@@ -1,42 +1,57 @@
 import { useState, useEffect } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel } from '../utils/timeline';
 import { SKILL_LABELS } from '../utils/operators';
+import { TimelineEvent, Operator, Enemy, SkillType } from '../model/types';
 
-export default function EventEditPanel({ event, operators, enemy, onUpdate, onRemove, onClose }) {
-  // Find the owner and skill metadata
-  let ownerName = '';
-  let skillName = '';
-  let ownerColor = '#4488ff';
-  let triggerCondition = null;
-  let channelLabel = '';
+interface EventEditPanelProps {
+  event: TimelineEvent;
+  operators: Operator[];
+  enemy: Enemy;
+  onUpdate: (id: string, updates: Partial<TimelineEvent>) => void;
+  onRemove: (id: string) => void;
+  onClose: () => void;
+}
+
+export default function EventEditPanel({
+  event,
+  operators,
+  enemy,
+  onUpdate,
+  onRemove,
+  onClose,
+}: EventEditPanelProps) {
+  let ownerName        = '';
+  let skillName        = '';
+  let ownerColor       = '#4488ff';
+  let triggerCondition: string | null = null;
+  let channelLabel     = '';
 
   if (event.ownerId === 'enemy') {
-    ownerName = 'Enemy';
-    const status = enemy.statuses.find(s => s.id === event.channelId);
-    skillName = status?.label ?? event.channelId;
-    ownerColor = status?.color ?? '#cc3333';
+    ownerName  = 'Enemy';
+    const status = enemy.statuses.find((s) => s.id === event.channelId);
+    skillName    = status?.label ?? event.channelId;
+    ownerColor   = status?.color ?? '#cc3333';
     channelLabel = 'STATUS';
   } else {
-    const op = operators.find(o => o.id === event.ownerId);
+    const op = operators.find((o) => o.id === event.ownerId);
     if (op) {
-      ownerName = op.name;
+      ownerName  = op.name;
       ownerColor = op.color;
-      const skill = op.skills[event.channelId];
+      const skillType = event.channelId as SkillType;
+      const skill = op.skills[skillType];
       if (skill) {
-        skillName = skill.name;
+        skillName        = skill.name;
         triggerCondition = skill.triggerCondition;
-        channelLabel = SKILL_LABELS[event.channelId] ?? event.channelId.toUpperCase();
+        channelLabel     = SKILL_LABELS[skillType] ?? event.channelId.toUpperCase();
       }
     }
   }
 
-  // Local seconds-based state
-  const [activeSec, setActiveSec]   = useState(framesToSeconds(event.activeDuration));
-  const [lingerSec, setLingerSec]   = useState(framesToSeconds(event.lingeringDuration));
+  const [activeSec,   setActiveSec]   = useState(framesToSeconds(event.activeDuration));
+  const [lingerSec,   setLingerSec]   = useState(framesToSeconds(event.lingeringDuration));
   const [cooldownSec, setCooldownSec] = useState(framesToSeconds(event.cooldownDuration));
-  const [startSec, setStartSec]     = useState(framesToSeconds(event.startFrame));
+  const [startSec,    setStartSec]    = useState(framesToSeconds(event.startFrame));
 
-  // Sync from event changes (e.g., drag-moved start)
   useEffect(() => {
     setStartSec(framesToSeconds(event.startFrame));
   }, [event.startFrame]);
@@ -50,9 +65,13 @@ export default function EventEditPanel({ event, operators, enemy, onUpdate, onRe
     });
   };
 
-  const handleBlur = () => commit();
+  interface FieldProps {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+  }
 
-  const Field = ({ label, value, onChange }) => (
+  const Field = ({ label, value, onChange }: FieldProps) => (
     <div className="edit-field">
       <span className="edit-field-label">{label}</span>
       <div className="edit-field-row">
@@ -62,9 +81,9 @@ export default function EventEditPanel({ event, operators, enemy, onUpdate, onRe
           step="0.1"
           min="0"
           value={value}
-          onChange={e => onChange(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={e => { if (e.key === 'Enter') { handleBlur(); e.target.blur(); } }}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') { commit(); (e.target as HTMLInputElement).blur(); } }}
         />
         <span className="edit-input-unit">s</span>
       </div>
@@ -75,13 +94,9 @@ export default function EventEditPanel({ event, operators, enemy, onUpdate, onRe
     <div className="event-edit-panel">
       <div className="edit-panel-header">
         <div
-          className="edit-panel-color-dot"
           style={{
-            width: 4,
-            height: 40,
+            width: 4, height: 40, borderRadius: 2, flexShrink: 0,
             background: ownerColor,
-            borderRadius: 2,
-            flexShrink: 0,
             boxShadow: `0 0 8px ${ownerColor}80`,
           }}
         />
@@ -128,7 +143,8 @@ export default function EventEditPanel({ event, operators, enemy, onUpdate, onRe
         <div className="edit-panel-section">
           <span className="edit-section-label">Info</span>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>
-            <div>Active: {framesToSeconds(event.activeDuration)}s → {framesToSeconds(event.activeDuration + event.lingeringDuration + event.cooldownDuration)}s total</div>
+            <div>Active: {framesToSeconds(event.activeDuration)}s</div>
+            <div>Total: {framesToSeconds(event.activeDuration + event.lingeringDuration + event.cooldownDuration)}s</div>
             <div>Frames: {event.activeDuration} / {event.lingeringDuration} / {event.cooldownDuration}</div>
           </div>
         </div>

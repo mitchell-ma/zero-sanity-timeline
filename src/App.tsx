@@ -2,33 +2,34 @@ import { useState, useCallback } from 'react';
 import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
 import EventEditPanel from './view/EventEditPanel';
-import { SAMPLE_OPERATORS, ENEMY, SKILL_TYPES, SKILL_LABELS, SKILL_ORDER } from './utils/operators';
+import { SAMPLE_OPERATORS, ENEMY, SKILL_LABELS, SKILL_ORDER } from './utils/operators';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from './model/types';
 import './App.css';
 
-const INITIAL_VISIBLE = Object.fromEntries(
+const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   SAMPLE_OPERATORS.map((op) => [
     op.id,
     {
-      [SKILL_TYPES.BASIC]:   false,
-      [SKILL_TYPES.BATTLE]:  true,
-      [SKILL_TYPES.COMBO]:   true,
-      [SKILL_TYPES.ULTIMATE]: false,
-    },
-  ])
+      basic:   false,
+      battle:  true,
+      combo:   true,
+      ultimate: false,
+    } satisfies Record<SkillType, boolean>,
+  ]),
 );
 
 let _id = 1;
 const genId = () => `ev-${_id++}`;
 
 export default function App() {
-  const [zoom, setZoom]                     = useState(0.5);
-  const [events, setEvents]                 = useState([]);
-  const [visibleSkills, setVisibleSkills]   = useState(INITIAL_VISIBLE);
-  const [contextMenu, setContextMenu]       = useState(null);
-  const [editingEventId, setEditingEventId] = useState(null);
+  const [zoom,           setZoom]           = useState<number>(0.5);
+  const [events,         setEvents]         = useState<TimelineEvent[]>([]);
+  const [visibleSkills,  setVisibleSkills]  = useState<VisibleSkills>(INITIAL_VISIBLE);
+  const [contextMenu,    setContextMenu]    = useState<ContextMenuState | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   // ─── Zoom ──────────────────────────────────────────────────────────────────
-  const handleZoom = useCallback((deltaY) => {
+  const handleZoom = useCallback((deltaY: number) => {
     setZoom((z) => {
       const factor = deltaY > 0 ? 1 / 1.2 : 1.2;
       return Math.max(0.15, Math.min(20, z * factor));
@@ -36,42 +37,47 @@ export default function App() {
   }, []);
 
   // ─── Skill visibility ─────────────────────────────────────────────────────
-  const handleToggleSkill = useCallback((operatorId, skillType) => {
+  const handleToggleSkill = useCallback((operatorId: string, skillType: string) => {
     setVisibleSkills((prev) => ({
       ...prev,
       [operatorId]: {
         ...prev[operatorId],
-        [skillType]: !prev[operatorId]?.[skillType],
+        [skillType]: !prev[operatorId]?.[skillType as SkillType],
       },
     }));
   }, []);
 
   // ─── Events ───────────────────────────────────────────────────────────────
-  const handleAddEvent = useCallback((ownerId, channelId, atFrame, defaultSkill) => {
-    const ev = {
-      id:               genId(),
+  const handleAddEvent = useCallback((
+    ownerId: string,
+    channelId: string,
+    atFrame: number,
+    defaultSkill: { defaultActiveDuration?: number; defaultLingeringDuration?: number; defaultCooldownDuration?: number } | null,
+  ) => {
+    const ev: TimelineEvent = {
+      id:                genId(),
       ownerId,
       channelId,
-      startFrame:       atFrame,
-      activeDuration:   defaultSkill?.defaultActiveDuration   ?? 120,
+      startFrame:        atFrame,
+      activeDuration:    defaultSkill?.defaultActiveDuration   ?? 120,
       lingeringDuration: defaultSkill?.defaultLingeringDuration ?? 0,
-      cooldownDuration: defaultSkill?.defaultCooldownDuration  ?? 0,
+      cooldownDuration:  defaultSkill?.defaultCooldownDuration  ?? 0,
     };
     setEvents((prev) => [...prev, ev]);
     setContextMenu(null);
   }, []);
 
-  const handleUpdateEvent = useCallback((id, updates) => {
+  const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
     setEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, ...updates } : ev)));
   }, []);
 
-  const handleMoveEvent = useCallback((id, newStartFrame) => {
+  const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
     setEvents((prev) =>
-      prev.map((ev) => (ev.id === id ? { ...ev, startFrame: newStartFrame } : ev))
+      prev.map((ev) => (ev.id === id ? { ...ev, startFrame: newStartFrame } : ev)),
     );
   }, []);
 
-  const handleRemoveEvent = useCallback((id) => {
+  const handleRemoveEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
@@ -83,7 +89,7 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── App bar ─────────────────────────────────────────────────────── */}
+      {/* App bar */}
       <div className="app-bar">
         <div className="app-brand">
           <span className="brand-hex">⬡</span>
@@ -111,7 +117,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Controls bar: skill visibility toggles ──────────────────────── */}
+      {/* Controls bar: skill visibility toggles */}
       <div className="controls-bar">
         {SAMPLE_OPERATORS.map((op) => (
           <div key={op.id} className="op-toggle-group">
@@ -122,7 +128,7 @@ export default function App() {
               <button
                 key={skillType}
                 className={`skill-toggle-btn${visibleSkills[op.id]?.[skillType] ? ' active' : ''}`}
-                style={{ '--op-color': op.color }}
+                style={{ '--op-color': op.color } as React.CSSProperties}
                 onClick={() => handleToggleSkill(op.id, skillType)}
                 title={op.skills[skillType].name}
               >
@@ -133,7 +139,7 @@ export default function App() {
         ))}
       </div>
 
-      {/* ── Main timeline ────────────────────────────────────────────────── */}
+      {/* Timeline */}
       <TimelineGrid
         operators={SAMPLE_OPERATORS}
         enemy={ENEMY}
@@ -149,7 +155,6 @@ export default function App() {
         onRemoveEvent={handleRemoveEvent}
       />
 
-      {/* ── Context menu ─────────────────────────────────────────────────── */}
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -159,7 +164,6 @@ export default function App() {
         />
       )}
 
-      {/* ── Event edit side panel ─────────────────────────────────────────── */}
       {editingEvent && (
         <EventEditPanel
           event={editingEvent}

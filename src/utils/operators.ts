@@ -1,26 +1,23 @@
-export const SKILL_TYPES = {
-  BASIC: 'basic',
-  BATTLE: 'battle',
-  COMBO: 'combo',
-  ULTIMATE: 'ultimate',
+import { SkillType, Operator, Enemy } from '../model/types';
+
+export const SKILL_TYPES: Record<string, SkillType> = {
+  BASIC:   'basic',
+  BATTLE:  'battle',
+  COMBO:   'combo',
+  ULTIMATE:'ultimate',
 };
 
-export const SKILL_LABELS = {
-  basic: 'BASIC',
-  battle: 'BATTLE',
-  combo: 'COMBO',
-  ultimate: 'ULT',
+export const SKILL_LABELS: Record<SkillType, string> = {
+  basic:   'BASIC',
+  battle:  'BATTLE',
+  combo:   'COMBO',
+  ultimate:'ULT',
 };
 
-export const SKILL_ORDER = [
-  SKILL_TYPES.BASIC,
-  SKILL_TYPES.BATTLE,
-  SKILL_TYPES.COMBO,
-  SKILL_TYPES.ULTIMATE,
-];
+export const SKILL_ORDER: SkillType[] = ['basic', 'battle', 'combo', 'ultimate'];
 
 // Durations are in frames (120 fps)
-export const SAMPLE_OPERATORS = [
+export const SAMPLE_OPERATORS: Operator[] = [
   {
     id: 'perlica',
     name: 'Perlica',
@@ -195,19 +192,11 @@ export const SAMPLE_OPERATORS = [
   },
 ];
 
-export const ENEMY = {
+export const ENEMY: Enemy = {
   id: 'enemy',
   name: 'Target Enemy',
   statuses: [
-    {
-      id: 'heatInfliction',
-      label: 'HEAT',
-      color: '#ff5522',
-    },
-    {
-      id: 'natureInfliction',
-      label: 'NATURE',
-      color: '#33cc66',
-    },
+    { id: 'heatInfliction',   label: 'HEAT',   color: '#ff5522' },
+    { id: 'natureInfliction', label: 'NATURE', color: '#33cc66' },
   ],
 };
