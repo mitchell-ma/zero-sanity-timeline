@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-root:      #06080f;
+  --bg-panel:     #0a0e1a;
+  --bg-card:      #0d1322;
+  --bg-elevated:  #121b2e;
+  --bg-hover:     #172236;
+
+  --border-dim:    rgba(40, 80, 160, 0.28);
+  --border-med:    rgba(60, 110, 200, 0.45);
+  --border-bright: rgba(68, 136, 255, 0.65);
+
+  --blue:       #4488ff;
+  --blue-glow:  rgba(68, 136, 255, 0.25);
+  --cyan:       #00d4c8;
+  --gold:       #f0a040;
+  --red:        #e05555;
+  --purple:     #9060e8;
+  --green:      #33cc66;
+
+  --text-bright:    #eef4ff;
+  --text-primary:   #b0c8e8;
+  --text-secondary: #6888aa;
+  --text-muted:     #384d68;
+
+  --font-display: 'Rajdhani', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input {
+  font-family: var(--font-mono);
+}
