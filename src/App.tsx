@@ -10,6 +10,15 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
 import { WEAPONS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import { CombatLoadout, WindowsMap } from './controller/combat-loadout';
+import {
+  serializeSheet,
+  loadFromLocalStorage,
+  saveToLocalStorage,
+  clearLocalStorage,
+  exportToFile,
+  importFromFile,
+  SheetData,
+} from './utils/sheetStorage';
 import DevlogModal from './view/DevlogModal';
 import './App.css';
 
@@ -30,26 +39,136 @@ const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   ]),
 );
 
+const INITIAL_LOADOUTS: Record<string, OperatorLoadoutState> = Object.fromEntries(
+  SLOT_IDS.map((id) => [id, EMPTY_LOADOUT]),
+);
+const INITIAL_LOADOUT_STATS: Record<string, LoadoutStats> = Object.fromEntries(
+  SLOT_IDS.map((id) => [id, DEFAULT_LOADOUT_STATS]),
+);
+
 let _id = 1;
 const genId = () => `ev-${_id++}`;
 
+function resolveOperatorId(id: string | null): Operator | null {
+  if (!id) return null;
+  return SAMPLE_OPERATORS.find((op) => op.id === id) ?? null;
+}
+
+function applySheetData(data: SheetData) {
+  _id = data.nextEventId;
+  return {
+    operators: data.operatorIds.map(resolveOperatorId),
+    enemy: ALL_ENEMIES.find((e) => e.id === data.enemyId) ?? DEFAULT_ENEMY,
+    events: data.events,
+    loadouts: { ...INITIAL_LOADOUTS, ...data.loadouts },
+    loadoutStats: { ...INITIAL_LOADOUT_STATS, ...data.loadoutStats },
+    visibleSkills: { ...INITIAL_VISIBLE, ...data.visibleSkills },
+  };
+}
+
+// Try loading saved data on module init (before first render)
+function loadInitialState() {
+  const result = loadFromLocalStorage();
+  if (result && result.ok) {
+    return { loaded: applySheetData(result.data), error: null };
+  }
+  if (result && !result.ok) {
+    return { loaded: null, error: result.error };
+  }
+  return { loaded: null, error: null };
+}
+
+const initialLoad = loadInitialState();
+
 export default function App() {
-  const [operators,      setOperators]      = useState<(Operator | null)[]>(() => [...INITIAL_OPERATORS]);
+  const [operators,      setOperators]      = useState<(Operator | null)[]>(
+    () => initialLoad.loaded?.operators ?? [...INITIAL_OPERATORS],
+  );
   const [zoom,           setZoom]           = useState<number>(0.5);
-  const { state: events, setState: setEvents, beginBatch, endBatch, undo, redo } = useHistory<TimelineEvent[]>([]);
-  const [visibleSkills,  setVisibleSkills]  = useState<VisibleSkills>(INITIAL_VISIBLE);
+  const { state: events, setState: setEvents, resetState: resetEvents, beginBatch, endBatch, undo, redo } = useHistory<TimelineEvent[]>(
+    initialLoad.loaded?.events ?? [],
+  );
+  const [visibleSkills,  setVisibleSkills]  = useState<VisibleSkills>(
+    initialLoad.loaded?.visibleSkills ?? INITIAL_VISIBLE,
+  );
   const [contextMenu,    setContextMenu]    = useState<ContextMenuState | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const [loadouts,       setLoadouts]       = useState<Record<string, OperatorLoadoutState>>(() =>
-    Object.fromEntries(SLOT_IDS.map((id) => [id, EMPTY_LOADOUT])),
+  const [loadouts,       setLoadouts]       = useState<Record<string, OperatorLoadoutState>>(
+    () => initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
   );
-  const [loadoutStats,   setLoadoutStats]   = useState<Record<string, LoadoutStats>>(() =>
-    Object.fromEntries(SLOT_IDS.map((id) => [id, DEFAULT_LOADOUT_STATS])),
+  const [loadoutStats,   setLoadoutStats]   = useState<Record<string, LoadoutStats>>(
+    () => initialLoad.loaded?.loadoutStats ?? INITIAL_LOADOUT_STATS,
   );
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
-  const [enemy,          setEnemy]          = useState(DEFAULT_ENEMY);
+  const [enemy,          setEnemy]          = useState(
+    initialLoad.loaded?.enemy ?? DEFAULT_ENEMY,
+  );
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
+  const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
+
+  // ─── Build current sheet data for saving ─────────────────────────────────
+  const buildSheetData = useCallback((): SheetData => {
+    return serializeSheet(
+      operators.map((op) => op?.id ?? null),
+      enemy.id,
+      events,
+      loadouts,
+      loadoutStats,
+      visibleSkills,
+      _id,
+    );
+  }, [operators, enemy, events, loadouts, loadoutStats, visibleSkills]);
+
+  // ─── Auto-save to localStorage ───────────────────────────────────────────
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveToLocalStorage(buildSheetData());
+    }, 500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [buildSheetData]);
+
+  // ─── Export / Import ─────────────────────────────────────────────────────
+  const handleExport = useCallback(() => {
+    exportToFile(buildSheetData());
+  }, [buildSheetData]);
+
+  const handleImport = useCallback(async () => {
+    const result = await importFromFile();
+    if (!result.ok) {
+      setWarningMessage(result.error);
+      return;
+    }
+    const resolved = applySheetData(result.data);
+    setOperators(resolved.operators);
+    setEnemy(resolved.enemy);
+    resetEvents(resolved.events);
+    setLoadouts(resolved.loadouts);
+    setLoadoutStats(resolved.loadoutStats);
+    setVisibleSkills(resolved.visibleSkills);
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setContextMenu(null);
+  }, [resetEvents]);
+
+  // ─── Clear sheet ─────────────────────────────────────────────────────────
+  const handleClear = useCallback(() => {
+    _id = 1;
+    setOperators([...INITIAL_OPERATORS]);
+    setEnemy(DEFAULT_ENEMY);
+    resetEvents([]);
+    setLoadouts(INITIAL_LOADOUTS);
+    setLoadoutStats(INITIAL_LOADOUT_STATS);
+    setVisibleSkills(INITIAL_VISIBLE);
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setContextMenu(null);
+    clearLocalStorage();
+  }, [resetEvents]);
 
   // ─── CombatLoadout controller ────────────────────────────────────────────
   const combatLoadoutRef = useRef<CombatLoadout>(null!);
@@ -217,7 +336,7 @@ export default function App() {
       {/* App bar */}
       <div className="app-bar">
         <div className="app-brand">
-          <span className="brand-hex">⬡</span>
+          <span className="brand-hex">&#x2B21;</span>
           <div className="brand-text">
             <span className="brand-title">ENDFIELD</span>
             <span className="brand-sub">ZERO SANITY TIMELINE</span>
@@ -225,6 +344,16 @@ export default function App() {
         </div>
 
         <div className="app-bar-divider" />
+
+        <button className="btn-clear" onClick={handleClear}>
+          CLEAR
+        </button>
+        <button className="btn-devlog" onClick={handleExport}>
+          EXPORT
+        </button>
+        <button className="btn-devlog" onClick={handleImport}>
+          IMPORT
+        </button>
 
         <div className="app-bar-right">
           <span className="wip-badge">WIP</span>
@@ -324,6 +453,25 @@ export default function App() {
               <div className="keys-row"><kbd>Right-click</kbd><span>Context menu</span></div>
               <div className="keys-row"><kbd>Double-click</kbd><span>Edit event</span></div>
               <div className="keys-row"><kbd>Drag</kbd><span>Move event / Marquee select</span></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning modal for load errors */}
+      {warningMessage && (
+        <div className="devlog-overlay" onClick={() => setWarningMessage(null)}>
+          <div className="devlog-modal warning-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="devlog-header">
+              <span className="devlog-title warning-title">LOAD WARNING</span>
+              <button className="devlog-close" onClick={() => setWarningMessage(null)}>&times;</button>
+            </div>
+            <div className="devlog-body">
+              <p className="warning-text">Failed to restore saved sheet data. The sheet has been reset to defaults.</p>
+              <div className="warning-detail">{warningMessage}</div>
+            </div>
+            <div className="warning-footer">
+              <button className="btn-warning-ok" onClick={() => setWarningMessage(null)}>OK</button>
             </div>
           </div>
         </div>

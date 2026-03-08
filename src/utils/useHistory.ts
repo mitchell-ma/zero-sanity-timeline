@@ -54,5 +54,13 @@ export function useHistory<T>(initial: T) {
     setStateRaw(next);
   }, []);
 
-  return { state, setState, beginBatch, endBatch, undo, redo };
+  const resetState = useCallback((value: T) => {
+    stateRef.current = value;
+    undoRef.current = [];
+    redoRef.current = [];
+    batchRef.current = null;
+    setStateRaw(value);
+  }, []);
+
+  return { state, setState, resetState, beginBatch, endBatch, undo, redo };
 }
