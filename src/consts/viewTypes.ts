@@ -67,24 +67,46 @@ export interface ContextMenuState {
 
 export type VisibleSkills = Record<string, Record<SkillType, boolean>>;
 
-export type SkillColumn = {
-  key: string;
-  type: "skill";
-  ownerId: string;
-  channelId: SkillType;
-  operator: Operator;
-  skill: SkillDef;
-  color: string;
-};
+/** A sub-channel within a micro-column mini-timeline. */
+export interface MicroColumn {
+  id: string;         // used as channelId for events in this micro-column
+  label: string;      // short display label (e.g. "HEAT", "1")
+  color: string;      // render color for events in this micro-column
+}
 
-export type StatusColumn = {
+/** Unified mini-timeline column — replaces SkillColumn, StatusColumn, MeltingFlameColumn. */
+export type MiniTimeline = {
   key: string;
-  type: "status";
-  ownerId: "enemy";
+  type: "mini-timeline";
+  source: import("./enums").TimelineSourceType;
+  ownerId: string;
   channelId: string;
-  status: EnemyStatus;
-  color: string;
   label: string;
+  color: string;
+  headerVariant: "skill" | "infliction" | "mf";
+
+  /** If present, this mini-timeline has micro-columns. */
+  microColumns?: MicroColumn[];
+  /** How events are assigned to micro-columns. */
+  microColumnAssignment?: "by-order" | "by-channel-id";
+  /** If set, collect events matching any of these channelIds (instead of col.channelId). */
+  matchChannelIds?: string[];
+
+  /** Default durations for new events created in this mini-timeline. */
+  defaultEvent?: {
+    name: string;
+    defaultActiveDuration: number;
+    defaultLingeringDuration: number;
+    defaultCooldownDuration: number;
+    triggerCondition?: string | null;
+  };
+
+  /** Max events allowed (e.g. MF has max 4). */
+  maxEvents?: number;
+  /** Events must be added in monotonically increasing start-frame order. */
+  requiresMonotonicOrder?: boolean;
+  /** If true, micro-column slots freed by expired/consumed events can be reused. */
+  reuseExpiredSlots?: boolean;
 };
 
 export type PlaceholderColumn = {
@@ -94,12 +116,4 @@ export type PlaceholderColumn = {
   color: string;
 };
 
-export type MeltingFlameColumn = {
-  key: string;
-  type: "melting-flame";
-  ownerId: string;
-  channelId: "melting-flame";
-  color: string;
-};
-
-export type Column = SkillColumn | StatusColumn | PlaceholderColumn | MeltingFlameColumn;
+export type Column = MiniTimeline | PlaceholderColumn;

@@ -25,9 +25,10 @@ import {
   VisibleSkills,
   ContextMenuState,
   Column,
+  MiniTimeline,
 } from "../consts/viewTypes";
 import { WindowsMap } from '../controller/combat-loadout';
-import { ELEMENT_COLORS, ElementType } from '../consts/enums';
+import { ELEMENT_COLORS, ElementType, TimelineSourceType } from '../consts/enums';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 
 const MIN_SLOT_COLS = 4;
@@ -42,7 +43,7 @@ interface DragState {
   eventIds: string[];
   startMouseY: number;
   startFrames: Map<string, number>; // original startFrame per event
-  mfBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
+  monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
 }
 
 interface MarqueeState {
@@ -205,14 +206,23 @@ export default function TimelineGrid({
     if (op) {
       for (const skillType of SKILL_ORDER) {
         if (visibleSkills[slot.slotId]?.[skillType]) {
+          const skill = op.skills[skillType];
           columns.push({
             key: `${slot.slotId}-${skillType}`,
-            type: 'skill',
+            type: 'mini-timeline',
+            source: TimelineSourceType.OPERATOR,
             ownerId: slot.slotId,
             channelId: skillType,
-            operator: op,
-            skill: op.skills[skillType],
+            label: SKILL_LABELS[skillType],
             color: op.color,
+            headerVariant: 'skill',
+            defaultEvent: {
+              name: skill.name,
+              defaultActiveDuration: skill.defaultActiveDuration,
+              defaultLingeringDuration: skill.defaultLingeringDuration,
+              defaultCooldownDuration: skill.defaultCooldownDuration,
+              triggerCondition: skill.triggerCondition,
+            },
           });
           slotHasCols = true;
         }
@@ -222,10 +232,27 @@ export default function TimelineGrid({
     if (isLaevatain) {
       columns.push({
         key: `${slot.slotId}-melting-flame`,
-        type: 'melting-flame',
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
         channelId: 'melting-flame',
+        label: 'MF',
         color: op!.color,
+        headerVariant: 'mf',
+        microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
+          id: `mf-${i}`,
+          label: String(i + 1),
+          color: ELEMENT_COLORS[ElementType.HEAT],
+        })),
+        microColumnAssignment: 'by-order',
+        maxEvents: MF_MICRO_COLS,
+        requiresMonotonicOrder: true,
+        defaultEvent: {
+          name: 'Melting Flame',
+          defaultActiveDuration: TOTAL_FRAMES * 10,
+          defaultLingeringDuration: 0,
+          defaultCooldownDuration: 0,
+        },
       });
     }
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
@@ -243,17 +270,51 @@ export default function TimelineGrid({
       });
     }
   }
-  for (const status of enemy.statuses) {
-    columns.push({
-      key: `enemy-${status.id}`,
-      type: 'status',
-      ownerId: 'enemy',
-      channelId: status.id,
-      status,
-      color: status.color,
-      label: status.label,
-    });
-  }
+  // Single arts infliction mini-timeline for the enemy (stacking like MF)
+  const inflictionStatuses = enemy.statuses;
+  const inflictionChannelIds = inflictionStatuses.map((s) => s.id);
+  columns.push({
+    key: 'enemy-arts-infliction',
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: 'enemy',
+    channelId: 'arts-infliction',
+    label: 'INFLICTION',
+    color: '#cc3333',
+    headerVariant: 'infliction',
+    microColumns: inflictionStatuses.map((s) => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+    })),
+    microColumnAssignment: 'by-order',
+    matchChannelIds: inflictionChannelIds,
+    reuseExpiredSlots: true,
+    defaultEvent: {
+      name: 'Infliction',
+      defaultActiveDuration: 2400, // 20 seconds at 120fps
+      defaultLingeringDuration: 0,
+      defaultCooldownDuration: 0,
+    },
+  });
+  // Arts reaction mini-timeline for the enemy
+  columns.push({
+    key: 'enemy-arts-reaction',
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: 'enemy',
+    channelId: 'arts-reaction',
+    label: 'ARTS REACTION',
+    color: '#dd6644',
+    headerVariant: 'infliction',
+    microColumns: [
+      { id: 'combustion',       label: 'COMB',  color: '#ff5522' },
+      { id: 'solidification',   label: 'SOLID', color: '#88ddff' },
+      { id: 'corrosion',        label: 'CORR',  color: '#33cc66' },
+      { id: 'electrification',  label: 'ELEC',  color: '#e8c840' },
+    ],
+    microColumnAssignment: 'by-channel-id',
+  });
 
   // ─── Compute slot groups for loadout row ──────────────────────────────────
   const slotGroups: SlotGroup[] = [];
@@ -269,7 +330,7 @@ export default function TimelineGrid({
     slotGroups.push({ slot, columnCount: count, startCol: colIdx });
     colIdx += count;
   }
-  const enemyColCount = enemy.statuses.length;
+  const enemyColCount = 2; // arts-infliction + arts-reaction mini-timelines
 
   // Compute per-slot column width: ensure loadout content fits
   const slotColWidths: number[] = slotGroups.map((g) => {
@@ -378,46 +439,103 @@ export default function TimelineGrid({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
-  // ─── Precompute MF micro-column positions per event ─────────────────────────
-  const mfEventPositions = useMemo(() => {
-    const positions = new Map<string, { left: number; right: number }>();
-    // Group MF events by owner
-    const byOwner = new Map<string, typeof events>();
-    for (const ev of events) {
-      if (ev.channelId !== 'melting-flame') continue;
-      const list = byOwner.get(ev.ownerId) ?? [];
-      list.push(ev);
-      byOwner.set(ev.ownerId, list);
+  // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
+  // Maps eventId → assigned micro-column index. Uses clamped durations so that
+  // consumed inflictions free their slot at the consumption frame.
+  const greedySlotAssignments = useMemo(() => {
+    const assignments = new Map<string, number>();
+    for (const col of columns) {
+      if (col.type !== 'mini-timeline' || !col.reuseExpiredSlots || !col.microColumns) continue;
+      const microCount = col.microColumns.length;
+
+      // Collect clamped events for this column
+      const matchSet = col.matchChannelIds ? new Set(col.matchChannelIds) : null;
+      const colEvents = events.filter(
+        (ev) => ev.ownerId === col.ownerId &&
+          (matchSet ? matchSet.has(ev.channelId) : ev.channelId === col.channelId),
+      );
+
+      // Sort by startFrame
+      const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
+
+      // Track when each slot becomes free
+      const slotEndFrames = new Array(microCount).fill(-1);
+      for (const ev of sorted) {
+        const endFrame = ev.startFrame + ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+        // Find first free slot
+        let assigned = -1;
+        for (let s = 0; s < microCount; s++) {
+          if (slotEndFrames[s] <= ev.startFrame) {
+            assigned = s;
+            slotEndFrames[s] = endFrame;
+            break;
+          }
+        }
+        // Overflow: pack into last slot
+        if (assigned < 0) assigned = microCount - 1;
+        assignments.set(ev.id, assigned);
+      }
     }
-    byOwner.forEach((mfEvts, ownerId) => {
-      const colKey = `${ownerId}-melting-flame`;
-      const colPos = columnPositions.get(colKey);
-      if (!colPos) return;
-      const sorted = mfEvts; // use insertion order for stable micro-column assignment
+    return assignments;
+  }, [events, columns]);
+
+  // ─── Precompute micro-column positions per event ────────────────────────────
+  const microColumnEventPositions = useMemo(() => {
+    const positions = new Map<string, { left: number; right: number; color: string }>();
+    for (const col of columns) {
+      if (col.type !== 'mini-timeline' || !col.microColumns) continue;
+      const colPos = columnPositions.get(col.key);
+      if (!colPos) continue;
       const colWidth = colPos.right - colPos.left;
-      sorted.forEach((ev, i) => {
-        const microIdx = Math.min(i, MF_MICRO_COLS - 1);
-        const microW = colWidth / MF_MICRO_COLS;
-        positions.set(ev.id, {
-          left: colPos.left + microIdx * microW,
-          right: colPos.left + (microIdx + 1) * microW,
+      const microCount = col.microColumns.length;
+      const microW = colWidth / microCount;
+
+      if (col.microColumnAssignment === 'by-order') {
+        const matchSet = col.matchChannelIds ? new Set(col.matchChannelIds) : null;
+        const colEvents = events.filter(
+          (ev) => ev.ownerId === col.ownerId &&
+            (matchSet ? matchSet.has(ev.channelId) : ev.channelId === col.channelId),
+        );
+        colEvents.forEach((ev, i) => {
+          // Use greedy assignment if available, else sequential
+          const microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
+          const mcMatch = matchSet
+            ? col.microColumns!.find((mc) => mc.id === ev.channelId)
+            : undefined;
+          positions.set(ev.id, {
+            left: colPos.left + microIdx * microW,
+            right: colPos.left + (microIdx + 1) * microW,
+            color: mcMatch?.color ?? col.microColumns![microIdx].color,
+          });
         });
-      });
-    });
+      } else {
+        // by-channel-id: match event channelId to micro-column id
+        col.microColumns.forEach((mc, mcIdx) => {
+          const mcEvents = events.filter(
+            (ev) => ev.ownerId === col.ownerId && ev.channelId === mc.id,
+          );
+          mcEvents.forEach((ev) => {
+            positions.set(ev.id, {
+              left: colPos.left + mcIdx * microW,
+              right: colPos.left + (mcIdx + 1) * microW,
+              color: mc.color,
+            });
+          });
+        });
+      }
+    }
     return positions;
-  }, [events, columnPositions]);
+  }, [events, columns, columnPositions, greedySlotAssignments]);
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
   const getEventsInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }) => {
     const bodyTop = bodyTopRef.current ?? 0;
     const ids = new Set<string>();
     for (const ev of events) {
-      let colPos: { left: number; right: number } | undefined;
-      if (ev.channelId === 'melting-flame') {
-        colPos = mfEventPositions.get(ev.id);
-      } else {
-        colPos = columnPositions.get(`${ev.ownerId}-${ev.channelId}`);
-      }
+      // Try micro-column positions first, then regular column positions
+      let colPos: { left: number; right: number } | undefined =
+        microColumnEventPositions.get(ev.id) ??
+        columnPositions.get(`${ev.ownerId}-${ev.channelId}`);
       if (!colPos) continue;
       const totalDur = ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
       const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
@@ -429,7 +547,7 @@ export default function TimelineGrid({
       }
     }
     return ids;
-  }, [events, columnPositions, mfEventPositions]);
+  }, [events, columnPositions, microColumnEventPositions]);
 
   // ─── Event hover ──────────────────────────────────────────────────────────────
   const handleEventHover = useCallback((id: string | null) => {
@@ -492,12 +610,12 @@ export default function TimelineGrid({
         (e.clientY - startMouseY) / getPxPerFrame(zoomRef.current)
       );
       let primaryNewFrame = 0;
-      const { mfBounds } = dragRef.current;
+      const { monotonicBounds } = dragRef.current;
 
       // Compute the most restrictive delta across all MF-constrained events
       let clampedDelta = deltaFrames;
       for (const eid of eventIds) {
-        const bounds = mfBounds.get(eid);
+        const bounds = monotonicBounds.get(eid);
         if (!bounds) continue;
         const orig = startFrames.get(eid) ?? 0;
         const minDelta = bounds.min - orig;
@@ -507,7 +625,7 @@ export default function TimelineGrid({
 
       for (const eid of eventIds) {
         const orig = startFrames.get(eid) ?? 0;
-        const delta = mfBounds.has(eid) ? clampedDelta : deltaFrames;
+        const delta = monotonicBounds.has(eid) ? clampedDelta : deltaFrames;
         const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, orig + delta));
         onMoveEvent(eid, newFrame);
         if (eid === primaryId) primaryNewFrame = newFrame;
@@ -576,32 +694,42 @@ export default function TimelineGrid({
   }, [onBatchEnd]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
-  const computeMfBounds = useCallback((draggedIds: string[]): Map<string, { min: number; max: number }> => {
+  // Compute drag bounds for events in monotonic-order micro-column mini-timelines
+  const computeMonotonicBounds = useCallback((draggedIds: string[]): Map<string, { min: number; max: number }> => {
     const bounds = new Map<string, { min: number; max: number }>();
     const draggedSet = new Set(draggedIds);
+    // Find all mini-timelines with requiresMonotonicOrder
+    const monotonicCols = columns.filter(
+      (c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.requiresMonotonicOrder,
+    );
     for (const eid of draggedIds) {
       const ev = events.find((e) => e.id === eid);
-      if (!ev || ev.channelId !== 'melting-flame') continue;
-      // Use insertion order (array order) for column assignment
-      const allMf = events
-        .filter((e) => e.ownerId === ev.ownerId && e.channelId === 'melting-flame');
-      const idx = allMf.findIndex((e) => e.id === eid);
+      if (!ev) continue;
+      const col = monotonicCols.find((c) => {
+        if (c.ownerId !== ev.ownerId) return false;
+        if (c.matchChannelIds) return c.matchChannelIds.includes(ev.channelId);
+        return c.channelId === ev.channelId;
+      });
+      if (!col) continue;
+      const matchSet = col.matchChannelIds ? new Set(col.matchChannelIds) : null;
+      const allInCol = events.filter((e) =>
+        e.ownerId === col.ownerId &&
+        (matchSet ? matchSet.has(e.channelId) : e.channelId === col.channelId),
+      );
+      const idx = allInCol.findIndex((e) => e.id === eid);
       if (idx < 0) continue;
-      // Bounds come from immediate non-dragged neighbors in stable order
       let min = 0;
       let max = TOTAL_FRAMES - 1;
-      // Search left for nearest non-dragged sibling
       for (let i = idx - 1; i >= 0; i--) {
-        if (!draggedSet.has(allMf[i].id)) { min = allMf[i].startFrame; break; }
+        if (!draggedSet.has(allInCol[i].id)) { min = allInCol[i].startFrame; break; }
       }
-      // Search right for nearest non-dragged sibling
-      for (let i = idx + 1; i < allMf.length; i++) {
-        if (!draggedSet.has(allMf[i].id)) { max = allMf[i].startFrame; break; }
+      for (let i = idx + 1; i < allInCol.length; i++) {
+        if (!draggedSet.has(allInCol[i].id)) { max = allInCol[i].startFrame; break; }
       }
       bounds.set(eid, { min, max });
     }
     return bounds;
-  }, [events]);
+  }, [events, columns]);
 
   const handleEventDragStart = useCallback((
     e: React.MouseEvent,
@@ -624,7 +752,7 @@ export default function TimelineGrid({
           startFrames.set(ev.id, ev.startFrame);
         }
       }
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, mfBounds: computeMfBounds(draggedIds) };
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds) };
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
         setSelectedIds(new Set());
@@ -632,9 +760,9 @@ export default function TimelineGrid({
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, mfBounds: computeMfBounds([eventId]) };
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]) };
     }
-  }, [selectedIds, events, computeMfBounds, onEditEvent, onBatchStart]);
+  }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart]);
 
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
@@ -668,6 +796,7 @@ export default function TimelineGrid({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    if (col.type !== 'mini-timeline') return;
 
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
@@ -677,7 +806,81 @@ export default function TimelineGrid({
     const atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
     const label   = frameToDetailLabel(atFrame);
 
-    if (col.type === 'skill') {
+    if (col.microColumns && col.microColumnAssignment === 'by-channel-id') {
+      // Micro-column by channel: determine which micro-column was clicked
+      const colPos = columnPositions.get(col.key);
+      if (!colPos) return;
+      const relX = e.clientX - (rect.left - (scrollRef.current?.scrollLeft ?? 0)) - colPos.left;
+      const microW = (colPos.right - colPos.left) / col.microColumns.length;
+      const mcIdx = Math.max(0, Math.min(col.microColumns.length - 1, Math.floor(relX / microW)));
+      const mc = col.microColumns[mcIdx];
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [{
+          label: `Add ${mc.label} at ${label}`,
+          action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ?? null),
+        }],
+      });
+    } else if (col.microColumns && col.microColumnAssignment === 'by-order') {
+      // Monotonic stacking micro-columns (e.g. MF stacks, inflictions)
+      const matchSet = col.matchChannelIds ? new Set(col.matchChannelIds) : null;
+      const existing = events.filter(
+        (ev) => ev.ownerId === col.ownerId &&
+          (matchSet ? matchSet.has(ev.channelId) : ev.channelId === col.channelId),
+      );
+
+      // For reuseExpiredSlots columns, count slots occupied at the target frame using clamped events
+      let full: boolean;
+      if (col.reuseExpiredSlots && col.microColumns) {
+        const activeAtFrame = events.filter(
+          (ev) => ev.ownerId === col.ownerId &&
+            (matchSet ? matchSet.has(ev.channelId) : ev.channelId === col.channelId) &&
+            ev.startFrame <= atFrame &&
+            ev.startFrame + ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration > atFrame,
+        );
+        full = activeAtFrame.length >= col.microColumns.length;
+      } else {
+        full = col.maxEvents != null && existing.length >= col.maxEvents;
+      }
+
+      const lastFrame = existing.length > 0
+        ? existing[existing.length - 1].startFrame
+        : -1;
+      const beforePrev = col.requiresMonotonicOrder && atFrame < lastFrame;
+
+      if (col.matchChannelIds && col.microColumns) {
+        // Multi-channel stacking (inflictions): always allow adding (at 4 stacks,
+        // adding more refreshes durations; 4th slot shows sequential bars)
+        onContextMenu({
+          x: e.clientX, y: e.clientY,
+          items: col.microColumns.map((mc) => ({
+            label: `Add ${mc.label} at ${label}`,
+            action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ?? null),
+          })),
+        });
+      } else {
+        // Single-channel stacking (MF)
+        const disabled = full || beforePrev;
+        const maxLabel = col.maxEvents ?? '?';
+        const disabledLabel = full
+          ? `${col.defaultEvent?.name ?? col.label} (${maxLabel}/${maxLabel} stacks)`
+          : beforePrev
+            ? `${col.defaultEvent?.name ?? col.label} (must be after stack ${existing.length})`
+            : '';
+        onContextMenu({
+          x: e.clientX, y: e.clientY,
+          items: [{
+            label: disabled
+              ? disabledLabel
+              : `Add ${col.defaultEvent?.name ?? col.label} at ${label}`,
+            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.defaultEvent ?? null),
+            disabled,
+          }],
+        });
+      }
+    } else {
+      // Simple single-channel mini-timeline (skill columns)
+      const eventName = col.defaultEvent?.name ?? col.label;
       // Gate combo skill additions behind activation windows
       if (col.channelId === 'combo' && activationWindows) {
         const windows = activationWindows.get(col.ownerId) ?? [];
@@ -686,9 +889,9 @@ export default function TimelineGrid({
           x: e.clientX, y: e.clientY,
           items: [{
             label: inWindow
-              ? `Add ${col.skill.name} at ${label}`
-              : `${col.skill.name} (no trigger active)`,
-            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
+              ? `Add ${eventName} at ${label}`
+              : `${eventName} (no trigger active)`,
+            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.defaultEvent ?? null),
             disabled: !inWindow,
           }],
         });
@@ -696,50 +899,13 @@ export default function TimelineGrid({
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [{
-            label: `Add ${col.skill.name} at ${label}`,
-            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
+            label: `Add ${eventName} at ${label}`,
+            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.defaultEvent ?? null),
           }],
         });
       }
-    } else if (col.type === 'status') {
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [{
-          label: `Add ${col.label} at ${label}`,
-          action: () => onAddEvent(col.ownerId, col.channelId, atFrame, null),
-        }],
-      });
-    } else if (col.type === 'melting-flame') {
-      const mfExisting = events.filter(
-        (ev) => ev.ownerId === col.ownerId && ev.channelId === 'melting-flame',
-      );
-      const full = mfExisting.length >= MF_MICRO_COLS;
-      const lastFrame = mfExisting.length > 0
-        ? mfExisting[mfExisting.length - 1].startFrame
-        : -1;
-      const beforePrev = atFrame < lastFrame;
-      const disabled = full || beforePrev;
-      const disabledLabel = full
-        ? `Melting Flame (${MF_MICRO_COLS}/${MF_MICRO_COLS} stacks)`
-        : beforePrev
-          ? `Melting Flame (must be after stack ${mfExisting.length})`
-          : '';
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [{
-          label: disabled
-            ? disabledLabel
-            : `Add Melting Flame at ${label}`,
-          action: () => onAddEvent(col.ownerId, 'melting-flame', atFrame, {
-            defaultActiveDuration: TOTAL_FRAMES * 10,
-            defaultLingeringDuration: 0,
-            defaultCooldownDuration: 0,
-          }),
-          disabled,
-        }],
-      });
     }
-  }, [onAddEvent, onContextMenu, events]);
+  }, [onAddEvent, onContextMenu, events, columnPositions, activationWindows]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -748,6 +914,59 @@ export default function TimelineGrid({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Compute frame from click position (for "Add" items)
+    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    const rect = scrollRef.current?.getBoundingClientRect();
+    let atFrame = 0;
+    let label = '';
+    if (rect && bodyTopRef.current !== null) {
+      const relY = e.clientY - rect.top + scrollTop - bodyTopRef.current;
+      atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
+      label = frameToDetailLabel(atFrame);
+    }
+
+    // Build "Add" items for stackable columns (by-order with matchChannelIds)
+    const ev = events.find((ev) => ev.id === eventId);
+    let addItems: import('../consts/viewTypes').ContextMenuItem[] = [];
+    if (ev) {
+      const col = columns.find((c) => {
+        if (c.type !== 'mini-timeline' || !c.microColumns || c.microColumnAssignment !== 'by-order') return false;
+        if (c.matchChannelIds) return c.ownerId === ev.ownerId && c.matchChannelIds.includes(ev.channelId);
+        return c.ownerId === ev.ownerId && c.channelId === ev.channelId;
+      }) as MiniTimeline | undefined;
+
+      if (col?.matchChannelIds && col.microColumns) {
+        addItems = col.microColumns.map((mc) => ({
+          label: `Add ${mc.label} at ${label}`,
+          action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ?? null),
+        }));
+      } else if (col) {
+        // Single-channel stacking (MF)
+        const matchSet = col.matchChannelIds ? new Set(col.matchChannelIds) : null;
+        const existing = events.filter(
+          (ev) => ev.ownerId === col.ownerId &&
+            (matchSet ? matchSet.has(ev.channelId) : ev.channelId === col.channelId),
+        );
+        const full = col.maxEvents != null && existing.length >= col.maxEvents;
+        const lastFrame = existing.length > 0 ? existing[existing.length - 1].startFrame : -1;
+        const beforePrev = col.requiresMonotonicOrder && atFrame < lastFrame;
+        const disabled = full || beforePrev;
+        const maxLabel = col.maxEvents ?? '?';
+        const disabledLabel = full
+          ? `${col.defaultEvent?.name ?? col.label} (${maxLabel}/${maxLabel} stacks)`
+          : beforePrev
+            ? `${col.defaultEvent?.name ?? col.label} (must be after stack ${existing.length})`
+            : '';
+        addItems = [{
+          label: disabled
+            ? disabledLabel
+            : `Add ${col.defaultEvent?.name ?? col.label} at ${label}`,
+          action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.defaultEvent ?? null),
+          disabled,
+        }];
+      }
+    }
 
     // Batch context menu when right-clicking a selected event in a multi-selection
     if (selectedIds.has(eventId) && selectedIds.size > 1) {
@@ -761,6 +980,7 @@ export default function TimelineGrid({
             action: () => { onBatchStart?.(); ids.forEach((id) => onRemoveEvent(id)); onBatchEnd?.(); setSelectedIds(new Set()); onContextMenu(null); },
             danger: true,
           },
+          ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
         ],
       });
     } else {
@@ -770,10 +990,11 @@ export default function TimelineGrid({
           { label: 'Edit Event',   action: () => { onEditEvent(eventId); onContextMenu(null); } },
           { separator: true },
           { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
+          ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
         ],
       });
     }
-  }, [onEditEvent, onRemoveEvent, onContextMenu, selectedIds, onBatchStart, onBatchEnd]);
+  }, [onEditEvent, onRemoveEvent, onContextMenu, selectedIds, onBatchStart, onBatchEnd, events, columns, onAddEvent]);
 
   const showHoverLine = hoverClientY !== null && outerRect
     && hoverClientY > outerRect.top + combinedHeaderHeight
@@ -901,29 +1122,29 @@ export default function TimelineGrid({
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
-              className={`tl-header-cell${col.type === 'status' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'melting-flame' ? ' tl-header-cell--mf' : ''}`}
+              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'mini-timeline' && col.headerVariant === 'mf' ? ' tl-header-cell--mf' : ''}`}
               style={{
                 '--op-color': col.color,
                 top: loadoutRowHeight,
               } as React.CSSProperties}
             >
-              {col.type === 'skill' ? (
+              {col.type === 'mini-timeline' && col.headerVariant === 'skill' ? (
                 <span className={`skill-badge skill-badge--vertical skill-badge--${col.channelId}`}>
-                  {SKILL_LABELS[col.channelId]}
+                  {col.label}
                 </span>
-              ) : col.type === 'status' ? (
+              ) : col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? (
                 <span
                   className="skill-badge skill-badge--vertical"
                   style={{ background: `${col.color}33`, color: col.color }}
                 >
                   {col.label}
                 </span>
-              ) : col.type === 'melting-flame' ? (
+              ) : col.type === 'mini-timeline' && col.headerVariant === 'mf' ? (
                 <span
                   className="skill-badge skill-badge--vertical skill-badge--mf"
                   style={{ '--op-color': col.color } as React.CSSProperties}
                 >
-                  MF
+                  {col.label}
                 </span>
               ) : null}
             </div>
@@ -966,76 +1187,38 @@ export default function TimelineGrid({
                 </div>
               );
             }
-            if (col.type === 'melting-flame') {
-              const mfEvents = events
-                .filter((ev) => ev.ownerId === col.ownerId && ev.channelId === 'melting-flame');
-              const heatColor = ELEMENT_COLORS[ElementType.HEAT];
-              return (
-                <div
-                  key={`col-${col.key}`}
-                  className="tl-sub-timeline tl-sub-timeline--mf"
-                  style={{ height: tlHeight }}
-                  onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
-                  onMouseDown={handleTimelineMouseDown}
-                >
-                  {ticks.filter((t) => t.major).map((tick) => (
-                    <div
-                      key={tick.frame}
-                      className="tl-gridline"
-                      style={{ top: frameToPx(tick.frame, zoom) }}
-                    />
-                  ))}
-                  {/* Micro-column dividers */}
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={`mf-div-${i}`}
-                      className="mf-micro-divider"
-                      style={{ left: `${(i / MF_MICRO_COLS) * 100}%` }}
-                    />
-                  ))}
-                  {/* Events placed into micro-columns sequentially */}
-                  {mfEvents.map((ev, i) => {
-                    const microIdx = Math.min(i, MF_MICRO_COLS - 1);
-                    const microW = 100 / MF_MICRO_COLS;
-                    return (
-                      <div
-                        key={ev.id}
-                        className={`mf-micro-slot${mfEvents.length >= MF_MICRO_COLS ? ' mf-micro-slot--empowered' : ''}`}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          bottom: 0,
-                          left: `${microIdx * microW}%`,
-                          width: `${microW}%`,
-                        }}
-                      >
-                        <EventBlock
-                          event={ev}
-                          color={heatColor}
-                          zoom={zoom}
-                          selected={selectedIds.has(ev.id)}
-                          hovered={hoveredId === ev.id}
-                          onDragStart={handleEventDragStart}
-                          onContextMenu={handleEventContextMenu}
-                          onDoubleClick={onEditEvent}
-                          onSelect={handleEventSelect}
-                          onHover={handleEventHover}
-                          onTouchStart={handleEventTouchStart}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+
+            // ── Unified mini-timeline rendering ──────────────────────
+            const hasMicro = !!col.microColumns;
+            const microCount = col.microColumns?.length ?? 0;
+
+            // Collect events belonging to this mini-timeline
+            // Events are already processed (refresh + consumption clamping)
+            // by the time they reach this component.
+            let colEvents: TimelineEvent[];
+            if (col.matchChannelIds) {
+              const matchSet = new Set(col.matchChannelIds);
+              colEvents = events.filter(
+                (ev) => ev.ownerId === col.ownerId && matchSet.has(ev.channelId),
+              );
+            } else if (hasMicro && col.microColumnAssignment === 'by-channel-id') {
+              const mcIds = new Set(col.microColumns!.map((mc) => mc.id));
+              colEvents = events.filter(
+                (ev) => ev.ownerId === col.ownerId && mcIds.has(ev.channelId),
+              );
+            } else {
+              colEvents = events.filter(
+                (ev) => ev.ownerId === col.ownerId && ev.channelId === col.channelId,
               );
             }
-            const channelId = col.type === 'skill' ? col.channelId : col.type === 'status' ? col.channelId : '';
-            const colEvents = events.filter(
-              (ev) => ev.ownerId === col.ownerId && ev.channelId === channelId,
-            );
+
+            const isMf = col.headerVariant === 'mf';
+            const empowered = isMf && col.maxEvents != null && colEvents.length >= col.maxEvents;
+
             return (
               <div
                 key={`col-${col.key}`}
-                className="tl-sub-timeline"
+                className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}`}
                 style={{ height: tlHeight }}
                 onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
                 onMouseDown={handleTimelineMouseDown}
@@ -1048,7 +1231,17 @@ export default function TimelineGrid({
                   />
                 ))}
 
-                {col.type === 'skill' && col.channelId === 'combo' && activationWindows?.get(col.ownerId)?.map((win, i) => (
+                {/* Micro-column dividers */}
+                {hasMicro && Array.from({ length: microCount - 1 }, (_, i) => (
+                  <div
+                    key={`mc-div-${i}`}
+                    className="mf-micro-divider"
+                    style={{ left: `${((i + 1) / microCount) * 100}%` }}
+                  />
+                ))}
+
+                {/* Activation windows (combo skills) */}
+                {col.channelId === 'combo' && activationWindows?.get(col.ownerId)?.map((win, i) => (
                   <div
                     key={`win-${i}`}
                     className="activation-window"
@@ -1060,22 +1253,73 @@ export default function TimelineGrid({
                   />
                 ))}
 
-                {colEvents.map((ev) => (
-                  <EventBlock
-                    key={ev.id}
-                    event={ev}
-                    color={col.color}
-                    zoom={zoom}
-                    selected={selectedIds.has(ev.id)}
-                    hovered={hoveredId === ev.id}
-                    onDragStart={handleEventDragStart}
-                    onContextMenu={handleEventContextMenu}
-                    onDoubleClick={onEditEvent}
-                    onSelect={handleEventSelect}
-                    onHover={handleEventHover}
-                    onTouchStart={handleEventTouchStart}
-                  />
-                ))}
+                {/* Events */}
+                {hasMicro ? (
+                  // Micro-column events
+                  colEvents.map((ev, i) => {
+                    let microIdx: number;
+                    let microColor: string;
+                    if (col.microColumnAssignment === 'by-order') {
+                      // Use greedy slot if available, else sequential
+                      microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
+                      // Color by channelId match if multi-channel, else by position
+                      const mcMatch = col.matchChannelIds
+                        ? col.microColumns!.find((mc) => mc.id === ev.channelId)
+                        : undefined;
+                      microColor = mcMatch?.color ?? col.microColumns![microIdx].color;
+                    } else {
+                      microIdx = col.microColumns!.findIndex((mc) => mc.id === ev.channelId);
+                      if (microIdx < 0) microIdx = 0;
+                      microColor = col.microColumns![microIdx].color;
+                    }
+                    const microW = 100 / microCount;
+                    return (
+                      <div
+                        key={ev.id}
+                        className={`mf-micro-slot${empowered ? ' mf-micro-slot--empowered' : ''}`}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          bottom: 0,
+                          left: `${microIdx * microW}%`,
+                          width: `${microW}%`,
+                        }}
+                      >
+                        <EventBlock
+                          event={ev}
+                          color={microColor}
+                          zoom={zoom}
+                          selected={selectedIds.has(ev.id)}
+                          hovered={hoveredId === ev.id}
+                          onDragStart={handleEventDragStart}
+                          onContextMenu={handleEventContextMenu}
+                          onDoubleClick={onEditEvent}
+                          onSelect={handleEventSelect}
+                          onHover={handleEventHover}
+                          onTouchStart={handleEventTouchStart}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  // Single-channel events
+                  colEvents.map((ev) => (
+                    <EventBlock
+                      key={ev.id}
+                      event={ev}
+                      color={col.color}
+                      zoom={zoom}
+                      selected={selectedIds.has(ev.id)}
+                      hovered={hoveredId === ev.id}
+                      onDragStart={handleEventDragStart}
+                      onContextMenu={handleEventContextMenu}
+                      onDoubleClick={onEditEvent}
+                      onSelect={handleEventSelect}
+                      onHover={handleEventHover}
+                      onTouchStart={handleEventTouchStart}
+                    />
+                  ))
+                )}
 
                 {colEvents.length === 0 && col === columns[0] && (
                   <div className="timeline-empty-state">

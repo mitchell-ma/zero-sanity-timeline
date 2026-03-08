@@ -63,7 +63,7 @@ import roadPlundererSprite from "../assets/enemies/road_plunderer_sprite.png";
 const DEFAULT_STATUSES = [
   { id: 'heatInfliction',     label: 'HEAT',     color: '#ff5522' },
   { id: 'natureInfliction',   label: 'NATURE',   color: '#33cc66' },
-  { id: 'electricInfliction', label: 'ELECTRIC', color: '#66bbff' },
+  { id: 'electricInfliction', label: 'ELECTRIC', color: '#e8c840' },
   { id: 'cryoInfliction',     label: 'CRYO',     color: '#88ddff' },
 ];
 

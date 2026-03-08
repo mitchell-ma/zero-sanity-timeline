@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useHistory } from './utils/useHistory';
 import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
@@ -19,8 +19,18 @@ import {
   importFromFile,
   SheetData,
 } from './utils/sheetStorage';
+import { processInflictionEvents } from './utils/processInflictions';
 import DevlogModal from './view/DevlogModal';
 import './App.css';
+
+/** Maps infliction channelId → arts reaction channelId. */
+const INFLICTION_TO_REACTION: Record<string, string> = {
+  heatInfliction:     'combustion',
+  cryoInfliction:     'solidification',
+  natureInfliction:   'corrosion',
+  electricInfliction: 'electrification',
+};
+const INFLICTION_CHANNEL_IDS = new Set(Object.keys(INFLICTION_TO_REACTION));
 
 const NUM_SLOTS = 4;
 const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
@@ -106,6 +116,12 @@ export default function App() {
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
+
+  // ─── Processed events (refresh + consumption clamping) ───────────────────
+  // Raw events are stored in `events` (via useHistory). Processed events apply
+  // same-element duration refresh and arts reaction consumption clamping. The
+  // view renders processedEvents; the edit panel uses raw events.
+  const processedEvents = useMemo(() => processInflictionEvents(events), [events]);
 
   // ─── Build current sheet data for saving ─────────────────────────────────
   const buildSheetData = useCallback((): SheetData => {
@@ -253,7 +269,44 @@ export default function App() {
       lingeringDuration: defaultSkill?.defaultLingeringDuration ?? 0,
       cooldownDuration:  defaultSkill?.defaultCooldownDuration  ?? 0,
     };
-    setEvents((prev) => [...prev, ev]);
+
+    // Arts infliction auto-consume: adding a different element creates an arts
+    // reaction event. The original inflictions are kept (their rendering is
+    // visually clamped to the consumption point in TimelineGrid).
+    if (ownerId === 'enemy' && INFLICTION_CHANNEL_IDS.has(channelId)) {
+      setEvents((prev) => {
+        const existingInflictions = prev.filter(
+          (e) => e.ownerId === 'enemy' && INFLICTION_CHANNEL_IDS.has(e.channelId),
+        );
+        // Check if there are existing inflictions of a DIFFERENT element
+        const differentElement = existingInflictions.length > 0 &&
+          existingInflictions.some((e) => e.channelId !== channelId);
+
+        if (differentElement) {
+          // Determine the reaction type from the existing inflictions' element
+          const existingChannelId = existingInflictions[0].channelId;
+          const reactionChannelId = INFLICTION_TO_REACTION[existingChannelId];
+          // Create arts reaction event at the consumption frame
+          const reactionEv: TimelineEvent = {
+            id:                genId(),
+            ownerId:           'enemy',
+            channelId:         reactionChannelId,
+            startFrame:        atFrame,
+            activeDuration:    defaultSkill?.defaultActiveDuration ?? 120,
+            lingeringDuration: 0,
+            cooldownDuration:  0,
+          };
+          // Keep all existing events, add the reaction (inflictions remain but
+          // will be visually clamped at the consumption frame)
+          return [...prev, reactionEv];
+        }
+
+        // Same element or no existing → just stack
+        return [...prev, ev];
+      });
+    } else {
+      setEvents((prev) => [...prev, ev]);
+    }
     setContextMenu(null);
   }, []);
 
@@ -382,7 +435,7 @@ export default function App() {
       <TimelineGrid
         slots={slots}
         enemy={enemy}
-        events={events}
+        events={processedEvents}
         visibleSkills={visibleSkills}
         loadouts={loadouts}
         zoom={zoom}

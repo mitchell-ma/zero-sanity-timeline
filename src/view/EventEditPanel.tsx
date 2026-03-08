@@ -54,12 +54,30 @@ export default function EventEditPanel({
   let triggerCondition: string | null = null;
   let channelLabel     = '';
 
+  const REACTION_LABELS: Record<string, { label: string; color: string }> = {
+    combustion:      { label: 'Combustion',      color: '#ff5522' },
+    solidification:  { label: 'Solidification',  color: '#88ddff' },
+    corrosion:       { label: 'Corrosion',        color: '#33cc66' },
+    electrification: { label: 'Electrification',  color: '#e8c840' },
+  };
+
   if (event.ownerId === 'enemy') {
-    ownerName  = 'Enemy';
+    ownerName  = enemy.name;
     const status = enemy.statuses.find((s) => s.id === event.channelId);
-    skillName    = status?.label ?? event.channelId;
-    ownerColor   = status?.color ?? '#cc3333';
-    channelLabel = 'STATUS';
+    const reaction = REACTION_LABELS[event.channelId];
+    if (status) {
+      skillName    = status.label;
+      ownerColor   = status.color;
+      channelLabel = 'INFLICTION';
+    } else if (reaction) {
+      skillName    = reaction.label;
+      ownerColor   = reaction.color;
+      channelLabel = 'ARTS REACTION';
+    } else {
+      skillName    = event.channelId;
+      ownerColor   = '#cc3333';
+      channelLabel = 'STATUS';
+    }
   } else {
     const op = operators.find((o) => o.id === event.ownerId);
     if (op) {

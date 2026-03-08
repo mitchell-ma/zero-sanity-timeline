@@ -31,7 +31,7 @@ export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.HEAT]:     '#f07030',
   [ElementType.CRYO]:     '#40c8f0',
   [ElementType.NATURE]:   '#50d050',
-  [ElementType.ELECTRIC]: '#d080ff',
+  [ElementType.ELECTRIC]: '#e8c840',
 };
 
 export enum StatusType {
@@ -148,6 +148,13 @@ export enum GearEffectType {
 export enum EventType {
   COMBAT_SKILL = "COMBAT_SKILL",
   STATUS = "STATUS",
+}
+
+export enum TimelineSourceType {
+  OPERATOR = "OPERATOR",
+  GEAR_EFFECT = "GEAR_EFFECT",
+  WEAPON = "WEAPON",
+  ENEMY = "ENEMY",
 }
 
 export enum TargetType {
