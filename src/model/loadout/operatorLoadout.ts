@@ -1,9 +1,9 @@
-import { GearType } from "../consts/enums";
-import { Consumable } from "../model/consumables/consumable";
-import { Tactical } from "../model/consumables/tactical";
-import { Gear } from "../model/gears/gear";
-import { Operator } from "../model/operators/operator";
-import { Weapon } from "../model/weapons/weapon";
+import { GearType } from "../../consts/enums";
+import { Consumable } from "../consumables/consumable";
+import { Tactical } from "../consumables/tactical";
+import { Gear } from "../gears/gear";
+import { Operator } from "../operators/operator";
+import { Weapon } from "../weapons/weapon";
 
 export class OperatorLoadout {
   operator: Operator | null;

@@ -199,7 +199,7 @@ function IconDropdown<T>({
 
   useEffect(() => {
     if (!open) return;
-    const handle = (e: MouseEvent) => {
+    const handle = (e: MouseEvent | TouchEvent) => {
       if (
         triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
         menuRef.current && !menuRef.current.contains(e.target as Node)
@@ -208,7 +208,11 @@ function IconDropdown<T>({
       }
     };
     document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
+    document.addEventListener('touchstart', handle);
+    return () => {
+      document.removeEventListener('mousedown', handle);
+      document.removeEventListener('touchstart', handle);
+    };
   }, [open]);
 
   const handleOpen = useCallback(() => {
@@ -332,7 +336,7 @@ export default function OperatorLoadoutHeader({
 
   useEffect(() => {
     if (!opMenuOpen) return;
-    const handle = (e: MouseEvent) => {
+    const handle = (e: MouseEvent | TouchEvent) => {
       if (
         splashRef.current && !splashRef.current.contains(e.target as Node) &&
         opMenuRef.current && !opMenuRef.current.contains(e.target as Node)
@@ -341,7 +345,11 @@ export default function OperatorLoadoutHeader({
       }
     };
     document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
+    document.addEventListener('touchstart', handle);
+    return () => {
+      document.removeEventListener('mousedown', handle);
+      document.removeEventListener('touchstart', handle);
+    };
   }, [opMenuOpen]);
 
   const handleSplashClick = useCallback(() => {

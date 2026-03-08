@@ -55,6 +55,7 @@ export interface ContextMenuItem {
   label?: string;
   action?: () => void;
   danger?: boolean;
+  disabled?: boolean;
   separator?: boolean;
 }
 
@@ -93,4 +94,12 @@ export type PlaceholderColumn = {
   color: string;
 };
 
-export type Column = SkillColumn | StatusColumn | PlaceholderColumn;
+export type MeltingFlameColumn = {
+  key: string;
+  type: "melting-flame";
+  ownerId: string;
+  channelId: "melting-flame";
+  color: string;
+};
+
+export type Column = SkillColumn | StatusColumn | PlaceholderColumn | MeltingFlameColumn;

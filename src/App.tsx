@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useHistory } from './utils/useHistory';
 import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
 import EventEditPanel from './view/EventEditPanel';
@@ -8,6 +9,7 @@ import { SAMPLE_OPERATORS } from './utils/operators';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
 import { WEAPONS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
+import { CombatLoadout, WindowsMap } from './controller/combat-loadout';
 import './App.css';
 
 const NUM_SLOTS = 4;
@@ -33,7 +35,7 @@ const genId = () => `ev-${_id++}`;
 export default function App() {
   const [operators,      setOperators]      = useState<(Operator | null)[]>(() => [...INITIAL_OPERATORS]);
   const [zoom,           setZoom]           = useState<number>(0.5);
-  const [events,         setEvents]         = useState<TimelineEvent[]>([]);
+  const { state: events, setState: setEvents, beginBatch, endBatch, undo, redo } = useHistory<TimelineEvent[]>([]);
   const [visibleSkills,  setVisibleSkills]  = useState<VisibleSkills>(INITIAL_VISIBLE);
   const [contextMenu,    setContextMenu]    = useState<ContextMenuState | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -45,6 +47,49 @@ export default function App() {
   );
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
   const [enemy,          setEnemy]          = useState(DEFAULT_ENEMY);
+
+  // ─── CombatLoadout controller ────────────────────────────────────────────
+  const combatLoadoutRef = useRef<CombatLoadout>(null!);
+  if (combatLoadoutRef.current === null) {
+    combatLoadoutRef.current = new CombatLoadout();
+    combatLoadoutRef.current.setSlotIds(SLOT_IDS);
+  }
+  const [activationWindows, setActivationWindows] = useState<WindowsMap>(new Map());
+
+  // Subscribe to window changes
+  useEffect(() => {
+    return combatLoadoutRef.current.subscribe(setActivationWindows);
+  }, []);
+
+  // Sync operators into loadout
+  useEffect(() => {
+    operators.forEach((op, i) => {
+      combatLoadoutRef.current.setOperator(i, op?.id ?? null);
+    });
+  }, [operators]);
+
+  // Recompute windows when events change
+  useEffect(() => {
+    combatLoadoutRef.current.recomputeWindows(events);
+  }, [events]);
+
+  // ─── Undo / Redo ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
 
   const handleSwapEnemy = useCallback((enemyId: string) => {
     const found = ALL_ENEMIES.find((e) => e.id === enemyId);
@@ -185,12 +230,24 @@ export default function App() {
         </div>
 
         <div className="app-bar-right">
+          <span className="wip-badge">WIP</span>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
             {events.length} event{events.length !== 1 ? 's' : ''}
           </span>
           <button className="btn-clear" onClick={() => setEvents([])}>
             CLEAR ALL
           </button>
+          <a
+            className="github-link"
+            href="https://github.com/mitchell-ma/zero-sanity-timeline"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View on GitHub"
+          >
+            <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+          </a>
         </div>
       </div>
 
@@ -215,6 +272,9 @@ export default function App() {
         onSwapOperator={handleSwapOperator}
         allEnemies={ALL_ENEMIES}
         onSwapEnemy={handleSwapEnemy}
+        activationWindows={activationWindows}
+        onBatchStart={beginBatch}
+        onBatchEnd={endBatch}
       />
 
       {/* Loadout edit panel (left side) */}

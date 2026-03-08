@@ -26,6 +26,14 @@ export enum ElementType {
   ELECTRIC = "ELECTRIC",
 }
 
+export const ELEMENT_COLORS: Record<ElementType, string> = {
+  [ElementType.PHYSICAL]: '#c0c8d0',
+  [ElementType.HEAT]:     '#f07030',
+  [ElementType.CRYO]:     '#40c8f0',
+  [ElementType.NATURE]:   '#50d050',
+  [ElementType.ELECTRIC]: '#d080ff',
+};
+
 export enum StatusType {
   // ── Arts reactions ──────────────────────────────────────────────────────────
   COMBUSTION = "COMBUSTION",

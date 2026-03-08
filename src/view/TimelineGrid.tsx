@@ -6,6 +6,7 @@ import { ENEMY_TIERS } from '../utils/enemies';
 import {
   pxPerFrame as getPxPerFrame,
   frameToPx,
+  durationToPx,
   pxToFrame,
   timelineHeight,
   getTickMarks,
@@ -25,6 +26,9 @@ import {
   ContextMenuState,
   Column,
 } from "../consts/viewTypes";
+import { WindowsMap } from '../controller/combat-loadout';
+import { ELEMENT_COLORS, ElementType } from '../consts/enums';
+import { useTouchHandlers } from '../utils/useTouchHandlers';
 
 const MIN_SLOT_COLS = 4;
 
@@ -34,9 +38,11 @@ const MIN_SLOT_COLS = 4;
 const LOADOUT_MIN_WIDTH = 164;
 
 interface DragState {
-  eventId: string;
+  primaryId: string; // the event the user grabbed
+  eventIds: string[];
   startMouseY: number;
-  startFrame: number;
+  startFrames: Map<string, number>; // original startFrame per event
+  mfBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
 }
 
 interface MarqueeState {
@@ -69,7 +75,7 @@ interface TimelineGridProps {
   onAddEvent: (ownerId: string, channelId: string, atFrame: number, defaultSkill: object | null) => void;
   onMoveEvent: (id: string, newStartFrame: number) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
-  onEditEvent: (id: string) => void;
+  onEditEvent: (id: string | null) => void;
   onRemoveEvent: (id: string) => void;
   onLoadoutChange: (slotId: string, state: OperatorLoadoutState) => void;
   onEditLoadout: (slotId: string) => void;
@@ -77,7 +83,12 @@ interface TimelineGridProps {
   onSwapOperator?: (slotId: string, newOperatorId: string | null) => void;
   allEnemies?: Enemy[];
   onSwapEnemy?: (enemyId: string) => void;
+  activationWindows?: WindowsMap;
+  onBatchStart?: () => void;
+  onBatchEnd?: () => void;
 }
+
+const MF_MICRO_COLS = 4;
 
 export default function TimelineGrid({
   slots,
@@ -99,6 +110,9 @@ export default function TimelineGrid({
   onSwapOperator,
   allEnemies,
   onSwapEnemy,
+  activationWindows,
+  onBatchStart,
+  onBatchEnd,
 }: TimelineGridProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
@@ -149,7 +163,7 @@ export default function TimelineGrid({
   // ─── Enemy selector ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!enemyMenuOpen) return;
-    const handle = (e: MouseEvent) => {
+    const handle = (e: MouseEvent | TouchEvent) => {
       if (
         enemyNameRef.current && !enemyNameRef.current.contains(e.target as Node) &&
         enemyMenuRef.current && !enemyMenuRef.current.contains(e.target as Node)
@@ -158,7 +172,11 @@ export default function TimelineGrid({
       }
     };
     document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
+    document.addEventListener('touchstart', handle);
+    return () => {
+      document.removeEventListener('mousedown', handle);
+      document.removeEventListener('touchstart', handle);
+    };
   }, [enemyMenuOpen]);
 
   const handleEnemyClick = useCallback(() => {
@@ -182,6 +200,7 @@ export default function TimelineGrid({
   const columns: Column[] = [];
   for (const slot of slots) {
     const op = slot.operator;
+    const isLaevatain = op?.id === 'laevatain';
     let slotHasCols = false;
     if (op) {
       for (const skillType of SKILL_ORDER) {
@@ -199,11 +218,23 @@ export default function TimelineGrid({
         }
       }
     }
+    // Add single MeltingFlame subtimeline column for Laevatain
+    if (isLaevatain) {
+      columns.push({
+        key: `${slot.slotId}-melting-flame`,
+        type: 'melting-flame',
+        ownerId: slot.slotId,
+        channelId: 'melting-flame',
+        color: op!.color,
+      });
+    }
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
-    const needed = MIN_SLOT_COLS - (slotHasCols
+    const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
-      : 0);
-    for (let p = 0; p < needed; p++) {
+      : 0;
+    const mfColCount = isLaevatain ? 1 : 0;
+    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount);
+    for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
         type: 'placeholder',
@@ -229,10 +260,12 @@ export default function TimelineGrid({
   let colIdx = 2; // 1-indexed grid column (col 1 = time axis)
   for (const slot of slots) {
     const op = slot.operator;
+    const isLaevatain = op?.id === 'laevatain';
     const skillCount = op
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const count = Math.max(MIN_SLOT_COLS, skillCount);
+    const mfCount = isLaevatain ? 1 : 0;
+    const count = Math.max(MIN_SLOT_COLS, skillCount + mfCount);
     slotGroups.push({ slot, columnCount: count, startCol: colIdx });
     colIdx += count;
   }
@@ -279,6 +312,20 @@ export default function TimelineGrid({
   const ticks    = getTickMarks(zoom);
   const combinedHeaderHeight = loadoutRowHeight + HEADER_HEIGHT;
 
+  // ─── Touch handlers ───────────────────────────────────────────────────────
+  const { handleEventTouchStart } = useTouchHandlers({
+    scrollRef,
+    bodyTopRef,
+    zoomRef,
+    onMoveEvent,
+    onZoom,
+    onContextMenu,
+    setHoverFrame,
+    setHoverClientY,
+    outerRect,
+    combinedHeaderHeight,
+  });
+
   // ─── Outer rect ────────────────────────────────────────────────────────────
   useEffect(() => {
     const update = () => {
@@ -317,9 +364,9 @@ export default function TimelineGrid({
     return () => ro.disconnect();
   }, []);
 
-  // ─── Wheel: alt = zoom, else native ────────────────────────────────────────
+  // ─── Wheel: shift = zoom, else native ────────────────────────────────────────
   const handleWheel = useCallback((e: WheelEvent) => {
-    if (e.altKey) {
+    if (e.shiftKey) {
       e.preventDefault();
       onZoom(e.deltaY);
     }
@@ -332,13 +379,46 @@ export default function TimelineGrid({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
+  // ─── Precompute MF micro-column positions per event ─────────────────────────
+  const mfEventPositions = useMemo(() => {
+    const positions = new Map<string, { left: number; right: number }>();
+    // Group MF events by owner
+    const byOwner = new Map<string, typeof events>();
+    for (const ev of events) {
+      if (ev.channelId !== 'melting-flame') continue;
+      const list = byOwner.get(ev.ownerId) ?? [];
+      list.push(ev);
+      byOwner.set(ev.ownerId, list);
+    }
+    byOwner.forEach((mfEvts, ownerId) => {
+      const colKey = `${ownerId}-melting-flame`;
+      const colPos = columnPositions.get(colKey);
+      if (!colPos) return;
+      const sorted = mfEvts; // use insertion order for stable micro-column assignment
+      const colWidth = colPos.right - colPos.left;
+      sorted.forEach((ev, i) => {
+        const microIdx = Math.min(i, MF_MICRO_COLS - 1);
+        const microW = colWidth / MF_MICRO_COLS;
+        positions.set(ev.id, {
+          left: colPos.left + microIdx * microW,
+          right: colPos.left + (microIdx + 1) * microW,
+        });
+      });
+    });
+    return positions;
+  }, [events, columnPositions]);
+
   // ─── Marquee intersection helper ────────────────────────────────────────────
   const getEventsInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }) => {
     const bodyTop = bodyTopRef.current ?? 0;
     const ids = new Set<string>();
     for (const ev of events) {
-      const colKey = `${ev.ownerId}-${ev.channelId}`;
-      const colPos = columnPositions.get(colKey);
+      let colPos: { left: number; right: number } | undefined;
+      if (ev.channelId === 'melting-flame') {
+        colPos = mfEventPositions.get(ev.id);
+      } else {
+        colPos = columnPositions.get(`${ev.ownerId}-${ev.channelId}`);
+      }
       if (!colPos) continue;
       const totalDur = ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
       const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
@@ -350,7 +430,7 @@ export default function TimelineGrid({
       }
     }
     return ids;
-  }, [events, columnPositions]);
+  }, [events, columnPositions, mfEventPositions]);
 
   // ─── Event hover ──────────────────────────────────────────────────────────────
   const handleEventHover = useCallback((id: string | null) => {
@@ -360,17 +440,32 @@ export default function TimelineGrid({
   // ─── Event select (click) ─────────────────────────────────────────────────────
   const handleEventSelect = useCallback((e: React.MouseEvent, eventId: string) => {
     if (dragMovedRef.current) return;
+    onContextMenu(null); // dismiss any open context menu
     if (e.ctrlKey || e.metaKey) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
         if (next.has(eventId)) next.delete(eventId);
         else next.add(eventId);
+        if (next.size === 1) {
+          let singleId = '';
+          next.forEach((id) => { singleId = id; });
+          onEditEvent(singleId);
+        } else {
+          onEditEvent(null);
+        }
         return next;
       });
     } else {
-      setSelectedIds(new Set([eventId]));
+      setSelectedIds((prev) => {
+        if (prev.has(eventId) && prev.size === 1) {
+          onEditEvent(null);
+          return new Set();
+        }
+        onEditEvent(eventId);
+        return new Set([eventId]);
+      });
     }
-  }, []);
+  }, [onContextMenu, onEditEvent]);
 
   // ─── Mouse move ─────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -390,21 +485,40 @@ export default function TimelineGrid({
       }
     }
 
-    // Event drag
+    // Event drag (single or batch)
     if (dragRef.current) {
       dragMovedRef.current = true;
-      const { eventId, startMouseY, startFrame } = dragRef.current;
+      const { primaryId, eventIds, startMouseY, startFrames } = dragRef.current;
       const deltaFrames = Math.round(
         (e.clientY - startMouseY) / getPxPerFrame(zoomRef.current)
       );
-      const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, startFrame + deltaFrames));
-      onMoveEvent(eventId, newFrame);
+      let primaryNewFrame = 0;
+      const { mfBounds } = dragRef.current;
+
+      // Compute the most restrictive delta across all MF-constrained events
+      let clampedDelta = deltaFrames;
+      for (const eid of eventIds) {
+        const bounds = mfBounds.get(eid);
+        if (!bounds) continue;
+        const orig = startFrames.get(eid) ?? 0;
+        const minDelta = bounds.min - orig;
+        const maxDelta = bounds.max - orig;
+        clampedDelta = Math.max(minDelta, Math.min(maxDelta, clampedDelta));
+      }
+
+      for (const eid of eventIds) {
+        const orig = startFrames.get(eid) ?? 0;
+        const delta = mfBounds.has(eid) ? clampedDelta : deltaFrames;
+        const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, orig + delta));
+        onMoveEvent(eid, newFrame);
+        if (eid === primaryId) primaryNewFrame = newFrame;
+      }
 
       if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
         const scrollTop = scrollRef.current.scrollTop;
         const bodyTop = bodyTopRef.current;
-        const snappedRelY = frameToPx(newFrame, zoomRef.current);
-        setHoverFrame(newFrame);
+        const snappedRelY = frameToPx(primaryNewFrame, zoomRef.current);
+        setHoverFrame(primaryNewFrame);
         setHoverClientY(snappedRelY - scrollTop + outerRect.top + bodyTop);
       }
       return;
@@ -427,12 +541,20 @@ export default function TimelineGrid({
       const marqueeIds = getEventsInRect({
         left, top, right: left + width, bottom: top + height,
       });
+      let finalIds: Set<string>;
       if (marqueeRef.current.ctrlKey) {
-        const combined = new Set(marqueeRef.current.priorSelection);
-        marqueeIds.forEach((id) => combined.add(id));
-        setSelectedIds(combined);
+        finalIds = new Set(marqueeRef.current.priorSelection);
+        marqueeIds.forEach((id) => finalIds.add(id));
       } else {
-        setSelectedIds(marqueeIds);
+        finalIds = marqueeIds;
+      }
+      setSelectedIds(finalIds);
+      if (finalIds.size === 1) {
+        let singleId = '';
+        finalIds.forEach((id) => { singleId = id; });
+        onEditEvent(singleId);
+      } else {
+        onEditEvent(null);
       }
     }
   }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect]);
@@ -445,25 +567,75 @@ export default function TimelineGrid({
   const handleMouseUp = useCallback(() => {
     if (dragRef.current) {
       dragRef.current = null;
+      onBatchEnd?.();
       requestAnimationFrame(() => { dragMovedRef.current = false; });
     }
     if (marqueeRef.current) {
       marqueeRef.current = null;
       setMarqueeRect(null);
     }
-  }, []);
+  }, [onBatchEnd]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
+  const computeMfBounds = useCallback((draggedIds: string[]): Map<string, { min: number; max: number }> => {
+    const bounds = new Map<string, { min: number; max: number }>();
+    const draggedSet = new Set(draggedIds);
+    for (const eid of draggedIds) {
+      const ev = events.find((e) => e.id === eid);
+      if (!ev || ev.channelId !== 'melting-flame') continue;
+      // Use insertion order (array order) for column assignment
+      const allMf = events
+        .filter((e) => e.ownerId === ev.ownerId && e.channelId === 'melting-flame');
+      const idx = allMf.findIndex((e) => e.id === eid);
+      if (idx < 0) continue;
+      // Bounds come from immediate non-dragged neighbors in stable order
+      let min = 0;
+      let max = TOTAL_FRAMES - 1;
+      // Search left for nearest non-dragged sibling
+      for (let i = idx - 1; i >= 0; i--) {
+        if (!draggedSet.has(allMf[i].id)) { min = allMf[i].startFrame; break; }
+      }
+      // Search right for nearest non-dragged sibling
+      for (let i = idx + 1; i < allMf.length; i++) {
+        if (!draggedSet.has(allMf[i].id)) { max = allMf[i].startFrame; break; }
+      }
+      bounds.set(eid, { min, max });
+    }
+    return bounds;
+  }, [events]);
+
   const handleEventDragStart = useCallback((
     e: React.MouseEvent,
     eventId: string,
     startFrame: number,
   ) => {
+    if (e.button !== 0) return; // only left-click drag
     e.preventDefault();
     e.stopPropagation();
     dragMovedRef.current = false;
-    dragRef.current = { eventId, startMouseY: e.clientY, startFrame };
-  }, []);
+    onBatchStart?.();
+
+    // If dragging a selected event, drag all selected events together
+    if (selectedIds.has(eventId) && selectedIds.size > 1) {
+      const startFrames = new Map<string, number>();
+      const draggedIds: string[] = [];
+      for (const ev of events) {
+        if (selectedIds.has(ev.id)) {
+          draggedIds.push(ev.id);
+          startFrames.set(ev.id, ev.startFrame);
+        }
+      }
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, mfBounds: computeMfBounds(draggedIds) };
+    } else {
+      if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
+        setSelectedIds(new Set());
+        onEditEvent(null);
+      }
+      const startFrames = new Map<string, number>();
+      startFrames.set(eventId, startFrame);
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, mfBounds: computeMfBounds([eventId]) };
+    }
+  }, [selectedIds, events, computeMfBounds, onEditEvent, onBatchStart]);
 
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
@@ -507,13 +679,29 @@ export default function TimelineGrid({
     const label   = frameToDetailLabel(atFrame);
 
     if (col.type === 'skill') {
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [{
-          label: `Add ${col.skill.name} at ${label}`,
-          action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
-        }],
-      });
+      // Gate combo skill additions behind activation windows
+      if (col.channelId === 'combo' && activationWindows) {
+        const windows = activationWindows.get(col.ownerId) ?? [];
+        const inWindow = windows.some((w) => atFrame >= w.startFrame && atFrame < w.endFrame);
+        onContextMenu({
+          x: e.clientX, y: e.clientY,
+          items: [{
+            label: inWindow
+              ? `Add ${col.skill.name} at ${label}`
+              : `${col.skill.name} (no trigger active)`,
+            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
+            disabled: !inWindow,
+          }],
+        });
+      } else {
+        onContextMenu({
+          x: e.clientX, y: e.clientY,
+          items: [{
+            label: `Add ${col.skill.name} at ${label}`,
+            action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
+          }],
+        });
+      }
     } else if (col.type === 'status') {
       onContextMenu({
         x: e.clientX, y: e.clientY,
@@ -522,8 +710,37 @@ export default function TimelineGrid({
           action: () => onAddEvent(col.ownerId, col.channelId, atFrame, null),
         }],
       });
+    } else if (col.type === 'melting-flame') {
+      const mfExisting = events.filter(
+        (ev) => ev.ownerId === col.ownerId && ev.channelId === 'melting-flame',
+      );
+      const full = mfExisting.length >= MF_MICRO_COLS;
+      const lastFrame = mfExisting.length > 0
+        ? mfExisting[mfExisting.length - 1].startFrame
+        : -1;
+      const beforePrev = atFrame < lastFrame;
+      const disabled = full || beforePrev;
+      const disabledLabel = full
+        ? `Melting Flame (${MF_MICRO_COLS}/${MF_MICRO_COLS} stacks)`
+        : beforePrev
+          ? `Melting Flame (must be after stack ${mfExisting.length})`
+          : '';
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [{
+          label: disabled
+            ? disabledLabel
+            : `Add Melting Flame at ${label}`,
+          action: () => onAddEvent(col.ownerId, 'melting-flame', atFrame, {
+            defaultActiveDuration: TOTAL_FRAMES * 10,
+            defaultLingeringDuration: 0,
+            defaultCooldownDuration: 0,
+          }),
+          disabled,
+        }],
+      });
     }
-  }, [onAddEvent, onContextMenu]);
+  }, [onAddEvent, onContextMenu, events]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -532,15 +749,32 @@ export default function TimelineGrid({
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    onContextMenu({
-      x: e.clientX, y: e.clientY,
-      items: [
-        { label: 'Edit Event',   action: () => { onEditEvent(eventId); onContextMenu(null); } },
-        { separator: true },
-        { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
-      ],
-    });
-  }, [onEditEvent, onRemoveEvent, onContextMenu]);
+
+    // Batch context menu when right-clicking a selected event in a multi-selection
+    if (selectedIds.has(eventId) && selectedIds.size > 1) {
+      const count = selectedIds.size;
+      const ids = Array.from(selectedIds);
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [
+          {
+            label: `Remove ${count} Events`,
+            action: () => { onBatchStart?.(); ids.forEach((id) => onRemoveEvent(id)); onBatchEnd?.(); setSelectedIds(new Set()); onContextMenu(null); },
+            danger: true,
+          },
+        ],
+      });
+    } else {
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [
+          { label: 'Edit Event',   action: () => { onEditEvent(eventId); onContextMenu(null); } },
+          { separator: true },
+          { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
+        ],
+      });
+    }
+  }, [onEditEvent, onRemoveEvent, onContextMenu, selectedIds, onBatchStart, onBatchEnd]);
 
   const showHoverLine = hoverClientY !== null && outerRect
     && hoverClientY > outerRect.top + combinedHeaderHeight
@@ -668,7 +902,7 @@ export default function TimelineGrid({
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
-              className={`tl-header-cell${col.type === 'status' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}`}
+              className={`tl-header-cell${col.type === 'status' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'melting-flame' ? ' tl-header-cell--mf' : ''}`}
               style={{
                 '--op-color': col.color,
                 top: loadoutRowHeight,
@@ -684,6 +918,13 @@ export default function TimelineGrid({
                   style={{ background: `${col.color}33`, color: col.color }}
                 >
                   {col.label}
+                </span>
+              ) : col.type === 'melting-flame' ? (
+                <span
+                  className="skill-badge skill-badge--vertical skill-badge--mf"
+                  style={{ '--op-color': col.color } as React.CSSProperties}
+                >
+                  MF
                 </span>
               ) : null}
             </div>
@@ -726,8 +967,71 @@ export default function TimelineGrid({
                 </div>
               );
             }
+            if (col.type === 'melting-flame') {
+              const mfEvents = events
+                .filter((ev) => ev.ownerId === col.ownerId && ev.channelId === 'melting-flame');
+              const heatColor = ELEMENT_COLORS[ElementType.HEAT];
+              return (
+                <div
+                  key={`col-${col.key}`}
+                  className="tl-sub-timeline tl-sub-timeline--mf"
+                  style={{ height: tlHeight }}
+                  onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
+                  onMouseDown={handleTimelineMouseDown}
+                >
+                  {ticks.filter((t) => t.major).map((tick) => (
+                    <div
+                      key={tick.frame}
+                      className="tl-gridline"
+                      style={{ top: frameToPx(tick.frame, zoom) }}
+                    />
+                  ))}
+                  {/* Micro-column dividers */}
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={`mf-div-${i}`}
+                      className="mf-micro-divider"
+                      style={{ left: `${(i / MF_MICRO_COLS) * 100}%` }}
+                    />
+                  ))}
+                  {/* Events placed into micro-columns sequentially */}
+                  {mfEvents.map((ev, i) => {
+                    const microIdx = Math.min(i, MF_MICRO_COLS - 1);
+                    const microW = 100 / MF_MICRO_COLS;
+                    return (
+                      <div
+                        key={ev.id}
+                        className={`mf-micro-slot${mfEvents.length >= MF_MICRO_COLS ? ' mf-micro-slot--empowered' : ''}`}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          bottom: 0,
+                          left: `${microIdx * microW}%`,
+                          width: `${microW}%`,
+                        }}
+                      >
+                        <EventBlock
+                          event={ev}
+                          color={heatColor}
+                          zoom={zoom}
+                          selected={selectedIds.has(ev.id)}
+                          hovered={hoveredId === ev.id}
+                          onDragStart={handleEventDragStart}
+                          onContextMenu={handleEventContextMenu}
+                          onDoubleClick={onEditEvent}
+                          onSelect={handleEventSelect}
+                          onHover={handleEventHover}
+                          onTouchStart={handleEventTouchStart}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+            const channelId = col.type === 'skill' ? col.channelId : col.type === 'status' ? col.channelId : '';
             const colEvents = events.filter(
-              (ev) => ev.ownerId === col.ownerId && ev.channelId === col.channelId,
+              (ev) => ev.ownerId === col.ownerId && ev.channelId === channelId,
             );
             return (
               <div
@@ -745,6 +1049,18 @@ export default function TimelineGrid({
                   />
                 ))}
 
+                {col.type === 'skill' && col.channelId === 'combo' && activationWindows?.get(col.ownerId)?.map((win, i) => (
+                  <div
+                    key={`win-${i}`}
+                    className="activation-window"
+                    style={{
+                      top: frameToPx(win.startFrame, zoom),
+                      height: durationToPx(win.endFrame - win.startFrame, zoom),
+                      '--op-color': col.color,
+                    } as React.CSSProperties}
+                  />
+                ))}
+
                 {colEvents.map((ev) => (
                   <EventBlock
                     key={ev.id}
@@ -758,6 +1074,7 @@ export default function TimelineGrid({
                     onDoubleClick={onEditEvent}
                     onSelect={handleEventSelect}
                     onHover={handleEventHover}
+                    onTouchStart={handleEventTouchStart}
                   />
                 ))}
 

@@ -1,3 +1,11 @@
+# Zero Sanity Timeline
+
+Arknights: Endfield rotation planner and timeline calculator.
+
+**Live:** [https://mitchell-ma.github.io/zero-sanity-timeline/](https://mitchell-ma.github.io/zero-sanity-timeline/)
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

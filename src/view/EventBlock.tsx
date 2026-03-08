@@ -13,6 +13,7 @@ interface EventBlockProps {
   onDoubleClick: (eventId: string) => void;
   onSelect?: (e: React.MouseEvent, eventId: string) => void;
   onHover?: (eventId: string | null) => void;
+  onTouchStart?: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -43,6 +44,7 @@ export default function EventBlock({
   onDoubleClick,
   onSelect,
   onHover,
+  onTouchStart,
 }: EventBlockProps) {
   const { id, startFrame, activeDuration, lingeringDuration, cooldownDuration } = event;
 
@@ -74,6 +76,7 @@ export default function EventBlock({
   return (
     <div
       className={wrapClass}
+      data-event-id={id}
       style={{ top: topPx, height: totalHeight }}
       onContextMenu={(e) => onContextMenu(e, id)}
       onDoubleClick={() => onDoubleClick(id)}
@@ -81,6 +84,7 @@ export default function EventBlock({
       onClick={(e) => onSelect?.(e, id)}
       onMouseEnter={() => onHover?.(id)}
       onMouseLeave={() => onHover?.(null)}
+      onTouchStart={(e) => onTouchStart?.(e, id, startFrame)}
     >
       {/* Active segment */}
       {activeH > 0 && (

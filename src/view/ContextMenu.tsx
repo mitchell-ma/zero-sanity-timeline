@@ -17,7 +17,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
   const clampedY = Math.min(y, window.innerHeight - menuH - 8);
 
   useEffect(() => {
-    const handleDown = (e: MouseEvent) => {
+    const handleDown = (e: MouseEvent | TouchEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -26,9 +26,11 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
     document.addEventListener('keydown', handleKey);
     return () => {
       document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
       document.removeEventListener('keydown', handleKey);
     };
   }, [onClose]);
@@ -46,8 +48,10 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
         return (
           <button
             key={i}
-            className={`context-menu-item${item.danger ? ' danger' : ''}`}
+            className={`context-menu-item${item.danger ? ' danger' : ''}${item.disabled ? ' disabled' : ''}`}
+            disabled={item.disabled}
             onClick={() => {
+              if (item.disabled) return;
               item.action?.();
               onClose();
             }}

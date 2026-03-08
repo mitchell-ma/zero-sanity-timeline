@@ -60,7 +60,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
         defaultActiveDuration: 840,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
-        triggerCondition: 'Enemy DEF below 50%',
+        triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
         name: 'Twilight',
@@ -106,7 +106,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
         defaultActiveDuration: 360,
         defaultLingeringDuration: 480,
         defaultCooldownDuration: 0,
-        triggerCondition: 'Enemy has ElectricInfliction',
+        triggerCondition: 'Enemy has Electrification',
       },
       ultimate: {
         name: 'Overclocked Moment',
@@ -152,7 +152,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
         defaultActiveDuration: 480,
         defaultLingeringDuration: 960,
         defaultCooldownDuration: 0,
-        triggerCondition: 'Enemy has HeatInfliction',
+        triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
         name: 'Squad on Me',
@@ -198,7 +198,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
         defaultActiveDuration: 360,
         defaultLingeringDuration: 1200,
         defaultCooldownDuration: 0,
-        triggerCondition: 'Enemy has HeatInfliction',
+        triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
         name: 'Wolven Fury',
@@ -244,7 +244,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
         defaultActiveDuration: 480,
         defaultLingeringDuration: 600,
         defaultCooldownDuration: 0,
-        triggerCondition: 'Enemy has NatureInfliction',
+        triggerCondition: 'Enemy has Corrosion',
       },
       ultimate: {
         name: 'Wooly Party',

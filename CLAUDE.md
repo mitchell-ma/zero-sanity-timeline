@@ -15,3 +15,7 @@ Naming convention:
 - file: camelCase
 - component: PascalCase
 - asset: snake_case
+
+Commands:
+- `npm start` — start localhost dev server
+- `npm run deploy` — build and deploy to GitHub Pages

@@ -1,7 +1,8 @@
-import { BasicAttackType } from "../../consts/enums";
+import { BasicAttackType, ElementType } from "../../consts/enums";
 import { BasicAttackEventFrame } from "./basicAttackEventFrame";
 import { BasicSkillEventFrame } from "./basicSkillEventFrame";
 import { ComboSkillEventFrame } from "./comboSkillEventFrame";
+import { CombatSkillEventFrame } from "./combatSkillEventFrame";
 
 // ── Flaming Cinders ───────────────────────────────────────────────────────────
 
@@ -23,6 +24,35 @@ export class TwilightEnhancedFlamingCindersFrame extends BasicAttackEventFrame {
     offsetFrame?: number;
   }) {
     super(params);
+  }
+}
+
+// ── Finisher Attack ──────────────────────────────────────────────────────────
+
+/**
+ * Finisher attack frame for Laevatain's basic attack chain.
+ * Consumes all heat infliction stacks from the enemy target and grants
+ * MeltingFlameStatus at a 1:1 exchange ratio (max 4 stacks).
+ */
+export class FinisherAttackEventFrame extends CombatSkillEventFrame {
+  /** Number of heat infliction stacks consumed from the enemy. */
+  consumedStacks: number;
+
+  /** Number of MeltingFlame stacks granted (= consumedStacks, capped at 4). */
+  grantedMeltingFlameStacks: number;
+
+  constructor(params: {
+    offsetFrame?: number;
+    hitDelayFrames?: number;
+    consumedStacks?: number;
+  }) {
+    super({
+      offsetFrame: params.offsetFrame,
+      hitDelayFrames: params.hitDelayFrames,
+      element: ElementType.HEAT,
+    });
+    this.consumedStacks = params.consumedStacks ?? 0;
+    this.grantedMeltingFlameStacks = Math.min(this.consumedStacks, 4);
   }
 }
 
