@@ -8,3 +8,9 @@ Project structure:
 - Pages: src/app
 - Data models: src/model
 - Utility: src/utils
+
+Naming convention:
+- directory: kebab-case
+- file: camelCase
+- component: PascalCase
+- asset: snake_case
