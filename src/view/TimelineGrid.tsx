@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
 import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
@@ -337,13 +337,12 @@ export default function TimelineGrid({
   }, []);
 
   // ─── Measure loadout row height dynamically ──────────────────────────────
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = loadoutRef.current;
     if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setLoadoutRowHeight(entry.contentRect.height);
-      }
+    setLoadoutRowHeight(el.offsetHeight);
+    const ro = new ResizeObserver(() => {
+      setLoadoutRowHeight(el.offsetHeight);
     });
     ro.observe(el);
     return () => ro.disconnect();

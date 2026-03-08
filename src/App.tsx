@@ -10,6 +10,7 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
 import { WEAPONS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import { CombatLoadout, WindowsMap } from './controller/combat-loadout';
+import DevlogModal from './view/DevlogModal';
 import './App.css';
 
 const NUM_SLOTS = 4;
@@ -47,6 +48,8 @@ export default function App() {
   );
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
   const [enemy,          setEnemy]          = useState(DEFAULT_ENEMY);
+  const [devlogOpen,     setDevlogOpen]     = useState(false);
+  const [keysOpen,       setKeysOpen]       = useState(false);
 
   // ─── CombatLoadout controller ────────────────────────────────────────────
   const combatLoadoutRef = useRef<CombatLoadout>(null!);
@@ -217,25 +220,20 @@ export default function App() {
           <span className="brand-hex">⬡</span>
           <div className="brand-text">
             <span className="brand-title">ENDFIELD</span>
-            <span className="brand-sub">ROTATION PLANNER</span>
+            <span className="brand-sub">ZERO SANITY TIMELINE</span>
           </div>
         </div>
 
         <div className="app-bar-divider" />
 
-        <div className="zoom-display">
-          <span className="zoom-label">ZOOM</span>
-          <span className="zoom-value">{zoom.toFixed(2)}x</span>
-          <span className="zoom-hint">alt+scroll</span>
-        </div>
-
         <div className="app-bar-right">
           <span className="wip-badge">WIP</span>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            {events.length} event{events.length !== 1 ? 's' : ''}
-          </span>
-          <button className="btn-clear" onClick={() => setEvents([])}>
-            CLEAR ALL
+          <button className="btn-devlog" onClick={() => setDevlogOpen(true)}>
+            DEVLOG
+          </button>
+
+          <button className="btn-keys" onClick={() => setKeysOpen((p) => !p)}>
+            ?
           </button>
           <a
             className="github-link"
@@ -306,6 +304,29 @@ export default function App() {
           onRemove={handleRemoveEvent}
           onClose={() => setEditingEventId(null)}
         />
+      )}
+
+      <DevlogModal open={devlogOpen} onClose={() => setDevlogOpen(false)} />
+
+      {keysOpen && (
+        <div className="devlog-overlay" onClick={() => setKeysOpen(false)}>
+          <div className="keys-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="devlog-header">
+              <span className="devlog-title">KEYBOARD CONTROLS</span>
+              <button className="devlog-close" onClick={() => setKeysOpen(false)}>&times;</button>
+            </div>
+            <div className="keys-body">
+              <div className="keys-row"><kbd>Shift</kbd> + <kbd>Scroll</kbd><span>Zoom in/out</span></div>
+              <div className="keys-row"><kbd>Scroll</kbd><span>Pan timeline</span></div>
+              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Z</kbd><span>Undo</span></div>
+              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd><span>Redo</span></div>
+              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Click</kbd><span>Multi-select</span></div>
+              <div className="keys-row"><kbd>Right-click</kbd><span>Context menu</span></div>
+              <div className="keys-row"><kbd>Double-click</kbd><span>Edit event</span></div>
+              <div className="keys-row"><kbd>Drag</kbd><span>Move event / Marquee select</span></div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
