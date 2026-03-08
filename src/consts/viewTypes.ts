@@ -14,6 +14,7 @@ export interface Operator {
   name: string;
   color: string;
   role: string;
+  rarity: number;
   splash?: string;
   weaponTypes: string[];
   weapon: string;
@@ -35,6 +36,8 @@ export interface EnemyStatus {
 export interface Enemy {
   id: string;
   name: string;
+  tier: string;
+  sprite?: string;
   statuses: EnemyStatus[];
 }
 

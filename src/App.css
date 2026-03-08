@@ -176,10 +176,17 @@
   border-right: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-dim);
   padding: 0;
+  overflow: hidden;
 }
 
 .tl-loadout-cell--enemy {
   background: color-mix(in srgb, #cc3333 5%, var(--bg-panel));
+  position: relative;
+}
+
+.tl-loadout-cell--enemy > .lo-cell {
+  position: absolute;
+  inset: 0;
 }
 
 /* ─── Loadout cell layout ─────────────────────────────── */
@@ -346,12 +353,80 @@
   position: fixed;
   z-index: 600;
   min-width: 200px;
-  max-height: 280px;
-  overflow-y: auto;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-panel);
   border: 1px solid #555;
   box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  padding: 0;
+}
+
+.lo-dropdown-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
   padding: 2px 0;
+}
+
+/* ─── Filter bar ─────────────────────────────────────── */
+.lo-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 4px;
+  border-bottom: 1px solid #444;
+  flex-shrink: 0;
+}
+
+.lo-filter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  background: #333;
+  border: 1px solid #555;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 12px;
+  outline: none;
+}
+
+.lo-filter-input:focus {
+  border-color: var(--blue);
+}
+
+.lo-filter-rarities {
+  display: flex;
+  gap: 3px;
+}
+
+.lo-filter-rarity {
+  flex: 1;
+  padding: 2px 0;
+  background: #333;
+  border: 1px solid #555;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.08s, color 0.08s, border-color 0.08s;
+}
+
+.lo-filter-rarity.active {
+  background: color-mix(in srgb, var(--blue) 25%, #333);
+  border-color: var(--blue);
+  color: var(--text-primary);
+}
+
+.lo-filter-rarity:hover {
+  background: #444;
+}
+
+.lo-filter-tier {
+  font-size: 9px;
+  letter-spacing: 0.02em;
 }
 
 .lo-dropdown-option {
@@ -411,6 +486,70 @@
   object-position: center 20%;
   flex-shrink: 0;
   border: 1px solid var(--border-dim);
+}
+
+/* ─── Enemy loadout cell ─────────────────────────────── */
+.lo-cell--enemy {
+  align-items: center;
+  overflow: hidden;
+}
+
+.lo-enemy-splash {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lo-enemy-splash--clickable {
+  cursor: pointer;
+}
+
+.lo-enemy-splash--clickable:hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.lo-enemy-splash-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.lo-enemy-splash-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #cc3333 20%, var(--bg-panel)) 0%,
+    var(--bg-panel) 100%
+  );
+}
+
+.lo-enemy-name {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #cc4444;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.lo-enemy-option-sprite {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.lo-enemy-menu {
+  min-width: 240px;
+  max-height: 360px;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -596,9 +735,11 @@
   background: var(--bg-panel);
   border-right: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-med);
-  padding: 8px 8px 6px;
+  padding: 4px 2px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 3px;
   overflow: hidden;
 }
@@ -627,8 +768,9 @@
 
 .hdr-skill-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .skill-badge {
@@ -642,29 +784,42 @@
   flex-shrink: 0;
 }
 
+.skill-badge--vertical {
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
+  padding: 5px 1px;
+}
+
 .skill-badge--basic   { background: rgba(100,140,200,0.2); color: #7aabcc; }
 .skill-badge--battle  { background: rgba(68,136,255,0.2);  color: #4488ff; }
 .skill-badge--combo   { background: rgba(0,212,200,0.2);   color: #00d4c8; }
 .skill-badge--ultimate { background: rgba(240,160,64,0.2); color: #f0a040; }
 
 .hdr-skill-name {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-primary);
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-height: 52px;
 }
 
 .hdr-trigger {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--gold);
   font-weight: 400;
   letter-spacing: 0.03em;
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-left: 2px solid var(--gold);
+  max-height: 40px;
+  border-left: none;
+  border-top: 2px solid var(--gold);
   padding-left: 4px;
   margin-top: 1px;
   opacity: 0.85;
@@ -849,6 +1004,29 @@
   opacity: 0.9;
 }
 
+.event-wrap--hovered {
+  filter: brightness(1.15);
+  z-index: 8;
+}
+
+.event-wrap--selected {
+  filter: brightness(1.25);
+  z-index: 10;
+  box-shadow: 0 0 0 2px rgba(100, 200, 255, 0.85), 0 0 12px rgba(100, 200, 255, 0.5);
+}
+
+.event-wrap--selected .event-segment {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+/* ─── Selection marquee ──────────────────────────────── */
+.selection-marquee {
+  border: 1px solid rgba(100, 200, 255, 0.6);
+  background: rgba(100, 200, 255, 0.08);
+  z-index: 12;
+  pointer-events: none;
+}
+
 .event-drag-handle {
   position: absolute;
   top: 0;
@@ -877,13 +1055,28 @@
 
 .hover-line-label {
   position: absolute;
-  right: calc(100% + 4px);
-  top: -9px;
+  left: 4px;
+  top: -20px;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(100, 200, 255, 0.9);
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
   white-space: nowrap;
   pointer-events: none;
+  text-shadow: 0 0 8px rgba(100, 200, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.hover-line-time {
+  font-size: 12px;
+}
+
+.hover-line-frame {
+  font-size: 12px;
+  color: rgba(100, 200, 255, 1);
+  letter-spacing: 0.04em;
 }
 
 /* ═══════════════════════════════════════════════════════

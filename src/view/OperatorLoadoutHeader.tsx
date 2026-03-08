@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   WEAPONS,
@@ -34,6 +34,7 @@ interface OperatorOption {
   id: string;
   name: string;
   color: string;
+  rarity: number;
   splash?: string;
 }
 
@@ -48,6 +49,99 @@ interface OperatorLoadoutHeaderProps {
   allOperators?: OperatorOption[];
   onSelectOperator?: (operatorId: string | null) => void;
 }
+
+/* ─── Shared filter bar for dropdown menus ────────────────────────────── */
+
+function DropdownFilterBar({
+  search,
+  onSearch,
+  rarities,
+  activeRarities,
+  onToggleRarity,
+}: {
+  search: string;
+  onSearch: (v: string) => void;
+  rarities: number[];
+  activeRarities: Set<number>;
+  onToggleRarity: (r: number) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  return (
+    <div className="lo-filter-bar" onMouseDown={(e) => e.stopPropagation()}>
+      <input
+        ref={inputRef}
+        className="lo-filter-input"
+        type="text"
+        placeholder="Filter..."
+        value={search}
+        onChange={(e) => onSearch(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+      {rarities.length > 1 && (
+        <div className="lo-filter-rarities">
+          {rarities.map((r) => (
+            <button
+              key={r}
+              className={`lo-filter-rarity${activeRarities.has(r) ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onToggleRarity(r); }}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DropdownTierBar({
+  search,
+  onSearch,
+  tiers,
+  activeTiers,
+  onToggleTier,
+}: {
+  search: string;
+  onSearch: (v: string) => void;
+  tiers: string[];
+  activeTiers: Set<string>;
+  onToggleTier: (t: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  return (
+    <div className="lo-filter-bar" onMouseDown={(e) => e.stopPropagation()}>
+      <input
+        ref={inputRef}
+        className="lo-filter-input"
+        type="text"
+        placeholder="Filter..."
+        value={search}
+        onChange={(e) => onSearch(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+      {tiers.length > 1 && (
+        <div className="lo-filter-rarities">
+          {tiers.map((t) => (
+            <button
+              key={t}
+              className={`lo-filter-rarity lo-filter-tier${activeTiers.has(t) ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onToggleTier(t); }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export { DropdownFilterBar, DropdownTierBar };
+export type { OperatorOption };
 
 /* ─── Custom dropdown with icon + name rows ─────────────────────────────── */
 
@@ -64,9 +158,44 @@ function IconDropdown<T>({
 }) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [search, setSearch] = useState('');
+  const [activeRarities, setActiveRarities] = useState<Set<number>>(new Set());
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const selected = selectedIdx !== null ? entries[selectedIdx] : null;
+
+  // Compute available rarities from entries
+  const rarities = useMemo(() => {
+    const s = new Set<number>();
+    entries.forEach((e) => s.add(e.rarity));
+    return Array.from(s).sort((a, b) => a - b);
+  }, [entries]);
+
+  // Initialize activeRarities when rarities change
+  useEffect(() => {
+    setActiveRarities(new Set(rarities));
+  }, [rarities]);
+
+  // Filter & sort entries
+  const filtered = useMemo(() => {
+    const lc = search.toLowerCase();
+    const items: { entry: RegistryEntry<T>; origIdx: number }[] = [];
+    entries.forEach((e, i) => {
+      if (lc && !e.name.toLowerCase().includes(lc)) return;
+      if (!activeRarities.has(e.rarity)) return;
+      items.push({ entry: e, origIdx: i });
+    });
+    items.sort((a, b) => a.entry.name.localeCompare(b.entry.name));
+    return items;
+  }, [entries, search, activeRarities]);
+
+  const toggleRarity = useCallback((r: number) => {
+    setActiveRarities((prev) => {
+      const next = new Set(prev);
+      if (next.has(r)) next.delete(r); else next.add(r);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -88,8 +217,10 @@ function IconDropdown<T>({
       const rect = triggerRef.current.getBoundingClientRect();
       setMenuPos({ top: rect.bottom + 2, left: rect.left });
     }
+    setSearch('');
+    setActiveRarities(new Set(rarities));
     setOpen(true);
-  }, [open]);
+  }, [open, rarities]);
 
   const pick = useCallback((idx: number | null) => {
     onChange(idx);
@@ -118,24 +249,33 @@ function IconDropdown<T>({
           style={{ top: menuPos.top, left: menuPos.left }}
           onMouseMove={(e) => e.stopPropagation()}
         >
-          <button className="lo-dropdown-option" onClick={() => pick(null)}>
-            <span className="lo-dropdown-option-empty" />
-            <span className="lo-dropdown-option-name">None</span>
-          </button>
-          {entries.map((entry, i) => (
-            <button
-              key={i}
-              className={`lo-dropdown-option${i === selectedIdx ? ' selected' : ''}`}
-              onClick={() => pick(i)}
-            >
-              {entry.icon ? (
-                <img className="lo-dropdown-option-icon" src={entry.icon} alt={entry.name} />
-              ) : (
-                <span className="lo-dropdown-option-empty" />
-              )}
-              <span className="lo-dropdown-option-name">{entry.name}</span>
+          <DropdownFilterBar
+            search={search}
+            onSearch={setSearch}
+            rarities={rarities}
+            activeRarities={activeRarities}
+            onToggleRarity={toggleRarity}
+          />
+          <div className="lo-dropdown-scroll">
+            <button className="lo-dropdown-option" onClick={() => pick(null)}>
+              <span className="lo-dropdown-option-empty" />
+              <span className="lo-dropdown-option-name">None</span>
             </button>
-          ))}
+            {filtered.map(({ entry, origIdx }) => (
+              <button
+                key={origIdx}
+                className={`lo-dropdown-option${origIdx === selectedIdx ? ' selected' : ''}`}
+                onClick={() => pick(origIdx)}
+              >
+                {entry.icon ? (
+                  <img className="lo-dropdown-option-icon" src={entry.icon} alt={entry.name} />
+                ) : (
+                  <span className="lo-dropdown-option-empty" />
+                )}
+                <span className="lo-dropdown-option-name">{entry.name}</span>
+              </button>
+            ))}
+          </div>
         </div>,
         document.body,
       )}
@@ -158,8 +298,37 @@ export default function OperatorLoadoutHeader({
 }: OperatorLoadoutHeaderProps) {
   const [opMenuOpen, setOpMenuOpen] = useState(false);
   const [opMenuPos, setOpMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [opSearch, setOpSearch] = useState('');
+  const [opActiveRarities, setOpActiveRarities] = useState<Set<number>>(new Set());
   const splashRef = useRef<HTMLDivElement>(null);
   const opMenuRef = useRef<HTMLDivElement>(null);
+
+  const opRarities = useMemo(() => {
+    if (!allOperators) return [];
+    const s = new Set<number>();
+    allOperators.forEach((op) => s.add(op.rarity));
+    return Array.from(s).sort((a, b) => a - b);
+  }, [allOperators]);
+
+  const filteredOperators = useMemo(() => {
+    if (!allOperators) return [];
+    const lc = opSearch.toLowerCase();
+    return allOperators
+      .filter((op) => {
+        if (lc && !op.name.toLowerCase().includes(lc)) return false;
+        if (!opActiveRarities.has(op.rarity)) return false;
+        return true;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allOperators, opSearch, opActiveRarities]);
+
+  const toggleOpRarity = useCallback((r: number) => {
+    setOpActiveRarities((prev) => {
+      const next = new Set(prev);
+      if (next.has(r)) next.delete(r); else next.add(r);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (!opMenuOpen) return;
@@ -182,8 +351,10 @@ export default function OperatorLoadoutHeader({
       const rect = splashRef.current.getBoundingClientRect();
       setOpMenuPos({ top: rect.bottom + 2, left: rect.left });
     }
+    setOpSearch('');
+    setOpActiveRarities(new Set(opRarities));
     setOpMenuOpen(true);
-  }, [opMenuOpen, allOperators, onSelectOperator]);
+  }, [opMenuOpen, allOperators, onSelectOperator, opRarities]);
 
   const pickOperator = useCallback((id: string | null) => {
     onSelectOperator?.(id);
@@ -239,26 +410,35 @@ export default function OperatorLoadoutHeader({
           style={{ top: opMenuPos.top, left: opMenuPos.left }}
           onMouseMove={(e) => e.stopPropagation()}
         >
-          <button className="lo-dropdown-option" onClick={() => pickOperator(null)}>
-            <span className="lo-dropdown-option-empty" />
-            <span className="lo-dropdown-option-name">None</span>
-          </button>
-          {allOperators.map((op) => (
-            <button
-              key={op.id}
-              className={`lo-dropdown-option${op.name === operatorName ? ' selected' : ''}`}
-              onClick={() => pickOperator(op.id)}
-            >
-              {op.splash ? (
-                <img className="lo-op-menu-splash" src={op.splash} alt={op.name} />
-              ) : (
-                <span className="lo-dropdown-option-empty" />
-              )}
-              <span className="lo-dropdown-option-name" style={{ color: op.color }}>
-                {op.name}
-              </span>
+          <DropdownFilterBar
+            search={opSearch}
+            onSearch={setOpSearch}
+            rarities={opRarities}
+            activeRarities={opActiveRarities}
+            onToggleRarity={toggleOpRarity}
+          />
+          <div className="lo-dropdown-scroll">
+            <button className="lo-dropdown-option" onClick={() => pickOperator(null)}>
+              <span className="lo-dropdown-option-empty" />
+              <span className="lo-dropdown-option-name">None</span>
             </button>
-          ))}
+            {filteredOperators.map((op) => (
+              <button
+                key={op.id}
+                className={`lo-dropdown-option${op.name === operatorName ? ' selected' : ''}`}
+                onClick={() => pickOperator(op.id)}
+              >
+                {op.splash ? (
+                  <img className="lo-op-menu-splash" src={op.splash} alt={op.name} />
+                ) : (
+                  <span className="lo-dropdown-option-empty" />
+                )}
+                <span className="lo-dropdown-option-name" style={{ color: op.color }}>
+                  {op.name}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>,
         document.body,
       )}

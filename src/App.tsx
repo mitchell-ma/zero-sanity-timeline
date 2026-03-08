@@ -4,7 +4,9 @@ import ContextMenu from './view/ContextMenu';
 import EventEditPanel from './view/EventEditPanel';
 import LoadoutEditPanel, { LoadoutStats, DEFAULT_LOADOUT_STATS } from './view/LoadoutEditPanel';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './view/OperatorLoadoutHeader';
-import { SAMPLE_OPERATORS, ENEMY } from './utils/operators';
+import { SAMPLE_OPERATORS } from './utils/operators';
+import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
+import { WEAPONS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import './App.css';
 
@@ -17,10 +19,10 @@ const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   SLOT_IDS.map((slotId, i) => [
     slotId,
     {
-      basic:   false,
+      basic:   true,
       battle:  true,
       combo:   true,
-      ultimate: false,
+      ultimate: true,
     } satisfies Record<SkillType, boolean>,
   ]),
 );
@@ -42,6 +44,12 @@ export default function App() {
     Object.fromEntries(SLOT_IDS.map((id) => [id, DEFAULT_LOADOUT_STATS])),
   );
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  const [enemy,          setEnemy]          = useState(DEFAULT_ENEMY);
+
+  const handleSwapEnemy = useCallback((enemyId: string) => {
+    const found = ALL_ENEMIES.find((e) => e.id === enemyId);
+    if (found) setEnemy(found);
+  }, []);
 
   // ─── Zoom ──────────────────────────────────────────────────────────────────
   const handleZoom = useCallback((deltaY: number) => {
@@ -110,22 +118,35 @@ export default function App() {
     const slotIndex = SLOT_IDS.indexOf(slotId);
     if (slotIndex < 0) return;
 
+    const newOp = newOperatorId ? SAMPLE_OPERATORS.find((op) => op.id === newOperatorId) ?? null : null;
+
     setOperators((prev) => {
       if (newOperatorId === null) {
         const next = [...prev];
         next[slotIndex] = null;
         return next;
       }
-      const newOp = SAMPLE_OPERATORS.find((op) => op.id === newOperatorId);
       if (!newOp) return prev;
       const next = [...prev];
-      // If the new operator is already in another slot, swap the operators (not loadouts)
       const existingIdx = next.findIndex((op) => op?.id === newOperatorId);
       if (existingIdx >= 0 && existingIdx !== slotIndex) {
         next[existingIdx] = next[slotIndex];
       }
       next[slotIndex] = newOp;
       return next;
+    });
+
+    // Reset weapon if the new operator can't use the currently equipped weapon type
+    setLoadouts((prev) => {
+      const current = prev[slotId];
+      if (current.weaponIdx === null) return prev;
+      const equippedWeapon = WEAPONS[current.weaponIdx];
+      if (!equippedWeapon) return prev;
+      const compatible = newOp?.weaponTypes.includes(equippedWeapon.weaponType) ?? false;
+      if (!compatible) {
+        return { ...prev, [slotId]: { ...current, weaponIdx: null } };
+      }
+      return prev;
     });
   }, []);
 
@@ -176,7 +197,7 @@ export default function App() {
       {/* Timeline */}
       <TimelineGrid
         slots={slots}
-        enemy={ENEMY}
+        enemy={enemy}
         events={events}
         visibleSkills={visibleSkills}
         loadouts={loadouts}
@@ -192,6 +213,8 @@ export default function App() {
         onEditLoadout={setEditingSlotId}
         allOperators={SAMPLE_OPERATORS}
         onSwapOperator={handleSwapOperator}
+        allEnemies={ALL_ENEMIES}
+        onSwapEnemy={handleSwapEnemy}
       />
 
       {/* Loadout edit panel (left side) */}
@@ -218,7 +241,7 @@ export default function App() {
         <EventEditPanel
           event={editingEvent}
           operators={SAMPLE_OPERATORS}
-          enemy={ENEMY}
+          enemy={enemy}
           onUpdate={handleUpdateEvent}
           onRemove={handleRemoveEvent}
           onClose={() => setEditingEventId(null)}

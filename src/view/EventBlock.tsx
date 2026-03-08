@@ -1,14 +1,18 @@
 import React from 'react';
-import { frameToPx, TOTAL_FRAMES } from '../utils/timeline';
+import { frameToPx, durationToPx, TOTAL_FRAMES } from '../utils/timeline';
 import { TimelineEvent } from "../consts/viewTypes";
 
 interface EventBlockProps {
   event: TimelineEvent;
   color: string;
   zoom: number;
+  selected?: boolean;
+  hovered?: boolean;
   onDragStart: (e: React.MouseEvent, eventId: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventId: string) => void;
   onDoubleClick: (eventId: string) => void;
+  onSelect?: (e: React.MouseEvent, eventId: string) => void;
+  onHover?: (eventId: string | null) => void;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -32,9 +36,13 @@ export default function EventBlock({
   event,
   color,
   zoom,
+  selected = false,
+  hovered = false,
   onDragStart,
   onContextMenu,
   onDoubleClick,
+  onSelect,
+  onHover,
 }: EventBlockProps) {
   const { id, startFrame, activeDuration, lingeringDuration, cooldownDuration } = event;
 
@@ -49,24 +57,30 @@ export default function EventBlock({
   const clampedLingerEnd = Math.min(coolStart,   TOTAL_FRAMES);
   const clampedCoolEnd   = Math.min(totalEnd,    TOTAL_FRAMES);
 
-  const activeH = frameToPx(clampedActiveEnd - startFrame, zoom);
-  const lingerH = hasLinger   ? frameToPx(clampedLingerEnd - lingerStart, zoom) : 0;
-  const coolH   = hasCooldown ? frameToPx(clampedCoolEnd   - coolStart,   zoom) : 0;
+  const activeH = durationToPx(clampedActiveEnd - startFrame, zoom);
+  const lingerH = hasLinger   ? durationToPx(clampedLingerEnd - lingerStart, zoom) : 0;
+  const coolH   = hasCooldown ? durationToPx(clampedCoolEnd   - coolStart,   zoom) : 0;
 
   const topPx      = frameToPx(startFrame, zoom);
-  const totalHeight = frameToPx(clampedCoolEnd - startFrame, zoom);
+  const totalHeight = durationToPx(clampedCoolEnd - startFrame, zoom);
 
   if (activeH <= 0 && lingerH <= 0) return null;
 
   const activeRadius = !hasLinger && !hasCooldown ? '2px' : '2px 2px 0 0';
   const lingerRadius = !hasCooldown ? '0 0 2px 2px' : '0';
 
+  const wrapClass = `event-wrap${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+
   return (
     <div
-      className="event-wrap"
+      className={wrapClass}
       style={{ top: topPx, height: totalHeight }}
       onContextMenu={(e) => onContextMenu(e, id)}
       onDoubleClick={() => onDoubleClick(id)}
+      onMouseDown={(e) => { if (e.button === 0) e.stopPropagation(); }}
+      onClick={(e) => onSelect?.(e, id)}
+      onMouseEnter={() => onHover?.(id)}
+      onMouseLeave={() => onHover?.(null)}
     >
       {/* Active segment */}
       {activeH > 0 && (

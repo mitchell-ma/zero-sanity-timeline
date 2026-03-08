@@ -1,6 +1,8 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
-import OperatorLoadoutHeader, { OperatorLoadoutState } from './OperatorLoadoutHeader';
+import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
+import { ENEMY_TIERS } from '../utils/enemies';
 import {
   pxPerFrame as getPxPerFrame,
   frameToPx,
@@ -8,9 +10,9 @@ import {
   timelineHeight,
   getTickMarks,
   frameToTimeLabel,
+  frameToTimeLabelPrecise,
   frameToDetailLabel,
   TIME_AXIS_WIDTH,
-  COL_WIDTH,
   HEADER_HEIGHT,
   TOTAL_FRAMES,
 } from '../utils/timeline';
@@ -24,12 +26,24 @@ import {
   Column,
 } from "../consts/viewTypes";
 
-const MIN_SLOT_COLS = 2;
+const MIN_SLOT_COLS = 4;
+
+// Minimum loadout width derived from icon layout:
+// Row 1: 5 icons × 28px + 4 gaps × 3px + 2 × 6px padding = 164px
+// Row 2: 2 icons × 28px + 1 gap × 3px = 59px (narrower, not constraining)
+const LOADOUT_MIN_WIDTH = 164;
 
 interface DragState {
   eventId: string;
   startMouseY: number;
   startFrame: number;
+}
+
+interface MarqueeState {
+  startX: number;
+  startY: number;
+  ctrlKey: boolean;
+  priorSelection: Set<string>;
 }
 
 export interface Slot {
@@ -61,6 +75,8 @@ interface TimelineGridProps {
   onEditLoadout: (slotId: string) => void;
   allOperators?: Operator[];
   onSwapOperator?: (slotId: string, newOperatorId: string | null) => void;
+  allEnemies?: Enemy[];
+  onSwapEnemy?: (enemyId: string) => void;
 }
 
 export default function TimelineGrid({
@@ -81,19 +97,86 @@ export default function TimelineGrid({
   onEditLoadout,
   allOperators,
   onSwapOperator,
+  allEnemies,
+  onSwapEnemy,
 }: TimelineGridProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
   const loadoutRef  = useRef<HTMLDivElement>(null);
+  const timeAxisRef = useRef<HTMLDivElement>(null);
   const dragRef     = useRef<DragState | null>(null);
+  const marqueeRef  = useRef<MarqueeState | null>(null);
+  const dragMovedRef = useRef(false);
   const zoomRef     = useRef(zoom);
+  const bodyTopRef  = useRef<number | null>(null);
 
   const [hoverClientY,     setHoverClientY]     = useState<number | null>(null);
   const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
   const [outerRect,        setOuterRect]        = useState<DOMRect | null>(null);
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(0);
+  const [enemyMenuOpen,    setEnemyMenuOpen]    = useState(false);
+  const [enemyMenuPos,     setEnemyMenuPos]     = useState<{ top: number; left: number } | null>(null);
+  const [enemySearch,      setEnemySearch]      = useState('');
+  const [enemyActiveTiers, setEnemyActiveTiers] = useState<Set<string>>(new Set(ENEMY_TIERS));
+  const [selectedIds,      setSelectedIds]      = useState<Set<string>>(new Set());
+  const [hoveredId,        setHoveredId]        = useState<string | null>(null);
+  const [marqueeRect,      setMarqueeRect]      = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const enemyNameRef = useRef<HTMLDivElement>(null);
+  const enemyMenuRef = useRef<HTMLDivElement>(null);
+
+  const filteredEnemies = useMemo(() => {
+    if (!allEnemies) return [];
+    const lc = enemySearch.toLowerCase();
+    return allEnemies
+      .filter((en) => {
+        if (lc && !en.name.toLowerCase().includes(lc)) return false;
+        if (!enemyActiveTiers.has(en.tier)) return false;
+        return true;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allEnemies, enemySearch, enemyActiveTiers]);
+
+  const toggleEnemyTier = useCallback((t: string) => {
+    setEnemyActiveTiers((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t); else next.add(t);
+      return next;
+    });
+  }, []);
 
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  // ─── Enemy selector ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!enemyMenuOpen) return;
+    const handle = (e: MouseEvent) => {
+      if (
+        enemyNameRef.current && !enemyNameRef.current.contains(e.target as Node) &&
+        enemyMenuRef.current && !enemyMenuRef.current.contains(e.target as Node)
+      ) {
+        setEnemyMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [enemyMenuOpen]);
+
+  const handleEnemyClick = useCallback(() => {
+    if (!allEnemies || !onSwapEnemy) return;
+    if (enemyMenuOpen) { setEnemyMenuOpen(false); return; }
+    if (enemyNameRef.current) {
+      const rect = enemyNameRef.current.getBoundingClientRect();
+      setEnemyMenuPos({ top: rect.bottom + 2, left: rect.left });
+    }
+    setEnemySearch('');
+    setEnemyActiveTiers(new Set(ENEMY_TIERS));
+    setEnemyMenuOpen(true);
+  }, [enemyMenuOpen, allEnemies, onSwapEnemy]);
+
+  const pickEnemy = useCallback((id: string) => {
+    onSwapEnemy?.(id);
+    setEnemyMenuOpen(false);
+  }, [onSwapEnemy]);
 
   // ─── Build ordered column descriptors (keyed by slotId) ──────────────────
   const columns: Column[] = [];
@@ -155,8 +238,43 @@ export default function TimelineGrid({
   }
   const enemyColCount = enemy.statuses.length;
 
+  // Compute per-slot column width: ensure loadout content fits
+  const slotColWidths: number[] = slotGroups.map((g) => {
+    const minPerCol = Math.ceil(LOADOUT_MIN_WIDTH / g.columnCount);
+    return Math.max(25, minPerCol); // floor of 25px
+  });
+  const enemyColWidth = enemyColCount > 0
+    ? Math.max(25, Math.ceil(LOADOUT_MIN_WIDTH / enemyColCount))
+    : 25;
+
+  // Build gridTemplateColumns string
+  const colWidthStrings: string[] = [];
+  for (let si = 0; si < slotGroups.length; si++) {
+    const g = slotGroups[si];
+    for (let c = 0; c < g.columnCount; c++) {
+      colWidthStrings.push(`${slotColWidths[si]}px`);
+    }
+  }
+  for (let i = 0; i < enemyColCount; i++) {
+    colWidthStrings.push(`${enemyColWidth}px`);
+  }
+  const gridCols = `${TIME_AXIS_WIDTH}px ${colWidthStrings.join(' ')}`;
+
+  // Precompute column X positions (content coords) for marquee intersection
+  const columnPositions = new Map<string, { left: number; right: number }>();
+  {
+    let xPos = TIME_AXIS_WIDTH;
+    for (let i = 0; i < columns.length; i++) {
+      const col = columns[i];
+      const sgIdx = slotGroups.findIndex((g) => g.slot.slotId === col.ownerId);
+      const w = sgIdx >= 0 ? slotColWidths[sgIdx] : enemyColWidth;
+      columnPositions.set(col.key, { left: xPos, right: xPos + w });
+      xPos += w;
+    }
+  }
+
   const numCols  = columns.length;
-  const totalW   = TIME_AXIS_WIDTH + numCols * COL_WIDTH;
+  const totalW   = TIME_AXIS_WIDTH + slotGroups.reduce((sum, g, i) => sum + g.columnCount * slotColWidths[i], 0) + enemyColCount * enemyColWidth;
   const tlHeight = timelineHeight(zoom);
   const ticks    = getTickMarks(zoom);
   const combinedHeaderHeight = loadoutRowHeight + HEADER_HEIGHT;
@@ -184,6 +302,21 @@ export default function TimelineGrid({
     return () => ro.disconnect();
   }, []);
 
+  // ─── Measure timeline body top offset ────────────────────────────────────
+  useEffect(() => {
+    const updateBodyTop = () => {
+      const axis = timeAxisRef.current;
+      const scroll = scrollRef.current;
+      if (axis && scroll) {
+        bodyTopRef.current = axis.offsetTop;
+      }
+    };
+    updateBodyTop();
+    const ro = new ResizeObserver(updateBodyTop);
+    if (loadoutRef.current) ro.observe(loadoutRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   // ─── Wheel: alt = zoom, else native ────────────────────────────────────────
   const handleWheel = useCallback((e: WheelEvent) => {
     if (e.altKey) {
@@ -199,31 +332,110 @@ export default function TimelineGrid({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
+  // ─── Marquee intersection helper ────────────────────────────────────────────
+  const getEventsInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }) => {
+    const bodyTop = bodyTopRef.current ?? 0;
+    const ids = new Set<string>();
+    for (const ev of events) {
+      const colKey = `${ev.ownerId}-${ev.channelId}`;
+      const colPos = columnPositions.get(colKey);
+      if (!colPos) continue;
+      const totalDur = ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+      const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
+      const evBot = bodyTop + frameToPx(ev.startFrame + totalDur, zoomRef.current);
+      // Check rect intersection
+      if (colPos.right > rect.left && colPos.left < rect.right &&
+          evBot > rect.top && evTop < rect.bottom) {
+        ids.add(ev.id);
+      }
+    }
+    return ids;
+  }, [events, columnPositions]);
+
+  // ─── Event hover ──────────────────────────────────────────────────────────────
+  const handleEventHover = useCallback((id: string | null) => {
+    setHoveredId(id);
+  }, []);
+
+  // ─── Event select (click) ─────────────────────────────────────────────────────
+  const handleEventSelect = useCallback((e: React.MouseEvent, eventId: string) => {
+    if (dragMovedRef.current) return;
+    if (e.ctrlKey || e.metaKey) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(eventId)) next.delete(eventId);
+        else next.add(eventId);
+        return next;
+      });
+    } else {
+      setSelectedIds(new Set([eventId]));
+    }
+  }, []);
+
   // ─── Mouse move ─────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (scrollRef.current && outerRect) {
+    // Hover line
+    if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
       const scrollTop = scrollRef.current.scrollTop;
-      const relY = e.clientY - outerRect.top + scrollTop - combinedHeaderHeight;
+      const bodyTop = bodyTopRef.current;
+      const relY = e.clientY - outerRect.top + scrollTop - bodyTop;
       if (relY > 0) {
         const frame = pxToFrame(relY, zoomRef.current);
         setHoverFrame(frame);
         const snappedRelY = frameToPx(frame, zoomRef.current);
-        setHoverClientY(snappedRelY - scrollTop + outerRect.top + combinedHeaderHeight);
+        setHoverClientY(snappedRelY - scrollTop + outerRect.top + bodyTop);
       } else {
         setHoverFrame(null);
         setHoverClientY(null);
       }
     }
 
+    // Event drag
     if (dragRef.current) {
+      dragMovedRef.current = true;
       const { eventId, startMouseY, startFrame } = dragRef.current;
       const deltaFrames = Math.round(
         (e.clientY - startMouseY) / getPxPerFrame(zoomRef.current)
       );
       const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, startFrame + deltaFrames));
       onMoveEvent(eventId, newFrame);
+
+      if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
+        const scrollTop = scrollRef.current.scrollTop;
+        const bodyTop = bodyTopRef.current;
+        const snappedRelY = frameToPx(newFrame, zoomRef.current);
+        setHoverFrame(newFrame);
+        setHoverClientY(snappedRelY - scrollTop + outerRect.top + bodyTop);
+      }
+      return;
     }
-  }, [outerRect, onMoveEvent, combinedHeaderHeight]);
+
+    // Marquee drag
+    if (marqueeRef.current && scrollRef.current) {
+      const scroll = scrollRef.current;
+      const scrollRect = scroll.getBoundingClientRect();
+      const curX = e.clientX - scrollRect.left + scroll.scrollLeft;
+      const curY = e.clientY - scrollRect.top + scroll.scrollTop;
+      const { startX, startY } = marqueeRef.current;
+      const left = Math.min(startX, curX);
+      const top = Math.min(startY, curY);
+      const width = Math.abs(curX - startX);
+      const height = Math.abs(curY - startY);
+      setMarqueeRect({ left, top, width, height });
+
+      // Live-update selection as marquee is dragged
+      const marqueeIds = getEventsInRect({
+        left, top, right: left + width, bottom: top + height,
+      });
+      if (marqueeRef.current.ctrlKey) {
+        const combined = new Set(marqueeRef.current.priorSelection);
+        marqueeIds.forEach((id) => combined.add(id));
+        setSelectedIds(combined);
+      } else {
+        setSelectedIds(marqueeIds);
+      }
+    }
+  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverClientY(null);
@@ -231,10 +443,17 @@ export default function TimelineGrid({
   }, []);
 
   const handleMouseUp = useCallback(() => {
-    dragRef.current = null;
+    if (dragRef.current) {
+      dragRef.current = null;
+      requestAnimationFrame(() => { dragMovedRef.current = false; });
+    }
+    if (marqueeRef.current) {
+      marqueeRef.current = null;
+      setMarqueeRect(null);
+    }
   }, []);
 
-  // ─── Drag start ─────────────────────────────────────────────────────────────
+  // ─── Drag start (event move) ──────────────────────────────────────────────────
   const handleEventDragStart = useCallback((
     e: React.MouseEvent,
     eventId: string,
@@ -242,8 +461,34 @@ export default function TimelineGrid({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    dragMovedRef.current = false;
     dragRef.current = { eventId, startMouseY: e.clientY, startFrame };
   }, []);
+
+  // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
+  const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const scroll = scrollRef.current;
+    if (!scroll) return;
+    const scrollRect = scroll.getBoundingClientRect();
+    const contentX = e.clientX - scrollRect.left + scroll.scrollLeft;
+    const contentY = e.clientY - scrollRect.top + scroll.scrollTop;
+    const bodyTop = bodyTopRef.current ?? 0;
+    // Only start marquee in the timeline body area
+    if (contentY < bodyTop || contentX < TIME_AXIS_WIDTH) return;
+
+    const ctrlKey = e.ctrlKey || e.metaKey;
+    marqueeRef.current = {
+      startX: contentX,
+      startY: contentY,
+      ctrlKey,
+      priorSelection: ctrlKey ? new Set(selectedIds) : new Set(),
+    };
+    // If not ctrl, clear selection immediately (will be set by marquee)
+    if (!ctrlKey) {
+      setSelectedIds(new Set());
+    }
+  }, [selectedIds]);
 
   // ─── Right-click on empty column ────────────────────────────────────────────
   const handleSubTimelineContextMenu = useCallback((
@@ -255,9 +500,9 @@ export default function TimelineGrid({
 
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    if (!rect || bodyTopRef.current === null) return;
 
-    const relY    = e.clientY - rect.top + scrollTop - HEADER_HEIGHT;
+    const relY    = e.clientY - rect.top + scrollTop - bodyTopRef.current;
     const atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
     const label   = frameToDetailLabel(atFrame);
 
@@ -265,7 +510,7 @@ export default function TimelineGrid({
       onContextMenu({
         x: e.clientX, y: e.clientY,
         items: [{
-          label: `Add event at ${label}`,
+          label: `Add ${col.skill.name} at ${label}`,
           action: () => onAddEvent(col.ownerId, col.channelId, atFrame, col.skill),
         }],
       });
@@ -313,7 +558,7 @@ export default function TimelineGrid({
         <div
           className="timeline-grid"
           style={{
-            gridTemplateColumns: `${TIME_AXIS_WIDTH}px repeat(${numCols}, ${COL_WIDTH}px)`,
+            gridTemplateColumns: gridCols,
             gridTemplateRows: `auto ${HEADER_HEIGHT}px auto`,
             width: totalW,
           }}
@@ -353,15 +598,62 @@ export default function TimelineGrid({
             );
           })}
 
-          {/* Enemy loadout placeholder */}
+          {/* Enemy loadout cell */}
           {enemyColCount > 0 && (
             <div
               className="tl-loadout-cell tl-loadout-cell--enemy"
               style={{ gridColumn: `${colIdx} / span ${enemyColCount}` }}
             >
-              <div className="lo-cell">
-                <div className="lo-name" style={{ color: '#cc4444' }}>ENEMY</div>
+              <div className="lo-cell lo-cell--enemy">
+                <div
+                  ref={enemyNameRef}
+                  className={`lo-enemy-splash${allEnemies ? ' lo-enemy-splash--clickable' : ''}`}
+                  onClick={handleEnemyClick}
+                >
+                  {enemy.sprite ? (
+                    <img className="lo-enemy-splash-img" src={enemy.sprite} alt={enemy.name} />
+                  ) : (
+                    <div className="lo-enemy-splash-fallback" />
+                  )}
+                </div>
+                <div className="lo-name-row">
+                  <span className="lo-enemy-name">{enemy.name}</span>
+                </div>
               </div>
+
+              {enemyMenuOpen && enemyMenuPos && allEnemies && createPortal(
+                <div
+                  ref={enemyMenuRef}
+                  className="lo-dropdown-menu lo-enemy-menu"
+                  style={{ top: enemyMenuPos.top, left: enemyMenuPos.left }}
+                  onMouseMove={(e) => e.stopPropagation()}
+                >
+                  <DropdownTierBar
+                    search={enemySearch}
+                    onSearch={setEnemySearch}
+                    tiers={Array.from(ENEMY_TIERS)}
+                    activeTiers={enemyActiveTiers}
+                    onToggleTier={toggleEnemyTier}
+                  />
+                  <div className="lo-dropdown-scroll">
+                    {filteredEnemies.map((en) => (
+                      <button
+                        key={en.id}
+                        className={`lo-dropdown-option${en.id === enemy.id ? ' selected' : ''}`}
+                        onClick={() => pickEnemy(en.id)}
+                      >
+                        {en.sprite ? (
+                          <img className="lo-enemy-option-sprite" src={en.sprite} alt={en.name} />
+                        ) : (
+                          <span className="lo-dropdown-option-empty" />
+                        )}
+                        <span className="lo-dropdown-option-name">{en.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>,
+                document.body,
+              )}
             </div>
           )}
 
@@ -383,43 +675,24 @@ export default function TimelineGrid({
               } as React.CSSProperties}
             >
               {col.type === 'skill' ? (
-                <>
-                  <div className="hdr-skill-row">
-                    <span className={`skill-badge skill-badge--${col.channelId}`}>
-                      {SKILL_LABELS[col.channelId]}
-                    </span>
-                    <span className="hdr-skill-name">{col.skill.name}</span>
-                  </div>
-                  {col.skill.triggerCondition && (
-                    <div className="hdr-trigger">{col.skill.triggerCondition}</div>
-                  )}
-                </>
+                <span className={`skill-badge skill-badge--vertical skill-badge--${col.channelId}`}>
+                  {SKILL_LABELS[col.channelId]}
+                </span>
               ) : col.type === 'status' ? (
-                <div className="hdr-skill-row">
-                  <span
-                    className="skill-badge"
-                    style={{ background: `${col.color}33`, color: col.color }}
-                  >
-                    {col.label}
-                  </span>
-                </div>
-              ) : null}
-              {col.type === 'skill' && (
-                <button
-                  className="hdr-toggle-btn"
-                  onClick={() => onToggleSkill(col.ownerId, col.channelId)}
-                  title="Hide column"
+                <span
+                  className="skill-badge skill-badge--vertical"
+                  style={{ background: `${col.color}33`, color: col.color }}
                 >
-                  ×
-                </button>
-              )}
+                  {col.label}
+                </span>
+              ) : null}
             </div>
           ))}
 
           {/* ── Row 3: Timeline body ──────────────────────────── */}
 
           {/* Time axis */}
-          <div className="tl-time-axis" style={{ height: tlHeight }}>
+          <div ref={timeAxisRef} className="tl-time-axis" style={{ height: tlHeight }}>
             {ticks.map((tick) => (
               <div
                 key={tick.frame}
@@ -441,6 +714,7 @@ export default function TimelineGrid({
                   key={`col-${col.key}`}
                   className="tl-sub-timeline tl-sub-timeline--empty"
                   style={{ height: tlHeight }}
+                  onMouseDown={handleTimelineMouseDown}
                 >
                   {ticks.filter((t) => t.major).map((tick) => (
                     <div
@@ -461,6 +735,7 @@ export default function TimelineGrid({
                 className="tl-sub-timeline"
                 style={{ height: tlHeight }}
                 onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
+                onMouseDown={handleTimelineMouseDown}
               >
                 {ticks.filter((t) => t.major).map((tick) => (
                   <div
@@ -476,9 +751,13 @@ export default function TimelineGrid({
                     event={ev}
                     color={col.color}
                     zoom={zoom}
+                    selected={selectedIds.has(ev.id)}
+                    hovered={hoveredId === ev.id}
                     onDragStart={handleEventDragStart}
                     onContextMenu={handleEventContextMenu}
                     onDoubleClick={onEditEvent}
+                    onSelect={handleEventSelect}
+                    onHover={handleEventHover}
                   />
                 ))}
 
@@ -492,6 +771,20 @@ export default function TimelineGrid({
             );
           })}
         </div>
+
+        {/* Marquee selection box */}
+        {marqueeRect && (
+          <div
+            className="selection-marquee"
+            style={{
+              position: 'absolute',
+              left: marqueeRect.left,
+              top: marqueeRect.top,
+              width: marqueeRect.width,
+              height: marqueeRect.height,
+            }}
+          />
+        )}
       </div>
 
       {/* Hover line */}
@@ -501,7 +794,10 @@ export default function TimelineGrid({
           style={{ top: hoverClientY!, left: outerRect.left, width: outerRect.width }}
         >
           {hoverFrame !== null && (
-            <span className="hover-line-label">{frameToDetailLabel(hoverFrame)}</span>
+            <span className="hover-line-label">
+              <span className="hover-line-time">{frameToTimeLabelPrecise(hoverFrame)}</span>
+              <span className="hover-line-frame">f{hoverFrame % 120}</span>
+            </span>
           )}
         </div>
       )}

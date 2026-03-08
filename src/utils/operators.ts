@@ -1,4 +1,4 @@
-import { SkillType, Operator, Enemy } from "../consts/viewTypes";
+import { SkillType, Operator } from "../consts/viewTypes";
 import { WeaponType } from "../consts/enums";
 
 import laevatainSplash from "../assets/operators/Laevatain_Banner.webp";
@@ -30,6 +30,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
     name: 'Laevatain',
     color: '#f0a040',
     role: 'Striker',
+    rarity: 6,
     splash: laevatainSplash,
     weaponTypes: [WeaponType.SWORD],
     weapon: 'Never Rest',
@@ -41,28 +42,28 @@ export const SAMPLE_OPERATORS: Operator[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Heavy Strike',
+        name: 'Flaming Cinders',
         defaultActiveDuration: 30,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Reaping Slash',
+        name: 'Smouldering Fire',
         defaultActiveDuration: 600,
         defaultLingeringDuration: 120,
         defaultCooldownDuration: 2160,
         triggerCondition: null,
       },
       combo: {
-        name: 'Execution Stance',
+        name: 'Seethe',
         defaultActiveDuration: 840,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy DEF below 50%',
       },
       ultimate: {
-        name: 'Hellfire Incarnation',
+        name: 'Twilight',
         defaultActiveDuration: 1200,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 3600,
@@ -75,6 +76,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
     name: 'Antal',
     color: '#55aadd',
     role: 'Supporter',
+    rarity: 4,
     splash: antalSplash,
     weaponTypes: [WeaponType.ARTS_UNIT],
     weapon: 'Stanza of Memorials',
@@ -86,28 +88,28 @@ export const SAMPLE_OPERATORS: Operator[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Dragon Pulse',
+        name: 'Exchange Current',
         defaultActiveDuration: 24,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Thunder Guard',
+        name: 'Specified Research Subject',
         defaultActiveDuration: 960,
         defaultLingeringDuration: 240,
         defaultCooldownDuration: 1440,
         triggerCondition: null,
       },
       combo: {
-        name: 'Storm Aegis',
+        name: 'EMP Test Site',
         defaultActiveDuration: 360,
         defaultLingeringDuration: 480,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has ElectricInfliction',
       },
       ultimate: {
-        name: 'Primordial Tempest',
+        name: 'Overclocked Moment',
         defaultActiveDuration: 600,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 3000,
@@ -120,6 +122,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
     name: 'Akekuri',
     color: '#e05555',
     role: 'Vanguard',
+    rarity: 4,
     splash: akekuriSplash,
     weaponTypes: [WeaponType.SWORD],
     weapon: 'Thermite Cutter',
@@ -131,28 +134,28 @@ export const SAMPLE_OPERATORS: Operator[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Slash',
+        name: 'Sword of Aspiration',
         defaultActiveDuration: 18,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Flame Surge',
+        name: 'Burst of Passion',
         defaultActiveDuration: 720,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 1800,
         triggerCondition: null,
       },
       combo: {
-        name: 'Searing Edge',
+        name: 'Flash and Dash',
         defaultActiveDuration: 480,
         defaultLingeringDuration: 960,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has HeatInfliction',
       },
       ultimate: {
-        name: 'Inferno Blaze',
+        name: 'Squad on Me',
         defaultActiveDuration: 480,
         defaultLingeringDuration: 720,
         defaultCooldownDuration: 3360,
@@ -165,6 +168,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
     name: 'Wulfgard',
     color: '#9060e8',
     role: 'Caster',
+    rarity: 5,
     splash: wulfgardSplash,
     weaponTypes: [WeaponType.HANDCANNON],
     weapon: 'Forgeborn Scathe',
@@ -176,28 +180,28 @@ export const SAMPLE_OPERATORS: Operator[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Void Bolt',
+        name: 'Rapid-fire Akimbo',
         defaultActiveDuration: 20,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Twilight Veil',
+        name: 'Thermite Tracers',
         defaultActiveDuration: 1200,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 1440,
         triggerCondition: null,
       },
       combo: {
-        name: 'Void Resonance',
+        name: 'Frag Grenade β',
         defaultActiveDuration: 360,
         defaultLingeringDuration: 1200,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has HeatInfliction',
       },
       ultimate: {
-        name: 'Void Collapse',
+        name: 'Wolven Fury',
         defaultActiveDuration: 360,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 4200,
@@ -210,6 +214,7 @@ export const SAMPLE_OPERATORS: Operator[] = [
     name: 'Ardelia',
     color: '#33cc88',
     role: 'Defender',
+    rarity: 6,
     splash: ardeliaSplash,
     weaponTypes: [WeaponType.POLEARM],
     weapon: 'Verdant Lance',
@@ -221,28 +226,28 @@ export const SAMPLE_OPERATORS: Operator[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Piercing Thrust',
+        name: 'Rocky Whispers',
         defaultActiveDuration: 22,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Verdant Shield',
+        name: 'Dolly Rush',
         defaultActiveDuration: 900,
         defaultLingeringDuration: 360,
         defaultCooldownDuration: 1800,
         triggerCondition: null,
       },
       combo: {
-        name: 'Nature\'s Embrace',
+        name: 'Eruption Column',
         defaultActiveDuration: 480,
         defaultLingeringDuration: 600,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has NatureInfliction',
       },
       ultimate: {
-        name: 'Gaia\'s Bulwark',
+        name: 'Wooly Party',
         defaultActiveDuration: 720,
         defaultLingeringDuration: 0,
         defaultCooldownDuration: 3600,
@@ -252,11 +257,3 @@ export const SAMPLE_OPERATORS: Operator[] = [
   },
 ];
 
-export const ENEMY: Enemy = {
-  id: 'enemy',
-  name: 'Target Enemy',
-  statuses: [
-    { id: 'heatInfliction',   label: 'HEAT',   color: '#ff5522' },
-    { id: 'natureInfliction', label: 'NATURE', color: '#33cc66' },
-  ],
-};

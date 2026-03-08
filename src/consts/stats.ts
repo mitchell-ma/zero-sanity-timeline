@@ -32,4 +32,12 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.CRYO_DAMAGE_BONUS]: 0,
   [StatType.NATURE_DAMAGE_BONUS]: 0,
   [StatType.BASIC_ATTACK_DAMAGE_BONUS]: 0,
+  [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0,
+  [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0,
+  [StatType.ULTIMATE_DAMAGE_BONUS]: 0,
+  [StatType.STAGGER_DAMAGE_BONUS]: 0,
+  [StatType.FINAL_DAMAGE_REDUCTION]: 0,
+  [StatType.SKILL_DAMAGE_BONUS]: 0,
+  [StatType.ARTS_DAMAGE_BONUS]: 0,
+  [StatType.HP_BONUS]: 0,
 };

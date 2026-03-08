@@ -392,11 +392,19 @@ import stewMeetingIcon from "../assets/consumables/stew_meeting.webp";
 export interface RegistryEntry<T> {
   name: string;
   icon?: string;
+  rarity: number;
   create: () => T;
 }
 
 export interface WeaponRegistryEntry extends RegistryEntry<Weapon> {
   weaponType: WeaponType;
+}
+
+interface GearRegistryInput {
+  name: string;
+  icon?: string;
+  gearType: GearType;
+  create: () => Gear;
 }
 
 export interface GearRegistryEntry extends RegistryEntry<Gear> {
@@ -406,31 +414,31 @@ export interface GearRegistryEntry extends RegistryEntry<Gear> {
 // ─── Operators ──────────────────────────────────────────────────────────────
 
 export const OPERATORS: RegistryEntry<Operator>[] = [
-  { name: "Laevatain",      icon: laevatainIcon,      create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Antal",          icon: antalIcon,           create: () => new AntalOperator({ level: 90 }) },
-  { name: "Akekuri",        icon: akekuriIcon,         create: () => new AkekuriOperator({ level: 90 }) },
-  { name: "Wulfgard",       icon: wulfgardIcon,        create: () => new WulfgardOperator({ level: 90 }) },
-  { name: "Ardelia",        icon: ardeliaIcon,         create: () => new ArdeliaOperator({ level: 90 }) },
-  { name: "Endministrator", icon: endministratorIcon,  create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Lifeng",         icon: lifengIcon,          create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Rossi",          icon: rossiIcon,           create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Chen Qianyu",    icon: chenQianyuIcon,      create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Estella",        icon: estellaIcon,         create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Ember",          icon: emberIcon,           create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Snowshine",      icon: snowshineIcon,       create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Catcher",        icon: catcherIcon,         create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Gilberta",       icon: gilbertaIcon,        create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Xaihi",          icon: xaihiIcon,           create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Tangtang",       icon: tangtangIcon,        create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Perlica",        icon: perlicaIcon,         create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Fluorite",       icon: fluoriteIcon,        create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Last Rite",      icon: lastRiteIcon,        create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Yvonne",         icon: yvonneIcon,          create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Avywenna",       icon: avywennaIcon,        create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Da Pan",         icon: daPanIcon,           create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Pogranichnik",   icon: pogranichnikIcon,    create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Alesh",          icon: aleshIcon,           create: () => new LaevatainOperator({ level: 90 }) },
-  { name: "Arclight",       icon: arclightIcon,        create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Laevatain",      icon: laevatainIcon,      rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Antal",          icon: antalIcon,           rarity: 4, create: () => new AntalOperator({ level: 90 }) },
+  { name: "Akekuri",        icon: akekuriIcon,         rarity: 4, create: () => new AkekuriOperator({ level: 90 }) },
+  { name: "Wulfgard",       icon: wulfgardIcon,        rarity: 5, create: () => new WulfgardOperator({ level: 90 }) },
+  { name: "Ardelia",        icon: ardeliaIcon,         rarity: 6, create: () => new ArdeliaOperator({ level: 90 }) },
+  { name: "Endministrator", icon: endministratorIcon,  rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Lifeng",         icon: lifengIcon,          rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Rossi",          icon: rossiIcon,           rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Chen Qianyu",    icon: chenQianyuIcon,      rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Estella",        icon: estellaIcon,         rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Ember",          icon: emberIcon,           rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Snowshine",      icon: snowshineIcon,       rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Catcher",        icon: catcherIcon,         rarity: 4, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Gilberta",       icon: gilbertaIcon,        rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Xaihi",          icon: xaihiIcon,           rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Tangtang",       icon: tangtangIcon,        rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Perlica",        icon: perlicaIcon,         rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Fluorite",       icon: fluoriteIcon,        rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Last Rite",      icon: lastRiteIcon,        rarity: 6, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Yvonne",         icon: yvonneIcon,          rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Avywenna",       icon: avywennaIcon,        rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Da Pan",         icon: daPanIcon,           rarity: 4, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Pogranichnik",   icon: pogranichnikIcon,    rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Alesh",          icon: aleshIcon,           rarity: 4, create: () => new LaevatainOperator({ level: 90 }) },
+  { name: "Arclight",       icon: arclightIcon,        rarity: 5, create: () => new LaevatainOperator({ level: 90 }) },
 ];
 
 // ─── Weapons (62) ───────────────────────────────────────────────────────────
@@ -439,72 +447,72 @@ const gw = (t: WeaponType) => new GenericWeapon({ weaponType: t });
 
 export const WEAPONS: WeaponRegistryEntry[] = [
   // Sword (17)
-  { name: "Never Rest",            icon: neverRestIcon,       weaponType: WeaponType.SWORD, create: () => new NeverRest({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Thermite Cutter",       icon: thermiteCutterIcon,  weaponType: WeaponType.SWORD, create: () => new ThermiteCutter({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Forgeborn Scathe",      icon: forgebornScatheIcon, weaponType: WeaponType.SWORD, create: () => new ForgebornScathe({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Eminent Repute",        icon: eminentRepute,       weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Rapid Ascent",          icon: rapidAscent,         weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "White Night Nova",      icon: whiteNightNova,      weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Grand Vision",          icon: grandVision,         weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Umbral Torch",          icon: umbralTorch,         weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Sundering Steel",       icon: sunderingSteel,      weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Fortmaker",             icon: fortmaker,           weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Aspirant",              icon: aspirant,            weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "OBJ Edge of Lightness", icon: objEdgeOfLightness,  weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Twelve Questions",      icon: twelveQuestions,      weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Finchaser 3.0",         icon: finchaser,           weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Wave Tide",             icon: waveTide,            weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Contingent Measure",    icon: contingentMeasure,   weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
-  { name: "Tarr 11",               icon: tarr11,              weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Never Rest",            icon: neverRestIcon,       rarity: 6, weaponType: WeaponType.SWORD, create: () => new NeverRest({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Thermite Cutter",       icon: thermiteCutterIcon,  rarity: 6, weaponType: WeaponType.SWORD, create: () => new ThermiteCutter({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Forgeborn Scathe",      icon: forgebornScatheIcon, rarity: 6, weaponType: WeaponType.SWORD, create: () => new ForgebornScathe({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Eminent Repute",        icon: eminentRepute,       rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Rapid Ascent",          icon: rapidAscent,         rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "White Night Nova",      icon: whiteNightNova,      rarity: 6, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Grand Vision",          icon: grandVision,         rarity: 6, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Umbral Torch",          icon: umbralTorch,         rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Sundering Steel",       icon: sunderingSteel,      rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Fortmaker",             icon: fortmaker,           rarity: 4, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Aspirant",              icon: aspirant,            rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "OBJ Edge of Lightness", icon: objEdgeOfLightness,  rarity: 4, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Twelve Questions",      icon: twelveQuestions,      rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Finchaser 3.0",         icon: finchaser,           rarity: 4, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Wave Tide",             icon: waveTide,            rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Contingent Measure",    icon: contingentMeasure,   rarity: 5, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
+  { name: "Tarr 11",               icon: tarr11,              rarity: 4, weaponType: WeaponType.SWORD, create: () => gw(WeaponType.SWORD) },
   // Great Sword (12)
-  { name: "Former Finery",         icon: formerFinery,        weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Sundered Prince",       icon: sunderedPrince,      weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Thunderberge",          icon: thunderberge,        weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Exemplar",              icon: exemplar,            weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Khravengger",           icon: khravengger,         weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "OBJ Heavy Burden",      icon: objHeavyBurden,      weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Finishing Call",         icon: finishingCall,       weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Ancient Canal",         icon: ancientCanal,        weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Seeker of Dark Lung",   icon: seekerOfDarkLung,    weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Industry 0.1",          icon: industry01,          weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Quencher",              icon: quencher,            weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
-  { name: "Darhoff 7",             icon: darhoff7,            weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Former Finery",         icon: formerFinery,        rarity: 6, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Sundered Prince",       icon: sunderedPrince,      rarity: 6, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Thunderberge",          icon: thunderberge,        rarity: 6, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Exemplar",              icon: exemplar,            rarity: 6, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Khravengger",           icon: khravengger,         rarity: 6, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "OBJ Heavy Burden",      icon: objHeavyBurden,      rarity: 4, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Finishing Call",         icon: finishingCall,       rarity: 5, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Ancient Canal",         icon: ancientCanal,        rarity: 5, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Seeker of Dark Lung",   icon: seekerOfDarkLung,    rarity: 5, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Industry 0.1",          icon: industry01,          rarity: 4, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Quencher",              icon: quencher,            rarity: 3, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
+  { name: "Darhoff 7",             icon: darhoff7,            rarity: 3, weaponType: WeaponType.GREAT_SWORD, create: () => gw(WeaponType.GREAT_SWORD) },
   // Polearm (9)
-  { name: "JET",                   icon: jetIcon,             weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Mountain Bearer",       icon: mountainBearer,      weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Valiant",               icon: valiant,             weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Cohesive Traction",     icon: cohesiveTraction,    weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Chimeric Justice",      icon: chimericJustice,     weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "OBJ Razorhorn",         icon: objRazorhorn,        weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Pathfinder's Beacon",   icon: pathfindersBeacon,   weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Aggeloslayer",          icon: aggeloslayer,        weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
-  { name: "Opero 77",              icon: opero77,             weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "JET",                   icon: jetIcon,             rarity: 6, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Mountain Bearer",       icon: mountainBearer,      rarity: 6, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Valiant",               icon: valiant,             rarity: 6, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Cohesive Traction",     icon: cohesiveTraction,    rarity: 6, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Chimeric Justice",      icon: chimericJustice,     rarity: 6, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "OBJ Razorhorn",         icon: objRazorhorn,        rarity: 4, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Pathfinder's Beacon",   icon: pathfindersBeacon,   rarity: 5, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Aggeloslayer",          icon: aggeloslayer,        rarity: 5, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
+  { name: "Opero 77",              icon: opero77,             rarity: 4, weaponType: WeaponType.POLEARM, create: () => gw(WeaponType.POLEARM) },
   // Handcannon (10)
-  { name: "Clannibal",             icon: clannibalIcon,       weaponType: WeaponType.HANDCANNON, create: () => new Clannibal({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Wedge",                 icon: wedgeIcon,           weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Navigator",             icon: navigator,           weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Artzy Tyrannical",      icon: artzyTyrannical,     weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Rational Farewell",     icon: rationalFarewell,    weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Opus: The Living",      icon: opusTheLiving,       weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "OBJ Velocitous",        icon: objVelocitous,       weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Howling Guard",         icon: howlingGuard,        weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Long Road",             icon: longRoad,            weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
-  { name: "Peco 5",                icon: peco5,               weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Clannibal",             icon: clannibalIcon,       rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => new Clannibal({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Wedge",                 icon: wedgeIcon,           rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Navigator",             icon: navigator,           rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Artzy Tyrannical",      icon: artzyTyrannical,     rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Rational Farewell",     icon: rationalFarewell,    rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Opus: The Living",      icon: opusTheLiving,       rarity: 6, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "OBJ Velocitous",        icon: objVelocitous,       rarity: 4, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Howling Guard",         icon: howlingGuard,        rarity: 5, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Long Road",             icon: longRoad,            rarity: 5, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
+  { name: "Peco 5",                icon: peco5,               rarity: 4, weaponType: WeaponType.HANDCANNON, create: () => gw(WeaponType.HANDCANNON) },
   // Arts Unit (14)
-  { name: "Stanza of Memorials",   icon: stanzaIcon,          weaponType: WeaponType.ARTS_UNIT, create: () => new StanzaOfMemorials({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Dreams of the Starry Beach", icon: dreamsIcon,     weaponType: WeaponType.ARTS_UNIT, create: () => new DreamsOfTheStarryBeach({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
-  { name: "Chivalric Virtues",     icon: chivalricVirtues,    weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Detonation Unit",       icon: detonationUnit,      weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Oblivion",              icon: oblivion,            weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Opus: Etch Figure",     icon: opusEtchFigure,      weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Delivery Guaranteed",   icon: deliveryGuaranteed,  weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "OBJ Arts Identifier",   icon: objArtsIdentifier,   weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Freedom to Proselytize", icon: freedomToProselytize, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Wild Wanderer",         icon: wildWanderer,        weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Monaihe",               icon: monaihe,             weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Fluorescent Roc",       icon: fluorescentRoc,      weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Hypernova Auto",        icon: hypernovaAuto,       weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
-  { name: "Jiminy 12",             icon: jiminy12,            weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Stanza of Memorials",   icon: stanzaIcon,          rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => new StanzaOfMemorials({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Dreams of the Starry Beach", icon: dreamsIcon,     rarity: 6, weaponType: WeaponType.ARTS_UNIT, create: () => new DreamsOfTheStarryBeach({ level: 90, skillOneLevel: 1, skillTwoLevel: 1, skillThreeLevel: 1 }) },
+  { name: "Chivalric Virtues",     icon: chivalricVirtues,    rarity: 6, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Detonation Unit",       icon: detonationUnit,      rarity: 6, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Oblivion",              icon: oblivion,            rarity: 6, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Opus: Etch Figure",     icon: opusEtchFigure,      rarity: 6, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Delivery Guaranteed",   icon: deliveryGuaranteed,  rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "OBJ Arts Identifier",   icon: objArtsIdentifier,   rarity: 4, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Freedom to Proselytize", icon: freedomToProselytize, rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Wild Wanderer",         icon: wildWanderer,        rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Monaihe",               icon: monaihe,             rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Fluorescent Roc",       icon: fluorescentRoc,      rarity: 5, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Hypernova Auto",        icon: hypernovaAuto,       rarity: 4, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
+  { name: "Jiminy 12",             icon: jiminy12,            rarity: 4, weaponType: WeaponType.ARTS_UNIT, create: () => gw(WeaponType.ARTS_UNIT) },
 ];
 
 // ─── Gear helper ────────────────────────────────────────────────────────────
@@ -512,7 +520,29 @@ export const WEAPONS: WeaponRegistryEntry[] = [
 const gg = (t: GearType, e: GearEffectType = GearEffectType.HOT_WORK) =>
   new GenericGear({ gearType: t, gearEffectType: e });
 
-type GE = GearRegistryEntry;
+const GEAR_RARITY: Record<GearEffectType, number> = {
+  [GearEffectType.AIC_HEAVY]:            2,
+  [GearEffectType.AIC_LIGHT]:            2,
+  [GearEffectType.ARMORED_MSGR]:         4,
+  [GearEffectType.ROVING_MSGR]:          4,
+  [GearEffectType.MORDVOLT_INSULATION]:  4,
+  [GearEffectType.MORDVOLT_RESISTANT]:   4,
+  [GearEffectType.ABURREY_LEGACY]:       4,
+  [GearEffectType.CATASTROPHE]:          4,
+  [GearEffectType.SWORDMANCER]:          5,
+  [GearEffectType.LYNX]:                 5,
+  [GearEffectType.AETHERTECH]:           5,
+  [GearEffectType.BONEKRUSHA]:           5,
+  [GearEffectType.PULSER_LABS]:          5,
+  [GearEffectType.FRONTIERS]:            5,
+  [GearEffectType.HOT_WORK]:             5,
+  [GearEffectType.MI_SECURITY]:          5,
+  [GearEffectType.TYPE_50_YINGLUNG]:     5,
+  [GearEffectType.TIDE_SURGE]:           5,
+  [GearEffectType.ETERNAL_XIRANITE]:     5,
+};
+
+type GI = GearRegistryInput;
 const A = GearType.ARMOR;
 const G = GearType.GLOVES;
 const K = GearType.KIT;
@@ -520,7 +550,7 @@ const E = GearEffectType;
 
 // ─── Gear (256) ─────────────────────────────────────────────────────────────
 
-export const GEARS: GE[] = [
+const GEARS_RAW: GI[] = [
   // ── Armor (70) ──────────────────────────────────────────────────────────────
   { name: "Aburrey Heavy Armor",           icon: aHeavyArmor,          gearType: A, create: () => gg(A, E.ABURREY_LEGACY) },
   { name: "Aburrey Heavy Armor T1",        icon: aHeavyArmorT1,        gearType: A, create: () => gg(A, E.ABURREY_LEGACY) },
@@ -784,6 +814,14 @@ export const GEARS: GE[] = [
   { name: "Æthertech Watch",             icon: aetWatch,             gearType: K, create: () => gg(K, E.AETHERTECH) },
 ];
 
+/** Derive rarity from the gear instance's GearEffectType. */
+function gearRarity(entry: GI): GearRegistryEntry {
+  const instance = entry.create();
+  const r = GEAR_RARITY[instance.gearEffectType] ?? 3;
+  return { ...entry, rarity: r };
+}
+
+export const GEARS: GearRegistryEntry[] = GEARS_RAW.map(gearRarity);
 export const ARMORS = GEARS.filter((g) => g.gearType === GearType.ARMOR);
 export const GLOVES = GEARS.filter((g) => g.gearType === GearType.GLOVES);
 export const KITS   = GEARS.filter((g) => g.gearType === GearType.KIT);
@@ -791,9 +829,9 @@ export const KITS   = GEARS.filter((g) => g.gearType === GearType.KIT);
 // ─── Consumables & Tacticals ────────────────────────────────────────────────
 
 export const CONSUMABLES: RegistryEntry<Consumable>[] = [
-  { name: "Ginseng Meat Stew", icon: ginsengMeatStewIcon, create: () => new GinsengMeatStew() },
+  { name: "Ginseng Meat Stew", icon: ginsengMeatStewIcon, rarity: 3, create: () => new GinsengMeatStew() },
 ];
 
 export const TACTICALS: RegistryEntry<Tactical>[] = [
-  { name: "Stew Meeting", icon: stewMeetingIcon, create: () => new StewMeeting() },
+  { name: "Stew Meeting", icon: stewMeetingIcon, rarity: 3, create: () => new StewMeeting() },
 ];
