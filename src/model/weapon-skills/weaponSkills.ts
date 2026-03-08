@@ -1,4 +1,4 @@
-import { WeaponSkillType } from "../enums";
+import { WeaponSkillType } from "../../consts/enums";
 import { WeaponSkill } from "./weaponSkill";
 
 // ── Attack Boost ──────────────────────────────────────────────────────────────

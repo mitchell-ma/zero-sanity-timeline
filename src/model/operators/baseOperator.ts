@@ -1,20 +1,9 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../enums";
-import { DEFAULT_STATS } from "../stats/stats";
+import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { DEFAULT_STATS } from "../../consts/stats";
+import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
 import { lookupByLevel } from "../../utils/lookupByLevel";
 
 type StatsByLevel = Readonly<Record<number, Partial<Record<StatType, number>>>>;
-
-/** Valid operator rarity values. */
-export type OperatorRarity = 4 | 5 | 6;
-
-/** Talent level, ranging 0–3. */
-export type TalentLevel = 0 | 1 | 2 | 3;
-
-/** Skill level, ranging 1–12. */
-export type SkillLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-
-/** Potential, ranging 0–5. */
-export type Potential = 0 | 1 | 2 | 3 | 4 | 5;
 
 export abstract class BaseOperator {
   readonly name: string;
@@ -124,6 +113,12 @@ export abstract class BaseOperator {
 
   getBaseAttack(): number {
     const stats = lookupByLevel(this.statsByLevel, this.level);
-    return stats[StatType.ATTACK] ?? 0;
+    const atk = stats[StatType.ATTACK];
+    if (atk === undefined) {
+      throw new Error(
+        `${this.name} has no ATTACK stat at level ${this.level}`,
+      );
+    }
+    return atk;
   }
 }

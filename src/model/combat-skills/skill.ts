@@ -1,5 +1,5 @@
-import { ElementType, OperatorType } from "../enums";
-import { Potential, SkillLevel } from "../operators/baseOperator";
+import { ElementType, OperatorType } from "../../consts/enums";
+import { Potential, SkillLevel } from "../../consts/types";
 
 export abstract class Skills {
   readonly operatorType: OperatorType;

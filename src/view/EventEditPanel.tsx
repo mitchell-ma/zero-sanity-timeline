@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel } from '../utils/timeline';
 import { SKILL_LABELS } from '../utils/operators';
-import { TimelineEvent, Operator, Enemy, SkillType } from '../model/types';
+import { TimelineEvent, Operator, Enemy, SkillType } from "../consts/viewTypes";
 
 interface EventEditPanelProps {
   event: TimelineEvent;

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ContextMenuItem } from '../model/types';
+import { ContextMenuItem } from "../consts/viewTypes";
 
 interface ContextMenuProps {
   x: number;

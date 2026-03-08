@@ -1,4 +1,4 @@
-import { CombatSkillType, EventType, OperatorType, TargetType } from "../enums";
+import { CombatSkillType, EventType, OperatorType, TargetType } from "../../consts/enums";
 import { Event } from "./event";
 
 export abstract class CombatSkillEvent extends Event {

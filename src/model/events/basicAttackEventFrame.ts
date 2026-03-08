@@ -1,4 +1,4 @@
-import { BasicAttackType } from "../enums";
+import { BasicAttackType } from "../../consts/enums";
 import { EventFrame } from "./eventFrame";
 
 export class BasicAttackEventFrame extends EventFrame {

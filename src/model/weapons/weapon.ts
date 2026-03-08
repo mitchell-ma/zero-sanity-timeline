@@ -1,10 +1,7 @@
-import { WeaponType } from "../enums";
-import { WeaponSkill } from "../weapon-skills/weaponSkill";
-
-/** Valid weapon rarity values. */
-export type WeaponRarity = 3 | 4 | 5 | 6;
-
+import { WeaponType } from "../../consts/enums";
+import { WeaponRarity } from "../../consts/types";
 import { lookupByLevel } from "../../utils/lookupByLevel";
+import { WeaponSkill } from "../weapon-skills/weaponSkill";
 
 export abstract class Weapon {
   readonly weaponType: WeaponType;

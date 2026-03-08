@@ -1,5 +1,5 @@
-import { BasicAttackType, ElementType, OperatorType } from "../enums";
-import { Potential, SkillLevel } from "../operators/baseOperator";
+import { BasicAttackType, ElementType, OperatorType } from "../../consts/enums";
+import { Potential, SkillLevel } from "../../consts/types";
 import { Skills } from "./skill";
 
 export abstract class BasicAttack extends Skills {

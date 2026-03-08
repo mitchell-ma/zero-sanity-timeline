@@ -3,7 +3,7 @@ import {
   CombatSkillType,
   OperatorType,
   TargetType,
-} from "../enums";
+} from "../../consts/enums";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
 export class BasicAttackEvent extends CombatSkillEvent {

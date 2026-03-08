@@ -21,7 +21,7 @@ import {
   VisibleSkills,
   ContextMenuState,
   Column,
-} from '../model/types';
+} from "../consts/viewTypes";
 
 interface DragState {
   eventId: string;

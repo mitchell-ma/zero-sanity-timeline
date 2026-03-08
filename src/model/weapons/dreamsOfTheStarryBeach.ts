@@ -1,7 +1,8 @@
-import { WeaponType } from '../enums';
+import { WeaponType } from "../../consts/enums";
 import { IntellectBoostL, TreatmentEfficiencyBoostL } from '../weapon-skills/weaponSkills';
 import { InflictionTidalMurmurs } from '../weapon-skills/namedWeaponSkills';
-import { Weapon, WeaponRarity } from './weapon';
+import { WeaponRarity } from "../../consts/types";
+import { Weapon } from "./weapon";
 
 const RARITY: WeaponRarity = 6;
 

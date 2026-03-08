@@ -3,7 +3,7 @@ import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
 import EventEditPanel from './view/EventEditPanel';
 import { SAMPLE_OPERATORS, ENEMY, SKILL_LABELS, SKILL_ORDER } from './utils/operators';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from './model/types';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import './App.css';
 
 const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(

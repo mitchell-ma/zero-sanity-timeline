@@ -1,4 +1,4 @@
-import { StatType } from "../enums";
+import { StatType } from "./enums";
 
 /** Default baseline for all stats (attributes and combat stats). */
 export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {

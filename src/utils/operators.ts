@@ -1,4 +1,4 @@
-import { SkillType, Operator, Enemy } from '../model/types';
+import { SkillType, Operator, Enemy } from "../consts/viewTypes";
 
 export const SKILL_TYPES: Record<string, SkillType> = {
   BASIC:   'basic',

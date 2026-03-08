@@ -1,4 +1,4 @@
-import { WeaponSkillType } from "../enums";
+import { WeaponSkillType } from "../../consts/enums";
 
 export abstract class WeaponSkill {
   readonly weaponSkillType: WeaponSkillType;

@@ -1,8 +1,9 @@
-import { WeaponType } from "../enums";
+import { WeaponType } from "../../consts/enums";
 import { AttackBoostL } from "../weapon-skills/weaponSkills";
 import { FlowReincarnation } from "../weapon-skills/namedWeaponSkills";
 import { WillBoostL } from "../weapon-skills/weaponSkills";
-import { Weapon, WeaponRarity } from "./weapon";
+import { WeaponRarity } from "../../consts/types";
+import { Weapon } from "./weapon";
 
 const RARITY: WeaponRarity = 6;
 

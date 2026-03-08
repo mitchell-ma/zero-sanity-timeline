@@ -1,16 +1,12 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../enums";
+import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
 import {
   FlamingCinders,
   Seethe,
   SmoulderingFire,
   Twilight,
 } from "../combat-skills/laevatainSkills";
-import {
-  BaseOperator,
-  OperatorRarity,
-  Potential,
-  SkillLevel,
-} from "./baseOperator";
+import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
+import { BaseOperator } from "./baseOperator";
 
 const RARITY: OperatorRarity = 6;
 

@@ -1,4 +1,4 @@
-import { ElementType } from "../enums";
+import { ElementType } from "../../consts/enums";
 import { EventFrame } from "./eventFrame";
 
 export abstract class CombatSkillEventFrame extends EventFrame {

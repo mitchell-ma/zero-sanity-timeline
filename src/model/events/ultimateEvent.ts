@@ -1,11 +1,6 @@
-import { CombatSkillType, OperatorType, TargetType } from "../enums";
+import { CombatSkillType, OperatorType, TargetType } from "../../consts/enums";
+import { EmpowerSkillTarget } from "../../consts/types";
 import { CombatSkillEvent } from "./combatSkillEvent";
-
-/** CombatSkillType values that an ultimate can empower (excludes ULTIMATE itself). */
-export type EmpowerSkillTarget = Exclude<
-  CombatSkillType,
-  CombatSkillType.ULTIMATE
->;
 
 export class UltimateEvent extends CombatSkillEvent {
   /** Duration of the ultimate's animation in frames. */

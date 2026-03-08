@@ -3,8 +3,8 @@ import {
   CombatSkillsType,
   ElementType,
   OperatorType,
-} from "../enums";
-import { Potential, SkillLevel } from "../operators/baseOperator";
+} from "../../consts/enums";
+import { Potential, SkillLevel } from "../../consts/types";
 import { BasicAttack } from "./basicAttack";
 import { BasicSkill } from "./basicSkill";
 import { ComboSkill } from "./comboSkill";

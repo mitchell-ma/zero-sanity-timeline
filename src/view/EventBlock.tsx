@@ -1,6 +1,6 @@
 import React from 'react';
 import { frameToPx, TOTAL_FRAMES } from '../utils/timeline';
-import { TimelineEvent } from '../model/types';
+import { TimelineEvent } from "../consts/viewTypes";
 
 interface EventBlockProps {
   event: TimelineEvent;

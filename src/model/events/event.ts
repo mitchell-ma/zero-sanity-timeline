@@ -1,4 +1,4 @@
-import { EventType, OperatorType, TargetType } from "../enums";
+import { EventType, OperatorType, TargetType } from "../../consts/enums";
 
 export abstract class Event {
   readonly eventType: EventType;
