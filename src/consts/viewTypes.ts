@@ -14,6 +14,8 @@ export interface Operator {
   name: string;
   color: string;
   role: string;
+  splash?: string;
+  weaponTypes: string[];
   weapon: string;
   armor: string;
   gloves: string;
@@ -81,4 +83,11 @@ export type StatusColumn = {
   label: string;
 };
 
-export type Column = SkillColumn | StatusColumn;
+export type PlaceholderColumn = {
+  key: string;
+  type: "placeholder";
+  ownerId: string;
+  color: string;
+};
+
+export type Column = SkillColumn | StatusColumn | PlaceholderColumn;

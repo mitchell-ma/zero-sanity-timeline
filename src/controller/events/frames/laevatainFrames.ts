@@ -1,4 +1,4 @@
-import { BasicAttackType } from "../../consts/enums";
+import { BasicAttackType } from "../../../consts/enums";
 import { BasicAttackEventFrame } from "./basicAttackEventFrame";
 import { BasicSkillEventFrame } from "./basicSkillEventFrame";
 import { ComboSkillEventFrame } from "./comboSkillEventFrame";

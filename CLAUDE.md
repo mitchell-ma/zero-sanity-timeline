@@ -7,6 +7,7 @@ Project structure:
 - Views/Components: src/view
 - Pages: src/app
 - Data models: src/model
+- Controllers: src/controller
 - Utility: src/utils
 
 Naming convention:

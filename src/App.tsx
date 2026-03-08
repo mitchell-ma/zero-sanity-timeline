@@ -2,13 +2,20 @@ import { useState, useCallback } from 'react';
 import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
 import EventEditPanel from './view/EventEditPanel';
-import { SAMPLE_OPERATORS, ENEMY, SKILL_LABELS, SKILL_ORDER } from './utils/operators';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
+import LoadoutEditPanel, { LoadoutStats, DEFAULT_LOADOUT_STATS } from './view/LoadoutEditPanel';
+import { OperatorLoadoutState, EMPTY_LOADOUT } from './view/OperatorLoadoutHeader';
+import { SAMPLE_OPERATORS, ENEMY } from './utils/operators';
+import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import './App.css';
 
+const NUM_SLOTS = 4;
+const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
+
+const INITIAL_OPERATORS: (Operator | null)[] = SAMPLE_OPERATORS.slice(0, NUM_SLOTS);
+
 const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
-  SAMPLE_OPERATORS.map((op) => [
-    op.id,
+  SLOT_IDS.map((slotId, i) => [
+    slotId,
     {
       basic:   false,
       battle:  true,
@@ -22,11 +29,19 @@ let _id = 1;
 const genId = () => `ev-${_id++}`;
 
 export default function App() {
+  const [operators,      setOperators]      = useState<(Operator | null)[]>(() => [...INITIAL_OPERATORS]);
   const [zoom,           setZoom]           = useState<number>(0.5);
   const [events,         setEvents]         = useState<TimelineEvent[]>([]);
   const [visibleSkills,  setVisibleSkills]  = useState<VisibleSkills>(INITIAL_VISIBLE);
   const [contextMenu,    setContextMenu]    = useState<ContextMenuState | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [loadouts,       setLoadouts]       = useState<Record<string, OperatorLoadoutState>>(() =>
+    Object.fromEntries(SLOT_IDS.map((id) => [id, EMPTY_LOADOUT])),
+  );
+  const [loadoutStats,   setLoadoutStats]   = useState<Record<string, LoadoutStats>>(() =>
+    Object.fromEntries(SLOT_IDS.map((id) => [id, DEFAULT_LOADOUT_STATS])),
+  );
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
 
   // ─── Zoom ──────────────────────────────────────────────────────────────────
   const handleZoom = useCallback((deltaY: number) => {
@@ -36,13 +51,13 @@ export default function App() {
     });
   }, []);
 
-  // ─── Skill visibility ─────────────────────────────────────────────────────
-  const handleToggleSkill = useCallback((operatorId: string, skillType: string) => {
+  // ─── Skill visibility (keyed by slot ID) ─────────────────────────────────
+  const handleToggleSkill = useCallback((slotId: string, skillType: string) => {
     setVisibleSkills((prev) => ({
       ...prev,
-      [operatorId]: {
-        ...prev[operatorId],
-        [skillType]: !prev[operatorId]?.[skillType as SkillType],
+      [slotId]: {
+        ...prev[slotId],
+        [skillType]: !prev[slotId]?.[skillType as SkillType],
       },
     }));
   }, []);
@@ -83,8 +98,49 @@ export default function App() {
     setContextMenu(null);
   }, []);
 
+  const handleLoadoutChange = useCallback((slotId: string, state: OperatorLoadoutState) => {
+    setLoadouts((prev) => ({ ...prev, [slotId]: state }));
+  }, []);
+
+  const handleStatsChange = useCallback((slotId: string, stats: LoadoutStats) => {
+    setLoadoutStats((prev) => ({ ...prev, [slotId]: stats }));
+  }, []);
+
+  const handleSwapOperator = useCallback((slotId: string, newOperatorId: string | null) => {
+    const slotIndex = SLOT_IDS.indexOf(slotId);
+    if (slotIndex < 0) return;
+
+    setOperators((prev) => {
+      if (newOperatorId === null) {
+        const next = [...prev];
+        next[slotIndex] = null;
+        return next;
+      }
+      const newOp = SAMPLE_OPERATORS.find((op) => op.id === newOperatorId);
+      if (!newOp) return prev;
+      const next = [...prev];
+      // If the new operator is already in another slot, swap the operators (not loadouts)
+      const existingIdx = next.findIndex((op) => op?.id === newOperatorId);
+      if (existingIdx >= 0 && existingIdx !== slotIndex) {
+        next[existingIdx] = next[slotIndex];
+      }
+      next[slotIndex] = newOp;
+      return next;
+    });
+  }, []);
+
+  // ─── Build slot descriptors for TimelineGrid ─────────────────────────────
+  const slots = SLOT_IDS.map((slotId, i) => ({
+    slotId,
+    operator: operators[i] ?? null,
+  }));
+
   const editingEvent = editingEventId
     ? events.find((e) => e.id === editingEventId) ?? null
+    : null;
+
+  const editingSlot = editingSlotId
+    ? slots.find((s) => s.slotId === editingSlotId) ?? null
     : null;
 
   return (
@@ -103,7 +159,7 @@ export default function App() {
 
         <div className="zoom-display">
           <span className="zoom-label">ZOOM</span>
-          <span className="zoom-value">{zoom.toFixed(2)}×</span>
+          <span className="zoom-value">{zoom.toFixed(2)}x</span>
           <span className="zoom-hint">alt+scroll</span>
         </div>
 
@@ -117,34 +173,13 @@ export default function App() {
         </div>
       </div>
 
-      {/* Controls bar: skill visibility toggles */}
-      <div className="controls-bar">
-        {SAMPLE_OPERATORS.map((op) => (
-          <div key={op.id} className="op-toggle-group">
-            <span className="op-toggle-name" style={{ color: op.color }}>
-              {op.name}
-            </span>
-            {SKILL_ORDER.map((skillType) => (
-              <button
-                key={skillType}
-                className={`skill-toggle-btn${visibleSkills[op.id]?.[skillType] ? ' active' : ''}`}
-                style={{ '--op-color': op.color } as React.CSSProperties}
-                onClick={() => handleToggleSkill(op.id, skillType)}
-                title={op.skills[skillType].name}
-              >
-                {SKILL_LABELS[skillType]}
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-
       {/* Timeline */}
       <TimelineGrid
-        operators={SAMPLE_OPERATORS}
+        slots={slots}
         enemy={ENEMY}
         events={events}
         visibleSkills={visibleSkills}
+        loadouts={loadouts}
         zoom={zoom}
         onZoom={handleZoom}
         onToggleSkill={handleToggleSkill}
@@ -153,7 +188,22 @@ export default function App() {
         onContextMenu={setContextMenu}
         onEditEvent={setEditingEventId}
         onRemoveEvent={handleRemoveEvent}
+        onLoadoutChange={handleLoadoutChange}
+        onEditLoadout={setEditingSlotId}
+        allOperators={SAMPLE_OPERATORS}
+        onSwapOperator={handleSwapOperator}
       />
+
+      {/* Loadout edit panel (left side) */}
+      {editingSlot && editingSlot.operator && (
+        <LoadoutEditPanel
+          operator={editingSlot.operator}
+          loadout={loadouts[editingSlot.slotId]}
+          stats={loadoutStats[editingSlot.slotId]}
+          onStatsChange={(s) => handleStatsChange(editingSlot.slotId, s)}
+          onClose={() => setEditingSlotId(null)}
+        />
+      )}
 
       {contextMenu && (
         <ContextMenu

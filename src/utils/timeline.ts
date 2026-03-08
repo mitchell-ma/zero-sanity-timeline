@@ -6,11 +6,13 @@ export const TOTAL_FRAMES = FPS * TOTAL_SECONDS; // 14,400
 export const BASE_PX_PER_SECOND = 60;
 
 export const TIME_AXIS_WIDTH = 68;
-export const COL_WIDTH = 88;
+export const COL_WIDTH = 100;
+export const LOADOUT_ROW_HEIGHT = 140;
 export const HEADER_HEIGHT = 72;
 export const APP_BAR_HEIGHT = 52;
 export const CONTROLS_BAR_HEIGHT = 44;
 
+export const TIMELINE_TOP_PAD = 16;
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 20;
 
@@ -24,15 +26,15 @@ export function pxPerFrame(zoom: number): number {
 }
 
 export function frameToPx(frame: number, zoom: number): number {
-  return frame * pxPerFrame(zoom);
+  return TIMELINE_TOP_PAD + frame * pxPerFrame(zoom);
 }
 
 export function pxToFrame(px: number, zoom: number): number {
-  return Math.max(0, Math.min(TOTAL_FRAMES, Math.round(px / pxPerFrame(zoom))));
+  return Math.max(0, Math.min(TOTAL_FRAMES, Math.round((px - TIMELINE_TOP_PAD) / pxPerFrame(zoom))));
 }
 
 export function timelineHeight(zoom: number): number {
-  return TOTAL_FRAMES * pxPerFrame(zoom);
+  return TIMELINE_TOP_PAD + TOTAL_FRAMES * pxPerFrame(zoom);
 }
 
 export function frameToTimeLabel(frame: number): string {
