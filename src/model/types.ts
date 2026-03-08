@@ -1,11 +1,11 @@
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
-export type SkillType = 'basic' | 'battle' | 'combo' | 'ultimate';
+export type SkillType = "basic" | "battle" | "combo" | "ultimate";
 
 export interface SkillDef {
   name: string;
-  defaultActiveDuration: number;    // frames
+  defaultActiveDuration: number; // frames
   defaultLingeringDuration: number; // frames
-  defaultCooldownDuration: number;  // frames
+  defaultCooldownDuration: number; // frames
   triggerCondition: string | null;
 }
 
@@ -63,7 +63,7 @@ export type VisibleSkills = Record<string, Record<SkillType, boolean>>;
 
 export type SkillColumn = {
   key: string;
-  type: 'skill';
+  type: "skill";
   ownerId: string;
   channelId: SkillType;
   operator: Operator;
@@ -73,8 +73,8 @@ export type SkillColumn = {
 
 export type StatusColumn = {
   key: string;
-  type: 'status';
-  ownerId: 'enemy';
+  type: "status";
+  ownerId: "enemy";
   channelId: string;
   status: EnemyStatus;
   color: string;

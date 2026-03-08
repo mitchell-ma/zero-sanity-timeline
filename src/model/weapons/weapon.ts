@@ -1,13 +1,10 @@
-import { WeaponType, WeaponSkill } from '../enums';
+import { WeaponType } from "../enums";
+import { WeaponSkill } from "../weapon-skills/weaponSkill";
 
 /** Valid weapon rarity values. */
 export type WeaponRarity = 3 | 4 | 5 | 6;
 
-/** Weapon skill upgrade level. */
-export type WeaponSkillLevel = number;
-
-/** Rarity 3 weapons have two skills; rarity 4–6 weapons have three. */
-export type WeaponSkillCount<R extends WeaponRarity> = R extends 3 ? 2 : 3;
+import { lookupByLevel } from "../../utils/lookupByLevel";
 
 export abstract class Weapon {
   readonly weaponType: WeaponType;
@@ -15,39 +12,35 @@ export abstract class Weapon {
 
   level: number;
 
-  weaponSkillOne:   WeaponSkill;
-  weaponSkillTwo:   WeaponSkill;
+  weaponSkillOne: WeaponSkill;
+  weaponSkillTwo: WeaponSkill;
   weaponSkillThree: WeaponSkill | undefined;
 
-  weaponSkillOneLevel:   WeaponSkillLevel;
-  weaponSkillTwoLevel:   WeaponSkillLevel;
-  weaponSkillThreeLevel: WeaponSkillLevel | undefined;
+  protected readonly baseAttackByLevel: Readonly<Record<number, number>>;
 
   constructor(params: {
     weaponType: WeaponType;
     weaponRarity: WeaponRarity;
     level: number;
+    baseAttackByLevel: Readonly<Record<number, number>>;
     weaponSkillOne: WeaponSkill;
     weaponSkillTwo: WeaponSkill;
     weaponSkillThree?: WeaponSkill;
-    weaponSkillOneLevel: WeaponSkillLevel;
-    weaponSkillTwoLevel: WeaponSkillLevel;
-    weaponSkillThreeLevel?: WeaponSkillLevel;
   }) {
     const {
       weaponType,
       weaponRarity,
       level,
+      baseAttackByLevel,
       weaponSkillOne,
       weaponSkillTwo,
       weaponSkillThree,
-      weaponSkillOneLevel,
-      weaponSkillTwoLevel,
-      weaponSkillThreeLevel,
     } = params;
 
     if (level < 1 || !Number.isInteger(level)) {
-      throw new RangeError(`Weapon level must be a positive integer, got ${level}`);
+      throw new RangeError(
+        `Weapon level must be a positive integer, got ${level}`,
+      );
     }
 
     const hasThirdSkill = weaponRarity >= 4;
@@ -58,29 +51,24 @@ export abstract class Weapon {
       );
     }
     if (!hasThirdSkill && weaponSkillThree !== undefined) {
-      throw new Error(
-        `Rarity 3 weapons do not have a third skill`,
-      );
-    }
-    if (hasThirdSkill && weaponSkillThreeLevel === undefined) {
-      throw new Error(
-        `Rarity ${weaponRarity} weapon requires weaponSkillThreeLevel`,
-      );
+      throw new Error(`Rarity 3 weapons do not have a third skill`);
     }
 
-    this.weaponType           = weaponType;
-    this.weaponRarity         = weaponRarity;
-    this.level                = level;
-    this.weaponSkillOne       = weaponSkillOne;
-    this.weaponSkillTwo       = weaponSkillTwo;
-    this.weaponSkillThree     = weaponSkillThree;
-    this.weaponSkillOneLevel   = weaponSkillOneLevel;
-    this.weaponSkillTwoLevel   = weaponSkillTwoLevel;
-    this.weaponSkillThreeLevel = weaponSkillThreeLevel;
+    this.weaponType = weaponType;
+    this.weaponRarity = weaponRarity;
+    this.level = level;
+    this.baseAttackByLevel = baseAttackByLevel;
+    this.weaponSkillOne = weaponSkillOne;
+    this.weaponSkillTwo = weaponSkillTwo;
+    this.weaponSkillThree = weaponSkillThree;
   }
 
   /** Whether this weapon has a third skill slot (rarity 4–6). */
   get hasThirdSkill(): boolean {
     return this.weaponRarity >= 4;
+  }
+
+  getBaseAttack(): number {
+    return lookupByLevel(this.baseAttackByLevel, this.level);
   }
 }
