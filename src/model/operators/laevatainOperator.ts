@@ -6,7 +6,7 @@ import {
   Twilight,
 } from "../combat-skills/laevatainSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { BaseOperator } from "./baseOperator";
+import { Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
@@ -56,7 +56,7 @@ const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>
   },
 };
 
-export class LaevatainOperator extends BaseOperator {
+export class LaevatainOperator extends Operator {
   static readonly ELEMENT = ElementType.HEAT;
   static readonly OPERATOR_CLASS = OperatorClassType.STRIKER;
   static readonly WEAPON_TYPES = [WeaponType.SWORD];

@@ -1,11 +1,11 @@
 import { SkillType, Operator, Enemy } from "../consts/viewTypes";
 import { WeaponType } from "../consts/enums";
 
-import laevatainSplash from "../assets/operators/laevatain_splash.webp";
-import antalSplash from "../assets/operators/antal_splash.webp";
-import akekuriSplash from "../assets/operators/akekuri_splash.webp";
-import wulfgardSplash from "../assets/operators/wulfgard_splash.webp";
-import ardeliaSplash from "../assets/operators/ardelia_splash.webp";
+import laevatainSplash from "../assets/operators/Laevatain_Banner.webp";
+import antalSplash from "../assets/operators/Antal_Banner.webp";
+import akekuriSplash from "../assets/operators/Akekuri_Banner.webp";
+import wulfgardSplash from "../assets/operators/Wulfgard_Banner.webp";
+import ardeliaSplash from "../assets/operators/Ardelia_Banner.webp";
 
 export const SKILL_TYPES: Record<string, SkillType> = {
   BASIC:   'basic',

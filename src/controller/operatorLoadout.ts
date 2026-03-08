@@ -2,11 +2,11 @@ import { GearType } from "../consts/enums";
 import { Consumable } from "../model/consumables/consumable";
 import { Tactical } from "../model/consumables/tactical";
 import { Gear } from "../model/gears/gear";
-import { BaseOperator } from "../model/operators/baseOperator";
+import { Operator } from "../model/operators/operator";
 import { Weapon } from "../model/weapons/weapon";
 
 export class OperatorLoadout {
-  operator: BaseOperator | null;
+  operator: Operator | null;
   weapon: Weapon | null;
   armor: Gear | null;
   gloves: Gear | null;
@@ -16,7 +16,7 @@ export class OperatorLoadout {
   tactical: Tactical | null;
 
   constructor(params: {
-    operator: BaseOperator | null;
+    operator: Operator | null;
     weapon: Weapon | null;
     armor: Gear | null;
     gloves: Gear | null;

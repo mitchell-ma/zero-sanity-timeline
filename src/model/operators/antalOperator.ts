@@ -6,7 +6,7 @@ import {
   OverclockedMoment,
 } from "../combat-skills/antalSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { BaseOperator } from "./baseOperator";
+import { Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
@@ -56,7 +56,7 @@ const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>
   },
 };
 
-export class AntalOperator extends BaseOperator {
+export class AntalOperator extends Operator {
   static readonly ELEMENT = ElementType.ELECTRIC;
   static readonly OPERATOR_CLASS = OperatorClassType.SUPPORTER;
   static readonly WEAPON_TYPES = [WeaponType.ARTS_UNIT];

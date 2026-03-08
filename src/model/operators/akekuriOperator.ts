@@ -6,7 +6,7 @@ import {
   SquadOnMe,
 } from "../combat-skills/akekuriSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { BaseOperator } from "./baseOperator";
+import { Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
@@ -56,7 +56,7 @@ const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>
   },
 };
 
-export class AkekuriOperator extends BaseOperator {
+export class AkekuriOperator extends Operator {
   static readonly ELEMENT = ElementType.HEAT;
   static readonly OPERATOR_CLASS = OperatorClassType.VANGUARD;
   static readonly WEAPON_TYPES = [WeaponType.SWORD];

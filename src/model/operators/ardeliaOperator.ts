@@ -6,7 +6,7 @@ import {
   WoolyParty,
 } from "../combat-skills/ardeliaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { BaseOperator } from "./baseOperator";
+import { Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
@@ -56,7 +56,7 @@ const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>
   },
 };
 
-export class ArdeliaOperator extends BaseOperator {
+export class ArdeliaOperator extends Operator {
   static readonly ELEMENT = ElementType.NATURE;
   static readonly OPERATOR_CLASS = OperatorClassType.SUPPORTER;
   static readonly WEAPON_TYPES = [WeaponType.ARTS_UNIT];

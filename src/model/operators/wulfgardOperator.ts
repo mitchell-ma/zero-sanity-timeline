@@ -6,7 +6,7 @@ import {
   WolvenFury,
 } from "../combat-skills/wulfgardSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { BaseOperator } from "./baseOperator";
+import { Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
@@ -56,7 +56,7 @@ const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>
   },
 };
 
-export class WulfgardOperator extends BaseOperator {
+export class WulfgardOperator extends Operator {
   static readonly ELEMENT = ElementType.HEAT;
   static readonly OPERATOR_CLASS = OperatorClassType.CASTER;
   static readonly WEAPON_TYPES = [WeaponType.HANDCANNON];
