@@ -37,11 +37,6 @@ import { useTouchHandlers } from '../utils/useTouchHandlers';
 
 const MIN_SLOT_COLS = 4;
 
-// Minimum loadout width derived from icon layout:
-// Row 1: 5 icons × 28px + 4 gaps × 3px + 2 × 6px padding = 164px
-// Row 2: 2 icons × 28px + 1 gap × 3px = 59px (narrower, not constraining)
-const LOADOUT_MIN_WIDTH = 164;
-
 interface DragState {
   primaryId: string; // the event the user grabbed
   eventIds: string[];
@@ -245,51 +240,22 @@ export default function CombatPlanner({
   }
   const enemyColCount = 2; // arts-infliction + arts-reaction mini-timelines
 
-  // Compute per-slot column width: ensure loadout content fits
-  const slotColWidths: number[] = slotGroups.map((g) => {
-    const minPerCol = Math.ceil(LOADOUT_MIN_WIDTH / g.columnCount);
-    return Math.max(25, minPerCol); // floor of 25px
-  });
-  const commonColWidth = 25;
-  const enemyColWidth = enemyColCount > 0
-    ? Math.max(25, Math.ceil(LOADOUT_MIN_WIDTH / enemyColCount))
-    : 25;
+  // Build fluid gridTemplateColumns: fixed time axis + 1fr per data column
+  const gridCols = `${TIME_AXIS_WIDTH}px repeat(${columns.length}, minmax(0, 1fr))`;
 
-  // Build gridTemplateColumns string
-  const colWidthStrings: string[] = [];
-  for (let i = 0; i < commonColCount; i++) {
-    colWidthStrings.push(`${commonColWidth}px`);
-  }
-  for (let si = 0; si < slotGroups.length; si++) {
-    const g = slotGroups[si];
-    for (let c = 0; c < g.columnCount; c++) {
-      colWidthStrings.push(`${slotColWidths[si]}px`);
-    }
-  }
-  for (let i = 0; i < enemyColCount; i++) {
-    colWidthStrings.push(`${enemyColWidth}px`);
-  }
-  const gridCols = `${TIME_AXIS_WIDTH}px ${colWidthStrings.join(' ')}`;
-
-  // Precompute column X positions (content coords) for marquee intersection
-  const columnPositions = new Map<string, { left: number; right: number }>();
-  {
-    let xPos = TIME_AXIS_WIDTH;
+  // Compute column pixel positions from available container width
+  const containerWidth = outerRect?.width ?? 800;
+  const colPixelWidth = columns.length > 0 ? (containerWidth - TIME_AXIS_WIDTH) / columns.length : 0;
+  const columnPositions = useMemo(() => {
+    const map = new Map<string, { left: number; right: number }>();
     for (let i = 0; i < columns.length; i++) {
-      const col = columns[i];
-      const sgIdx = slotGroups.findIndex((g) => g.slot.slotId === col.ownerId);
-      const w = sgIdx >= 0
-        ? slotColWidths[sgIdx]
-        : col.ownerId === COMMON_OWNER_ID
-          ? commonColWidth
-          : enemyColWidth;
-      columnPositions.set(col.key, { left: xPos, right: xPos + w });
-      xPos += w;
+      const left = TIME_AXIS_WIDTH + i * colPixelWidth;
+      map.set(columns[i].key, { left, right: left + colPixelWidth });
     }
-  }
+    return map;
+  }, [columns, colPixelWidth]);
 
   const numCols  = columns.length;
-  const totalW   = TIME_AXIS_WIDTH + slotGroups.reduce((sum, g, i) => sum + g.columnCount * slotColWidths[i], 0) + commonColCount * commonColWidth + enemyColCount * enemyColWidth;
   const tlHeight = timelineHeight(zoom);
   const ticks    = getTickMarks(zoom);
   const combinedHeaderHeight = loadoutRowHeight + HEADER_HEIGHT;
@@ -965,7 +931,7 @@ export default function CombatPlanner({
       onMouseUp={handleMouseUp}
     >
       {/* ── Fixed headers (outside scroll) ─────────────────────── */}
-      <div className="timeline-header-area" style={{ width: totalW }}>
+      <div className="timeline-header-area">
         {/* Row 1: Loadout row */}
         <div
           ref={loadoutRef}
@@ -1114,7 +1080,7 @@ export default function CombatPlanner({
       <div ref={scrollRef} className={`timeline-scroll${hideScrollbar ? ' timeline-scroll--no-bar' : ''}`}>
         <div
           className="timeline-body-grid"
-          style={{ gridTemplateColumns: gridCols, width: totalW }}
+          style={{ gridTemplateColumns: gridCols }}
         >
           {/* Time axis */}
           <div ref={timeAxisRef} className="tl-time-axis" style={{ height: tlHeight }}>

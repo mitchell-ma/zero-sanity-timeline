@@ -391,17 +391,16 @@
 .timeline-header-area {
   flex-shrink: 0;
   overflow: hidden;
-  min-width: max-content;
 }
 
 .timeline-header-grid {
   display: grid;
-  min-width: max-content;
 }
 
 .timeline-scroll {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   touch-action: pan-y;
 }
@@ -415,7 +414,6 @@
 
 .timeline-body-grid {
   display: grid;
-  min-width: max-content;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1737,11 +1735,13 @@
   flex-direction: column;
   border-left: 2px solid var(--border-med);
   background: var(--bg-root);
+  overflow: hidden;
 }
 
 .dmg-table-scroll {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ── Loadout spacer — mirrors timeline loadout row ── */
@@ -1749,7 +1749,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
-  padding: 0 0 0.375rem 72px; /* TIME_WIDTH offset */
+  padding: 0 0 0.375rem 3.5rem; /* matches time column width */
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-med);
   box-sizing: border-box;
@@ -1795,7 +1795,7 @@
 
 .dmg-header-time {
   flex-shrink: 0;
-  width: 72px;
+  width: 3.5rem;
   text-align: center;
   font-family: var(--font-display);
   font-size: 0.6875rem;
@@ -1805,8 +1805,8 @@
 }
 
 .dmg-header-skill {
-  flex-shrink: 0;
-  width: 72px;
+  flex: 1;
+  min-width: 0;
   text-align: center;
   font-family: var(--font-display);
   font-size: 0.625rem;
@@ -1861,8 +1861,8 @@
 
 /* ── Cells ─────────────────────────────────────────── */
 .dmg-cell {
-  flex-shrink: 0;
-  width: 72px;
+  flex: 1;
+  min-width: 0;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
@@ -1884,7 +1884,7 @@
 }
 
 .dmg-cell-time {
-  width: 72px;
+  flex: 0 0 3.5rem;
   font-size: 0.625rem;
   color: var(--text-muted);
 }

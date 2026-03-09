@@ -9,8 +9,6 @@ import {
 } from '../controller/calculation/damageTableBuilder';
 import type { Slot } from '../controller/timeline/columnBuilder';
 
-const TIME_WIDTH = 72;
-const SKILL_COL_WIDTH = 72;
 const ROW_HEIGHT = 20;
 
 interface CombatSheetProps {
@@ -56,9 +54,9 @@ export default function CombatSheet({
   }, [onScrollProp]);
 
   const tlHeight = timelineHeight(zoom);
-  const totalContentWidth = TIME_WIDTH + tableColumns.length * SKILL_COL_WIDTH;
+  const numCols = tableColumns.length;
 
-  if (tableColumns.length === 0) {
+  if (numCols === 0) {
     return (
       <div className="dmg-table-empty">
         <span className="dmg-table-empty-text">No skill columns</span>
@@ -71,7 +69,7 @@ export default function CombatSheet({
       {/* Headers outside scroll — scrollbar starts below them */}
       <div
         className="dmg-loadout-spacer"
-        style={{ height: loadoutRowHeight, minWidth: totalContentWidth }}
+        style={{ height: loadoutRowHeight }}
       >
         {slotGroups.map((g) => (
           <div
@@ -79,7 +77,7 @@ export default function CombatSheet({
             className="dmg-loadout-op"
             style={{
               '--op-color': g.slot.operator?.color ?? '#666',
-              width: g.columns.length * SKILL_COL_WIDTH,
+              flex: g.columns.length,
             } as React.CSSProperties}
           >
             {g.slot.operator?.name ?? '—'}
@@ -87,7 +85,7 @@ export default function CombatSheet({
         ))}
       </div>
 
-      <div className="dmg-header" style={{ minWidth: totalContentWidth }}>
+      <div className="dmg-header">
         <div className="dmg-header-time">Time</div>
         {tableColumns.map((col) => (
           <div
@@ -104,7 +102,7 @@ export default function CombatSheet({
       <div ref={scrollRef} className="dmg-table-scroll" onScroll={handleScroll}>
         <div
           className="dmg-body"
-          style={{ height: tlHeight, minWidth: totalContentWidth }}
+          style={{ height: tlHeight }}
         >
           {rows.length === 0 ? (
             <div className="dmg-body-empty">
