@@ -1700,31 +1700,32 @@
 /* ═══════════════════════════════════════════════════════
    DAMAGE CALCULATION TABLE — positioned rows synced with timeline
 ══════════════════════════════════════════════════════════ */
-/* ── Scroll sync toggle — sits on the border between timeline and sheet ── */
-.scroll-sync-toggle {
-  flex-shrink: 0;
-  width: 20px;
+/* ── Scroll sync toggle in app bar ── */
+.btn-scroll-sync {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border-dim);
-  border-right: 1px solid var(--border-dim);
-  cursor: pointer;
-  transition: background 0.15s;
-  z-index: 10;
-}
-.scroll-sync-toggle:hover {
-  background: var(--bg-hover);
-}
-.scroll-sync-toggle svg {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-.scroll-sync-toggle--active svg {
+.btn-scroll-sync:hover {
+  border-color: var(--text-secondary);
+}
+.btn-scroll-sync--active {
   color: var(--blue);
+  border-color: var(--blue);
+}
+.btn-scroll-sync--active:hover {
+  border-color: var(--blue);
 }
 
 .dmg-table-outer {
