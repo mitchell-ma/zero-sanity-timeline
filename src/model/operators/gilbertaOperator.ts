@@ -1,0 +1,110 @@
+import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import {
+  BeamCohesionArts,
+  GravityMode,
+  MatrixDisplacement,
+  GravityField,
+} from "../combat-skills/gilbertaSkills";
+import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
+import { Operator } from "./operator";
+
+const RARITY: OperatorRarity = 6;
+
+const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
+  1: {
+    [StatType.ATTACK]: 57,
+    [StatType.STRENGTH]: 17,
+    [StatType.AGILITY]: 16,
+    [StatType.INTELLECT]: 25,
+    [StatType.WILL]: 19,
+  },
+  20: {
+    [StatType.ATTACK]: 114,
+    [StatType.STRENGTH]: 32,
+    [StatType.AGILITY]: 32,
+    [StatType.INTELLECT]: 58,
+    [StatType.WILL]: 41,
+  },
+  40: {
+    [StatType.ATTACK]: 174,
+    [StatType.STRENGTH]: 50,
+    [StatType.AGILITY]: 49,
+    [StatType.INTELLECT]: 94,
+    [StatType.WILL]: 65,
+  },
+  60: {
+    [StatType.ATTACK]: 232,
+    [StatType.STRENGTH]: 66,
+    [StatType.AGILITY]: 64,
+    [StatType.INTELLECT]: 127,
+    [StatType.WILL]: 87,
+  },
+  80: {
+    [StatType.ATTACK]: 289,
+    [StatType.STRENGTH]: 82,
+    [StatType.AGILITY]: 80,
+    [StatType.INTELLECT]: 161,
+    [StatType.WILL]: 109,
+  },
+  90: {
+    [StatType.ATTACK]: 318,
+    [StatType.STRENGTH]: 90,
+    [StatType.AGILITY]: 88,
+    [StatType.INTELLECT]: 178,
+    [StatType.WILL]: 120,
+  },
+};
+
+export class GilbertaOperator extends Operator {
+  static readonly ELEMENT = ElementType.NATURE;
+  static readonly OPERATOR_CLASS = OperatorClassType.SUPPORTER;
+  static readonly WEAPON_TYPES = [WeaponType.ARTS_UNIT];
+  static readonly OPERATOR_RARITY = RARITY;
+  static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
+  static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+
+  readonly basicAttack: BeamCohesionArts;
+  readonly battleSkill: GravityMode;
+  readonly comboSkill: MatrixDisplacement;
+  readonly ultimate: GravityField;
+
+  constructor(params: {
+    level: number;
+    potential?: Potential;
+    talentOneLevel?: number;
+    talentTwoLevel?: number;
+    basicAttackLevel?: SkillLevel;
+    battleSkillLevel?: SkillLevel;
+    comboSkillLevel?: SkillLevel;
+    ultimateLevel?: SkillLevel;
+  }) {
+    super({
+      name: "Gilberta",
+      element: GilbertaOperator.ELEMENT,
+      operatorClass: GilbertaOperator.OPERATOR_CLASS,
+      weaponTypes: GilbertaOperator.WEAPON_TYPES,
+      operatorRarity: GilbertaOperator.OPERATOR_RARITY,
+      mainAttributeType: GilbertaOperator.MAIN_ATTRIBUTE_TYPE,
+      secondaryAttributeType: GilbertaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      statsByLevel: STATS_BY_LEVEL,
+      ...params,
+    });
+
+    this.basicAttack = new BeamCohesionArts({
+      level: params.basicAttackLevel,
+      operatorPotential: params.potential,
+    });
+    this.battleSkill = new GravityMode({
+      level: params.battleSkillLevel,
+      operatorPotential: params.potential,
+    });
+    this.comboSkill = new MatrixDisplacement({
+      level: params.comboSkillLevel,
+      operatorPotential: params.potential,
+    });
+    this.ultimate = new GravityField({
+      level: params.ultimateLevel,
+      operatorPotential: params.potential,
+    });
+  }
+}

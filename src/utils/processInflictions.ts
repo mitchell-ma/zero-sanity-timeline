@@ -1,6 +1,14 @@
 import { TimelineEvent } from '../consts/viewTypes';
 import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS } from '../model/channels';
 
+/** Maps forced reaction name → reaction columnId. */
+const FORCED_REACTION_COLUMN: Record<string, string> = {
+  COMBUSTION: 'combustion',
+  SOLIDIFICATION: 'solidification',
+  CORROSION: 'corrosion',
+  ELECTRIFICATION: 'electrification',
+};
+
 /** Default active duration for derived reaction events (20s at 120fps). */
 const REACTION_DURATION = 2400;
 
@@ -51,22 +59,41 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          if (!frame.applyArtsInfliction) continue;
-
-          const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
-          if (!columnId) continue;
-
           const absoluteFrame = event.startFrame + cumulativeOffset + frame.offsetFrame;
-          derived.push({
-            id: `${event.id}-inflict-${si}-${fi}`,
-            name: columnId,
-            ownerId: 'enemy',
-            columnId,
-            startFrame: absoluteFrame,
-            activationDuration: INFLICTION_DURATION,
-            activeDuration: 0,
-            cooldownDuration: 0,
-          });
+
+          if (frame.applyArtsInfliction) {
+            const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
+            if (columnId) {
+              derived.push({
+                id: `${event.id}-inflict-${si}-${fi}`,
+                name: columnId,
+                ownerId: 'enemy',
+                columnId,
+                startFrame: absoluteFrame,
+                activationDuration: INFLICTION_DURATION,
+                activeDuration: 0,
+                cooldownDuration: 0,
+              });
+            }
+          }
+
+          // Forced reactions bypass infliction stacks entirely
+          if (frame.applyForcedReaction) {
+            const reactionColumnId = FORCED_REACTION_COLUMN[frame.applyForcedReaction.reaction];
+            if (reactionColumnId) {
+              derived.push({
+                id: `${event.id}-forced-${si}-${fi}`,
+                name: reactionColumnId,
+                ownerId: 'enemy',
+                columnId: reactionColumnId,
+                startFrame: absoluteFrame,
+                activationDuration: REACTION_DURATION,
+                activeDuration: 0,
+                cooldownDuration: 0,
+                statusLevel: frame.applyForcedReaction.statusLevel,
+              });
+            }
+          }
         }
       }
       cumulativeOffset += seg.durationFrames;
@@ -254,7 +281,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
  * - Clamps slot 3 events sequentially (previous ends where next begins)
  *
  * Uses iterative refinement: extend durations first, then assign slots using
- * the extended durations so the slot assignment matches TimelineGrid's greedy
+ * the extended durations so the slot assignment matches CombatPlanner's greedy
  * bin-packing on the processed output.
  */
 function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
@@ -293,7 +320,7 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
       extendedActive[i] = maxEnd - ev.startFrame;
     }
 
-    // Step 2: Assign slots using extended durations (matching TimelineGrid's
+    // Step 2: Assign slots using extended durations (matching CombatPlanner's
     // greedy algorithm on the processed output).
     const slotEndFrames = new Array(INFLICTION_SLOTS).fill(-1);
     const slotAssignment: number[] = [];

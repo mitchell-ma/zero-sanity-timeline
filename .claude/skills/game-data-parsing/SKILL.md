@@ -1,18 +1,21 @@
-# game-data directory
+---
+name: game-data-parsing
+description: Parse gamedata.json into skills.json frame data for Arknights Endfield operators. Use when adding new operator frame data, parsing attack segments, skill ticks, anomalies/inflictions, and variant (enhanced/empowered) forms.
+---
+
+This skill guides parsing of raw game data (`gamedata.json`) into structured skill frame data (`skills.json`) for the timeline calculator.
 
 ## Files
-- `gamedata.json` — Raw game data extracted from Arknights: Endfield
-- `skills.json` — Parsed skill/attack data for our operators, derived from gamedata.json
+- `src/model/game-data/gamedata.json` — Raw game data extracted from Arknights: Endfield
+- `src/model/game-data/skills.json` — Parsed skill/attack data for our operators, derived from gamedata.json
 
-## Parsing gamedata.json
-
-### Top-level structure
+## Top-level structure of gamedata.json
 - `characterRoster` — Array of operator objects
 - `enemyDatabase` — Enemy data
 - `weaponDatabase` — Weapon data
 - `equipmentDatabase` — Gear/equipment data
 
-### Character keys → skills.json mapping
+## Character keys → skills.json mapping
 
 Each character in `characterRoster` has:
 
@@ -41,14 +44,14 @@ Each character in `characterRoster` has:
 | `ultimate_damage_ticks[]` | `*_ULTIMATE_TICK_N` | Same tick format |
 | `execution_duration` | Not yet parsed | Finisher animation duration |
 
-### Terminology mapping
+## Terminology mapping
 - gamedata `skill_*` = Battle Skill (`CombatSkillType.BATTLE_SKILL`)
 - gamedata `link_*` = Combo Skill (`CombatSkillType.COMBO_SKILL`)
 - gamedata `ultimate_*` = Ultimate (`CombatSkillType.ULTIMATE`)
 - gamedata `attack_segments` = Basic Attack (`CombatSkillType.BASIC_ATTACK`)
 - gamedata `execution_*` = Finisher (not yet modeled)
 
-### Anomalies / inflictions in gamedata
+## Anomalies / inflictions in gamedata
 
 Anomalies represent status inflictions applied by damage ticks. They appear on:
 - `attack_segments[].anomalies` or `attack_segments[].physicalAnomaly` — per-segment inflictions
@@ -63,7 +66,7 @@ Each anomaly entry has:
 | `offset` | Time offset in seconds |
 | `_id` | Links to `boundEffects` array on damage ticks |
 
-#### Anomaly type → skills.json mapping
+### Anomaly type → skills.json mapping
 | gamedata `type` | skills.json `APPLY_ARTS_INFLICTION` key | Element |
 |---|---|---|
 | `blaze_attach` | `HEAT` | Heat Infliction |
@@ -71,13 +74,15 @@ Each anomaly entry has:
 | `emag_attach` | `ELECTRIC` | Electric Infliction |
 | `nature_attach` | `NATURE` | Nature Infliction |
 
-#### Anomaly type → non-infliction effects (not parsed as APPLY_ARTS_INFLICTION)
+### Anomaly type → non-infliction effects (not parsed as APPLY_ARTS_INFLICTION)
 | gamedata `type` | Meaning |
 |---|---|
-| `magma_0` – `magma_4` | Melting Flame / Scorching Heart absorption trigger (Laevatain talent) |
+| `magma_0` | StatusLevel 1 Combustion (forced arts reaction, bypasses infliction stacks) |
+| `magma_1` – `magma_3` | Intermediate Melting Flame effects (stack-dependent) |
+| `magma_4` | Melting Flame / Scorching Heart absorption (absorbs Heat infliction → Melting Flame stacks) |
 | `blaze_burst` / `burning` | Combustion arts reaction |
 
-### skills.json tick format
+## skills.json tick format
 
 Each tick in skills.json has:
 ```json
@@ -85,24 +90,36 @@ Each tick in skills.json has:
   "OFFSET_SECONDS": 0.3,
   "SKILL_POINT_RECOVERY": 0,
   "STAGGER": 0,
-  "APPLY_ARTS_INFLICTION": {        // optional — present when this tick applies an infliction
-    "<ELEMENT>": {                   // HEAT, CRYO, ELECTRIC, or NATURE
+  "APPLY_ARTS_INFLICTION": {
+    "<ELEMENT>": {
       "STACKS": 1
     }
   },
-  "ABSORB_ARTS_INFLICTION": {       // optional — present when this tick absorbs infliction from enemies
-    "<ELEMENT>": {                   // HEAT, CRYO, ELECTRIC, or NATURE
-      "STACKS": 4,                  // max stacks absorbed
+  "APPLY_FORCED_REACTION": {
+    "REACTION": "COMBUSTION",
+    "STATUS_LEVEL": 1
+  },
+  "ABSORB_ARTS_INFLICTION": {
+    "<ELEMENT>": {
+      "STACKS": 4,
       "CONVERSION": {
-        "EXCHANGE": "MELTING_FLAME", // StatusType enum value the absorbed stacks convert into
-        "RATIO": "1:1"              // conversion ratio (absorbed:converted)
+        "EXCHANGE": "MELTING_FLAME",
+        "RATIO": "1:1"
       }
     }
   }
 }
 ```
 
-### Variants in gamedata
+Fields:
+- `OFFSET_SECONDS` — When the hit lands (seconds from skill start)
+- `SKILL_POINT_RECOVERY` — SP gained on hit
+- `STAGGER` — Stagger damage dealt
+- `APPLY_ARTS_INFLICTION` — (optional) Element infliction with stack count
+- `APPLY_FORCED_REACTION` — (optional) Forced arts reaction bypassing infliction stacks
+- `ABSORB_ARTS_INFLICTION` — (optional) Absorbs infliction from enemies, with conversion info
+
+## Variants in gamedata
 
 `variants[]` contains enhanced/empowered forms of skills. Each variant has:
 - `name` — Chinese name (强化 = Empowered, 大招内 = Enhanced/during ult)
@@ -112,6 +129,17 @@ Each tick in skills.json has:
 
 Naming convention: **Enhanced** = during ultimate, **Empowered** = from status effects (e.g. Melting Flame stacks).
 
-### Other character fields (not yet in skills.json)
+## Other character fields (not yet in skills.json)
 - `skill_allowed_types` / `link_allowed_types` — Status types that can be active during the skill
 - `exclusive_buffs` — Operator-specific buff icons (e.g. Laevatain's Melting Flame stacks)
+
+## Parsing workflow
+
+1. Find operator in `characterRoster` by `id`
+2. Extract basic attack sequences from `attack_segments[]`
+3. Extract battle skill from `skill_*` fields
+4. Extract combo skill from `link_*` fields
+5. Extract ultimate from `ultimate_*` fields
+6. For each damage tick, map anomalies using the type mapping above
+7. Check `variants[]` for enhanced/empowered forms
+8. Output to skills.json following the tick format above

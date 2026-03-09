@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useHistory } from './utils/useHistory';
-import TimelineGrid from './view/TimelineGrid';
+import CombatPlanner from './view/CombatPlanner';
+import CombatSheet from './view/CombatSheet';
 import ContextMenu from './view/ContextMenu';
 import InformationPane, { LoadoutStats, DEFAULT_LOADOUT_STATS, getDefaultLoadoutStats } from './view/InformationPane';
 import AppBar from './view/AppBar';
@@ -43,6 +44,7 @@ import { useKeyboardShortcuts } from './app/useKeyboardShortcuts';
 import { useCombatLoadout } from './app/useCombatLoadout';
 import { useResourceGraphs } from './app/useResourceGraphs';
 import { useAutoSave } from './app/useAutoSave';
+import { LOADOUT_ROW_HEIGHT } from './utils/timeline';
 import './App.css';
 
 const initialLoad = loadInitialState();
@@ -72,9 +74,40 @@ export default function App() {
   const [editingSlotId,  setEditingSlotId]  = useState<string | null>(null);
   const [enemy,          setEnemy]          = useState(initialLoad.loaded?.enemy ?? DEFAULT_ENEMY);
   const [selectedFrame,  setSelectedFrame]  = useState<SelectedFrame | null>(null);
+  const [hoverFrame,     setHoverFrame]     = useState<number | null>(null);
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
+
+  // ─── Scroll sync between timeline and damage table ──────────────────────
+  const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const dmgScrollRef = useRef<HTMLDivElement | null>(null);
+  const isSyncing = useRef(false);
+
+  const handleTimelineScrollRef = useCallback((el: HTMLDivElement | null) => {
+    timelineScrollRef.current = el;
+  }, []);
+
+  // Sheet has an invisible spacer matching the timeline header area,
+  // so both scroll containers share the same coordinate system — direct 1:1.
+  const handleTimelineScroll = useCallback((scrollTop: number) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (dmgScrollRef.current) dmgScrollRef.current.scrollTop = scrollTop;
+    isSyncing.current = false;
+  }, []);
+
+  const handleDmgScrollRef = useCallback((el: HTMLDivElement | null) => {
+    dmgScrollRef.current = el;
+  }, []);
+
+  const handleDmgScroll = useCallback((scrollTop: number) => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (timelineScrollRef.current) timelineScrollRef.current.scrollTop = scrollTop;
+    isSyncing.current = false;
+  }, []);
 
   // ─── Controllers & hooks ─────────────────────────────────────────────────
   const { activationWindows, activationWindowsRef, combatLoadout } =
@@ -292,34 +325,52 @@ export default function App() {
         onKeys={() => setKeysOpen((p) => !p)}
       />
 
-      <TimelineGrid
-        slots={slots}
-        enemy={enemy}
-        events={processedEvents}
-        columns={columns}
-        visibleSkills={visibleSkills}
-        loadouts={loadouts}
-        zoom={zoom}
-        onZoom={handleZoom}
-        onToggleSkill={handleToggleSkill}
-        onAddEvent={handleAddEvent}
-        onMoveEvent={handleMoveEvent}
-        onContextMenu={setContextMenu}
-        onEditEvent={(id) => { setEditingEventId(id); setSelectedFrame(null); }}
-        onRemoveEvent={handleRemoveEvent}
-        onLoadoutChange={handleLoadoutChange}
-        onEditLoadout={setEditingSlotId}
-        allOperators={ALL_OPERATORS}
-        onSwapOperator={handleSwapOperator}
-        allEnemies={ALL_ENEMIES}
-        onSwapEnemy={handleSwapEnemy}
-        activationWindows={activationWindows}
-        resourceGraphs={resourceGraphs}
-        onBatchStart={beginBatch}
-        onBatchEnd={endBatch}
-        onFrameClick={handleFrameClick}
-        selectedFrame={selectedFrame}
-      />
+      <div className="app-body">
+        <CombatPlanner
+          slots={slots}
+          enemy={enemy}
+          events={processedEvents}
+          columns={columns}
+          visibleSkills={visibleSkills}
+          loadouts={loadouts}
+          zoom={zoom}
+          onZoom={handleZoom}
+          onToggleSkill={handleToggleSkill}
+          onAddEvent={handleAddEvent}
+          onMoveEvent={handleMoveEvent}
+          onContextMenu={setContextMenu}
+          onEditEvent={(id) => { setEditingEventId(id); setSelectedFrame(null); }}
+          onRemoveEvent={handleRemoveEvent}
+          onLoadoutChange={handleLoadoutChange}
+          onEditLoadout={setEditingSlotId}
+          allOperators={ALL_OPERATORS}
+          onSwapOperator={handleSwapOperator}
+          allEnemies={ALL_ENEMIES}
+          onSwapEnemy={handleSwapEnemy}
+          activationWindows={activationWindows}
+          resourceGraphs={resourceGraphs}
+          onBatchStart={beginBatch}
+          onBatchEnd={endBatch}
+          onFrameClick={handleFrameClick}
+          selectedFrame={selectedFrame}
+          onScrollRef={handleTimelineScrollRef}
+          onScroll={handleTimelineScroll}
+          onLoadoutRowHeight={setLoadoutRowHeight}
+          onHoverFrame={setHoverFrame}
+        />
+
+        <CombatSheet
+          slots={slots}
+          events={processedEvents}
+          columns={columns}
+          zoom={zoom}
+          loadoutRowHeight={loadoutRowHeight}
+          selectedFrame={selectedFrame}
+          hoverFrame={hoverFrame}
+          onScrollRef={handleDmgScrollRef}
+          onScroll={handleDmgScroll}
+        />
+      </div>
 
       {contextMenu && (
         <ContextMenu

@@ -413,6 +413,11 @@ function EventPane({
                                 Absorb: {f.absorbArtsInfliction.element} Infliction (max {f.absorbArtsInfliction.stacks}) → {f.absorbArtsInfliction.exchangeStatus.replace(/_/g, ' ')} ({f.absorbArtsInfliction.ratio})
                               </div>
                             )}
+                            {f.applyForcedReaction && (
+                              <div style={{ paddingLeft: 8, color: '#ff5522' }}>
+                                Apply: {f.applyForcedReaction.reaction.replace(/_/g, ' ')} (Lv.{f.applyForcedReaction.statusLevel})
+                              </div>
+                            )}
                           </div>
                         );
                       })}

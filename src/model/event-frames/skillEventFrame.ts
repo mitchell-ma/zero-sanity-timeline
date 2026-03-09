@@ -14,6 +14,12 @@ export interface FrameArtsAbsorption {
   ratio: string;         // e.g. "1:1"
 }
 
+/** Forced arts reaction applied by a frame tick (bypasses infliction stacks). */
+export interface FrameForcedReaction {
+  reaction: StatusType;  // e.g. COMBUSTION
+  statusLevel: number;   // reaction intensity level
+}
+
 /** A single damage tick within a skill sequence. */
 export abstract class SkillEventFrame {
   /** Offset in seconds from the start of the parent sequence. */
@@ -30,6 +36,9 @@ export abstract class SkillEventFrame {
 
   /** Arts infliction absorbed by this frame, or null. */
   getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return null; }
+
+  /** Forced arts reaction applied by this frame, or null. */
+  getApplyForcedReaction(): FrameForcedReaction | null { return null; }
 
   /** Whether this frame grants any skill points. */
   hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }

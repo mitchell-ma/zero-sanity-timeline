@@ -1,6 +1,5 @@
 import { TimelineSourceType, TriggerConditionType } from '../../consts/enums';
 import {
-  TRIGGER_CAPABILITIES,
   TriggerCapability,
 } from '../../consts/triggerCapabilities';
 import {
@@ -60,7 +59,7 @@ function getTriggerScope(
 
 /** Configuration passed in when assigning an operator to this slot. */
 export interface OperatorSlotConfig {
-  /** Operator ID (must match a key in TRIGGER_CAPABILITIES if the operator has one). */
+  /** Operator ID. */
   id: string;
   /** Display color for column headers. */
   color: string;
@@ -68,6 +67,8 @@ export interface OperatorSlotConfig {
   skills: Record<SkillType, SkillDef>;
   /** Additional subtimeline columns beyond the 4 standard skills (e.g. Melting Flame). */
   extraColumns?: ExtraColumnDef[];
+  /** Trigger capability derived from operator skills/talents. */
+  triggerCapability?: TriggerCapability;
 }
 
 /** Definition for an extra (non-skill) subtimeline column. */
@@ -192,9 +193,7 @@ export class SlotController {
 
     // 2. Apply new config
     this.config = config;
-    this.capability = config
-      ? (TRIGGER_CAPABILITIES[config.id] ?? null)
-      : null;
+    this.capability = config?.triggerCapability ?? null;
 
     // 3. Build subtimelines for new operator
     if (config) {
@@ -502,15 +501,13 @@ export class SlotController {
     const subCap = subCtrl.capability;
     if (!pubCap || !subCap) return;
 
-    const required = subCap.comboRequires;
-    const key = triggerKey(required);
-
-    const triggerSets = Object.values(pubCap.publishesTriggers);
-    for (let i = 0; i < triggerSets.length; i++) {
-      const triggers = triggerSets[i];
-      if (triggers && triggers.includes(required)) {
-        pubsubSubscribe(key, pubCtrl.publisher, subCtrl.comboSubscriber);
-        return;
+    const publishes = pubCap.publishesTriggers;
+    for (const required of subCap.comboRequires) {
+      const hasTrigger = Object.keys(publishes).some((k) =>
+        publishes[k]?.includes(required),
+      );
+      if (hasTrigger) {
+        pubsubSubscribe(triggerKey(required), pubCtrl.publisher, subCtrl.comboSubscriber);
       }
     }
   }
@@ -519,11 +516,13 @@ export class SlotController {
   private unwirePair(pubCtrl: SlotController, subCtrl: SlotController): void {
     const subCap = subCtrl.capability;
     if (!subCap) return;
-    pubsubUnsubscribe(
-      triggerKey(subCap.comboRequires),
-      pubCtrl.publisher,
-      subCtrl.comboSubscriber,
-    );
+    for (const required of subCap.comboRequires) {
+      pubsubUnsubscribe(
+        triggerKey(required),
+        pubCtrl.publisher,
+        subCtrl.comboSubscriber,
+      );
+    }
   }
 
   // ── Internal: gear effect wiring ────────────────────────────────────────

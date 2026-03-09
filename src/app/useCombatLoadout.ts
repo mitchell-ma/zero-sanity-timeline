@@ -26,7 +26,7 @@ export function useCombatLoadout(
   // Sync operators into loadout
   useEffect(() => {
     operators.forEach((op, i) => {
-      combatLoadoutRef.current.setOperator(i, op?.id ?? null);
+      combatLoadoutRef.current.setOperator(i, op);
     });
   }, [operators]);
 

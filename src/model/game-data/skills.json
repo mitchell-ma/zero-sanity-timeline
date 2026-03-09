@@ -428,10 +428,9 @@
             "OFFSET_SECONDS": 1.267,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0,
-            "APPLY_ARTS_INFLICTION": {
-              "HEAT": {
-                "STACKS": 1
-              }
+            "APPLY_FORCED_REACTION": {
+              "REACTION": "COMBUSTION",
+              "STATUS_LEVEL": 1
             }
           }
         },
@@ -784,6 +783,1941 @@
           "AKEKURI_ULTIMATE_GAUGE_MAX": 108,
           "AKEKURI_ULTIMATE_GAUGE_REPLY": 0,
           "AKEKURI_ULTIMATE_TICKS": 0
+        }
+      }
+    },
+    "ENDMINISTRATOR": {
+      "BASIC_ATTACK": {
+        "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_1": {
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.33,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_2": {
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.43,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_3": {
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.6,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4": {
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.1,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_TICKS": 4,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_4_TICK_4": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_5": {
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_5_DURATION": 0.867,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "ENDMINISTRATOR_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 20,
+            "STAGGER": 18
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "ENDMINISTRATOR_BATTLE_SKILL": {
+          "ENDMINISTRATOR_BATTLE_SKILL_DURATION": 0.8,
+          "ENDMINISTRATOR_BATTLE_SKILL_SP_COST": 100,
+          "ENDMINISTRATOR_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "ENDMINISTRATOR_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "ENDMINISTRATOR_BATTLE_SKILL_TICKS": 1,
+          "ENDMINISTRATOR_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.37,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ENDMINISTRATOR_COMBO_SKILL": {
+          "ENDMINISTRATOR_COMBO_SKILL_DURATION": 0.77,
+          "ENDMINISTRATOR_COMBO_SKILL_COOLDOWN": 16,
+          "ENDMINISTRATOR_COMBO_SKILL_GAUGE_GAIN": 10,
+          "ENDMINISTRATOR_COMBO_SKILL_TICKS": 1,
+          "ENDMINISTRATOR_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ENDMINISTRATOR_ULTIMATE": {
+          "ENDMINISTRATOR_ULTIMATE_DURATION": 1.83,
+          "ENDMINISTRATOR_ULTIMATE_ANIMATION_TIME": 1.467,
+          "ENDMINISTRATOR_ULTIMATE_GAUGE_MAX": 80,
+          "ENDMINISTRATOR_ULTIMATE_GAUGE_REPLY": 0,
+          "ENDMINISTRATOR_ULTIMATE_TICKS": 1,
+          "ENDMINISTRATOR_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 25
+          }
+        }
+      }
+    },
+    "POGRANICHNK": {
+      "BASIC_ATTACK": {
+        "POGRANICHNK_BASIC_ATTACK_SEQUENCE_1": {
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.43,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "POGRANICHNK_BASIC_ATTACK_SEQUENCE_2": {
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.67,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.47,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "POGRANICHNK_BASIC_ATTACK_SEQUENCE_3": {
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.67,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4": {
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.63,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICKS": 6,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_4": {
+            "OFFSET_SECONDS": 0.37,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_5": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_4_TICK_6": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "POGRANICHNK_BASIC_ATTACK_SEQUENCE_5": {
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_5_DURATION": 0.83,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "POGRANICHNK_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 20,
+            "STAGGER": 18
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "POGRANICHNK_BATTLE_SKILL": {
+          "POGRANICHNK_BATTLE_SKILL_DURATION": 1.5,
+          "POGRANICHNK_BATTLE_SKILL_SP_COST": 100,
+          "POGRANICHNK_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "POGRANICHNK_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "POGRANICHNK_BATTLE_SKILL_TICKS": 2,
+          "POGRANICHNK_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "POGRANICHNK_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "POGRANICHNK_COMBO_SKILL": {
+          "POGRANICHNK_COMBO_SKILL_DURATION": 2.2,
+          "POGRANICHNK_COMBO_SKILL_COOLDOWN": 18,
+          "POGRANICHNK_COMBO_SKILL_GAUGE_GAIN": 10,
+          "POGRANICHNK_COMBO_SKILL_TICKS": 3,
+          "POGRANICHNK_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 5,
+            "STAGGER": 3
+          },
+          "POGRANICHNK_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.23,
+            "SKILL_POINT_RECOVERY": 7,
+            "STAGGER": 3
+          },
+          "POGRANICHNK_COMBO_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 2.03,
+            "SKILL_POINT_RECOVERY": 23,
+            "STAGGER": 9
+          }
+        }
+      },
+      "ULTIMATE": {
+        "POGRANICHNK_ULTIMATE": {
+          "POGRANICHNK_ULTIMATE_DURATION": 3,
+          "POGRANICHNK_ULTIMATE_ANIMATION_TIME": 2.47,
+          "POGRANICHNK_ULTIMATE_GAUGE_MAX": 90,
+          "POGRANICHNK_ULTIMATE_GAUGE_REPLY": 0,
+          "POGRANICHNK_ULTIMATE_TICKS": 6,
+          "POGRANICHNK_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.47,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          },
+          "POGRANICHNK_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_ULTIMATE_TICK_4": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_ULTIMATE_TICK_5": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 0
+          },
+          "POGRANICHNK_ULTIMATE_TICK_6": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 30,
+            "STAGGER": 15
+          }
+        }
+      }
+    },
+    "LASTRITE": {
+      "BASIC_ATTACK": {
+        "LASTRITE_BASIC_ATTACK_SEQUENCE_1": {
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.7,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LASTRITE_BASIC_ATTACK_SEQUENCE_2": {
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_2_DURATION": 1,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LASTRITE_BASIC_ATTACK_SEQUENCE_3": {
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_3_DURATION": 1.23,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LASTRITE_BASIC_ATTACK_SEQUENCE_4": {
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.567,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 30,
+            "STAGGER": 25
+          }
+        },
+        "LASTRITE_BASIC_ATTACK_SEQUENCE_5": {
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "LASTRITE_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "LASTRITE_BATTLE_SKILL": {
+          "LASTRITE_BATTLE_SKILL_DURATION": 0.5,
+          "LASTRITE_BATTLE_SKILL_SP_COST": 100,
+          "LASTRITE_BATTLE_SKILL_GAUGE_GAIN": 16,
+          "LASTRITE_BATTLE_SKILL_TEAM_GAUGE_GAIN": 0,
+          "LASTRITE_BATTLE_SKILL_TICKS": 1,
+          "LASTRITE_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 30,
+            "STAGGER": 0
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "LASTRITE_COMBO_SKILL": {
+          "LASTRITE_COMBO_SKILL_DURATION": 2.17,
+          "LASTRITE_COMBO_SKILL_COOLDOWN": 9,
+          "LASTRITE_COMBO_SKILL_GAUGE_GAIN": 85,
+          "LASTRITE_COMBO_SKILL_TICKS": 2,
+          "LASTRITE_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LASTRITE_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 2.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 15
+          }
+        }
+      },
+      "ULTIMATE": {
+        "LASTRITE_ULTIMATE": {
+          "LASTRITE_ULTIMATE_DURATION": 4.67,
+          "LASTRITE_ULTIMATE_ANIMATION_TIME": 2.867,
+          "LASTRITE_ULTIMATE_GAUGE_MAX": 240,
+          "LASTRITE_ULTIMATE_GAUGE_REPLY": 0,
+          "LASTRITE_ULTIMATE_TICKS": 3,
+          "LASTRITE_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.87,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "LASTRITE_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 3.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "LASTRITE_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 4.47,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      }
+    },
+    "GILBERTA": {
+      "BASIC_ATTACK": {
+        "GILBERTA_BASIC_ATTACK_SEQUENCE_1": {
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.63,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "GILBERTA_BASIC_ATTACK_SEQUENCE_2": {
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.767,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "GILBERTA_BASIC_ATTACK_SEQUENCE_3": {
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.8,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_3_TICKS": 3,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.233,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.333,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_3_TICK_3": {
+            "OFFSET_SECONDS": 0.467,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "GILBERTA_BASIC_ATTACK_SEQUENCE_4": {
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.367,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_4_TICKS": 3,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.767,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.833,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 16,
+            "STAGGER": 16
+          }
+        },
+        "GILBERTA_BASIC_ATTACK_SEQUENCE_5": {
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "GILBERTA_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "GILBERTA_BATTLE_SKILL": {
+          "GILBERTA_BATTLE_SKILL_DURATION": 4.1,
+          "GILBERTA_BATTLE_SKILL_SP_COST": 100,
+          "GILBERTA_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "GILBERTA_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "GILBERTA_BATTLE_SKILL_TICKS": 5,
+          "GILBERTA_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.97,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 2.067,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BATTLE_SKILL_TICK_4": {
+            "OFFSET_SECONDS": 2.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "GILBERTA_BATTLE_SKILL_TICK_5": {
+            "OFFSET_SECONDS": 3.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "NATURE": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "GILBERTA_COMBO_SKILL": {
+          "GILBERTA_COMBO_SKILL_DURATION": 1.77,
+          "GILBERTA_COMBO_SKILL_COOLDOWN": 20,
+          "GILBERTA_COMBO_SKILL_GAUGE_GAIN": 10,
+          "GILBERTA_COMBO_SKILL_TICKS": 1,
+          "GILBERTA_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 1.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      },
+      "ULTIMATE": {
+        "GILBERTA_ULTIMATE": {
+          "GILBERTA_ULTIMATE_DURATION": 2.13,
+          "GILBERTA_ULTIMATE_ANIMATION_TIME": 2,
+          "GILBERTA_ULTIMATE_GAUGE_MAX": 90,
+          "GILBERTA_ULTIMATE_GAUGE_REPLY": 0,
+          "GILBERTA_ULTIMATE_TICKS": 1,
+          "GILBERTA_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 20,
+            "APPLY_ARTS_INFLICTION": {
+              "NATURE": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "YVONNE": {
+      "BASIC_ATTACK": {
+        "YVONNE_BASIC_ATTACK_SEQUENCE_1": {
+          "YVONNE_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.567,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "YVONNE_BASIC_ATTACK_SEQUENCE_2": {
+          "YVONNE_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.5,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.467,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "YVONNE_BASIC_ATTACK_SEQUENCE_3": {
+          "YVONNE_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.53,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "YVONNE_BASIC_ATTACK_SEQUENCE_4": {
+          "YVONNE_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.83,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "YVONNE_BASIC_ATTACK_SEQUENCE_5": {
+          "YVONNE_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.167,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "YVONNE_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 17,
+            "STAGGER": 17
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "YVONNE_BATTLE_SKILL": {
+          "YVONNE_BATTLE_SKILL_DURATION": 1.13,
+          "YVONNE_BATTLE_SKILL_SP_COST": 100,
+          "YVONNE_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "YVONNE_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "YVONNE_BATTLE_SKILL_TICKS": 1,
+          "YVONNE_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "YVONNE_COMBO_SKILL": {
+          "YVONNE_COMBO_SKILL_DURATION": 0.63,
+          "YVONNE_COMBO_SKILL_COOLDOWN": 22,
+          "YVONNE_COMBO_SKILL_GAUGE_GAIN": 20,
+          "YVONNE_COMBO_SKILL_TICKS": 1,
+          "YVONNE_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "YVONNE_ULTIMATE": {
+          "YVONNE_ULTIMATE_DURATION": 2.13,
+          "YVONNE_ULTIMATE_ANIMATION_TIME": 2.03,
+          "YVONNE_ULTIMATE_GAUGE_MAX": 200,
+          "YVONNE_ULTIMATE_GAUGE_REPLY": 0,
+          "YVONNE_ULTIMATE_TICKS": 0
+        }
+      }
+    },
+    "LIFENG": {
+      "BASIC_ATTACK": {
+        "LIFENG_BASIC_ATTACK_SEQUENCE_1": {
+          "LIFENG_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.83,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_1_TICKS": 2,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LIFENG_BASIC_ATTACK_SEQUENCE_1_TICK_2": {
+            "OFFSET_SECONDS": 0.57,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LIFENG_BASIC_ATTACK_SEQUENCE_2": {
+          "LIFENG_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.63,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LIFENG_BASIC_ATTACK_SEQUENCE_3": {
+          "LIFENG_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.5,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.37,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LIFENG_BASIC_ATTACK_SEQUENCE_4": {
+          "LIFENG_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.2,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_4_TICKS": 2,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LIFENG_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 21,
+            "STAGGER": 19
+          }
+        },
+        "LIFENG_BASIC_ATTACK_SEQUENCE_5": {
+          "LIFENG_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "LIFENG_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "LIFENG_BATTLE_SKILL": {
+          "LIFENG_BATTLE_SKILL_DURATION": 2.23,
+          "LIFENG_BATTLE_SKILL_SP_COST": 100,
+          "LIFENG_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "LIFENG_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "LIFENG_BATTLE_SKILL_TICKS": 3,
+          "LIFENG_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LIFENG_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LIFENG_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "LIFENG_COMBO_SKILL": {
+          "LIFENG_COMBO_SKILL_DURATION": 1.67,
+          "LIFENG_COMBO_SKILL_COOLDOWN": 16,
+          "LIFENG_COMBO_SKILL_GAUGE_GAIN": 10,
+          "LIFENG_COMBO_SKILL_TICKS": 2,
+          "LIFENG_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LIFENG_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "LIFENG_ULTIMATE": {
+          "LIFENG_ULTIMATE_DURATION": 2.2,
+          "LIFENG_ULTIMATE_ANIMATION_TIME": 1.867,
+          "LIFENG_ULTIMATE_GAUGE_MAX": 90,
+          "LIFENG_ULTIMATE_GAUGE_REPLY": 0,
+          "LIFENG_ULTIMATE_TICKS": 2,
+          "LIFENG_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "LIFENG_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 4.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      }
+    },
+    "EMBER": {
+      "BASIC_ATTACK": {
+        "EMBER_BASIC_ATTACK_SEQUENCE_1": {
+          "EMBER_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.83,
+          "EMBER_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "EMBER_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "EMBER_BASIC_ATTACK_SEQUENCE_2": {
+          "EMBER_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.63,
+          "EMBER_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "EMBER_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "EMBER_BASIC_ATTACK_SEQUENCE_3": {
+          "EMBER_BASIC_ATTACK_SEQUENCE_3_DURATION": 1.2,
+          "EMBER_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "EMBER_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "EMBER_BASIC_ATTACK_SEQUENCE_4": {
+          "EMBER_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.767,
+          "EMBER_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "EMBER_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.87,
+            "SKILL_POINT_RECOVERY": 28,
+            "STAGGER": 25
+          }
+        },
+        "EMBER_BASIC_ATTACK_SEQUENCE_5": {
+          "EMBER_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "EMBER_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "EMBER_BATTLE_SKILL": {
+          "EMBER_BATTLE_SKILL_DURATION": 1.7,
+          "EMBER_BATTLE_SKILL_SP_COST": 100,
+          "EMBER_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "EMBER_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "EMBER_BATTLE_SKILL_TICKS": 2,
+          "EMBER_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "EMBER_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "EMBER_COMBO_SKILL": {
+          "EMBER_COMBO_SKILL_DURATION": 1.27,
+          "EMBER_COMBO_SKILL_COOLDOWN": 19,
+          "EMBER_COMBO_SKILL_GAUGE_GAIN": 10,
+          "EMBER_COMBO_SKILL_TICKS": 1,
+          "EMBER_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.87,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "EMBER_ULTIMATE": {
+          "EMBER_ULTIMATE_DURATION": 1.67,
+          "EMBER_ULTIMATE_ANIMATION_TIME": 1.63,
+          "EMBER_ULTIMATE_GAUGE_MAX": 100,
+          "EMBER_ULTIMATE_GAUGE_REPLY": 0,
+          "EMBER_ULTIMATE_TICKS": 1,
+          "EMBER_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      }
+    },
+    "XAIHI": {
+      "BASIC_ATTACK": {
+        "XAIHI_BASIC_ATTACK_SEQUENCE_1": {
+          "XAIHI_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.467,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "XAIHI_BASIC_ATTACK_SEQUENCE_2": {
+          "XAIHI_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.6,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "XAIHI_BASIC_ATTACK_SEQUENCE_3": {
+          "XAIHI_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.5,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "XAIHI_BASIC_ATTACK_SEQUENCE_4": {
+          "XAIHI_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.73,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_4_TICKS": 2,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "XAIHI_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "XAIHI_BASIC_ATTACK_SEQUENCE_5": {
+          "XAIHI_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.13,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "XAIHI_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 15,
+            "STAGGER": 15
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "XAIHI_BATTLE_SKILL": {
+          "XAIHI_BATTLE_SKILL_DURATION": 1,
+          "XAIHI_BATTLE_SKILL_SP_COST": 100,
+          "XAIHI_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "XAIHI_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "XAIHI_BATTLE_SKILL_TICKS": 0
+        }
+      },
+      "COMBO_SKILL": {
+        "XAIHI_COMBO_SKILL": {
+          "XAIHI_COMBO_SKILL_DURATION": 0.83,
+          "XAIHI_COMBO_SKILL_COOLDOWN": 8,
+          "XAIHI_COMBO_SKILL_GAUGE_GAIN": 10,
+          "XAIHI_COMBO_SKILL_TICKS": 1,
+          "XAIHI_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "CRYO": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      },
+      "ULTIMATE": {
+        "XAIHI_ULTIMATE": {
+          "XAIHI_ULTIMATE_DURATION": 2.23,
+          "XAIHI_ULTIMATE_ANIMATION_TIME": 1.467,
+          "XAIHI_ULTIMATE_GAUGE_MAX": 72,
+          "XAIHI_ULTIMATE_GAUGE_REPLY": 0,
+          "XAIHI_ULTIMATE_TICKS": 0
+        }
+      }
+    },
+    "SNOWSHINE": {
+      "BASIC_ATTACK": {
+        "SNOWSHINE_BASIC_ATTACK_SEQUENCE_1": {
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_1_DURATION": 1.1,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "SNOWSHINE_BASIC_ATTACK_SEQUENCE_2": {
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.967,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "SNOWSHINE_BASIC_ATTACK_SEQUENCE_3": {
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_3_DURATION": 2.067,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 1.3,
+            "SKILL_POINT_RECOVERY": 25,
+            "STAGGER": 23
+          }
+        },
+        "SNOWSHINE_BASIC_ATTACK_SEQUENCE_4": {
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_4_DURATION": 0,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_4_TICKS": 0
+        },
+        "SNOWSHINE_BASIC_ATTACK_SEQUENCE_5": {
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "SNOWSHINE_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "SNOWSHINE_BATTLE_SKILL": {
+          "SNOWSHINE_BATTLE_SKILL_DURATION": 4.5,
+          "SNOWSHINE_BATTLE_SKILL_SP_COST": 100,
+          "SNOWSHINE_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "SNOWSHINE_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "SNOWSHINE_BATTLE_SKILL_TICKS": 1,
+          "SNOWSHINE_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 3.57,
+            "SKILL_POINT_RECOVERY": 30,
+            "STAGGER": 20
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "SNOWSHINE_COMBO_SKILL": {
+          "SNOWSHINE_COMBO_SKILL_DURATION": 0.5,
+          "SNOWSHINE_COMBO_SKILL_COOLDOWN": 25,
+          "SNOWSHINE_COMBO_SKILL_GAUGE_GAIN": 10,
+          "SNOWSHINE_COMBO_SKILL_TICKS": 0
+        }
+      },
+      "ULTIMATE": {
+        "SNOWSHINE_ULTIMATE": {
+          "SNOWSHINE_ULTIMATE_DURATION": 2.37,
+          "SNOWSHINE_ULTIMATE_ANIMATION_TIME": 1.983,
+          "SNOWSHINE_ULTIMATE_GAUGE_MAX": 80,
+          "SNOWSHINE_ULTIMATE_GAUGE_REPLY": 0,
+          "SNOWSHINE_ULTIMATE_TICKS": 1,
+          "SNOWSHINE_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.07,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 15
+          }
+        }
+      }
+    },
+    "ARCLIGHT": {
+      "BASIC_ATTACK": {
+        "ARCLIGHT_BASIC_ATTACK_SEQUENCE_1": {
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.33,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARCLIGHT_BASIC_ATTACK_SEQUENCE_2": {
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.367,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARCLIGHT_BASIC_ATTACK_SEQUENCE_3": {
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.7,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARCLIGHT_BASIC_ATTACK_SEQUENCE_4": {
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.93,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARCLIGHT_BASIC_ATTACK_SEQUENCE_5": {
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_5_DURATION": 1,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "ARCLIGHT_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 17,
+            "STAGGER": 16
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "ARCLIGHT_BATTLE_SKILL": {
+          "ARCLIGHT_BATTLE_SKILL_DURATION": 1.2,
+          "ARCLIGHT_BATTLE_SKILL_SP_COST": 100,
+          "ARCLIGHT_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "ARCLIGHT_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "ARCLIGHT_BATTLE_SKILL_TICKS": 2,
+          "ARCLIGHT_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARCLIGHT_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ARCLIGHT_COMBO_SKILL": {
+          "ARCLIGHT_COMBO_SKILL_DURATION": 0.9,
+          "ARCLIGHT_COMBO_SKILL_COOLDOWN": 3,
+          "ARCLIGHT_COMBO_SKILL_GAUGE_GAIN": 5,
+          "ARCLIGHT_COMBO_SKILL_TICKS": 3,
+          "ARCLIGHT_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.57,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARCLIGHT_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARCLIGHT_COMBO_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 0.83,
+            "SKILL_POINT_RECOVERY": 8,
+            "STAGGER": 5
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ARCLIGHT_ULTIMATE": {
+          "ARCLIGHT_ULTIMATE_DURATION": 2.57,
+          "ARCLIGHT_ULTIMATE_ANIMATION_TIME": 1.9,
+          "ARCLIGHT_ULTIMATE_GAUGE_MAX": 76.5,
+          "ARCLIGHT_ULTIMATE_GAUGE_REPLY": 0,
+          "ARCLIGHT_ULTIMATE_TICKS": 2,
+          "ARCLIGHT_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.03,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 7
+          },
+          "ARCLIGHT_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 3.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 7
+          }
+        }
+      }
+    },
+    "AVYWENNA": {
+      "BASIC_ATTACK": {
+        "AVYWENNA_BASIC_ATTACK_SEQUENCE_1": {
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.3,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AVYWENNA_BASIC_ATTACK_SEQUENCE_2": {
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.5,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AVYWENNA_BASIC_ATTACK_SEQUENCE_3": {
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.367,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AVYWENNA_BASIC_ATTACK_SEQUENCE_4": {
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.767,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_4_TICKS": 2,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AVYWENNA_BASIC_ATTACK_SEQUENCE_5": {
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.53,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "AVYWENNA_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 19,
+            "STAGGER": 17
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "AVYWENNA_BATTLE_SKILL": {
+          "AVYWENNA_BATTLE_SKILL_DURATION": 1.13,
+          "AVYWENNA_BATTLE_SKILL_SP_COST": 100,
+          "AVYWENNA_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "AVYWENNA_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "AVYWENNA_BATTLE_SKILL_TICKS": 1,
+          "AVYWENNA_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "AVYWENNA_COMBO_SKILL": {
+          "AVYWENNA_COMBO_SKILL_DURATION": 0.7,
+          "AVYWENNA_COMBO_SKILL_COOLDOWN": 13,
+          "AVYWENNA_COMBO_SKILL_GAUGE_GAIN": 10,
+          "AVYWENNA_COMBO_SKILL_TICKS": 1,
+          "AVYWENNA_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.47,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "AVYWENNA_ULTIMATE": {
+          "AVYWENNA_ULTIMATE_DURATION": 1.9,
+          "AVYWENNA_ULTIMATE_ANIMATION_TIME": 1.53,
+          "AVYWENNA_ULTIMATE_GAUGE_MAX": 85,
+          "AVYWENNA_ULTIMATE_GAUGE_REPLY": 0,
+          "AVYWENNA_ULTIMATE_TICKS": 1,
+          "AVYWENNA_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      }
+    },
+    "DAPAN": {
+      "BASIC_ATTACK": {
+        "DAPAN_BASIC_ATTACK_SEQUENCE_1": {
+          "DAPAN_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.53,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "DAPAN_BASIC_ATTACK_SEQUENCE_2": {
+          "DAPAN_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.7,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "DAPAN_BASIC_ATTACK_SEQUENCE_3": {
+          "DAPAN_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.867,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "DAPAN_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "DAPAN_BASIC_ATTACK_SEQUENCE_4": {
+          "DAPAN_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.53,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 1.07,
+            "SKILL_POINT_RECOVERY": 21,
+            "STAGGER": 20
+          }
+        },
+        "DAPAN_BASIC_ATTACK_SEQUENCE_5": {
+          "DAPAN_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "DAPAN_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "DAPAN_BATTLE_SKILL": {
+          "DAPAN_BATTLE_SKILL_DURATION": 2.17,
+          "DAPAN_BATTLE_SKILL_SP_COST": 100,
+          "DAPAN_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "DAPAN_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "DAPAN_BATTLE_SKILL_TICKS": 2,
+          "DAPAN_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "DAPAN_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "DAPAN_COMBO_SKILL": {
+          "DAPAN_COMBO_SKILL_DURATION": 0.8,
+          "DAPAN_COMBO_SKILL_COOLDOWN": 20,
+          "DAPAN_COMBO_SKILL_GAUGE_GAIN": 10,
+          "DAPAN_COMBO_SKILL_TICKS": 1,
+          "DAPAN_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 1.76,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 15
+          }
+        }
+      },
+      "ULTIMATE": {
+        "DAPAN_ULTIMATE": {
+          "DAPAN_ULTIMATE_DURATION": 2.87,
+          "DAPAN_ULTIMATE_ANIMATION_TIME": 1.4,
+          "DAPAN_ULTIMATE_GAUGE_MAX": 76.5,
+          "DAPAN_ULTIMATE_GAUGE_REPLY": 0,
+          "DAPAN_ULTIMATE_TICKS": 2,
+          "DAPAN_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "DAPAN_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 2.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      }
+    },
+    "PERLICA": {
+      "BASIC_ATTACK": {
+        "PERLICA_BASIC_ATTACK_SEQUENCE_1": {
+          "PERLICA_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.53,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "PERLICA_BASIC_ATTACK_SEQUENCE_2": {
+          "PERLICA_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.63,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "PERLICA_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "PERLICA_BASIC_ATTACK_SEQUENCE_3": {
+          "PERLICA_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.9,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_3_TICKS": 3,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "PERLICA_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "PERLICA_BASIC_ATTACK_SEQUENCE_3_TICK_3": {
+            "OFFSET_SECONDS": 0.73,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "PERLICA_BASIC_ATTACK_SEQUENCE_4": {
+          "PERLICA_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.467,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 15,
+            "STAGGER": 15
+          }
+        },
+        "PERLICA_BASIC_ATTACK_SEQUENCE_5": {
+          "PERLICA_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "PERLICA_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "PERLICA_BATTLE_SKILL": {
+          "PERLICA_BATTLE_SKILL_DURATION": 0.93,
+          "PERLICA_BATTLE_SKILL_SP_COST": 100,
+          "PERLICA_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "PERLICA_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "PERLICA_BATTLE_SKILL_TICKS": 1,
+          "PERLICA_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "ELECTRIC": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "PERLICA_COMBO_SKILL": {
+          "PERLICA_COMBO_SKILL_DURATION": 0.83,
+          "PERLICA_COMBO_SKILL_COOLDOWN": 20,
+          "PERLICA_COMBO_SKILL_GAUGE_GAIN": 10,
+          "PERLICA_COMBO_SKILL_TICKS": 1,
+          "PERLICA_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "PERLICA_ULTIMATE": {
+          "PERLICA_ULTIMATE_DURATION": 2.1,
+          "PERLICA_ULTIMATE_ANIMATION_TIME": 1.583,
+          "PERLICA_ULTIMATE_GAUGE_MAX": 68,
+          "PERLICA_ULTIMATE_GAUGE_REPLY": 0,
+          "PERLICA_ULTIMATE_TICKS": 1,
+          "PERLICA_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      }
+    },
+    "CHENQIANYU": {
+      "BASIC_ATTACK": {
+        "CHENQIANYU_BASIC_ATTACK_SEQUENCE_1": {
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.5,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_1_TICKS": 2,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_1_TICK_2": {
+            "OFFSET_SECONDS": 0.37,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CHENQIANYU_BASIC_ATTACK_SEQUENCE_2": {
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.367,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CHENQIANYU_BASIC_ATTACK_SEQUENCE_3": {
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.63,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CHENQIANYU_BASIC_ATTACK_SEQUENCE_4": {
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.73,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_4_TICKS": 2,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CHENQIANYU_BASIC_ATTACK_SEQUENCE_5": {
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.1,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_5_TICKS": 1,
+          "CHENQIANYU_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 18,
+            "STAGGER": 16
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "CHENQIANYU_BATTLE_SKILL": {
+          "CHENQIANYU_BATTLE_SKILL_DURATION": 0.83,
+          "CHENQIANYU_BATTLE_SKILL_SP_COST": 100,
+          "CHENQIANYU_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "CHENQIANYU_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "CHENQIANYU_BATTLE_SKILL_TICKS": 1,
+          "CHENQIANYU_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "CHENQIANYU_COMBO_SKILL": {
+          "CHENQIANYU_COMBO_SKILL_DURATION": 0.77,
+          "CHENQIANYU_COMBO_SKILL_COOLDOWN": 16,
+          "CHENQIANYU_COMBO_SKILL_GAUGE_GAIN": 10,
+          "CHENQIANYU_COMBO_SKILL_TICKS": 1,
+          "CHENQIANYU_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.57,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "CHENQIANYU_ULTIMATE": {
+          "CHENQIANYU_ULTIMATE_DURATION": 3.73,
+          "CHENQIANYU_ULTIMATE_ANIMATION_TIME": 1.63,
+          "CHENQIANYU_ULTIMATE_GAUGE_MAX": 59.5,
+          "CHENQIANYU_ULTIMATE_GAUGE_REPLY": 0,
+          "CHENQIANYU_ULTIMATE_TICKS": 7,
+          "CHENQIANYU_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 15
+          },
+          "CHENQIANYU_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 2.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 2.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_ULTIMATE_TICK_4": {
+            "OFFSET_SECONDS": 2.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_ULTIMATE_TICK_5": {
+            "OFFSET_SECONDS": 2.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_ULTIMATE_TICK_6": {
+            "OFFSET_SECONDS": 2.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "CHENQIANYU_ULTIMATE_TICK_7": {
+            "OFFSET_SECONDS": 3.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 20
+          }
+        }
+      }
+    },
+    "ALESH": {
+      "BASIC_ATTACK": {
+        "ALESH_BASIC_ATTACK_SEQUENCE_1": {
+          "ALESH_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.43,
+          "ALESH_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ALESH_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ALESH_BASIC_ATTACK_SEQUENCE_2": {
+          "ALESH_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.367,
+          "ALESH_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "ALESH_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.17,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ALESH_BASIC_ATTACK_SEQUENCE_3": {
+          "ALESH_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.567,
+          "ALESH_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "ALESH_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ALESH_BASIC_ATTACK_SEQUENCE_4": {
+          "ALESH_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.767,
+          "ALESH_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "ALESH_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ALESH_BASIC_ATTACK_SEQUENCE_5": {
+          "ALESH_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.067,
+          "ALESH_BASIC_ATTACK_SEQUENCE_5_TICKS": 2,
+          "ALESH_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 19,
+            "STAGGER": 17
+          },
+          "ALESH_BASIC_ATTACK_SEQUENCE_5_TICK_2": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "ALESH_BATTLE_SKILL": {
+          "ALESH_BATTLE_SKILL_DURATION": 1.67,
+          "ALESH_BATTLE_SKILL_SP_COST": 100,
+          "ALESH_BATTLE_SKILL_GAUGE_GAIN": 17,
+          "ALESH_BATTLE_SKILL_TEAM_GAUGE_GAIN": 8.5,
+          "ALESH_BATTLE_SKILL_TICKS": 1,
+          "ALESH_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ALESH_COMBO_SKILL": {
+          "ALESH_COMBO_SKILL_DURATION": 1.3,
+          "ALESH_COMBO_SKILL_COOLDOWN": 9,
+          "ALESH_COMBO_SKILL_GAUGE_GAIN": 10,
+          "ALESH_COMBO_SKILL_TICKS": 1,
+          "ALESH_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 1.27,
+            "SKILL_POINT_RECOVERY": 10,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ALESH_ULTIMATE": {
+          "ALESH_ULTIMATE_DURATION": 3.2,
+          "ALESH_ULTIMATE_ANIMATION_TIME": 2.583,
+          "ALESH_ULTIMATE_GAUGE_MAX": 85,
+          "ALESH_ULTIMATE_GAUGE_REPLY": 0,
+          "ALESH_ULTIMATE_TICKS": 1,
+          "ALESH_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 3,
+            "SKILL_POINT_RECOVERY": 20,
+            "STAGGER": 20,
+            "APPLY_ARTS_INFLICTION": {
+              "CRYO": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "CATCHER": {
+      "BASIC_ATTACK": {
+        "CATCHER_BASIC_ATTACK_SEQUENCE_1": {
+          "CATCHER_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.73,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CATCHER_BASIC_ATTACK_SEQUENCE_2": {
+          "CATCHER_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.73,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CATCHER_BASIC_ATTACK_SEQUENCE_3": {
+          "CATCHER_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.967,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "CATCHER_BASIC_ATTACK_SEQUENCE_4": {
+          "CATCHER_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.53,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 25,
+            "STAGGER": 22
+          }
+        },
+        "CATCHER_BASIC_ATTACK_SEQUENCE_5": {
+          "CATCHER_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "CATCHER_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "CATCHER_BATTLE_SKILL": {
+          "CATCHER_BATTLE_SKILL_DURATION": 3.17,
+          "CATCHER_BATTLE_SKILL_SP_COST": 100,
+          "CATCHER_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "CATCHER_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "CATCHER_BATTLE_SKILL_TICKS": 1,
+          "CATCHER_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 2.77,
+            "SKILL_POINT_RECOVERY": 30,
+            "STAGGER": 20
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "CATCHER_COMBO_SKILL": {
+          "CATCHER_COMBO_SKILL_DURATION": 0.8,
+          "CATCHER_COMBO_SKILL_COOLDOWN": 15,
+          "CATCHER_COMBO_SKILL_GAUGE_GAIN": 10,
+          "CATCHER_COMBO_SKILL_TICKS": 1,
+          "CATCHER_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.57,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "CATCHER_ULTIMATE": {
+          "CATCHER_ULTIMATE_DURATION": 3.43,
+          "CATCHER_ULTIMATE_ANIMATION_TIME": 1.3,
+          "CATCHER_ULTIMATE_GAUGE_MAX": 72,
+          "CATCHER_ULTIMATE_GAUGE_REPLY": 0,
+          "CATCHER_ULTIMATE_TICKS": 3,
+          "CATCHER_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "CATCHER_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 2.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          },
+          "CATCHER_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 2.83,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      }
+    },
+    "FLUORITE": {
+      "BASIC_ATTACK": {
+        "FLUORITE_BASIC_ATTACK_SEQUENCE_1": {
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.767,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "FLUORITE_BASIC_ATTACK_SEQUENCE_2": {
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.53,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "FLUORITE_BASIC_ATTACK_SEQUENCE_3": {
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.63,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "FLUORITE_BASIC_ATTACK_SEQUENCE_4": {
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.767,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.967,
+            "SKILL_POINT_RECOVERY": 15,
+            "STAGGER": 15
+          }
+        },
+        "FLUORITE_BASIC_ATTACK_SEQUENCE_5": {
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "FLUORITE_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "FLUORITE_BATTLE_SKILL": {
+          "FLUORITE_BATTLE_SKILL_DURATION": 1.13,
+          "FLUORITE_BATTLE_SKILL_SP_COST": 100,
+          "FLUORITE_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "FLUORITE_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "FLUORITE_BATTLE_SKILL_TICKS": 2,
+          "FLUORITE_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "FLUORITE_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 2.97,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "NATURE": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "FLUORITE_COMBO_SKILL": {
+          "FLUORITE_COMBO_SKILL_DURATION": 0.57,
+          "FLUORITE_COMBO_SKILL_COOLDOWN": 25,
+          "FLUORITE_COMBO_SKILL_GAUGE_GAIN": 10,
+          "FLUORITE_COMBO_SKILL_TICKS": 1,
+          "FLUORITE_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "FLUORITE_ULTIMATE": {
+          "FLUORITE_ULTIMATE_DURATION": 2.57,
+          "FLUORITE_ULTIMATE_ANIMATION_TIME": 1.867,
+          "FLUORITE_ULTIMATE_GAUGE_MAX": 72,
+          "FLUORITE_ULTIMATE_GAUGE_REPLY": 0,
+          "FLUORITE_ULTIMATE_TICKS": 4,
+          "FLUORITE_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.97,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "FLUORITE_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 2.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "FLUORITE_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 2.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "FLUORITE_ULTIMATE_TICK_4": {
+            "OFFSET_SECONDS": 2.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 20
+          }
+        }
+      }
+    },
+    "ESTELLA": {
+      "BASIC_ATTACK": {
+        "ESTELLA_BASIC_ATTACK_SEQUENCE_1": {
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.467,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ESTELLA_BASIC_ATTACK_SEQUENCE_2": {
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.567,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ESTELLA_BASIC_ATTACK_SEQUENCE_3": {
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.967,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ESTELLA_BASIC_ATTACK_SEQUENCE_4": {
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.567,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 19,
+            "STAGGER": 17
+          }
+        },
+        "ESTELLA_BASIC_ATTACK_SEQUENCE_5": {
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "ESTELLA_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "ESTELLA_BATTLE_SKILL": {
+          "ESTELLA_BATTLE_SKILL_DURATION": 1.5,
+          "ESTELLA_BATTLE_SKILL_SP_COST": 100,
+          "ESTELLA_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "ESTELLA_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "ESTELLA_BATTLE_SKILL_TICKS": 1,
+          "ESTELLA_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "CRYO": {
+                "STACKS": 1
+              }
+            }
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ESTELLA_COMBO_SKILL": {
+          "ESTELLA_COMBO_SKILL_DURATION": 0.67,
+          "ESTELLA_COMBO_SKILL_COOLDOWN": 15,
+          "ESTELLA_COMBO_SKILL_GAUGE_GAIN": 10,
+          "ESTELLA_COMBO_SKILL_TICKS": 1,
+          "ESTELLA_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ESTELLA_ULTIMATE": {
+          "ESTELLA_ULTIMATE_DURATION": 2,
+          "ESTELLA_ULTIMATE_ANIMATION_TIME": 1.8,
+          "ESTELLA_ULTIMATE_GAUGE_MAX": 63,
+          "ESTELLA_ULTIMATE_GAUGE_REPLY": 0,
+          "ESTELLA_ULTIMATE_TICKS": 1,
+          "ESTELLA_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
         }
       }
     }

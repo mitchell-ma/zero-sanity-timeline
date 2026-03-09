@@ -27,7 +27,7 @@ setOperator(config | null)
   → if config:
       create Subtimeline per skill channel (basic/battle/combo/ultimate)
       create Subtimeline per extraChannel (e.g. melting-flame)
-      lookup TriggerCapability from TRIGGER_CAPABILITIES[config.id]
+      use config.triggerCapability (passed in from view-layer Operator)
   → wireAllPeers()
   → notifyChange()
 

@@ -42,6 +42,96 @@ export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
   [CombatSkillsType.DOLLY_RUSH]:                           'Dolly Rush',
   [CombatSkillsType.ERUPTION_COLUMN]:                      'Eruption Column',
   [CombatSkillsType.WOOLY_PARTY]:                          'Wooly Party',
+  // Endministrator
+  [CombatSkillsType.DESTRUCTIVE_SEQUENCE]:       'Destructive Sequence',
+  [CombatSkillsType.CONSTRUCTIVE_SEQUENCE]:       'Constructive Sequence',
+  [CombatSkillsType.SEALING_SEQUENCE]:             'Sealing Sequence',
+  [CombatSkillsType.BOMBARDMENT_SEQUENCE]:         'Bombardment Sequence',
+  // Lifeng
+  [CombatSkillsType.RUINATION]:                    'Ruination',
+  [CombatSkillsType.TURBID_AVATAR]:                'Turbid Avatar',
+  [CombatSkillsType.ASPECT_OF_WRATH]:              'Aspect of Wrath',
+  [CombatSkillsType.HEART_OF_THE_UNMOVING]:        'Heart of the Unmoving',
+  // Chen Qianyu
+  [CombatSkillsType.SOARING_BREAK]:                'Soaring Break',
+  [CombatSkillsType.ASCENDING_STRIKE]:             'Ascending Strike',
+  [CombatSkillsType.SOAR_TO_THE_STARS]:            'Soar to the Stars',
+  [CombatSkillsType.BLADE_GALE]:                   'Blade Gale',
+  // Estella
+  [CombatSkillsType.AUDIO_NOISE]:                  'Audio Noise',
+  [CombatSkillsType.ONOMATOPOEIA]:                 'Onomatopoeia',
+  [CombatSkillsType.DISTORTION]:                   'Distortion',
+  [CombatSkillsType.TREMOLO]:                      'Tremolo',
+  // Ember
+  [CombatSkillsType.SWORD_ART_OF_ASSAULT]:         'Sword Art of Assault',
+  [CombatSkillsType.FORWARD_MARCH]:                'Forward March',
+  [CombatSkillsType.FRONTLINE_SUPPORT]:             'Frontline Support',
+  [CombatSkillsType.RE_IGNITED_OATH]:               'Re-Ignited Oath',
+  // Snowshine
+  [CombatSkillsType.HYPOTHERMIC_ASSAULT]:           'Hypothermic Assault',
+  [CombatSkillsType.SATURATED_DEFENSE]:             'Saturated Defense',
+  [CombatSkillsType.POLAR_RESCUE]:                  'Polar Rescue',
+  [CombatSkillsType.FRIGID_SNOWFIELD]:              'Frigid Snowfield',
+  // Catcher
+  [CombatSkillsType.RIGID_INTERDICTION_BASIC]:      'Rigid Interdiction',
+  [CombatSkillsType.RIGID_INTERDICTION]:             'Rigid Interdiction',
+  [CombatSkillsType.TIMELY_SUPPRESSION]:             'Timely Suppression',
+  [CombatSkillsType.TEXTBOOK_ASSAULT]:               'Textbook Assault',
+  // Gilberta
+  [CombatSkillsType.BEAM_COHESION_ARTS]:             'Beam Cohesion Arts',
+  [CombatSkillsType.GRAVITY_MODE]:                   'Gravity Mode',
+  [CombatSkillsType.MATRIX_DISPLACEMENT]:            'Matrix Displacement',
+  [CombatSkillsType.GRAVITY_FIELD]:                  'Gravity Field',
+  // Xaihi
+  [CombatSkillsType.XAIHI_BASIC_ATTACK]:             'Xaihi Basic Attack',
+  [CombatSkillsType.DISTRIBUTED_DOS]:                'Distributed DoS',
+  [CombatSkillsType.STRESS_TESTING]:                  'Stress Testing',
+  [CombatSkillsType.STACK_OVERFLOW]:                  'Stack Overflow',
+  // Perlica
+  [CombatSkillsType.PROTOCOL_ALPHA_BREACH]:           'Protocol \u03b1: Breach',
+  [CombatSkillsType.PROTOCOL_OMEGA_STRIKE]:           'Protocol \u03c9: Strike',
+  [CombatSkillsType.INSTANT_PROTOCOL_CHAIN]:          'Instant Protocol: Chain',
+  [CombatSkillsType.PROTOCOL_EPSILON]:                'Protocol \u03b5: 70.41K',
+  // Fluorite
+  [CombatSkillsType.SIGNATURE_GUN_KATA]:              'Signature Gun Kata',
+  [CombatSkillsType.TINY_SURPRISE]:                   'Tiny Surprise',
+  [CombatSkillsType.FREE_GIVEAWAY]:                   'Free Giveaway',
+  [CombatSkillsType.APEX_PRANKSTER]:                  'Apex Prankster',
+  // Last Rite
+  [CombatSkillsType.DANCE_OF_RIME]:                   'Dance of Rime',
+  [CombatSkillsType.ESOTERIC_LEGACY]:                 'Esoteric Legacy',
+  [CombatSkillsType.WINTERS_DEVOURER]:                "Winter's Devourer",
+  [CombatSkillsType.VIGIL_SERVICES]:                  'Vigil Services',
+  // Yvonne
+  [CombatSkillsType.EXUBERANT_TRIGGER]:               'Exuberant Trigger',
+  [CombatSkillsType.BRR_BRR_BOMB]:                    'Brr-Brr-Bomb \u03b2',
+  [CombatSkillsType.FLASHFREEZER]:                     'Flashfreezer \u03c5-37',
+  [CombatSkillsType.CRYOBLASTING_PISTOLIER]:           'Cryoblasting Pistolier',
+  // Avywenna
+  [CombatSkillsType.THUNDERLANCE_BLITZ]:               'Thunderlance: Blitz',
+  [CombatSkillsType.THUNDERLANCE_INTERDICTION]:        'Thunderlance: Interdiction',
+  [CombatSkillsType.THUNDERLANCE_STRIKE]:              'Thunderlance: Strike',
+  [CombatSkillsType.THUNDERLANCE_FINAL_SHOCK]:         'Thunderlance: Final Shock',
+  // Da Pan
+  [CombatSkillsType.ROLLING_CUT]:                      'ROLLING CUT!',
+  [CombatSkillsType.FLIP_DA_WOK]:                      'FLIP DA WOK!',
+  [CombatSkillsType.MORE_SPICE]:                        'MORE SPICE!',
+  [CombatSkillsType.CHOP_N_DUNK]:                       "CHOP 'N DUNK!",
+  // Pogranichnik
+  [CombatSkillsType.ALL_OUT_OFFENSIVE]:                 'All-Out Offensive',
+  [CombatSkillsType.THE_PULVERIZING_FRONT]:             'The Pulverizing Front',
+  [CombatSkillsType.FULL_MOON_SLASH]:                   'Full Moon Slash',
+  [CombatSkillsType.SHIELDGUARD_BANNER]:                'Shieldguard Banner, Forward',
+  // Alesh
+  [CombatSkillsType.ROD_CASTING]:                       'Rod Casting',
+  [CombatSkillsType.UNCONVENTIONAL_LURE]:               'Unconventional Lure',
+  [CombatSkillsType.AUGER_ANGLING]:                     'Auger Angling',
+  [CombatSkillsType.ONE_MONSTER_CATCH]:                  'One Monster Catch!',
+  // Arclight
+  [CombatSkillsType.SEEK_AND_HUNT]:                     'Seek and Hunt',
+  [CombatSkillsType.TEMPESTUOUS_ARC]:                   'Tempestuous Arc',
+  [CombatSkillsType.PEAL_OF_THUNDER]:                   'Peal of Thunder',
+  [CombatSkillsType.EXPLODING_BLITZ]:                   'Exploding Blitz',
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────

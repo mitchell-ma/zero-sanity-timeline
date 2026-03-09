@@ -1,5 +1,14 @@
 # Devlog
 
+## 2026-03-09
+- Added 18 new operators: Endministrator, Lifeng, Chen Qianyu, Estella, Ember, Snowshine, Catcher, Gilberta, Xaihi, Perlica, Fluorite, Last Rite, Yvonne, Avywenna, Da Pan, Pogranichnik, Alesh, Arclight
+- Full MVC stack per operator — combat skills, operator model, event frames, events
+- Parsed skills.json frame data from gamedata.json for all operators (tick timing, arts inflictions)
+- Operator registry rewrite — all 23 operators with skill timing data from skills.json
+- Trigger capabilities for all operators (combo pub/sub wiring)
+- comboRequires upgraded to array type for multi-condition combo triggers
+- Backward-compatible loadout stats migration (field-level merge for old saves)
+
 ## 2026-03-08
 - Unified MiniTimeline column type (replaces separate skill/status/melting flame columns)
 - Damage calculation pipeline (pure formulas + frame calculator with loadout/enemy context)

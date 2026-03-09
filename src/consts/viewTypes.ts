@@ -26,6 +26,7 @@ export interface Operator {
   tactical: string;
   skills: Record<SkillType, SkillDef>;
   ultimateEnergyCost: number;
+  triggerCapability?: import('./triggerCapabilities').TriggerCapability;
 }
 
 export interface EnemyStatus {
@@ -68,6 +69,8 @@ export interface EventFrameMarker {
   applyArtsInfliction?: FrameInflictionMarker;
   /** Arts infliction absorbed on this frame hit. */
   absorbArtsInfliction?: FrameAbsorptionMarker;
+  /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
+  applyForcedReaction?: { reaction: string; statusLevel: number };
 }
 
 /** Identifies a specific frame within a sequenced event. */

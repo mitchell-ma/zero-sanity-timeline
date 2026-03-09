@@ -3,7 +3,7 @@ import { BasicAttackEventFrame } from "./basicAttackEventFrame";
 import { BasicSkillEventFrame } from "./basicSkillEventFrame";
 import { ComboSkillEventFrame } from "./comboSkillEventFrame";
 import { CombatSkillEventFrame } from "./combatSkillEventFrame";
-import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption } from "./skillEventFrame";
+import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption, FrameForcedReaction } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
@@ -17,6 +17,7 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
   private readonly _stagger: number;
   private readonly _applyArtsInfliction: FrameArtsInfliction | null;
   private readonly _absorbArtsInfliction: FrameArtsAbsorption | null;
+  private readonly _applyForcedReaction: FrameForcedReaction | null;
 
   constructor(tickData: Record<string, any>) {
     super();
@@ -47,6 +48,12 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
     } else {
       this._absorbArtsInfliction = null;
     }
+
+    // Parse APPLY_FORCED_REACTION (e.g. forced Combustion from magma_0)
+    const forced = tickData.APPLY_FORCED_REACTION;
+    this._applyForcedReaction = forced
+      ? { reaction: forced.REACTION as StatusType, statusLevel: forced.STATUS_LEVEL }
+      : null;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -54,6 +61,7 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
   getStagger(): number { return this._stagger; }
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
   getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return this._absorbArtsInfliction; }
+  getApplyForcedReaction(): FrameForcedReaction | null { return this._applyForcedReaction; }
 }
 
 class LaevatainSkillEventSequence extends SkillEventSequence {

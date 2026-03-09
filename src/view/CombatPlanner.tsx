@@ -63,7 +63,7 @@ interface SlotGroup {
   startCol: number;
 }
 
-interface TimelineGridProps {
+interface CombatPlannerProps {
   slots: Slot[];
   enemy: Enemy;
   events: TimelineEvent[];
@@ -91,6 +91,14 @@ interface TimelineGridProps {
   onBatchEnd?: () => void;
   onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
   selectedFrame?: import('../consts/viewTypes').SelectedFrame | null;
+  /** Callback to expose the scroll container ref for external scroll sync. */
+  onScrollRef?: (el: HTMLDivElement | null) => void;
+  /** Callback when the timeline scrolls (for scroll sync). */
+  onScroll?: (scrollTop: number) => void;
+  /** Callback with measured loadout row height. */
+  onLoadoutRowHeight?: (h: number) => void;
+  /** Callback when the hovered frame changes. */
+  onHoverFrame?: (frame: number | null) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -98,7 +106,7 @@ const noop2 = (_a: any, _b: any) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noop3 = (_a: any, _b: any, _c: any) => {};
 
-export default function TimelineGrid({
+export default function CombatPlanner({
   slots,
   enemy,
   events,
@@ -125,7 +133,11 @@ export default function TimelineGrid({
   onBatchEnd,
   onFrameClick,
   selectedFrame,
-}: TimelineGridProps) {
+  onScrollRef,
+  onScroll: onScrollProp,
+  onLoadoutRowHeight,
+  onHoverFrame,
+}: CombatPlannerProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
   const loadoutRef  = useRef<HTMLDivElement>(null);
@@ -137,7 +149,11 @@ export default function TimelineGrid({
   const bodyTopRef  = useRef<number | null>(null);
 
   const [hoverClientY,     setHoverClientY]     = useState<number | null>(null);
-  const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
+  const [hoverFrame,       setHoverFrameRaw]    = useState<number | null>(null);
+  const setHoverFrame = useCallback((f: number | null) => {
+    setHoverFrameRaw(f);
+    onHoverFrame?.(f);
+  }, [onHoverFrame]);
   const [outerRect,        setOuterRect]        = useState<DOMRect | null>(null);
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(0);
   const [enemyMenuOpen,    setEnemyMenuOpen]    = useState(false);
@@ -303,21 +319,37 @@ export default function TimelineGrid({
   useLayoutEffect(() => {
     const el = loadoutRef.current;
     if (!el) return;
-    setLoadoutRowHeight(el.offsetHeight);
-    const ro = new ResizeObserver(() => {
-      setLoadoutRowHeight(el.offsetHeight);
-    });
+    const update = () => {
+      const h = el.offsetHeight;
+      setLoadoutRowHeight(h);
+      onLoadoutRowHeight?.(h);
+    };
+    update();
+    const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [onLoadoutRowHeight]);
+
+  // ─── Expose scroll ref & scroll events for sync ────────────────────────
+  useEffect(() => {
+    onScrollRef?.(scrollRef.current);
+    return () => onScrollRef?.(null);
+  }, [onScrollRef]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !onScrollProp) return;
+    const handler = () => onScrollProp(el.scrollTop);
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el.removeEventListener('scroll', handler);
+  }, [onScrollProp]);
 
   // ─── Measure timeline body top offset ────────────────────────────────────
   useEffect(() => {
     const updateBodyTop = () => {
-      const axis = timeAxisRef.current;
       const scroll = scrollRef.current;
-      if (axis && scroll) {
-        bodyTopRef.current = axis.offsetTop;
+      if (scroll) {
+        bodyTopRef.current = scroll.offsetTop;
       }
     };
     updateBodyTop();
@@ -929,23 +961,18 @@ export default function TimelineGrid({
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
     >
-      <div ref={scrollRef} className="timeline-scroll">
+      {/* ── Fixed headers (outside scroll) ─────────────────────── */}
+      <div className="timeline-header-area" style={{ width: totalW }}>
+        {/* Row 1: Loadout row */}
         <div
-          className="timeline-grid"
-          style={{
-            gridTemplateColumns: gridCols,
-            gridTemplateRows: `auto ${HEADER_HEIGHT}px auto`,
-            width: totalW,
-          }}
+          ref={loadoutRef}
+          className="timeline-header-grid"
+          style={{ gridTemplateColumns: gridCols }}
         >
-          {/* ── Row 1: Loadout row ─────────────────────────────────── */}
-
-          {/* Loadout corner */}
-          <div ref={loadoutRef} className="tl-loadout-corner">
+          <div className="tl-loadout-corner">
             <span className="corner-label">LOADOUT</span>
           </div>
 
-          {/* Common (global) loadout cell */}
           <div
             className="tl-loadout-cell tl-loadout-cell--common"
             style={{ gridColumn: `${commonStartCol} / span ${commonColCount}` }}
@@ -955,7 +982,6 @@ export default function TimelineGrid({
             </div>
           </div>
 
-          {/* Slot loadout cells */}
           {slotGroups.map((group) => {
             const { slot } = group;
             const op = slot.operator;
@@ -983,7 +1009,6 @@ export default function TimelineGrid({
             );
           })}
 
-          {/* Enemy loadout cell */}
           {enemyColCount > 0 && (
             <div
               className="tl-loadout-cell tl-loadout-cell--enemy"
@@ -1041,23 +1066,22 @@ export default function TimelineGrid({
               )}
             </div>
           )}
+        </div>
 
-          {/* ── Row 2: Skill column headers ────────────────────────── */}
-
-          {/* Corner */}
-          <div className="tl-corner" style={{ top: loadoutRowHeight }}>
+        {/* Row 2: Skill column headers */}
+        <div
+          className="timeline-header-grid"
+          style={{ gridTemplateColumns: gridCols, height: HEADER_HEIGHT }}
+        >
+          <div className="tl-corner">
             <span className="corner-label">TIME</span>
           </div>
 
-          {/* Header cells */}
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
               className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'mini-timeline' && col.headerVariant === 'mf' ? ' tl-header-cell--mf' : ''}`}
-              style={{
-                '--op-color': col.color,
-                top: loadoutRowHeight,
-              } as React.CSSProperties}
+              style={{ '--op-color': col.color } as React.CSSProperties}
             >
               {col.type === 'mini-timeline' && col.headerVariant === 'skill' ? (
                 <span className={`skill-badge skill-badge--vertical skill-badge--${col.columnId}`}>
@@ -1080,9 +1104,15 @@ export default function TimelineGrid({
               ) : null}
             </div>
           ))}
+        </div>
+      </div>
 
-          {/* ── Row 3: Timeline body ──────────────────────────── */}
-
+      {/* ── Scrollable body ──────────────────────────────────── */}
+      <div ref={scrollRef} className="timeline-scroll">
+        <div
+          className="timeline-body-grid"
+          style={{ gridTemplateColumns: gridCols, width: totalW }}
+        >
           {/* Time axis */}
           <div ref={timeAxisRef} className="tl-time-axis" style={{ height: tlHeight }}>
             {ticks.map((tick) => (

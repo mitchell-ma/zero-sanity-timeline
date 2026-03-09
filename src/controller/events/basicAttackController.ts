@@ -42,6 +42,11 @@ export class SkillSegmentBuilder {
           exchangeStatus: absorb.exchangeStatus,
           ratio: absorb.ratio,
         };
+        const forced = f.getApplyForcedReaction();
+        if (forced) marker.applyForcedReaction = {
+          reaction: forced.reaction,
+          statusLevel: forced.statusLevel,
+        };
         return marker;
       });
 

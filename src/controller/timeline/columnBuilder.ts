@@ -15,6 +15,48 @@ import {
   LAEVATAIN_COMBO_SKILL_SEQUENCE,
 } from '../../model/event-frames/laevatainEventFrames';
 import { AKEKURI_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/akekuriEventFrames';
+import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/endministratorEventFrames';
+import { LIFENG_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/lifengEventFrames';
+import { CHENQIANYU_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/chenQianyuEventFrames';
+import { ESTELLA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/estellaEventFrames';
+import { EMBER_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/emberEventFrames';
+import { SNOWSHINE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/snowshineEventFrames';
+import { CATCHER_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/catcherEventFrames';
+import { GILBERTA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/gilbertaEventFrames';
+import { XAIHI_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/xaihiEventFrames';
+import { PERLICA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/perlicaEventFrames';
+import { FLUORITE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/fluoriteEventFrames';
+import { LASTRITE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/lastRiteEventFrames';
+import { YVONNE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/yvonneEventFrames';
+import { AVYWENNA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/avywennaEventFrames';
+import { DAPAN_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/daPanEventFrames';
+import { POGRANICHNK_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/pogranichnikEventFrames';
+import { ALESH_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/aleshEventFrames';
+import { ARCLIGHT_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/arclightEventFrames';
+import { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
+
+/** Map operator IDs to their basic attack frame sequences. */
+const BASIC_ATTACK_FRAME_SEQUENCES: Record<string, readonly SkillEventSequence[]> = {
+  akekuri: AKEKURI_BASIC_ATTACK_SEQUENCES,
+  endministrator: ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES,
+  lifeng: LIFENG_BASIC_ATTACK_SEQUENCES,
+  chenQianyu: CHENQIANYU_BASIC_ATTACK_SEQUENCES,
+  estella: ESTELLA_BASIC_ATTACK_SEQUENCES,
+  ember: EMBER_BASIC_ATTACK_SEQUENCES,
+  snowshine: SNOWSHINE_BASIC_ATTACK_SEQUENCES,
+  catcher: CATCHER_BASIC_ATTACK_SEQUENCES,
+  gilberta: GILBERTA_BASIC_ATTACK_SEQUENCES,
+  xaihi: XAIHI_BASIC_ATTACK_SEQUENCES,
+  perlica: PERLICA_BASIC_ATTACK_SEQUENCES,
+  fluorite: FLUORITE_BASIC_ATTACK_SEQUENCES,
+  lastRite: LASTRITE_BASIC_ATTACK_SEQUENCES,
+  yvonne: YVONNE_BASIC_ATTACK_SEQUENCES,
+  avywenna: AVYWENNA_BASIC_ATTACK_SEQUENCES,
+  daPan: DAPAN_BASIC_ATTACK_SEQUENCES,
+  pogranichnik: POGRANICHNK_BASIC_ATTACK_SEQUENCES,
+  alesh: ALESH_BASIC_ATTACK_SEQUENCES,
+  arclight: ARCLIGHT_BASIC_ATTACK_SEQUENCES,
+};
 
 export interface Slot {
   slotId: string;
@@ -59,7 +101,6 @@ export function buildColumns(
   for (const slot of slots) {
     const op = slot.operator;
     const isLaevatain = op?.id === 'laevatain';
-    const isAkekuri = op?.id === 'akekuri';
     let slotHasCols = false;
     if (op) {
       for (const skillType of SKILL_ORDER) {
@@ -167,11 +208,12 @@ export function buildColumns(
               segments: comboSeg.segments,
             };
           }
-          // Akekuri basic attack: multi-sequence event with frame markers
-          if (isAkekuri && skillType === 'basic') {
-            const base = SkillSegmentBuilder.buildSegments(AKEKURI_BASIC_ATTACK_SEQUENCES);
+          // Generic basic attack: map-based lookup for operators with frame data
+          const basicSeqs = op && BASIC_ATTACK_FRAME_SEQUENCES[op.id];
+          if (basicSeqs && skillType === 'basic') {
+            const base = SkillSegmentBuilder.buildSegments(basicSeqs);
             col.defaultEvent = {
-              name: CombatSkillsType.SWORD_OF_ASPIRATION,
+              name: skill.name,
               defaultActivationDuration: base.totalDurationFrames,
               defaultActiveDuration: 0,
               defaultCooldownDuration: 0,

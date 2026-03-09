@@ -1,7 +1,7 @@
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { TriggerConditionType } from '../../consts/enums';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
-import { TRIGGER_CAPABILITIES, TriggerCapability } from '../../consts/triggerCapabilities';
+import { TriggerCapability } from '../../consts/triggerCapabilities';
 import {
   Publisher,
   Subscriber,
@@ -82,7 +82,7 @@ export class CombatLoadout {
     this.slotIds = ids;
   }
 
-  setOperator(slotIndex: number, operatorId: string | null): void {
+  setOperator(slotIndex: number, operator: Operator | null): void {
     // Clean up old wiring
     const old = this.slots[slotIndex];
     if (old) {
@@ -90,16 +90,16 @@ export class CombatLoadout {
       disconnectAllPublishers(old.subscriber);
     }
 
-    if (!operatorId) {
+    if (!operator) {
       this.slots[slotIndex] = null;
     } else {
-      const capability = TRIGGER_CAPABILITIES[operatorId];
+      const capability = operator.triggerCapability;
       if (!capability) {
         this.slots[slotIndex] = null;
       } else {
         const publisher = new SlotPublisher();
         const subscriber = new SlotSubscriber();
-        this.slots[slotIndex] = { operatorId, capability, publisher, subscriber };
+        this.slots[slotIndex] = { operatorId: operator.id, capability, publisher, subscriber };
       }
     }
 
@@ -120,24 +120,35 @@ export class CombatLoadout {
       }
     }
 
-    // For each slot that has a combo requirement, find all slots that publish that trigger
+    // For each slot that has combo requirements, find all slots that publish matching triggers
     for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
       const subSlot = this.slots[subIdx];
       if (!subSlot) continue;
 
-      const requiredTrigger = subSlot.capability.comboRequires;
-      const key = triggerKey(requiredTrigger);
-
+      const allPublished = new Set<TriggerConditionType>();
       for (let pubIdx = 0; pubIdx < NUM_SLOTS; pubIdx++) {
         if (pubIdx === subIdx) continue;
         const pubSlot = this.slots[pubIdx];
         if (!pubSlot) continue;
 
-        // Check if this publisher publishes the required trigger
         for (const triggers of Object.values(pubSlot.capability.publishesTriggers)) {
-          if (triggers && triggers.includes(requiredTrigger)) {
+          if (triggers) triggers.forEach((t) => allPublished.add(t));
+        }
+      }
+
+      for (const required of subSlot.capability.comboRequires) {
+        if (!allPublished.has(required)) continue;
+        const key = triggerKey(required);
+        for (let pubIdx = 0; pubIdx < NUM_SLOTS; pubIdx++) {
+          if (pubIdx === subIdx) continue;
+          const pubSlot = this.slots[pubIdx];
+          if (!pubSlot) continue;
+          const publishes = pubSlot.capability.publishesTriggers;
+          const hasTrigger = Object.keys(publishes).some((k) =>
+            publishes[k]?.includes(required),
+          );
+          if (hasTrigger) {
             pubsubSubscribe(key, pubSlot.publisher, subSlot.subscriber);
-            break;
           }
         }
       }
@@ -174,7 +185,7 @@ export class CombatLoadout {
         for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
           const subSlot = this.slots[subIdx];
           if (!subSlot) continue;
-          if (subSlot.capability.comboRequires !== trigger) continue;
+          if (!subSlot.capability.comboRequires.includes(trigger)) continue;
 
           const slotId = this.slotIds[subIdx];
           if (!slotId) continue;
