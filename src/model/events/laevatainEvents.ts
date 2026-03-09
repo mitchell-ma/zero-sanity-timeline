@@ -1,4 +1,4 @@
-import { BasicAttackType, CombatSkillType, OperatorType, TargetType, TimeInteractionType, TriggerConditionType } from "../../consts/enums";
+import { BasicAttackType, CombatSkillsType, CombatSkillType, OperatorType, TargetType, TimeInteractionType, TriggerConditionType } from "../../consts/enums";
 import { LaevatainEnhancementSource, LaevatainEmpowermentSource } from "../operators/laevatainEnums";
 import skillsData from "../game-data/skills.json";
 import { BasicAttackEvent } from "./basicAttackEvent";
@@ -11,7 +11,7 @@ const LAEV_COMBO = skillsData.operators.LAEVATAIN.COMBO_SKILL.LAEVATAIN_COMBO_SK
 const LAEV_BATTLE = skillsData.operators.LAEVATAIN.BATTLE_SKILL.LAEVATAIN_BATTLE_SKILL;
 const LAEV_ENHANCED_BATTLE = skillsData.operators.LAEVATAIN.ENHANCED_BATTLE_SKILL.LAEVATAIN_ENHANCED_BATTLE_SKILL;
 const LAEV_ENHANCED_EMPOWERED_BATTLE = skillsData.operators.LAEVATAIN.ENHANCED_EMPOWERED_BATTLE_SKILL.LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL;
-const LAEV_EMPOWERED_BATTLE = skillsData.operators.LAEVATAIN.EMPOWERED_BATTLE_SKILL.LAEVATAIN_EMPOWERED_BATTLE_SKILL;
+const LAEV_EMPOWERED_BATTLE = skillsData.operators.LAEVATAIN.EMPOWERED_BATTLE_SKILL;
 
 // ── Basic Attack: Flaming Cinders ───────────────────────────────────────────
 //
@@ -30,7 +30,7 @@ export class LaevatainBasicAttackSequence1 extends BasicAttackEvent {
   constructor() {
     super({
       basicAttackType: BasicAttackType.SEQUENCE_1,
-      name: "Flaming Cinders (1)",
+      name: CombatSkillsType.FLAMING_CINDERS,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBasicAttackSequence1.DURATION_SECONDS,
@@ -45,7 +45,7 @@ export class LaevatainBasicAttackSequence2 extends BasicAttackEvent {
   constructor() {
     super({
       basicAttackType: BasicAttackType.SEQUENCE_2,
-      name: "Flaming Cinders (2)",
+      name: CombatSkillsType.FLAMING_CINDERS,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBasicAttackSequence2.DURATION_SECONDS,
@@ -60,7 +60,7 @@ export class LaevatainBasicAttackSequence3 extends BasicAttackEvent {
   constructor() {
     super({
       basicAttackType: BasicAttackType.SEQUENCE_3,
-      name: "Flaming Cinders (3)",
+      name: CombatSkillsType.FLAMING_CINDERS,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBasicAttackSequence3.DURATION_SECONDS,
@@ -75,7 +75,7 @@ export class LaevatainBasicAttackSequence4 extends BasicAttackEvent {
   constructor() {
     super({
       basicAttackType: BasicAttackType.SEQUENCE_4,
-      name: "Flaming Cinders (4)",
+      name: CombatSkillsType.FLAMING_CINDERS,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBasicAttackSequence4.DURATION_SECONDS,
@@ -90,7 +90,7 @@ export class LaevatainBasicAttackSequence5 extends BasicAttackEvent {
   constructor() {
     super({
       basicAttackType: BasicAttackType.SEQUENCE_5,
-      name: "Flaming Cinders (5)",
+      name: CombatSkillsType.FLAMING_CINDERS,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBasicAttackSequence5.DURATION_SECONDS,
@@ -110,7 +110,7 @@ export class LaevatainComboSkillEvent extends ComboSkillEvent {
 
   constructor() {
     super({
-      name: "Seethe",
+      name: CombatSkillsType.SEETHE,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainComboSkillEvent.DURATION_SECONDS,
@@ -145,7 +145,7 @@ export class LaevatainBattleSkillEvent extends BasicSkillEvent {
 
   constructor() {
     super({
-      name: "Smouldering Fire",
+      name: CombatSkillsType.SMOULDERING_FIRE,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainBattleSkillEvent.DURATION_SECONDS,
@@ -164,7 +164,7 @@ export class LaevatainEnhancedBattleSkillEvent extends BasicSkillEvent {
 
   constructor() {
     super({
-      name: "Smouldering Fire (Enhanced)",
+      name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainEnhancedBattleSkillEvent.DURATION_SECONDS,
@@ -176,7 +176,9 @@ export class LaevatainEnhancedBattleSkillEvent extends BasicSkillEvent {
 
 /** Empowered by existing statuses (Melting Flame stacks) — skill behaviour is changed by active status effects. */
 export class LaevatainEmpoweredBattleSkillEvent extends BasicSkillEvent {
-  static readonly DURATION_SECONDS = LAEV_EMPOWERED_BATTLE.LAEVATAIN_EMPOWERED_BATTLE_SKILL_DURATION;
+  static readonly EXPLOSION_DURATION_SECONDS = LAEV_EMPOWERED_BATTLE.LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION.LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_DURATION;
+  static readonly ADDITIONAL_ATTACK_DURATION_SECONDS = LAEV_EMPOWERED_BATTLE.LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK.LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK_DURATION;
+  static readonly DURATION_SECONDS = LaevatainEmpoweredBattleSkillEvent.EXPLOSION_DURATION_SECONDS + LaevatainEmpoweredBattleSkillEvent.ADDITIONAL_ATTACK_DURATION_SECONDS;
   static readonly SP_COST = LAEV_EMPOWERED_BATTLE.LAEVATAIN_EMPOWERED_BATTLE_SKILL_SP_COST;
   static readonly GAUGE_GAIN = LAEV_EMPOWERED_BATTLE.LAEVATAIN_EMPOWERED_BATTLE_SKILL_GAUGE_GAIN;
   readonly enhancementSource = null;
@@ -184,7 +186,7 @@ export class LaevatainEmpoweredBattleSkillEvent extends BasicSkillEvent {
 
   constructor() {
     super({
-      name: "Smouldering Fire (Empowered)",
+      name: CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainEmpoweredBattleSkillEvent.DURATION_SECONDS,
@@ -203,7 +205,7 @@ export class LaevatainEnhancedEmpoweredBattleSkillEvent extends BasicSkillEvent 
 
   constructor() {
     super({
-      name: "Smouldering Fire (Enhanced + Empowered)",
+      name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
       target: TargetType.ENEMY,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: LaevatainEnhancedEmpoweredBattleSkillEvent.DURATION_SECONDS,
@@ -248,7 +250,7 @@ export class LaevatainUltimateEvent extends UltimateEvent {
     const cooldown = params?.cooldownSeconds ?? LaevatainUltimateEvent.COOLDOWN_SECONDS;
 
     super({
-      name: "Twilight",
+      name: CombatSkillsType.TWILIGHT,
       target: TargetType.SELF,
       sourceOperator: OperatorType.LAEVATAIN,
       duration: activation + active,

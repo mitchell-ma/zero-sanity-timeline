@@ -47,6 +47,7 @@ export class Subtimeline {
 
   /** Add a new event with the given parameters. Returns the created event. */
   addEvent(params: {
+    name?: string;
     startFrame: number;
     activationDuration: number;
     activeDuration: number;
@@ -54,6 +55,7 @@ export class Subtimeline {
   }): TimelineEvent {
     const ev: TimelineEvent = {
       id: genId(),
+      name: params.name ?? this.columnId,
       ownerId: this.ownerId,
       columnId: this.columnId,
       startFrame: params.startFrame,

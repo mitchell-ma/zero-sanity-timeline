@@ -1,15 +1,20 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { ELEMENT_COLORS, ElementType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, TimelineSourceType } from '../../consts/enums';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
 import { SKILL_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/channelLabels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { TOTAL_FRAMES } from '../../utils/timeline';
-import { BasicAttackController } from '../events/basicAttackController';
+import { SkillSegmentBuilder } from '../events/basicAttackController';
 import {
   LAEVATAIN_BASIC_ATTACK_SEQUENCES,
   LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCES,
+  LAEVATAIN_BATTLE_SKILL_SEQUENCE,
+  LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE,
+  LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES,
+  LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE,
+  LAEVATAIN_COMBO_SKILL_SEQUENCE,
 } from '../../model/event-frames/laevatainEventFrames';
-import skillsData from '../../model/game-data/skills.json';
+import { AKEKURI_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/akekuriEventFrames';
 
 export interface Slot {
   slotId: string;
@@ -54,6 +59,7 @@ export function buildColumns(
   for (const slot of slots) {
     const op = slot.operator;
     const isLaevatain = op?.id === 'laevatain';
+    const isAkekuri = op?.id === 'akekuri';
     let slotHasCols = false;
     if (op) {
       for (const skillType of SKILL_ORDER) {
@@ -78,10 +84,10 @@ export function buildColumns(
           };
           // Laevatain basic attack: multi-sequence event with frame markers
           if (isLaevatain && skillType === 'basic') {
-            const base = BasicAttackController.buildSegments(LAEVATAIN_BASIC_ATTACK_SEQUENCES);
-            const enhanced = BasicAttackController.buildSegments(LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCES);
+            const base = SkillSegmentBuilder.buildSegments(LAEVATAIN_BASIC_ATTACK_SEQUENCES);
+            const enhanced = SkillSegmentBuilder.buildSegments(LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCES);
             col.defaultEvent = {
-              name: 'Flaming Cinders',
+              name: CombatSkillsType.FLAMING_CINDERS,
               defaultActivationDuration: base.totalDurationFrames,
               defaultActiveDuration: 0,
               defaultCooldownDuration: 0,
@@ -89,14 +95,14 @@ export function buildColumns(
             };
             col.eventVariants = [
               {
-                name: 'Flaming Cinders',
+                name: CombatSkillsType.FLAMING_CINDERS,
                 defaultActivationDuration: base.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
                 segments: base.segments,
               },
               {
-                name: 'Flaming Cinders (Enhanced)',
+                name: CombatSkillsType.FLAMING_CINDERS_ENHANCED,
                 defaultActivationDuration: enhanced.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
@@ -105,43 +111,72 @@ export function buildColumns(
               },
             ];
           }
-          // Laevatain battle skill: 4 variants (base, enhanced, empowered, enhanced+empowered)
+          // Laevatain battle skill: 4 variants with frame data from skills.json
           if (isLaevatain && skillType === 'battle') {
-            const LAEV_SKILLS = skillsData.operators.LAEVATAIN;
-            const baseDur = LAEV_SKILLS.BATTLE_SKILL.LAEVATAIN_BATTLE_SKILL.LAEVATAIN_BATTLE_SKILL_DURATION;
-            const enhDur = LAEV_SKILLS.ENHANCED_BATTLE_SKILL.LAEVATAIN_ENHANCED_BATTLE_SKILL.LAEVATAIN_ENHANCED_BATTLE_SKILL_DURATION;
-            const empDur = LAEV_SKILLS.EMPOWERED_BATTLE_SKILL.LAEVATAIN_EMPOWERED_BATTLE_SKILL.LAEVATAIN_EMPOWERED_BATTLE_SKILL_DURATION;
-            const enhEmpDur = LAEV_SKILLS.ENHANCED_EMPOWERED_BATTLE_SKILL.LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL.LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_DURATION;
-            const toFrames = (s: number) => Math.round(s * 120);
+            const baseSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_BATTLE_SKILL_SEQUENCE], { labels: ['Explosion'] });
+            const enhSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE]);
+            const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'] });
+            const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE]);
+            col.defaultEvent = {
+              name: CombatSkillsType.SMOULDERING_FIRE,
+              defaultActivationDuration: baseSeg.totalDurationFrames,
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+              segments: baseSeg.segments,
+            };
             col.eventVariants = [
               {
-                name: 'Smouldering Fire',
-                defaultActivationDuration: toFrames(baseDur),
+                name: CombatSkillsType.SMOULDERING_FIRE,
+                defaultActivationDuration: baseSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
+                segments: baseSeg.segments,
               },
               {
-                name: 'Smouldering Fire (Enhanced)',
-                defaultActivationDuration: toFrames(enhDur),
+                name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED,
+                defaultActivationDuration: enhSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
+                segments: enhSeg.segments,
                 triggerCondition: 'Requires: Twilight active',
               },
               {
-                name: 'Smouldering Fire (Empowered)',
-                defaultActivationDuration: toFrames(empDur),
+                name: CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
+                defaultActivationDuration: empSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
+                segments: empSeg.segments,
                 triggerCondition: 'Requires: Melting Flame ×4',
               },
               {
-                name: 'Smouldering Fire (Enhanced + Empowered)',
-                defaultActivationDuration: toFrames(enhEmpDur),
+                name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
+                defaultActivationDuration: enhEmpSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
+                segments: enhEmpSeg.segments,
                 triggerCondition: 'Requires: Twilight active + Melting Flame ×4',
               },
             ];
+          }
+          // Laevatain combo skill: single-sequence event with frame data
+          if (isLaevatain && skillType === 'combo') {
+            const comboSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_COMBO_SKILL_SEQUENCE]);
+            col.defaultEvent = {
+              ...col.defaultEvent!,
+              defaultActivationDuration: comboSeg.totalDurationFrames,
+              segments: comboSeg.segments,
+            };
+          }
+          // Akekuri basic attack: multi-sequence event with frame markers
+          if (isAkekuri && skillType === 'basic') {
+            const base = SkillSegmentBuilder.buildSegments(AKEKURI_BASIC_ATTACK_SEQUENCES);
+            col.defaultEvent = {
+              name: CombatSkillsType.SWORD_OF_ASPIRATION,
+              defaultActivationDuration: base.totalDurationFrames,
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+              segments: base.segments,
+            };
           }
           columns.push(col);
           slotHasCols = true;

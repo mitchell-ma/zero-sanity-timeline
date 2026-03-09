@@ -1,9 +1,9 @@
-import { BasicAttackType, ElementType } from "../../consts/enums";
+import { BasicAttackType, ElementType, StatusType } from "../../consts/enums";
 import { BasicAttackEventFrame } from "./basicAttackEventFrame";
 import { BasicSkillEventFrame } from "./basicSkillEventFrame";
 import { ComboSkillEventFrame } from "./comboSkillEventFrame";
 import { CombatSkillEventFrame } from "./combatSkillEventFrame";
-import { SkillEventFrame } from "./skillEventFrame";
+import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
@@ -15,17 +15,45 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
   private readonly _offsetSeconds: number;
   private readonly _skillPointRecovery: number;
   private readonly _stagger: number;
+  private readonly _applyArtsInfliction: FrameArtsInfliction | null;
+  private readonly _absorbArtsInfliction: FrameArtsAbsorption | null;
 
-  constructor(tickData: { OFFSET_SECONDS: number; SKILL_POINT_RECOVERY: number; STAGGER: number }) {
+  constructor(tickData: Record<string, any>) {
     super();
     this._offsetSeconds = tickData.OFFSET_SECONDS;
     this._skillPointRecovery = tickData.SKILL_POINT_RECOVERY;
     this._stagger = tickData.STAGGER;
+
+    // Parse APPLY_ARTS_INFLICTION
+    const apply = tickData.APPLY_ARTS_INFLICTION;
+    if (apply) {
+      const element = Object.keys(apply)[0];
+      this._applyArtsInfliction = { element, stacks: apply[element].STACKS };
+    } else {
+      this._applyArtsInfliction = null;
+    }
+
+    // Parse ABSORB_ARTS_INFLICTION
+    const absorb = tickData.ABSORB_ARTS_INFLICTION;
+    if (absorb) {
+      const element = Object.keys(absorb)[0];
+      const entry = absorb[element];
+      this._absorbArtsInfliction = {
+        element,
+        stacks: entry.STACKS,
+        exchangeStatus: entry.CONVERSION.EXCHANGE as StatusType,
+        ratio: entry.CONVERSION.RATIO,
+      };
+    } else {
+      this._absorbArtsInfliction = null;
+    }
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
   getSkillPointRecovery(): number { return this._skillPointRecovery; }
   getStagger(): number { return this._stagger; }
+  getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
+  getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return this._absorbArtsInfliction; }
 }
 
 class LaevatainSkillEventSequence extends SkillEventSequence {
@@ -142,10 +170,16 @@ export const LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE: SkillEventSeque
   'LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL',
 );
 
-export const LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new LaevatainSkillEventSequence(
-  LAEV.EMPOWERED_BATTLE_SKILL.LAEVATAIN_EMPOWERED_BATTLE_SKILL,
-  'LAEVATAIN_EMPOWERED_BATTLE_SKILL',
-);
+export const LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES: readonly SkillEventSequence[] = [
+  new LaevatainSkillEventSequence(
+    (LAEV.EMPOWERED_BATTLE_SKILL as Record<string, any>).LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION,
+    'LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION',
+  ),
+  new LaevatainSkillEventSequence(
+    (LAEV.EMPOWERED_BATTLE_SKILL as Record<string, any>).LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK,
+    'LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK',
+  ),
+];
 
 export class SmoulderingFireExplosionFrame extends BasicSkillEventFrame {}
 export class SmoulderingFireDotFrame extends BasicSkillEventFrame {}

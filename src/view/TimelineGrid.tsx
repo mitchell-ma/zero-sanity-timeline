@@ -18,7 +18,8 @@ import {
   TOTAL_FRAMES,
 } from '../utils/timeline';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../model/channels';
-import { REACTION_LABELS } from '../consts/channelLabels';
+import { REACTION_LABELS, COMBAT_SKILL_LABELS } from '../consts/channelLabels';
+import { CombatSkillsType, TimelineSourceType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -32,7 +33,6 @@ import { MicroColumnController } from '../controller/timeline/microColumnControl
 import { WindowsMap } from '../controller/combat-loadout';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TimelineSourceType } from '../consts/enums';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 
 const MIN_SLOT_COLS = 4;
@@ -93,8 +93,6 @@ interface TimelineGridProps {
   selectedFrame?: import('../consts/viewTypes').SelectedFrame | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const noop1 = (_a: any) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noop2 = (_a: any, _b: any) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -797,17 +795,20 @@ export default function TimelineGrid({
           x: e.clientX, y: e.clientY,
           items: [
             headerItem,
-            ...col.eventVariants.map((v) => ({
-              label: v.disabled ? `${v.name} ${v.disabledReason ?? ''}`.trim() : v.name,
-              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, {
-                name: v.name,
-                defaultActivationDuration: v.defaultActivationDuration,
-                defaultActiveDuration: v.defaultActiveDuration,
-                defaultCooldownDuration: v.defaultCooldownDuration,
-                ...(v.segments ? { segments: v.segments } : {}),
-              }),
-              disabled: v.disabled,
-            })),
+            ...col.eventVariants.map((v) => {
+              const displayName = COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? v.name;
+              return {
+                label: v.disabled ? `${displayName} ${v.disabledReason ?? ''}`.trim() : displayName,
+                action: () => onAddEvent(col.ownerId, col.columnId, atFrame, {
+                  name: v.name,
+                  defaultActivationDuration: v.defaultActivationDuration,
+                  defaultActiveDuration: v.defaultActiveDuration,
+                  defaultCooldownDuration: v.defaultCooldownDuration,
+                  ...(v.segments ? { segments: v.segments } : {}),
+                }),
+                disabled: v.disabled,
+              };
+            }),
           ],
         });
       } else {
@@ -1284,9 +1285,9 @@ export default function TimelineGrid({
                           zoom={zoom}
                           selected={false}
                           hovered={hoveredId === ev.id}
+                          label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
                           onDragStart={col.derived ? noop3 : handleEventDragStart}
                           onContextMenu={col.derived ? noop2 : handleEventContextMenu}
-                          onDoubleClick={col.derived ? noop1 : onEditEvent}
                           onSelect={col.derived ? undefined : handleEventSelect}
                           onHover={handleEventHover}
                           onTouchStart={col.derived ? undefined : handleEventTouchStart}
@@ -1304,10 +1305,10 @@ export default function TimelineGrid({
                       zoom={zoom}
                       selected={selectedIds.has(ev.id)}
                       hovered={hoveredId === ev.id}
-                      variant={col.columnId === 'ultimate' ? 'ultimate' : col.columnId === 'basic' ? 'sequenced' : 'default'}
+                      label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
+                      variant={col.columnId === 'ultimate' ? 'ultimate' : ev.segments && ev.segments.length > 0 ? 'sequenced' : 'default'}
                       onDragStart={handleEventDragStart}
                       onContextMenu={handleEventContextMenu}
-                      onDoubleClick={onEditEvent}
                       onSelect={handleEventSelect}
                       onHover={handleEventHover}
                       onTouchStart={handleEventTouchStart}

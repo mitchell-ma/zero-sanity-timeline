@@ -1,16 +1,63 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../utils/timeline';
-import { SKILL_LABELS, REACTION_LABELS } from '../consts/channelLabels';
+import { SKILL_LABELS, REACTION_LABELS, COMBAT_SKILL_LABELS } from '../consts/channelLabels';
+import { CombatSkillsType } from '../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, SelectedFrame } from "../consts/viewTypes";
+import { OperatorLoadoutState } from './OperatorLoadoutHeader';
+import { WEAPONS, ARMORS, GLOVES, KITS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
 
-interface FieldProps {
+// ── Loadout stats type (shared across app) ──────────────────────────────────
+
+export interface LoadoutStats {
+  operatorLevel: number;
+  potential: number;
+  talentOneLevel: number;
+  talentTwoLevel: number;
+  basicAttackLevel: number;
+  battleSkillLevel: number;
+  comboSkillLevel: number;
+  ultimateLevel: number;
+  weaponLevel: number;
+  weaponSkill1Level: number;
+  weaponSkill2Level: number;
+  weaponSkill3Level: number;
+  gearRank: number;
+}
+
+export const DEFAULT_LOADOUT_STATS: LoadoutStats = {
+  operatorLevel: 90,
+  potential: 5,
+  talentOneLevel: 3,
+  talentTwoLevel: 3,
+  basicAttackLevel: 12,
+  battleSkillLevel: 12,
+  comboSkillLevel: 12,
+  ultimateLevel: 12,
+  weaponLevel: 90,
+  weaponSkill1Level: 5,
+  weaponSkill2Level: 5,
+  weaponSkill3Level: 5,
+  gearRank: 4,
+};
+
+/** Generate default loadout stats for a given operator rarity. */
+export function getDefaultLoadoutStats(rarity: number): LoadoutStats {
+  return {
+    ...DEFAULT_LOADOUT_STATS,
+    potential: rarity >= 6 ? 0 : 5,
+  };
+}
+
+const LEVEL_BREAKPOINTS = [1, 20, 40, 60, 80, 90];
+
+// ── Shared field components ─────────────────────────────────────────────────
+
+function DurationField({ label, value, onChange, onCommit }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   onCommit: () => void;
-}
-
-function Field({ label, value, onChange, onCommit }: FieldProps) {
+}) {
   return (
     <div className="edit-field">
       <span className="edit-field-label">{label}</span>
@@ -31,22 +78,105 @@ function Field({ label, value, onChange, onCommit }: FieldProps) {
   );
 }
 
-function ReadOnlyField({ label, value, unit }: { label: string; value: string; unit?: string }) {
+/** Initial delay before repeating (ms). */
+const REPEAT_DELAY = 400;
+/** Interval between repeats (ms). */
+const REPEAT_INTERVAL = 80;
+
+function StatField({ label, value, min, max, onChange }: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopRepeat = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+  }, []);
+
+  const startRepeat = useCallback((delta: number) => {
+    stopRepeat();
+    timerRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        const next = Math.max(min, Math.min(max, valueRef.current + delta));
+        if (next !== valueRef.current) onChange(next);
+      }, REPEAT_INTERVAL);
+    }, REPEAT_DELAY);
+  }, [min, max, onChange, stopRepeat]);
+
+  // Clean up on unmount
+  useEffect(() => stopRepeat, [stopRepeat]);
+
   return (
-    <div className="edit-field">
+    <div className="stat-field">
       <span className="edit-field-label">{label}</span>
-      <div className="edit-field-row">
-        <span className="edit-readonly-value">{value}</span>
-        {unit && <span className="edit-input-unit">{unit}</span>}
+      <div className="stat-field-controls">
+        <button
+          className="stat-arrow"
+          disabled={value <= min}
+          onClick={() => onChange(Math.max(min, value - 1))}
+          onMouseDown={() => startRepeat(-1)}
+          onMouseUp={stopRepeat}
+          onMouseLeave={stopRepeat}
+        >-</button>
+        <input
+          className="edit-input stat-field-input"
+          type="number"
+          value={value}
+          min={min}
+          max={max}
+          onChange={(e) => {
+            const v = Math.max(min, Math.min(max, Number(e.target.value) || min));
+            onChange(v);
+          }}
+        />
+        <button
+          className="stat-arrow"
+          disabled={value >= max}
+          onClick={() => onChange(Math.min(max, value + 1))}
+          onMouseDown={() => startRepeat(1)}
+          onMouseUp={stopRepeat}
+          onMouseLeave={stopRepeat}
+        >+</button>
       </div>
     </div>
   );
 }
 
-interface InformationPaneProps {
+function LevelSelect({ label, value, options, onChange }: {
+  label: string;
+  value: number;
+  options: number[];
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="stat-field">
+      <span className="edit-field-label">{label}</span>
+      <select
+        className="edit-input stat-level-select"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      >
+        {options.map((lv) => (
+          <option key={lv} value={lv}>{lv}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// ── Event pane content ──────────────────────────────────────────────────────
+
+interface EventPaneProps {
   event: TimelineEvent;
   operators: Operator[];
-  /** Slot ID → operator mapping for resolving event owner. */
   slots: { slotId: string; operator: Operator | null }[];
   enemy: Enemy;
   onUpdate: (id: string, updates: Partial<TimelineEvent>) => void;
@@ -55,7 +185,7 @@ interface InformationPaneProps {
   selectedFrame?: SelectedFrame | null;
 }
 
-export default function InformationPane({
+function EventPane({
   event,
   operators,
   enemy,
@@ -64,7 +194,7 @@ export default function InformationPane({
   onClose,
   selectedFrame,
   slots,
-}: InformationPaneProps) {
+}: EventPaneProps) {
   let ownerName        = '';
   let skillName        = '';
   let ownerColor       = '#4488ff';
@@ -96,7 +226,7 @@ export default function InformationPane({
       ownerColor = op.color;
       if (event.columnId === 'melting-flame') {
         skillName    = 'Melting Flame';
-        ownerColor   = '#f07030'; // Heat element color
+        ownerColor   = '#f07030';
         columnLabel = 'STATUS';
       } else {
         const skillType = event.columnId as SkillType;
@@ -110,8 +240,10 @@ export default function InformationPane({
     }
   }
 
-  // Event-level name overrides derived skill name (for variants like "Flaming Cinders (Enhanced)")
-  if (event.name) {
+  const combatLabel = COMBAT_SKILL_LABELS[event.name as CombatSkillsType];
+  if (combatLabel) {
+    skillName = combatLabel;
+  } else if (event.name && event.name !== event.columnId) {
     skillName = event.name;
   }
 
@@ -130,10 +262,8 @@ export default function InformationPane({
   const [startWholeSec, setStartWholeSec] = useState(String(Math.floor(event.startFrame / FPS)));
   const [startModFrame, setStartModFrame] = useState(String(event.startFrame % FPS));
 
-  // Track whether any input is focused — skip syncing from props while editing
   const focusedRef = useRef(false);
 
-  // Sync local state from event prop (e.g. after undo, drag, or switching events)
   useEffect(() => {
     if (focusedRef.current) return;
     setStartWholeSec(String(Math.floor(event.startFrame / FPS)));
@@ -147,7 +277,6 @@ export default function InformationPane({
 
   const commit = () => {
     if (isSequenced) {
-      // Only start offset is editable for sequenced events
       onUpdate(event.id, { startFrame: computedStartFrame });
     } else {
       onUpdate(event.id, {
@@ -170,7 +299,7 @@ export default function InformationPane({
     : event.activationDuration + event.activeDuration + event.cooldownDuration;
 
   return (
-    <div className="event-edit-panel" onFocus={handleFocus}>
+    <>
       <div className="edit-panel-header">
         <div
           style={{
@@ -194,7 +323,7 @@ export default function InformationPane({
         <button className="edit-panel-close" onClick={onClose}>×</button>
       </div>
 
-      <div className="edit-panel-body">
+      <div className="edit-panel-body" onFocus={handleFocus}>
         {triggerCondition && (
           <div className="edit-panel-trigger">{triggerCondition}</div>
         )}
@@ -274,6 +403,16 @@ export default function InformationPane({
                             {(f.stagger ?? 0) > 0 && (
                               <div style={{ paddingLeft: 8 }}>Stagger: {f.stagger}</div>
                             )}
+                            {f.applyArtsInfliction && (
+                              <div style={{ paddingLeft: 8, color: '#f07030' }}>
+                                Apply: {f.applyArtsInfliction.element} Infliction ×{f.applyArtsInfliction.stacks}
+                              </div>
+                            )}
+                            {f.absorbArtsInfliction && (
+                              <div style={{ paddingLeft: 8, color: '#f0a040' }}>
+                                Absorb: {f.absorbArtsInfliction.element} Infliction (max {f.absorbArtsInfliction.stacks}) → {f.absorbArtsInfliction.exchangeStatus.replace(/_/g, ' ')} ({f.absorbArtsInfliction.ratio})
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -295,17 +434,17 @@ export default function InformationPane({
           <>
             <div className="edit-panel-section">
               <span className="edit-section-label">Active Phase</span>
-              <Field label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
+              <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
             </div>
 
             <div className="edit-panel-section">
               <span className="edit-section-label">Lingering Effect</span>
-              <Field label="Duration (0 = none)" value={lingerSec} onChange={setLingerSec} onCommit={handleBlur} />
+              <DurationField label="Duration (0 = none)" value={lingerSec} onChange={setLingerSec} onCommit={handleBlur} />
             </div>
 
             <div className="edit-panel-section">
               <span className="edit-section-label">Cooldown</span>
-              <Field label="Duration (0 = none)" value={cooldownSec} onChange={setCooldownSec} onCommit={handleBlur} />
+              <DurationField label="Duration (0 = none)" value={cooldownSec} onChange={setCooldownSec} onCommit={handleBlur} />
             </div>
 
             <div className="edit-panel-section">
@@ -325,6 +464,149 @@ export default function InformationPane({
           REMOVE EVENT
         </button>
       </div>
+    </>
+  );
+}
+
+// ── Loadout pane content ────────────────────────────────────────────────────
+
+interface LoadoutPaneProps {
+  operator: Operator;
+  loadout: OperatorLoadoutState;
+  stats: LoadoutStats;
+  onStatsChange: (stats: LoadoutStats) => void;
+  onClose: () => void;
+}
+
+function LoadoutPane({ operator, loadout, stats, onStatsChange, onClose }: LoadoutPaneProps) {
+  const set = (key: keyof LoadoutStats) => (v: number) =>
+    onStatsChange({ ...stats, [key]: v });
+
+  const weapon = loadout.weaponIdx !== null ? WEAPONS[loadout.weaponIdx] : null;
+  const armor  = loadout.armorIdx  !== null ? ARMORS[loadout.armorIdx]   : null;
+  const gloves = loadout.glovesIdx !== null ? GLOVES[loadout.glovesIdx]  : null;
+  const kit1   = loadout.kit1Idx   !== null ? KITS[loadout.kit1Idx]      : null;
+  const kit2   = loadout.kit2Idx   !== null ? KITS[loadout.kit2Idx]      : null;
+  const food   = loadout.consumableIdx !== null ? CONSUMABLES[loadout.consumableIdx] : null;
+  const tac    = loadout.tacticalIdx   !== null ? TACTICALS[loadout.tacticalIdx]     : null;
+
+  return (
+    <>
+      <div className="edit-panel-header">
+        <div
+          style={{
+            width: 4, height: 40, borderRadius: 2, flexShrink: 0,
+            background: operator.color,
+            boxShadow: `0 0 8px ${operator.color}80`,
+          }}
+        />
+        <div className="edit-panel-title-wrap">
+          <div className="edit-panel-skill-name">{operator.name}</div>
+          <div className="edit-panel-op-name" style={{ color: operator.color }}>
+            {operator.role}
+            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· LOADOUT</span>
+          </div>
+        </div>
+        <button className="edit-panel-close" onClick={onClose}>×</button>
+      </div>
+
+      <div className="edit-panel-body">
+        <div className="edit-panel-section">
+          <span className="edit-section-label">Operator</span>
+          <LevelSelect label="Operator Level"     value={stats.operatorLevel}     options={LEVEL_BREAKPOINTS} onChange={set('operatorLevel')} />
+          <StatField   label="Potential"           value={stats.potential}         min={0} max={5}  onChange={set('potential')} />
+          <StatField   label="Talent 1 Level"      value={stats.talentOneLevel}   min={0} max={3}  onChange={set('talentOneLevel')} />
+          <StatField   label="Talent 2 Level"      value={stats.talentTwoLevel}   min={0} max={3}  onChange={set('talentTwoLevel')} />
+        </div>
+
+        <div className="edit-panel-section">
+          <span className="edit-section-label">Skills</span>
+          <StatField label="Basic Attack Level"  value={stats.basicAttackLevel}  min={1} max={12} onChange={set('basicAttackLevel')} />
+          <StatField label="Battle Skill Level"  value={stats.battleSkillLevel}  min={1} max={12} onChange={set('battleSkillLevel')} />
+          <StatField label="Combo Skill Level"   value={stats.comboSkillLevel}   min={1} max={12} onChange={set('comboSkillLevel')} />
+          <StatField label="Ultimate Level"      value={stats.ultimateLevel}     min={1} max={12} onChange={set('ultimateLevel')} />
+        </div>
+
+        {weapon && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Weapon</span>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{weapon.name}</div>
+            <LevelSelect label="Weapon Level"    value={stats.weaponLevel}       options={LEVEL_BREAKPOINTS} onChange={set('weaponLevel')} />
+            <StatField   label="Skill 1 Level"   value={stats.weaponSkill1Level} min={1} max={5}  onChange={set('weaponSkill1Level')} />
+            <StatField   label="Skill 2 Level"   value={stats.weaponSkill2Level} min={1} max={5}  onChange={set('weaponSkill2Level')} />
+            <StatField   label="Skill 3 Level"   value={stats.weaponSkill3Level} min={1} max={5}  onChange={set('weaponSkill3Level')} />
+          </div>
+        )}
+
+        {(armor || gloves || kit1 || kit2) && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Gear</span>
+            {armor  && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{armor.name}</div>}
+            {gloves && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{gloves.name}</div>}
+            {kit1   && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{kit1.name}</div>}
+            {kit2   && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{kit2.name}</div>}
+            <StatField label="Gear Rank" value={stats.gearRank} min={1} max={4} onChange={set('gearRank')} />
+          </div>
+        )}
+
+        {(food || tac) && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Items</span>
+            {food && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{food.name}</div>}
+            {tac  && <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{tac.name}</div>}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ── Unified information pane ────────────────────────────────────────────────
+
+type InformationPaneProps =
+  | ({
+      mode: 'event';
+      event: TimelineEvent;
+      operators: Operator[];
+      slots: { slotId: string; operator: Operator | null }[];
+      enemy: Enemy;
+      onUpdate: (id: string, updates: Partial<TimelineEvent>) => void;
+      onRemove: (id: string) => void;
+      onClose: () => void;
+      selectedFrame?: SelectedFrame | null;
+    })
+  | ({
+      mode: 'loadout';
+      operator: Operator;
+      loadout: OperatorLoadoutState;
+      stats: LoadoutStats;
+      onStatsChange: (stats: LoadoutStats) => void;
+      onClose: () => void;
+    });
+
+export default function InformationPane(props: InformationPaneProps) {
+  return (
+    <div className="event-edit-panel">
+      {props.mode === 'event' ? (
+        <EventPane
+          event={props.event}
+          operators={props.operators}
+          slots={props.slots}
+          enemy={props.enemy}
+          onUpdate={props.onUpdate}
+          onRemove={props.onRemove}
+          onClose={props.onClose}
+          selectedFrame={props.selectedFrame}
+        />
+      ) : (
+        <LoadoutPane
+          operator={props.operator}
+          loadout={props.loadout}
+          stats={props.stats}
+          onStatsChange={props.onStatsChange}
+          onClose={props.onClose}
+        />
+      )}
     </div>
   );
 }

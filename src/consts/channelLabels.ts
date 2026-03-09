@@ -1,3 +1,4 @@
+import { CombatSkillsType } from './enums';
 import { SkillType } from './viewTypes';
 
 // ── Skill labels ────────────────────────────────────────────────────────────
@@ -7,6 +8,40 @@ export const SKILL_LABELS: Record<SkillType, string> = {
   battle:   'BATTLE',
   combo:    'COMBO',
   ultimate: 'ULT',
+};
+
+// ── Combat skill display names ──────────────────────────────────────────────
+
+export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
+  // Laevatain
+  [CombatSkillsType.FLAMING_CINDERS]:                     'Flaming Cinders',
+  [CombatSkillsType.FLAMING_CINDERS_ENHANCED]:            'Flaming Cinders (Enhanced)',
+  [CombatSkillsType.SMOULDERING_FIRE]:                    'Smouldering Fire',
+  [CombatSkillsType.SMOULDERING_FIRE_ENHANCED]:           'Smouldering Fire (Enhanced)',
+  [CombatSkillsType.SMOULDERING_FIRE_EMPOWERED]:          'Smouldering Fire (Empowered)',
+  [CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED]: 'Smouldering Fire (Enhanced + Empowered)',
+  [CombatSkillsType.SEETHE]:                              'Seethe',
+  [CombatSkillsType.TWILIGHT]:                             'Twilight',
+  // Antal
+  [CombatSkillsType.EXCHANGE_CURRENT]:                     'Exchange Current',
+  [CombatSkillsType.SPECIFIED_RESEARCH_SUBJECT]:           'Specified Research Subject',
+  [CombatSkillsType.EMP_TEST_SITE]:                        'EMP Test Site',
+  [CombatSkillsType.OVERCLOCKED_MOMENT]:                   'Overclocked Moment',
+  // Akekuri
+  [CombatSkillsType.SWORD_OF_ASPIRATION]:                  'Sword of Aspiration',
+  [CombatSkillsType.BURST_OF_PASSION]:                     'Burst of Passion',
+  [CombatSkillsType.FLASH_AND_DASH]:                       'Flash and Dash',
+  [CombatSkillsType.SQUAD_ON_ME]:                          'Squad on Me!',
+  // Wulfgard
+  [CombatSkillsType.RAPID_FIRE_AKIMBO]:                    'Rapid-Fire Akimbo',
+  [CombatSkillsType.THERMITE_TRACERS]:                     'Thermite Tracers',
+  [CombatSkillsType.FRAG_GRENADE_BETA]:                    'Frag Grenade β',
+  [CombatSkillsType.WOLVEN_FURY]:                          'Wolven Fury',
+  // Ardelia
+  [CombatSkillsType.ROCKY_WHISPERS]:                       'Rocky Whispers',
+  [CombatSkillsType.DOLLY_RUSH]:                           'Dolly Rush',
+  [CombatSkillsType.ERUPTION_COLUMN]:                      'Eruption Column',
+  [CombatSkillsType.WOOLY_PARTY]:                          'Wooly Party',
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────

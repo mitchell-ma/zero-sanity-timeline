@@ -179,7 +179,16 @@
           "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5_TICK_2": {
             "OFFSET_SECONDS": 0.87,
             "SKILL_POINT_RECOVERY": 20,
-            "STAGGER": 18
+            "STAGGER": 18,
+            "ABSORB_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 4,
+                "CONVERSION": {
+                  "EXCHANGE": "MELTING_FLAME",
+                  "RATIO": "1:1"
+                }
+              }
+            }
           }
         }
       },
@@ -189,53 +198,58 @@
           "LAEVATAIN_BATTLE_SKILL_SP_COST": 100,
           "LAEVATAIN_BATTLE_SKILL_GAUGE_GAIN": 6.5,
           "LAEVATAIN_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
-          "LAEVATAIN_BATTLE_SKILL_TICKS": 10,
+          "LAEVATAIN_BATTLE_SKILL_TICKS": 11,
           "LAEVATAIN_BATTLE_SKILL_TICK_1": {
             "OFFSET_SECONDS": 0.73,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_2": {
-            "OFFSET_SECONDS": 0.967,
+            "OFFSET_SECONDS": 0.848,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_3": {
-            "OFFSET_SECONDS": 1.1,
+            "OFFSET_SECONDS": 0.967,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_4": {
-            "OFFSET_SECONDS": 1.23,
+            "OFFSET_SECONDS": 1.1,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_5": {
-            "OFFSET_SECONDS": 1.367,
+            "OFFSET_SECONDS": 1.23,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_6": {
-            "OFFSET_SECONDS": 1.5,
+            "OFFSET_SECONDS": 1.367,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_7": {
-            "OFFSET_SECONDS": 1.63,
+            "OFFSET_SECONDS": 1.5,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_8": {
-            "OFFSET_SECONDS": 1.8,
+            "OFFSET_SECONDS": 1.63,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_9": {
-            "OFFSET_SECONDS": 1.93,
+            "OFFSET_SECONDS": 1.8,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_10": {
+            "OFFSET_SECONDS": 1.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_11": {
             "OFFSET_SECONDS": 2.067,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 10
@@ -272,7 +286,12 @@
           "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
             "OFFSET_SECONDS": 0.3,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 0
+            "STAGGER": 0,
+            "APPLY_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 1
+              }
+            }
           }
         },
         "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4": {
@@ -286,7 +305,16 @@
           "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
             "OFFSET_SECONDS": 0.87,
             "SKILL_POINT_RECOVERY": 20,
-            "STAGGER": 12
+            "STAGGER": 12,
+            "ABSORB_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 4,
+                "CONVERSION": {
+                  "EXCHANGE": "MELTING_FLAME",
+                  "RATIO": "1:1"
+                }
+              }
+            }
           }
         }
       },
@@ -334,68 +362,82 @@
         }
       },
       "EMPOWERED_BATTLE_SKILL": {
-        "LAEVATAIN_EMPOWERED_BATTLE_SKILL": {
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_DURATION": 3.9,
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_SP_COST": 100,
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_GAUGE_GAIN": 6.5,
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICKS": 11,
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_1": {
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_DURATION": 2.2,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICKS": 11,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_1": {
             "OFFSET_SECONDS": 0.73,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_2": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_2": {
+            "OFFSET_SECONDS": 0.848,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_3": {
             "OFFSET_SECONDS": 0.967,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_3": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_4": {
             "OFFSET_SECONDS": 1.1,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_4": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_5": {
             "OFFSET_SECONDS": 1.23,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_5": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_6": {
             "OFFSET_SECONDS": 1.367,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_6": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_7": {
             "OFFSET_SECONDS": 1.5,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_7": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_8": {
             "OFFSET_SECONDS": 1.63,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_8": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_9": {
             "OFFSET_SECONDS": 1.8,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_9": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_10": {
             "OFFSET_SECONDS": 1.93,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
           },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_10": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_11": {
             "OFFSET_SECONDS": 2.067,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 10
-          },
-          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_11": {
-            "OFFSET_SECONDS": 3.467,
-            "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 0
           }
-        }
+        },
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK_DURATION": 1.7,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK_TICKS": 1,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK_TICK_1": {
+            "OFFSET_SECONDS": 1.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "APPLY_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 1
+              }
+            }
+          }
+        },
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL_SP_COST": 100,
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5
       },
       "COMBO_SKILL": {
         "LAEVATAIN_COMBO_SKILL": {
@@ -708,7 +750,12 @@
           "AKEKURI_BATTLE_SKILL_TICK_1": {
             "OFFSET_SECONDS": 0.67,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 10
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 1
+              }
+            }
           }
         }
       },

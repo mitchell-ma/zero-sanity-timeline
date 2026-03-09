@@ -8,7 +8,7 @@
  * - skills.json GAUGE_MAX for ultimateEnergyCost
  */
 import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
-import { OperatorClassType } from '../../consts/enums';
+import { CombatSkillsType, OperatorClassType } from '../../consts/enums';
 import { LaevatainOperator } from './laevatainOperator';
 import { AntalOperator } from './antalOperator';
 import { AkekuriOperator } from './akekuriOperator';
@@ -77,29 +77,29 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Flaming Cinders',
+        name: CombatSkillsType.FLAMING_CINDERS,
         defaultActivationDuration: 30,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Smouldering Fire',
-        defaultActivationDuration: 600,
-        defaultActiveDuration: 120,
-        defaultCooldownDuration: 2160,
+        name: CombatSkillsType.SMOULDERING_FIRE,
+        defaultActivationDuration: Math.round(skillsData.operators.LAEVATAIN.BATTLE_SKILL.LAEVATAIN_BATTLE_SKILL.LAEVATAIN_BATTLE_SKILL_DURATION * 120),
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       combo: {
-        name: 'Seethe',
-        defaultActivationDuration: 840,
+        name: CombatSkillsType.SEETHE,
+        defaultActivationDuration: Math.round(skillsData.operators.LAEVATAIN.COMBO_SKILL.LAEVATAIN_COMBO_SKILL.LAEVATAIN_COMBO_SKILL_DURATION * 120),
         defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        defaultCooldownDuration: Math.round(skillsData.operators.LAEVATAIN.COMBO_SKILL.LAEVATAIN_COMBO_SKILL.LAEVATAIN_COMBO_SKILL_COOLDOWN * 120),
         triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
-        name: 'Twilight',
-        defaultActivationDuration: 284,
+        name: CombatSkillsType.TWILIGHT,
+        defaultActivationDuration: Math.round(skillsData.operators.LAEVATAIN.ULTIMATE.LAEVATAIN_ULTIMATE.LAEVATAIN_ULTIMATE_DURATION * 120),
         defaultActiveDuration: 1800,
         defaultCooldownDuration: 1200,
         triggerCondition: null,
@@ -119,28 +119,28 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Exchange Current',
+        name: CombatSkillsType.EXCHANGE_CURRENT,
         defaultActivationDuration: 24,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Specified Research Subject',
+        name: CombatSkillsType.SPECIFIED_RESEARCH_SUBJECT,
         defaultActivationDuration: 960,
         defaultActiveDuration: 240,
         defaultCooldownDuration: 1440,
         triggerCondition: null,
       },
       combo: {
-        name: 'EMP Test Site',
+        name: CombatSkillsType.EMP_TEST_SITE,
         defaultActivationDuration: 360,
         defaultActiveDuration: 480,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has Electrification',
       },
       ultimate: {
-        name: 'Overclocked Moment',
+        name: CombatSkillsType.OVERCLOCKED_MOMENT,
         defaultActivationDuration: 600,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 3000,
@@ -161,28 +161,28 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Sword of Aspiration',
+        name: CombatSkillsType.SWORD_OF_ASPIRATION,
         defaultActivationDuration: 18,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Burst of Passion',
+        name: CombatSkillsType.BURST_OF_PASSION,
         defaultActivationDuration: 720,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 1800,
         triggerCondition: null,
       },
       combo: {
-        name: 'Flash and Dash',
+        name: CombatSkillsType.FLASH_AND_DASH,
         defaultActivationDuration: 480,
         defaultActiveDuration: 960,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
-        name: 'Squad on Me',
+        name: CombatSkillsType.SQUAD_ON_ME,
         defaultActivationDuration: 480,
         defaultActiveDuration: 720,
         defaultCooldownDuration: 3360,
@@ -203,28 +203,28 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Rapid-fire Akimbo',
+        name: CombatSkillsType.RAPID_FIRE_AKIMBO,
         defaultActivationDuration: 20,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Thermite Tracers',
+        name: CombatSkillsType.THERMITE_TRACERS,
         defaultActivationDuration: 1200,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 1440,
         triggerCondition: null,
       },
       combo: {
-        name: 'Frag Grenade β',
+        name: CombatSkillsType.FRAG_GRENADE_BETA,
         defaultActivationDuration: 360,
         defaultActiveDuration: 1200,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has Combustion',
       },
       ultimate: {
-        name: 'Wolven Fury',
+        name: CombatSkillsType.WOLVEN_FURY,
         defaultActivationDuration: 360,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 4200,
@@ -245,28 +245,28 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     tactical: 'Stew Meeting',
     skills: {
       basic: {
-        name: 'Rocky Whispers',
+        name: CombatSkillsType.ROCKY_WHISPERS,
         defaultActivationDuration: 22,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         triggerCondition: null,
       },
       battle: {
-        name: 'Dolly Rush',
+        name: CombatSkillsType.DOLLY_RUSH,
         defaultActivationDuration: 900,
         defaultActiveDuration: 360,
         defaultCooldownDuration: 1800,
         triggerCondition: null,
       },
       combo: {
-        name: 'Eruption Column',
+        name: CombatSkillsType.ERUPTION_COLUMN,
         defaultActivationDuration: 480,
         defaultActiveDuration: 600,
         defaultCooldownDuration: 0,
         triggerCondition: 'Enemy has Corrosion',
       },
       ultimate: {
-        name: 'Wooly Party',
+        name: CombatSkillsType.WOOLY_PARTY,
         defaultActivationDuration: 720,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 3600,

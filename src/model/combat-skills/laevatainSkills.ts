@@ -200,6 +200,17 @@ export class SmoulderingFire extends BasicSkill {
     return SMOULDERING_FIRE_DMG_OVER_TIME_PER_SEQ[level - 1];
   }
 
+  /**
+   * Stacking explosion tick multiplier.
+   * Each tick adds the DoT increment: base + dot × tickIndex.
+   * e.g. at level 1: tick 0 = 0.62, tick 1 = 0.68, tick 2 = 0.74, ...
+   */
+  getExplosionTickMultiplier(level: SkillLevel, tickIndex: number): number {
+    const base = SMOULDERING_FIRE_BASE_EXPLOSION_DMG[level - 1];
+    const dot = SMOULDERING_FIRE_DMG_OVER_TIME_PER_SEQ[level - 1];
+    return base + dot * tickIndex;
+  }
+
   /** P1: Additional ATK multiplier ×1.2. */
   getAdditionalAtkDmgMultiplier(
     level: SkillLevel,

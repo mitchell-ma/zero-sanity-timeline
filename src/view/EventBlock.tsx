@@ -8,11 +8,12 @@ interface EventBlockProps {
   zoom: number;
   selected?: boolean;
   hovered?: boolean;
+  /** Display name shown on the event block. */
+  label?: string;
   /** "ultimate" renders Activation → Active → Cooldown. "sequenced" renders multi-sequence segments with frame diamonds. */
   variant?: "default" | "ultimate" | "sequenced";
   onDragStart: (e: React.MouseEvent, eventId: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventId: string) => void;
-  onDoubleClick: (eventId: string) => void;
   onSelect?: (e: React.MouseEvent, eventId: string) => void;
   onHover?: (eventId: string | null) => void;
   onTouchStart?: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
@@ -44,10 +45,10 @@ export default function EventBlock({
   zoom,
   selected = false,
   hovered = false,
+  label,
   variant = "default",
   onDragStart,
   onContextMenu,
-  onDoubleClick,
   onSelect,
   onHover,
   onTouchStart,
@@ -102,8 +103,8 @@ export default function EventBlock({
             margin: 0,
           }}
         >
-          {segH > 14 && seg.label && (
-            <span className="event-block-label" style={{ color: '#fff' }}>{seg.label}</span>
+          {segH > 14 && (seg.label || (isFirst && label)) && (
+            <span className="event-block-label" style={{ color: '#fff' }}>{seg.label ?? label}</span>
           )}
           {/* Frame diamonds */}
           {seg.frames?.map((f, fi) => {
@@ -133,7 +134,6 @@ export default function EventBlock({
         data-event-id={id}
         style={{ top: topPx, height: totalHeight }}
         onContextMenu={(e) => onContextMenu(e, id)}
-        onDoubleClick={() => onDoubleClick(id)}
         onMouseDown={(e) => {
           if (e.button === 0) { e.stopPropagation(); onDragStart(e, id, startFrame); }
         }}
@@ -179,7 +179,6 @@ export default function EventBlock({
       data-event-id={id}
       style={{ top: topPx, height: totalHeight }}
       onContextMenu={(e) => onContextMenu(e, id)}
-      onDoubleClick={() => onDoubleClick(id)}
       onMouseDown={(e) => {
         if (e.button === 0) e.stopPropagation();
         if (variant === 'ultimate' && e.button === 0) onDragStart(e, id, startFrame);
@@ -212,7 +211,7 @@ export default function EventBlock({
         >
           {activeH > 14 && (
             <span className="event-block-label" style={{ color: '#fff' }}>
-              {variant === 'ultimate' ? 'Activation' : 'ACT'}
+              {variant === 'ultimate' ? 'Activation' : (label ?? 'ACT')}
             </span>
           )}
         </div>

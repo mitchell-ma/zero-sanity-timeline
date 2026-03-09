@@ -4,22 +4,77 @@ import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS } fr
 /** Default active duration for derived reaction events (20s at 120fps). */
 const REACTION_DURATION = 2400;
 
+/** Default active duration for derived infliction events (20s at 120fps). */
+const INFLICTION_DURATION = 2400;
+
 /** Number of micro-column slots for infliction stacking. */
 const INFLICTION_SLOTS = 4;
+
+/** Maps element key (from frame data) → infliction columnId. */
+const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
+  HEAT: 'heatInfliction',
+  CRYO: 'cryoInfliction',
+  NATURE: 'natureInfliction',
+  ELECTRIC: 'electricInfliction',
+};
 
 /**
  * Processes raw timeline events into renderable events.
  *
- * 1. Derives arts reaction events from cross-element infliction overlaps.
+ * 1. Derives infliction events from operator frames with applyArtsInfliction.
+ * 2. Derives arts reaction events from cross-element infliction overlaps.
  *    The triggering (incoming) infliction is removed; the consumed inflictions
  *    are clamped at the reaction frame.
- * 2. Same-element infliction refresh: slots 0–2 get durations extended to the
+ * 3. Same-element infliction refresh: slots 0–2 get durations extended to the
  *    newest stack's end time. Slot 3 shows sequential bars.
  */
 export function processInflictionEvents(rawEvents: TimelineEvent[]): TimelineEvent[] {
-  const withReactions = deriveReactions(rawEvents);
+  const withDerivedInflictions = deriveFrameInflictions(rawEvents);
+  const withReactions = deriveReactions(withDerivedInflictions);
   const mergedReactions = mergeReactions(withReactions);
   return applySameElementRefresh(mergedReactions);
+}
+
+/**
+ * Scans sequenced operator events for frames with `applyArtsInfliction` markers
+ * and generates corresponding enemy infliction events at the correct absolute frame.
+ */
+function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
+  const derived: TimelineEvent[] = [];
+
+  for (const event of events) {
+    if (!event.segments || event.ownerId === 'enemy') continue;
+
+    let cumulativeOffset = 0;
+    for (let si = 0; si < event.segments.length; si++) {
+      const seg = event.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          if (!frame.applyArtsInfliction) continue;
+
+          const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
+          if (!columnId) continue;
+
+          const absoluteFrame = event.startFrame + cumulativeOffset + frame.offsetFrame;
+          derived.push({
+            id: `${event.id}-inflict-${si}-${fi}`,
+            name: columnId,
+            ownerId: 'enemy',
+            columnId,
+            startFrame: absoluteFrame,
+            activationDuration: INFLICTION_DURATION,
+            activeDuration: 0,
+            cooldownDuration: 0,
+          });
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  if (derived.length === 0) return events;
+  return [...events, ...derived];
 }
 
 /**
@@ -72,6 +127,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       const reactionColumnId = INFLICTION_TO_REACTION[incoming.columnId];
       generatedReactions.push({
         id: `${incoming.id}-reaction`,
+        name: reactionColumnId,
         ownerId: 'enemy',
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,

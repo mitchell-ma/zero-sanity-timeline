@@ -90,7 +90,7 @@ export class BurstOfPassion extends BasicSkill {
   ) {
     super({
       operatorType: OperatorType.AKEKURI,
-      elementType: ElementType.PHYSICAL,
+      elementType: ElementType.HEAT,
       ...params,
     });
   }
@@ -112,7 +112,7 @@ const FLASH_AND_DASH_DMG = [
 export class FlashAndDash extends ComboSkill {
   static readonly SKILL_NAME = CombatSkillsType.FLASH_AND_DASH;
   static readonly STAGGER_PER_SEQ = 5;
-  static readonly SP_RECOVERY_PER_SEQ = 7.5;
+  static readonly BASE_SP_RECOVERY_PER_SEQ = 7.5;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},
@@ -131,6 +131,21 @@ export class FlashAndDash extends ComboSkill {
   getDmgMultiplierPerSeq(level: SkillLevel): number {
     return FLASH_AND_DASH_DMG[level - 1];
   }
+
+  /**
+   * Cheer of Victory (Talent 2) — SP Recovery per sequence, scaled by Intellect.
+   * E1 (talentLevel 1): +1% per 10 INT, max +50%
+   * E2+ (talentLevel 2–3): +1.5% per 10 INT, max +75%
+   * talentLevel 0: no bonus.
+   */
+  getSpRecoveryPerSeq(talentTwoLevel: number, intellect: number): number {
+    const base = FlashAndDash.BASE_SP_RECOVERY_PER_SEQ;
+    if (talentTwoLevel <= 0) return base;
+    const ratePerTenInt = talentTwoLevel >= 2 ? 0.015 : 0.01;
+    const maxBonus = talentTwoLevel >= 2 ? 0.75 : 0.5;
+    const bonus = Math.min(Math.floor(intellect / 10) * ratePerTenInt, maxBonus);
+    return base * (1 + bonus);
+  }
 }
 
 // ── SQUAD! ON ME! (Ultimate) ──────────────────────────────────────────────────
@@ -141,15 +156,21 @@ const SQUAD_ON_ME_SP_RECOVERY = [
 
 export class SquadOnMe extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.SQUAD_ON_ME;
-  static readonly ULTIMATE_ENERGY_COST = 120;
+  static readonly BASE_ULTIMATE_ENERGY_COST = 120;
+  /** Potential 4 threshold — at potential >= 4, energy cost is reduced by 10%. */
+  static readonly POT4_COST_REDUCTION = 0.10;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},
   ) {
+    const pot = params.operatorPotential ?? 0;
+    const cost = pot >= 4
+      ? SquadOnMe.BASE_ULTIMATE_ENERGY_COST * (1 - SquadOnMe.POT4_COST_REDUCTION)
+      : SquadOnMe.BASE_ULTIMATE_ENERGY_COST;
     super({
       operatorType: OperatorType.AKEKURI,
       elementType: ElementType.PHYSICAL,
-      ultimateEnergyCost: SquadOnMe.ULTIMATE_ENERGY_COST,
+      ultimateEnergyCost: cost,
       duration: 0,
       ...params,
     });
@@ -157,9 +178,11 @@ export class SquadOnMe extends Ultimate {
 
   getUltimateEnergyCost(
     _level: SkillLevel,
-    _operatorPotential: Potential,
+    operatorPotential: Potential,
   ): number {
-    return SquadOnMe.ULTIMATE_ENERGY_COST;
+    return operatorPotential >= 4
+      ? SquadOnMe.BASE_ULTIMATE_ENERGY_COST * (1 - SquadOnMe.POT4_COST_REDUCTION)
+      : SquadOnMe.BASE_ULTIMATE_ENERGY_COST;
   }
 
   getDuration(_level: SkillLevel, _operatorPotential: Potential): number {

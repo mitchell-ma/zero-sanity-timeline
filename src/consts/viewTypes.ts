@@ -42,6 +42,20 @@ export interface Enemy {
   statuses: EnemyStatus[];
 }
 
+/** Arts infliction applied or absorbed by a frame. */
+export interface FrameInflictionMarker {
+  element: string;
+  stacks: number;
+}
+
+/** Arts infliction absorption with conversion (e.g. Scorching Heart). */
+export interface FrameAbsorptionMarker {
+  element: string;
+  stacks: number;
+  exchangeStatus: string;
+  ratio: string;
+}
+
 /** A damage frame marker within a segment. */
 export interface EventFrameMarker {
   /** Frame offset from the start of the parent segment. */
@@ -50,6 +64,10 @@ export interface EventFrameMarker {
   skillPointRecovery?: number;
   /** Stagger dealt on this frame hit. */
   stagger?: number;
+  /** Arts infliction applied on this frame hit. */
+  applyArtsInfliction?: FrameInflictionMarker;
+  /** Arts infliction absorbed on this frame hit. */
+  absorbArtsInfliction?: FrameAbsorptionMarker;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -71,8 +89,8 @@ export interface EventSegmentData {
 
 export interface TimelineEvent {
   id: string;
-  /** Display name for this event (e.g. "Flaming Cinders (Enhanced)"). */
-  name?: string;
+  /** CombatSkillsType enum value identifying this event's skill variant. */
+  name: string;
   ownerId: string;
   columnId: string;
   startFrame: number;

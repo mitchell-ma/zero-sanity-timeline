@@ -40,6 +40,8 @@ export enum StatusType {
   SOLIDIFICATION = "SOLIDIFICATION",
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
+  // ── Operator buffs ─────────────────────────────────────────────────────────
+  MELTING_FLAME = "MELTING_FLAME",
   // ── Physical statuses ───────────────────────────────────────────────────────
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -218,7 +220,11 @@ export enum StatType {
 export enum CombatSkillsType {
   // Laevatain
   FLAMING_CINDERS = "FLAMING_CINDERS",
+  FLAMING_CINDERS_ENHANCED = "FLAMING_CINDERS_ENHANCED",
   SMOULDERING_FIRE = "SMOULDERING_FIRE",
+  SMOULDERING_FIRE_ENHANCED = "SMOULDERING_FIRE_ENHANCED",
+  SMOULDERING_FIRE_EMPOWERED = "SMOULDERING_FIRE_EMPOWERED",
+  SMOULDERING_FIRE_ENHANCED_EMPOWERED = "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
   SEETHE = "SEETHE",
   TWILIGHT = "TWILIGHT",
   // Antal

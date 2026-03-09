@@ -1,6 +1,6 @@
 import { TimelineEvent, VisibleSkills } from '../consts/viewTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { LoadoutStats } from '../view/LoadoutEditPanel';
+import { LoadoutStats } from '../view/InformationPane';
 
 const STORAGE_KEY = 'zst-sheet';
 const CURRENT_VERSION = 1;

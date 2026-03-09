@@ -12,8 +12,8 @@ export class UltimateEvent extends CombatSkillEvent {
   /** What interaction applies during the animation time. */
   animationTimeInteraction: TimeInteractionType;
 
-  /** The skill type that this ultimate empowers. */
-  empowerSkillTarget: EmpowerSkillTarget;
+  /** The skill type that this ultimate empowers (if any). */
+  empowerSkillTarget: EmpowerSkillTarget | null;
 
   constructor(params: {
     name: string;
@@ -24,7 +24,7 @@ export class UltimateEvent extends CombatSkillEvent {
     animationDuration: number;
     activationDuration: number;
     animationTimeInteraction: TimeInteractionType;
-    empowerSkillTarget: EmpowerSkillTarget;
+    empowerSkillTarget?: EmpowerSkillTarget;
   }) {
     super({
       combatSkillType: CombatSkillType.ULTIMATE,
@@ -37,6 +37,6 @@ export class UltimateEvent extends CombatSkillEvent {
     this.animationDuration = params.animationDuration;
     this.activationDuration = params.activationDuration;
     this.animationTimeInteraction = params.animationTimeInteraction;
-    this.empowerSkillTarget = params.empowerSkillTarget;
+    this.empowerSkillTarget = params.empowerSkillTarget ?? null;
   }
 }

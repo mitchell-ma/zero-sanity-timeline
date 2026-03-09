@@ -48,8 +48,70 @@ Each character in `characterRoster` has:
 - gamedata `attack_segments` = Basic Attack (`CombatSkillType.BASIC_ATTACK`)
 - gamedata `execution_*` = Finisher (not yet modeled)
 
+### Anomalies / inflictions in gamedata
+
+Anomalies represent status inflictions applied by damage ticks. They appear on:
+- `attack_segments[].anomalies` or `attack_segments[].physicalAnomaly` — per-segment inflictions
+- `skill_anomalies` / `link_anomalies` / `ultimate_anomalies` — per-skill inflictions
+
+Each anomaly entry has:
+| gamedata key | Meaning |
+|---|---|
+| `type` | Infliction type (see mapping below) |
+| `stacks` | Number of stacks applied |
+| `duration` | Duration override (0 = default) |
+| `offset` | Time offset in seconds |
+| `_id` | Links to `boundEffects` array on damage ticks |
+
+#### Anomaly type → skills.json mapping
+| gamedata `type` | skills.json `APPLY_ARTS_INFLICTION` key | Element |
+|---|---|---|
+| `blaze_attach` | `HEAT` | Heat Infliction |
+| `cold_attach` | `CRYO` | Cryo Infliction |
+| `emag_attach` | `ELECTRIC` | Electric Infliction |
+| `nature_attach` | `NATURE` | Nature Infliction |
+
+#### Anomaly type → non-infliction effects (not parsed as APPLY_ARTS_INFLICTION)
+| gamedata `type` | Meaning |
+|---|---|
+| `magma_0` – `magma_4` | Melting Flame / Scorching Heart absorption trigger (Laevatain talent) |
+| `blaze_burst` / `burning` | Combustion arts reaction |
+
+### skills.json tick format
+
+Each tick in skills.json has:
+```json
+{
+  "OFFSET_SECONDS": 0.3,
+  "SKILL_POINT_RECOVERY": 0,
+  "STAGGER": 0,
+  "APPLY_ARTS_INFLICTION": {        // optional — present when this tick applies an infliction
+    "<ELEMENT>": {                   // HEAT, CRYO, ELECTRIC, or NATURE
+      "STACKS": 1
+    }
+  },
+  "ABSORB_ARTS_INFLICTION": {       // optional — present when this tick absorbs infliction from enemies
+    "<ELEMENT>": {                   // HEAT, CRYO, ELECTRIC, or NATURE
+      "STACKS": 4,                  // max stacks absorbed
+      "CONVERSION": {
+        "EXCHANGE": "MELTING_FLAME", // StatusType enum value the absorbed stacks convert into
+        "RATIO": "1:1"              // conversion ratio (absorbed:converted)
+      }
+    }
+  }
+}
+```
+
+### Variants in gamedata
+
+`variants[]` contains enhanced/empowered forms of skills. Each variant has:
+- `name` — Chinese name (强化 = Empowered, 大招内 = Enhanced/during ult)
+- `type` — `"attack"` (basic attack variant) or `"skill"` (battle skill variant)
+- `attackSegments[]` — Same structure as `attack_segments` (with `physicalAnomaly` and `damageTicks`)
+- `duration`, `damageTicks[]`, `allowedTypes[]`
+
+Naming convention: **Enhanced** = during ultimate, **Empowered** = from status effects (e.g. Melting Flame stacks).
+
 ### Other character fields (not yet in skills.json)
-- `skill_anomalies` / `link_anomalies` / `ultimate_anomalies` — Status inflictions triggered by skills
 - `skill_allowed_types` / `link_allowed_types` — Status types that can be active during the skill
 - `exclusive_buffs` — Operator-specific buff icons (e.g. Laevatain's Melting Flame stacks)
-- `variants` — Skill variants (e.g. enhanced/empowered forms)
