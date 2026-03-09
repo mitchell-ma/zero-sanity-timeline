@@ -932,7 +932,7 @@
   background: var(--bg-panel);
   border-right: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-med);
-  padding: 0.25rem 0.125rem;
+  padding: 0.25rem 0.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -982,15 +982,21 @@
 }
 
 .skill-badge--vertical {
-  writing-mode: vertical-lr;
+  writing-mode: vertical-rl;
   text-orientation: mixed;
   padding: 0.3125rem 0.0625rem;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  text-align: center;
+  line-height: 1.2;
+  max-height: calc(100% - 0.5rem);
 }
 
-.skill-badge--basic   { background: rgba(100,140,200,0.2); color: #7aabcc; }
-.skill-badge--battle  { background: rgba(68,136,255,0.2);  color: #4488ff; }
-.skill-badge--combo   { background: rgba(0,212,200,0.2);   color: #00d4c8; }
-.skill-badge--ultimate { background: rgba(240,160,64,0.2); color: #f0a040; }
+.skill-badge--basic   { color: #7aabcc; }
+.skill-badge--battle  { color: #4488ff; }
+.skill-badge--combo   { color: #00d4c8; }
+.skill-badge--ultimate { color: #f0a040; }
 
 .hdr-skill-name {
   font-size: 0.625rem;
@@ -1144,7 +1150,6 @@
 }
 
 .skill-badge--mf {
-  background: rgba(240, 160, 64, 0.15);
   color: #f0a040;
   font-size: 0.5rem;
   letter-spacing: 0;
@@ -1306,12 +1311,8 @@
 .hover-line-label {
   position: absolute;
   left: 4px;
-  top: -20px;
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
+  bottom: 4px;
   font-family: var(--font-mono);
-  font-size: 12px;
   font-weight: 700;
   color: #fff;
   white-space: nowrap;
@@ -1319,14 +1320,42 @@
   text-shadow: 0 0 8px rgba(100, 200, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
+.hover-line-label-below {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(100, 200, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
 .hover-line-time {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .hover-line-frame {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(100, 200, 255, 1);
   letter-spacing: 0.04em;
+}
+
+.hover-line-resource-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(20, 30, 40, 0.85);
+  border: 1.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1373,6 +1402,17 @@
   color: var(--text-muted);
   cursor: default;
   opacity: 0.5;
+}
+
+.context-menu-header {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.7rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-dim);
 }
 
 .context-menu-separator {

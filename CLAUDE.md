@@ -19,3 +19,7 @@ Naming convention:
 Commands:
 - `npm start` — start localhost dev server
 - `npm run deploy` — build and deploy to GitHub Pages
+
+Processes:
+- **"summarize and sync"** — Write a concise git commit message with a descriptive summary in the body, then run `gitsync <DETAILS>` with the summary details.
+- **"look at screenshot"** — Read image files from the `.claude-adhoc/` folder.

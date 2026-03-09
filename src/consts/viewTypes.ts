@@ -44,11 +44,21 @@ export interface Enemy {
 export interface TimelineEvent {
   id: string;
   ownerId: string;
-  channelId: string;
+  columnId: string;
   startFrame: number;
   activeDuration: number;
   lingeringDuration: number;
   cooldownDuration: number;
+  /** True for manually-added arts reaction events (not derived from infliction interactions). */
+  isForced?: boolean;
+  /** Arts reaction status level (1–4). Higher = stronger effect. */
+  statusLevel?: number;
+  /**
+   * Frame count from startFrame during which no other event in the same
+   * mini-timeline or micro-timeline column may overlap.
+   * Default is 0 (no restriction — events can always overlap).
+   */
+  nonOverlappableRange?: number;
 }
 
 export interface ContextMenuItem {
@@ -57,6 +67,8 @@ export interface ContextMenuItem {
   danger?: boolean;
   disabled?: boolean;
   separator?: boolean;
+  /** Non-interactive section header label. */
+  header?: boolean;
 }
 
 export interface ContextMenuState {
@@ -67,9 +79,9 @@ export interface ContextMenuState {
 
 export type VisibleSkills = Record<string, Record<SkillType, boolean>>;
 
-/** A sub-channel within a micro-column mini-timeline. */
+/** A sub-column within a micro-column mini-timeline. */
 export interface MicroColumn {
-  id: string;         // used as channelId for events in this micro-column
+  id: string;         // used as columnId for events in this micro-column
   label: string;      // short display label (e.g. "HEAT", "1")
   color: string;      // render color for events in this micro-column
 }
@@ -80,7 +92,7 @@ export type MiniTimeline = {
   type: "mini-timeline";
   source: import("./enums").TimelineSourceType;
   ownerId: string;
-  channelId: string;
+  columnId: string;
   label: string;
   color: string;
   headerVariant: "skill" | "infliction" | "mf";
@@ -88,9 +100,9 @@ export type MiniTimeline = {
   /** If present, this mini-timeline has micro-columns. */
   microColumns?: MicroColumn[];
   /** How events are assigned to micro-columns. */
-  microColumnAssignment?: "by-order" | "by-channel-id";
-  /** If set, collect events matching any of these channelIds (instead of col.channelId). */
-  matchChannelIds?: string[];
+  microColumnAssignment?: "by-order" | "by-column-id" | "dynamic-split";
+  /** If set, collect events matching any of these columnIds (instead of col.columnId). */
+  matchColumnIds?: string[];
 
   /** Default durations for new events created in this mini-timeline. */
   defaultEvent?: {
@@ -101,6 +113,8 @@ export type MiniTimeline = {
     triggerCondition?: string | null;
   };
 
+  /** If true, suppress the "Add" context menu for this column. */
+  noAdd?: boolean;
   /** Max events allowed (e.g. MF has max 4). */
   maxEvents?: number;
   /** Events must be added in monotonically increasing start-frame order. */

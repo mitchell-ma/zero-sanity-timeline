@@ -58,11 +58,12 @@ export function frameToTimeLabelPrecise(frame: number): string {
 
 export function frameToDetailLabel(frame: number): string {
   const totalSec = frame / FPS;
-  const mins = Math.floor(totalSec / 60);
-  const secs = Math.floor(totalSec % 60);
+  const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+  const secsRaw = (totalSec % 60).toFixed(2);
+  const secs = secsRaw.indexOf('.') < 2 ? secsRaw.padStart(5, '0') : secsRaw;
   const frames = frame % FPS;
-  if (frames === 0) return `${mins}:${String(secs).padStart(2, '0')}`;
-  return `${mins}:${String(secs).padStart(2, '0')}.${String(frames).padStart(3, '0')}`;
+  if (frames === 0) return `${mins}:${secs}s`;
+  return `${mins}:${secs}s F${String(frames).padStart(3, '0')}`;
 }
 
 export function framesToSeconds(frames: number): string {

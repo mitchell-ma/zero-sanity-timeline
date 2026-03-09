@@ -8,20 +8,20 @@ function genId(): string {
 }
 
 /**
- * Manages a sorted list of TimelineEvents for a single channel
+ * Manages a sorted list of TimelineEvents for a single column
  * (e.g. one operator skill column or one enemy status column).
  * Events are kept sorted by startFrame at all times.
  */
 export class Subtimeline {
   readonly ownerId: string;
-  readonly channelId: string;
+  readonly columnId: string;
 
   private events: TimelineEvent[] = [];
   private listeners: Set<SubtimelineListener> = new Set();
 
-  constructor(ownerId: string, channelId: string) {
+  constructor(ownerId: string, columnId: string) {
     this.ownerId = ownerId;
-    this.channelId = channelId;
+    this.columnId = columnId;
   }
 
   /** Subscribe to event list changes. Returns an unsubscribe function. */
@@ -55,7 +55,7 @@ export class Subtimeline {
     const ev: TimelineEvent = {
       id: genId(),
       ownerId: this.ownerId,
-      channelId: this.channelId,
+      columnId: this.columnId,
       startFrame: params.startFrame,
       activeDuration: params.activeDuration,
       lingeringDuration: params.lingeringDuration,
@@ -76,7 +76,7 @@ export class Subtimeline {
   }
 
   /** Update an event's fields. Re-sorts if startFrame changed. */
-  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "id" | "ownerId" | "channelId">>): boolean {
+  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "id" | "ownerId" | "columnId">>): boolean {
     const idx = this.events.findIndex((ev) => ev.id === id);
     if (idx === -1) return false;
     const ev = this.events[idx];

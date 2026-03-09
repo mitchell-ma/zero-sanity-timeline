@@ -1,5 +1,6 @@
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { TriggerConditionType } from '../../consts/enums';
+import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TRIGGER_CAPABILITIES, TriggerCapability } from '../../consts/triggerCapabilities';
 import {
   Publisher,
@@ -10,6 +11,7 @@ import {
   unsubscribeAllSubscribers,
   disconnectAllPublishers,
 } from '../pubsub';
+import { CommonSlotController } from '../slot/commonSlotController';
 
 export interface ActivationWindow {
   startFrame: number;
@@ -54,11 +56,27 @@ interface SlotWiring {
 }
 
 export class CombatLoadout {
+  /**
+   * Check if a weapon is compatible with an operator.
+   * Returns true if the operator can equip the weapon, false otherwise.
+   * Returns true if operator or weapon is null (no constraint to violate).
+   */
+  static isWeaponCompatible(
+    operator: Operator | null,
+    weapon: WeaponRegistryEntry | null | undefined,
+  ): boolean {
+    if (!operator || !weapon) return true;
+    return operator.weaponTypes.includes(weapon.weaponType);
+  }
+
   private slots: (SlotWiring | null)[] = Array(NUM_SLOTS).fill(null);
   private slotIds: string[] = [];
   private cachedEvents: TimelineEvent[] = [];
   private cachedWindows: WindowsMap = new Map();
   private listeners: Set<CombatLoadoutListener> = new Set();
+
+  // ── Common (global) slot ────────────────────────────────────────────────
+  readonly commonSlot = new CommonSlotController();
 
   setSlotIds(ids: string[]): void {
     this.slotIds = ids;
@@ -145,7 +163,7 @@ export class CombatLoadout {
       const pubSlot = this.slots[slotIndex];
       if (!pubSlot) continue;
 
-      const publishedTriggers = pubSlot.capability.publishesTriggers[event.channelId];
+      const publishedTriggers = pubSlot.capability.publishesTriggers[event.columnId];
       if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
       // Window starts at end of active duration

@@ -45,6 +45,9 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
         if (item.separator) {
           return <div key={i} className="context-menu-separator" />;
         }
+        if (item.header) {
+          return <div key={i} className="context-menu-header">{item.label}</div>;
+        }
         return (
           <button
             key={i}

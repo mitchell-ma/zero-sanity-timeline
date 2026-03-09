@@ -155,6 +155,7 @@ export enum TimelineSourceType {
   GEAR_EFFECT = "GEAR_EFFECT",
   WEAPON = "WEAPON",
   ENEMY = "ENEMY",
+  COMMON = "COMMON",
 }
 
 export enum TargetType {

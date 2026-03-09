@@ -1,4 +1,4 @@
-import { SkillType, Operator } from "../consts/viewTypes";
+import { Operator } from "../consts/viewTypes";
 import { WeaponType } from "../consts/enums";
 
 import laevatainSplash from "../assets/operators/Laevatain_Banner.webp";
@@ -6,22 +6,6 @@ import antalSplash from "../assets/operators/Antal_Banner.webp";
 import akekuriSplash from "../assets/operators/Akekuri_Banner.webp";
 import wulfgardSplash from "../assets/operators/Wulfgard_Banner.webp";
 import ardeliaSplash from "../assets/operators/Ardelia_Banner.webp";
-
-export const SKILL_TYPES: Record<string, SkillType> = {
-  BASIC:   'basic',
-  BATTLE:  'battle',
-  COMBO:   'combo',
-  ULTIMATE:'ultimate',
-};
-
-export const SKILL_LABELS: Record<SkillType, string> = {
-  basic:   'BASIC',
-  battle:  'BATTLE',
-  combo:   'COMBO',
-  ultimate:'ULT',
-};
-
-export const SKILL_ORDER: SkillType[] = ['basic', 'battle', 'combo', 'ultimate'];
 
 // Durations are in frames (120 fps)
 export const SAMPLE_OPERATORS: Operator[] = [

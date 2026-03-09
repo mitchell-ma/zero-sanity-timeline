@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../utils/timeline';
-import { SKILL_LABELS } from '../utils/operators';
+import { SKILL_LABELS, REACTION_LABELS } from '../consts/channelLabels';
 import { TimelineEvent, Operator, Enemy, SkillType } from "../consts/viewTypes";
 
 interface FieldProps {
@@ -52,48 +52,41 @@ export default function EventEditPanel({
   let skillName        = '';
   let ownerColor       = '#4488ff';
   let triggerCondition: string | null = null;
-  let channelLabel     = '';
-
-  const REACTION_LABELS: Record<string, { label: string; color: string }> = {
-    combustion:      { label: 'Combustion',      color: '#ff5522' },
-    solidification:  { label: 'Solidification',  color: '#88ddff' },
-    corrosion:       { label: 'Corrosion',        color: '#33cc66' },
-    electrification: { label: 'Electrification',  color: '#e8c840' },
-  };
+  let columnLabel     = '';
 
   if (event.ownerId === 'enemy') {
     ownerName  = enemy.name;
-    const status = enemy.statuses.find((s) => s.id === event.channelId);
-    const reaction = REACTION_LABELS[event.channelId];
+    const status = enemy.statuses.find((s) => s.id === event.columnId);
+    const reaction = REACTION_LABELS[event.columnId];
     if (status) {
       skillName    = status.label;
       ownerColor   = status.color;
-      channelLabel = 'INFLICTION';
+      columnLabel = 'INFLICTION';
     } else if (reaction) {
       skillName    = reaction.label;
       ownerColor   = reaction.color;
-      channelLabel = 'ARTS REACTION';
+      columnLabel = 'ARTS REACTION';
     } else {
-      skillName    = event.channelId;
+      skillName    = event.columnId;
       ownerColor   = '#cc3333';
-      channelLabel = 'STATUS';
+      columnLabel = 'STATUS';
     }
   } else {
     const op = operators.find((o) => o.id === event.ownerId);
     if (op) {
       ownerName  = op.name;
       ownerColor = op.color;
-      if (event.channelId === 'melting-flame') {
+      if (event.columnId === 'melting-flame') {
         skillName    = 'Melting Flame';
         ownerColor   = '#f07030'; // Heat element color
-        channelLabel = 'STATUS';
+        columnLabel = 'STATUS';
       } else {
-        const skillType = event.channelId as SkillType;
+        const skillType = event.columnId as SkillType;
         const skill = op.skills[skillType];
         if (skill) {
           skillName        = skill.name;
           triggerCondition = skill.triggerCondition;
-          channelLabel     = SKILL_LABELS[skillType] ?? event.channelId.toUpperCase();
+          columnLabel     = SKILL_LABELS[skillType] ?? event.columnId.toUpperCase();
         }
       }
     }
@@ -149,8 +142,8 @@ export default function EventEditPanel({
           <div className="edit-panel-skill-name">{skillName}</div>
           <div className="edit-panel-op-name" style={{ color: ownerColor }}>
             {ownerName}
-            {channelLabel && (
-              <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· {channelLabel}</span>
+            {columnLabel && (
+              <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· {columnLabel}</span>
             )}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 4 }}>

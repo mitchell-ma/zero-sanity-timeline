@@ -10,6 +10,8 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
 import { WEAPONS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
 import { CombatLoadout, WindowsMap } from './controller/combat-loadout';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './controller/slot/commonSlotController';
+import { ResourcePoint } from './controller/timeline/resourceTimeline';
 import {
   serializeSheet,
   loadFromLocalStorage,
@@ -20,17 +22,11 @@ import {
   SheetData,
 } from './utils/sheetStorage';
 import { processInflictionEvents } from './utils/processInflictions';
+import { REACTION_COLUMN_IDS, INFLICTION_TO_REACTION } from './model/channels';
+import { MeltingFlameController } from './controller/timeline/meltingFlameController';
+import { ComboSkillEventController } from './controller/timeline/comboSkillEventController';
 import DevlogModal from './view/DevlogModal';
 import './App.css';
-
-/** Maps infliction channelId → arts reaction channelId. */
-const INFLICTION_TO_REACTION: Record<string, string> = {
-  heatInfliction:     'combustion',
-  cryoInfliction:     'solidification',
-  natureInfliction:   'corrosion',
-  electricInfliction: 'electrification',
-};
-const INFLICTION_CHANNEL_IDS = new Set(Object.keys(INFLICTION_TO_REACTION));
 
 const NUM_SLOTS = 4;
 const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
@@ -193,6 +189,8 @@ export default function App() {
     combatLoadoutRef.current.setSlotIds(SLOT_IDS);
   }
   const [activationWindows, setActivationWindows] = useState<WindowsMap>(new Map());
+  const activationWindowsRef = useRef<WindowsMap>(activationWindows);
+  activationWindowsRef.current = activationWindows;
 
   // Subscribe to window changes
   useEffect(() => {
@@ -210,6 +208,25 @@ export default function App() {
   useEffect(() => {
     combatLoadoutRef.current.recomputeWindows(events);
   }, [events]);
+
+  // ─── Resource graphs ───────────────────────────────────────────────────────
+  type ResourceGraphData = { points: ReadonlyArray<ResourcePoint>; min: number; max: number };
+  const [resourceGraphs, setResourceGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
+
+  useEffect(() => {
+    const sp = combatLoadoutRef.current.commonSlot.skillPoints;
+    const key = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const update = (points: ReadonlyArray<ResourcePoint>) => {
+      setResourceGraphs((prev) => {
+        const next = new Map(prev);
+        next.set(key, { points, min: sp.min, max: sp.max });
+        return next;
+      });
+    };
+    // Set initial graph
+    update(sp.getGraph());
+    return sp.onGraphChange(update);
+  }, []);
 
   // ─── Undo / Redo ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -253,71 +270,79 @@ export default function App() {
     }));
   }, []);
 
+  // ─── Non-overlappable range check ──────────────────────────────────────────
+  /**
+   * Returns true if placing `ev` at `startFrame` would conflict with a sibling's
+   * non-overlappable range, or if `ev`'s own range would cover a sibling.
+   * Range [start, start + nonOverlappableRange) — default 0 means no restriction.
+   */
+  const wouldOverlapNonOverlappable = (
+    allEvents: TimelineEvent[],
+    ev: TimelineEvent,
+    startFrame: number,
+  ): boolean => {
+    const evRange = ev.nonOverlappableRange ?? 0;
+    for (const sib of allEvents) {
+      if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+      const sibRange = sib.nonOverlappableRange ?? 0;
+      // ev falls inside sib's non-overlappable range
+      if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
+      // sib falls inside ev's non-overlappable range
+      if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
+    }
+    return false;
+  };
+
   // ─── Events ───────────────────────────────────────────────────────────────
   const handleAddEvent = useCallback((
     ownerId: string,
-    channelId: string,
+    columnId: string,
     atFrame: number,
     defaultSkill: { defaultActiveDuration?: number; defaultLingeringDuration?: number; defaultCooldownDuration?: number } | null,
   ) => {
+    const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
     const ev: TimelineEvent = {
       id:                genId(),
       ownerId,
-      channelId,
+      columnId,
       startFrame:        atFrame,
       activeDuration:    defaultSkill?.defaultActiveDuration   ?? 120,
       lingeringDuration: defaultSkill?.defaultLingeringDuration ?? 0,
       cooldownDuration:  defaultSkill?.defaultCooldownDuration  ?? 0,
+      ...(isForced ? { isForced: true } : {}),
     };
 
-    // Arts infliction auto-consume: adding a different element creates an arts
-    // reaction event. The original inflictions are kept (their rendering is
-    // visually clamped to the consumption point in TimelineGrid).
-    if (ownerId === 'enemy' && INFLICTION_CHANNEL_IDS.has(channelId)) {
-      setEvents((prev) => {
-        const existingInflictions = prev.filter(
-          (e) => e.ownerId === 'enemy' && INFLICTION_CHANNEL_IDS.has(e.channelId),
-        );
-        // Check if there are existing inflictions of a DIFFERENT element
-        const differentElement = existingInflictions.length > 0 &&
-          existingInflictions.some((e) => e.channelId !== channelId);
-
-        if (differentElement) {
-          // Determine the reaction type from the existing inflictions' element
-          const existingChannelId = existingInflictions[0].channelId;
-          const reactionChannelId = INFLICTION_TO_REACTION[existingChannelId];
-          // Create arts reaction event at the consumption frame
-          const reactionEv: TimelineEvent = {
-            id:                genId(),
-            ownerId:           'enemy',
-            channelId:         reactionChannelId,
-            startFrame:        atFrame,
-            activeDuration:    defaultSkill?.defaultActiveDuration ?? 120,
-            lingeringDuration: 0,
-            cooldownDuration:  0,
-          };
-          // Keep all existing events, add the reaction (inflictions remain but
-          // will be visually clamped at the consumption frame)
-          return [...prev, reactionEv];
-        }
-
-        // Same element or no existing → just stack
-        return [...prev, ev];
-      });
-    } else {
-      setEvents((prev) => [...prev, ev]);
-    }
+    // Infliction events are always stored as-is. Arts reactions are derived
+    // automatically in processInflictionEvents when cross-element overlaps
+    // exist, so deleting an infliction naturally removes its reaction.
+    setEvents((prev) => {
+      if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame)) return prev;
+      return [...prev, ev];
+    });
     setContextMenu(null);
   }, []);
 
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
-    setEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, ...updates } : ev)));
+    setEvents((prev) => {
+      const target = prev.find((ev) => ev.id === id);
+      if (!target) return prev;
+      let validated = MeltingFlameController.validateUpdate(prev, target, updates);
+      validated = ComboSkillEventController.validateUpdate(target, validated, activationWindowsRef.current);
+      const merged = { ...target, ...validated };
+      if (wouldOverlapNonOverlappable(prev, merged, merged.startFrame)) return prev;
+      return prev.map((ev) => (ev.id === id ? merged : ev));
+    });
   }, []);
 
   const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
-    setEvents((prev) =>
-      prev.map((ev) => (ev.id === id ? { ...ev, startFrame: newStartFrame } : ev)),
-    );
+    setEvents((prev) => {
+      const target = prev.find((ev) => ev.id === id);
+      if (!target) return prev;
+      let clamped = MeltingFlameController.validateMove(prev, target, newStartFrame);
+      clamped = ComboSkillEventController.validateMove(target, clamped, activationWindowsRef.current);
+      if (wouldOverlapNonOverlappable(prev, target, clamped)) return prev;
+      return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped } : ev));
+    });
   }, []);
 
   const handleRemoveEvent = useCallback((id: string) => {
@@ -362,8 +387,7 @@ export default function App() {
       if (current.weaponIdx === null) return prev;
       const equippedWeapon = WEAPONS[current.weaponIdx];
       if (!equippedWeapon) return prev;
-      const compatible = newOp?.weaponTypes.includes(equippedWeapon.weaponType) ?? false;
-      if (!compatible) {
+      if (!CombatLoadout.isWeaponCompatible(newOp, equippedWeapon)) {
         return { ...prev, [slotId]: { ...current, weaponIdx: null } };
       }
       return prev;
@@ -453,6 +477,7 @@ export default function App() {
         allEnemies={ALL_ENEMIES}
         onSwapEnemy={handleSwapEnemy}
         activationWindows={activationWindows}
+        resourceGraphs={resourceGraphs}
         onBatchStart={beginBatch}
         onBatchEnd={endBatch}
       />

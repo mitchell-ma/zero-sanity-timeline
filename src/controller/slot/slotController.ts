@@ -22,17 +22,8 @@ import {
 import { Subtimeline } from '../timeline/subtimeline';
 import { OperatorLoadout } from '../../model/loadout/operatorLoadout';
 import { GearEffect } from '../../model/gears/gearEffects';
-
-// ── Skill channel ordering ──────────────────────────────────────────────────
-
-const SKILL_CHANNEL_ORDER: SkillType[] = ['basic', 'battle', 'combo', 'ultimate'];
-
-const SKILL_LABELS: Record<SkillType, string> = {
-  basic: 'BASIC',
-  battle: 'BATTLE',
-  combo: 'COMBO',
-  ultimate: 'ULT',
-};
+import { SKILL_COLUMN_ORDER } from '../../model/channels';
+import { SKILL_LABELS } from '../../consts/channelLabels';
 
 // ── Trigger scope ───────────────────────────────────────────────────────────
 
@@ -73,15 +64,15 @@ export interface OperatorSlotConfig {
   id: string;
   /** Display color for column headers. */
   color: string;
-  /** Skill definitions for the 4 standard skill channels. */
+  /** Skill definitions for the 4 standard skill columns. */
   skills: Record<SkillType, SkillDef>;
-  /** Additional subtimeline channels beyond the 4 standard skills (e.g. Melting Flame). */
-  extraChannels?: ExtraChannelDef[];
+  /** Additional subtimeline columns beyond the 4 standard skills (e.g. Melting Flame). */
+  extraColumns?: ExtraColumnDef[];
 }
 
-/** Definition for an extra (non-skill) subtimeline channel. */
-export interface ExtraChannelDef {
-  channelId: string;
+/** Definition for an extra (non-skill) subtimeline column. */
+export interface ExtraColumnDef {
+  columnId: string;
   label: string;
   color: string;
   headerVariant: MiniTimeline['headerVariant'];
@@ -207,17 +198,17 @@ export class SlotController {
 
     // 3. Build subtimelines for new operator
     if (config) {
-      for (const skillType of SKILL_CHANNEL_ORDER) {
+      for (const skillType of SKILL_COLUMN_ORDER) {
         this.subtimelines.set(
           skillType,
           new Subtimeline(this.slotId, skillType),
         );
       }
-      if (config.extraChannels) {
-        for (const ch of config.extraChannels) {
+      if (config.extraColumns) {
+        for (const ch of config.extraColumns) {
           this.subtimelines.set(
-            ch.channelId,
-            new Subtimeline(this.slotId, ch.channelId),
+            ch.columnId,
+            new Subtimeline(this.slotId, ch.columnId),
           );
         }
       }
@@ -313,8 +304,8 @@ export class SlotController {
     return this.gearEffects;
   }
 
-  getSubtimeline(channelId: string): Subtimeline | undefined {
-    return this.subtimelines.get(channelId);
+  getSubtimeline(columnId: string): Subtimeline | undefined {
+    return this.subtimelines.get(columnId);
   }
 
   getSubtimelines(): ReadonlyMap<string, Subtimeline> {
@@ -341,14 +332,14 @@ export class SlotController {
     const cols: MiniTimeline[] = [];
 
     // Standard skill columns
-    for (const skillType of SKILL_CHANNEL_ORDER) {
+    for (const skillType of SKILL_COLUMN_ORDER) {
       const skill = cfg.skills[skillType];
       cols.push({
         key: `${this.slotId}-${skillType}`,
         type: 'mini-timeline',
         source: TimelineSourceType.OPERATOR,
         ownerId: this.slotId,
-        channelId: skillType,
+        columnId: skillType,
         label: SKILL_LABELS[skillType],
         color: cfg.color,
         headerVariant: 'skill',
@@ -362,15 +353,15 @@ export class SlotController {
       });
     }
 
-    // Extra channels (e.g. Melting Flame, gear buff timelines)
-    if (cfg.extraChannels) {
-      for (const ch of cfg.extraChannels) {
+    // Extra columns (e.g. Melting Flame, gear buff timelines)
+    if (cfg.extraColumns) {
+      for (const ch of cfg.extraColumns) {
         cols.push({
-          key: `${this.slotId}-${ch.channelId}`,
+          key: `${this.slotId}-${ch.columnId}`,
           type: 'mini-timeline',
           source: TimelineSourceType.OPERATOR,
           ownerId: this.slotId,
-          channelId: ch.channelId,
+          columnId: ch.columnId,
           label: ch.label,
           color: ch.color,
           headerVariant: ch.headerVariant,

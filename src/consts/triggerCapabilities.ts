@@ -1,7 +1,7 @@
 import { TriggerConditionType } from './enums';
 
 export interface TriggerCapability {
-  /** What this operator's skills publish (keyed by channelId: 'basic'|'battle'|'ultimate') */
+  /** What this operator's skills publish (keyed by columnId: 'basic'|'battle'|'ultimate') */
   publishesTriggers: Partial<Record<string, TriggerConditionType[]>>;
   /** Primary trigger key the combo subscribes to */
   comboRequires: TriggerConditionType;

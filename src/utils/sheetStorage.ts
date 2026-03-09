@@ -72,7 +72,7 @@ export function validateSheetData(raw: unknown): LoadResult {
       typeof ev !== 'object' || ev == null ||
       typeof ev.id !== 'string' ||
       typeof ev.ownerId !== 'string' ||
-      typeof ev.channelId !== 'string' ||
+      typeof ev.columnId !== 'string' ||
       typeof ev.startFrame !== 'number' ||
       typeof ev.activeDuration !== 'number' ||
       typeof ev.lingeringDuration !== 'number' ||
