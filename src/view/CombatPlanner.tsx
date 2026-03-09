@@ -240,20 +240,53 @@ export default function CombatPlanner({
   }
   const enemyColCount = 2; // arts-infliction + arts-reaction mini-timelines
 
-  // Build fluid gridTemplateColumns: fixed time axis + 1fr per data column
-  const gridCols = `${TIME_AXIS_WIDTH}px repeat(${columns.length}, minmax(0, 1fr))`;
+  // Build fluid gridTemplateColumns: equal-width operator/enemy groups, smaller TEAM
+  // Each operator & enemy group gets GROUP_FR total fr; common (TEAM) gets COMMON_FR
+  const GROUP_FR = 1;
+  const COMMON_FR = 0.3;
+  const colFrStrings: string[] = [];
+  // Common columns
+  for (let i = 0; i < commonColCount; i++) {
+    colFrStrings.push(`minmax(0, ${COMMON_FR / Math.max(1, commonColCount)}fr)`);
+  }
+  // Operator groups
+  for (const g of slotGroups) {
+    const perCol = GROUP_FR / g.columnCount;
+    for (let c = 0; c < g.columnCount; c++) {
+      colFrStrings.push(`minmax(0, ${perCol}fr)`);
+    }
+  }
+  // Enemy columns
+  for (let i = 0; i < enemyColCount; i++) {
+    colFrStrings.push(`minmax(0, ${GROUP_FR / enemyColCount}fr)`);
+  }
+  const gridCols = `${TIME_AXIS_WIDTH}px ${colFrStrings.join(' ')}`;
 
   // Compute column pixel positions from available container width
   const containerWidth = outerRect?.width ?? 800;
-  const colPixelWidth = columns.length > 0 ? (containerWidth - TIME_AXIS_WIDTH) / columns.length : 0;
+  const totalFr = commonColCount * (COMMON_FR / Math.max(1, commonColCount))
+    + slotGroups.reduce((sum, g) => sum + g.columnCount * (GROUP_FR / g.columnCount), 0)
+    + enemyColCount * (GROUP_FR / enemyColCount);
+  const pxPerFr = totalFr > 0 ? (containerWidth - TIME_AXIS_WIDTH) / totalFr : 0;
+
   const columnPositions = useMemo(() => {
     const map = new Map<string, { left: number; right: number }>();
+    let x = TIME_AXIS_WIDTH;
     for (let i = 0; i < columns.length; i++) {
-      const left = TIME_AXIS_WIDTH + i * colPixelWidth;
-      map.set(columns[i].key, { left, right: left + colPixelWidth });
+      const col = columns[i];
+      let fr: number;
+      if (col.type === 'mini-timeline' && col.source === TimelineSourceType.COMMON) {
+        fr = COMMON_FR / Math.max(1, commonColCount);
+      } else {
+        const sg = slotGroups.find((g) => g.slot.slotId === col.ownerId);
+        fr = sg ? GROUP_FR / sg.columnCount : GROUP_FR / enemyColCount;
+      }
+      const w = fr * pxPerFr;
+      map.set(col.key, { left: x, right: x + w });
+      x += w;
     }
     return map;
-  }, [columns, colPixelWidth]);
+  }, [columns, slotGroups, commonColCount, enemyColCount, pxPerFr]);
 
   const numCols  = columns.length;
   const tlHeight = timelineHeight(zoom);

@@ -465,16 +465,17 @@ export default function OperatorLoadoutHeader({
 
       {/* Equipment icons */}
       <div className="lo-slots">
-        <div className="lo-slots-row">
-          <IconDropdown label="WPN" entries={compatibleWeapons} selectedIdx={filteredSelectedIdx} onChange={handleWeaponChange} />
-          <IconDropdown label="ARM" entries={ARMORS}            selectedIdx={state.armorIdx}      onChange={set('armorIdx')} />
-          <IconDropdown label="GLV" entries={GLOVES}            selectedIdx={state.glovesIdx}     onChange={set('glovesIdx')} />
-          <IconDropdown label="K1"  entries={KITS}              selectedIdx={state.kit1Idx}       onChange={set('kit1Idx')} />
-          <IconDropdown label="K2"  entries={KITS}              selectedIdx={state.kit2Idx}       onChange={set('kit2Idx')} />
+        <div className="lo-slots-row lo-slots-row--top">
+          <IconDropdown label="WPN"  entries={compatibleWeapons} selectedIdx={filteredSelectedIdx} onChange={handleWeaponChange} />
+          <div className="lo-slots-spacer" />
+          <IconDropdown label="FOOD" entries={CONSUMABLES}       selectedIdx={state.consumableIdx} onChange={set('consumableIdx')} />
+          <IconDropdown label="TAC"  entries={TACTICALS}         selectedIdx={state.tacticalIdx}   onChange={set('tacticalIdx')} />
         </div>
         <div className="lo-slots-row">
-          <IconDropdown label="FOOD" entries={CONSUMABLES} selectedIdx={state.consumableIdx} onChange={set('consumableIdx')} />
-          <IconDropdown label="TAC"  entries={TACTICALS}   selectedIdx={state.tacticalIdx}   onChange={set('tacticalIdx')} />
+          <IconDropdown label="ARM" entries={ARMORS}  selectedIdx={state.armorIdx}  onChange={set('armorIdx')} />
+          <IconDropdown label="GLV" entries={GLOVES}  selectedIdx={state.glovesIdx} onChange={set('glovesIdx')} />
+          <IconDropdown label="K1"  entries={KITS}    selectedIdx={state.kit1Idx}   onChange={set('kit1Idx')} />
+          <IconDropdown label="K2"  entries={KITS}    selectedIdx={state.kit2Idx}   onChange={set('kit2Idx')} />
         </div>
       </div>
     </div>

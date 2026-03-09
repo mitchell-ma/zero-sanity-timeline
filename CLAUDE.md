@@ -22,5 +22,5 @@ Commands:
 
 Processes:
 - **"summarize and sync"** — Write a concise git commit message with a descriptive summary in the body, then run `gitsync <DETAILS>` with the summary details.
-- **"look at screenshot"** — Read image files from the `.claude-adhoc/` folder.
+- **"look at screenshot"** — Read the latest image file from the `.claude-adhoc/` folder.
 - **"auto screenshot and re-iterate"** — Run `python3 .claude-adhoc/desktop_screenshot.py "Endfield"` to capture the browser window, then read `.claude-adhoc/screenshot.png` to inspect the app. Identify visual issues, make fixes, and repeat until the UI looks correct.

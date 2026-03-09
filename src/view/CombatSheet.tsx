@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { Column, TimelineEvent, SelectedFrame } from '../consts/viewTypes';
-import { frameToPx, timelineHeight, frameToTimeLabelPrecise } from '../utils/timeline';
+import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
@@ -42,6 +42,20 @@ export default function CombatSheet({
     return groups;
   }, [slots, tableColumns]);
 
+  // Per-column flex: each group gets equal total width, columns subdivide within
+  const colFlexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const groupCount = slotGroups.length;
+    if (groupCount === 0) return map;
+    for (const g of slotGroups) {
+      const perCol = 1 / g.columns.length;
+      for (const col of g.columns) {
+        map.set(col.key, perCol);
+      }
+    }
+    return map;
+  }, [slotGroups]);
+
   useEffect(() => {
     onScrollRef?.(scrollRef.current);
     return () => onScrollRef?.(null);
@@ -52,6 +66,22 @@ export default function CombatSheet({
       onScrollProp(scrollRef.current.scrollTop);
     }
   }, [onScrollProp]);
+
+  // Find nearest row within a generous pixel tolerance for hover highlighting
+  const hoveredRowKey = useMemo(() => {
+    if (hoverFrame == null || rows.length === 0) return null;
+    const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom)); // 8px hit area
+    let bestKey: string | null = null;
+    let bestDist = Infinity;
+    for (const row of rows) {
+      const dist = Math.abs(row.absoluteFrame - hoverFrame);
+      if (dist < bestDist && dist <= toleranceFrames) {
+        bestDist = dist;
+        bestKey = row.key;
+      }
+    }
+    return bestKey;
+  }, [hoverFrame, rows, zoom]);
 
   const tlHeight = timelineHeight(zoom);
   const numCols = tableColumns.length;
@@ -77,7 +107,7 @@ export default function CombatSheet({
             className="dmg-loadout-op"
             style={{
               '--op-color': g.slot.operator?.color ?? '#666',
-              flex: g.columns.length,
+              flex: 1,
             } as React.CSSProperties}
           >
             {g.slot.operator?.name ?? '—'}
@@ -91,7 +121,7 @@ export default function CombatSheet({
           <div
             key={col.key}
             className="dmg-header-skill"
-            style={{ color: col.color }}
+            style={{ color: col.color, flex: colFlexMap.get(col.key) ?? 1 }}
           >
             {col.label}
           </div>
@@ -114,12 +144,13 @@ export default function CombatSheet({
                 key={row.key}
                 row={row}
                 tableColumns={tableColumns}
+                colFlexMap={colFlexMap}
                 top={frameToPx(row.absoluteFrame, zoom) - ROW_HEIGHT / 2}
                 selected={!!selectedFrame
                   && selectedFrame.eventId === row.eventId
                   && selectedFrame.segmentIndex === row.segmentIndex
                   && selectedFrame.frameIndex === row.frameIndex}
-                hovered={hoverFrame === row.absoluteFrame}
+                hovered={row.key === hoveredRowKey}
               />
             ))
           )}
@@ -129,9 +160,10 @@ export default function CombatSheet({
   );
 }
 
-function DamageRow({ row, tableColumns, top, selected, hovered }: {
+function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered }: {
   row: DamageTableRow;
   tableColumns: DamageTableColumn[];
+  colFlexMap: Map<string, number>;
   top: number;
   selected: boolean;
   hovered: boolean;
@@ -144,11 +176,12 @@ function DamageRow({ row, tableColumns, top, selected, hovered }: {
       </div>
       {tableColumns.map((col) => {
         const isMatch = col.key === row.columnKey;
+        const flex = colFlexMap.get(col.key) ?? 1;
         return (
           <div
             key={col.key}
             className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}`}
-            style={isMatch ? { color: col.color } : undefined}
+            style={isMatch ? { color: col.color, flex } : { flex }}
           >
             {isMatch ? row.damage : ''}
           </div>
