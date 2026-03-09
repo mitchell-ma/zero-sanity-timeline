@@ -401,12 +401,15 @@
 
 .timeline-scroll {
   flex: 1;
-  overflow: scroll;
+  overflow: auto;
   position: relative;
   touch-action: pan-y;
+}
+
+.timeline-scroll--no-bar {
   scrollbar-width: none;
 }
-.timeline-scroll::-webkit-scrollbar {
+.timeline-scroll--no-bar::-webkit-scrollbar {
   display: none;
 }
 
@@ -1697,6 +1700,33 @@
 /* ═══════════════════════════════════════════════════════
    DAMAGE CALCULATION TABLE — positioned rows synced with timeline
 ══════════════════════════════════════════════════════════ */
+/* ── Scroll sync toggle — sits on the border between timeline and sheet ── */
+.scroll-sync-toggle {
+  flex-shrink: 0;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-dim);
+  border-right: 1px solid var(--border-dim);
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 10;
+}
+.scroll-sync-toggle:hover {
+  background: var(--bg-hover);
+}
+.scroll-sync-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  color: var(--text-secondary);
+}
+.scroll-sync-toggle--active svg {
+  color: var(--blue);
+}
+
 .dmg-table-outer {
   flex-shrink: 0;
   width: 50vw;

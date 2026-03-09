@@ -99,6 +99,8 @@ interface CombatPlannerProps {
   onLoadoutRowHeight?: (h: number) => void;
   /** Callback when the hovered frame changes. */
   onHoverFrame?: (frame: number | null) => void;
+  /** Hide scrollbar (when scroll is synced to another container). */
+  hideScrollbar?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -137,6 +139,7 @@ export default function CombatPlanner({
   onScroll: onScrollProp,
   onLoadoutRowHeight,
   onHoverFrame,
+  hideScrollbar,
 }: CombatPlannerProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
@@ -1108,7 +1111,7 @@ export default function CombatPlanner({
       </div>
 
       {/* ── Scrollable body ──────────────────────────────────── */}
-      <div ref={scrollRef} className="timeline-scroll">
+      <div ref={scrollRef} className={`timeline-scroll${hideScrollbar ? ' timeline-scroll--no-bar' : ''}`}>
         <div
           className="timeline-body-grid"
           style={{ gridTemplateColumns: gridCols, width: totalW }}

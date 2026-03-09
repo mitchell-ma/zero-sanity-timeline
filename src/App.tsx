@@ -75,39 +75,22 @@ export default function App() {
   const [enemy,          setEnemy]          = useState(initialLoad.loaded?.enemy ?? DEFAULT_ENEMY);
   const [selectedFrame,  setSelectedFrame]  = useState<SelectedFrame | null>(null);
   const [hoverFrame,     setHoverFrame]     = useState<number | null>(null);
+  const [scrollSynced,   setScrollSynced]   = useState(true);
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
 
-  // ─── Scroll sync between timeline and damage table ──────────────────────
+  // ─── Scroll sync ────────────────────────────────────────────────────────
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
-  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const dmgScrollRef = useRef<HTMLDivElement | null>(null);
-  const isSyncing = useRef(false);
-
-  const handleTimelineScrollRef = useCallback((el: HTMLDivElement | null) => {
-    timelineScrollRef.current = el;
-  }, []);
-
-  // Sheet has an invisible spacer matching the timeline header area,
-  // so both scroll containers share the same coordinate system — direct 1:1.
-  const handleTimelineScroll = useCallback((scrollTop: number) => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (dmgScrollRef.current) dmgScrollRef.current.scrollTop = scrollTop;
-    isSyncing.current = false;
-  }, []);
 
   const handleDmgScrollRef = useCallback((el: HTMLDivElement | null) => {
     dmgScrollRef.current = el;
   }, []);
 
-  const handleDmgScroll = useCallback((scrollTop: number) => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (timelineScrollRef.current) timelineScrollRef.current.scrollTop = scrollTop;
-    isSyncing.current = false;
-  }, []);
+  const handleTimelineScroll = useCallback((scrollTop: number) => {
+    if (scrollSynced && dmgScrollRef.current) dmgScrollRef.current.scrollTop = scrollTop;
+  }, [scrollSynced]);
 
   // ─── Controllers & hooks ─────────────────────────────────────────────────
   const { activationWindows, activationWindowsRef, combatLoadout } =
@@ -353,11 +336,32 @@ export default function App() {
           onBatchEnd={endBatch}
           onFrameClick={handleFrameClick}
           selectedFrame={selectedFrame}
-          onScrollRef={handleTimelineScrollRef}
-          onScroll={handleTimelineScroll}
           onLoadoutRowHeight={setLoadoutRowHeight}
+          onScroll={handleTimelineScroll}
           onHoverFrame={setHoverFrame}
+          hideScrollbar={scrollSynced}
         />
+
+        <button
+          className={`scroll-sync-toggle${scrollSynced ? ' scroll-sync-toggle--active' : ''}`}
+          onClick={() => setScrollSynced((p) => !p)}
+          title={scrollSynced ? 'Desync scroll' : 'Sync scroll'}
+        >
+          <svg viewBox="0 0 24 24">
+            {scrollSynced ? (
+              <>
+                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
+                <path d="M8 13h8v-2H8v2z"/>
+                <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+              </>
+            ) : (
+              <>
+                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
+                <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+              </>
+            )}
+          </svg>
+        </button>
 
         <CombatSheet
           slots={slots}
@@ -368,7 +372,6 @@ export default function App() {
           selectedFrame={selectedFrame}
           hoverFrame={hoverFrame}
           onScrollRef={handleDmgScrollRef}
-          onScroll={handleDmgScroll}
         />
       </div>
 
