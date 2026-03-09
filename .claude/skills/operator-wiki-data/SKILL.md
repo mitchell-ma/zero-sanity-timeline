@@ -1,6 +1,6 @@
 ---
 name: operator-wiki-data
-description: Reference data for all 18 Arknights Endfield operators. Use when adding new operators, building skill definitions, or looking up operator stats, skills, talents, potentials, combo triggers, rarity, class, weapon, and element.
+description: Reference data for all 19 Arknights Endfield operators. Use when adding new operators, building skill definitions, or looking up operator stats, skills, talents, potentials, combo triggers, rarity, class, weapon, and element.
 ---
 
 Use this reference when working with operator data — adding new operators to the registry, creating skill definitions, or verifying operator details.
@@ -305,7 +305,49 @@ When an Arts Reaction is applied to an enemy
 
 ---
 
-## 9. Xaihi
+## 9. Ardelia
+
+| Field | Value |
+|-------|-------|
+| Rarity | 6-star |
+| Class | Supporter |
+| Weapon | Arts Unit |
+| Element | Nature |
+
+### Skills
+- **Basic Attack:** Rocky Whispers — 4-sequence Nature DMG attack; dive and finisher variants; Final Strike deals 18 Stagger
+- **Battle Skill:** Dolly Rush — Hops on Mr. Dolly and rams target dealing Nature DMG; if target has Corrosion, consumes it to apply Physical Susceptibility and Arts Susceptibility (12-20% by rank). SP Cost: 100
+- **Combo Skill:** Eruption Column — Launches homing Volcanic Cloud dealing Nature DMG; explodes after delay dealing half Nature DMG and forcibly applying temporary Corrosion (7s) to nearby enemies. Cooldown: 18s (17s at rank 12)
+- **Ultimate:** Wooly Party — Enters mobile channeling state; multiple Mr. Dolly copies thrown in random directions dealing Nature DMG. Duration: 3s. Energy Cost: 90
+
+### Combo Trigger
+When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction
+
+### Talents
+**Talent 1 — Keen Mind:**
+- E1: Intellect +10
+- E2: Intellect +15
+- E3: Intellect +15
+- E4: Intellect +20
+
+**Talent 2 — Friendly Presence:**
+- E1: Creates 3 Shadows of Mr. Dolly after Dolly Rush hits. Wooly Party copies have 10% chance to create Shadows. Controlled operator touching a Shadow restores HP by [45 + Will x0.38]. Shadows last 10s; max 10 on battlefield
+- E2: HP restoration scales higher
+- E3: HP restoration scales higher
+
+**Talent 3 — Mountainpeak Surfer:**
+- E2: Dolly Rush improved: consuming Corrosion while another Corrosion enemy is nearby immediately casts battle skill again (once per casting)
+
+### Potentials
+1. **Dolly Paradise:** Susceptibility from consuming Corrosion increased +8%
+2. **Game Rewards:** Friendly Presence treats second-lowest HP ally with 50% effect
+3. **Explosive Eruption:** Wooly Party duration +1s; Shadow creation chance x1.2
+4. **Rock Blossom:** Wooly Party energy cost -15%
+5. **Volcanic Steam:** Eruption Column cooldown -2s; damage x1.2; Corrosion duration +4s
+
+---
+
+## 10. Xaihi
 
 | Field | Value |
 |-------|-------|
@@ -340,7 +382,7 @@ When Auxiliary Crystal exhausts HP treatments (2 triggers used)
 
 ---
 
-## 10. Perlica
+## 11. Perlica
 
 | Field | Value |
 |-------|-------|
@@ -381,7 +423,7 @@ When performing a Final Strike finisher
 
 ---
 
-## 11. Fluorite
+## 12. Fluorite
 
 | Field | Value |
 |-------|-------|
@@ -417,7 +459,7 @@ When enemy has 2+ stacks of Cryo or Nature Infliction
 
 ---
 
-## 12. Last Rite
+## 13. Last Rite
 
 | Field | Value |
 |-------|-------|
@@ -459,7 +501,7 @@ When enemy has 3+ Cryo Infliction stacks
 
 ---
 
-## 13. Yvonne
+## 14. Yvonne
 
 | Field | Value |
 |-------|-------|
@@ -495,7 +537,7 @@ When performing Final Strike on Solidified enemies
 
 ---
 
-## 14. Avywenna
+## 15. Avywenna
 
 | Field | Value |
 |-------|-------|
@@ -537,7 +579,7 @@ When performing a Final Strike on targets with Electric Infliction or Electrific
 
 ---
 
-## 15. Da Pan
+## 16. Da Pan
 
 | Field | Value |
 |-------|-------|
@@ -573,7 +615,7 @@ When an enemy reaches 4 Vulnerability stacks
 
 ---
 
-## 16. Pogranichnik
+## 17. Pogranichnik
 
 | Field | Value |
 |-------|-------|
@@ -609,7 +651,7 @@ When Crush or Breach consumes enemy Vulnerability stacks
 
 ---
 
-## 17. Alesh
+## 18. Alesh
 
 | Field | Value |
 |-------|-------|
@@ -645,7 +687,7 @@ When the Arts Reaction or Originium Crystals of a nearby target is consumed
 
 ---
 
-## 18. Arclight
+## 19. Arclight
 
 | Field | Value |
 |-------|-------|
@@ -695,13 +737,14 @@ When an enemy suffers Electrification or after an enemy's Electrification is con
 | 6 | Snowshine | 5-star | Defender | Great Sword | Cryo |
 | 7 | Catcher | 4-star | Defender | Great Sword | Physical |
 | 8 | Gilberta | 6-star | Supporter | Arts Unit | Nature |
-| 9 | Xaihi | 5-star | Supporter | Arts Unit | Cryo |
-| 10 | Perlica | 5-star | Caster | Arts Unit | Electric |
-| 11 | Fluorite | 4-star | Caster | Handcannon | Nature |
-| 12 | Last Rite | 6-star | Striker | Great Sword | Cryo |
-| 13 | Yvonne | 6-star | Striker | Handcannon | Cryo |
-| 14 | Avywenna | 5-star | Striker | Polearm | Electric |
-| 15 | Da Pan | 5-star | Striker | Great Sword | Physical |
-| 16 | Pogranichnik | 6-star | Vanguard | Sword | Physical |
-| 17 | Alesh | 5-star | Vanguard | Sword | Cryo |
-| 18 | Arclight | 5-star | Vanguard | Sword | Electric |
+| 9 | Ardelia | 6-star | Supporter | Arts Unit | Nature |
+| 10 | Xaihi | 5-star | Supporter | Arts Unit | Cryo |
+| 11 | Perlica | 5-star | Caster | Arts Unit | Electric |
+| 12 | Fluorite | 4-star | Caster | Handcannon | Nature |
+| 13 | Last Rite | 6-star | Striker | Great Sword | Cryo |
+| 14 | Yvonne | 6-star | Striker | Handcannon | Cryo |
+| 15 | Avywenna | 5-star | Striker | Polearm | Electric |
+| 16 | Da Pan | 5-star | Striker | Great Sword | Physical |
+| 17 | Pogranichnik | 6-star | Vanguard | Sword | Physical |
+| 18 | Alesh | 5-star | Vanguard | Sword | Cryo |
+| 19 | Arclight | 5-star | Vanguard | Sword | Electric |

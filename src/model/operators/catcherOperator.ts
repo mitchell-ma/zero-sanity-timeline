@@ -62,6 +62,8 @@ export class CatcherOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: RigidInterdictionBasic;
   readonly battleSkill: RigidInterdiction;
@@ -86,6 +88,8 @@ export class CatcherOperator extends Operator {
       operatorRarity: CatcherOperator.OPERATOR_RARITY,
       mainAttributeType: CatcherOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: CatcherOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: CatcherOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: CatcherOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

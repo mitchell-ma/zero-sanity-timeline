@@ -40,11 +40,13 @@ export const DEFAULT_LOADOUT_STATS: LoadoutStats = {
   gearRank: 4,
 };
 
-/** Generate default loadout stats for a given operator rarity. */
-export function getDefaultLoadoutStats(rarity: number): LoadoutStats {
+/** Generate default loadout stats for a given operator. */
+export function getDefaultLoadoutStats(op: { rarity: number; maxTalentOneLevel: number; maxTalentTwoLevel: number }): LoadoutStats {
   return {
     ...DEFAULT_LOADOUT_STATS,
-    potential: rarity >= 6 ? 0 : 5,
+    potential: op.rarity >= 6 ? 0 : 5,
+    talentOneLevel: op.maxTalentOneLevel,
+    talentTwoLevel: op.maxTalentTwoLevel,
   };
 }
 
@@ -183,6 +185,7 @@ interface EventPaneProps {
   onRemove: (id: string) => void;
   onClose: () => void;
   selectedFrame?: SelectedFrame | null;
+  readOnly?: boolean;
 }
 
 function EventPane({
@@ -194,6 +197,7 @@ function EventPane({
   onClose,
   selectedFrame,
   slots,
+  readOnly,
 }: EventPaneProps) {
   let ownerName        = '';
   let skillName        = '';
@@ -330,39 +334,45 @@ function EventPane({
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Timing</span>
-          <div className="edit-field">
-            <span className="edit-field-label">Start offset</span>
-            <div className="edit-field-row">
-              <input
-                className="edit-input"
-                type="number"
-                step="1"
-                min="0"
-                value={startWholeSec}
-                onChange={(e) => setStartWholeSec(e.target.value)}
-                onBlur={handleBlur}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-              />
-              <span className="edit-input-unit">s</span>
-              <input
-                className="edit-input"
-                type="number"
-                step="1"
-                min="0"
-                max={FPS - 1}
-                value={startModFrame}
-                onChange={(e) => setStartModFrame(e.target.value)}
-                onBlur={handleBlur}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-              />
-              <span className="edit-input-unit">f</span>
+          {readOnly ? (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>
+              <div>Start: {frameToTimeLabelPrecise(event.startFrame)}</div>
             </div>
-            <div className="edit-field-computed">
-              = {frameToTimeLabelPrecise(computedStartFrame)}
+          ) : (
+            <div className="edit-field">
+              <span className="edit-field-label">Start offset</span>
+              <div className="edit-field-row">
+                <input
+                  className="edit-input"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={startWholeSec}
+                  onChange={(e) => setStartWholeSec(e.target.value)}
+                  onBlur={handleBlur}
+                  onFocus={handleFocus}
+                  onKeyDown={handleKeyDown}
+                />
+                <span className="edit-input-unit">s</span>
+                <input
+                  className="edit-input"
+                  type="number"
+                  step="1"
+                  min="0"
+                  max={FPS - 1}
+                  value={startModFrame}
+                  onChange={(e) => setStartModFrame(e.target.value)}
+                  onBlur={handleBlur}
+                  onFocus={handleFocus}
+                  onKeyDown={handleKeyDown}
+                />
+                <span className="edit-input-unit">f</span>
+              </div>
+              <div className="edit-field-computed">
+                = {frameToTimeLabelPrecise(computedStartFrame)}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {isSequenced ? (
@@ -435,6 +445,16 @@ function EventPane({
               </div>
             </div>
           </>
+        ) : readOnly ? (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Duration</span>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>
+              <div>Active: {framesToSeconds(event.activationDuration)}s ({event.activationDuration}f)</div>
+              {event.activeDuration > 0 && <div>Linger: {framesToSeconds(event.activeDuration)}s ({event.activeDuration}f)</div>}
+              {event.cooldownDuration > 0 && <div>Cooldown: {framesToSeconds(event.cooldownDuration)}s ({event.cooldownDuration}f)</div>}
+              <div>Total: {framesToSeconds(totalDurationFrames)}s</div>
+            </div>
+          </div>
         ) : (
           <>
             <div className="edit-panel-section">
@@ -464,11 +484,13 @@ function EventPane({
         )}
       </div>
 
-      <div className="edit-panel-footer">
-        <button className="btn-delete-event" onClick={() => onRemove(event.id)}>
-          REMOVE EVENT
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="edit-panel-footer">
+          <button className="btn-delete-event" onClick={() => onRemove(event.id)}>
+            REMOVE EVENT
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -520,8 +542,8 @@ function LoadoutPane({ operator, loadout, stats, onStatsChange, onClose }: Loado
           <span className="edit-section-label">Operator</span>
           <LevelSelect label="Operator Level"     value={stats.operatorLevel}     options={LEVEL_BREAKPOINTS} onChange={set('operatorLevel')} />
           <StatField   label="Potential"           value={stats.potential}         min={0} max={5}  onChange={set('potential')} />
-          <StatField   label="Talent 1 Level"      value={stats.talentOneLevel}   min={0} max={3}  onChange={set('talentOneLevel')} />
-          <StatField   label="Talent 2 Level"      value={stats.talentTwoLevel}   min={0} max={3}  onChange={set('talentTwoLevel')} />
+          <StatField   label="Talent 1 Level"      value={stats.talentOneLevel}   min={0} max={operator.maxTalentOneLevel}  onChange={set('talentOneLevel')} />
+          <StatField   label="Talent 2 Level"      value={stats.talentTwoLevel}   min={0} max={operator.maxTalentTwoLevel}  onChange={set('talentTwoLevel')} />
         </div>
 
         <div className="edit-panel-section">
@@ -579,6 +601,7 @@ type InformationPaneProps =
       onRemove: (id: string) => void;
       onClose: () => void;
       selectedFrame?: SelectedFrame | null;
+      readOnly?: boolean;
     })
   | ({
       mode: 'loadout';
@@ -602,6 +625,7 @@ export default function InformationPane(props: InformationPaneProps) {
           onRemove={props.onRemove}
           onClose={props.onClose}
           selectedFrame={props.selectedFrame}
+          readOnly={props.readOnly}
         />
       ) : (
         <LoadoutPane

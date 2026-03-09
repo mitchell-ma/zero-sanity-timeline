@@ -62,6 +62,8 @@ export class PogranichnikOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: AllOutOffensive;
   readonly battleSkill: ThePulverizingFront;
@@ -86,6 +88,8 @@ export class PogranichnikOperator extends Operator {
       operatorRarity: PogranichnikOperator.OPERATOR_RARITY,
       mainAttributeType: PogranichnikOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: PogranichnikOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: PogranichnikOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: PogranichnikOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

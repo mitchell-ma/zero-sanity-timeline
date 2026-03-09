@@ -1,5 +1,6 @@
-import { TimelineEvent } from '../consts/viewTypes';
+import { TimelineEvent, FrameAbsorptionMarker } from '../consts/viewTypes';
 import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS } from '../model/channels';
+import { TOTAL_FRAMES } from './timeline';
 
 /** Maps forced reaction name → reaction columnId. */
 const FORCED_REACTION_COLUMN: Record<string, string> = {
@@ -11,6 +12,14 @@ const FORCED_REACTION_COLUMN: Record<string, string> = {
 
 /** Default active duration for derived reaction events (20s at 120fps). */
 const REACTION_DURATION = 2400;
+
+/** Forced reaction durations by type (frames at 120fps). */
+const FORCED_REACTION_DURATION: Record<string, number> = {
+  combustion: 600,        // 5s
+  solidification: 600,    // 5s
+  corrosion: 600,         // 5s
+  electrification: 600,   // 5s
+};
 
 /** Default active duration for derived infliction events (20s at 120fps). */
 const INFLICTION_DURATION = 2400;
@@ -38,7 +47,8 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
  */
 export function processInflictionEvents(rawEvents: TimelineEvent[]): TimelineEvent[] {
   const withDerivedInflictions = deriveFrameInflictions(rawEvents);
-  const withReactions = deriveReactions(withDerivedInflictions);
+  const withAbsorptions = applyAbsorptions(withDerivedInflictions);
+  const withReactions = deriveReactions(withAbsorptions);
   const mergedReactions = mergeReactions(withReactions);
   return applySameElementRefresh(mergedReactions);
 }
@@ -87,7 +97,7 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 ownerId: 'enemy',
                 columnId: reactionColumnId,
                 startFrame: absoluteFrame,
-                activationDuration: REACTION_DURATION,
+                activationDuration: FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
                 activeDuration: 0,
                 cooldownDuration: 0,
                 statusLevel: frame.applyForcedReaction.statusLevel,
@@ -102,6 +112,179 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
 
   if (derived.length === 0) return events;
   return [...events, ...derived];
+}
+
+/** Maps absorption exchange status → columnId for generated events. */
+const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
+  MELTING_FLAME: 'melting-flame',
+};
+
+/** Max micro-column slots for each exchange status. */
+const EXCHANGE_STATUS_MAX_SLOTS: Record<string, number> = {
+  MELTING_FLAME: 4,
+};
+
+/** Default duration for generated exchange events (effectively permanent). */
+const EXCHANGE_EVENT_DURATION = TOTAL_FRAMES * 10;
+
+/**
+ * Processes absorption frames: consumes enemy infliction stacks and generates
+ * exchange status events (e.g. Melting Flame) on the absorbing operator.
+ *
+ * For each absorption marker found on operator events:
+ * 1. Count active infliction events of the matching element on the enemy
+ * 2. Count active exchange status events on the operator
+ * 3. Consume min(active inflictions, available slots, marker max stacks)
+ * 4. Clamp consumed inflictions at the absorption frame
+ * 5. Generate new exchange status events
+ */
+function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
+  // Collect all absorption points: { absoluteFrame, ownerId, marker }
+  type AbsorptionPoint = {
+    absoluteFrame: number;
+    ownerId: string;
+    marker: FrameAbsorptionMarker;
+    eventId: string;
+    segmentIndex: number;
+    frameIndex: number;
+  };
+
+  const absorptions: AbsorptionPoint[] = [];
+
+  for (const event of events) {
+    if (!event.segments || event.ownerId === 'enemy') continue;
+
+    let cumulativeOffset = 0;
+    for (let si = 0; si < event.segments.length; si++) {
+      const seg = event.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          if (frame.absorbArtsInfliction) {
+            absorptions.push({
+              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              ownerId: event.ownerId,
+              marker: frame.absorbArtsInfliction,
+              eventId: event.id,
+              segmentIndex: si,
+              frameIndex: fi,
+            });
+          }
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  if (absorptions.length === 0) return events;
+
+  // Sort absorptions chronologically
+  absorptions.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
+
+  // Track modifications: clamped inflictions and removed inflictions
+  const clampMap = new Map<string, number>(); // infliction id → clamp frame
+  const removedIds = new Set<string>();
+  const generated: TimelineEvent[] = [];
+
+  for (const absorption of absorptions) {
+    const { absoluteFrame, ownerId, marker } = absorption;
+    const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
+    const exchangeColumnId = EXCHANGE_STATUS_COLUMN[marker.exchangeStatus];
+    const maxSlots = EXCHANGE_STATUS_MAX_SLOTS[marker.exchangeStatus] ?? 4;
+
+    if (!inflictionColumnId || !exchangeColumnId) continue;
+
+    // Find active enemy infliction events of the matching element at this frame
+    const activeInflictions: TimelineEvent[] = [];
+    for (const ev of events) {
+      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (removedIds.has(ev.id)) continue;
+
+      const clampFrame = clampMap.get(ev.id);
+      const endFrame = clampFrame !== undefined
+        ? clampFrame
+        : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+
+      if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
+        activeInflictions.push(ev);
+      }
+    }
+
+    if (activeInflictions.length === 0) continue;
+
+    // Count active exchange status events for this operator at this frame
+    let activeExchangeCount = 0;
+    for (const ev of [...events, ...generated]) {
+      if (ev.ownerId !== ownerId || ev.columnId !== exchangeColumnId) continue;
+      if (removedIds.has(ev.id)) continue;
+
+      const clampFrame = clampMap.get(ev.id);
+      const endFrame = clampFrame !== undefined
+        ? clampFrame
+        : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+
+      if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
+        activeExchangeCount++;
+      }
+    }
+
+    const availableSlots = maxSlots - activeExchangeCount;
+    if (availableSlots <= 0) continue;
+
+    const stacksToConsume = Math.min(activeInflictions.length, availableSlots, marker.stacks);
+    if (stacksToConsume <= 0) continue;
+
+    // Sort active inflictions by startFrame (consume oldest first)
+    activeInflictions.sort((a, b) => a.startFrame - b.startFrame);
+
+    // Consume inflictions: clamp them at the absorption frame
+    for (let i = 0; i < stacksToConsume; i++) {
+      const consumed = activeInflictions[i];
+      clampMap.set(consumed.id, absoluteFrame);
+    }
+
+    // Generate exchange status events
+    for (let i = 0; i < stacksToConsume; i++) {
+      generated.push({
+        id: `${absorption.eventId}-absorb-${absorption.segmentIndex}-${absorption.frameIndex}-${i}`,
+        name: marker.exchangeStatus,
+        ownerId,
+        columnId: exchangeColumnId,
+        startFrame: absoluteFrame,
+        activationDuration: EXCHANGE_EVENT_DURATION,
+        activeDuration: 0,
+        cooldownDuration: 0,
+      });
+    }
+  }
+
+  if (clampMap.size === 0 && generated.length === 0) return events;
+
+  // Build output: clamp consumed inflictions, append generated events
+  const result: TimelineEvent[] = [];
+  for (const ev of events) {
+    if (removedIds.has(ev.id)) continue;
+
+    const clampFrame = clampMap.get(ev.id);
+    if (clampFrame !== undefined) {
+      const available = Math.max(0, clampFrame - ev.startFrame);
+      const clampedActive = Math.min(ev.activationDuration, available);
+      const remAfterActive = available - clampedActive;
+      const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
+      const remAfterLinger = remAfterActive - clampedLinger;
+      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
+      result.push({
+        ...ev,
+        activationDuration: clampedActive,
+        activeDuration: clampedLinger,
+        cooldownDuration: clampedCooldown,
+      });
+    } else {
+      result.push(ev);
+    }
+  }
+
+  return [...result, ...generated];
 }
 
 /**

@@ -62,6 +62,8 @@ export class EmberOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: SwordArtOfAssault;
   readonly battleSkill: ForwardMarch;
@@ -86,6 +88,8 @@ export class EmberOperator extends Operator {
       operatorRarity: EmberOperator.OPERATOR_RARITY,
       mainAttributeType: EmberOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: EmberOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: EmberOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: EmberOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

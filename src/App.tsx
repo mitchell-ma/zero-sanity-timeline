@@ -130,8 +130,17 @@ export default function App() {
   );
 
   const editingEvent = editingEventId
-    ? events.find((e) => e.id === editingEventId) ?? null
+    ? processedEvents.find((e) => e.id === editingEventId) ?? null
     : null;
+
+  const editingEventReadOnly = editingEvent
+    ? columns.some((c) => {
+        if (c.type !== 'mini-timeline' || !c.derived) return false;
+        if (c.ownerId !== editingEvent.ownerId) return false;
+        if (c.columnId === editingEvent.columnId) return true;
+        return c.matchColumnIds?.includes(editingEvent.columnId) ?? false;
+      })
+    : false;
 
   const editingSlot = editingSlotId
     ? slots.find((s) => s.slotId === editingSlotId) ?? null
@@ -304,7 +313,7 @@ export default function App() {
 
     // Reset loadout stats to rarity-appropriate defaults when operator changes
     if (newOp) {
-      setLoadoutStats((prev) => ({ ...prev, [slotId]: getDefaultLoadoutStats(newOp.rarity) }));
+      setLoadoutStats((prev) => ({ ...prev, [slotId]: getDefaultLoadoutStats(newOp) }));
     }
   }, []);
 
@@ -371,6 +380,7 @@ export default function App() {
           hoverFrame={hoverFrame}
           onScrollRef={handleDmgScrollRef}
           onScroll={handleSheetScroll}
+          onZoom={handleZoom}
         />
       </div>
 
@@ -394,6 +404,7 @@ export default function App() {
           onRemove={handleRemoveEvent}
           onClose={() => { setEditingEventId(null); setSelectedFrame(null); }}
           selectedFrame={selectedFrame}
+          readOnly={editingEventReadOnly}
         />
       ) : editingSlot && editingSlot.operator ? (
         <InformationPane

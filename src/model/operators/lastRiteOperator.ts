@@ -62,6 +62,8 @@ export class LastRiteOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.AGILITY;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: DanceOfRime;
   readonly battleSkill: EsotericLegacy;
@@ -86,6 +88,8 @@ export class LastRiteOperator extends Operator {
       operatorRarity: LastRiteOperator.OPERATOR_RARITY,
       mainAttributeType: LastRiteOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: LastRiteOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: LastRiteOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: LastRiteOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

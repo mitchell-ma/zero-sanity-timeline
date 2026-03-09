@@ -62,6 +62,8 @@ export class EndministratorOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.INTELLECT;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: DestructiveSequence;
   readonly battleSkill: ConstructiveSequence;
@@ -86,6 +88,8 @@ export class EndministratorOperator extends Operator {
       operatorRarity: EndministratorOperator.OPERATOR_RARITY,
       mainAttributeType: EndministratorOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: EndministratorOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: EndministratorOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: EndministratorOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

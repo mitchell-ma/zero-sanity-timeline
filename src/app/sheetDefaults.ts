@@ -37,7 +37,7 @@ export const INITIAL_LOADOUTS: Record<string, OperatorLoadoutState> = Object.fro
 export const INITIAL_LOADOUT_STATS: Record<string, LoadoutStats> = Object.fromEntries(
   SLOT_IDS.map((id, i) => {
     const op = INITIAL_OPERATORS[i];
-    return [id, op ? getDefaultLoadoutStats(op.rarity) : DEFAULT_LOADOUT_STATS];
+    return [id, op ? getDefaultLoadoutStats(op) : DEFAULT_LOADOUT_STATS];
   }),
 );
 

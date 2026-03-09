@@ -63,6 +63,8 @@ export class AkekuriOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.AGILITY;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.INTELLECT;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: SwordOfAspiration;
   readonly battleSkill: BurstOfPassion;
@@ -87,6 +89,8 @@ export class AkekuriOperator extends Operator {
       operatorRarity: AkekuriOperator.OPERATOR_RARITY,
       mainAttributeType: AkekuriOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: AkekuriOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: AkekuriOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: AkekuriOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

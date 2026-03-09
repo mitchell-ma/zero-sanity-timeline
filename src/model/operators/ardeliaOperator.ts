@@ -63,6 +63,8 @@ export class ArdeliaOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 3;
 
   readonly basicAttack: RockyWhispers;
   readonly battleSkill: DollyRush;
@@ -87,6 +89,8 @@ export class ArdeliaOperator extends Operator {
       operatorRarity: ArdeliaOperator.OPERATOR_RARITY,
       mainAttributeType: ArdeliaOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: ArdeliaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: ArdeliaOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: ArdeliaOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

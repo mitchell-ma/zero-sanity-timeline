@@ -13,6 +13,8 @@ export abstract class Operator {
   readonly operatorRarity: OperatorRarity;
   readonly mainAttributeType: StatType;
   readonly secondaryAttributeType: StatType;
+  readonly maxTalentOneLevel: number;
+  readonly maxTalentTwoLevel: number;
 
   level: number;
   potential: Potential;
@@ -39,6 +41,8 @@ export abstract class Operator {
     mainAttributeType: StatType;
     secondaryAttributeType: StatType;
     statsByLevel: StatsByLevel;
+    maxTalentOneLevel: number;
+    maxTalentTwoLevel: number;
     potential?: Potential;
     talentOneLevel?: number;
     talentTwoLevel?: number;
@@ -57,6 +61,8 @@ export abstract class Operator {
       mainAttributeType,
       secondaryAttributeType,
       statsByLevel,
+      maxTalentOneLevel,
+      maxTalentTwoLevel,
       potential = 0,
       talentOneLevel = 0,
       talentTwoLevel = 0,
@@ -95,6 +101,8 @@ export abstract class Operator {
     this.operatorRarity = operatorRarity;
     this.mainAttributeType = mainAttributeType;
     this.secondaryAttributeType = secondaryAttributeType;
+    this.maxTalentOneLevel = maxTalentOneLevel;
+    this.maxTalentTwoLevel = maxTalentTwoLevel;
     this.potential = potential;
     this.talentOneLevel = talentOneLevel;
     this.talentTwoLevel = talentTwoLevel;

@@ -62,6 +62,8 @@ export class YvonneOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.AGILITY;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: ExuberantTrigger;
   readonly battleSkill: BrrBrrBomb;
@@ -86,6 +88,8 @@ export class YvonneOperator extends Operator {
       operatorRarity: YvonneOperator.OPERATOR_RARITY,
       mainAttributeType: YvonneOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: YvonneOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: YvonneOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: YvonneOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

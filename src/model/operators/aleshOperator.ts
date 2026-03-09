@@ -62,6 +62,8 @@ export class AleshOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.INTELLECT;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: RodCasting;
   readonly battleSkill: UnconventionalLure;
@@ -86,6 +88,8 @@ export class AleshOperator extends Operator {
       operatorRarity: AleshOperator.OPERATOR_RARITY,
       mainAttributeType: AleshOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: AleshOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: AleshOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: AleshOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

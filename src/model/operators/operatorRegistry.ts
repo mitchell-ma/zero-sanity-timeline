@@ -58,6 +58,7 @@ import daPanSplash from '../../assets/operators/Da_Pan_Banner.webp';
 import pogranichnikSplash from '../../assets/operators/Pogranichnik_Banner.webp';
 import aleshSplash from '../../assets/operators/Alesh_Banner.webp';
 import arclightSplash from '../../assets/operators/Arclight_Banner.webp';
+import catcherSplash from '../../assets/operators/Catcher_Banner.webp';
 
 // ── Role display names ──────────────────────────────────────────────────────
 
@@ -158,6 +159,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: laevatainSplash,
     weapon: 'Never Rest',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.FLAMING_CINDERS, defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.SMOULDERING_FIRE, defaultActivationDuration: L.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -173,6 +175,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     weapon: 'Stanza of Memorials',
     ...PLACEHOLDER_EQUIPMENT,
     kit2: 'Hot Work Pyrometer',
+
     skills: {
       basic: { name: CombatSkillsType.EXCHANGE_CURRENT, defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.SPECIFIED_RESEARCH_SUBJECT, defaultActivationDuration: 960, defaultActiveDuration: 240, defaultCooldownDuration: 1440, triggerCondition: null },
@@ -190,6 +193,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     gloves: 'Hot Work Gauntlets T1',
     kit1: 'Hot Work Power Cartridge',
     kit2: 'Hot Work Pyrometer',
+
     skills: {
       basic: { name: CombatSkillsType.SWORD_OF_ASPIRATION, defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.BURST_OF_PASSION, defaultActivationDuration: AK.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -204,6 +208,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: wulfgardSplash,
     weapon: 'Forgeborn Scathe',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.RAPID_FIRE_AKIMBO, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.THERMITE_TRACERS, defaultActivationDuration: WF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -219,6 +224,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     weapon: 'Verdant Lance',
     ...PLACEHOLDER_EQUIPMENT,
     kit2: 'Hot Work Pyrometer',
+
     skills: {
       basic: { name: CombatSkillsType.ROCKY_WHISPERS, defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.DOLLY_RUSH, defaultActivationDuration: AR.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -233,6 +239,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: endministratorSplash,
     weapon: 'Endministrator Blade',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.DESTRUCTIVE_SEQUENCE, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.CONSTRUCTIVE_SEQUENCE, defaultActivationDuration: EN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -247,6 +254,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: lifengSplash,
     weapon: 'Vajra Fang',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.RUINATION, defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.TURBID_AVATAR, defaultActivationDuration: LF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -261,6 +269,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: chenQianyuSplash,
     weapon: 'Dawn Breaker',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.SOARING_BREAK, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.ASCENDING_STRIKE, defaultActivationDuration: CQ.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -275,6 +284,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: estellaSplash,
     weapon: 'Frost Spear',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.AUDIO_NOISE, defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.ONOMATOPOEIA, defaultActivationDuration: ES.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -289,6 +299,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: emberSplash,
     weapon: 'Iron Valor',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.SWORD_ART_OF_ASSAULT, defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.FORWARD_MARCH, defaultActivationDuration: EM.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -303,6 +314,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: snowshineSplash,
     weapon: 'Glacial Guard',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.HYPOTHERMIC_ASSAULT, defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.SATURATED_DEFENSE, defaultActivationDuration: SN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -314,8 +326,10 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
   {
     id: 'catcher',
     color: '#8899aa',
+    splash: catcherSplash,
     weapon: 'Iron Shield',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.RIGID_INTERDICTION_BASIC, defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.RIGID_INTERDICTION, defaultActivationDuration: CA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -330,6 +344,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: gilbertaSplash,
     weapon: 'Arcane Staff',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.BEAM_COHESION_ARTS, defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.GRAVITY_MODE, defaultActivationDuration: GI.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -344,6 +359,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: xaihiSplash,
     weapon: 'Crystal Prism',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.XAIHI_BASIC_ATTACK, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.DISTRIBUTED_DOS, defaultActivationDuration: XA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -358,6 +374,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: perlicaSplash,
     weapon: 'Spark Emitter',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.PROTOCOL_ALPHA_BREACH, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.PROTOCOL_OMEGA_STRIKE, defaultActivationDuration: PE.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -372,6 +389,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: fluoriteSplash,
     weapon: 'Trick Shot',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.SIGNATURE_GUN_KATA, defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.TINY_SURPRISE, defaultActivationDuration: FL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -386,6 +404,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: lastRiteSplash,
     weapon: 'Frostbound Scythe',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.DANCE_OF_RIME, defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.ESOTERIC_LEGACY, defaultActivationDuration: LR.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -400,6 +419,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: yvonneSplash,
     weapon: 'Frost Pistol',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.EXUBERANT_TRIGGER, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.BRR_BRR_BOMB, defaultActivationDuration: YV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -414,6 +434,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: avywennaSplash,
     weapon: 'Thunderlance',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.THUNDERLANCE_BLITZ, defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.THUNDERLANCE_INTERDICTION, defaultActivationDuration: AV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -428,6 +449,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: daPanSplash,
     weapon: 'Wok of Justice',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.ROLLING_CUT, defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.FLIP_DA_WOK, defaultActivationDuration: DP.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -442,6 +464,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: pogranichnikSplash,
     weapon: 'Banner Blade',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.ALL_OUT_OFFENSIVE, defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.THE_PULVERIZING_FRONT, defaultActivationDuration: PG.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -456,6 +479,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: aleshSplash,
     weapon: 'Fishing Rod',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.ROD_CASTING, defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.UNCONVENTIONAL_LURE, defaultActivationDuration: AL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -470,6 +494,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     splash: arclightSplash,
     weapon: 'Storm Edge',
     ...PLACEHOLDER_EQUIPMENT,
+
     skills: {
       basic: { name: CombatSkillsType.SEEK_AND_HUNT, defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { name: CombatSkillsType.TEMPESTUOUS_ARC, defaultActivationDuration: AC.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
@@ -561,6 +586,8 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     tactical: config.tactical,
     skills: config.skills as Record<string, SkillDef>,
     ultimateEnergyCost: gaugeMax,
+    maxTalentOneLevel: model.maxTalentOneLevel,
+    maxTalentTwoLevel: model.maxTalentTwoLevel,
     triggerCapability: TRIGGER_CAPABILITIES[config.id],
   };
 }

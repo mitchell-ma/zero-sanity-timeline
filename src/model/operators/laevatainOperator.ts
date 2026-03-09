@@ -63,6 +63,8 @@ export class LaevatainOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.STRENGTH;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 3;
 
   readonly basicAttack: FlamingCinders;
   readonly battleSkill: SmoulderingFire;
@@ -87,6 +89,8 @@ export class LaevatainOperator extends Operator {
       operatorRarity: LaevatainOperator.OPERATOR_RARITY,
       mainAttributeType: LaevatainOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: LaevatainOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: LaevatainOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: LaevatainOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

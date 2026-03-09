@@ -62,6 +62,8 @@ export class ChenQianyuOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.AGILITY;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.STRENGTH;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: SoaringBreak;
   readonly battleSkill: AscendingStrike;
@@ -86,6 +88,8 @@ export class ChenQianyuOperator extends Operator {
       operatorRarity: ChenQianyuOperator.OPERATOR_RARITY,
       mainAttributeType: ChenQianyuOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: ChenQianyuOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: ChenQianyuOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: ChenQianyuOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

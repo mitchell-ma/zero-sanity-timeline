@@ -62,6 +62,8 @@ export class SnowshineOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: HypothermicAssault;
   readonly battleSkill: SaturatedDefense;
@@ -86,6 +88,8 @@ export class SnowshineOperator extends Operator {
       operatorRarity: SnowshineOperator.OPERATOR_RARITY,
       mainAttributeType: SnowshineOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: SnowshineOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: SnowshineOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: SnowshineOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

@@ -26,6 +26,8 @@ export interface Operator {
   tactical: string;
   skills: Record<SkillType, SkillDef>;
   ultimateEnergyCost: number;
+  maxTalentOneLevel: number;
+  maxTalentTwoLevel: number;
   triggerCapability?: import('./triggerCapabilities').TriggerCapability;
 }
 

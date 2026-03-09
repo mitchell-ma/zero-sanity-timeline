@@ -63,6 +63,8 @@ export class AntalOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.STRENGTH;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: ExchangeCurrent;
   readonly battleSkill: SpecifiedResearchSubject;
@@ -87,6 +89,8 @@ export class AntalOperator extends Operator {
       operatorRarity: AntalOperator.OPERATOR_RARITY,
       mainAttributeType: AntalOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: AntalOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: AntalOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: AntalOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

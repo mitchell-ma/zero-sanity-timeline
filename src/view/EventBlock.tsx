@@ -20,6 +20,8 @@ interface EventBlockProps {
   onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
   /** Currently selected frame (segment + frame index) for highlight. */
   selectedFrame?: { segmentIndex: number; frameIndex: number } | null;
+  /** If true, event cannot be dragged — shows pointer cursor instead of grab. */
+  notDraggable?: boolean;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -54,6 +56,7 @@ export default function EventBlock({
   onTouchStart,
   onFrameClick,
   selectedFrame,
+  notDraggable = false,
 }: EventBlockProps) {
   const { id, startFrame, activationDuration, activeDuration, cooldownDuration, segments } = event;
 
@@ -66,7 +69,7 @@ export default function EventBlock({
 
     if (totalHeight <= 0) return null;
 
-    const wrapClass = `event-wrap${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+    const wrapClass = `event-wrap${notDraggable ? ' event-wrap--static' : ''}${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
     let offsetFrames = 0;
     const segmentElements: React.ReactNode[] = [];
@@ -135,12 +138,12 @@ export default function EventBlock({
         style={{ top: topPx, height: totalHeight }}
         onContextMenu={(e) => onContextMenu(e, id)}
         onMouseDown={(e) => {
-          if (e.button === 0) { e.stopPropagation(); onDragStart(e, id, startFrame); }
+          if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, id, startFrame); }
         }}
         onClick={(e) => onSelect?.(e, id)}
         onMouseOver={() => onHover?.(id)}
         onMouseOut={() => onHover?.(null)}
-        onTouchStart={(e) => onTouchStart?.(e, id, startFrame)}
+        onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
       >
         {segmentElements}
       </div>
@@ -171,7 +174,7 @@ export default function EventBlock({
   const activeRadius = !hasLinger && !hasCooldown ? '2px' : '2px 2px 0 0';
   const lingerRadius = !hasCooldown ? '0 0 2px 2px' : '0';
 
-  const wrapClass = `event-wrap${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+  const wrapClass = `event-wrap${notDraggable ? ' event-wrap--static' : ''}${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
   return (
     <div
@@ -181,12 +184,12 @@ export default function EventBlock({
       onContextMenu={(e) => onContextMenu(e, id)}
       onMouseDown={(e) => {
         if (e.button === 0) e.stopPropagation();
-        if (variant === 'ultimate' && e.button === 0) onDragStart(e, id, startFrame);
+        if (!notDraggable && variant === 'ultimate' && e.button === 0) onDragStart(e, id, startFrame);
       }}
       onClick={(e) => onSelect?.(e, id)}
       onMouseEnter={() => onHover?.(id)}
       onMouseLeave={() => onHover?.(null)}
-      onTouchStart={(e) => onTouchStart?.(e, id, startFrame)}
+      onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
     >
       {/* Active segment */}
       {activeH > 0 && (

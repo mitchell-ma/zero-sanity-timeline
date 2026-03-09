@@ -177,8 +177,11 @@ export class CombatLoadout {
       const publishedTriggers = pubSlot.capability.publishesTriggers[event.columnId];
       if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
-      // Window starts at end of active duration
-      const triggerFrame = event.startFrame + event.activationDuration;
+      // Default: window starts at end of active duration
+      const defaultTriggerFrame = event.startFrame + event.activationDuration;
+
+      // For FINAL_STRIKE on sequenced events, start at the first hit of the last segment
+      const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event) ?? defaultTriggerFrame;
 
       // For each published trigger, find all slots whose combo requires it
       for (const trigger of publishedTriggers) {
@@ -189,6 +192,16 @@ export class CombatLoadout {
 
           const slotId = this.slotIds[subIdx];
           if (!slotId) continue;
+
+          const triggerFrame = trigger === TriggerConditionType.FINAL_STRIKE
+            ? finalStrikeTriggerFrame
+            : defaultTriggerFrame;
+
+          // Check comboForbidsActiveColumns — skip if any forbidden event is active
+          const forbids = subSlot.capability.comboForbidsActiveColumns;
+          if (forbids && forbids.length > 0 && hasActiveEventInColumns(events, forbids, triggerFrame)) {
+            continue;
+          }
 
           const window: ActivationWindow = {
             startFrame: triggerFrame,
@@ -230,6 +243,47 @@ export class CombatLoadout {
   private notify(windows: WindowsMap): void {
     this.listeners.forEach((listener) => listener(windows));
   }
+}
+
+/**
+ * Check if any event whose columnId is in `columnIds` is active at `frame`.
+ * An event is "active" if frame falls within [startFrame, startFrame + totalDuration).
+ */
+function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], frame: number): boolean {
+  for (const ev of events) {
+    if (!columnIds.includes(ev.columnId)) continue;
+    const totalDuration = ev.segments
+      ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+      : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+    if (frame >= ev.startFrame && frame < ev.startFrame + totalDuration) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * For a sequenced event, compute the frame at which the final strike's first
+ * hit lands.  Returns null if the event has no segments or fewer than 2.
+ */
+function getFinalStrikeTriggerFrame(event: TimelineEvent): number | null {
+  const segs = event.segments;
+  if (!segs || segs.length < 2) return null;
+
+  // Sum durations of all segments before the last one
+  let offsetFrames = 0;
+  for (let i = 0; i < segs.length - 1; i++) {
+    offsetFrames += segs[i].durationFrames;
+  }
+
+  const lastSeg = segs[segs.length - 1];
+  // Use the last hit of the final strike segment (the actual finishing blow)
+  const frames = lastSeg.frames;
+  const lastHitOffset = frames && frames.length > 0
+    ? frames[frames.length - 1].offsetFrame
+    : 0;
+
+  return event.startFrame + offsetFrames + lastHitOffset;
 }
 
 function mergeWindows(sorted: ActivationWindow[]): ActivationWindow[] {

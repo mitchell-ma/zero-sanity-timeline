@@ -62,6 +62,8 @@ export class EstellaOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.AGILITY;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: AudioNoise;
   readonly battleSkill: Onomatopoeia;
@@ -86,6 +88,8 @@ export class EstellaOperator extends Operator {
       operatorRarity: EstellaOperator.OPERATOR_RARITY,
       mainAttributeType: EstellaOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: EstellaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: EstellaOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: EstellaOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

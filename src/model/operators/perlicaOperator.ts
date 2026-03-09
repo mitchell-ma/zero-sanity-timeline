@@ -62,6 +62,8 @@ export class PerlicaOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.AGILITY;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: ProtocolAlphaBreach;
   readonly battleSkill: ProtocolOmegaStrike;
@@ -86,6 +88,8 @@ export class PerlicaOperator extends Operator {
       operatorRarity: PerlicaOperator.OPERATOR_RARITY,
       mainAttributeType: PerlicaOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: PerlicaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: PerlicaOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: PerlicaOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

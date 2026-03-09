@@ -62,6 +62,8 @@ export class GilbertaOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: BeamCohesionArts;
   readonly battleSkill: GravityMode;
@@ -86,6 +88,8 @@ export class GilbertaOperator extends Operator {
       operatorRarity: GilbertaOperator.OPERATOR_RARITY,
       mainAttributeType: GilbertaOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: GilbertaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: GilbertaOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: GilbertaOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

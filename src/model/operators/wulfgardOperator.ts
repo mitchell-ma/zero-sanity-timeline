@@ -63,6 +63,8 @@ export class WulfgardOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.AGILITY;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: RapidFireAkimbo;
   readonly battleSkill: ThermiteTracers;
@@ -87,6 +89,8 @@ export class WulfgardOperator extends Operator {
       operatorRarity: WulfgardOperator.OPERATOR_RARITY,
       mainAttributeType: WulfgardOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: WulfgardOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: WulfgardOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: WulfgardOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

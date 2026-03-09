@@ -62,6 +62,8 @@ export class ArclightOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.AGILITY;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.INTELLECT;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: SeekAndHunt;
   readonly battleSkill: TempestuousArc;
@@ -86,6 +88,8 @@ export class ArclightOperator extends Operator {
       operatorRarity: ArclightOperator.OPERATOR_RARITY,
       mainAttributeType: ArclightOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: ArclightOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: ArclightOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: ArclightOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

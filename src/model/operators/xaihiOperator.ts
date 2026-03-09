@@ -62,6 +62,8 @@ export class XaihiOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.INTELLECT;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 1;
 
   readonly basicAttack: XaihiBasicAttack;
   readonly battleSkill: DistributedDos;
@@ -86,6 +88,8 @@ export class XaihiOperator extends Operator {
       operatorRarity: XaihiOperator.OPERATOR_RARITY,
       mainAttributeType: XaihiOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: XaihiOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: XaihiOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: XaihiOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

@@ -9,6 +9,11 @@ export interface TriggerCapability {
   comboDescription: string;
   /** Activation window in frames (default 720 = 6s at 120 FPS) */
   comboWindowFrames: number;
+  /**
+   * If set, combo window is blocked when ANY event with a matching columnId
+   * is active at the trigger frame (e.g. no arts infliction on enemy).
+   */
+  comboForbidsActiveColumns?: string[];
 }
 
 export const TRIGGER_CAPABILITIES: Record<string, TriggerCapability> = {
@@ -49,9 +54,12 @@ export const TRIGGER_CAPABILITIES: Record<string, TriggerCapability> = {
     publishesTriggers: {
       battle: [TriggerConditionType.CORROSION],
     },
-    comboRequires: [TriggerConditionType.CORROSION],
-    comboDescription: 'Enemy has Corrosion',
+    comboRequires: [TriggerConditionType.FINAL_STRIKE],
+    comboDescription: 'Final Strike on enemy with no Vulnerability or Arts Infliction',
     comboWindowFrames: 720,
+    comboForbidsActiveColumns: [
+      'heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction',
+    ],
   },
   endministrator: {
     publishesTriggers: {

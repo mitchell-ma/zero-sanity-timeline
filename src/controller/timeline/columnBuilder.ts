@@ -289,6 +289,7 @@ export function buildColumns(
     microColumnAssignment: 'by-order',
     matchColumnIds: inflictionColumnIds,
     reuseExpiredSlots: true,
+    derived: true,
     defaultEvent: {
       name: 'Infliction',
       defaultActivationDuration: 2400, // 20 seconds at 120fps
@@ -310,6 +311,7 @@ export function buildColumns(
     microColumns: REACTION_MICRO_COLUMNS,
     microColumnAssignment: 'dynamic-split',
     matchColumnIds: REACTION_MICRO_COLUMNS.map((mc) => mc.id),
+    derived: true,
   });
 
   return columns;

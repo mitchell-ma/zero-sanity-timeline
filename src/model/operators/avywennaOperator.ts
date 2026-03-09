@@ -62,6 +62,8 @@ export class AvywennaOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.AGILITY;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.WILL;
+  static readonly MAX_TALENT_ONE_LEVEL = 3;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: ThunderlanceBlitz;
   readonly battleSkill: ThunderlanceInterdiction;
@@ -86,6 +88,8 @@ export class AvywennaOperator extends Operator {
       operatorRarity: AvywennaOperator.OPERATOR_RARITY,
       mainAttributeType: AvywennaOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: AvywennaOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: AvywennaOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: AvywennaOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

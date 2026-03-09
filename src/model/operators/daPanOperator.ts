@@ -62,6 +62,8 @@ export class DaPanOperator extends Operator {
   static readonly OPERATOR_RARITY = RARITY;
   static readonly MAIN_ATTRIBUTE_TYPE = StatType.STRENGTH;
   static readonly SECONDARY_ATTRIBUTE_TYPE = StatType.AGILITY;
+  static readonly MAX_TALENT_ONE_LEVEL = 2;
+  static readonly MAX_TALENT_TWO_LEVEL = 2;
 
   readonly basicAttack: RollingCut;
   readonly battleSkill: FlipDaWok;
@@ -86,6 +88,8 @@ export class DaPanOperator extends Operator {
       operatorRarity: DaPanOperator.OPERATOR_RARITY,
       mainAttributeType: DaPanOperator.MAIN_ATTRIBUTE_TYPE,
       secondaryAttributeType: DaPanOperator.SECONDARY_ATTRIBUTE_TYPE,
+      maxTalentOneLevel: DaPanOperator.MAX_TALENT_ONE_LEVEL,
+      maxTalentTwoLevel: DaPanOperator.MAX_TALENT_TWO_LEVEL,
       statsByLevel: STATS_BY_LEVEL,
       ...params,
     });

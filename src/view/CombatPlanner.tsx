@@ -346,18 +346,9 @@ export default function CombatPlanner({
     return () => el.removeEventListener('scroll', handler);
   }, [onScrollProp]);
 
-  // ─── Measure timeline body top offset ────────────────────────────────────
+  // Headers are now outside the scroll container, so body starts at top of scroll
   useEffect(() => {
-    const updateBodyTop = () => {
-      const scroll = scrollRef.current;
-      if (scroll) {
-        bodyTopRef.current = scroll.offsetTop;
-      }
-    };
-    updateBodyTop();
-    const ro = new ResizeObserver(updateBodyTop);
-    if (loadoutRef.current) ro.observe(loadoutRef.current);
-    return () => ro.disconnect();
+    bodyTopRef.current = 0;
   }, []);
 
   // ─── Wheel: shift = zoom, else native ────────────────────────────────────────
@@ -539,12 +530,12 @@ export default function CombatPlanner({
     if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
       const scrollTop = scrollRef.current.scrollTop;
       const bodyTop = bodyTopRef.current;
-      const relY = e.clientY - outerRect.top + scrollTop - bodyTop;
+      const relY = e.clientY - outerRect.top - combinedHeaderHeight + scrollTop - bodyTop;
       if (relY > 0) {
         const frame = pxToFrame(relY, zoomRef.current);
         setHoverFrame(frame);
         const snappedRelY = frameToPx(frame, zoomRef.current);
-        setHoverClientY(snappedRelY - scrollTop + outerRect.top + bodyTop);
+        setHoverClientY(snappedRelY - scrollTop + outerRect.top + combinedHeaderHeight + bodyTop);
       } else {
         setHoverFrame(null);
         setHoverClientY(null);
@@ -591,7 +582,7 @@ export default function CombatPlanner({
         const bodyTop = bodyTopRef.current;
         const snappedRelY = frameToPx(primaryNewFrame, zoomRef.current);
         setHoverFrame(primaryNewFrame);
-        setHoverClientY(snappedRelY - scrollTop + outerRect.top + bodyTop);
+        setHoverClientY(snappedRelY - scrollTop + outerRect.top + combinedHeaderHeight + bodyTop);
       }
       return;
     }
@@ -640,12 +631,12 @@ export default function CombatPlanner({
     if (dragRef.current) {
       dragRef.current = null;
       onBatchEnd?.();
-      requestAnimationFrame(() => { dragMovedRef.current = false; });
     }
     if (marqueeRef.current) {
       marqueeRef.current = null;
       setMarqueeRect(null);
     }
+    requestAnimationFrame(() => { dragMovedRef.current = false; });
   }, [onBatchEnd]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
@@ -1320,34 +1311,39 @@ export default function CombatPlanner({
                           label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
                           onDragStart={col.derived ? noop3 : handleEventDragStart}
                           onContextMenu={col.derived ? noop2 : handleEventContextMenu}
-                          onSelect={col.derived ? undefined : handleEventSelect}
+                          onSelect={handleEventSelect}
                           onHover={handleEventHover}
                           onTouchStart={col.derived ? undefined : handleEventTouchStart}
+                          notDraggable={col.source === TimelineSourceType.ENEMY}
                         />
                       </div>
                     );
                   })
                 ) : (
                   // Single-column events
-                  colEvents.map((ev) => (
-                    <EventBlock
-                      key={ev.id}
-                      event={ev}
-                      color={col.color}
-                      zoom={zoom}
-                      selected={selectedIds.has(ev.id)}
-                      hovered={hoveredId === ev.id}
-                      label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
-                      variant={col.columnId === 'ultimate' ? 'ultimate' : ev.segments && ev.segments.length > 0 ? 'sequenced' : 'default'}
-                      onDragStart={handleEventDragStart}
-                      onContextMenu={handleEventContextMenu}
-                      onSelect={handleEventSelect}
-                      onHover={handleEventHover}
-                      onTouchStart={handleEventTouchStart}
-                      onFrameClick={onFrameClick}
-                      selectedFrame={selectedFrame?.eventId === ev.id ? selectedFrame : null}
-                    />
-                  ))
+                  colEvents.map((ev) => {
+                    const isEnemy = col.source === TimelineSourceType.ENEMY;
+                    return (
+                      <EventBlock
+                        key={ev.id}
+                        event={ev}
+                        color={col.color}
+                        zoom={zoom}
+                        selected={selectedIds.has(ev.id)}
+                        hovered={hoveredId === ev.id}
+                        label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
+                        variant={col.columnId === 'ultimate' ? 'ultimate' : ev.segments && ev.segments.length > 0 ? 'sequenced' : 'default'}
+                        onDragStart={handleEventDragStart}
+                        onContextMenu={handleEventContextMenu}
+                        onSelect={handleEventSelect}
+                        onHover={handleEventHover}
+                        onTouchStart={handleEventTouchStart}
+                        onFrameClick={onFrameClick}
+                        selectedFrame={selectedFrame?.eventId === ev.id ? selectedFrame : null}
+                        notDraggable={isEnemy}
+                      />
+                    );
+                  })
                 )}
 
                 {colEvents.length === 0 && col === columns[0] && (

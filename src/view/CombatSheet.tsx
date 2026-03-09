@@ -21,15 +21,30 @@ interface CombatSheetProps {
   hoverFrame?: number | null;
   onScrollRef?: (el: HTMLDivElement | null) => void;
   onScroll?: (scrollTop: number) => void;
+  onZoom?: (deltaY: number) => void;
 }
 
 export default function CombatSheet({
   slots, events, columns, zoom, loadoutRowHeight,
-  selectedFrame, hoverFrame, onScrollRef, onScroll: onScrollProp,
+  selectedFrame, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
   const rows = useMemo(() => buildDamageTableRows(events, columns), [events, columns]);
+
+  // Forward shift+scroll to zoom handler (same as timeline)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !onZoom) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        onZoom(e.deltaY);
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [onZoom]);
 
   const slotGroups = useMemo(() => {
     const groups: { slot: Slot; columns: DamageTableColumn[] }[] = [];
