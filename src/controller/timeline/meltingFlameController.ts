@@ -68,10 +68,10 @@ export class MeltingFlameController {
     const validated = { ...updates };
 
     // Clamp durations to non-negative (applies to all events)
+    if (validated.activationDuration !== undefined)
+      validated.activationDuration = Math.max(0, validated.activationDuration);
     if (validated.activeDuration !== undefined)
       validated.activeDuration = Math.max(0, validated.activeDuration);
-    if (validated.lingeringDuration !== undefined)
-      validated.lingeringDuration = Math.max(0, validated.lingeringDuration);
     if (validated.cooldownDuration !== undefined)
       validated.cooldownDuration = Math.max(0, validated.cooldownDuration);
 

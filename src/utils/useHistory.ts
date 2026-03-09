@@ -12,6 +12,7 @@ export function useHistory<T>(initial: T) {
   const setState = useCallback((action: T | ((prev: T) => T)) => {
     setStateRaw((prev) => {
       const next = typeof action === 'function' ? (action as (p: T) => T)(prev) : action;
+      if (next === prev) return prev;
       if (batchRef.current === null) {
         undoRef.current.push(prev);
         if (undoRef.current.length > MAX_HISTORY) undoRef.current.shift();

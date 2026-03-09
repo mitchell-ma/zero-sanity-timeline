@@ -8,12 +8,17 @@ interface EventBlockProps {
   zoom: number;
   selected?: boolean;
   hovered?: boolean;
+  /** "ultimate" renders Activation → Active → Cooldown. "sequenced" renders multi-sequence segments with frame diamonds. */
+  variant?: "default" | "ultimate" | "sequenced";
   onDragStart: (e: React.MouseEvent, eventId: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventId: string) => void;
   onDoubleClick: (eventId: string) => void;
   onSelect?: (e: React.MouseEvent, eventId: string) => void;
   onHover?: (eventId: string | null) => void;
   onTouchStart?: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
+  onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
+  /** Currently selected frame (segment + frame index) for highlight. */
+  selectedFrame?: { segmentIndex: number; frameIndex: number } | null;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -39,20 +44,115 @@ export default function EventBlock({
   zoom,
   selected = false,
   hovered = false,
+  variant = "default",
   onDragStart,
   onContextMenu,
   onDoubleClick,
   onSelect,
   onHover,
   onTouchStart,
+  onFrameClick,
+  selectedFrame,
 }: EventBlockProps) {
-  const { id, startFrame, activeDuration, lingeringDuration, cooldownDuration } = event;
+  const { id, startFrame, activationDuration, activeDuration, cooldownDuration, segments } = event;
 
-  const hasLinger   = lingeringDuration > 0;
+  // ── Sequenced variant (multi-sequence with frame diamonds) ──────────────
+  if (variant === 'sequenced' && segments && segments.length > 0) {
+    const totalFrames = segments.reduce((sum, s) => sum + s.durationFrames, 0);
+    const clampedEnd = Math.min(startFrame + totalFrames, TOTAL_FRAMES);
+    const topPx = frameToPx(startFrame, zoom);
+    const totalHeight = durationToPx(clampedEnd - startFrame, zoom);
+
+    if (totalHeight <= 0) return null;
+
+    const wrapClass = `event-wrap${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+
+    let offsetFrames = 0;
+    const segmentElements: React.ReactNode[] = [];
+
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const segStartFrame = startFrame + offsetFrames;
+      const segEndFrame = Math.min(segStartFrame + seg.durationFrames, TOTAL_FRAMES);
+      const segH = durationToPx(segEndFrame - segStartFrame, zoom);
+
+      if (segH <= 0) { offsetFrames += seg.durationFrames; continue; }
+
+      const segTopPx = durationToPx(offsetFrames, zoom);
+      const isFirst = i === 0;
+      const isLast = i === segments.length - 1;
+      const alpha = 0.55 + (i % 2) * 0.15;
+      const borderRadius = isFirst && isLast ? '2px'
+        : isFirst ? '2px 2px 0 0'
+        : isLast ? '0 0 2px 2px'
+        : '0';
+
+      segmentElements.push(
+        <div
+          key={`seg-${i}`}
+          className="event-segment event-segment--sequenced"
+          style={{
+            top: segTopPx,
+            height: segH,
+            background: hexAlpha(color, alpha),
+            border: `1px solid ${hexAlpha(color, alpha + 0.15)}`,
+            borderTop: isFirst ? undefined : `1px dashed ${hexAlpha(color, 0.5)}`,
+            borderRadius,
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          {segH > 14 && seg.label && (
+            <span className="event-block-label" style={{ color: '#fff' }}>{seg.label}</span>
+          )}
+          {/* Frame diamonds */}
+          {seg.frames?.map((f, fi) => {
+            const framePx = durationToPx(f.offsetFrame, zoom);
+            const isSelected = selectedFrame?.segmentIndex === i && selectedFrame?.frameIndex === fi;
+            return (
+              <div
+                key={`f-${fi}`}
+                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}`}
+                style={{ top: framePx }}
+                onMouseDown={(e) => { e.stopPropagation(); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, i, fi); }}
+                onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
+                onMouseOut={(e) => { e.stopPropagation(); }}
+              />
+            );
+          })}
+        </div>,
+      );
+
+      offsetFrames += seg.durationFrames;
+    }
+
+    return (
+      <div
+        className={wrapClass}
+        data-event-id={id}
+        style={{ top: topPx, height: totalHeight }}
+        onContextMenu={(e) => onContextMenu(e, id)}
+        onDoubleClick={() => onDoubleClick(id)}
+        onMouseDown={(e) => {
+          if (e.button === 0) { e.stopPropagation(); onDragStart(e, id, startFrame); }
+        }}
+        onClick={(e) => onSelect?.(e, id)}
+        onMouseOver={() => onHover?.(id)}
+        onMouseOut={() => onHover?.(null)}
+        onTouchStart={(e) => onTouchStart?.(e, id, startFrame)}
+      >
+        {segmentElements}
+      </div>
+    );
+  }
+
+  // ── Standard 3-phase layout (default / ultimate) ────────────────────────
+  const hasLinger   = activeDuration > 0;
   const hasCooldown = cooldownDuration > 0;
 
-  const lingerStart = startFrame + activeDuration;
-  const coolStart   = lingerStart + lingeringDuration;
+  const lingerStart = startFrame + activationDuration;
+  const coolStart   = lingerStart + activeDuration;
   const totalEnd    = coolStart + cooldownDuration;
 
   const clampedActiveEnd = Math.min(lingerStart, TOTAL_FRAMES);
@@ -80,7 +180,10 @@ export default function EventBlock({
       style={{ top: topPx, height: totalHeight }}
       onContextMenu={(e) => onContextMenu(e, id)}
       onDoubleClick={() => onDoubleClick(id)}
-      onMouseDown={(e) => { if (e.button === 0) e.stopPropagation(); }}
+      onMouseDown={(e) => {
+        if (e.button === 0) e.stopPropagation();
+        if (variant === 'ultimate' && e.button === 0) onDragStart(e, id, startFrame);
+      }}
       onClick={(e) => onSelect?.(e, id)}
       onMouseEnter={() => onHover?.(id)}
       onMouseLeave={() => onHover?.(null)}
@@ -90,7 +193,14 @@ export default function EventBlock({
       {activeH > 0 && (
         <div
           className="event-segment"
-          style={{
+          style={variant === 'ultimate' ? {
+            top: 0,
+            height: activeH,
+            background: hexAlpha(color, 0.55),
+            border: `1px solid ${hexAlpha(color, 0.75)}`,
+            borderBottom: hasLinger ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
+            borderRadius: activeRadius,
+          } : {
             top: 0,
             height: activeH,
             background: hexAlpha(color, 0.80),
@@ -101,16 +211,27 @@ export default function EventBlock({
           onMouseDown={(e) => onDragStart(e, id, startFrame)}
         >
           {activeH > 14 && (
-            <span className="event-block-label" style={{ color: '#fff' }}>ACT</span>
+            <span className="event-block-label" style={{ color: '#fff' }}>
+              {variant === 'ultimate' ? 'Activation' : 'ACT'}
+            </span>
           )}
         </div>
       )}
 
-      {/* Lingering segment */}
+      {/* Lingering / Active phase segment */}
       {hasLinger && lingerH > 0 && (
         <div
           className="event-segment"
-          style={{
+          style={variant === 'ultimate' ? {
+            top: activeH,
+            height: lingerH,
+            background: hexAlpha(color, 0.80),
+            border: `1px solid ${hexAlpha(color, 0.95)}`,
+            boxShadow: `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`,
+            borderTop: `1px dashed ${hexAlpha(color, 0.95)}`,
+            borderBottom: hasCooldown ? 'none' : `1px solid ${hexAlpha(color, 0.95)}`,
+            borderRadius: lingerRadius,
+          } : {
             top: activeH,
             height: lingerH,
             background: hexAlpha(color, 0.28),
@@ -122,7 +243,9 @@ export default function EventBlock({
           }}
         >
           {lingerH > 14 && (
-            <span className="event-block-label" style={{ color: hexAlpha(color, 0.9) }}>LNG</span>
+            <span className="event-block-label" style={{ color: variant === 'ultimate' ? '#fff' : hexAlpha(color, 0.9) }}>
+              {variant === 'ultimate' ? 'Active' : 'LNG'}
+            </span>
           )}
         </div>
       )}
@@ -141,7 +264,7 @@ export default function EventBlock({
           }}
         >
           {coolH > 14 && (
-            <span className="event-block-label" style={{ color: 'rgba(120,150,180,0.7)' }}>CD</span>
+            <span className="event-block-label" style={{ color: 'rgba(120,150,180,0.7)' }}>Cooldown</span>
           )}
         </div>
       )}

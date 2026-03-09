@@ -167,7 +167,7 @@ export class CombatLoadout {
       if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
       // Window starts at end of active duration
-      const triggerFrame = event.startFrame + event.activeDuration;
+      const triggerFrame = event.startFrame + event.activationDuration;
 
       // For each published trigger, find all slots whose combo requires it
       for (const trigger of publishedTriggers) {

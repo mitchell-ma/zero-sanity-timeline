@@ -1,4 +1,5 @@
 import { Subtimeline } from './subtimeline';
+import { TimelineEvent } from '../../consts/viewTypes';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 
 /**
@@ -17,7 +18,7 @@ export type ResourceGraphListener = (points: ResourcePoint[]) => void;
  *
  * The resource starts at `startValue`, regenerates at `regenPerFrame`,
  * and is clamped to [min, max]. Events on the underlying subtimeline
- * represent instant consumption costs — each event's `activeDuration`
+ * represent instant consumption costs — each event's `activationDuration`
  * is used as the cost amount.
  *
  * Subclasses define the concrete resource parameters.
@@ -61,8 +62,8 @@ export abstract class ResourceTimeline {
       const regenFrames = ev.startFrame - lastFrame;
       value = this.clamp(value + regenFrames * this.regenPerFrame);
 
-      // Apply cost (activeDuration is used as the cost amount)
-      value = this.clamp(value - ev.activeDuration);
+      // Apply cost
+      value = this.clamp(value - this.getCost(ev));
       lastFrame = ev.startFrame;
     }
 
@@ -82,6 +83,11 @@ export abstract class ResourceTimeline {
   onGraphChange(listener: ResourceGraphListener): () => void {
     this.graphListeners.add(listener);
     return () => { this.graphListeners.delete(listener); };
+  }
+
+  /** Extract the cost from an event. Override in subclasses for custom cost logic. */
+  protected getCost(ev: TimelineEvent): number {
+    return ev.activationDuration;
   }
 
   /** Clean up subscriptions. */
@@ -118,7 +124,7 @@ export abstract class ResourceTimeline {
       }
 
       // Apply cost
-      const postConsume = this.clamp(preConsume - ev.activeDuration);
+      const postConsume = this.clamp(preConsume - this.getCost(ev));
       points.push({ frame: ev.startFrame, value: postConsume });
 
       value = postConsume;

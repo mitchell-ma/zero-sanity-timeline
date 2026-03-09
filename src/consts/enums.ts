@@ -150,6 +150,12 @@ export enum EventType {
   STATUS = "STATUS",
 }
 
+/** Time manipulation effects that prevent other events from starting. */
+export enum TimeInteractionType {
+  /** No other events can start on any timeline while this is active. */
+  TIME_STOP = "TIME_STOP",
+}
+
 export enum TimelineSourceType {
   OPERATOR = "OPERATOR",
   GEAR_EFFECT = "GEAR_EFFECT",
@@ -235,6 +241,24 @@ export enum CombatSkillsType {
   DOLLY_RUSH = "DOLLY_RUSH",
   ERUPTION_COLUMN = "ERUPTION_COLUMN",
   WOOLY_PARTY = "WOOLY_PARTY",
+}
+
+export enum SkillDataKey {
+  DURATION = "DURATION",
+  SP_COST = "SP_COST",
+  GAUGE_GAIN = "GAUGE_GAIN",
+  TEAM_GAUGE_GAIN = "TEAM_GAUGE_GAIN",
+  COOLDOWN = "COOLDOWN",
+  TICKS = "TICKS",
+  ANIMATION_TIME = "ANIMATION_TIME",
+  GAUGE_MAX = "GAUGE_MAX",
+  GAUGE_REPLY = "GAUGE_REPLY",
+}
+
+export enum DamageTickKey {
+  OFFSET_SECONDS = "OFFSET_SECONDS",
+  SKILL_POINT_RECOVERY = "SKILL_POINT_RECOVERY",
+  STAGGER = "STAGGER",
 }
 
 export enum OperatorType {

@@ -48,8 +48,8 @@ export class Subtimeline {
   /** Add a new event with the given parameters. Returns the created event. */
   addEvent(params: {
     startFrame: number;
+    activationDuration: number;
     activeDuration: number;
-    lingeringDuration: number;
     cooldownDuration: number;
   }): TimelineEvent {
     const ev: TimelineEvent = {
@@ -57,8 +57,8 @@ export class Subtimeline {
       ownerId: this.ownerId,
       columnId: this.columnId,
       startFrame: params.startFrame,
+      activationDuration: params.activationDuration,
       activeDuration: params.activeDuration,
-      lingeringDuration: params.lingeringDuration,
       cooldownDuration: params.cooldownDuration,
     };
     this.insertSorted(ev);

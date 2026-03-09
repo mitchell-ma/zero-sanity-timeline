@@ -28,7 +28,7 @@ export class MicroColumnController {
 
       const slotEndFrames = new Array(microCount).fill(-1);
       for (const ev of sorted) {
-        const endFrame = ev.startFrame + ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+        const endFrame = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
         let assigned = -1;
         for (let s = 0; s < microCount; s++) {
           if (slotEndFrames[s] <= ev.startFrame) {
@@ -53,13 +53,13 @@ export class MicroColumnController {
     colEvents: TimelineEvent[],
     typeOrder: Map<string, number>,
   ): { count: number; index: number } {
-    const evEnd = ev.startFrame + ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+    const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
     const overlappingTypes = new Set<string>();
     overlappingTypes.add(ev.columnId);
     for (const other of colEvents) {
       if (other.id === ev.id) continue;
-      const otherEnd = other.startFrame + other.activeDuration + other.lingeringDuration + other.cooldownDuration;
+      const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
       if (other.startFrame < evEnd && otherEnd > ev.startFrame) {
         overlappingTypes.add(other.columnId);
       }
@@ -143,7 +143,7 @@ export class MicroColumnController {
         (ev) => ev.ownerId === col.ownerId &&
           (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId) &&
           ev.startFrame <= atFrame &&
-          ev.startFrame + ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration > atFrame,
+          ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration > atFrame,
       );
       return activeAtFrame.length >= col.microColumns.length;
     }

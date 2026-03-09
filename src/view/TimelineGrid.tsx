@@ -18,7 +18,7 @@ import {
   TOTAL_FRAMES,
 } from '../utils/timeline';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../model/channels';
-import { SKILL_LABELS, REACTION_MICRO_COLUMNS, REACTION_LABELS } from '../consts/channelLabels';
+import { REACTION_LABELS } from '../consts/channelLabels';
 import {
   Operator,
   Enemy,
@@ -30,8 +30,9 @@ import {
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
 import { WindowsMap } from '../controller/combat-loadout';
+import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { ELEMENT_COLORS, ElementType, TimelineSourceType } from '../consts/enums';
+import { TimelineSourceType } from '../consts/enums';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 
 const MIN_SLOT_COLS = 4;
@@ -56,11 +57,6 @@ interface MarqueeState {
   priorSelection: Set<string>;
 }
 
-export interface Slot {
-  slotId: string;
-  operator: Operator | null;
-}
-
 interface SlotGroup {
   slot: Slot;
   columnCount: number;
@@ -71,6 +67,7 @@ interface TimelineGridProps {
   slots: Slot[];
   enemy: Enemy;
   events: TimelineEvent[];
+  columns: Column[];
   visibleSkills: VisibleSkills;
   loadouts: Record<string, OperatorLoadoutState>;
   zoom: number;
@@ -92,14 +89,22 @@ interface TimelineGridProps {
   resourceGraphs?: Map<string, { points: ReadonlyArray<{ frame: number; value: number }>; min: number; max: number }>;
   onBatchStart?: () => void;
   onBatchEnd?: () => void;
+  onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
+  selectedFrame?: import('../consts/viewTypes').SelectedFrame | null;
 }
 
-const MF_MICRO_COLS = 4;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const noop1 = (_a: any) => {};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const noop2 = (_a: any, _b: any) => {};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const noop3 = (_a: any, _b: any, _c: any) => {};
 
 export default function TimelineGrid({
   slots,
   enemy,
   events,
+  columns,
   visibleSkills,
   loadouts,
   zoom,
@@ -120,6 +125,8 @@ export default function TimelineGrid({
   resourceGraphs,
   onBatchStart,
   onBatchEnd,
+  onFrameClick,
+  selectedFrame,
 }: TimelineGridProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
@@ -203,150 +210,8 @@ export default function TimelineGrid({
     setEnemyMenuOpen(false);
   }, [onSwapEnemy]);
 
-  // ─── Build ordered column descriptors (keyed by slotId) ──────────────────
-  const columns: Column[] = [];
-
-  // Common (global) columns — before operator slots
-  columns.push({
-    key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`,
-    type: 'mini-timeline',
-    source: TimelineSourceType.COMMON,
-    ownerId: COMMON_OWNER_ID,
-    columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-    label: 'Skill Points',
-    color: '#ccaa33',
-    headerVariant: 'skill',
-    noAdd: true,
-  });
-  columns.push({
-    key: `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.TEAM_STATUS}`,
-    type: 'mini-timeline',
-    source: TimelineSourceType.COMMON,
-    ownerId: COMMON_OWNER_ID,
-    columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
-    label: 'TEAM STATUS',
-    color: '#66aa88',
-    headerVariant: 'skill',
-    noAdd: true,
-  });
-  const commonColCount = 2;
-
-  for (const slot of slots) {
-    const op = slot.operator;
-    const isLaevatain = op?.id === 'laevatain';
-    let slotHasCols = false;
-    if (op) {
-      for (const skillType of SKILL_ORDER) {
-        if (visibleSkills[slot.slotId]?.[skillType]) {
-          const skill = op.skills[skillType];
-          columns.push({
-            key: `${slot.slotId}-${skillType}`,
-            type: 'mini-timeline',
-            source: TimelineSourceType.OPERATOR,
-            ownerId: slot.slotId,
-            columnId: skillType,
-            label: SKILL_LABELS[skillType],
-            color: op.color,
-            headerVariant: 'skill',
-            defaultEvent: {
-              name: skill.name,
-              defaultActiveDuration: skill.defaultActiveDuration,
-              defaultLingeringDuration: skill.defaultLingeringDuration,
-              defaultCooldownDuration: skill.defaultCooldownDuration,
-              triggerCondition: skill.triggerCondition,
-            },
-          });
-          slotHasCols = true;
-        }
-      }
-    }
-    // Add single MeltingFlame subtimeline column for Laevatain
-    if (isLaevatain) {
-      columns.push({
-        key: `${slot.slotId}-melting-flame`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: 'melting-flame',
-        label: 'Melting Flames',
-        color: op!.color,
-        headerVariant: 'mf',
-        microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
-          id: `mf-${i}`,
-          label: String(i + 1),
-          color: ELEMENT_COLORS[ElementType.HEAT],
-        })),
-        microColumnAssignment: 'by-order',
-        maxEvents: MF_MICRO_COLS,
-        requiresMonotonicOrder: true,
-        defaultEvent: {
-          name: 'Melting Flame',
-          defaultActiveDuration: TOTAL_FRAMES * 10,
-          defaultLingeringDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      });
-    }
-    // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
-    const skillColCount = slotHasCols
-      ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
-      : 0;
-    const mfColCount = isLaevatain ? 1 : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount);
-    for (let p = 0; p < Math.max(0, needed); p++) {
-      columns.push({
-        key: `${slot.slotId}-placeholder${p}`,
-        type: 'placeholder',
-        ownerId: slot.slotId,
-        color: op?.color ?? '#666',
-      });
-    }
-  }
-  // Single arts infliction mini-timeline for the enemy (stacking like MF)
-  const inflictionStatuses = enemy.statuses;
-  const inflictionColumnIds = inflictionStatuses.map((s) => s.id);
-  columns.push({
-    key: 'enemy-arts-infliction',
-    type: 'mini-timeline',
-    source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
-    columnId: 'arts-infliction',
-    label: 'INFLICTION',
-    color: '#cc3333',
-    headerVariant: 'infliction',
-    microColumns: inflictionStatuses.map((s) => ({
-      id: s.id,
-      label: s.label,
-      color: s.color,
-    })),
-    microColumnAssignment: 'by-order',
-    matchColumnIds: inflictionColumnIds,
-    reuseExpiredSlots: true,
-    defaultEvent: {
-      name: 'Infliction',
-      defaultActiveDuration: 2400, // 20 seconds at 120fps
-      defaultLingeringDuration: 0,
-      defaultCooldownDuration: 0,
-    },
-  });
-  // Arts reaction mini-timeline for the enemy
-  // Uses 'dynamic-split' so overlapping different-type reactions share width
-  // equally, and a single reaction takes the full column width.
-  columns.push({
-    key: 'enemy-arts-reaction',
-    type: 'mini-timeline',
-    source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
-    columnId: 'arts-reaction',
-    label: 'ARTS REACTION',
-    color: '#dd6644',
-    headerVariant: 'infliction',
-    microColumns: REACTION_MICRO_COLUMNS,
-    microColumnAssignment: 'dynamic-split',
-    matchColumnIds: REACTION_MICRO_COLUMNS.map((mc) => mc.id),
-  });
-
   // ─── Compute slot groups for loadout row ──────────────────────────────────
+  const commonColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.COMMON).length;
   const slotGroups: SlotGroup[] = [];
   const commonStartCol = 2; // right after time axis
   let colIdx = 2 + commonColCount; // common columns come first
@@ -478,7 +343,7 @@ export default function TimelineGrid({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
-  // ─── Delete key: remove selected events ────────────────────────────────────
+  // ─── Keyboard shortcuts: Delete, Ctrl+A ─────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
@@ -491,10 +356,19 @@ export default function TimelineGrid({
         onBatchEnd?.();
         setSelectedIds(new Set());
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        const derivedCols = new Set(
+          columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerId}-${c.columnId}`),
+        );
+        setSelectedIds(new Set(
+          events.filter((ev) => !derivedCols.has(`${ev.ownerId}-${ev.columnId}`)).map((ev) => ev.id),
+        ));
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, onRemoveEvent, onBatchStart, onBatchEnd]);
+  }, [selectedIds, events, onRemoveEvent, onBatchStart, onBatchEnd]);
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
   const greedySlotAssignments = useMemo(
@@ -580,7 +454,7 @@ export default function TimelineGrid({
         microColumnEventPositions.get(ev.id) ??
         columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
       if (!colPos) continue;
-      const totalDur = ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
       const evBot = bodyTop + frameToPx(ev.startFrame + totalDur, zoomRef.current);
       // Check rect intersection
@@ -655,22 +529,27 @@ export default function TimelineGrid({
       let primaryNewFrame = 0;
       const { monotonicBounds } = dragRef.current;
 
-      // Compute the most restrictive delta across monotonic-constrained events
-      // so they move as a unit and preserve ordering
-      let monotonicDelta = deltaFrames;
+      // Compute a single delta clamped by ALL events' constraints so that
+      // relative timing between events is preserved during batch drag.
+      let clampedDelta = deltaFrames;
       for (const eid of eventIds) {
-        const bounds = monotonicBounds.get(eid);
-        if (!bounds) continue;
         const orig = startFrames.get(eid) ?? 0;
-        const minDelta = bounds.min - orig;
-        const maxDelta = bounds.max - orig;
-        monotonicDelta = Math.max(minDelta, Math.min(maxDelta, monotonicDelta));
+        // Timeline bounds: orig + delta must stay in [0, TOTAL_FRAMES - 1]
+        const timelineMin = -orig;
+        const timelineMax = TOTAL_FRAMES - 1 - orig;
+        clampedDelta = Math.max(timelineMin, Math.min(timelineMax, clampedDelta));
+        // Monotonic bounds (MF stacks)
+        const bounds = monotonicBounds.get(eid);
+        if (bounds) {
+          const minDelta = bounds.min - orig;
+          const maxDelta = bounds.max - orig;
+          clampedDelta = Math.max(minDelta, Math.min(maxDelta, clampedDelta));
+        }
       }
 
       for (const eid of eventIds) {
         const orig = startFrames.get(eid) ?? 0;
-        const delta = monotonicBounds.has(eid) ? monotonicDelta : deltaFrames;
-        const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, orig + delta));
+        const newFrame = orig + clampedDelta;
         onMoveEvent(eid, newFrame);
         if (eid === primaryId) primaryNewFrame = newFrame;
       }
@@ -749,6 +628,12 @@ export default function TimelineGrid({
     startFrame: number,
   ) => {
     if (e.button !== 0) return; // only left-click drag
+    // Block drag for derived columns (e.g. melting flame)
+    const ev = events.find((ev) => ev.id === eventId);
+    if (ev) {
+      const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+      if (col?.derived) return;
+    }
     e.preventDefault();
     e.stopPropagation();
     dragMovedRef.current = false;
@@ -809,7 +694,7 @@ export default function TimelineGrid({
     e.preventDefault();
     e.stopPropagation();
     if (col.type !== 'mini-timeline') return;
-    if (col.noAdd) return;
+    if (col.noAdd || col.derived) return;
 
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
@@ -906,6 +791,25 @@ export default function TimelineGrid({
             },
           ],
         });
+      } else if (col.eventVariants && col.eventVariants.length > 0) {
+        // Multiple event variants (e.g. Laevatain battle skill)
+        onContextMenu({
+          x: e.clientX, y: e.clientY,
+          items: [
+            headerItem,
+            ...col.eventVariants.map((v) => ({
+              label: v.disabled ? `${v.name} ${v.disabledReason ?? ''}`.trim() : v.name,
+              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, {
+                name: v.name,
+                defaultActivationDuration: v.defaultActivationDuration,
+                defaultActiveDuration: v.defaultActiveDuration,
+                defaultCooldownDuration: v.defaultCooldownDuration,
+                ...(v.segments ? { segments: v.segments } : {}),
+              }),
+              disabled: v.disabled,
+            })),
+          ],
+        });
       } else {
         onContextMenu({
           x: e.clientX, y: e.clientY,
@@ -925,6 +829,12 @@ export default function TimelineGrid({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    // Block context menu for derived columns (e.g. melting flame)
+    const target = events.find((ev) => ev.id === eventId);
+    if (target) {
+      const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId);
+      if (col?.derived) return;
+    }
 
     // Compute frame from click position (for "Add" items)
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
@@ -1372,14 +1282,14 @@ export default function TimelineGrid({
                           event={ev}
                           color={microColor}
                           zoom={zoom}
-                          selected={selectedIds.has(ev.id)}
+                          selected={false}
                           hovered={hoveredId === ev.id}
-                          onDragStart={handleEventDragStart}
-                          onContextMenu={handleEventContextMenu}
-                          onDoubleClick={onEditEvent}
-                          onSelect={handleEventSelect}
+                          onDragStart={col.derived ? noop3 : handleEventDragStart}
+                          onContextMenu={col.derived ? noop2 : handleEventContextMenu}
+                          onDoubleClick={col.derived ? noop1 : onEditEvent}
+                          onSelect={col.derived ? undefined : handleEventSelect}
                           onHover={handleEventHover}
-                          onTouchStart={handleEventTouchStart}
+                          onTouchStart={col.derived ? undefined : handleEventTouchStart}
                         />
                       </div>
                     );
@@ -1394,12 +1304,15 @@ export default function TimelineGrid({
                       zoom={zoom}
                       selected={selectedIds.has(ev.id)}
                       hovered={hoveredId === ev.id}
+                      variant={col.columnId === 'ultimate' ? 'ultimate' : col.columnId === 'basic' ? 'sequenced' : 'default'}
                       onDragStart={handleEventDragStart}
                       onContextMenu={handleEventContextMenu}
                       onDoubleClick={onEditEvent}
                       onSelect={handleEventSelect}
                       onHover={handleEventHover}
                       onTouchStart={handleEventTouchStart}
+                      onFrameClick={onFrameClick}
+                      selectedFrame={selectedFrame?.eventId === ev.id ? selectedFrame : null}
                     />
                   ))
                 )}

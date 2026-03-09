@@ -9,7 +9,7 @@ const SP_REGEN_PER_SECOND = 8;
  * Skill Point resource timeline.
  *
  * Range: 0–300, regenerates at 8 SP/second, starts at max.
- * Events represent SP costs (activeDuration = cost amount).
+ * Events represent SP costs (activationDuration = cost amount).
  */
 export class SkillPointTimeline extends ResourceTimeline {
   readonly min = 0;

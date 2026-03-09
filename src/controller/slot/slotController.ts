@@ -345,8 +345,8 @@ export class SlotController {
         headerVariant: 'skill',
         defaultEvent: {
           name: skill.name,
+          defaultActivationDuration: skill.defaultActivationDuration,
           defaultActiveDuration: skill.defaultActiveDuration,
-          defaultLingeringDuration: skill.defaultLingeringDuration,
           defaultCooldownDuration: skill.defaultCooldownDuration,
           triggerCondition: skill.triggerCondition,
         },

@@ -3,8 +3,8 @@ export type SkillType = "basic" | "battle" | "combo" | "ultimate";
 
 export interface SkillDef {
   name: string;
+  defaultActivationDuration: number; // frames
   defaultActiveDuration: number; // frames
-  defaultLingeringDuration: number; // frames
   defaultCooldownDuration: number; // frames
   triggerCondition: string | null;
 }
@@ -25,6 +25,7 @@ export interface Operator {
   food: string;
   tactical: string;
   skills: Record<SkillType, SkillDef>;
+  ultimateEnergyCost: number;
 }
 
 export interface EnemyStatus {
@@ -41,14 +42,45 @@ export interface Enemy {
   statuses: EnemyStatus[];
 }
 
+/** A damage frame marker within a segment. */
+export interface EventFrameMarker {
+  /** Frame offset from the start of the parent segment. */
+  offsetFrame: number;
+  /** SP recovered on this frame hit. */
+  skillPointRecovery?: number;
+  /** Stagger dealt on this frame hit. */
+  stagger?: number;
+}
+
+/** Identifies a specific frame within a sequenced event. */
+export interface SelectedFrame {
+  eventId: string;
+  segmentIndex: number;
+  frameIndex: number;
+}
+
+/** A sequence segment within a multi-sequence event (e.g. basic attack chain). */
+export interface EventSegmentData {
+  /** Duration of this segment in frames. */
+  durationFrames: number;
+  /** Label for this segment (e.g. "1", "2"). */
+  label?: string;
+  /** Damage frame markers within this segment. */
+  frames?: EventFrameMarker[];
+}
+
 export interface TimelineEvent {
   id: string;
+  /** Display name for this event (e.g. "Flaming Cinders (Enhanced)"). */
+  name?: string;
   ownerId: string;
   columnId: string;
   startFrame: number;
+  activationDuration: number;
   activeDuration: number;
-  lingeringDuration: number;
   cooldownDuration: number;
+  /** If present, this event is multi-sequence. Segments replace the standard 3-phase layout. */
+  segments?: EventSegmentData[];
   /** True for manually-added arts reaction events (not derived from infliction interactions). */
   isForced?: boolean;
   /** Arts reaction status level (1–4). Higher = stronger effect. */
@@ -107,14 +139,33 @@ export type MiniTimeline = {
   /** Default durations for new events created in this mini-timeline. */
   defaultEvent?: {
     name: string;
+    defaultActivationDuration: number;
     defaultActiveDuration: number;
-    defaultLingeringDuration: number;
     defaultCooldownDuration: number;
     triggerCondition?: string | null;
+    /** If present, the event is multi-sequence. */
+    segments?: EventSegmentData[];
   };
+
+  /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
+  eventVariants?: {
+    name: string;
+    defaultActivationDuration: number;
+    defaultActiveDuration: number;
+    defaultCooldownDuration: number;
+    triggerCondition?: string | null;
+    /** If present, the event is multi-sequence. */
+    segments?: EventSegmentData[];
+    /** If true, this variant is disabled in the context menu. */
+    disabled?: boolean;
+    /** Reason shown when disabled. */
+    disabledReason?: string;
+  }[];
 
   /** If true, suppress the "Add" context menu for this column. */
   noAdd?: boolean;
+  /** If true, events in this column are derived/computed and cannot be added, dragged, or edited. */
+  derived?: boolean;
   /** Max events allowed (e.g. MF has max 4). */
   maxEvents?: number;
   /** Events must be added in monotonically increasing start-frame order. */

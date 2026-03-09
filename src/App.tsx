@@ -2,16 +2,17 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useHistory } from './utils/useHistory';
 import TimelineGrid from './view/TimelineGrid';
 import ContextMenu from './view/ContextMenu';
-import EventEditPanel from './view/EventEditPanel';
+import InformationPane from './view/InformationPane';
 import LoadoutEditPanel, { LoadoutStats, DEFAULT_LOADOUT_STATS } from './view/LoadoutEditPanel';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './view/OperatorLoadoutHeader';
-import { SAMPLE_OPERATORS } from './utils/operators';
+import { ALL_OPERATORS } from './model/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
 import { WEAPONS } from './utils/loadoutRegistry';
-import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType } from "./consts/viewTypes";
+import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame } from "./consts/viewTypes";
 import { CombatLoadout, WindowsMap } from './controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './controller/slot/commonSlotController';
 import { ResourcePoint } from './controller/timeline/resourceTimeline';
+import { TOTAL_FRAMES, FPS } from './utils/timeline';
 import {
   serializeSheet,
   loadFromLocalStorage,
@@ -25,13 +26,14 @@ import { processInflictionEvents } from './utils/processInflictions';
 import { REACTION_COLUMN_IDS, INFLICTION_TO_REACTION } from './model/channels';
 import { MeltingFlameController } from './controller/timeline/meltingFlameController';
 import { ComboSkillEventController } from './controller/timeline/comboSkillEventController';
+import { buildColumns } from './controller/timeline/columnBuilder';
 import DevlogModal from './view/DevlogModal';
 import './App.css';
 
 const NUM_SLOTS = 4;
 const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
 
-const INITIAL_OPERATORS: (Operator | null)[] = SAMPLE_OPERATORS.slice(0, NUM_SLOTS);
+const INITIAL_OPERATORS: (Operator | null)[] = ALL_OPERATORS.slice(0, NUM_SLOTS);
 
 const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   SLOT_IDS.map((slotId, i) => [
@@ -57,7 +59,7 @@ const genId = () => `ev-${_id++}`;
 
 function resolveOperatorId(id: string | null): Operator | null {
   if (!id) return null;
-  return SAMPLE_OPERATORS.find((op) => op.id === id) ?? null;
+  return ALL_OPERATORS.find((op) => op.id === id) ?? null;
 }
 
 function applySheetData(data: SheetData) {
@@ -90,7 +92,9 @@ export default function App() {
   const [operators,      setOperators]      = useState<(Operator | null)[]>(
     () => initialLoad.loaded?.operators ?? [...INITIAL_OPERATORS],
   );
-  const [zoom,           setZoom]           = useState<number>(0.5);
+  const [zoom,           setZoom]           = useState<number>(() => {
+    try { const v = localStorage.getItem('zst-zoom'); return v ? Number(v) : 0.5; } catch { return 0.5; }
+  });
   const { state: events, setState: setEvents, resetState: resetEvents, beginBatch, endBatch, undo, redo } = useHistory<TimelineEvent[]>(
     initialLoad.loaded?.events ?? [],
   );
@@ -109,6 +113,7 @@ export default function App() {
   const [enemy,          setEnemy]          = useState(
     initialLoad.loaded?.enemy ?? DEFAULT_ENEMY,
   );
+  const [selectedFrame,  setSelectedFrame]  = useState<SelectedFrame | null>(null);
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
@@ -228,6 +233,67 @@ export default function App() {
     return sp.onGraphChange(update);
   }, []);
 
+  // ─── Ultimate energy graphs (computed from events + operator data) ─────────
+  const ultimateGraphs = useMemo(() => {
+    const ULT_CHARGE_PER_FRAME = 10 / FPS; // 10 energy/sec
+    const graphs = new Map<string, ResourceGraphData>();
+
+    for (let i = 0; i < NUM_SLOTS; i++) {
+      const op = operators[i];
+      if (!op) continue;
+      const slotId = SLOT_IDS[i];
+      const key = `${slotId}-ultimate`;
+      const max = op.ultimateEnergyCost;
+      const ultEvents = events
+        .filter((ev) => ev.ownerId === slotId && ev.columnId === 'ultimate')
+        .sort((a, b) => a.startFrame - b.startFrame);
+
+      const points: ResourcePoint[] = [];
+      let value = 0;
+      let lastFrame = 0;
+      points.push({ frame: 0, value });
+
+      for (const ev of ultEvents) {
+        const regenFrames = ev.startFrame - lastFrame;
+        const preConsume = Math.min(max, value + regenFrames * ULT_CHARGE_PER_FRAME);
+
+        if (preConsume !== value || ev.startFrame !== lastFrame) {
+          if (preConsume !== points[points.length - 1].value || ev.startFrame !== points[points.length - 1].frame) {
+            points.push({ frame: ev.startFrame, value: preConsume });
+          }
+        }
+
+        const postConsume = Math.max(0, preConsume - max);
+        points.push({ frame: ev.startFrame, value: postConsume });
+        value = postConsume;
+        lastFrame = ev.startFrame;
+      }
+
+      // Regen to end
+      const endValue = Math.min(max, value + (TOTAL_FRAMES - lastFrame) * ULT_CHARGE_PER_FRAME);
+      if (endValue !== value && ULT_CHARGE_PER_FRAME > 0 && value < max) {
+        const framesToMax = Math.ceil((max - value) / ULT_CHARGE_PER_FRAME);
+        const maxFrame = Math.min(lastFrame + framesToMax, TOTAL_FRAMES);
+        if (maxFrame < TOTAL_FRAMES) {
+          points.push({ frame: maxFrame, value: max });
+        }
+      }
+      points.push({ frame: TOTAL_FRAMES, value: endValue });
+
+      graphs.set(key, { points, min: 0, max });
+    }
+    return graphs;
+  }, [operators, events]);
+
+  // Merge SP + ultimate graphs
+  const mergedResourceGraphs = useMemo(() => {
+    const merged = new Map(resourceGraphs);
+    for (const [key, data] of Array.from(ultimateGraphs)) {
+      merged.set(key, data);
+    }
+    return merged;
+  }, [resourceGraphs, ultimateGraphs]);
+
   // ─── Undo / Redo ────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -255,7 +321,9 @@ export default function App() {
   const handleZoom = useCallback((deltaY: number) => {
     setZoom((z) => {
       const factor = deltaY > 0 ? 1 / 1.2 : 1.2;
-      return Math.max(0.15, Math.min(20, z * factor));
+      const next = Math.max(0.15, Math.min(20, z * factor));
+      try { localStorage.setItem('zst-zoom', String(next)); } catch { /* ignore */ }
+      return next;
     });
   }, []);
 
@@ -270,27 +338,62 @@ export default function App() {
     }));
   }, []);
 
-  // ─── Non-overlappable range check ──────────────────────────────────────────
+  // ─── Non-overlappable range helpers ────────────────────────────────────────
+
+  const getRange = (ev: TimelineEvent): number =>
+    ev.nonOverlappableRange
+    ?? (ev.segments ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0) : 0);
+
   /**
    * Returns true if placing `ev` at `startFrame` would conflict with a sibling's
    * non-overlappable range, or if `ev`'s own range would cover a sibling.
-   * Range [start, start + nonOverlappableRange) — default 0 means no restriction.
    */
   const wouldOverlapNonOverlappable = (
     allEvents: TimelineEvent[],
     ev: TimelineEvent,
     startFrame: number,
   ): boolean => {
-    const evRange = ev.nonOverlappableRange ?? 0;
+    const evRange = getRange(ev);
     for (const sib of allEvents) {
       if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
-      const sibRange = sib.nonOverlappableRange ?? 0;
-      // ev falls inside sib's non-overlappable range
+      const sibRange = getRange(sib);
       if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
-      // sib falls inside ev's non-overlappable range
       if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
     }
     return false;
+  };
+
+  /**
+   * Clamp `desiredFrame` so that `ev` doesn't overlap any sibling's non-overlappable range.
+   * Returns the closest valid frame in the direction of `desiredFrame` from `ev.startFrame`.
+   */
+  const clampNonOverlappable = (
+    allEvents: TimelineEvent[],
+    ev: TimelineEvent,
+    desiredFrame: number,
+  ): number => {
+    const evRange = getRange(ev);
+    if (evRange === 0) return desiredFrame;
+    let result = desiredFrame;
+    for (const sib of allEvents) {
+      if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+      const sibRange = getRange(sib);
+      if (sibRange === 0 && evRange === 0) continue;
+      // Check if [result, result+evRange) overlaps [sib.startFrame, sib.startFrame+sibRange)
+      const evEnd = result + evRange;
+      const sibEnd = sib.startFrame + sibRange;
+      if (evEnd > sib.startFrame && result < sibEnd) {
+        // Overlap detected — clamp to nearest edge based on direction
+        if (desiredFrame < ev.startFrame) {
+          // Moving up: clamp to just after sibling ends
+          result = Math.max(result, sibEnd);
+        } else {
+          // Moving down: clamp to just before sibling starts
+          result = Math.min(result, sib.startFrame - evRange);
+        }
+      }
+    }
+    return Math.max(0, result);
   };
 
   // ─── Events ───────────────────────────────────────────────────────────────
@@ -298,7 +401,7 @@ export default function App() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { defaultActiveDuration?: number; defaultLingeringDuration?: number; defaultCooldownDuration?: number } | null,
+    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('./consts/viewTypes').EventSegmentData[] } | null,
   ) => {
     const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
     const ev: TimelineEvent = {
@@ -306,10 +409,15 @@ export default function App() {
       ownerId,
       columnId,
       startFrame:        atFrame,
-      activeDuration:    defaultSkill?.defaultActiveDuration   ?? 120,
-      lingeringDuration: defaultSkill?.defaultLingeringDuration ?? 0,
+      activationDuration:    defaultSkill?.defaultActivationDuration   ?? 120,
+      activeDuration: defaultSkill?.defaultActiveDuration ?? 0,
       cooldownDuration:  defaultSkill?.defaultCooldownDuration  ?? 0,
+      ...(defaultSkill?.name ? { name: defaultSkill.name } : {}),
       ...(isForced ? { isForced: true } : {}),
+      ...(defaultSkill?.segments ? {
+        segments: defaultSkill.segments,
+        nonOverlappableRange: defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0),
+      } : {}),
     };
 
     // Infliction events are always stored as-is. Arts reactions are derived
@@ -340,7 +448,8 @@ export default function App() {
       if (!target) return prev;
       let clamped = MeltingFlameController.validateMove(prev, target, newStartFrame);
       clamped = ComboSkillEventController.validateMove(target, clamped, activationWindowsRef.current);
-      if (wouldOverlapNonOverlappable(prev, target, clamped)) return prev;
+      clamped = clampNonOverlappable(prev, target, clamped);
+      if (clamped === target.startFrame) return prev;
       return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped } : ev));
     });
   }, []);
@@ -349,6 +458,16 @@ export default function App() {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
+  }, []);
+
+  const handleFrameClick = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
+    setSelectedFrame((prev) => {
+      if (prev && prev.eventId === eventId && prev.segmentIndex === segmentIndex && prev.frameIndex === frameIndex) {
+        return null; // toggle off
+      }
+      return { eventId, segmentIndex, frameIndex };
+    });
+    setEditingEventId(eventId);
   }, []);
 
   const handleLoadoutChange = useCallback((slotId: string, state: OperatorLoadoutState) => {
@@ -363,7 +482,7 @@ export default function App() {
     const slotIndex = SLOT_IDS.indexOf(slotId);
     if (slotIndex < 0) return;
 
-    const newOp = newOperatorId ? SAMPLE_OPERATORS.find((op) => op.id === newOperatorId) ?? null : null;
+    const newOp = newOperatorId ? ALL_OPERATORS.find((op) => op.id === newOperatorId) ?? null : null;
 
     setOperators((prev) => {
       if (newOperatorId === null) {
@@ -399,6 +518,11 @@ export default function App() {
     slotId,
     operator: operators[i] ?? null,
   }));
+
+  const columns = useMemo(
+    () => buildColumns(slots, enemy, visibleSkills),
+    [slots, enemy, visibleSkills],
+  );
 
   const editingEvent = editingEventId
     ? events.find((e) => e.id === editingEventId) ?? null
@@ -460,6 +584,7 @@ export default function App() {
         slots={slots}
         enemy={enemy}
         events={processedEvents}
+        columns={columns}
         visibleSkills={visibleSkills}
         loadouts={loadouts}
         zoom={zoom}
@@ -468,18 +593,20 @@ export default function App() {
         onAddEvent={handleAddEvent}
         onMoveEvent={handleMoveEvent}
         onContextMenu={setContextMenu}
-        onEditEvent={setEditingEventId}
+        onEditEvent={(id) => { setEditingEventId(id); setSelectedFrame(null); }}
         onRemoveEvent={handleRemoveEvent}
         onLoadoutChange={handleLoadoutChange}
         onEditLoadout={setEditingSlotId}
-        allOperators={SAMPLE_OPERATORS}
+        allOperators={ALL_OPERATORS}
         onSwapOperator={handleSwapOperator}
         allEnemies={ALL_ENEMIES}
         onSwapEnemy={handleSwapEnemy}
         activationWindows={activationWindows}
-        resourceGraphs={resourceGraphs}
+        resourceGraphs={mergedResourceGraphs}
         onBatchStart={beginBatch}
         onBatchEnd={endBatch}
+        onFrameClick={handleFrameClick}
+        selectedFrame={selectedFrame}
       />
 
       {/* Loadout edit panel (left side) */}
@@ -503,13 +630,15 @@ export default function App() {
       )}
 
       {editingEvent && (
-        <EventEditPanel
+        <InformationPane
           event={editingEvent}
-          operators={SAMPLE_OPERATORS}
+          operators={ALL_OPERATORS}
+          slots={slots}
           enemy={enemy}
           onUpdate={handleUpdateEvent}
           onRemove={handleRemoveEvent}
-          onClose={() => setEditingEventId(null)}
+          onClose={() => { setEditingEventId(null); setSelectedFrame(null); }}
+          selectedFrame={selectedFrame}
         />
       )}
 
@@ -523,14 +652,15 @@ export default function App() {
               <button className="devlog-close" onClick={() => setKeysOpen(false)}>&times;</button>
             </div>
             <div className="keys-body">
-              <div className="keys-row"><kbd>Shift</kbd> + <kbd>Scroll</kbd><span>Zoom in/out</span></div>
-              <div className="keys-row"><kbd>Scroll</kbd><span>Pan timeline</span></div>
-              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Z</kbd><span>Undo</span></div>
-              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd><span>Redo</span></div>
-              <div className="keys-row"><kbd>Ctrl</kbd> + <kbd>Click</kbd><span>Multi-select</span></div>
-              <div className="keys-row"><kbd>Right-click</kbd><span>Context menu</span></div>
-              <div className="keys-row"><kbd>Double-click</kbd><span>Edit event</span></div>
-              <div className="keys-row"><kbd>Drag</kbd><span>Move event / Marquee select</span></div>
+              <div className="keys-row"><span>Zoom in/out</span><kbd>Shift</kbd> + <kbd>Scroll</kbd></div>
+              <div className="keys-row"><span>Pan timeline</span><kbd>Scroll</kbd></div>
+              <div className="keys-row"><span>Undo</span><kbd>Ctrl</kbd> + <kbd>Z</kbd></div>
+              <div className="keys-row"><span>Redo</span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></div>
+              <div className="keys-row"><span>Select all events</span><kbd>Ctrl</kbd> + <kbd>A</kbd></div>
+              <div className="keys-row"><span>Multi-select</span><kbd>Ctrl</kbd> + <kbd>Click</kbd></div>
+              <div className="keys-row"><span>Context menu</span><kbd>Right-click</kbd></div>
+              <div className="keys-row"><span>Edit event</span><kbd>Double-click</kbd></div>
+              <div className="keys-row"><span>Move event / Marquee select</span><kbd>Drag</kbd></div>
             </div>
           </div>
         </div>

@@ -74,8 +74,8 @@ export function validateSheetData(raw: unknown): LoadResult {
       typeof ev.ownerId !== 'string' ||
       typeof ev.columnId !== 'string' ||
       typeof ev.startFrame !== 'number' ||
+      typeof ev.activationDuration !== 'number' ||
       typeof ev.activeDuration !== 'number' ||
-      typeof ev.lingeringDuration !== 'number' ||
       typeof ev.cooldownDuration !== 'number'
     ) {
       return { ok: false, error: `Invalid event at index ${i}.` };

@@ -60,7 +60,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       const clampFrame = clampMap.get(prev.id);
       const endFrame = clampFrame !== undefined
         ? clampFrame
-        : prev.startFrame + prev.activeDuration + prev.lingeringDuration + prev.cooldownDuration;
+        : prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
 
       if (endFrame > incoming.startFrame) {
         activeOther.push(prev);
@@ -75,8 +75,8 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         ownerId: 'enemy',
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
-        activeDuration: REACTION_DURATION,
-        lingeringDuration: 0,
+        activationDuration: REACTION_DURATION,
+        activeDuration: 0,
         cooldownDuration: 0,
       });
 
@@ -100,15 +100,15 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
     const clampFrame = clampMap.get(ev.id);
     if (clampFrame !== undefined) {
       const available = Math.max(0, clampFrame - ev.startFrame);
-      const clampedActive = Math.min(ev.activeDuration, available);
+      const clampedActive = Math.min(ev.activationDuration, available);
       const remAfterActive = available - clampedActive;
-      const clampedLinger = Math.min(ev.lingeringDuration, remAfterActive);
+      const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
       const remAfterLinger = remAfterActive - clampedLinger;
       const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
       result.push({
         ...ev,
-        activeDuration: clampedActive,
-        lingeringDuration: clampedLinger,
+        activationDuration: clampedActive,
+        activeDuration: clampedLinger,
         cooldownDuration: clampedCooldown,
       });
     } else {
@@ -147,12 +147,12 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
     // Walk through chronologically, merging into the current "active" reaction
     let active = sorted[0];
-    let activeEnd = active.startFrame + active.activeDuration;
+    let activeEnd = active.startFrame + active.activationDuration;
     let activeLevel = active.statusLevel ?? 1;
 
     for (let i = 1; i < sorted.length; i++) {
       const next = sorted[i];
-      const nextEnd = next.startFrame + next.activeDuration;
+      const nextEnd = next.startFrame + next.activationDuration;
       const nextLevel = next.statusLevel ?? 1;
 
       if (next.startFrame < activeEnd) {
@@ -162,10 +162,10 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         removedIds.add(next.id);
       } else {
         // No overlap: finalize the active reaction and start a new one
-        if (activeEnd !== active.startFrame + active.activeDuration || activeLevel !== (active.statusLevel ?? 1)) {
+        if (activeEnd !== active.startFrame + active.activationDuration || activeLevel !== (active.statusLevel ?? 1)) {
           mergedMap.set(active.id, {
             ...active,
-            activeDuration: activeEnd - active.startFrame,
+            activationDuration: activeEnd - active.startFrame,
             statusLevel: activeLevel,
           });
         }
@@ -176,10 +176,10 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
     }
 
     // Finalize the last active reaction
-    if (activeEnd !== active.startFrame + active.activeDuration || activeLevel !== (active.statusLevel ?? 1)) {
+    if (activeEnd !== active.startFrame + active.activationDuration || activeLevel !== (active.statusLevel ?? 1)) {
       mergedMap.set(active.id, {
         ...active,
-        activeDuration: activeEnd - active.startFrame,
+        activationDuration: activeEnd - active.startFrame,
         statusLevel: activeLevel,
       });
     }
@@ -222,9 +222,9 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
 
     // Step 1: Compute the maximum extended duration for each event assuming
     // all events in slots 0–2 get fully extended. We extend each event's
-    // activeDuration to the latest end frame reachable through a chain of
+    // activationDuration to the latest end frame reachable through a chain of
     // overlapping subsequent stacks.
-    const extendedActive: number[] = sorted.map((ev) => ev.activeDuration);
+    const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
     for (let i = sorted.length - 2; i >= 0; i--) {
       const ev = sorted[i];
       // Walk forward to find the latest chained end
@@ -264,8 +264,8 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
 
       if (slot < lastSlot) {
         // Extend duration
-        if (extendedActive[i] !== ev.activeDuration) {
-          processedMap.set(ev.id, { ...ev, activeDuration: extendedActive[i] });
+        if (extendedActive[i] !== ev.activationDuration) {
+          processedMap.set(ev.id, { ...ev, activationDuration: extendedActive[i] });
         }
       }
     }
@@ -281,21 +281,21 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
       const nextIdx = lastSlotIndices[k + 1];
       const ev = sorted[idx];
       const nextStart = sorted[nextIdx].startFrame;
-      const totalDur = ev.activeDuration + ev.lingeringDuration + ev.cooldownDuration;
+      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       const originalEnd = ev.startFrame + totalDur;
 
       if (nextStart < originalEnd) {
         const available = Math.max(0, nextStart - ev.startFrame);
-        const clampedActive = Math.min(ev.activeDuration, available);
+        const clampedActive = Math.min(ev.activationDuration, available);
         const remAfterActive = available - clampedActive;
-        const clampedLinger = Math.min(ev.lingeringDuration, remAfterActive);
+        const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
         const remAfterLinger = remAfterActive - clampedLinger;
         const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
 
         processedMap.set(ev.id, {
           ...(processedMap.get(ev.id) ?? ev),
-          activeDuration: clampedActive,
-          lingeringDuration: clampedLinger,
+          activationDuration: clampedActive,
+          activeDuration: clampedLinger,
           cooldownDuration: clampedCooldown,
         });
       }

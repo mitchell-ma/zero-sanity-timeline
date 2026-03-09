@@ -1,0 +1,744 @@
+{
+  "operators": {
+    "ARDELIA": {
+      "BASIC_ATTACK": {
+        "ARDELIA_BASIC_ATTACK_SEQUENCE_1": {
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.4,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARDELIA_BASIC_ATTACK_SEQUENCE_2": {
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.7,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARDELIA_BASIC_ATTACK_SEQUENCE_3": {
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_3_DURATION": 1.53,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_3_TICKS": 3,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_3_TICK_3": {
+            "OFFSET_SECONDS": 1.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ARDELIA_BASIC_ATTACK_SEQUENCE_4": {
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_4_DURATION": 2.167,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 2.167,
+            "SKILL_POINT_RECOVERY": 18,
+            "STAGGER": 18
+          }
+        },
+        "ARDELIA_BASIC_ATTACK_SEQUENCE_5": {
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "ARDELIA_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "ARDELIA_BATTLE_SKILL": {
+          "ARDELIA_BATTLE_SKILL_DURATION": 1.57,
+          "ARDELIA_BATTLE_SKILL_SP_COST": 100,
+          "ARDELIA_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "ARDELIA_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "ARDELIA_BATTLE_SKILL_TICKS": 1,
+          "ARDELIA_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 1.07,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ARDELIA_COMBO_SKILL": {
+          "ARDELIA_COMBO_SKILL_DURATION": 0.77,
+          "ARDELIA_COMBO_SKILL_COOLDOWN": 18,
+          "ARDELIA_COMBO_SKILL_GAUGE_GAIN": 10,
+          "ARDELIA_COMBO_SKILL_TICKS": 2,
+          "ARDELIA_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ARDELIA_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 2.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ARDELIA_ULTIMATE": {
+          "ARDELIA_ULTIMATE_DURATION": 6.97,
+          "ARDELIA_ULTIMATE_ANIMATION_TIME": 2.5,
+          "ARDELIA_ULTIMATE_GAUGE_MAX": 90,
+          "ARDELIA_ULTIMATE_GAUGE_REPLY": 0,
+          "ARDELIA_ULTIMATE_TICKS": 3,
+          "ARDELIA_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 2.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 6.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          }
+        }
+      }
+    },
+    "LAEVATAIN": {
+      "BASIC_ATTACK": {
+        "LAEVATAIN_BASIC_ATTACK_SEQUENCE_1": {
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.367,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_BASIC_ATTACK_SEQUENCE_2": {
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.567,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_BASIC_ATTACK_SEQUENCE_3": {
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.43,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4": {
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4_DURATION": 0.76,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4_TICKS": 3,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5": {
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.167,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5_TICKS": 2,
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BASIC_ATTACK_SEQUENCE_5_TICK_2": {
+            "OFFSET_SECONDS": 0.87,
+            "SKILL_POINT_RECOVERY": 20,
+            "STAGGER": 18
+          }
+        }
+      },
+      "BATTLE_SKILL": {
+        "LAEVATAIN_BATTLE_SKILL": {
+          "LAEVATAIN_BATTLE_SKILL_DURATION": 2.2,
+          "LAEVATAIN_BATTLE_SKILL_SP_COST": 100,
+          "LAEVATAIN_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "LAEVATAIN_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "LAEVATAIN_BATTLE_SKILL_TICKS": 10,
+          "LAEVATAIN_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.73,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.967,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 1.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_4": {
+            "OFFSET_SECONDS": 1.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_5": {
+            "OFFSET_SECONDS": 1.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_6": {
+            "OFFSET_SECONDS": 1.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_7": {
+            "OFFSET_SECONDS": 1.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_8": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_9": {
+            "OFFSET_SECONDS": 1.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_BATTLE_SKILL_TICK_10": {
+            "OFFSET_SECONDS": 2.067,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ENHANCED_BASIC_ATTACK": {
+        "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_1": {
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.6,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_2": {
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.93,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_3": {
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.5,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4": {
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.2,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICKS": 2,
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.73,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.87,
+            "SKILL_POINT_RECOVERY": 20,
+            "STAGGER": 12
+          }
+        }
+      },
+      "ENHANCED_BATTLE_SKILL": {
+        "LAEVATAIN_ENHANCED_BATTLE_SKILL": {
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_DURATION": 1.1,
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_SP_COST": 100,
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_GAUGE_GAIN": 0,
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_TEAM_GAUGE_GAIN": 0,
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_TICKS": 2,
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          },
+          "LAEVATAIN_ENHANCED_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ENHANCED_EMPOWERED_BATTLE_SKILL": {
+        "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL": {
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_DURATION": 1.9,
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SP_COST": 100,
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_GAUGE_GAIN": 0,
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_TEAM_GAUGE_GAIN": 0,
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_TICKS": 3,
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          },
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.77,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          },
+          "LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 1.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "EMPOWERED_BATTLE_SKILL": {
+        "LAEVATAIN_EMPOWERED_BATTLE_SKILL": {
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_DURATION": 3.9,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_SP_COST": 100,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICKS": 11,
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.73,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.967,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 1.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_4": {
+            "OFFSET_SECONDS": 1.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_5": {
+            "OFFSET_SECONDS": 1.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_6": {
+            "OFFSET_SECONDS": 1.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_7": {
+            "OFFSET_SECONDS": 1.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_8": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_9": {
+            "OFFSET_SECONDS": 1.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_10": {
+            "OFFSET_SECONDS": 2.067,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          },
+          "LAEVATAIN_EMPOWERED_BATTLE_SKILL_TICK_11": {
+            "OFFSET_SECONDS": 3.467,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "LAEVATAIN_COMBO_SKILL": {
+          "LAEVATAIN_COMBO_SKILL_DURATION": 1.37,
+          "LAEVATAIN_COMBO_SKILL_COOLDOWN": 10,
+          "LAEVATAIN_COMBO_SKILL_GAUGE_GAIN": 30,
+          "LAEVATAIN_COMBO_SKILL_TICKS": 1,
+          "LAEVATAIN_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "LAEVATAIN_ULTIMATE": {
+          "LAEVATAIN_ULTIMATE_DURATION": 2.37,
+          "LAEVATAIN_ULTIMATE_ANIMATION_TIME": 2.07,
+          "LAEVATAIN_ULTIMATE_GAUGE_MAX": 300,
+          "LAEVATAIN_ULTIMATE_GAUGE_REPLY": 0,
+          "LAEVATAIN_ULTIMATE_TICKS": 0
+        }
+      }
+    },
+    "WULFGARD": {
+      "BASIC_ATTACK": {
+        "WULFGARD_BASIC_ATTACK_SEQUENCE_1": {
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.83,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_1_TICKS": 2,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_1_TICK_2": {
+            "OFFSET_SECONDS": 0.467,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "WULFGARD_BASIC_ATTACK_SEQUENCE_2": {
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.8,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "WULFGARD_BASIC_ATTACK_SEQUENCE_3": {
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_3_DURATION": 1.1,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_3_TICKS": 3,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_3_TICK_3": {
+            "OFFSET_SECONDS": 0.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "WULFGARD_BASIC_ATTACK_SEQUENCE_4": {
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.767,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.767,
+            "SKILL_POINT_RECOVERY": 18,
+            "STAGGER": 18
+          }
+        },
+        "WULFGARD_BASIC_ATTACK_SEQUENCE_5": {
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "WULFGARD_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "WULFGARD_BATTLE_SKILL": {
+          "WULFGARD_BATTLE_SKILL_DURATION": 1.07,
+          "WULFGARD_BATTLE_SKILL_SP_COST": 100,
+          "WULFGARD_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "WULFGARD_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "WULFGARD_BATTLE_SKILL_TICKS": 3,
+          "WULFGARD_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BATTLE_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_BATTLE_SKILL_TICK_3": {
+            "OFFSET_SECONDS": 0.767,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 5
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "WULFGARD_COMBO_SKILL": {
+          "WULFGARD_COMBO_SKILL_DURATION": 1,
+          "WULFGARD_COMBO_SKILL_COOLDOWN": 20,
+          "WULFGARD_COMBO_SKILL_GAUGE_GAIN": 10,
+          "WULFGARD_COMBO_SKILL_TICKS": 1,
+          "WULFGARD_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "WULFGARD_ULTIMATE": {
+          "WULFGARD_ULTIMATE_DURATION": 2.5,
+          "WULFGARD_ULTIMATE_ANIMATION_TIME": 1.53,
+          "WULFGARD_ULTIMATE_GAUGE_MAX": 76.5,
+          "WULFGARD_ULTIMATE_GAUGE_REPLY": 0,
+          "WULFGARD_ULTIMATE_TICKS": 5,
+          "WULFGARD_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 1.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_ULTIMATE_TICK_2": {
+            "OFFSET_SECONDS": 1.73,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_ULTIMATE_TICK_3": {
+            "OFFSET_SECONDS": 1.967,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_ULTIMATE_TICK_4": {
+            "OFFSET_SECONDS": 1.13,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "WULFGARD_ULTIMATE_TICK_5": {
+            "OFFSET_SECONDS": 2.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 15
+          }
+        }
+      }
+    },
+    "ANTAL": {
+      "BASIC_ATTACK": {
+        "ANTAL_BASIC_ATTACK_SEQUENCE_1": {
+          "ANTAL_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.53,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.267,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ANTAL_BASIC_ATTACK_SEQUENCE_2": {
+          "ANTAL_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.7,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_2_TICKS": 1,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ANTAL_BASIC_ATTACK_SEQUENCE_3": {
+          "ANTAL_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.767,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_3_TICKS": 2,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.467,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "ANTAL_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.6,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "ANTAL_BASIC_ATTACK_SEQUENCE_4": {
+          "ANTAL_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.3,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_4_TICKS": 1,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 15,
+            "STAGGER": 15
+          }
+        },
+        "ANTAL_BASIC_ATTACK_SEQUENCE_5": {
+          "ANTAL_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "ANTAL_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "ANTAL_BATTLE_SKILL": {
+          "ANTAL_BATTLE_SKILL_DURATION": 1,
+          "ANTAL_BATTLE_SKILL_SP_COST": 100,
+          "ANTAL_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "ANTAL_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "ANTAL_BATTLE_SKILL_TICKS": 1,
+          "ANTAL_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "ANTAL_COMBO_SKILL": {
+          "ANTAL_COMBO_SKILL_DURATION": 0.8,
+          "ANTAL_COMBO_SKILL_COOLDOWN": 15,
+          "ANTAL_COMBO_SKILL_GAUGE_GAIN": 10,
+          "ANTAL_COMBO_SKILL_TICKS": 1,
+          "ANTAL_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "ULTIMATE": {
+        "ANTAL_ULTIMATE": {
+          "ANTAL_ULTIMATE_DURATION": 1.87,
+          "ANTAL_ULTIMATE_ANIMATION_TIME": 1.4,
+          "ANTAL_ULTIMATE_GAUGE_MAX": 90,
+          "ANTAL_ULTIMATE_GAUGE_REPLY": 0,
+          "ANTAL_ULTIMATE_TICKS": 0
+        }
+      }
+    },
+    "AKEKURI": {
+      "BASIC_ATTACK": {
+        "AKEKURI_BASIC_ATTACK_SEQUENCE_1": {
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.5,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_1_TICKS": 1,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AKEKURI_BASIC_ATTACK_SEQUENCE_2": {
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.767,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_2_TICKS": 2,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_2_TICK_1": {
+            "OFFSET_SECONDS": 0.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_2_TICK_2": {
+            "OFFSET_SECONDS": 0.53,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AKEKURI_BASIC_ATTACK_SEQUENCE_3": {
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_3_DURATION": 0.733,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_3_TICKS": 1,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.33,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          }
+        },
+        "AKEKURI_BASIC_ATTACK_SEQUENCE_4": {
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_4_DURATION": 1.2,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_4_TICKS": 3,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0
+          },
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 19,
+            "STAGGER": 17
+          }
+        },
+        "AKEKURI_BASIC_ATTACK_SEQUENCE_5": {
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_5_DURATION": 0,
+          "AKEKURI_BASIC_ATTACK_SEQUENCE_5_TICKS": 0
+        }
+      },
+      "BATTLE_SKILL": {
+        "AKEKURI_BATTLE_SKILL": {
+          "AKEKURI_BATTLE_SKILL_DURATION": 1.33,
+          "AKEKURI_BATTLE_SKILL_SP_COST": 100,
+          "AKEKURI_BATTLE_SKILL_GAUGE_GAIN": 6.5,
+          "AKEKURI_BATTLE_SKILL_TEAM_GAUGE_GAIN": 6.5,
+          "AKEKURI_BATTLE_SKILL_TICKS": 1,
+          "AKEKURI_BATTLE_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.67,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 10
+          }
+        }
+      },
+      "COMBO_SKILL": {
+        "AKEKURI_COMBO_SKILL": {
+          "AKEKURI_COMBO_SKILL_DURATION": 1.27,
+          "AKEKURI_COMBO_SKILL_COOLDOWN": 15,
+          "AKEKURI_COMBO_SKILL_GAUGE_GAIN": 10,
+          "AKEKURI_COMBO_SKILL_TICKS": 2,
+          "AKEKURI_COMBO_SKILL_TICK_1": {
+            "OFFSET_SECONDS": 0.73,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 5
+          },
+          "AKEKURI_COMBO_SKILL_TICK_2": {
+            "OFFSET_SECONDS": 1.03,
+            "SKILL_POINT_RECOVERY": 7.5,
+            "STAGGER": 5
+          }
+        }
+      },
+      "ULTIMATE": {
+        "AKEKURI_ULTIMATE": {
+          "AKEKURI_ULTIMATE_DURATION": 4.3,
+          "AKEKURI_ULTIMATE_ANIMATION_TIME": 1.683,
+          "AKEKURI_ULTIMATE_GAUGE_MAX": 108,
+          "AKEKURI_ULTIMATE_GAUGE_REPLY": 0,
+          "AKEKURI_ULTIMATE_TICKS": 0
+        }
+      }
+    }
+  }
+}
