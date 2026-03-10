@@ -18,13 +18,17 @@
 - Equipment saved by name instead of slot number (more resilient to future updates)
 
 ## 2026-03-09
+- Ctrl+D duplicates selected events — ghost preview follows your mouse (green = valid, red = overlap)
+- Status subtimelines for team buffs: Arts Amp (Antal/Xaihi ult), Shield (Ember/Snowshine/Catcher), enemy Susceptibility (Ardelia/Gilberta/Avywenna/Lifeng)
+- Overlapping status effects (like Focus) now show cleanly — the earlier one stops where the next begins
+- Multi-sequence ultimates for Lifeng and Arclight (delayed hits render as separate segments)
+- Batch event move support — dragging multiple selected events preserves relative timing
+- Damage table expanded with per-tick breakdowns and element-aware calculations
+- Viewport culling — only visible events are rendered, improving scroll performance on long timelines
 - Added 18 new operators: Endministrator, Lifeng, Chen Qianyu, Estella, Ember, Snowshine, Catcher, Gilberta, Xaihi, Perlica, Fluorite, Last Rite, Yvonne, Avywenna, Da Pan, Pogranichnik, Alesh, Arclight
-- Full MVC stack per operator — combat skills, operator model, event frames, events
-- Parsed skills.json frame data from gamedata.json for all operators (tick timing, arts inflictions)
-- Operator registry rewrite — all 23 operators with skill timing data from skills.json
-- Trigger capabilities for all operators (combo pub/sub wiring)
-- comboRequires upgraded to array type for multi-condition combo triggers
-- Backward-compatible loadout stats migration (field-level merge for old saves)
+- Full skill frame data parsed from game data for all operators
+- Combo trigger wiring for all operators (pub/sub system)
+- Backward-compatible save migration for old loadout data
 
 ## 2026-03-08
 - Unified MiniTimeline column type (replaces separate skill/status/melting flame columns)
