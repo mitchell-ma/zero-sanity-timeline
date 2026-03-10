@@ -1,5 +1,19 @@
 # Devlog
 
+## 2026-03-10
+- Loadout changes (operator swap, stats, equipment, resource configs) are now tracked by undo/redo
+- Potential level affects ultimate energy cost (e.g. P4 reduces charge by 15%)
+- Warning icons are non-interactive and positioned above events (combo + sequence warnings unified)
+- Ultimate info pane is now fully editable (animation, activation, active, cooldown, frame offsets)
+- Combo trigger bar uses striped pattern; operators with passive triggers (attacked, HP threshold) show solid bar
+- Arts infliction consumption pipeline (distinct from absorption — removes stacks without exchange)
+- Derived event status labels (expired/consumed/refreshed/triggered) and forced reaction indicator in info pane
+- Drag performance: React.memo on EventBlock, selective hoverFrame passing
+- Marquee selection fix: sequenced events use segment-based duration for accurate hit testing
+- Arts reaction events sorted by start frame; earlier events positioned left in micro-columns
+- Editable frame offsets in info pane; segment duration changes clamp inner frames
+- Event labels fade-disappear when overflowing (CSS mask-image)
+
 ## 2026-03-09
 - Added 18 new operators: Endministrator, Lifeng, Chen Qianyu, Estella, Ember, Snowshine, Catcher, Gilberta, Xaihi, Perlica, Fluorite, Last Rite, Yvonne, Avywenna, Da Pan, Pogranichnik, Alesh, Arclight
 - Full MVC stack per operator — combat skills, operator model, event frames, events
