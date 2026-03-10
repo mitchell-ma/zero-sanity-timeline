@@ -157,7 +157,7 @@ const OVERCLOCKED_MOMENT_AMP = [
 
 export class OverclockedMoment extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.OVERCLOCKED_MOMENT;
-  static readonly ULTIMATE_ENERGY_COST = 100;
+  static readonly ULTIMATE_ENERGY_COST = 90;
   static readonly DURATION_SECONDS = 12;
 
   constructor(

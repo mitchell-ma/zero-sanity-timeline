@@ -73,3 +73,9 @@ export const PERLICA_COMBO_SKILL_SEQUENCE: SkillEventSequence = new PerlicaSkill
   OP.COMBO_SKILL.PERLICA_COMBO_SKILL,
   'PERLICA_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const PERLICA_ULTIMATE_SEQUENCE: SkillEventSequence = new PerlicaSkillEventSequence(
+  OP.ULTIMATE.PERLICA_ULTIMATE,
+  'PERLICA_ULTIMATE',
+);

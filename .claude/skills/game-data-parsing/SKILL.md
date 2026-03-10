@@ -133,6 +133,73 @@ Naming convention: **Enhanced** = during ultimate, **Empowered** = from status e
 - `skill_allowed_types` / `link_allowed_types` — Status types that can be active during the skill
 - `exclusive_buffs` — Operator-specific buff icons (e.g. Laevatain's Melting Flame stacks)
 
+## Ultimates with delayed hits (out-of-bounds ticks)
+
+Some ultimates have damage ticks with `OFFSET_SECONDS > *_ULTIMATE_DURATION`. These represent delayed effects (explosions, impacts) that occur after the main activation animation ends.
+
+### Detection
+After parsing ultimate ticks, check if any tick has `OFFSET_SECONDS > DURATION`. If so, the ultimate needs to be split into multiple sequences.
+
+### Splitting into sequences
+1. **Main sequence**: Ticks where `OFFSET_SECONDS <= DURATION`. Uses original `DURATION`.
+2. **Delayed sequence**: Ticks where `OFFSET_SECONDS > DURATION`. Re-offset each tick by subtracting the main duration. Duration = max re-offset + 0.1s buffer.
+
+### Naming delayed sequences
+Cross-reference the operator's ultimate description from the wiki to name the delayed segment:
+
+| Operator | Ultimate Name | Delayed Segment Name | Description |
+|---|---|---|---|
+| Lifeng | Heart of the Unmoving | Vajra Impact | Delayed Vajra slam after main activation |
+| Arclight | Exploding Blitz | Explosion | Delayed explosion after forward dash |
+
+### Event frame file pattern
+```ts
+const OP_ULT = OP.ULTIMATE.OPERATOR_ULTIMATE;
+const OP_ULT_DUR = OP_ULT.OPERATOR_ULTIMATE_DURATION;
+
+/** Main activation — ticks within duration */
+class OperatorUltimateMainSequence extends SkillEventSequence {
+  constructor() {
+    super();
+    this._durationSeconds = OP_ULT_DUR;
+    for (let i = 1; i <= ticks; i++) {
+      const tick = OP_ULT[`OPERATOR_ULTIMATE_TICK_${i}`];
+      if (tick && tick.OFFSET_SECONDS <= OP_ULT_DUR) frames.push(new OperatorSkillEventFrame(tick));
+    }
+  }
+}
+
+/** Delayed hit — ticks beyond duration, re-offset */
+class OperatorDelayedSequence extends SkillEventSequence {
+  constructor() {
+    super();
+    for (let i = 1; i <= ticks; i++) {
+      const tick = OP_ULT[`OPERATOR_ULTIMATE_TICK_${i}`];
+      if (tick && tick.OFFSET_SECONDS > OP_ULT_DUR) {
+        delayedTicks.push({ tick, offset: tick.OFFSET_SECONDS - OP_ULT_DUR });
+      }
+    }
+    this._durationSeconds = maxOffset + 0.1;
+    this._frames = delayedTicks.map(d => new OperatorSkillEventFrame({ ...d.tick, OFFSET_SECONDS: d.offset }));
+  }
+}
+
+export const OPERATOR_ULTIMATE_SEQUENCE = new OperatorUltimateMainSequence();
+export const OPERATOR_DELAYED_SEQUENCE = new OperatorDelayedSequence();
+```
+
+### columnBuilder registration
+Multi-sequence ultimates use the `{ sequences, labels }` format in `ULTIMATE_FRAME_SEQUENCES`:
+```ts
+lifeng: { sequences: [LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE], labels: ['Heart of the Unmoving', 'Vajra Impact'] },
+arclight: { sequences: [ARCLIGHT_ULTIMATE_SEQUENCE, ARCLIGHT_EXPLOSION_SEQUENCE], labels: ['Exploding Blitz', 'Explosion'] },
+```
+
+Single-sequence ultimates remain as plain `SkillEventSequence`:
+```ts
+endministrator: ENDMINISTRATOR_ULTIMATE_SEQUENCE,
+```
+
 ## Parsing workflow
 
 1. Find operator in `characterRoster` by `id`
@@ -141,5 +208,6 @@ Naming convention: **Enhanced** = during ultimate, **Empowered** = from status e
 4. Extract combo skill from `link_*` fields
 5. Extract ultimate from `ultimate_*` fields
 6. For each damage tick, map anomalies using the type mapping above
-7. Check `variants[]` for enhanced/empowered forms
-8. Output to skills.json following the tick format above
+7. Check for out-of-bounds ultimate ticks (`OFFSET_SECONDS > DURATION`) and split into delayed sequences if found; name using wiki descriptions
+8. Check `variants[]` for enhanced/empowered forms
+9. Output to skills.json following the tick format above

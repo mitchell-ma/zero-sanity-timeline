@@ -97,6 +97,12 @@ export class Subtimeline {
     return this.updateEvent(id, { startFrame: newStartFrame });
   }
 
+  /** Replace all events with the given list. */
+  setEvents(events: TimelineEvent[]): void {
+    this.events = [...events].sort((a, b) => a.startFrame - b.startFrame);
+    this.notify();
+  }
+
   /** Remove all events. */
   clear(): void {
     if (this.events.length === 0) return;

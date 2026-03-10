@@ -13,10 +13,14 @@ export const SKILL_LABELS: Record<SkillType, string> = {
 export const enum ColumnLabel {
   SKILL_POINTS         = 'SKILL POINTS',
   TEAM_STATUS          = 'TEAM STATUS',
+  LINK                 = 'LINK',
+  ARTS_AMP             = 'ARTS AMP',
+  SHIELD               = 'SHIELD',
   INFLICTION           = 'ARTS INFLICTION',
   ARTS_REACTION        = 'ARTS REACTION',
   PHYSICAL_INFLICTION  = 'PHYSICAL INFLICTION',
   PHYSICAL_STATUS      = 'PHYSICAL STATUS',
+  SUSCEPTIBILITY       = 'SUSCEPTIBILITY',
 }
 
 export const STATUS_LABELS: Record<StatusType, string> = {
@@ -25,8 +29,13 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.CORROSION]:       'Corrosion',
   [StatusType.ELECTRIFICATION]: 'Electrification',
   [StatusType.MELTING_FLAME]:   'Melting Flame',
+  [StatusType.THUNDERLANCE]:    'Thunderlance',
   [StatusType.SQUAD_BUFF]:      'Squad Buff',
+  [StatusType.LINK]:            'Link',
+  [StatusType.ARTS_AMP]:        'Arts Amp',
+  [StatusType.SHIELD]:          'Shield',
   [StatusType.FOCUS]:           'Focus',
+  [StatusType.SUSCEPTIBILITY]:  'Susceptibility',
   [StatusType.LIFT]:            'Lift',
   [StatusType.KNOCK_DOWN]:      'Knock Down',
   [StatusType.CRUSH]:           'Crush',
@@ -176,9 +185,14 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   breach:               'Breach',
   // Operator statuses (exchange status enum values)
   MELTING_FLAME:        'Melting Flame',
+  THUNDERLANCE:         'Thunderlance',
   // Enemy statuses (applied via applyStatus frames)
   focus:                'Focus',
   FOCUS:                'Focus',
+  SUSCEPTIBILITY:       'Susceptibility',
+  // Team statuses
+  ARTS_AMP:             'Arts Amp',
+  SHIELD:               'Shield',
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────
@@ -242,6 +256,8 @@ export const TRIGGER_CONDITION_LABELS: Record<string, string> = {
   [TriggerConditionType.HP_BELOW_THRESHOLD]:              'HP Below Threshold',
   [TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD]: 'Ultimate Energy Below Threshold',
   [TriggerConditionType.OPERATOR_ATTACKED]:               'Operator Attacked',
+  [TriggerConditionType.STAGGER]:                        'Stagger',
+  [TriggerConditionType.STAGGER_NODE]:                   'Stagger Node',
 };
 
 export const PHYSICAL_STATUS_MICRO_COLUMNS = [

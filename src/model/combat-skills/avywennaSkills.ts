@@ -87,7 +87,7 @@ export class ThunderlanceStrike extends ComboSkill {
 export class ThunderlanceFinalShock extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.THUNDERLANCE_FINAL_SHOCK;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 85;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

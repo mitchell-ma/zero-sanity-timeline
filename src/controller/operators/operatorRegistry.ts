@@ -113,23 +113,25 @@ function getSkillData(opKey: string) {
   const ultAnimDur = ultData[`${ultKey}_ANIMATION_TIME`] != null
     ? dur(ultData[`${ultKey}_ANIMATION_TIME`])
     : ultTotalDur;
+  const ultCdRaw = ultData[`${ultKey}_COOLDOWN`];
   return {
     battleDur: dur(op.BATTLE_SKILL[bsKey][`${bsKey}_DURATION`]),
     comboDur: dur(op.COMBO_SKILL[csKey][`${csKey}_DURATION`]),
     comboCd: dur(op.COMBO_SKILL[csKey][`${csKey}_COOLDOWN`]),
     ultDur: ultTotalDur,
     ultAnimDur,
+    ultCd: ultCdRaw != null ? dur(ultCdRaw) : 0,
   };
 }
 
-// ── skills.json GAUGE_MAX lookup ────────────────────────────────────────────
+// ── skills.json ULTIMATE_ENERGY_COST lookup ─────────────────────────────────
 
-function getUltimateGaugeMax(operatorKey: string): number {
+function getUltimateEnergyCost(operatorKey: string): number {
   const opData = (skillsData as any).operators?.[operatorKey];
   if (!opData?.ULTIMATE) return 0;
   const ultKey = Object.keys(opData.ULTIMATE)[0];
   if (!ultKey) return 0;
-  return opData.ULTIMATE[ultKey][`${ultKey}_GAUGE_MAX`] ?? 0;
+  return opData.ULTIMATE[ultKey][`${ultKey}_ENERGY_COST`] ?? 0;
 }
 
 /** Extract gauge gain values for battle and combo skills from skills.json. */
@@ -254,7 +256,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AK.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: AK.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AK.comboCd, triggerCondition: null },
-      ultimate: { defaultActivationDuration: AK.ultDur, defaultActiveDuration: 720, defaultCooldownDuration: 3360, triggerCondition: null, animationDuration: AK.ultAnimDur },
+      ultimate: { defaultActivationDuration: AK.ultAnimDur, defaultActiveDuration: dur(3.427), defaultCooldownDuration: AK.ultCd, triggerCondition: null, animationDuration: AK.ultAnimDur },
     },
   },
   // ── Wulfgard ────────────────────────────────────────────────────────────────
@@ -562,7 +564,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
 
 // ── Model operator factories (instantiated at default level 90) ─────────────
 
-const MODEL_FACTORIES: Record<string, () => ModelOperator> = {
+export const MODEL_FACTORIES: Record<string, () => ModelOperator> = {
   laevatain: () => new LaevatainOperator({ level: 90 }),
   antal: () => new AntalOperator({ level: 90 }),
   akekuri: () => new AkekuriOperator({ level: 90 }),
@@ -623,25 +625,29 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
 
   const model = factory();
   const jsonKey = SKILLS_JSON_KEYS[config.id];
-  const gaugeMax = jsonKey ? getUltimateGaugeMax(jsonKey) : model.ultimate.ultimateEnergyCost;
+  const gaugeMax = jsonKey ? getUltimateEnergyCost(jsonKey) : model.ultimate.ultimateEnergyCost;
   const gg = jsonKey ? getSkillGaugeGains(jsonKey) : null;
 
-  // Read skill names and triggers from model instances, merge with timing config
-  const modelSkills: Record<string, { skillName: string; publishesTriggers: TriggerConditionType[] }> = {
-    basic:    { skillName: model.basicAttack.skillName, publishesTriggers: model.basicAttack.publishesTriggers },
-    battle:   { skillName: model.battleSkill.skillName, publishesTriggers: model.battleSkill.publishesTriggers },
-    combo:    { skillName: model.comboSkill.skillName,  publishesTriggers: model.comboSkill.publishesTriggers },
-    ultimate: { skillName: model.ultimate.skillName,    publishesTriggers: model.ultimate.publishesTriggers },
+  // Read skill names, triggers, and element from model instances, merge with timing config
+  const modelSkills: Record<string, { skillName: string; publishesTriggers: TriggerConditionType[]; element: string }> = {
+    basic:    { skillName: model.basicAttack.skillName, publishesTriggers: model.basicAttack.publishesTriggers, element: model.basicAttack.elementType },
+    battle:   { skillName: model.battleSkill.skillName, publishesTriggers: model.battleSkill.publishesTriggers, element: model.battleSkill.elementType },
+    combo:    { skillName: model.comboSkill.skillName,  publishesTriggers: model.comboSkill.publishesTriggers,  element: model.comboSkill.elementType },
+    ultimate: { skillName: model.ultimate.skillName,    publishesTriggers: model.ultimate.publishesTriggers,    element: model.ultimate.elementType },
   };
 
   const skills: Record<string, SkillDef> = {};
   for (const [key, timing] of Object.entries(config.skills)) {
     const ms = modelSkills[key];
-    // Auto-add FINAL_STRIKE for basic attacks
-    const publishesTriggers = key === 'basic'
-      ? [TriggerConditionType.FINAL_STRIKE, ...ms.publishesTriggers]
-      : ms.publishesTriggers.length > 0 ? ms.publishesTriggers : undefined;
-    skills[key] = { name: ms?.skillName ?? key, ...timing, publishesTriggers };
+    // Auto-add default triggers per skill type
+    const defaultTriggers: TriggerConditionType[] = [];
+    if (key === 'basic') defaultTriggers.push(TriggerConditionType.FINAL_STRIKE);
+    if (key === 'battle') defaultTriggers.push(TriggerConditionType.CAST_BATTLE_SKILL);
+    if (key === 'combo') defaultTriggers.push(TriggerConditionType.CAST_COMBO_SKILL);
+    if (key === 'ultimate') defaultTriggers.push(TriggerConditionType.CAST_ULTIMATE);
+    const merged = [...defaultTriggers, ...ms.publishesTriggers];
+    const publishesTriggers = merged.length > 0 ? merged : undefined;
+    skills[key] = { name: ms?.skillName ?? key, element: ms.element, ...timing, publishesTriggers };
   }
 
   // Attach gauge gain values to battle and combo skill defs
@@ -675,6 +681,7 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
       comboForbidsActiveColumns: model.comboForbidsActiveColumns,
       comboRequiresActiveColumns: model.comboRequiresActiveColumns,
       derivedEnemyColumns: model.derivedEnemyColumns,
+      derivedTeamColumns: model.derivedTeamColumns,
     };
   }
 

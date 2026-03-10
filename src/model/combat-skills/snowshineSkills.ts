@@ -87,7 +87,7 @@ export class PolarRescue extends ComboSkill {
 export class FrigidSnowfield extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.FRIGID_SNOWFIELD;
 
-  static readonly ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly ULTIMATE_ENERGY_COST = 80;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},

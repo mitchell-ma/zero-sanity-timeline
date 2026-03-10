@@ -73,3 +73,9 @@ export const EMBER_COMBO_SKILL_SEQUENCE: SkillEventSequence = new EmberSkillEven
   OP.COMBO_SKILL.EMBER_COMBO_SKILL,
   'EMBER_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const EMBER_ULTIMATE_SEQUENCE: SkillEventSequence = new EmberSkillEventSequence(
+  OP.ULTIMATE.EMBER_ULTIMATE,
+  'EMBER_ULTIMATE',
+);

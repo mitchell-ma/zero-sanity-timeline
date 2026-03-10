@@ -116,4 +116,5 @@ export class XaihiOperator extends Operator {
     return [TriggerConditionType.HP_TREATMENT];
   }
   get comboDescription(): string { return 'Auxiliary Crystal exhausts HP treatments'; }
+  get derivedTeamColumns(): string[] { return ['team-amp']; }
 }

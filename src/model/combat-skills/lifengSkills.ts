@@ -87,7 +87,7 @@ export class AspectOfWrath extends ComboSkill {
 export class HeartOfTheUnmoving extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.HEART_OF_THE_UNMOVING;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 90;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

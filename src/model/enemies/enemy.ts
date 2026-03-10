@@ -102,6 +102,7 @@ export abstract class Enemy {
 
   getResistance(element: ElementType): number {
     const resistanceMap: Record<ElementType, EnemyStatType> = {
+      [ElementType.NONE]: EnemyStatType.PHYSICAL_RESISTANCE,
       [ElementType.PHYSICAL]: EnemyStatType.PHYSICAL_RESISTANCE,
       [ElementType.HEAT]: EnemyStatType.HEAT_RESISTANCE,
       [ElementType.ELECTRIC]: EnemyStatType.ELECTRIC_RESISTANCE,

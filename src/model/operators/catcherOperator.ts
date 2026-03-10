@@ -116,4 +116,5 @@ export class CatcherOperator extends Operator {
     return [TriggerConditionType.OPERATOR_ATTACKED];
   }
   get comboDescription(): string { return 'Enemy charges up or operator below 40% HP'; }
+  get derivedTeamColumns(): string[] { return ['team-shield']; }
 }

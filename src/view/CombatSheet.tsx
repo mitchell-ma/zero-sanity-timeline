@@ -1,20 +1,36 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import { Column, TimelineEvent, SelectedFrame } from '../consts/viewTypes';
+import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
 import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
+  computeDamageStatistics,
   DamageTableRow,
   DamageTableColumn,
+  DamageStatistics,
 } from '../controller/calculation/damageTableBuilder';
 import type { Slot } from '../controller/timeline/columnBuilder';
+import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
 
 const ROW_HEIGHT = 20;
+
+function formatDamage(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1_000) return n.toLocaleString();
+  return String(n);
+}
+
+function formatPct(n: number): string {
+  return `${(n * 100).toFixed(1)}%`;
+}
 
 interface CombatSheetProps {
   slots: Slot[];
   events: TimelineEvent[];
   columns: Column[];
+  enemy: Enemy;
+  loadoutStats: Record<string, LoadoutStats>;
   zoom: number;
   loadoutRowHeight: number;
   selectedFrames?: SelectedFrame[];
@@ -26,12 +42,19 @@ interface CombatSheetProps {
 }
 
 export default function CombatSheet({
-  slots, events, columns, zoom, loadoutRowHeight,
+  slots, events, columns, enemy, loadoutStats, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom, compact,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
-  const rows = useMemo(() => buildDamageTableRows(events, columns), [events, columns]);
+  const rows = useMemo(
+    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats),
+    [events, columns, slots, enemy, loadoutStats],
+  );
+  const statistics = useMemo(
+    () => computeDamageStatistics(rows, tableColumns),
+    [rows, tableColumns],
+  );
 
   // Forward shift+scroll to zoom handler (same as timeline)
   useEffect(() => {
@@ -138,34 +161,75 @@ export default function CombatSheet({
         className="dmg-loadout-spacer"
         style={{ height: loadoutRowHeight }}
       >
-        {slotGroups.map((g) => (
-          <div
-            key={g.slot.slotId}
-            className="dmg-loadout-op"
-            style={{
-              '--op-color': g.slot.operator?.color ?? '#666',
-              flex: 1,
-            } as React.CSSProperties}
-          >
-            {g.slot.operator?.name ?? '—'}
+        <div className="dmg-loadout-ops">
+          {slotGroups.map((g) => {
+            const opStats = statistics.operators.find((o) => o.ownerId === g.slot.slotId);
+            return (
+              <div
+                key={g.slot.slotId}
+                className="dmg-loadout-op"
+                style={{
+                  '--op-color': g.slot.operator?.color ?? '#666',
+                  flex: 1,
+                } as React.CSSProperties}
+              >
+                <span className="dmg-loadout-op-name">{g.slot.operator?.name ?? '\u2014'}</span>
+                {opStats && opStats.totalDamage > 0 && (
+                  <span className="dmg-loadout-op-stats">
+                    {formatDamage(opStats.totalDamage)} ({formatPct(opStats.teamPct)})
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Team total bar — inside loadout spacer to keep header heights aligned */}
+        {statistics.teamTotalDamage > 0 && (
+          <div className="dmg-team-total">
+            <span className="dmg-team-total-label">Team Total</span>
+            <span className="dmg-team-total-value">{formatDamage(statistics.teamTotalDamage)}</span>
+            <div className="dmg-team-total-bars">
+              {statistics.operators.map((op) => {
+                const slot = slots.find((s) => s.slotId === op.ownerId);
+                if (!slot?.operator || op.totalDamage <= 0) return null;
+                return (
+                  <div
+                    key={op.ownerId}
+                    className="dmg-team-bar-segment"
+                    style={{
+                      width: `${op.teamPct * 100}%`,
+                      background: slot.operator.color,
+                    }}
+                    title={`${slot.operator.name}: ${formatDamage(op.totalDamage)} (${formatPct(op.teamPct)})`}
+                  />
+                );
+              })}
+            </div>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="dmg-header">
         <div className="dmg-header-time">Time</div>
-        {tableColumns.map((col) => (
-          <div
-            key={col.key}
-            className="dmg-header-skill"
-            style={{
-              '--op-color': col.color,
-              flex: colFlexMap.get(col.key) ?? 1,
-            } as React.CSSProperties}
-          >
-            <span className="dmg-header-skill-label">{col.label}</span>
-          </div>
-        ))}
+        {tableColumns.map((col) => {
+          const colTotal = statistics.columnTotals.get(col.key) ?? 0;
+          return (
+            <div
+              key={col.key}
+              className="dmg-header-skill"
+              style={{
+                '--op-color': col.color,
+                flex: colFlexMap.get(col.key) ?? 1,
+              } as React.CSSProperties}
+            >
+              <span className="dmg-header-skill-label">{col.label}</span>
+              {colTotal > 0 && (
+                <span className="dmg-header-skill-total">{formatDamage(colTotal)}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Scrollable body — same coordinate system as timeline body */}
@@ -218,13 +282,24 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered }: {
       {tableColumns.map((col) => {
         const isMatch = col.key === row.columnKey;
         const flex = colFlexMap.get(col.key) ?? 1;
+        let displayValue = '';
+        if (isMatch) {
+          if (row.damage != null) {
+            displayValue = formatDamage(row.damage);
+          } else if (row.multiplier != null) {
+            displayValue = `${(row.multiplier * 100).toFixed(0)}%`;
+          } else {
+            displayValue = '\u2014';
+          }
+        }
         return (
           <div
             key={col.key}
             className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}`}
             style={isMatch ? { color: col.color, flex } : { flex }}
+            title={isMatch && row.damage != null ? `${row.label}\n${row.damage.toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(0)}% ATK)` : ''}` : undefined}
           >
-            {isMatch ? row.damage : ''}
+            {displayValue}
           </div>
         );
       })}

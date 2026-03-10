@@ -73,3 +73,9 @@ export const SNOWSHINE_COMBO_SKILL_SEQUENCE: SkillEventSequence = new SnowshineS
   OP.COMBO_SKILL.SNOWSHINE_COMBO_SKILL,
   'SNOWSHINE_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const SNOWSHINE_ULTIMATE_SEQUENCE: SkillEventSequence = new SnowshineSkillEventSequence(
+  OP.ULTIMATE.SNOWSHINE_ULTIMATE,
+  'SNOWSHINE_ULTIMATE',
+);

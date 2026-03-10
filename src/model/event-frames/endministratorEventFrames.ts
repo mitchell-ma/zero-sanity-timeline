@@ -73,3 +73,9 @@ export const ENDMINISTRATOR_COMBO_SKILL_SEQUENCE: SkillEventSequence = new Endmi
   OP.COMBO_SKILL.ENDMINISTRATOR_COMBO_SKILL,
   'ENDMINISTRATOR_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const ENDMINISTRATOR_ULTIMATE_SEQUENCE: SkillEventSequence = new EndministratorSkillEventSequence(
+  OP.ULTIMATE.ENDMINISTRATOR_ULTIMATE,
+  'ENDMINISTRATOR_ULTIMATE',
+);

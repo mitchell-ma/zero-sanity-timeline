@@ -21,4 +21,6 @@ export interface TriggerCapability {
   comboRequiresActiveColumns?: string[];
   /** Enemy column keys that should be shown when this operator is on the team. */
   derivedEnemyColumns?: string[];
+  /** Team column keys that should be shown when this operator is on the team. */
+  derivedTeamColumns?: string[];
 }

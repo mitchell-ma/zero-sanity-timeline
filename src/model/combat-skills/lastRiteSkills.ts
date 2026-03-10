@@ -87,7 +87,7 @@ export class WintersDevourer extends ComboSkill {
 export class VigilServices extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.VIGIL_SERVICES;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 240;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

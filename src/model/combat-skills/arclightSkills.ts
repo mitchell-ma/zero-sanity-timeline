@@ -87,7 +87,7 @@ export class PealOfThunder extends ComboSkill {
 export class ExplodingBlitz extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.EXPLODING_BLITZ;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 76.5;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

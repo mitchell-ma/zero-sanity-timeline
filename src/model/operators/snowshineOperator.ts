@@ -116,4 +116,5 @@ export class SnowshineOperator extends Operator {
     return [TriggerConditionType.HP_BELOW_THRESHOLD];
   }
   get comboDescription(): string { return 'Controlled operator drops below 60% HP'; }
+  get derivedTeamColumns(): string[] { return ['team-shield']; }
 }

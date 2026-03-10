@@ -73,3 +73,56 @@ export const ARCLIGHT_COMBO_SKILL_SEQUENCE: SkillEventSequence = new ArclightSki
   OP.COMBO_SKILL.ARCLIGHT_COMBO_SKILL,
   'ARCLIGHT_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+// Arclight's ultimate has a delayed explosion (tick 2 at 3.9s) beyond the
+// 2.57s activation duration. Split into main sequence + explosion sequence.
+
+const ARCLIGHT_ULT = OP.ULTIMATE.ARCLIGHT_ULTIMATE;
+const ARCLIGHT_ULT_DUR = ARCLIGHT_ULT.ARCLIGHT_ULTIMATE_DURATION;
+
+/** Main dash — ticks within duration */
+class ArclightUltimateMainSequence extends SkillEventSequence {
+  private readonly _durationSeconds: number;
+  private readonly _frames: readonly ArclightSkillEventFrame[];
+  constructor() {
+    super();
+    this._durationSeconds = ARCLIGHT_ULT_DUR;
+    const frames: ArclightSkillEventFrame[] = [];
+    const ticks = ARCLIGHT_ULT.ARCLIGHT_ULTIMATE_TICKS;
+    for (let i = 1; i <= ticks; i++) {
+      const tick = ARCLIGHT_ULT[`ARCLIGHT_ULTIMATE_TICK_${i}` as keyof typeof ARCLIGHT_ULT] as Record<string, any>;
+      if (tick && (tick as any).OFFSET_SECONDS <= ARCLIGHT_ULT_DUR) {
+        frames.push(new ArclightSkillEventFrame(tick));
+      }
+    }
+    this._frames = frames;
+  }
+  getDurationSeconds(): number { return this._durationSeconds; }
+  getFrames(): readonly ArclightSkillEventFrame[] { return this._frames; }
+}
+
+/** Explosion — delayed hit after main dash */
+class ArclightExplosionSequence extends SkillEventSequence {
+  private readonly _durationSeconds: number;
+  private readonly _frames: readonly ArclightSkillEventFrame[];
+  constructor() {
+    super();
+    const delayedTicks: { tick: Record<string, any>; offset: number }[] = [];
+    const ticks = ARCLIGHT_ULT.ARCLIGHT_ULTIMATE_TICKS;
+    for (let i = 1; i <= ticks; i++) {
+      const tick = ARCLIGHT_ULT[`ARCLIGHT_ULTIMATE_TICK_${i}` as keyof typeof ARCLIGHT_ULT] as Record<string, any>;
+      if (tick && (tick as any).OFFSET_SECONDS > ARCLIGHT_ULT_DUR) {
+        delayedTicks.push({ tick, offset: (tick as any).OFFSET_SECONDS - ARCLIGHT_ULT_DUR });
+      }
+    }
+    const maxOffset = delayedTicks.length > 0 ? Math.max(...delayedTicks.map((d) => d.offset)) : 0;
+    this._durationSeconds = maxOffset + 0.1;
+    this._frames = delayedTicks.map((d) => new ArclightSkillEventFrame({ ...d.tick, OFFSET_SECONDS: d.offset }));
+  }
+  getDurationSeconds(): number { return this._durationSeconds; }
+  getFrames(): readonly ArclightSkillEventFrame[] { return this._frames; }
+}
+
+export const ARCLIGHT_ULTIMATE_SEQUENCE: SkillEventSequence = new ArclightUltimateMainSequence();
+export const ARCLIGHT_EXPLOSION_SEQUENCE: SkillEventSequence = new ArclightExplosionSequence();

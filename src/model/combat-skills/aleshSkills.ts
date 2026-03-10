@@ -87,7 +87,7 @@ export class AugerAngling extends ComboSkill {
 export class OneMonsterCatch extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.ONE_MONSTER_CATCH;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 85;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

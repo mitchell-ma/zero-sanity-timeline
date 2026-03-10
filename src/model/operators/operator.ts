@@ -153,4 +153,6 @@ export abstract class Operator {
   get comboRequiresActiveColumns(): string[] | undefined { return undefined; }
   /** Enemy column keys that should be shown when this operator is on the team. */
   get derivedEnemyColumns(): string[] | undefined { return undefined; }
+  /** Team column keys that should be shown when this operator is on the team. */
+  get derivedTeamColumns(): string[] | undefined { return undefined; }
 }

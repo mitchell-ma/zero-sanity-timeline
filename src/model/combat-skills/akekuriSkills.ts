@@ -3,6 +3,7 @@ import {
   CombatSkillsType,
   ElementType,
   OperatorType,
+  TriggerConditionType,
 } from "../../consts/enums";
 import { Potential, SkillLevel } from "../../consts/types";
 import { BasicAttack } from "./basicAttack";
@@ -169,7 +170,7 @@ export class SquadOnMe extends Ultimate {
       : SquadOnMe.BASE_ULTIMATE_ENERGY_COST;
     super({
       operatorType: OperatorType.AKEKURI,
-      elementType: ElementType.PHYSICAL,
+      elementType: ElementType.NONE,
       ultimateEnergyCost: cost,
       duration: 0,
       ...params,
@@ -187,6 +188,10 @@ export class SquadOnMe extends Ultimate {
 
   getDuration(_level: SkillLevel, _operatorPotential: Potential): number {
     return 0;
+  }
+
+  get publishesTriggers(): TriggerConditionType[] {
+    return [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL];
   }
 
   getSpRecovery(level: SkillLevel): number {

@@ -115,5 +115,6 @@ export class LifengOperator extends Operator {
   get comboRequires(): TriggerConditionType[] {
     return [TriggerConditionType.FINAL_STRIKE];
   }
-  get comboDescription(): string { return 'Final Strike on enemy with Breach'; }
+  get comboDescription(): string { return 'Final Strike on enemy with Physical Susceptibility or Breach'; }
+  get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
 }

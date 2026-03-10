@@ -62,6 +62,15 @@ export abstract class SkillEventFrame {
   /** Status applied by this frame to a target, or null. */
   getApplyStatus(): FrameApplyStatus | null { return null; }
 
+  /** Status consumed by this frame (e.g. Thunderlance consumed by ultimate), or null. */
+  getConsumeStatus(): string | null { return null; }
+
+  /** Element of damage dealt by this frame (for coloring), or null. */
+  getDamageElement(): string | null { return null; }
+
+  /** Whether this frame duplicates the source infliction that triggered it. */
+  getDuplicatesSourceInfliction(): boolean { return false; }
+
   /** Whether this frame grants any skill points. */
   hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }
 

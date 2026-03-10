@@ -87,7 +87,7 @@ export class MatrixDisplacement extends ComboSkill {
 export class GravityField extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.GRAVITY_FIELD;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 90;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

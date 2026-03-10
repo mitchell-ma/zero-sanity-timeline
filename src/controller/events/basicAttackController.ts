@@ -52,6 +52,11 @@ export class SkillSegmentBuilder {
         };
         const status = f.getApplyStatus();
         if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }) };
+        const consumeStatus = f.getConsumeStatus();
+        if (consumeStatus) marker.consumeStatus = consumeStatus;
+        const dmgEl = f.getDamageElement();
+        if (dmgEl) marker.damageElement = dmgEl;
+        if (f.getDuplicatesSourceInfliction()) marker.duplicatesSourceInfliction = true;
         return marker;
       });
 

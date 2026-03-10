@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
+import { wouldOverlapNonOverlappable } from '../controller/timeline/eventController';
 import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
 import { ENEMY_TIERS } from '../utils/enemies';
 import {
@@ -10,6 +11,7 @@ import {
   pxToFrame,
   timelineHeight,
   getTickMarks,
+  getVisibleFrameRange,
   frameToTimeLabel,
   frameToDetailLabel,
   FPS,
@@ -71,6 +73,7 @@ interface CombatPlannerProps {
   onToggleSkill: (slotId: string, skillType: string) => void;
   onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
   onMoveEvent: (id: string, newStartFrame: number) => void;
+  onMoveEvents?: (ids: string[], delta: number) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
   onEditEvent: (id: string | null, context?: string) => void;
   onRemoveEvent: (id: string) => void;
@@ -110,6 +113,7 @@ interface CombatPlannerProps {
   onHoverFrame?: (frame: number | null) => void;
   /** Hide scrollbar (when scroll is synced to another container). */
   hideScrollbar?: boolean;
+  onDuplicateEvents?: (sourceEvents: TimelineEvent[], frameOffset: number) => string[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -129,6 +133,7 @@ export default function CombatPlanner({
   onToggleSkill,
   onAddEvent,
   onMoveEvent,
+  onMoveEvents,
   onContextMenu,
   onEditEvent,
   onRemoveEvent,
@@ -162,6 +167,7 @@ export default function CombatPlanner({
   onLoadoutRowHeight,
   onHoverFrame,
   hideScrollbar,
+  onDuplicateEvents,
 }: CombatPlannerProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
@@ -201,6 +207,14 @@ export default function CombatPlanner({
   const [selectedIds,      setSelectedIds]      = useState<Set<string>>(new Set());
   const [hoveredId,        setHoveredId]        = useState<string | null>(null);
   const [marqueeRect,      setMarqueeRect]      = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+
+  // ─── Duplicate ghost state ──────────────────────────────────────────────────
+  const [dupMode, setDupMode] = useState(false);
+  const dupSourceRef = useRef<TimelineEvent[]>([]);
+  /** Frame offset from each source event's original startFrame to the ghost position. */
+  const [dupOffset, setDupOffset] = useState(0);
+  /** Whether the current ghost position is valid (no overlaps). */
+  const [dupValid, setDupValid] = useState(false);
   const enemyNameRef = useRef<HTMLDivElement>(null);
   const enemyMenuRef = useRef<HTMLDivElement>(null);
 
@@ -376,8 +390,19 @@ export default function CombatPlanner({
 
   const numCols  = columns.length;
   const tlHeight = timelineHeight(zoom);
-  const ticks    = getTickMarks(zoom);
   const combinedHeaderHeight = loadoutRowHeight + HEADER_HEIGHT;
+
+  // ─── Viewport-aware rendering (lazy timeline) ─────────────────────────────
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportH, setViewportH] = useState(800);
+  const visibleRange = useMemo(
+    () => getVisibleFrameRange(scrollTop, viewportH, zoom),
+    [scrollTop, viewportH, zoom],
+  );
+  const ticks = useMemo(
+    () => getTickMarks(zoom, visibleRange.startFrame, visibleRange.endFrame),
+    [zoom, visibleRange],
+  );
 
   // ─── Touch handlers ───────────────────────────────────────────────────────
   const { handleEventTouchStart } = useTouchHandlers({
@@ -428,12 +453,16 @@ export default function CombatPlanner({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    setViewportH(el.clientHeight);
+    const ro = new ResizeObserver(() => setViewportH(el.clientHeight));
+    ro.observe(el);
     const handler = () => {
+      setScrollTop(el.scrollTop);
       onScrollProp?.(el.scrollTop);
       onContextMenu(null);
     };
     el.addEventListener('scroll', handler, { passive: true });
-    return () => el.removeEventListener('scroll', handler);
+    return () => { el.removeEventListener('scroll', handler); ro.disconnect(); };
   }, [onScrollProp, onContextMenu]);
 
   // Headers are now outside the scroll container, so body starts at top of scroll
@@ -489,10 +518,30 @@ export default function CombatPlanner({
           events.filter((ev) => !derivedCols.has(`${ev.ownerId}-${ev.columnId}`)).map((ev) => ev.id),
         ));
       }
+      // Ctrl+D: enter duplicate mode with selected events
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && selectedIds.size > 0 && onDuplicateEvents) {
+        e.preventDefault();
+        const derivedCols = new Set(
+          columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.derived).map((c) => `${c.ownerId}-${c.columnId}`),
+        );
+        const sources = events.filter((ev) => selectedIds.has(ev.id) && !derivedCols.has(`${ev.ownerId}-${ev.columnId}`));
+        if (sources.length > 0) {
+          dupSourceRef.current = sources;
+          setDupMode(true);
+          setDupOffset(0);
+          setDupValid(false);
+        }
+      }
+      // Escape: cancel duplicate mode
+      if (e.key === 'Escape' && dupMode) {
+        e.preventDefault();
+        setDupMode(false);
+        dupSourceRef.current = [];
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, selectedFrames, events, onRemoveEvent, onRemoveEvents, onRemoveFrame, onRemoveFrames, onSelectedFramesChange]);
+  }, [selectedIds, selectedFrames, events, columns, dupMode, onRemoveEvent, onRemoveEvents, onRemoveFrame, onRemoveFrames, onSelectedFramesChange, onDuplicateEvents]);
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
   const greedySlotAssignments = useMemo(
@@ -603,13 +652,16 @@ export default function CombatPlanner({
       if (!colPos) continue;
       // Column X must overlap
       if (colPos.right <= rect.left || colPos.left >= rect.right) continue;
+      // Ultimate frames live in the Active phase (offset by activationDuration)
+      const isUltimate = ev.columnId === 'ultimate';
+      const baseOffset = isUltimate ? ev.activationDuration : 0;
       let segOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];
         if (seg.frames) {
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const f = seg.frames[fi];
-            const absFrame = ev.startFrame + segOffset + f.offsetFrame;
+            const absFrame = ev.startFrame + baseOffset + segOffset + f.offsetFrame;
             const y = bodyTop + frameToPx(absFrame, z);
             if (y >= rect.top && y <= rect.bottom) {
               result.push({ eventId: ev.id, segmentIndex: si, frameIndex: fi });
@@ -682,6 +734,31 @@ export default function CombatPlanner({
       }
     }
 
+    // Duplicate ghost positioning
+    if (dupMode && scrollRef.current && outerRect && bodyTopRef.current !== null) {
+      const scrollTop = scrollRef.current.scrollTop;
+      const bodyTop = bodyTopRef.current;
+      const relY = e.clientY - outerRect.top - combinedHeaderHeight + scrollTop - bodyTop;
+      const mouseFrame = pxToFrame(relY, zoomRef.current);
+      const sources = dupSourceRef.current;
+      if (sources.length > 0) {
+        // Offset relative to the earliest source event
+        const minSourceFrame = Math.min(...sources.map((s) => s.startFrame));
+        const offset = mouseFrame - minSourceFrame;
+        setDupOffset(offset);
+        // Validate: no overlaps for any ghost event at its new position
+        // Use a fake ID so the overlap check doesn't skip the original event
+        let valid = true;
+        for (const src of sources) {
+          const ghostFrame = src.startFrame + offset;
+          if (ghostFrame < 0 || ghostFrame >= TOTAL_FRAMES) { valid = false; break; }
+          const ghost = { ...src, id: `__dup_ghost_${src.id}` };
+          if (wouldOverlapNonOverlappable(events, ghost, ghostFrame)) { valid = false; break; }
+        }
+        setDupValid(valid);
+      }
+    }
+
     // Event drag (single or batch)
     if (dragRef.current) {
       dragMovedRef.current = true;
@@ -692,16 +769,13 @@ export default function CombatPlanner({
       let primaryNewFrame = 0;
       const { monotonicBounds } = dragRef.current;
 
-      // Compute a single delta clamped by ALL events' constraints so that
-      // relative timing between events is preserved during batch drag.
+      // Pre-clamp delta by timeline bounds and monotonic (MF) bounds.
       let clampedDelta = deltaFrames;
       for (const eid of eventIds) {
         const orig = startFrames.get(eid) ?? 0;
-        // Timeline bounds: orig + delta must stay in [0, TOTAL_FRAMES - 1]
         const timelineMin = -orig;
         const timelineMax = TOTAL_FRAMES - 1 - orig;
         clampedDelta = Math.max(timelineMin, Math.min(timelineMax, clampedDelta));
-        // Monotonic bounds (MF stacks)
         const bounds = monotonicBounds.get(eid);
         if (bounds) {
           const minDelta = bounds.min - orig;
@@ -710,12 +784,18 @@ export default function CombatPlanner({
         }
       }
 
-      for (const eid of eventIds) {
-        const orig = startFrames.get(eid) ?? 0;
-        const newFrame = orig + clampedDelta;
-        onMoveEvent(eid, newFrame);
-        if (eid === primaryId) primaryNewFrame = newFrame;
+      // Batch move: delegate to controller which applies full validation
+      // (non-overlappable, combo windows, etc.) and picks the most restrictive
+      // delta so all events preserve their relative positions.
+      if (eventIds.length > 1 && onMoveEvents) {
+        onMoveEvents(eventIds, clampedDelta);
+      } else {
+        for (const eid of eventIds) {
+          const orig = startFrames.get(eid) ?? 0;
+          onMoveEvent(eid, orig + clampedDelta);
+        }
       }
+      primaryNewFrame = (startFrames.get(primaryId) ?? 0) + clampedDelta;
 
       if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
         const scrollTop = scrollRef.current.scrollTop;
@@ -813,7 +893,7 @@ export default function CombatPlanner({
       }
       onSelectedFramesChange?.(frames);
     }
-  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange]);
+  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange, dupMode, events]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverClientY(null);
@@ -925,6 +1005,20 @@ export default function CombatPlanner({
 
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    // Dup mode: right-click cancels, left-click confirms
+    if (dupMode) {
+      if (e.button === 2 || e.button === 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.button === 0 && dupValid && onDuplicateEvents) {
+          const newIds = onDuplicateEvents(dupSourceRef.current, dupOffset);
+          setSelectedIds(new Set(newIds));
+        }
+        setDupMode(false);
+        dupSourceRef.current = [];
+      }
+      return;
+    }
     // Right-click: cancel left-click marquee, start frame marquee
     if (e.button === 2) {
       if (marqueeRef.current) {
@@ -975,7 +1069,7 @@ export default function CombatPlanner({
       setSelectedIds(new Set());
       onSelectedFramesChange?.([]);
     }
-  }, [selectedIds, selectedFrames, onSelectedFramesChange]);
+  }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents]);
 
   // ─── Right-click on empty column ────────────────────────────────────────────
   const handleSubTimelineContextMenu = useCallback((
@@ -984,6 +1078,12 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    // Cancel dup mode on right-click
+    if (dupMode) {
+      setDupMode(false);
+      dupSourceRef.current = [];
+      return;
+    }
     // Suppress context menu if right-click marquee was dragged
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
@@ -1188,7 +1288,7 @@ export default function CombatPlanner({
         });
       }
     }
-  }, [onAddEvent, onContextMenu, events, columnPositions, activationWindows, resourceGraphs, onEditResource, onSelectedFramesChange]);
+  }, [onAddEvent, onContextMenu, events, columnPositions, activationWindows, resourceGraphs, onEditResource, onSelectedFramesChange, dupMode]);
 
   // ─── Build "Add Segment" items for a sequenced event ────────────────────────
   const buildSegmentAddItems = useCallback((eventId: string): import('../consts/viewTypes').ContextMenuItem[] => {
@@ -1442,10 +1542,23 @@ export default function CombatPlanner({
   return (
     <div
       ref={outerRef}
-      className="timeline-outer"
+      className={`timeline-outer${dupMode ? ' timeline-outer--dup' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
+      onContextMenu={dupMode ? (e) => { e.preventDefault(); setDupMode(false); dupSourceRef.current = []; } : undefined}
+      onMouseDown={dupMode ? (e) => {
+        if (e.button === 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (dupValid && onDuplicateEvents) {
+            const newIds = onDuplicateEvents(dupSourceRef.current, dupOffset);
+            setSelectedIds(new Set(newIds));
+          }
+          setDupMode(false);
+          dupSourceRef.current = [];
+        }
+      } : undefined}
     >
       {/* ── Fixed headers (outside scroll) ─────────────────────── */}
       <div className="timeline-header-area">
@@ -1662,6 +1775,29 @@ export default function CombatPlanner({
             if (col.microColumnAssignment === 'by-order' || col.derived) {
               colEvents.sort((a, b) => a.startFrame - b.startFrame);
             }
+            // For derived (overlappable) columns, truncate each event's visual
+            // duration at the start of the next event in the same column.
+            if (col.derived) {
+              for (let i = 0; i < colEvents.length - 1; i++) {
+                const cur = colEvents[i];
+                const next = colEvents[i + 1];
+                const curEnd = cur.startFrame + cur.activationDuration + cur.activeDuration + cur.cooldownDuration;
+                if (curEnd > next.startFrame) {
+                  const clampedTotal = next.startFrame - cur.startFrame;
+                  colEvents[i] = {
+                    ...cur,
+                    activationDuration: Math.min(cur.activationDuration, clampedTotal),
+                    activeDuration: Math.max(0, Math.min(cur.activeDuration, clampedTotal - cur.activationDuration)),
+                    cooldownDuration: Math.max(0, Math.min(cur.cooldownDuration, clampedTotal - cur.activationDuration - cur.activeDuration)),
+                  };
+                }
+              }
+            }
+            // Viewport culling: only render events overlapping the visible frame range
+            const visColEvents = colEvents.filter((ev) => {
+              const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+              return evEnd >= visibleRange.startFrame && ev.startFrame <= visibleRange.endFrame;
+            });
 
             const isMf = col.headerVariant === 'mf';
             const empowered = isMf && col.maxEvents != null && colEvents.length >= col.maxEvents;
@@ -1786,7 +1922,9 @@ export default function CombatPlanner({
                 })()}
 
                 {/* Activation windows (combo skills) */}
-                {col.columnId === 'combo' && activationWindows?.get(col.ownerId)?.map((win, i) => (
+                {col.columnId === 'combo' && activationWindows?.get(col.ownerId)
+                  ?.filter((win) => win.endFrame >= visibleRange.startFrame && win.startFrame <= visibleRange.endFrame)
+                  .map((win, i) => (
                   <div
                     key={`win-${i}`}
                     className="activation-window"
@@ -1802,7 +1940,7 @@ export default function CombatPlanner({
                 {/* Events */}
                 {hasMicro ? (
                   // Micro-column events
-                  colEvents.map((ev, i) => {
+                  visColEvents.map((ev, i) => {
                     const dynPos = col.microColumnAssignment === 'dynamic-split'
                       ? microColumnEventPositions.get(ev.id)
                       : undefined;
@@ -1870,11 +2008,14 @@ export default function CombatPlanner({
                   })
                 ) : (
                   // Single-column events
-                  colEvents.map((ev) => {
+                  visColEvents.map((ev) => {
                     const isEnemy = col.source === TimelineSourceType.ENEMY;
                     const isSequenced = ev.segments && ev.segments.length > 0;
-                    const eventColor = isSequenced && slotElementColor[col.ownerId]
-                      ? slotElementColor[col.ownerId]
+                    const skillElColor = col.type === 'mini-timeline' && col.skillElement
+                      ? ELEMENT_COLORS[col.skillElement as ElementType]
+                      : undefined;
+                    const eventColor = isSequenced
+                      ? (skillElColor ?? slotElementColor[col.ownerId] ?? col.color)
                       : col.color;
                     return (
                       <EventBlock
@@ -1902,6 +2043,7 @@ export default function CombatPlanner({
                         allSegmentLabels={col.defaultEvent?.segments?.map((s) => s.label!)}
                         allDefaultSegments={col.defaultEvent?.segments}
                         hoverFrame={isSequenced ? hoverFrame : undefined}
+                        skillElement={col.type === 'mini-timeline' ? col.skillElement : undefined}
                       />
                     );
                   })
@@ -1932,6 +2074,37 @@ export default function CombatPlanner({
             }}
           />
         )}
+
+        {/* Duplicate ghost events */}
+        {dupMode && dupSourceRef.current.map((src) => {
+          const ghostFrame = src.startFrame + dupOffset;
+          const colKey = columns.find((c) =>
+            c.type === 'mini-timeline' &&
+            c.ownerId === src.ownerId &&
+            (c.columnId === src.columnId || (c.matchColumnIds?.includes(src.columnId) ?? false)),
+          )?.key;
+          const colPos = colKey ? columnPositions.get(colKey) : undefined;
+          if (!colPos) return null;
+          const topPx = frameToPx(ghostFrame, zoom);
+          const totalDuration = src.segments
+            ? src.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+            : src.activationDuration + src.activeDuration + src.cooldownDuration;
+          const heightPx = durationToPx(totalDuration, zoom);
+          return (
+            <div
+              key={`ghost-${src.id}`}
+              className={`dup-ghost ${dupValid ? 'dup-ghost--valid' : 'dup-ghost--invalid'}`}
+              style={{
+                position: 'absolute',
+                top: topPx,
+                left: colPos.left,
+                width: colPos.right - colPos.left,
+                height: heightPx,
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Hover line */}

@@ -73,3 +73,9 @@ export const DAPAN_COMBO_SKILL_SEQUENCE: SkillEventSequence = new DaPanSkillEven
   OP.COMBO_SKILL.DAPAN_COMBO_SKILL,
   'DAPAN_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const DAPAN_ULTIMATE_SEQUENCE: SkillEventSequence = new DaPanSkillEventSequence(
+  OP.ULTIMATE.DAPAN_ULTIMATE,
+  'DAPAN_ULTIMATE',
+);

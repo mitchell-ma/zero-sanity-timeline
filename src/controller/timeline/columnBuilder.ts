@@ -15,26 +15,27 @@ import {
   LAEVATAIN_COMBO_SKILL_SEQUENCE,
 } from '../../model/event-frames/laevatainEventFrames';
 import { AKEKURI_BASIC_ATTACK_SEQUENCES, AKEKURI_BATTLE_SKILL_SEQUENCE, AKEKURI_COMBO_SKILL_SEQUENCE, AKEKURI_ULTIMATE_SEQUENCE } from '../../model/event-frames/akekuriEventFrames';
-import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES, ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE, ENDMINISTRATOR_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/endministratorEventFrames';
-import { LIFENG_BASIC_ATTACK_SEQUENCES, LIFENG_BATTLE_SKILL_SEQUENCE, LIFENG_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/lifengEventFrames';
-import { CHENQIANYU_BASIC_ATTACK_SEQUENCES, CHENQIANYU_BATTLE_SKILL_SEQUENCE, CHENQIANYU_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/chenQianyuEventFrames';
-import { ESTELLA_BASIC_ATTACK_SEQUENCES, ESTELLA_BATTLE_SKILL_SEQUENCE, ESTELLA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/estellaEventFrames';
-import { EMBER_BASIC_ATTACK_SEQUENCES, EMBER_BATTLE_SKILL_SEQUENCE, EMBER_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/emberEventFrames';
-import { SNOWSHINE_BASIC_ATTACK_SEQUENCES, SNOWSHINE_BATTLE_SKILL_SEQUENCE, SNOWSHINE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/snowshineEventFrames';
-import { CATCHER_BASIC_ATTACK_SEQUENCES, CATCHER_BATTLE_SKILL_SEQUENCE, CATCHER_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/catcherEventFrames';
-import { GILBERTA_BASIC_ATTACK_SEQUENCES, GILBERTA_BATTLE_SKILL_SEQUENCE, GILBERTA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/gilbertaEventFrames';
+import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES, ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE, ENDMINISTRATOR_COMBO_SKILL_SEQUENCE, ENDMINISTRATOR_ULTIMATE_SEQUENCE } from '../../model/event-frames/endministratorEventFrames';
+import { LIFENG_BASIC_ATTACK_SEQUENCES, LIFENG_BATTLE_SKILL_SEQUENCE, LIFENG_COMBO_SKILL_SEQUENCE, LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE } from '../../model/event-frames/lifengEventFrames';
+import { CHENQIANYU_BASIC_ATTACK_SEQUENCES, CHENQIANYU_BATTLE_SKILL_SEQUENCE, CHENQIANYU_COMBO_SKILL_SEQUENCE, CHENQIANYU_ULTIMATE_SEQUENCE } from '../../model/event-frames/chenQianyuEventFrames';
+import { ESTELLA_BASIC_ATTACK_SEQUENCES, ESTELLA_BATTLE_SKILL_SEQUENCE, ESTELLA_COMBO_SKILL_SEQUENCE, ESTELLA_ULTIMATE_SEQUENCE } from '../../model/event-frames/estellaEventFrames';
+import { EMBER_BASIC_ATTACK_SEQUENCES, EMBER_BATTLE_SKILL_SEQUENCE, EMBER_COMBO_SKILL_SEQUENCE, EMBER_ULTIMATE_SEQUENCE } from '../../model/event-frames/emberEventFrames';
+import { SNOWSHINE_BASIC_ATTACK_SEQUENCES, SNOWSHINE_BATTLE_SKILL_SEQUENCE, SNOWSHINE_COMBO_SKILL_SEQUENCE, SNOWSHINE_ULTIMATE_SEQUENCE } from '../../model/event-frames/snowshineEventFrames';
+import { CATCHER_BASIC_ATTACK_SEQUENCES, CATCHER_BATTLE_SKILL_SEQUENCE, CATCHER_COMBO_SKILL_SEQUENCE, CATCHER_ULTIMATE_SEQUENCE } from '../../model/event-frames/catcherEventFrames';
+import { GILBERTA_BASIC_ATTACK_SEQUENCES, GILBERTA_BATTLE_SKILL_SEQUENCE, GILBERTA_COMBO_SKILL_SEQUENCE, GILBERTA_ULTIMATE_SEQUENCE } from '../../model/event-frames/gilbertaEventFrames';
 import { XAIHI_BASIC_ATTACK_SEQUENCES, XAIHI_BATTLE_SKILL_SEQUENCE, XAIHI_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/xaihiEventFrames';
-import { PERLICA_BASIC_ATTACK_SEQUENCES, PERLICA_BATTLE_SKILL_SEQUENCE, PERLICA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/perlicaEventFrames';
-import { FLUORITE_BASIC_ATTACK_SEQUENCES, FLUORITE_BATTLE_SKILL_SEQUENCE, FLUORITE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/fluoriteEventFrames';
-import { LASTRITE_BASIC_ATTACK_SEQUENCES, LASTRITE_BATTLE_SKILL_SEQUENCE, LASTRITE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/lastRiteEventFrames';
+import { PERLICA_BASIC_ATTACK_SEQUENCES, PERLICA_BATTLE_SKILL_SEQUENCE, PERLICA_COMBO_SKILL_SEQUENCE, PERLICA_ULTIMATE_SEQUENCE } from '../../model/event-frames/perlicaEventFrames';
+import { FLUORITE_BASIC_ATTACK_SEQUENCES, FLUORITE_BATTLE_SKILL_SEQUENCE, FLUORITE_COMBO_SKILL_SEQUENCE, FLUORITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/fluoriteEventFrames';
+import { LASTRITE_BASIC_ATTACK_SEQUENCES, LASTRITE_BATTLE_SKILL_SEQUENCE, LASTRITE_COMBO_SKILL_SEQUENCE, LASTRITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/lastRiteEventFrames';
 import { YVONNE_BASIC_ATTACK_SEQUENCES, YVONNE_BATTLE_SKILL_SEQUENCE, YVONNE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/yvonneEventFrames';
-import { AVYWENNA_BASIC_ATTACK_SEQUENCES, AVYWENNA_BATTLE_SKILL_SEQUENCE, AVYWENNA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/avywennaEventFrames';
-import { DAPAN_BASIC_ATTACK_SEQUENCES, DAPAN_BATTLE_SKILL_SEQUENCE, DAPAN_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/daPanEventFrames';
-import { POGRANICHNK_BASIC_ATTACK_SEQUENCES, POGRANICHNK_BATTLE_SKILL_SEQUENCE, POGRANICHNK_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/pogranichnikEventFrames';
-import { ALESH_BASIC_ATTACK_SEQUENCES, ALESH_BATTLE_SKILL_SEQUENCE, ALESH_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/aleshEventFrames';
-import { ARCLIGHT_BASIC_ATTACK_SEQUENCES, ARCLIGHT_BATTLE_SKILL_SEQUENCE, ARCLIGHT_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/arclightEventFrames';
+import { AVYWENNA_BASIC_ATTACK_SEQUENCES, AVYWENNA_BATTLE_SKILL_SEQUENCE, AVYWENNA_COMBO_SKILL_SEQUENCE, AVYWENNA_ULTIMATE_SEQUENCE } from '../../model/event-frames/avywennaEventFrames';
+import { DAPAN_BASIC_ATTACK_SEQUENCES, DAPAN_BATTLE_SKILL_SEQUENCE, DAPAN_COMBO_SKILL_SEQUENCE, DAPAN_ULTIMATE_SEQUENCE } from '../../model/event-frames/daPanEventFrames';
+import { POGRANICHNK_BASIC_ATTACK_SEQUENCES, POGRANICHNK_BATTLE_SKILL_SEQUENCE, POGRANICHNK_COMBO_SKILL_SEQUENCE, POGRANICHNK_ULTIMATE_SEQUENCE } from '../../model/event-frames/pogranichnikEventFrames';
+import { ALESH_BASIC_ATTACK_SEQUENCES, ALESH_BATTLE_SKILL_SEQUENCE, ALESH_COMBO_SKILL_SEQUENCE, ALESH_ULTIMATE_SEQUENCE } from '../../model/event-frames/aleshEventFrames';
+import { ARCLIGHT_BASIC_ATTACK_SEQUENCES, ARCLIGHT_BATTLE_SKILL_SEQUENCE, ARCLIGHT_COMBO_SKILL_SEQUENCE, ARCLIGHT_ULTIMATE_SEQUENCE, ARCLIGHT_EXPLOSION_SEQUENCE } from '../../model/event-frames/arclightEventFrames';
 import { ARDELIA_BASIC_ATTACK_SEQUENCES, ARDELIA_BATTLE_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE, ARDELIA_ULTIMATE_SEQUENCE } from '../../model/event-frames/ardeliaEventFrames';
 import { ANTAL_BASIC_ATTACK_SEQUENCES, ANTAL_BATTLE_SKILL_SEQUENCE, ANTAL_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/antalEventFrames';
+import { WULFGARD_BASIC_ATTACK_SEQUENCES, WULFGARD_BATTLE_SKILL_SEQUENCE, WULFGARD_COMBO_SKILL_SEQUENCE, WULFGARD_ULTIMATE_SEQUENCE } from '../../model/event-frames/wulfgardEventFrames';
 import { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
 
 /** Map operator IDs to their basic attack frame sequences. */
@@ -60,6 +61,7 @@ const BASIC_ATTACK_FRAME_SEQUENCES: Record<string, readonly SkillEventSequence[]
   arclight: ARCLIGHT_BASIC_ATTACK_SEQUENCES,
   ardelia: ARDELIA_BASIC_ATTACK_SEQUENCES,
   antal: ANTAL_BASIC_ATTACK_SEQUENCES,
+  wulfgard: WULFGARD_BASIC_ATTACK_SEQUENCES,
 };
 
 /** Map operator IDs to their battle skill frame sequence. */
@@ -85,6 +87,7 @@ const BATTLE_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence> = {
   arclight: ARCLIGHT_BATTLE_SKILL_SEQUENCE,
   ardelia: ARDELIA_BATTLE_SKILL_SEQUENCE,
   antal: ANTAL_BATTLE_SKILL_SEQUENCE,
+  wulfgard: WULFGARD_BATTLE_SKILL_SEQUENCE,
 };
 
 /** Map operator IDs to their combo skill frame sequence(s). */
@@ -110,17 +113,36 @@ const COMBO_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence | { sequenc
   arclight: ARCLIGHT_COMBO_SKILL_SEQUENCE,
   ardelia: { sequences: [ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE], labels: ['Eruption Column', 'Explosion'] },
   antal: ANTAL_COMBO_SKILL_SEQUENCE,
+  wulfgard: WULFGARD_COMBO_SKILL_SEQUENCE,
 };
 
-/** Map operator IDs to their ultimate frame sequence. */
-const ULTIMATE_FRAME_SEQUENCES: Record<string, SkillEventSequence> = {
+/** Map operator IDs to their ultimate frame sequence(s). */
+const ULTIMATE_FRAME_SEQUENCES: Record<string, SkillEventSequence | { sequences: SkillEventSequence[]; labels: string[] }> = {
   akekuri: AKEKURI_ULTIMATE_SEQUENCE,
   ardelia: ARDELIA_ULTIMATE_SEQUENCE,
+  endministrator: ENDMINISTRATOR_ULTIMATE_SEQUENCE,
+  lifeng: { sequences: [LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE], labels: ['Heart of the Unmoving', 'Vajra Impact'] },
+  chenQianyu: CHENQIANYU_ULTIMATE_SEQUENCE,
+  estella: ESTELLA_ULTIMATE_SEQUENCE,
+  ember: EMBER_ULTIMATE_SEQUENCE,
+  snowshine: SNOWSHINE_ULTIMATE_SEQUENCE,
+  catcher: CATCHER_ULTIMATE_SEQUENCE,
+  gilberta: GILBERTA_ULTIMATE_SEQUENCE,
+  perlica: PERLICA_ULTIMATE_SEQUENCE,
+  fluorite: FLUORITE_ULTIMATE_SEQUENCE,
+  lastRite: LASTRITE_ULTIMATE_SEQUENCE,
+  avywenna: AVYWENNA_ULTIMATE_SEQUENCE,
+  daPan: DAPAN_ULTIMATE_SEQUENCE,
+  pogranichnik: POGRANICHNK_ULTIMATE_SEQUENCE,
+  alesh: ALESH_ULTIMATE_SEQUENCE,
+  arclight: { sequences: [ARCLIGHT_ULTIMATE_SEQUENCE, ARCLIGHT_EXPLOSION_SEQUENCE], labels: ['Exploding Blitz', 'Explosion'] },
+  wulfgard: WULFGARD_ULTIMATE_SEQUENCE,
 };
 
 export interface Slot {
   slotId: string;
   operator: Operator | null;
+  potential?: number;
 }
 
 const MF_MICRO_COLS = 4;
@@ -158,6 +180,75 @@ export function buildColumns(
     noAdd: true,
   });
 
+  // ── Dynamic team columns based on team composition ──────────────────────
+  const teamTeamColumns = new Set<string>();
+  for (const slot of slots) {
+    const cap = slot.operator?.triggerCapability;
+    if (cap?.derivedTeamColumns) {
+      cap.derivedTeamColumns.forEach((c) => teamTeamColumns.add(c));
+    }
+  }
+
+  if (teamTeamColumns.has('team-link')) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-link`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.COMMON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.LINK,
+      label: ColumnLabel.LINK,
+      color: '#e05555',
+      headerVariant: 'skill',
+      derived: true,
+      defaultEvent: {
+        name: 'Link',
+        defaultActivationDuration: 2400, // 20 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
+  if (teamTeamColumns.has('team-amp')) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-amp`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.COMMON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.ARTS_AMP,
+      label: ColumnLabel.ARTS_AMP,
+      color: '#dd88cc',
+      headerVariant: 'skill',
+      derived: true,
+      defaultEvent: {
+        name: 'Arts Amp',
+        defaultActivationDuration: 1440, // 12 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
+  if (teamTeamColumns.has('team-shield')) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-shield`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.COMMON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.SHIELD,
+      label: ColumnLabel.SHIELD,
+      color: '#88aacc',
+      headerVariant: 'skill',
+      derived: true,
+      defaultEvent: {
+        name: 'Shield',
+        defaultActivationDuration: 1800, // 15 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
   for (const slot of slots) {
     const op = slot.operator;
     const isLaevatain = op?.id === 'laevatain';
@@ -175,6 +266,7 @@ export function buildColumns(
             label: SKILL_LABELS[skillType],
             color: op.color,
             headerVariant: 'skill',
+            skillElement: skill.element,
             defaultEvent: {
               name: skill.name,
               defaultActivationDuration: skill.defaultActivationDuration,
@@ -185,6 +277,7 @@ export function buildColumns(
               teamGaugeGain: skill.teamGaugeGain,
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
               animationDuration: skill.animationDuration,
+              ...(skillType === 'ultimate' && slot.potential != null ? { operatorPotential: slot.potential } : {}),
             },
           };
           // Laevatain basic attack: multi-sequence event with frame markers
@@ -317,10 +410,18 @@ export function buildColumns(
               segments: seg.segments,
             };
           }
-          // Generic ultimate: attach frame data without overriding durations
-          const ultSeq = op && ULTIMATE_FRAME_SEQUENCES[op.id];
-          if (ultSeq && skillType === 'ultimate') {
-            const seg = SkillSegmentBuilder.buildSegments([ultSeq]);
+          // Generic ultimate: attach frame data, stretch segment to match activeDuration
+          const ultEntry = op && ULTIMATE_FRAME_SEQUENCES[op.id];
+          if (ultEntry && skillType === 'ultimate') {
+            const isMultiUlt = 'sequences' in ultEntry;
+            const seg = isMultiUlt
+              ? SkillSegmentBuilder.buildSegments(ultEntry.sequences, { labels: ultEntry.labels })
+              : SkillSegmentBuilder.buildSegments([ultEntry]);
+            const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
+            // Stretch segment to cover the full Active phase so frames are draggable
+            if (activeDur > 0 && seg.segments.length > 0) {
+              seg.segments[0].durationFrames = activeDur;
+            }
             col.defaultEvent = {
               ...col.defaultEvent!,
               segments: seg.segments,
@@ -330,6 +431,36 @@ export function buildColumns(
           slotHasCols = true;
         }
       }
+    }
+    // Add Thunderlance subtimeline column for Avywenna
+    const isAvywenna = op?.id === 'avywenna';
+    if (isAvywenna) {
+      columns.push({
+        key: `${slot.slotId}-thunderlance`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: 'thunderlance',
+        label: STATUS_LABELS[StatusType.THUNDERLANCE].toUpperCase(),
+        color: op!.color,
+        headerVariant: 'mf',
+        microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
+          id: `tl-${i}`,
+          label: String(i + 1),
+          color: ELEMENT_COLORS[ElementType.ELECTRIC],
+        })),
+        microColumnAssignment: 'by-order',
+        maxEvents: MF_MICRO_COLS,
+        requiresMonotonicOrder: true,
+        reuseExpiredSlots: true,
+        derived: true,
+        defaultEvent: {
+          name: 'Thunderlance',
+          defaultActivationDuration: 2400, // 20s at 120fps
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      });
     }
     // Add single MeltingFlame subtimeline column for Laevatain
     if (isLaevatain) {
@@ -363,7 +494,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const mfColCount = isLaevatain ? 1 : 0;
+    const mfColCount = isLaevatain ? 1 : isAvywenna ? 1 : 0;
     const needed = MIN_SLOT_COLS - (skillColCount + mfColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
@@ -515,6 +646,28 @@ export function buildColumns(
       defaultEvent: {
         name: 'Focus',
         defaultActivationDuration: 7200, // 60 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
+  if (teamEnemyColumns.has('enemy-susceptibility')) {
+    // Susceptibility debuff on enemy (applied by Ardelia Dolly Rush, Gilberta Gravity Field,
+    // Avywenna Thunderlance: Final Shock talent 3)
+    columns.push({
+      key: 'enemy-susceptibility',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: StatusType.SUSCEPTIBILITY,
+      label: ColumnLabel.SUSCEPTIBILITY,
+      color: '#cc8866',
+      headerVariant: 'skill',
+      derived: true,
+      defaultEvent: {
+        name: 'Susceptibility',
+        defaultActivationDuration: 1800, // 15 seconds at 120fps
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
       },

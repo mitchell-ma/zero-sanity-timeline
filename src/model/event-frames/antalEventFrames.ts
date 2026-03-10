@@ -19,13 +19,15 @@ class AntalSkillEventFrame extends SkillEventFrame {
   private readonly _stagger: number;
   private readonly _applyStatus: FrameApplyStatus | null;
   private readonly _applyArtsInfliction: FrameArtsInfliction | null;
+  private readonly _duplicatesSourceInfliction: boolean;
 
-  constructor(tickData: Record<string, any>, applyStatus?: FrameApplyStatus) {
+  constructor(tickData: Record<string, any>, opts?: { applyStatus?: FrameApplyStatus; duplicatesSourceInfliction?: boolean }) {
     super();
     this._offsetSeconds = tickData.OFFSET_SECONDS;
     this._skillPointRecovery = tickData.SKILL_POINT_RECOVERY;
     this._stagger = tickData.STAGGER;
-    this._applyStatus = applyStatus ?? null;
+    this._applyStatus = opts?.applyStatus ?? null;
+    this._duplicatesSourceInfliction = opts?.duplicatesSourceInfliction ?? false;
 
     // Parse APPLY_ARTS_INFLICTION
     const apply = tickData.APPLY_ARTS_INFLICTION;
@@ -42,6 +44,7 @@ class AntalSkillEventFrame extends SkillEventFrame {
   getStagger(): number { return this._stagger; }
   getApplyStatus(): FrameApplyStatus | null { return this._applyStatus; }
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
+  getDuplicatesSourceInfliction(): boolean { return this._duplicatesSourceInfliction; }
 }
 
 class AntalSkillEventSequence extends SkillEventSequence {
@@ -99,7 +102,7 @@ class AntalBattleSkillSequence extends SkillEventSequence {
               susceptibility: { electric: FOCUS_SUSCEPTIBILITY, heat: FOCUS_SUSCEPTIBILITY },
             }
           : undefined;
-        frames.push(new AntalSkillEventFrame(tick, applyStatus));
+        frames.push(new AntalSkillEventFrame(tick, applyStatus ? { applyStatus } : undefined));
       }
     }
     this._frames = frames;
@@ -112,7 +115,27 @@ class AntalBattleSkillSequence extends SkillEventSequence {
 export const ANTAL_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new AntalBattleSkillSequence();
 
 // ── Combo Skill ─────────────────────────────────────────────────────────────
-export const ANTAL_COMBO_SKILL_SEQUENCE: SkillEventSequence = new AntalSkillEventSequence(
-  OP.COMBO_SKILL.ANTAL_COMBO_SKILL,
-  'ANTAL_COMBO_SKILL',
-);
+// Antal's combo duplicates the source infliction that triggered it
+class AntalComboSkillSequence extends SkillEventSequence {
+  private readonly _durationSeconds: number;
+  private readonly _frames: readonly AntalSkillEventFrame[];
+
+  constructor() {
+    super();
+    const seqData = OP.COMBO_SKILL.ANTAL_COMBO_SKILL as Record<string, any>;
+    const prefix = 'ANTAL_COMBO_SKILL';
+    this._durationSeconds = seqData[`${prefix}_DURATION`];
+    const tickCount: number = seqData[`${prefix}_TICKS`];
+    const frames: AntalSkillEventFrame[] = [];
+    for (let i = 1; i <= tickCount; i++) {
+      const tick = seqData[`${prefix}_TICK_${i}`];
+      if (tick) frames.push(new AntalSkillEventFrame(tick, { duplicatesSourceInfliction: true }));
+    }
+    this._frames = frames;
+  }
+
+  getDurationSeconds(): number { return this._durationSeconds; }
+  getFrames(): readonly AntalSkillEventFrame[] { return this._frames; }
+}
+
+export const ANTAL_COMBO_SKILL_SEQUENCE: SkillEventSequence = new AntalComboSkillSequence();

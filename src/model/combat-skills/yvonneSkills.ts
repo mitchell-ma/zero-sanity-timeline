@@ -87,7 +87,7 @@ export class Flashfreezer extends ComboSkill {
 export class CryoblastingPistolier extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.CRYOBLASTING_PISTOLIER;
 
-  static readonly ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly ULTIMATE_ENERGY_COST = 200;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},

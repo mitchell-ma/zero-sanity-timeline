@@ -1,4 +1,5 @@
-import { SkillEventFrame, FrameArtsInfliction } from "./skillEventFrame";
+import { StatusType, TargetType } from "../../consts/enums";
+import { SkillEventFrame, FrameArtsInfliction, FrameApplyStatus } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
@@ -9,6 +10,8 @@ class AvywennaSkillEventFrame extends SkillEventFrame {
   private readonly _skillPointRecovery: number;
   private readonly _stagger: number;
   private readonly _applyArtsInfliction: FrameArtsInfliction | null;
+  private readonly _applyStatus: FrameApplyStatus | null;
+  private readonly _consumeStatus: string | null;
 
   constructor(tickData: Record<string, any>) {
     super();
@@ -23,12 +26,24 @@ class AvywennaSkillEventFrame extends SkillEventFrame {
     } else {
       this._applyArtsInfliction = null;
     }
+
+    // Parse GRANT_STATUS (e.g. final strike grants Thunderlance on self)
+    const grant = tickData.GRANT_STATUS;
+    this._applyStatus = grant
+      ? { target: TargetType.SELF, status: grant.STATUS as StatusType, stacks: grant.STACKS, durationFrames: 0 }
+      : null;
+
+    // Parse CONSUME_STATUS (e.g. ultimate consumes Thunderlances)
+    const consume = tickData.CONSUME_STATUS;
+    this._consumeStatus = consume ? consume.STATUS : null;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
   getSkillPointRecovery(): number { return this._skillPointRecovery; }
   getStagger(): number { return this._stagger; }
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
+  getApplyStatus(): FrameApplyStatus | null { return this._applyStatus; }
+  getConsumeStatus(): string | null { return this._consumeStatus; }
 }
 
 class AvywennaSkillEventSequence extends SkillEventSequence {
@@ -72,4 +87,10 @@ export const AVYWENNA_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new AvywennaSk
 export const AVYWENNA_COMBO_SKILL_SEQUENCE: SkillEventSequence = new AvywennaSkillEventSequence(
   OP.COMBO_SKILL.AVYWENNA_COMBO_SKILL,
   'AVYWENNA_COMBO_SKILL',
+);
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const AVYWENNA_ULTIMATE_SEQUENCE: SkillEventSequence = new AvywennaSkillEventSequence(
+  OP.ULTIMATE.AVYWENNA_ULTIMATE,
+  'AVYWENNA_ULTIMATE',
 );

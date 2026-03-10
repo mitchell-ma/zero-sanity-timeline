@@ -87,7 +87,7 @@ export class FrontlineSupport extends ComboSkill {
 export class ReIgnitedOath extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.RE_IGNITED_OATH;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 100;
   static readonly POT4_COST_REDUCTION = 0.15;
 
   constructor(

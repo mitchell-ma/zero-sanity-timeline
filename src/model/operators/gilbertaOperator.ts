@@ -116,4 +116,5 @@ export class GilbertaOperator extends Operator {
     return [TriggerConditionType.COMBUSTION, TriggerConditionType.SOLIDIFICATION, TriggerConditionType.CORROSION, TriggerConditionType.ELECTRIFICATION];
   }
   get comboDescription(): string { return 'Any Arts Reaction applied'; }
+  get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
 }

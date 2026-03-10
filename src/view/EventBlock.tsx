@@ -3,13 +3,17 @@ import { frameToPx, durationToPx, TOTAL_FRAMES } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, STATUS_ELEMENT } from '../consts/enums';
 
-function getFrameElementColor(f: EventFrameMarker): string | undefined {
+function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
   const el = f.applyArtsInfliction?.element
     ?? f.absorbArtsInfliction?.element
     ?? f.consumeArtsInfliction?.element
     ?? (f.applyForcedReaction ? STATUS_ELEMENT[f.applyForcedReaction.reaction] : undefined)
-    ?? (f.applyStatus ? STATUS_ELEMENT[f.applyStatus.status] : undefined);
-  return el ? ELEMENT_COLORS[el as ElementType] : undefined;
+    ?? (f.applyStatus ? STATUS_ELEMENT[f.applyStatus.status] : undefined)
+    ?? f.damageElement
+    ?? skillElement;
+  if (!el) return undefined;
+  const base = ELEMENT_COLORS[el as ElementType];
+  return base ? `color-mix(in srgb, ${base} 75%, #fff)` : undefined;
 }
 
 interface EventBlockProps {
@@ -41,6 +45,8 @@ interface EventBlockProps {
   allDefaultSegments?: import('../consts/viewTypes').EventSegmentData[];
   /** Current hover-line frame (absolute). Diamonds at this frame get hover-selected styling. */
   hoverFrame?: number | null;
+  /** Element type of the skill (e.g. "HEAT", "NATURE") for frame diamond coloring. */
+  skillElement?: string;
   /** If true, use diagonal stripe pattern for the active segment (e.g. combo trigger). */
   striped?: boolean;
   /** If set, shows a warning overlay on top of the event (e.g. combo outside trigger window). */
@@ -86,6 +92,7 @@ function EventBlock({
   allSegmentLabels,
   allDefaultSegments,
   hoverFrame: hoverFrameProp,
+  skillElement,
   striped = false,
   comboWarning = null,
 }: EventBlockProps) {
@@ -186,7 +193,7 @@ function EventBlock({
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
             const isHoverHighlight = !isSelected && hoverFrameProp != null &&
               Math.abs(durationToPx(hoverFrameProp - (startFrame + offsetFrames + f.offsetFrame), zoom)) <= 4;
-            const elColor = getFrameElementColor(f);
+            const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
                 key={`f-${fi}`}
@@ -253,7 +260,7 @@ function EventBlock({
   const coolH   = hasCooldown ? durationToPx(clampedCoolEnd   - coolStart,   zoom) : 0;
 
   // Animation sub-phase within activation (TIME_STOP portion)
-  const hasAnimation = variant === 'ultimate' && animationDuration != null && animationDuration > 0 && animationDuration < activationDuration;
+  const hasAnimation = variant === 'ultimate' && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration;
   const animH = hasAnimation ? durationToPx(animationDuration!, zoom) : 0;
   const postAnimH = hasAnimation ? activeH - animH : 0;
 
@@ -283,9 +290,12 @@ function EventBlock({
       onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
     >
       {/* Active / Activation segment */}
-      {activeH > 0 && hasAnimation ? (
+      {activeH > 0 && hasAnimation ? (() => {
+        // For ultimates with animation sub-phases but no active phase, render frame diamonds
+        const actFrames = !hasLinger && segments && segments.length > 0 ? segments[0].frames : undefined;
+        return (
         <>
-          {/* Animation sub-phase (TIME_STOP) */}
+          {/* Animation sub-phase (TIME_STOP) — starts at top of activation */}
           <div
             className="event-segment"
             style={{
@@ -293,7 +303,7 @@ function EventBlock({
               height: animH,
               background: hexAlpha(color, 0.35),
               border: `1px solid ${hexAlpha(color, 0.55)}`,
-              borderBottom: 'none',
+              borderBottom: `1px dashed ${hexAlpha(color, 0.55)}`,
               borderRadius: '2px 2px 0 0',
             }}
             onMouseDown={(e) => onDragStart(e, id, startFrame)}
@@ -302,15 +312,15 @@ function EventBlock({
               <span className="event-block-label" style={{ color: hexAlpha(color, 0.8) }}>Animation</span>
             )}
           </div>
-          {/* Post-animation activation */}
+          {/* Activation sub-phase (post-animation) */}
           <div
-            className="event-segment"
+            className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
             style={{
               top: animH,
               height: postAnimH,
               background: hexAlpha(color, 0.55),
               border: `1px solid ${hexAlpha(color, 0.75)}`,
-              borderTop: `1px dashed ${hexAlpha(color, 0.55)}`,
+              borderTop: 'none',
               borderBottom: hasLinger ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
               borderRadius: hasLinger || hasCooldown ? '0' : '0 0 2px 2px',
             }}
@@ -319,11 +329,37 @@ function EventBlock({
             {postAnimH > 14 && (
               <span className="event-block-label" style={{ color: '#fff' }}>Activation</span>
             )}
+            {actFrames?.map((f, fi) => {
+              // offsetFrame is relative to ultimate start; subtract animation frames to position in post-anim segment
+              const animFrames = animationDuration ?? 0;
+              const framePx = durationToPx(f.offsetFrame - animFrames, zoom);
+              if (framePx < 0 || framePx > postAnimH) return null;
+              const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
+              const isHoverHighlight = !isSelected && hoverFrameProp != null &&
+                Math.abs(durationToPx(hoverFrameProp - (startFrame + f.offsetFrame), zoom)) <= 4;
+              const elColor = getFrameElementColor(f, skillElement);
+              return (
+                <div
+                  key={`f-${fi}`}
+                  className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
+                  style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
+                  onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
+                  onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 0, fi); }}
+                  onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
+                  onMouseOut={(e) => { e.stopPropagation(); }}
+                />
+              );
+            })}
           </div>
         </>
-      ) : activeH > 0 ? (
+        );
+      })() : activeH > 0 ? (() => {
+        // For ultimates with no active phase, render frame diamonds in the activation segment
+        const actFrames = variant === 'ultimate' && !hasLinger && segments && segments.length > 0 ? segments[0].frames : undefined;
+        return (
         <div
-          className="event-segment"
+          className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
           style={variant === 'ultimate' ? {
             top: 0,
             height: activeH,
@@ -346,8 +382,28 @@ function EventBlock({
               {variant === 'ultimate' ? 'Activation' : (label ?? 'ACT')}
             </span>
           )}
+          {actFrames?.map((f, fi) => {
+            const framePx = durationToPx(f.offsetFrame, zoom);
+            const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
+            const isHoverHighlight = !isSelected && hoverFrameProp != null &&
+              Math.abs(durationToPx(hoverFrameProp - (startFrame + f.offsetFrame), zoom)) <= 4;
+            const elColor = getFrameElementColor(f, skillElement);
+            return (
+              <div
+                key={`f-${fi}`}
+                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
+                style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 0, fi); }}
+                onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
+                onMouseOut={(e) => { e.stopPropagation(); }}
+              />
+            );
+          })}
         </div>
-      ) : null}
+        );
+      })() : null}
 
       {/* Lingering / Active phase segment */}
       {hasLinger && lingerH > 0 && (() => {
@@ -385,7 +441,7 @@ function EventBlock({
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
             const isHoverHighlight = !isSelected && hoverFrameProp != null &&
               Math.abs(durationToPx(hoverFrameProp - (startFrame + activationDuration + f.offsetFrame), zoom)) <= 4;
-            const elColor = getFrameElementColor(f);
+            const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
                 key={`f-${fi}`}

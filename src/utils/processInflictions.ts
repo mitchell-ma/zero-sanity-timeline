@@ -1,6 +1,7 @@
 import { TimelineEvent, FrameAbsorptionMarker } from '../consts/viewTypes';
-import { TargetType } from '../consts/enums';
+import { StatusType, TargetType } from '../consts/enums';
 import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../model/channels';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TOTAL_FRAMES } from './timeline';
 
 /** Maps forced reaction name → reaction columnId. */
@@ -47,6 +48,20 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   ELECTRIC: 'electricInfliction',
 };
 
+/** Maps self-targeted grant status → team-level derived column. */
+const TEAM_STATUS_COLUMN: Record<string, string> = {
+  [StatusType.SQUAD_BUFF]: StatusType.LINK,
+};
+
+/** P5 link extension: extra frames added to link duration when operator potential >= 5. */
+const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
+
+/** Source information for event status changes (consumed/refreshed). */
+interface StatusSource {
+  ownerId: string;
+  skillName?: string;
+}
+
 /**
  * Processes raw timeline events into renderable events.
  *
@@ -59,11 +74,136 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
  */
 export function processInflictionEvents(rawEvents: TimelineEvent[]): TimelineEvent[] {
   const withDerivedInflictions = deriveFrameInflictions(rawEvents);
-  const withAbsorptions = applyAbsorptions(withDerivedInflictions);
+  const withConsumedOperatorStatuses = consumeOperatorStatuses(withDerivedInflictions);
+  const withConsumedTeam = consumeTeamStatuses(withConsumedOperatorStatuses);
+  const withAbsorptions = applyAbsorptions(withConsumedTeam);
   const withReactions = deriveReactions(withAbsorptions);
   const mergedReactions = mergeReactions(withReactions);
   const withPhysicalRefresh = applyPhysicalInflictionRefresh(mergedReactions);
   return applySameElementRefresh(withPhysicalRefresh);
+}
+
+/** Skill column IDs that consume team statuses (Link) when cast. */
+const CONSUMING_COLUMNS = new Set(['battle', 'combo', 'ultimate']);
+
+/**
+ * Consumes team status events (e.g. Link) when a battle/combo/ultimate skill is cast.
+ * The first skill cast after Link is granted clamps the Link event at that frame.
+ */
+function consumeTeamStatuses(events: TimelineEvent[]): TimelineEvent[] {
+  // Collect team status events (Link, etc.) and consuming skill events
+  const teamStatuses = events.filter(
+    (ev) => ev.ownerId === COMMON_OWNER_ID && Object.values(TEAM_STATUS_COLUMN).includes(ev.columnId),
+  );
+  if (teamStatuses.length === 0) return events;
+
+  const skillCasts = events
+    .filter((ev) => ev.ownerId !== 'enemy' && ev.ownerId !== COMMON_OWNER_ID && CONSUMING_COLUMNS.has(ev.columnId))
+    .sort((a, b) => a.startFrame - b.startFrame);
+
+  if (skillCasts.length === 0) return events;
+
+  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
+
+  for (const status of teamStatuses) {
+    const statusEnd = status.startFrame + status.activationDuration;
+    // Find the first skill cast strictly after the status starts
+    for (const cast of skillCasts) {
+      if (cast.startFrame <= status.startFrame) continue;
+      if (cast.startFrame >= statusEnd) break;
+      clampMap.set(status.id, {
+        frame: cast.startFrame,
+        source: { ownerId: cast.ownerId, skillName: cast.name },
+      });
+      break;
+    }
+  }
+
+  if (clampMap.size === 0) return events;
+
+  return events.map((ev) => {
+    const clamp = clampMap.get(ev.id);
+    if (!clamp) return ev;
+    const clamped = Math.max(0, clamp.frame - ev.startFrame);
+    return {
+      ...ev,
+      activationDuration: clamped,
+      eventStatus: 'consumed' as const,
+      eventStatusOwnerId: clamp.source.ownerId,
+      eventStatusSkillName: clamp.source.skillName,
+    };
+  });
+}
+
+/**
+ * Consumes operator exchange-status events (e.g. Thunderlance) when a frame has
+ * `consumeStatus`. All active events of the matching status owned by the same
+ * operator are clamped at the consumption frame.
+ */
+function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
+  // Collect consume-status points from frame markers
+  type ConsumePoint = { absoluteFrame: number; ownerId: string; status: string; source: StatusSource };
+  const consumePoints: ConsumePoint[] = [];
+
+  for (const event of events) {
+    if (!event.segments || event.ownerId === 'enemy' || event.ownerId === COMMON_OWNER_ID) continue;
+
+    let cumulativeOffset = 0;
+    for (let si = 0; si < event.segments.length; si++) {
+      const seg = event.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          if (frame.consumeStatus) {
+            consumePoints.push({
+              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              ownerId: event.ownerId,
+              status: frame.consumeStatus,
+              source: { ownerId: event.ownerId, skillName: event.name },
+            });
+          }
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  if (consumePoints.length === 0) return events;
+
+  consumePoints.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
+
+  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
+
+  for (const cp of consumePoints) {
+    const exchangeColumnId = EXCHANGE_STATUS_COLUMN[cp.status];
+    if (!exchangeColumnId) continue;
+
+    // Find all active exchange status events of this type owned by the same operator
+    for (const ev of events) {
+      if (ev.ownerId !== cp.ownerId || ev.columnId !== exchangeColumnId) continue;
+      if (clampMap.has(ev.id)) continue; // already clamped
+
+      const endFrame = ev.startFrame + ev.activationDuration;
+      if (ev.startFrame <= cp.absoluteFrame && endFrame > cp.absoluteFrame) {
+        clampMap.set(ev.id, { frame: cp.absoluteFrame, source: cp.source });
+      }
+    }
+  }
+
+  if (clampMap.size === 0) return events;
+
+  return events.map((ev) => {
+    const clamp = clampMap.get(ev.id);
+    if (!clamp) return ev;
+    const clamped = Math.max(0, clamp.frame - ev.startFrame);
+    return {
+      ...ev,
+      activationDuration: clamped,
+      eventStatus: 'consumed' as const,
+      eventStatusOwnerId: clamp.source.ownerId,
+      eventStatusSkillName: clamp.source.skillName,
+    };
+  });
 }
 
 /**
@@ -105,9 +245,10 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
           // Status applied by this frame (self or enemy target)
           if (frame.applyStatus) {
             if (frame.applyStatus.target === TargetType.SELF) {
-              // Self-targeted status (e.g. Melting Flame)
+              // Self-targeted status (e.g. Melting Flame, Thunderlance)
               const grantColumnId = EXCHANGE_STATUS_COLUMN[frame.applyStatus.status];
               if (grantColumnId) {
+                const statusDuration = EXCHANGE_STATUS_DURATION[frame.applyStatus.status] ?? EXCHANGE_EVENT_DURATION;
                 for (let s = 0; s < frame.applyStatus.stacks; s++) {
                   derived.push({
                     id: `${event.id}-status-${si}-${fi}-${s}`,
@@ -115,13 +256,36 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                     ownerId: event.ownerId,
                     columnId: grantColumnId,
                     startFrame: absoluteFrame,
-                    activationDuration: EXCHANGE_EVENT_DURATION,
+                    activationDuration: statusDuration,
                     activeDuration: 0,
                     cooldownDuration: 0,
                     sourceOwnerId: event.ownerId,
                     sourceSkillName: event.name,
                   });
                 }
+              }
+              // Team status (e.g. Squad Buff → Link)
+              const teamColumnId = TEAM_STATUS_COLUMN[frame.applyStatus.status];
+              if (teamColumnId) {
+                // Link duration = remaining ultimate active phase from grant frame
+                const ultActiveEnd = event.startFrame + event.activationDuration + event.activeDuration;
+                let linkDuration = Math.max(0, ultActiveEnd - absoluteFrame);
+                // P5: extend link buff duration beyond ultimate active phase
+                if ((event.operatorPotential ?? 0) >= 5) {
+                  linkDuration += P5_LINK_EXTENSION_FRAMES;
+                }
+                derived.push({
+                  id: `${event.id}-team-status-${si}-${fi}`,
+                  name: 'Squad Buff (Link)',
+                  ownerId: COMMON_OWNER_ID,
+                  columnId: teamColumnId,
+                  startFrame: absoluteFrame,
+                  activationDuration: linkDuration,
+                  activeDuration: 0,
+                  cooldownDuration: 0,
+                  sourceOwnerId: event.ownerId,
+                  sourceSkillName: event.name,
+                });
               }
             } else if (frame.applyStatus.target === TargetType.ENEMY) {
               // Enemy-targeted status (e.g. Focus)
@@ -160,6 +324,23 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 forcedReaction: true,
               });
             }
+          }
+
+          // SP recovery from frames → team SP resource timeline
+          if ((frame.skillPointRecovery ?? 0) > 0) {
+            derived.push({
+              id: `${event.id}-sp-${si}-${fi}`,
+              name: 'sp-recovery',
+              ownerId: COMMON_OWNER_ID,
+              columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+              startFrame: absoluteFrame,
+              // Negative activationDuration = negative cost = SP gain in ResourceTimeline
+              activationDuration: -(frame.skillPointRecovery!),
+              activeDuration: 0,
+              cooldownDuration: 0,
+              sourceOwnerId: event.ownerId,
+              sourceSkillName: event.name,
+            });
           }
         }
       }
@@ -223,11 +404,18 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
 /** Maps absorption exchange status → columnId for generated events. */
 const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
   MELTING_FLAME: 'melting-flame',
+  THUNDERLANCE: 'thunderlance',
 };
 
 /** Max micro-column slots for each exchange status. */
 const EXCHANGE_STATUS_MAX_SLOTS: Record<string, number> = {
   MELTING_FLAME: 4,
+  THUNDERLANCE: 4,
+};
+
+/** Duration (frames) for each exchange status. Unkeyed = effectively permanent. */
+const EXCHANGE_STATUS_DURATION: Record<string, number> = {
+  THUNDERLANCE: 2400, // 20s at 120fps
 };
 
 /** Default duration for generated exchange events (effectively permanent). */
@@ -260,6 +448,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     absoluteFrame: number;
     element: string;
     stacks: number;
+    source: StatusSource;
   };
 
   const absorptions: AbsorptionPoint[] = [];
@@ -290,6 +479,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
               absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
               element: frame.consumeArtsInfliction.element,
               stacks: frame.consumeArtsInfliction.stacks,
+              source: { ownerId: event.ownerId, skillName: event.name },
             });
           }
         }
@@ -304,7 +494,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
   absorptions.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
 
   // Track modifications: clamped inflictions and removed inflictions
-  const clampMap = new Map<string, number>(); // infliction id → clamp frame
+  const clampMap = new Map<string, { frame: number; source: StatusSource }>(); // infliction id → clamp info
   const removedIds = new Set<string>();
   const generated: TimelineEvent[] = [];
 
@@ -322,9 +512,9 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
       if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
 
-      const clampFrame = clampMap.get(ev.id);
-      const endFrame = clampFrame !== undefined
-        ? clampFrame
+      const clamp = clampMap.get(ev.id);
+      const endFrame = clamp !== undefined
+        ? clamp.frame
         : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
       if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
@@ -340,9 +530,9 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
       if (ev.ownerId !== ownerId || ev.columnId !== exchangeColumnId) continue;
       if (removedIds.has(ev.id)) continue;
 
-      const clampFrame = clampMap.get(ev.id);
-      const endFrame = clampFrame !== undefined
-        ? clampFrame
+      const clamp = clampMap.get(ev.id);
+      const endFrame = clamp !== undefined
+        ? clamp.frame
         : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
       if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
@@ -360,9 +550,10 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     activeInflictions.sort((a, b) => a.startFrame - b.startFrame);
 
     // Consume inflictions: clamp them at the absorption frame
+    const absSource: StatusSource = { ownerId: absorption.ownerId, skillName: absorption.eventName };
     for (let i = 0; i < stacksToConsume; i++) {
       const consumed = activeInflictions[i];
-      clampMap.set(consumed.id, absoluteFrame);
+      clampMap.set(consumed.id, { frame: absoluteFrame, source: absSource });
     }
 
     // Generate exchange status events
@@ -392,9 +583,9 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     for (const ev of events) {
       if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
-      const clampFrame = clampMap.get(ev.id);
-      const endFrame = clampFrame !== undefined
-        ? clampFrame
+      const clamp = clampMap.get(ev.id);
+      const endFrame = clamp !== undefined
+        ? clamp.frame
         : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       if (ev.startFrame <= consumption.absoluteFrame && endFrame > consumption.absoluteFrame) {
         activeInflictions.push(ev);
@@ -405,7 +596,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     activeInflictions.sort((a, b) => a.startFrame - b.startFrame);
     const toConsume = Math.min(activeInflictions.length, consumption.stacks);
     for (let i = 0; i < toConsume; i++) {
-      clampMap.set(activeInflictions[i].id, consumption.absoluteFrame);
+      clampMap.set(activeInflictions[i].id, { frame: consumption.absoluteFrame, source: consumption.source });
     }
   }
 
@@ -416,9 +607,9 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
   for (const ev of events) {
     if (removedIds.has(ev.id)) continue;
 
-    const clampFrame = clampMap.get(ev.id);
-    if (clampFrame !== undefined) {
-      const available = Math.max(0, clampFrame - ev.startFrame);
+    const clamp = clampMap.get(ev.id);
+    if (clamp !== undefined) {
+      const available = Math.max(0, clamp.frame - ev.startFrame);
       const clampedActive = Math.min(ev.activationDuration, available);
       const remAfterActive = available - clampedActive;
       const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
@@ -430,6 +621,8 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
         activeDuration: clampedLinger,
         cooldownDuration: clampedCooldown,
         eventStatus: 'consumed',
+        eventStatusOwnerId: clamp.source.ownerId,
+        eventStatusSkillName: clamp.source.skillName,
       });
     } else {
       result.push(ev);
@@ -458,7 +651,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Track which infliction IDs are consumed (triggering infliction removed,
   // consumed inflictions clamped)
   const removedIds = new Set<string>();
-  const clampMap = new Map<string, number>(); // infliction id → clamp frame
+  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
   const generatedReactions: TimelineEvent[] = [];
 
   // Walk through inflictions in chronological order
@@ -474,9 +667,9 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       if (prev.columnId === incoming.columnId) continue;
 
       // Use clamped end if already clamped by a prior reaction
-      const clampFrame = clampMap.get(prev.id);
-      const endFrame = clampFrame !== undefined
-        ? clampFrame
+      const clamp = clampMap.get(prev.id);
+      const endFrame = clamp !== undefined
+        ? clamp.frame
         : prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
 
       if (endFrame > incoming.startFrame) {
@@ -504,8 +697,9 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       removedIds.add(incoming.id);
 
       // Clamp all active other-element inflictions at the reaction frame
+      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? 'enemy', skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
-        clampMap.set(consumed.id, incoming.startFrame);
+        clampMap.set(consumed.id, { frame: incoming.startFrame, source: reactionSource });
       }
     }
   }
@@ -517,9 +711,9 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   for (const ev of events) {
     if (removedIds.has(ev.id)) continue;
 
-    const clampFrame = clampMap.get(ev.id);
-    if (clampFrame !== undefined) {
-      const available = Math.max(0, clampFrame - ev.startFrame);
+    const clamp = clampMap.get(ev.id);
+    if (clamp !== undefined) {
+      const available = Math.max(0, clamp.frame - ev.startFrame);
       const clampedActive = Math.min(ev.activationDuration, available);
       const remAfterActive = available - clampedActive;
       const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
@@ -531,6 +725,8 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         activeDuration: clampedLinger,
         cooldownDuration: clampedCooldown,
         eventStatus: 'consumed',
+        eventStatusOwnerId: clamp.source.ownerId,
+        eventStatusSkillName: clamp.source.skillName,
       });
     } else {
       result.push(ev);
@@ -557,7 +753,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
   if (reactionsByType.size === 0) return events;
 
-  const clampMap = new Map<string, number>(); // event id → clamped activationDuration
+  const clampMap = new Map<string, { duration: number; source: StatusSource }>();
 
   reactionsByType.forEach((group) => {
     if (group.length <= 1) return;
@@ -565,13 +761,16 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
     for (let i = 0; i < sorted.length - 1; i++) {
       const current = sorted[i];
-      const currentEnd = current.startFrame + (clampMap.get(current.id) ?? current.activationDuration);
+      const currentEnd = current.startFrame + (clampMap.get(current.id)?.duration ?? current.activationDuration);
       const next = sorted[i + 1];
       const nextEnd = next.startFrame + next.activationDuration;
 
       // Only clamp if the newer event outlasts the older one (refresh)
       if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
-        clampMap.set(current.id, Math.max(0, next.startFrame - current.startFrame));
+        clampMap.set(current.id, {
+          duration: Math.max(0, next.startFrame - current.startFrame),
+          source: { ownerId: next.sourceOwnerId ?? 'enemy', skillName: next.sourceSkillName },
+        });
       }
     }
   });
@@ -579,8 +778,14 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   if (clampMap.size === 0) return events;
 
   return events.map((ev) => {
-    const clamped = clampMap.get(ev.id);
-    return clamped !== undefined ? { ...ev, activationDuration: clamped, eventStatus: 'refreshed' as const } : ev;
+    const clamp = clampMap.get(ev.id);
+    return clamp !== undefined ? {
+      ...ev,
+      activationDuration: clamp.duration,
+      eventStatus: 'refreshed' as const,
+      eventStatusOwnerId: clamp.source.ownerId,
+      eventStatusSkillName: clamp.source.skillName,
+    } : ev;
   });
 }
 
@@ -657,7 +862,8 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
       const idx = lastSlotIndices[k];
       const nextIdx = lastSlotIndices[k + 1];
       const ev = sorted[idx];
-      const nextStart = sorted[nextIdx].startFrame;
+      const nextEv = sorted[nextIdx];
+      const nextStart = nextEv.startFrame;
       const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       const originalEnd = ev.startFrame + totalDur;
 
@@ -675,6 +881,8 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
           activeDuration: clampedLinger,
           cooldownDuration: clampedCooldown,
           eventStatus: 'refreshed' as const,
+          eventStatusOwnerId: nextEv.sourceOwnerId,
+          eventStatusSkillName: nextEv.sourceSkillName,
         });
       }
     }
@@ -772,7 +980,8 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
       const idx = lastSlotIndices[k];
       const nextIdx = lastSlotIndices[k + 1];
       const ev = sorted[idx];
-      const nextStart = sorted[nextIdx].startFrame;
+      const nextEv = sorted[nextIdx];
+      const nextStart = nextEv.startFrame;
       const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       const originalEnd = ev.startFrame + totalDur;
 
@@ -790,6 +999,8 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
           activeDuration: clampedLinger,
           cooldownDuration: clampedCooldown,
           eventStatus: 'refreshed' as const,
+          eventStatusOwnerId: nextEv.sourceOwnerId,
+          eventStatusSkillName: nextEv.sourceSkillName,
         });
       }
     }

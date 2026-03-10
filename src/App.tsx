@@ -5,6 +5,7 @@ import CombatSheet from './view/CombatSheet';
 import ContextMenu from './view/ContextMenu';
 import InformationPane, { LoadoutStats, DEFAULT_LOADOUT_STATS, getDefaultLoadoutStats } from './view/InformationPane';
 import AppBar from './view/AppBar';
+import SessionSidebar from './view/SessionSidebar';
 import KeyboardShortcutsModal from './view/KeyboardShortcutsModal';
 import WarningModal from './view/WarningModal';
 import DevlogModal from './view/DevlogModal';
@@ -18,8 +19,10 @@ import { processInflictionEvents } from './utils/processInflictions';
 import { buildColumns } from './controller/timeline/columnBuilder';
 import {
   createEvent,
+  genEventId,
   validateUpdate,
   validateMove,
+  validateBatchMoveDelta,
   wouldOverlapNonOverlappable,
   setNextEventId,
   getNextEventId,
@@ -40,6 +43,18 @@ import {
   applySheetData,
   loadInitialState,
 } from './app/sheetDefaults';
+import {
+  SessionTree,
+  loadSessionTree,
+  saveSessionTree,
+  loadActiveSessionId,
+  saveActiveSessionId,
+  loadSessionData,
+  saveSessionData,
+  deleteSessionData,
+  addSession as addSessionNode,
+  migrateLegacySheet,
+} from './utils/sessionStorage';
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts';
 import { useCombatLoadout } from './app/useCombatLoadout';
 import { useResourceGraphs } from './app/useResourceGraphs';
@@ -49,6 +64,42 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './controller/slot/commonSlot
 import './App.css';
 
 const initialLoad = loadInitialState();
+
+// ─── Session initialization ──────────────────────────────────────────────────
+function initSessions() {
+  let tree = loadSessionTree();
+  let activeId = loadActiveSessionId();
+
+  // If no sessions exist, migrate legacy sheet or create a default session
+  if (tree.nodes.length === 0) {
+    const migrated = migrateLegacySheet();
+    if (migrated) {
+      return { tree: migrated.tree, activeId: migrated.activeId };
+    }
+    // Create a default session from current initialLoad
+    const { tree: newTree, node } = addSessionNode(tree, 'Session 1', null);
+    tree = newTree;
+    activeId = node.id;
+    saveSessionTree(tree);
+    saveActiveSessionId(activeId);
+    // Save current state as this session
+    const sheetData = serializeSheet(
+      (initialLoad.loaded?.operators ?? INITIAL_OPERATORS).map((op) => op?.id ?? null),
+      (initialLoad.loaded?.enemy ?? DEFAULT_ENEMY).id,
+      initialLoad.loaded?.events ?? [],
+      initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
+      initialLoad.loaded?.loadoutStats ?? INITIAL_LOADOUT_STATS,
+      initialLoad.loaded?.visibleSkills ?? INITIAL_VISIBLE,
+      getNextEventId(),
+      initialLoad.loaded?.resourceConfigs ?? {},
+    );
+    saveSessionData(activeId, sheetData);
+  }
+
+  return { tree, activeId };
+}
+
+const initialSessions = initSessions();
 
 export default function App() {
   // ─── Core state ──────────────────────────────────────────────────────────
@@ -142,6 +193,13 @@ export default function App() {
   const [keysOpen,       setKeysOpen]       = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
 
+  // ─── Session state ─────────────────────────────────────────────────────
+  const [sessionTree, setSessionTree] = useState<SessionTree>(initialSessions.tree);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(initialSessions.activeId);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('zst-sidebar-collapsed') === 'true'; } catch { return false; }
+  });
+
   // ─── Scroll sync ────────────────────────────────────────────────────────
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
   const dmgScrollRef = useRef<HTMLDivElement | null>(null);
@@ -215,14 +273,25 @@ export default function App() {
     });
   }, [resourceConfigs, combatLoadout, spKey]);
 
+  // Sync derived SP recovery events onto the SP subtimeline for resource graph
+  useEffect(() => {
+    const spSubtimeline = combatLoadout.commonSlot.getSubtimeline(COMMON_COLUMN_IDS.SKILL_POINTS);
+    if (!spSubtimeline) return;
+    const spEvents = processedEvents.filter(
+      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS,
+    );
+    spSubtimeline.setEvents(spEvents);
+  }, [processedEvents, combatLoadout]);
+
   const slots = SLOT_IDS.map((slotId, i) => ({
     slotId,
     operator: operators[i] ?? null,
+    potential: loadoutStats[slotId]?.potential,
   }));
 
   const columns = useMemo(
     () => buildColumns(slots, enemy, visibleSkills),
-    [slots, enemy, visibleSkills],
+    [slots, enemy, visibleSkills, loadoutStats],
   );
 
   const editingEvent = editingEventId
@@ -255,11 +324,11 @@ export default function App() {
     const slotId = colKey.replace(/-ultimate$/, '');
     const slotIdx = SLOT_IDS.indexOf(slotId);
     const op = slotIdx >= 0 ? operators[slotIdx] : null;
-    if (!op) return { startValue: 0, max: 300, regenPerSecond: 10 };
+    if (!op) return { startValue: 0, max: 300, regenPerSecond: 0 };
     const stats = loadoutStats[slotId];
     const potential = stats?.potential ?? 5;
     const cost = getUltimateEnergyCostForPotential(op.id, potential as 0|1|2|3|4|5) ?? op.ultimateEnergyCost;
-    return { startValue: 0, max: cost, regenPerSecond: 10 };
+    return { startValue: 0, max: cost, regenPerSecond: 0 };
   }, [operators, spKey, loadoutStats]);
 
   const editingResourceConfig = editingResourceKey
@@ -285,6 +354,133 @@ export default function App() {
   }, [operators, enemy, events, loadouts, loadoutStats, visibleSkills, resourceConfigs]);
 
   useAutoSave(buildSheetData);
+
+  // Also auto-save to the active session
+  useEffect(() => {
+    if (!activeSessionId) return;
+    const timer = setTimeout(() => {
+      saveSessionData(activeSessionId, buildSheetData());
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [buildSheetData, activeSessionId]);
+
+  // ─── Session handlers ──────────────────────────────────────────────────
+  const handleSessionTreeChange = useCallback((tree: SessionTree) => {
+    setSessionTree(tree);
+    saveSessionTree(tree);
+  }, []);
+
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarCollapsed((p) => {
+      const next = !p;
+      try { localStorage.setItem('zst-sidebar-collapsed', String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
+  const handleNewSession = useCallback((parentId: string | null) => {
+    // Save current session first
+    if (activeSessionId) {
+      saveSessionData(activeSessionId, buildSheetData());
+    }
+
+    const { tree: newTree, node } = addSessionNode(sessionTree, 'New Session', parentId);
+    setSessionTree(newTree);
+    saveSessionTree(newTree);
+
+    // Create empty session data
+    setNextEventId(1);
+    const emptyState = {
+      events: [] as TimelineEvent[],
+      operators: [...INITIAL_OPERATORS],
+      enemy: DEFAULT_ENEMY,
+      loadouts: INITIAL_LOADOUTS,
+      loadoutStats: INITIAL_LOADOUT_STATS,
+      resourceConfigs: {} as Record<string, ResourceConfig>,
+    };
+    resetUndoable(emptyState);
+    setVisibleSkills(INITIAL_VISIBLE);
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingResourceKey(null);
+    setContextMenu(null);
+
+    // Save and activate
+    const sheetData = serializeSheet(
+      emptyState.operators.map((op) => op?.id ?? null),
+      emptyState.enemy.id,
+      emptyState.events,
+      emptyState.loadouts,
+      emptyState.loadoutStats,
+      INITIAL_VISIBLE,
+      1,
+      emptyState.resourceConfigs,
+    );
+    saveSessionData(node.id, sheetData);
+    setActiveSessionId(node.id);
+    saveActiveSessionId(node.id);
+  }, [sessionTree, activeSessionId, buildSheetData, resetUndoable]);
+
+  const handleSelectSession = useCallback((id: string) => {
+    if (id === activeSessionId) return;
+
+    // Save current session
+    if (activeSessionId) {
+      saveSessionData(activeSessionId, buildSheetData());
+    }
+
+    // Load target session
+    const data = loadSessionData(id);
+    if (data) {
+      const resolved = applySheetData(data);
+      resetUndoable({
+        events: resolved.events,
+        operators: resolved.operators,
+        enemy: resolved.enemy,
+        loadouts: resolved.loadouts,
+        loadoutStats: resolved.loadoutStats,
+        resourceConfigs: resolved.resourceConfigs,
+      });
+      setVisibleSkills(resolved.visibleSkills);
+    } else {
+      // Session data missing — reset to defaults
+      setNextEventId(1);
+      resetUndoable({
+        events: [],
+        operators: [...INITIAL_OPERATORS],
+        enemy: DEFAULT_ENEMY,
+        loadouts: INITIAL_LOADOUTS,
+        loadoutStats: INITIAL_LOADOUT_STATS,
+        resourceConfigs: {},
+      });
+      setVisibleSkills(INITIAL_VISIBLE);
+    }
+
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingResourceKey(null);
+    setContextMenu(null);
+    setActiveSessionId(id);
+    saveActiveSessionId(id);
+  }, [activeSessionId, buildSheetData, resetUndoable]);
+
+  const handleDeleteSession = useCallback((sessionIds: string[], _nodeId: string) => {
+    for (const sid of sessionIds) {
+      deleteSessionData(sid);
+    }
+    // If active session was deleted, switch to first remaining session
+    if (activeSessionId && sessionIds.includes(activeSessionId)) {
+      const remaining = sessionTree.nodes.find(
+        (n) => n.type === 'session' && !sessionIds.includes(n.id),
+      );
+      if (remaining) {
+        handleSelectSession(remaining.id);
+      } else {
+        // No sessions left — will need to create one after tree updates
+        setActiveSessionId(null);
+      }
+    }
+  }, [activeSessionId, sessionTree, handleSelectSession]);
 
   const handleExport = useCallback(() => {
     exportToFile(buildSheetData());
@@ -356,7 +552,7 @@ export default function App() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('./consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string } | null,
+    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('./consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number } | null,
   ) => {
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
@@ -387,6 +583,15 @@ export default function App() {
     });
   }, []);
 
+  const handleMoveEvents = useCallback((ids: string[], delta: number) => {
+    setEvents((prev) => {
+      const clampedDelta = validateBatchMoveDelta(prev, ids, delta, activationWindowsRef.current);
+      if (clampedDelta === 0) return prev;
+      const idSet = new Set(ids);
+      return prev.map((ev) => idSet.has(ev.id) ? { ...ev, startFrame: ev.startFrame + clampedDelta } : ev);
+    });
+  }, []);
+
   const handleRemoveEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
     setEditingEventId((cur) => (cur === id ? null : cur));
@@ -398,6 +603,29 @@ export default function App() {
     setEvents((prev) => prev.filter((ev) => !idSet.has(ev.id)));
     setEditingEventId((cur) => (cur && idSet.has(cur) ? null : cur));
     setContextMenu(null);
+  }, []);
+
+  const handleDuplicateEvents = useCallback((sourceEvents: TimelineEvent[], frameOffset: number): string[] => {
+    const newIds: string[] = [];
+    const clones: TimelineEvent[] = [];
+    for (const src of sourceEvents) {
+      const newId = genEventId();
+      newIds.push(newId);
+      clones.push({
+        ...src,
+        id: newId,
+        startFrame: src.startFrame + frameOffset,
+      });
+    }
+    setEvents((prev) => {
+      // Validate none overlap
+      const combined = [...prev, ...clones];
+      for (const c of clones) {
+        if (wouldOverlapNonOverlappable(combined, c, c.startFrame)) return prev;
+      }
+      return combined;
+    });
+    return newIds;
   }, []);
 
   /** Look up default durations for an event from its column definition. */
@@ -648,7 +876,7 @@ export default function App() {
             if (existing && existing.max !== newCost) {
               nextResourceConfigs = { ...prev.resourceConfigs, [ultKey]: { ...existing, max: newCost } };
             } else if (!existing && newCost !== op.ultimateEnergyCost) {
-              nextResourceConfigs = { ...prev.resourceConfigs, [ultKey]: { startValue: 0, max: newCost, regenPerSecond: 10 } };
+              nextResourceConfigs = { ...prev.resourceConfigs, [ultKey]: { startValue: 0, max: newCost, regenPerSecond: 0 } };
             }
           }
         }
@@ -721,6 +949,18 @@ export default function App() {
       />
 
       <div ref={appBodyRef} className="app-body" style={{ '--tl-flex': `${splitPct} 0 0`, '--sheet-flex': `${100 - splitPct} 0 0` } as React.CSSProperties}>
+        <SessionSidebar
+          tree={sessionTree}
+          activeSessionId={activeSessionId}
+          onTreeChange={handleSessionTreeChange}
+          onSelectSession={handleSelectSession}
+          onNewSession={handleNewSession}
+          onDeleteSession={handleDeleteSession}
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={handleToggleSidebar}
+          onWarning={setWarningMessage}
+        />
+
         <CombatPlanner
           slots={slots}
           enemy={enemy}
@@ -733,6 +973,7 @@ export default function App() {
           onToggleSkill={handleToggleSkill}
           onAddEvent={handleAddEvent}
           onMoveEvent={handleMoveEvent}
+          onMoveEvents={handleMoveEvents}
           onContextMenu={setContextMenu}
           onEditEvent={(id, context) => {
             if (id !== null) { setEditingEventId(id); setEditContext(context ?? null); setEditingSlotId(null); setEditingResourceKey(null); setSelectedFrames([]); setInfoPaneClosing(false); }
@@ -777,6 +1018,7 @@ export default function App() {
           onScroll={handleTimelineScroll}
           onHoverFrame={setHoverFrame}
           hideScrollbar={scrollSynced}
+          onDuplicateEvents={handleDuplicateEvents}
         />
 
         <div
@@ -831,6 +1073,8 @@ export default function App() {
           slots={slots}
           events={processedEvents}
           columns={columns}
+          enemy={enemy}
+          loadoutStats={loadoutStats}
           zoom={zoom}
           loadoutRowHeight={loadoutRowHeight}
           selectedFrames={selectedFrames}

@@ -119,4 +119,5 @@ export class AntalOperator extends Operator {
   get comboDescription(): string { return 'Enemy with Focus suffers Physical Status or Arts Infliction'; }
   get comboRequiresActiveColumns(): string[] { return [StatusType.FOCUS]; }
   get derivedEnemyColumns(): string[] { return ['enemy-focus']; }
+  get derivedTeamColumns(): string[] { return ['team-amp']; }
 }

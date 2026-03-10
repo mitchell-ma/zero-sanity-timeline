@@ -73,3 +73,9 @@ export const LASTRITE_COMBO_SKILL_SEQUENCE: SkillEventSequence = new LastRiteSki
   OP.COMBO_SKILL.LASTRITE_COMBO_SKILL,
   'LASTRITE_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const LASTRITE_ULTIMATE_SEQUENCE: SkillEventSequence = new LastRiteSkillEventSequence(
+  OP.ULTIMATE.LASTRITE_ULTIMATE,
+  'LASTRITE_ULTIMATE',
+);

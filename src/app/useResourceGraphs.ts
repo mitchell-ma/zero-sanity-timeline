@@ -65,7 +65,7 @@ export function useResourceGraphs(
       const cfg = resourceConfigs?.[key];
       const max = cfg?.max ?? op.ultimateEnergyCost;
       const startValue = cfg?.startValue ?? 0;
-      const chargePerFrame = (cfg?.regenPerSecond ?? 10) / FPS;
+      const chargePerFrame = (cfg?.regenPerSecond ?? 0) / FPS;
 
       // Merge ultimate consumption events and gauge gain events for this slot
       type UltEvent = { frame: number; type: 'consume' | 'gain'; amount: number };

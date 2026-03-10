@@ -73,3 +73,56 @@ export const LIFENG_COMBO_SKILL_SEQUENCE: SkillEventSequence = new LifengSkillEv
   OP.COMBO_SKILL.LIFENG_COMBO_SKILL,
   'LIFENG_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+// Lifeng's ultimate has a delayed Vajra Impact hit (tick 2 at 4.13s) beyond the
+// 2.2s activation duration. Split into main sequence + delayed hit sequence.
+
+const LIFENG_ULT = OP.ULTIMATE.LIFENG_ULTIMATE;
+const LIFENG_ULT_DUR = LIFENG_ULT.LIFENG_ULTIMATE_DURATION;
+
+/** Main activation — ticks within duration */
+class LifengUltimateMainSequence extends SkillEventSequence {
+  private readonly _durationSeconds: number;
+  private readonly _frames: readonly LifengSkillEventFrame[];
+  constructor() {
+    super();
+    this._durationSeconds = LIFENG_ULT_DUR;
+    const frames: LifengSkillEventFrame[] = [];
+    const ticks = LIFENG_ULT.LIFENG_ULTIMATE_TICKS;
+    for (let i = 1; i <= ticks; i++) {
+      const tick = LIFENG_ULT[`LIFENG_ULTIMATE_TICK_${i}` as keyof typeof LIFENG_ULT] as Record<string, any>;
+      if (tick && (tick as any).OFFSET_SECONDS <= LIFENG_ULT_DUR) {
+        frames.push(new LifengSkillEventFrame(tick));
+      }
+    }
+    this._frames = frames;
+  }
+  getDurationSeconds(): number { return this._durationSeconds; }
+  getFrames(): readonly LifengSkillEventFrame[] { return this._frames; }
+}
+
+/** Vajra Impact — delayed hit after main activation */
+class LifengVajraImpactSequence extends SkillEventSequence {
+  private readonly _durationSeconds: number;
+  private readonly _frames: readonly LifengSkillEventFrame[];
+  constructor() {
+    super();
+    const delayedTicks: { tick: Record<string, any>; offset: number }[] = [];
+    const ticks = LIFENG_ULT.LIFENG_ULTIMATE_TICKS;
+    for (let i = 1; i <= ticks; i++) {
+      const tick = LIFENG_ULT[`LIFENG_ULTIMATE_TICK_${i}` as keyof typeof LIFENG_ULT] as Record<string, any>;
+      if (tick && (tick as any).OFFSET_SECONDS > LIFENG_ULT_DUR) {
+        delayedTicks.push({ tick, offset: (tick as any).OFFSET_SECONDS - LIFENG_ULT_DUR });
+      }
+    }
+    const maxOffset = delayedTicks.length > 0 ? Math.max(...delayedTicks.map((d) => d.offset)) : 0;
+    this._durationSeconds = maxOffset + 0.1; // small buffer past last tick
+    this._frames = delayedTicks.map((d) => new LifengSkillEventFrame({ ...d.tick, OFFSET_SECONDS: d.offset }));
+  }
+  getDurationSeconds(): number { return this._durationSeconds; }
+  getFrames(): readonly LifengSkillEventFrame[] { return this._frames; }
+}
+
+export const LIFENG_ULTIMATE_SEQUENCE: SkillEventSequence = new LifengUltimateMainSequence();
+export const LIFENG_VAJRA_IMPACT_SEQUENCE: SkillEventSequence = new LifengVajraImpactSequence();

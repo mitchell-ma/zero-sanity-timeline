@@ -87,7 +87,7 @@ export class FreeGiveaway extends ComboSkill {
 export class ApexPrankster extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.APEX_PRANKSTER;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 72;
   static readonly POT4_COST_REDUCTION = 0.1;
 
   constructor(

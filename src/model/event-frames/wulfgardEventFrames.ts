@@ -2,9 +2,9 @@ import { SkillEventFrame, FrameArtsInfliction } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
-const OP = skillsData.operators.FLUORITE;
+const OP = skillsData.operators.WULFGARD;
 
-class FluoriteSkillEventFrame extends SkillEventFrame {
+class WulfgardSkillEventFrame extends SkillEventFrame {
   private readonly _offsetSeconds: number;
   private readonly _skillPointRecovery: number;
   private readonly _stagger: number;
@@ -31,31 +31,31 @@ class FluoriteSkillEventFrame extends SkillEventFrame {
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
 }
 
-class FluoriteSkillEventSequence extends SkillEventSequence {
+class WulfgardSkillEventSequence extends SkillEventSequence {
   private readonly _durationSeconds: number;
-  private readonly _frames: readonly FluoriteSkillEventFrame[];
+  private readonly _frames: readonly WulfgardSkillEventFrame[];
 
   constructor(seqData: Record<string, any>, prefix: string) {
     super();
     this._durationSeconds = seqData[`${prefix}_DURATION`];
     const tickCount: number = seqData[`${prefix}_TICKS`];
-    const frames: FluoriteSkillEventFrame[] = [];
+    const frames: WulfgardSkillEventFrame[] = [];
     for (let i = 1; i <= tickCount; i++) {
       const tick = seqData[`${prefix}_TICK_${i}`];
-      if (tick) frames.push(new FluoriteSkillEventFrame(tick));
+      if (tick) frames.push(new WulfgardSkillEventFrame(tick));
     }
     this._frames = frames;
   }
 
   getDurationSeconds(): number { return this._durationSeconds; }
-  getFrames(): readonly FluoriteSkillEventFrame[] { return this._frames; }
+  getFrames(): readonly WulfgardSkillEventFrame[] { return this._frames; }
 }
 
 // ── Basic Attack ────────────────────────────────────────────────────────────
-export const FLUORITE_BASIC_ATTACK_SEQUENCES: readonly SkillEventSequence[] = [1, 2, 3, 4]
+export const WULFGARD_BASIC_ATTACK_SEQUENCES: readonly SkillEventSequence[] = [1, 2, 3, 4]
   .map((n) => {
-    const key = `FLUORITE_BASIC_ATTACK_SEQUENCE_${n}`;
-    return new FluoriteSkillEventSequence(
+    const key = `WULFGARD_BASIC_ATTACK_SEQUENCE_${n}`;
+    return new WulfgardSkillEventSequence(
       (OP.BASIC_ATTACK as Record<string, any>)[key],
       key,
     );
@@ -63,19 +63,19 @@ export const FLUORITE_BASIC_ATTACK_SEQUENCES: readonly SkillEventSequence[] = [1
   .filter((seq) => seq.getDurationSeconds() > 0);
 
 // ── Battle Skill ────────────────────────────────────────────────────────────
-export const FLUORITE_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new FluoriteSkillEventSequence(
-  OP.BATTLE_SKILL.FLUORITE_BATTLE_SKILL,
-  'FLUORITE_BATTLE_SKILL',
+export const WULFGARD_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new WulfgardSkillEventSequence(
+  OP.BATTLE_SKILL.WULFGARD_BATTLE_SKILL,
+  'WULFGARD_BATTLE_SKILL',
 );
 
 // ── Combo Skill ─────────────────────────────────────────────────────────────
-export const FLUORITE_COMBO_SKILL_SEQUENCE: SkillEventSequence = new FluoriteSkillEventSequence(
-  OP.COMBO_SKILL.FLUORITE_COMBO_SKILL,
-  'FLUORITE_COMBO_SKILL',
+export const WULFGARD_COMBO_SKILL_SEQUENCE: SkillEventSequence = new WulfgardSkillEventSequence(
+  OP.COMBO_SKILL.WULFGARD_COMBO_SKILL,
+  'WULFGARD_COMBO_SKILL',
 );
 
 // ── Ultimate ────────────────────────────────────────────────────────────────
-export const FLUORITE_ULTIMATE_SEQUENCE: SkillEventSequence = new FluoriteSkillEventSequence(
-  OP.ULTIMATE.FLUORITE_ULTIMATE,
-  'FLUORITE_ULTIMATE',
+export const WULFGARD_ULTIMATE_SEQUENCE: SkillEventSequence = new WulfgardSkillEventSequence(
+  OP.ULTIMATE.WULFGARD_ULTIMATE,
+  'WULFGARD_ULTIMATE',
 );

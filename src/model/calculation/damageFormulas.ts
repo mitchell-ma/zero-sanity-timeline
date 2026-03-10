@@ -75,6 +75,7 @@ export function getDamageBonus(
 /** Map an element to its corresponding damage bonus stat. */
 export function getElementDamageBonusStat(element: ElementType): StatType {
   const map: Record<ElementType, StatType> = {
+    [ElementType.NONE]: StatType.PHYSICAL_DAMAGE_BONUS,
     [ElementType.PHYSICAL]: StatType.PHYSICAL_DAMAGE_BONUS,
     [ElementType.HEAT]: StatType.HEAT_DAMAGE_BONUS,
     [ElementType.ELECTRIC]: StatType.ELECTRIC_DAMAGE_BONUS,

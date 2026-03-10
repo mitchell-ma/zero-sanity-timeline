@@ -1,6 +1,6 @@
 ---
 name: operator-wiki-data
-description: Reference data for all 19 Arknights Endfield operators. Use when adding new operators, building skill definitions, or looking up operator stats, skills, talents, potentials, combo triggers, rarity, class, weapon, and element.
+description: Reference data for all 20 Arknights Endfield operators. Use when adding new operators, building skill definitions, or looking up operator stats, skills, talents, potentials, combo triggers, rarity, class, weapon, and element.
 ---
 
 Use this reference when working with operator data — adding new operators to the registry, creating skill definitions, or verifying operator details.
@@ -725,6 +725,47 @@ When an enemy suffers Electrification or after an enemy's Electrification is con
 
 ---
 
+## 20. Akekuri
+
+| Field | Value |
+|-------|-------|
+| Rarity | 4-star |
+| Class | Vanguard |
+| Weapon | Sword |
+| Element | Heat |
+
+### Skills
+- **Basic Attack:** Sword of Aspiration — 4-sequence attack dealing Physical DMG; Final Strike deals 17 Stagger; dive and finisher variants
+- **Battle Skill:** Burst of Passion — Frontal slash dealing Heat DMG with Heat Infliction. SP Cost: 100. Stagger: 10
+- **Combo Skill:** Flash and Dash — 2 thrust sequences dealing Physical DMG with SP recovery per sequence. Cooldown: 10s (9s at rank 12). SP Recovery per sequence: 7.5
+- **Ultimate:** SQUAD! ON ME! — Channeling state firing 3 Rallying Flares; each firing recovers SP. Energy Cost: 120. SP Recovery: 58-80 by level
+
+### Combo Trigger
+When an enemy becomes Staggered or hits a Stagger Node
+
+### Talents
+**Talent 1 — Skirmisher:**
+- E1: Agility +10
+- E2: Agility +15
+- E3: Agility +15
+- E4: Agility +20
+
+**Talent 2 — Cheer of Victory:**
+- E1: For every 10 points of Intellect, SP Recovery +1% (max: 50%)
+- E2: For every 10 points of Intellect, SP Recovery +1.5% (max: 75%)
+
+**Talent 3 — Staying in the Zone:**
+- E3: When ultimate is active, gains Link
+
+### Potentials
+1. **Positive Feedback:** After recovering SP with skills, Akekuri gains ATK +10% for 10s (max 5 stacks)
+2. **Passionate Idealist:** Agility +10, Intellect +10
+3. **Committed Team Player:** While ultimate is active, entire team gains ATK +10%
+4. **Super Perfect Status:** Ultimate Energy cost -10%
+5. **Tempo of Awareness:** When ultimate SQUAD! ON ME! ends, the Link buff persists for 5s
+
+---
+
 ## Summary Table
 
 | # | Operator | Rarity | Class | Weapon | Element |
@@ -748,3 +789,4 @@ When an enemy suffers Electrification or after an enemy's Electrification is con
 | 17 | Pogranichnik | 6-star | Vanguard | Sword | Physical |
 | 18 | Alesh | 5-star | Vanguard | Sword | Cryo |
 | 19 | Arclight | 5-star | Vanguard | Sword | Electric |
+| 20 | Akekuri | 4-star | Vanguard | Sword | Heat |

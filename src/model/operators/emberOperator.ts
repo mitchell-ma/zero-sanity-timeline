@@ -116,4 +116,5 @@ export class EmberOperator extends Operator {
     return [TriggerConditionType.OPERATOR_ATTACKED];
   }
   get comboDescription(): string { return 'Controlled operator is attacked'; }
+  get derivedTeamColumns(): string[] { return ['team-shield']; }
 }

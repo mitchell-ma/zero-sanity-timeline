@@ -98,6 +98,7 @@ export function createEvent(
     teamGaugeGain?: number;
     gaugeGainByEnemies?: Record<number, number>;
     animationDuration?: number;
+    operatorPotential?: number;
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
@@ -115,10 +116,16 @@ export function createEvent(
       segments: defaultSkill.segments,
       nonOverlappableRange: defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0),
     } : {}),
+    ...(columnId === 'ultimate' && !defaultSkill?.segments ? {
+      nonOverlappableRange: (defaultSkill?.defaultActivationDuration ?? 120)
+        + (defaultSkill?.defaultActiveDuration ?? 0)
+        + (defaultSkill?.defaultCooldownDuration ?? 0),
+    } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),
     ...(defaultSkill?.animationDuration ? { animationDuration: defaultSkill.animationDuration } : {}),
+    ...(defaultSkill?.operatorPotential != null ? { operatorPotential: defaultSkill.operatorPotential } : {}),
   };
 }
 
@@ -155,4 +162,33 @@ export function validateMove(
   clamped = ComboSkillEventController.validateMove(target, clamped, activationWindows);
   clamped = clampNonOverlappable(allEvents, target, clamped);
   return clamped;
+}
+
+/**
+ * Validate a batch move: compute the most restrictive delta across all events
+ * so that relative frame positions are preserved. Returns the clamped delta
+ * (add to each event's original startFrame).
+ */
+export function validateBatchMoveDelta(
+  allEvents: TimelineEvent[],
+  targetIds: string[],
+  delta: number,
+  activationWindows: WindowsMap,
+): number {
+  let clampedDelta = delta;
+  for (const id of targetIds) {
+    const target = allEvents.find((ev) => ev.id === id);
+    if (!target) continue;
+    const desired = target.startFrame + clampedDelta;
+    const clamped = validateMove(allEvents, target, desired, activationWindows);
+    // The difference between the clamped result and the original start is the
+    // effective delta this event allows. Restrict the global delta to it.
+    const effectiveDelta = clamped - target.startFrame;
+    if (delta >= 0) {
+      clampedDelta = Math.min(clampedDelta, effectiveDelta);
+    } else {
+      clampedDelta = Math.max(clampedDelta, effectiveDelta);
+    }
+  }
+  return clampedDelta;
 }

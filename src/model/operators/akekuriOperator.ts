@@ -114,7 +114,8 @@ export class AkekuriOperator extends Operator {
   }
 
   get comboRequires(): TriggerConditionType[] {
-    return [TriggerConditionType.COMBUSTION];
+    return [TriggerConditionType.STAGGER, TriggerConditionType.STAGGER_NODE];
   }
-  get comboDescription(): string { return 'Enemy has Combustion'; }
+  get comboDescription(): string { return 'Enemy becomes Staggered or hits a Stagger Node'; }
+  get derivedTeamColumns(): string[] | undefined { return ['team-link']; }
 }

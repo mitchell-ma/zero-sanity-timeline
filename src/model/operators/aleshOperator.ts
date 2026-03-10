@@ -113,7 +113,7 @@ export class AleshOperator extends Operator {
   }
 
   get comboRequires(): TriggerConditionType[] {
-    return [TriggerConditionType.SOLIDIFICATION];
+    return [TriggerConditionType.COMBUSTION, TriggerConditionType.SOLIDIFICATION, TriggerConditionType.CORROSION, TriggerConditionType.ELECTRIFICATION];
   }
-  get comboDescription(): string { return 'Arts Reaction or Crystals consumed nearby'; }
+  get comboDescription(): string { return 'Arts Reaction or Originium Crystals consumed nearby'; }
 }

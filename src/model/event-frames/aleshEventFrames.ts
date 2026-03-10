@@ -73,3 +73,9 @@ export const ALESH_COMBO_SKILL_SEQUENCE: SkillEventSequence = new AleshSkillEven
   OP.COMBO_SKILL.ALESH_COMBO_SKILL,
   'ALESH_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const ALESH_ULTIMATE_SEQUENCE: SkillEventSequence = new AleshSkillEventSequence(
+  OP.ULTIMATE.ALESH_ULTIMATE,
+  'ALESH_ULTIMATE',
+);

@@ -271,21 +271,22 @@ function FrameOffsetField({ eventId, segmentIndex, frameIndex, offsetFrame, maxO
   };
 
   return (
-    <div className="edit-field" style={{ display: 'inline-flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-      <span className="edit-field-label" style={{ minWidth: 'auto' }}>Offset</span>
-      <input
-        className="edit-input"
-        type="number"
-        step="0.01"
-        min="0"
-        max={framesToSeconds(maxOffset)}
-        value={sec}
-        onChange={(e) => setSec(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-        style={{ width: 60 }}
-      />
-      <span className="edit-input-unit">s</span>
+    <div className="edit-field">
+      <span className="edit-field-label">Offset</span>
+      <div className="edit-field-row">
+        <input
+          className="edit-input"
+          type="number"
+          step="0.01"
+          min="0"
+          max={framesToSeconds(maxOffset)}
+          value={sec}
+          onChange={(e) => setSec(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+        />
+        <span className="edit-input-unit">s</span>
+      </div>
     </div>
   );
 }
@@ -433,12 +434,25 @@ function EventPane({
       if (clampedAnim !== newAnim) setAnimSec(framesToSeconds(clampedAnim));
       const newLinger = secondsToFrames(lingerSec);
       const newCooldown = secondsToFrames(cooldownSec);
+      // Clamp frame offsets within segments when active duration shrinks
+      let clampedSegments: typeof event.segments;
+      if (event.segments && newLinger < event.activeDuration) {
+        const maxOffset = Math.max(0, newLinger - 1);
+        clampedSegments = event.segments.map((s) => {
+          if (!s.frames) return s;
+          const clamped = s.frames
+            .map((f) => f.offsetFrame > maxOffset ? { ...f, offsetFrame: maxOffset } : f)
+            .filter((f, j, arr) => arr.findIndex((o) => o.offsetFrame === f.offsetFrame) === j);
+          return { ...s, frames: clamped };
+        });
+      }
       onUpdate(event.id, {
         startFrame: computedStartFrame,
         activationDuration: newActivation,
         activeDuration: newLinger,
         cooldownDuration: newCooldown,
         ...(event.columnId === 'ultimate' ? { animationDuration: clampedAnim } : {}),
+        ...(clampedSegments ? { segments: clampedSegments } : {}),
       });
     } else {
       const newActivation = secondsToFrames(activeSec);
@@ -554,7 +568,24 @@ function EventPane({
                 <span style={{ color: '#ff5522' }}>FORCED{event.eventStatus ? ' · ' : ''}</span>
               )}
               {event.eventStatus && (
-                <><span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Event status: </span>{event.eventStatus.toUpperCase()}</>
+                <>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Event status: </span>{event.eventStatus.toUpperCase()}
+                  {event.eventStatusOwnerId && (() => {
+                    const statusSlot = slots.find((s) => s.slotId === event.eventStatusOwnerId);
+                    const statusOpName = statusSlot?.operator?.name ?? event.eventStatusOwnerId;
+                    const statusOpColor = statusSlot?.operator?.color;
+                    const statusSkillLabel = event.eventStatusSkillName
+                      ? COMBAT_SKILL_LABELS[event.eventStatusSkillName as CombatSkillsType] ?? event.eventStatusSkillName
+                      : null;
+                    return (
+                      <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
+                        {' by '}
+                        <span style={{ color: statusOpColor ?? 'inherit', fontWeight: 600 }}>{statusOpName}</span>
+                        {statusSkillLabel && <span> ({statusSkillLabel})</span>}
+                      </span>
+                    );
+                  })()}
+                </>
               )}
             </div>
           )}
@@ -722,23 +753,18 @@ function EventPane({
                           key={fi}
                           ref={isSelected ? selectedFrameElRef : undefined}
                           style={{
-                            fontSize: 11,
-                            fontFamily: 'var(--font-mono)',
-                            lineHeight: 1.8,
                             padding: '1px 4px',
                             borderRadius: 2,
                             background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            color: isSelected ? '#ffdd44' : 'var(--text-muted)',
                             borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
                           }}
                         >
-                          <div>Hit {fi + 1} — Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
-                          {(f.stagger ?? 0) > 0 && (
-                            <div style={{ paddingLeft: 8 }}>Stagger: {f.stagger}</div>
-                          )}
-                          {(f.skillPointRecovery ?? 0) > 0 && (
-                            <div style={{ paddingLeft: 8 }}>SP Recovery: {f.skillPointRecovery}</div>
-                          )}
+                          <span className="edit-field-label">Hit {fi + 1}</span>
+                          <div className="edit-info-text" style={{ paddingLeft: '0.5rem' }}>
+                            <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
+                            {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery}</div>}
+                          </div>
                         </div>
                       );
                     })}
@@ -783,16 +809,13 @@ function EventPane({
                           key={fi}
                           ref={isSelected ? selectedFrameElRef : undefined}
                           style={{
-                            fontSize: 11,
-                            fontFamily: 'var(--font-mono)',
-                            lineHeight: 1.8,
                             padding: '1px 4px',
                             borderRadius: 2,
                             background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            color: isSelected ? '#ffdd44' : 'var(--text-muted)',
                             borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
                           }}
                         >
+                          <span className="edit-field-label">Hit {fi + 1}</span>
                           <FrameOffsetField
                             eventId={event.id}
                             segmentIndex={si}
@@ -802,12 +825,10 @@ function EventPane({
                             onUpdate={onUpdate}
                             segments={event.segments}
                           />
-                          {(f.stagger ?? 0) > 0 && (
-                            <div style={{ paddingLeft: 8 }}>Stagger: {f.stagger}</div>
-                          )}
-                          {(f.skillPointRecovery ?? 0) > 0 && (
-                            <div style={{ paddingLeft: 8 }}>SP Recovery: {f.skillPointRecovery}</div>
-                          )}
+                          <div className="edit-info-text" style={{ paddingLeft: '0.5rem' }}>
+                            {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery}</div>}
+                          </div>
                         </div>
                       );
                     })}
@@ -865,66 +886,60 @@ function EventPane({
                             key={fi}
                             ref={isSelected ? selectedFrameElRef : undefined}
                             style={{
-                              fontSize: 11,
-                              fontFamily: 'var(--font-mono)',
-                              lineHeight: 1.8,
                               padding: '1px 4px',
                               borderRadius: 2,
                               background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                              color: isSelected ? '#ffdd44' : 'var(--text-muted)',
                               borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
                             }}
                           >
-                            <div>
-                              <div>Hit {getHitNumber(seg.label, si, f.offsetFrame)}</div>
-                              {readOnly ? (
-                                <div style={{ marginLeft: 8 }}>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
-                              ) : (
-                                <FrameOffsetField
-                                  eventId={event.id}
-                                  segmentIndex={si}
-                                  frameIndex={fi}
-                                  offsetFrame={f.offsetFrame}
-                                  maxOffset={Math.max(0, seg.durationFrames - 1)}
-                                  onUpdate={onUpdate}
-                                  segments={event.segments!}
-                                />
+                            <span className="edit-field-label">Hit {getHitNumber(seg.label, si, f.offsetFrame)}</span>
+                            {readOnly ? (
+                              <div className="edit-info-text">
+                                <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
+                              </div>
+                            ) : (
+                              <FrameOffsetField
+                                eventId={event.id}
+                                segmentIndex={si}
+                                frameIndex={fi}
+                                offsetFrame={f.offsetFrame}
+                                maxOffset={Math.max(0, seg.durationFrames - 1)}
+                                onUpdate={onUpdate}
+                                segments={event.segments!}
+                              />
+                            )}
+                            <div className="edit-info-text" style={{ paddingLeft: '0.5rem' }}>
+                              {f.isFinalStrike && (
+                                <div style={{ color: '#f0a040' }}>Final Strike</div>
+                              )}
+                              {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery}</div>}
+                              {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
+                              {f.applyArtsInfliction && (
+                                <div style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
+                                  Apply: {f.applyArtsInfliction.element} Infliction ×{f.applyArtsInfliction.stacks}
+                                </div>
+                              )}
+                              {f.absorbArtsInfliction && (
+                                <div style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+                                  Absorb: {f.absorbArtsInfliction.element} Infliction (max {f.absorbArtsInfliction.stacks}) → {f.absorbArtsInfliction.exchangeStatus.replace(/_/g, ' ')} ({f.absorbArtsInfliction.ratio})
+                                </div>
+                              )}
+                              {f.consumeArtsInfliction && (
+                                <div style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+                                  Consume: {f.consumeArtsInfliction.element} Infliction (max {f.consumeArtsInfliction.stacks})
+                                </div>
+                              )}
+                              {f.applyStatus && (
+                                <div style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
+                                  Apply: {STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status}{f.applyStatus.stacks > 0 ? ` ×${f.applyStatus.stacks}` : ''} → {f.applyStatus.target === 'ENEMY' ? 'Enemy' : f.applyStatus.target === 'SELF' ? ownerName : f.applyStatus.target}
+                                </div>
+                              )}
+                              {f.applyForcedReaction && (
+                                <div style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
+                                  Apply: {STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction.replace(/_/g, ' ')} (Lv.{f.applyForcedReaction.statusLevel})
+                                </div>
                               )}
                             </div>
-                            {f.isFinalStrike && (
-                              <div style={{ paddingLeft: 8, color: '#f0a040' }}>Final Strike</div>
-                            )}
-                            {(f.skillPointRecovery ?? 0) > 0 && (
-                              <div style={{ paddingLeft: 8 }}>SP Recovery: {f.skillPointRecovery}</div>
-                            )}
-                            {(f.stagger ?? 0) > 0 && (
-                              <div style={{ paddingLeft: 8 }}>Stagger: {f.stagger}</div>
-                            )}
-                            {f.applyArtsInfliction && (
-                              <div style={{ paddingLeft: 8, color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
-                                Apply: {f.applyArtsInfliction.element} Infliction ×{f.applyArtsInfliction.stacks}
-                              </div>
-                            )}
-                            {f.absorbArtsInfliction && (
-                              <div style={{ paddingLeft: 8, color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                Absorb: {f.absorbArtsInfliction.element} Infliction (max {f.absorbArtsInfliction.stacks}) → {f.absorbArtsInfliction.exchangeStatus.replace(/_/g, ' ')} ({f.absorbArtsInfliction.ratio})
-                              </div>
-                            )}
-                            {f.consumeArtsInfliction && (
-                              <div style={{ paddingLeft: 8, color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                Consume: {f.consumeArtsInfliction.element} Infliction (max {f.consumeArtsInfliction.stacks})
-                              </div>
-                            )}
-                            {f.applyStatus && (
-                              <div style={{ paddingLeft: 8, color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
-                                Apply: {STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status}{f.applyStatus.stacks > 0 ? ` ×${f.applyStatus.stacks}` : ''} → {f.applyStatus.target === 'ENEMY' ? 'Enemy' : f.applyStatus.target === 'SELF' ? ownerName : f.applyStatus.target}
-                              </div>
-                            )}
-                            {f.applyForcedReaction && (
-                              <div style={{ paddingLeft: 8, color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
-                                Apply: {STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction.replace(/_/g, ' ')} (Lv.{f.applyForcedReaction.statusLevel})
-                              </div>
-                            )}
                           </div>
                         );
                       })}

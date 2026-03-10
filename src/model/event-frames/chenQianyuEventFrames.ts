@@ -73,3 +73,9 @@ export const CHENQIANYU_COMBO_SKILL_SEQUENCE: SkillEventSequence = new ChenQiany
   OP.COMBO_SKILL.CHENQIANYU_COMBO_SKILL,
   'CHENQIANYU_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const CHENQIANYU_ULTIMATE_SEQUENCE: SkillEventSequence = new ChenQianyuSkillEventSequence(
+  OP.ULTIMATE.CHENQIANYU_ULTIMATE,
+  'CHENQIANYU_ULTIMATE',
+);

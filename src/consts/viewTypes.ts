@@ -3,6 +3,8 @@ export type SkillType = "basic" | "battle" | "combo" | "ultimate";
 
 export interface SkillDef {
   name: string;
+  /** Element type of this skill (e.g. "PHYSICAL", "HEAT"). */
+  element?: string;
   defaultActivationDuration: number; // frames
   defaultActiveDuration: number; // frames
   defaultCooldownDuration: number; // frames
@@ -88,6 +90,12 @@ export interface EventFrameMarker {
   applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
   /** Status applied by this frame to a target (self or enemy). */
   applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Record<string, readonly number[]> };
+  /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
+  consumeStatus?: string;
+  /** Element of damage dealt by this frame (for coloring when no infliction). */
+  damageElement?: string;
+  /** Whether this frame duplicates the source infliction that triggered it. */
+  duplicatesSourceInfliction?: boolean;
   /** True only for the last frame of the final basic attack sequence. */
   isFinalStrike?: boolean;
 }
@@ -151,8 +159,14 @@ export interface TimelineEvent {
   sourceSkillName?: string;
   /** Outcome of a derived event: how it ended. */
   eventStatus?: 'expired' | 'consumed' | 'refreshed' | 'triggered';
+  /** Operator slot ID responsible for this event status change. */
+  eventStatusOwnerId?: string;
+  /** Skill name responsible for this event status change. */
+  eventStatusSkillName?: string;
   /** True if this reaction was forced (bypassed infliction stacks). */
   forcedReaction?: boolean;
+  /** Operator potential (0–5) for potential-dependent derived effects. */
+  operatorPotential?: number;
 }
 
 export interface ContextMenuItem {
@@ -249,6 +263,8 @@ export type MiniTimeline = {
     animationDuration?: number;
   }[];
 
+  /** Element type of this skill column (for per-skill coloring). */
+  skillElement?: string;
   /** If true, suppress the "Add" context menu for this column. */
   noAdd?: boolean;
   /** If true, events in this column are derived/computed and cannot be added, dragged, or edited. */

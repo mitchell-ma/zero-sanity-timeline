@@ -19,6 +19,7 @@ export enum CombatResourceType {
 }
 
 export enum ElementType {
+  NONE = "NONE",
   PHYSICAL = "PHYSICAL",
   HEAT = "HEAT",
   CRYO = "CRYO",
@@ -34,9 +35,11 @@ export const STATUS_ELEMENT: Record<string, string> = {
   SOLIDIFICATION:   ElementType.CRYO,
   CORROSION:        ElementType.NATURE,
   ELECTRIFICATION:  ElementType.ELECTRIC,
+  THUNDERLANCE:     ElementType.ELECTRIC,
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
+  [ElementType.NONE]:     '#ffffff',
   [ElementType.PHYSICAL]: '#c0c8d0',
   [ElementType.HEAT]:     '#f07030',
   [ElementType.CRYO]:     '#40c8f0',
@@ -52,9 +55,15 @@ export enum StatusType {
   ELECTRIFICATION = "ELECTRIFICATION",
   // ── Operator buffs ─────────────────────────────────────────────────────────
   MELTING_FLAME = "MELTING_FLAME",
+  THUNDERLANCE = "THUNDERLANCE",
   SQUAD_BUFF = "SQUAD_BUFF",
-  // ── Debuffs ────────────────────────────────────────────────────────────────
+  // ── Team statuses ─────────────────────────────────────────────────────────
+  LINK = "LINK",
+  ARTS_AMP = "ARTS_AMP",
+  SHIELD = "SHIELD",
+  // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
+  SUSCEPTIBILITY = "SUSCEPTIBILITY",
   // ── Physical statuses ───────────────────────────────────────────────────────
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -142,6 +151,8 @@ export enum TriggerConditionType {
   HP_BELOW_THRESHOLD = "HP_BELOW_THRESHOLD",
   ULTIMATE_ENERGY_BELOW_THRESHOLD = "ULTIMATE_ENERGY_BELOW_THRESHOLD",
   OPERATOR_ATTACKED = "OPERATOR_ATTACKED",
+  STAGGER = "STAGGER",
+  STAGGER_NODE = "STAGGER_NODE",
 }
 
 /**
@@ -378,8 +389,7 @@ export enum SkillDataKey {
   COOLDOWN = "COOLDOWN",
   TICKS = "TICKS",
   ANIMATION_TIME = "ANIMATION_TIME",
-  GAUGE_MAX = "GAUGE_MAX",
-  GAUGE_REPLY = "GAUGE_REPLY",
+  ENERGY_COST = "ENERGY_COST",
 }
 
 export enum DamageTickKey {

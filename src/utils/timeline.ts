@@ -1,6 +1,6 @@
 export const FPS = 120;
-export const TOTAL_SECONDS = 120;
-export const TOTAL_FRAMES = FPS * TOTAL_SECONDS; // 14,400
+export const TOTAL_SECONDS = 900;
+export const TOTAL_FRAMES = FPS * TOTAL_SECONDS; // 108,000 (15 minutes)
 
 // At zoom 1.0: 60px per second = 0.5px per frame
 export const BASE_PX_PER_SECOND = 60;
@@ -74,30 +74,54 @@ export function secondsToFrames(s: string | number): number {
   return Math.round(parseFloat(String(s)) * FPS);
 }
 
-export function getTickMarks(zoom: number): TickMark[] {
+/**
+ * Get tick marks within a visible frame range.
+ * Pass startFrame/endFrame to limit output (virtualization for large timelines).
+ */
+export function getTickMarks(zoom: number, startFrame = 0, endFrame = TOTAL_FRAMES): TickMark[] {
   const ticks: TickMark[] = [];
   const secondPx = pxPerFrame(zoom) * FPS;
 
   if (secondPx < 6) {
-    for (let s = 0; s <= TOTAL_SECONDS; s += 5) {
+    const step = 5;
+    const s0 = Math.max(0, Math.floor((startFrame / FPS) / step) * step);
+    const s1 = Math.min(TOTAL_SECONDS, Math.ceil(endFrame / FPS));
+    for (let s = s0; s <= s1; s += step) {
       ticks.push({ frame: s * FPS, major: s % 10 === 0 });
     }
   } else if (secondPx < 20) {
-    for (let s = 0; s <= TOTAL_SECONDS; s++) {
+    const s0 = Math.max(0, Math.floor(startFrame / FPS));
+    const s1 = Math.min(TOTAL_SECONDS, Math.ceil(endFrame / FPS));
+    for (let s = s0; s <= s1; s++) {
       ticks.push({ frame: s * FPS, major: s % 5 === 0 });
     }
   } else if (secondPx < 80) {
-    for (let s = 0; s <= TOTAL_SECONDS; s++) {
+    const s0 = Math.max(0, Math.floor(startFrame / FPS));
+    const s1 = Math.min(TOTAL_SECONDS, Math.ceil(endFrame / FPS));
+    for (let s = s0; s <= s1; s++) {
       ticks.push({ frame: s * FPS, major: true });
       if (s < TOTAL_SECONDS) {
-        ticks.push({ frame: s * FPS + FPS / 2, major: false });
+        const half = s * FPS + FPS / 2;
+        if (half >= startFrame && half <= endFrame) {
+          ticks.push({ frame: half, major: false });
+        }
       }
     }
   } else {
     const frameInterval = Math.max(1, Math.floor(FPS / Math.floor(secondPx / 10)));
-    for (let f = 0; f <= TOTAL_FRAMES; f += frameInterval) {
+    const f0 = Math.max(0, Math.floor(startFrame / frameInterval) * frameInterval);
+    const f1 = Math.min(TOTAL_FRAMES, endFrame);
+    for (let f = f0; f <= f1; f += frameInterval) {
       ticks.push({ frame: f, major: f % FPS === 0 });
     }
   }
   return ticks;
+}
+
+/** Compute the visible frame range from scroll position and viewport height. */
+export function getVisibleFrameRange(scrollTop: number, viewportHeight: number, zoom: number, buffer = 2000): { startFrame: number; endFrame: number } {
+  const ppf = pxPerFrame(zoom);
+  const startFrame = Math.max(0, Math.floor((scrollTop - TIMELINE_TOP_PAD - buffer) / ppf));
+  const endFrame = Math.min(TOTAL_FRAMES, Math.ceil((scrollTop + viewportHeight + buffer - TIMELINE_TOP_PAD) / ppf));
+  return { startFrame, endFrame };
 }

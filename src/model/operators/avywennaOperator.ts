@@ -116,4 +116,5 @@ export class AvywennaOperator extends Operator {
     return [TriggerConditionType.FINAL_STRIKE];
   }
   get comboDescription(): string { return 'Final Strike on Electric/Electrified enemy'; }
+  get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
 }

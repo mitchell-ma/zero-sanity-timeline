@@ -87,7 +87,7 @@ export class InstantProtocolChain extends ComboSkill {
 export class ProtocolEpsilon extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.PROTOCOL_EPSILON;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 68;
   static readonly POT2_COST_REDUCTION = 0.15;
 
   constructor(

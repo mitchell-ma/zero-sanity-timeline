@@ -92,7 +92,7 @@ export class StressTesting extends ComboSkill {
 export class StackOverflow extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.STACK_OVERFLOW;
 
-  static readonly BASE_ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly BASE_ULTIMATE_ENERGY_COST = 72;
   static readonly POT2_COST_REDUCTION = 0.1;
 
   constructor(

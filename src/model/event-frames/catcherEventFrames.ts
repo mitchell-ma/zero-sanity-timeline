@@ -73,3 +73,9 @@ export const CATCHER_COMBO_SKILL_SEQUENCE: SkillEventSequence = new CatcherSkill
   OP.COMBO_SKILL.CATCHER_COMBO_SKILL,
   'CATCHER_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const CATCHER_ULTIMATE_SEQUENCE: SkillEventSequence = new CatcherSkillEventSequence(
+  OP.ULTIMATE.CATCHER_ULTIMATE,
+  'CATCHER_ULTIMATE',
+);

@@ -87,7 +87,7 @@ export class SealingSequence extends ComboSkill {
 export class BombardmentSequence extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.BOMBARDMENT_SEQUENCE;
 
-  static readonly ULTIMATE_ENERGY_COST = 0; // from GAUGE_MAX
+  static readonly ULTIMATE_ENERGY_COST = 80;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},

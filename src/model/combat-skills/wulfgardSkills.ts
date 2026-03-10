@@ -148,7 +148,7 @@ const WOLVEN_FURY_DMG_PER_SEQ = [
 
 export class WolvenFury extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.WOLVEN_FURY;
-  static readonly ULTIMATE_ENERGY_COST = 90;
+  static readonly ULTIMATE_ENERGY_COST = 76.5;
   static readonly STAGGER = 15;
 
   constructor(

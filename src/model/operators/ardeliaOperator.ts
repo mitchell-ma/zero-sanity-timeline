@@ -118,4 +118,5 @@ export class ArdeliaOperator extends Operator {
   }
   get comboDescription(): string { return 'Final Strike on enemy with no Vulnerability or Arts Infliction'; }
   get comboForbidsActiveColumns(): string[] { return ['heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction']; }
+  get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
 }

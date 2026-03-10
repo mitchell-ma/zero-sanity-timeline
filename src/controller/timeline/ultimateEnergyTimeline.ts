@@ -4,7 +4,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
 
 const ULT_ENERGY_MAX = 300;
-const ULT_CHARGE_PER_SECOND = 10;
+const ULT_CHARGE_PER_SECOND = 0;
 
 /**
  * Ultimate Energy resource timeline.

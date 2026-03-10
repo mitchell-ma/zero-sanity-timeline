@@ -73,3 +73,9 @@ export const ESTELLA_COMBO_SKILL_SEQUENCE: SkillEventSequence = new EstellaSkill
   OP.COMBO_SKILL.ESTELLA_COMBO_SKILL,
   'ESTELLA_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const ESTELLA_ULTIMATE_SEQUENCE: SkillEventSequence = new EstellaSkillEventSequence(
+  OP.ULTIMATE.ESTELLA_ULTIMATE,
+  'ESTELLA_ULTIMATE',
+);

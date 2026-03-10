@@ -73,3 +73,9 @@ export const GILBERTA_COMBO_SKILL_SEQUENCE: SkillEventSequence = new GilbertaSki
   OP.COMBO_SKILL.GILBERTA_COMBO_SKILL,
   'GILBERTA_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const GILBERTA_ULTIMATE_SEQUENCE: SkillEventSequence = new GilbertaSkillEventSequence(
+  OP.ULTIMATE.GILBERTA_ULTIMATE,
+  'GILBERTA_ULTIMATE',
+);

@@ -73,3 +73,9 @@ export const POGRANICHNK_COMBO_SKILL_SEQUENCE: SkillEventSequence = new Pogranic
   OP.COMBO_SKILL.POGRANICHNK_COMBO_SKILL,
   'POGRANICHNK_COMBO_SKILL',
 );
+
+// ── Ultimate ────────────────────────────────────────────────────────────────
+export const POGRANICHNK_ULTIMATE_SEQUENCE: SkillEventSequence = new PogranichnikSkillEventSequence(
+  OP.ULTIMATE.POGRANICHNK_ULTIMATE,
+  'POGRANICHNK_ULTIMATE',
+);
