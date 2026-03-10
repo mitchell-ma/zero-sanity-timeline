@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   AudioNoise,
   Onomatopoeia,
@@ -111,4 +111,9 @@ export class EstellaOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.SOLIDIFICATION];
+  }
+  get comboDescription(): string { return 'Enemy has Solidification'; }
 }

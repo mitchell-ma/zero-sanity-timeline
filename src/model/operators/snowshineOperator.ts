@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   HypothermicAssault,
   SaturatedDefense,
@@ -111,4 +111,9 @@ export class SnowshineOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.HP_BELOW_THRESHOLD];
+  }
+  get comboDescription(): string { return 'Controlled operator drops below 60% HP'; }
 }

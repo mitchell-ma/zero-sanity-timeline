@@ -1,4 +1,5 @@
 import { TimelineSourceType } from '../../consts/enums';
+import { ColumnLabel } from '../../consts/channelLabels';
 import { MiniTimeline } from '../../consts/viewTypes';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline } from '../timeline/skillPointTimeline';
@@ -64,7 +65,7 @@ export class CommonSlotController {
         source: TimelineSourceType.COMMON,
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-        label: 'SP',
+        label: ColumnLabel.SKILL_POINTS,
         color: '#ccaa33',
         headerVariant: 'skill',
       },
@@ -74,7 +75,7 @@ export class CommonSlotController {
         source: TimelineSourceType.COMMON,
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
-        label: 'TEAM STATUS',
+        label: ColumnLabel.TEAM_STATUS,
         color: '#66aa88',
         headerVariant: 'skill',
       },

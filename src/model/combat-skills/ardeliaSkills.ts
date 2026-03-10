@@ -4,6 +4,7 @@ import {
   ElementType,
   OperatorType,
 } from "../../consts/enums";
+import skillsData from "../game-data/skills.json";
 import { Potential, SkillLevel } from "../../consts/types";
 import { BasicAttack } from "./basicAttack";
 import { BasicSkill } from "./basicSkill";
@@ -110,6 +111,8 @@ export class DollyRush extends BasicSkill {
 
 // ── Eruption Column (Combo Skill) ─────────────────────────────────────────────
 
+const ARDELIA_COMBO = skillsData.operators.ARDELIA.COMBO_SKILL.ARDELIA_COMBO_SKILL;
+
 const ERUPTION_COLUMN_COOLDOWN = [
   18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 17,
 ] as const;
@@ -122,6 +125,9 @@ const ERUPTION_COLUMN_EXPLOSION_DMG = [
 
 export class EruptionColumn extends ComboSkill {
   static readonly SKILL_NAME = CombatSkillsType.ERUPTION_COLUMN;
+  static readonly DURATION_SECONDS = ARDELIA_COMBO.ARDELIA_COMBO_SKILL_DURATION;
+  static readonly COOLDOWN_BASE = ARDELIA_COMBO.ARDELIA_COMBO_SKILL_COOLDOWN;
+  static readonly GAUGE_GAIN = ARDELIA_COMBO.ARDELIA_COMBO_SKILL_GAUGE_GAIN;
   static readonly STAGGER = 10;
   static readonly CORRODE_DURATION_SECONDS = 7;
 
@@ -155,10 +161,13 @@ const WOOLY_PARTY_DMG = [
 ] as const;
 const WOOLY_PARTY_STAGGER = [2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3] as const;
 
+const ARDELIA_ULT = skillsData.operators.ARDELIA.ULTIMATE.ARDELIA_ULTIMATE;
+
 export class WoolyParty extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.WOOLY_PARTY;
-  static readonly ULTIMATE_ENERGY_COST = 90;
-  static readonly DURATION_SECONDS = 3;
+  static readonly ULTIMATE_ENERGY_COST = ARDELIA_ULT.ARDELIA_ULTIMATE_GAUGE_MAX;
+  static readonly DURATION_SECONDS = ARDELIA_ULT.ARDELIA_ULTIMATE_DURATION;
+  static readonly ANIMATION_SECONDS = ARDELIA_ULT.ARDELIA_ULTIMATE_ANIMATION_TIME;
 
   constructor(
     params: { level?: SkillLevel; operatorPotential?: Potential } = {},
@@ -168,6 +177,7 @@ export class WoolyParty extends Ultimate {
       elementType: ElementType.NATURE,
       ultimateEnergyCost: WoolyParty.ULTIMATE_ENERGY_COST,
       duration: WoolyParty.DURATION_SECONDS,
+      animationDuration: WoolyParty.ANIMATION_SECONDS,
       ...params,
     });
   }

@@ -24,11 +24,11 @@ export type ResourceGraphListener = (points: ResourcePoint[]) => void;
  * Subclasses define the concrete resource parameters.
  */
 export abstract class ResourceTimeline {
-  abstract readonly min: number;
-  abstract readonly max: number;
-  abstract readonly startValue: number;
+  abstract min: number;
+  abstract max: number;
+  abstract startValue: number;
   /** Resource gained per frame (e.g. 8 SP/sec at 120fps = 8/120). */
-  abstract readonly regenPerFrame: number;
+  abstract regenPerFrame: number;
 
   readonly subtimeline: Subtimeline;
 
@@ -46,6 +46,14 @@ export abstract class ResourceTimeline {
 
   /** Call from subclass constructor after super() to run the initial computation. */
   protected init(): void {
+    this.recompute();
+  }
+
+  /** Update resource parameters and recompute. */
+  updateConfig(config: { startValue?: number; max?: number; regenPerFrame?: number }): void {
+    if (config.startValue !== undefined) this.startValue = config.startValue;
+    if (config.max !== undefined) this.max = config.max;
+    if (config.regenPerFrame !== undefined) this.regenPerFrame = config.regenPerFrame;
     this.recompute();
   }
 

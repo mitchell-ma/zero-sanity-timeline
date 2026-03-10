@@ -12,10 +12,10 @@ const SP_REGEN_PER_SECOND = 8;
  * Events represent SP costs (activationDuration = cost amount).
  */
 export class SkillPointTimeline extends ResourceTimeline {
-  readonly min = 0;
-  readonly max = SP_MAX;
-  readonly startValue = 200;
-  readonly regenPerFrame = SP_REGEN_PER_SECOND / FPS;
+  min = 0;
+  max = SP_MAX;
+  startValue = 200;
+  regenPerFrame = SP_REGEN_PER_SECOND / FPS;
 
   constructor(subtimeline: Subtimeline) {
     super(subtimeline);

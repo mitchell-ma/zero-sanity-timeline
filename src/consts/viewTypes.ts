@@ -7,12 +7,23 @@ export interface SkillDef {
   defaultActiveDuration: number; // frames
   defaultCooldownDuration: number; // frames
   triggerCondition: string | null;
+  /** Trigger conditions this skill publishes when used. */
+  publishesTriggers?: import('./enums').TriggerConditionType[];
+  /** Ultimate gauge gained by this operator when skill is used. */
+  gaugeGain?: number;
+  /** Ultimate gauge gained by all team operators when skill is used. */
+  teamGaugeGain?: number;
+  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  gaugeGainByEnemies?: Record<number, number>;
+  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates only. */
+  animationDuration?: number;
 }
 
 export interface Operator {
   id: string;
   name: string;
   color: string;
+  element: string;
   role: string;
   rarity: number;
   splash?: string;
@@ -71,8 +82,14 @@ export interface EventFrameMarker {
   applyArtsInfliction?: FrameInflictionMarker;
   /** Arts infliction absorbed on this frame hit. */
   absorbArtsInfliction?: FrameAbsorptionMarker;
+  /** Arts infliction consumed on this frame hit (removed without exchange). */
+  consumeArtsInfliction?: { element: string; stacks: number };
   /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
-  applyForcedReaction?: { reaction: string; statusLevel: number };
+  applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
+  /** Status applied by this frame to a target (self or enemy). */
+  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Record<string, readonly number[]> };
+  /** True only for the last frame of the final basic attack sequence. */
+  isFinalStrike?: boolean;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -102,6 +119,8 @@ export interface TimelineEvent {
   activationDuration: number;
   activeDuration: number;
   cooldownDuration: number;
+  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates only. */
+  animationDuration?: number;
   /** If present, this event is multi-sequence. Segments replace the standard 3-phase layout. */
   segments?: EventSegmentData[];
   /** True for manually-added arts reaction events (not derived from infliction interactions). */
@@ -114,6 +133,26 @@ export interface TimelineEvent {
    * Default is 0 (no restriction — events can always overlap).
    */
   nonOverlappableRange?: number;
+  /** Ultimate gauge gained by this operator when event fires. */
+  gaugeGain?: number;
+  /** Ultimate gauge gained by all team operators when event fires. */
+  teamGaugeGain?: number;
+  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  gaugeGainByEnemies?: Record<number, number>;
+  /** Number of enemies hit (selectable in info pane when gaugeGainByEnemies exists). */
+  enemiesHit?: number;
+  /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by element → per-level array. */
+  susceptibility?: Record<string, readonly number[]>;
+  /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'breach'). */
+  comboTriggerColumnId?: string;
+  /** Operator slot ID that originally produced this derived event. */
+  sourceOwnerId?: string;
+  /** Skill name of the operator event that produced this derived event. */
+  sourceSkillName?: string;
+  /** Outcome of a derived event: how it ended. */
+  eventStatus?: 'expired' | 'consumed' | 'refreshed' | 'triggered';
+  /** True if this reaction was forced (bypassed infliction stacks). */
+  forcedReaction?: boolean;
 }
 
 export interface ContextMenuItem {
@@ -121,6 +160,8 @@ export interface ContextMenuItem {
   action?: () => void;
   danger?: boolean;
   disabled?: boolean;
+  /** Reason shown below label when disabled. */
+  disabledReason?: string;
   separator?: boolean;
   /** Non-interactive section header label. */
   header?: boolean;
@@ -133,6 +174,13 @@ export interface ContextMenuState {
 }
 
 export type VisibleSkills = Record<string, Record<SkillType, boolean>>;
+
+/** Editable resource parameters for a resource subtimeline. */
+export interface ResourceConfig {
+  startValue: number;
+  max: number;
+  regenPerSecond: number;
+}
 
 /** A sub-column within a micro-column mini-timeline. */
 export interface MicroColumn {
@@ -168,6 +216,14 @@ export type MiniTimeline = {
     triggerCondition?: string | null;
     /** If present, the event is multi-sequence. */
     segments?: EventSegmentData[];
+    /** Ultimate gauge gained by this operator. */
+    gaugeGain?: number;
+    /** Ultimate gauge gained by all team operators. */
+    teamGaugeGain?: number;
+    /** Per-enemy-count gauge gain map. */
+    gaugeGainByEnemies?: Record<number, number>;
+    /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
+    animationDuration?: number;
   };
 
   /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
@@ -183,6 +239,14 @@ export type MiniTimeline = {
     disabled?: boolean;
     /** Reason shown when disabled. */
     disabledReason?: string;
+    /** Ultimate gauge gained by this operator. */
+    gaugeGain?: number;
+    /** Ultimate gauge gained by all team operators. */
+    teamGaugeGain?: number;
+    /** Per-enemy-count gauge gain map. */
+    gaugeGainByEnemies?: Record<number, number>;
+    /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
+    animationDuration?: number;
   }[];
 
   /** If true, suppress the "Add" context menu for this column. */

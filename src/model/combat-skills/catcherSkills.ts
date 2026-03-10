@@ -3,6 +3,7 @@ import {
   CombatSkillsType,
   ElementType,
   OperatorType,
+  TriggerConditionType,
 } from "../../consts/enums";
 import { Potential, SkillLevel } from "../../consts/types";
 import { BasicAttack } from "./basicAttack";
@@ -63,6 +64,10 @@ export class RigidInterdiction extends BasicSkill {
       elementType: ElementType.PHYSICAL,
       ...params,
     });
+  }
+
+  get publishesTriggers(): TriggerConditionType[] {
+    return [TriggerConditionType.APPLY_VULNERABILITY];
   }
 }
 

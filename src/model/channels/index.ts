@@ -31,3 +31,16 @@ export const INFLICTION_TO_REACTION: Record<string, string> = {
 // ── Reaction columns ───────────────────────────────────────────────────────
 
 export const REACTION_COLUMN_IDS = new Set(Object.values(INFLICTION_TO_REACTION));
+
+// ── Physical infliction columns ───────────────────────────────────────────
+
+export const PHYSICAL_INFLICTION_COLUMN_IDS = new Set([
+  'vulnerableInfliction',
+]);
+
+/** Maps physical infliction columnId → physical status columnId. */
+export const PHYSICAL_INFLICTION_TO_STATUS: Record<string, string> = {
+  vulnerableInfliction: 'breach',
+};
+
+export const PHYSICAL_STATUS_COLUMN_IDS = new Set(Object.values(PHYSICAL_INFLICTION_TO_STATUS));

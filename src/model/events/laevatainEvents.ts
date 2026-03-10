@@ -101,12 +101,13 @@ export class LaevatainBasicAttackSequence5 extends BasicAttackEvent {
 
 // ── Combo Skill: Seethe ────────────────────────────────────────────────────
 //
-// Triggered when enemy has Combustion. 1.37s duration, 10s cooldown, 30 gauge gain.
+// Triggered when enemy has Combustion. 1.37s duration, 10s cooldown.
+// Gauge gain scales with enemies hit: 25/30/35 for 1/2/3 enemies.
 
 export class LaevatainComboSkillEvent extends ComboSkillEvent {
   static readonly DURATION_SECONDS = LAEV_COMBO.LAEVATAIN_COMBO_SKILL_DURATION;
   static readonly COOLDOWN_SECONDS = LAEV_COMBO.LAEVATAIN_COMBO_SKILL_COOLDOWN;
-  static readonly GAUGE_GAIN = LAEV_COMBO.LAEVATAIN_COMBO_SKILL_GAUGE_GAIN;
+  static readonly GAUGE_GAIN = LAEV_COMBO.LAEVATAIN_COMBO_SKILL_GAUGE_GAIN_HIT_1_ENEMY;
 
   constructor() {
     super({

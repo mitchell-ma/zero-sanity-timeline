@@ -1,4 +1,5 @@
-import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption } from "./skillEventFrame";
+import { StatusType, TargetType } from "../../consts/enums";
+import { SkillEventFrame, FrameArtsInfliction, FrameApplyStatus } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
@@ -11,6 +12,7 @@ class AkekuriSkillEventFrame extends SkillEventFrame {
   private readonly _skillPointRecovery: number;
   private readonly _stagger: number;
   private readonly _applyArtsInfliction: FrameArtsInfliction | null;
+  private readonly _applyStatus: FrameApplyStatus | null;
 
   constructor(tickData: Record<string, any>) {
     super();
@@ -25,12 +27,19 @@ class AkekuriSkillEventFrame extends SkillEventFrame {
     } else {
       this._applyArtsInfliction = null;
     }
+
+    // Parse GRANT_STATUS (e.g. ultimate grants Squad Buff on self)
+    const grant = tickData.GRANT_STATUS;
+    this._applyStatus = grant
+      ? { target: TargetType.SELF, status: grant.STATUS as StatusType, stacks: grant.STACKS, durationFrames: 0 }
+      : null;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
   getSkillPointRecovery(): number { return this._skillPointRecovery; }
   getStagger(): number { return this._stagger; }
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
+  getApplyStatus(): FrameApplyStatus | null { return this._applyStatus; }
 }
 
 class AkekuriSkillEventSequence extends SkillEventSequence {
@@ -79,4 +88,11 @@ export const AKEKURI_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new AkekuriSkil
 export const AKEKURI_COMBO_SKILL_SEQUENCE: SkillEventSequence = new AkekuriSkillEventSequence(
   AKEK.COMBO_SKILL.AKEKURI_COMBO_SKILL,
   'AKEKURI_COMBO_SKILL',
+);
+
+// ── Squad on Me (Ultimate) ──────────────────────────────────────────────────
+
+export const AKEKURI_ULTIMATE_SEQUENCE: SkillEventSequence = new AkekuriSkillEventSequence(
+  AKEK.ULTIMATE.AKEKURI_ULTIMATE,
+  'AKEKURI_ULTIMATE',
 );

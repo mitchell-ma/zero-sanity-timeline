@@ -1,9 +1,9 @@
-import { BasicAttackType, ElementType, StatusType } from "../../consts/enums";
+import { BasicAttackType, ElementType, StatusType, TargetType } from "../../consts/enums";
 import { BasicAttackEventFrame } from "./basicAttackEventFrame";
 import { BasicSkillEventFrame } from "./basicSkillEventFrame";
 import { ComboSkillEventFrame } from "./comboSkillEventFrame";
 import { CombatSkillEventFrame } from "./combatSkillEventFrame";
-import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption, FrameForcedReaction } from "./skillEventFrame";
+import { SkillEventFrame, FrameArtsInfliction, FrameArtsAbsorption, FrameArtsConsumption, FrameForcedReaction, FrameApplyStatus } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
 
@@ -17,7 +17,9 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
   private readonly _stagger: number;
   private readonly _applyArtsInfliction: FrameArtsInfliction | null;
   private readonly _absorbArtsInfliction: FrameArtsAbsorption | null;
+  private readonly _consumeArtsInfliction: FrameArtsConsumption | null;
   private readonly _applyForcedReaction: FrameForcedReaction | null;
+  private readonly _applyStatus: FrameApplyStatus | null;
 
   constructor(tickData: Record<string, any>) {
     super();
@@ -49,10 +51,25 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
       this._absorbArtsInfliction = null;
     }
 
+    // Parse CONSUME_ARTS_INFLICTION (removes infliction stacks without exchange)
+    const consume = tickData.CONSUME_ARTS_INFLICTION;
+    if (consume) {
+      const element = Object.keys(consume)[0];
+      this._consumeArtsInfliction = { element, stacks: consume[element].STACKS };
+    } else {
+      this._consumeArtsInfliction = null;
+    }
+
     // Parse APPLY_FORCED_REACTION (e.g. forced Combustion from magma_0)
     const forced = tickData.APPLY_FORCED_REACTION;
     this._applyForcedReaction = forced
       ? { reaction: forced.REACTION as StatusType, statusLevel: forced.STATUS_LEVEL }
+      : null;
+
+    // Parse GRANT_STATUS (e.g. battle skill grants Melting Flame on self)
+    const grant = tickData.GRANT_STATUS;
+    this._applyStatus = grant
+      ? { target: TargetType.SELF, status: grant.STATUS as StatusType, stacks: grant.STACKS, durationFrames: 0 }
       : null;
   }
 
@@ -61,7 +78,9 @@ class LaevatainSkillEventFrame extends SkillEventFrame {
   getStagger(): number { return this._stagger; }
   getApplyArtsInfliction(): FrameArtsInfliction | null { return this._applyArtsInfliction; }
   getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return this._absorbArtsInfliction; }
+  getConsumeArtsInfliction(): FrameArtsConsumption | null { return this._consumeArtsInfliction; }
   getApplyForcedReaction(): FrameForcedReaction | null { return this._applyForcedReaction; }
+  getApplyStatus(): FrameApplyStatus | null { return this._applyStatus; }
 }
 
 class LaevatainSkillEventSequence extends SkillEventSequence {

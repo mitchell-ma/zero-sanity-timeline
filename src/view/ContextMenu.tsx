@@ -60,6 +60,9 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
             }}
           >
             {item.label}
+            {item.disabled && item.disabledReason && (
+              <span className="context-menu-reason">{item.disabledReason}</span>
+            )}
           </button>
         );
       })}

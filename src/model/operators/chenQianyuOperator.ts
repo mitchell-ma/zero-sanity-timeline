@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   SoaringBreak,
   AscendingStrike,
@@ -111,4 +111,9 @@ export class ChenQianyuOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.APPLY_VULNERABILITY];
+  }
+  get comboDescription(): string { return 'Enemy becomes Vulnerable'; }
 }

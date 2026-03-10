@@ -1,7 +1,11 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import { DEFAULT_STATS } from "../../consts/stats";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
 import { lookupByLevel } from "../../utils/lookupByLevel";
+import { BasicAttack } from "../combat-skills/basicAttack";
+import { BasicSkill } from "../combat-skills/basicSkill";
+import { ComboSkill } from "../combat-skills/comboSkill";
+import { Ultimate } from "../combat-skills/ultimate";
 
 type StatsByLevel = Readonly<Record<number, Partial<Record<StatType, number>>>>;
 
@@ -15,6 +19,11 @@ export abstract class Operator {
   readonly secondaryAttributeType: StatType;
   readonly maxTalentOneLevel: number;
   readonly maxTalentTwoLevel: number;
+
+  abstract readonly basicAttack: BasicAttack;
+  abstract readonly battleSkill: BasicSkill;
+  abstract readonly comboSkill: ComboSkill;
+  abstract readonly ultimate: Ultimate;
 
   level: number;
   potential: Potential;
@@ -129,4 +138,19 @@ export abstract class Operator {
     }
     return atk;
   }
+
+  // ── Combo trigger config (from talent) ──────────────────────────────────────
+
+  /** Trigger conditions that activate this operator's combo (OR). Override in subclass. */
+  get comboRequires(): TriggerConditionType[] { return []; }
+  /** Human-readable combo trigger description. */
+  get comboDescription(): string { return ''; }
+  /** Combo activation window in frames. */
+  get comboWindowFrames(): number { return 720; }
+  /** Combo blocked when any of these columnIds are active. */
+  get comboForbidsActiveColumns(): string[] | undefined { return undefined; }
+  /** Combo requires at least one of these columnIds to be active. */
+  get comboRequiresActiveColumns(): string[] | undefined { return undefined; }
+  /** Enemy column keys that should be shown when this operator is on the team. */
+  get derivedEnemyColumns(): string[] | undefined { return undefined; }
 }

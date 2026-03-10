@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   SeekAndHunt,
   TempestuousArc,
@@ -111,4 +111,9 @@ export class ArclightOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.ELECTRIFICATION];
+  }
+  get comboDescription(): string { return 'Enemy has or consumed Electrification'; }
 }

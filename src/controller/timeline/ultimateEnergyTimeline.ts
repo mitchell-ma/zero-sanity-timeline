@@ -13,12 +13,12 @@ const ULT_CHARGE_PER_SECOND = 10;
  * Each ultimate activation consumes the full energy cost.
  */
 export class UltimateEnergyTimeline extends ResourceTimeline {
-  readonly min = 0;
-  readonly max: number;
-  readonly startValue = 0;
-  readonly regenPerFrame: number;
+  min = 0;
+  max: number;
+  startValue = 0;
+  regenPerFrame: number;
 
-  private readonly energyCost: number;
+  private energyCost: number;
 
   constructor(subtimeline: Subtimeline, energyCost: number = ULT_ENERGY_MAX, chargePerSecond: number = ULT_CHARGE_PER_SECOND) {
     super(subtimeline);

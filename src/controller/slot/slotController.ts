@@ -1,4 +1,4 @@
-import { TimelineSourceType, TriggerConditionType } from '../../consts/enums';
+import { TimelineSourceType, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import {
   TriggerCapability,
 } from '../../consts/triggerCapabilities';
@@ -503,9 +503,12 @@ export class SlotController {
 
     const publishes = pubCap.publishesTriggers;
     for (const required of subCap.comboRequires) {
-      const hasTrigger = Object.keys(publishes).some((k) =>
-        publishes[k]?.includes(required),
-      );
+      const hasTrigger = Object.keys(publishes).some((k) => {
+        const triggers = publishes[k];
+        if (!triggers) return false;
+        return triggers.includes(required) ||
+          triggers.some((t) => TRIGGER_CONDITION_PARENTS[t] === required);
+      });
       if (hasTrigger) {
         pubsubSubscribe(triggerKey(required), pubCtrl.publisher, subCtrl.comboSubscriber);
       }

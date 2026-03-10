@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   SwordArtOfAssault,
   ForwardMarch,
@@ -111,4 +111,9 @@ export class EmberOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.OPERATOR_ATTACKED];
+  }
+  get comboDescription(): string { return 'Controlled operator is attacked'; }
 }

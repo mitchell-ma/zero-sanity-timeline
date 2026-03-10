@@ -17,16 +17,17 @@ interface CombatSheetProps {
   columns: Column[];
   zoom: number;
   loadoutRowHeight: number;
-  selectedFrame?: SelectedFrame | null;
+  selectedFrames?: SelectedFrame[];
   hoverFrame?: number | null;
   onScrollRef?: (el: HTMLDivElement | null) => void;
   onScroll?: (scrollTop: number) => void;
   onZoom?: (deltaY: number) => void;
+  compact?: boolean;
 }
 
 export default function CombatSheet({
   slots, events, columns, zoom, loadoutRowHeight,
-  selectedFrame, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
+  selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom, compact,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
@@ -98,7 +99,28 @@ export default function CombatSheet({
     return bestKey;
   }, [hoverFrame, rows, zoom]);
 
-  const tlHeight = timelineHeight(zoom);
+  // Compute clamped top positions so rows never overlap
+  const rowLayout = useMemo(() => {
+    const layout: { row: DamageTableRow; top: number; frameTop: number }[] = [];
+    let prevBottom = -Infinity;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const frameTop = frameToPx(row.absoluteFrame, zoom) - ROW_HEIGHT / 2;
+      const top = compact ? i * ROW_HEIGHT : Math.max(frameTop, prevBottom);
+      layout.push({ row, top, frameTop });
+      prevBottom = top + ROW_HEIGHT;
+    }
+    return layout;
+  }, [rows, zoom, compact]);
+
+
+  const tlHeight = useMemo(() => {
+    const baseHeight = timelineHeight(zoom);
+    if (rowLayout.length === 0) return baseHeight;
+    const lastRow = rowLayout[rowLayout.length - 1];
+    // Extend body if clamped rows push past the natural timeline height
+    return Math.max(baseHeight, lastRow.top + ROW_HEIGHT + 16);
+  }, [zoom, rowLayout]);
   const numCols = tableColumns.length;
 
   if (numCols === 0) {
@@ -136,9 +158,12 @@ export default function CombatSheet({
           <div
             key={col.key}
             className="dmg-header-skill"
-            style={{ color: col.color, flex: colFlexMap.get(col.key) ?? 1 }}
+            style={{
+              '--op-color': col.color,
+              flex: colFlexMap.get(col.key) ?? 1,
+            } as React.CSSProperties}
           >
-            {col.label}
+            <span className="dmg-header-skill-label">{col.label}</span>
           </div>
         ))}
       </div>
@@ -149,22 +174,23 @@ export default function CombatSheet({
           className="dmg-body"
           style={{ height: tlHeight }}
         >
-          {rows.length === 0 ? (
+          {rowLayout.length === 0 ? (
             <div className="dmg-body-empty">
               Add events to the timeline to see damage calculations
             </div>
           ) : (
-            rows.map((row) => (
+            rowLayout.map(({ row, top }) => (
               <DamageRow
                 key={row.key}
                 row={row}
                 tableColumns={tableColumns}
                 colFlexMap={colFlexMap}
-                top={frameToPx(row.absoluteFrame, zoom) - ROW_HEIGHT / 2}
-                selected={!!selectedFrame
-                  && selectedFrame.eventId === row.eventId
-                  && selectedFrame.segmentIndex === row.segmentIndex
-                  && selectedFrame.frameIndex === row.frameIndex}
+                top={top}
+                selected={selectedFrames?.some(
+                  (sf) => sf.eventId === row.eventId
+                    && sf.segmentIndex === row.segmentIndex
+                    && sf.frameIndex === row.frameIndex,
+                ) ?? false}
                 hovered={row.key === hoveredRowKey}
               />
             ))

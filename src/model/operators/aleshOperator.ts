@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   RodCasting,
   UnconventionalLure,
@@ -111,4 +111,9 @@ export class AleshOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.SOLIDIFICATION];
+  }
+  get comboDescription(): string { return 'Arts Reaction or Crystals consumed nearby'; }
 }

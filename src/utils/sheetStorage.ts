@@ -1,4 +1,4 @@
-import { TimelineEvent, VisibleSkills } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../view/InformationPane';
 
@@ -14,6 +14,7 @@ export interface SheetData {
   loadoutStats: Record<string, LoadoutStats>;
   visibleSkills: VisibleSkills;
   nextEventId: number;
+  resourceConfigs?: Record<string, ResourceConfig>;
 }
 
 export function serializeSheet(
@@ -24,6 +25,7 @@ export function serializeSheet(
   loadoutStats: Record<string, LoadoutStats>,
   visibleSkills: VisibleSkills,
   nextEventId: number,
+  resourceConfigs?: Record<string, ResourceConfig>,
 ): SheetData {
   return {
     version: CURRENT_VERSION,
@@ -34,6 +36,7 @@ export function serializeSheet(
     loadoutStats,
     visibleSkills,
     nextEventId,
+    ...(resourceConfigs && Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
   };
 }
 
@@ -92,6 +95,19 @@ export function validateSheetData(raw: unknown): LoadResult {
   }
   if (typeof obj.nextEventId !== 'number') {
     return { ok: false, error: 'Missing or invalid nextEventId field.' };
+  }
+
+  // Migration: strip isFinalStrike from non-basic events (only basic attacks have final strikes)
+  for (const ev of obj.events as any[]) {
+    if (ev.columnId !== 'basic' && ev.segments) {
+      for (const seg of ev.segments) {
+        if (seg.frames) {
+          for (const f of seg.frames) {
+            delete f.isFinalStrike;
+          }
+        }
+      }
+    }
   }
 
   return { ok: true, data: obj as unknown as SheetData };

@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   SignatureGunKata,
   TinySurprise,
@@ -111,4 +111,9 @@ export class FluoriteOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.SOLIDIFICATION, TriggerConditionType.CORROSION];
+  }
+  get comboDescription(): string { return '2+ Cryo or Nature Infliction stacks'; }
 }

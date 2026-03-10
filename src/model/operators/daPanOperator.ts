@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   RollingCut,
   FlipDaWok,
@@ -111,4 +111,9 @@ export class DaPanOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.APPLY_VULNERABILITY];
+  }
+  get comboDescription(): string { return 'Enemy reaches 4 Vulnerability stacks'; }
 }

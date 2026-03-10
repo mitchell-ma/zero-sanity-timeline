@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, StatusType, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
-import { SKILL_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/channelLabels';
+import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/channelLabels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
@@ -14,25 +14,27 @@ import {
   LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE,
   LAEVATAIN_COMBO_SKILL_SEQUENCE,
 } from '../../model/event-frames/laevatainEventFrames';
-import { AKEKURI_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/akekuriEventFrames';
-import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/endministratorEventFrames';
-import { LIFENG_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/lifengEventFrames';
-import { CHENQIANYU_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/chenQianyuEventFrames';
-import { ESTELLA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/estellaEventFrames';
-import { EMBER_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/emberEventFrames';
-import { SNOWSHINE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/snowshineEventFrames';
-import { CATCHER_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/catcherEventFrames';
-import { GILBERTA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/gilbertaEventFrames';
-import { XAIHI_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/xaihiEventFrames';
-import { PERLICA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/perlicaEventFrames';
-import { FLUORITE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/fluoriteEventFrames';
-import { LASTRITE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/lastRiteEventFrames';
-import { YVONNE_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/yvonneEventFrames';
-import { AVYWENNA_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/avywennaEventFrames';
-import { DAPAN_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/daPanEventFrames';
-import { POGRANICHNK_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/pogranichnikEventFrames';
-import { ALESH_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/aleshEventFrames';
-import { ARCLIGHT_BASIC_ATTACK_SEQUENCES } from '../../model/event-frames/arclightEventFrames';
+import { AKEKURI_BASIC_ATTACK_SEQUENCES, AKEKURI_BATTLE_SKILL_SEQUENCE, AKEKURI_COMBO_SKILL_SEQUENCE, AKEKURI_ULTIMATE_SEQUENCE } from '../../model/event-frames/akekuriEventFrames';
+import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES, ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE, ENDMINISTRATOR_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/endministratorEventFrames';
+import { LIFENG_BASIC_ATTACK_SEQUENCES, LIFENG_BATTLE_SKILL_SEQUENCE, LIFENG_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/lifengEventFrames';
+import { CHENQIANYU_BASIC_ATTACK_SEQUENCES, CHENQIANYU_BATTLE_SKILL_SEQUENCE, CHENQIANYU_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/chenQianyuEventFrames';
+import { ESTELLA_BASIC_ATTACK_SEQUENCES, ESTELLA_BATTLE_SKILL_SEQUENCE, ESTELLA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/estellaEventFrames';
+import { EMBER_BASIC_ATTACK_SEQUENCES, EMBER_BATTLE_SKILL_SEQUENCE, EMBER_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/emberEventFrames';
+import { SNOWSHINE_BASIC_ATTACK_SEQUENCES, SNOWSHINE_BATTLE_SKILL_SEQUENCE, SNOWSHINE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/snowshineEventFrames';
+import { CATCHER_BASIC_ATTACK_SEQUENCES, CATCHER_BATTLE_SKILL_SEQUENCE, CATCHER_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/catcherEventFrames';
+import { GILBERTA_BASIC_ATTACK_SEQUENCES, GILBERTA_BATTLE_SKILL_SEQUENCE, GILBERTA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/gilbertaEventFrames';
+import { XAIHI_BASIC_ATTACK_SEQUENCES, XAIHI_BATTLE_SKILL_SEQUENCE, XAIHI_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/xaihiEventFrames';
+import { PERLICA_BASIC_ATTACK_SEQUENCES, PERLICA_BATTLE_SKILL_SEQUENCE, PERLICA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/perlicaEventFrames';
+import { FLUORITE_BASIC_ATTACK_SEQUENCES, FLUORITE_BATTLE_SKILL_SEQUENCE, FLUORITE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/fluoriteEventFrames';
+import { LASTRITE_BASIC_ATTACK_SEQUENCES, LASTRITE_BATTLE_SKILL_SEQUENCE, LASTRITE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/lastRiteEventFrames';
+import { YVONNE_BASIC_ATTACK_SEQUENCES, YVONNE_BATTLE_SKILL_SEQUENCE, YVONNE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/yvonneEventFrames';
+import { AVYWENNA_BASIC_ATTACK_SEQUENCES, AVYWENNA_BATTLE_SKILL_SEQUENCE, AVYWENNA_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/avywennaEventFrames';
+import { DAPAN_BASIC_ATTACK_SEQUENCES, DAPAN_BATTLE_SKILL_SEQUENCE, DAPAN_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/daPanEventFrames';
+import { POGRANICHNK_BASIC_ATTACK_SEQUENCES, POGRANICHNK_BATTLE_SKILL_SEQUENCE, POGRANICHNK_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/pogranichnikEventFrames';
+import { ALESH_BASIC_ATTACK_SEQUENCES, ALESH_BATTLE_SKILL_SEQUENCE, ALESH_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/aleshEventFrames';
+import { ARCLIGHT_BASIC_ATTACK_SEQUENCES, ARCLIGHT_BATTLE_SKILL_SEQUENCE, ARCLIGHT_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/arclightEventFrames';
+import { ARDELIA_BASIC_ATTACK_SEQUENCES, ARDELIA_BATTLE_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE, ARDELIA_ULTIMATE_SEQUENCE } from '../../model/event-frames/ardeliaEventFrames';
+import { ANTAL_BASIC_ATTACK_SEQUENCES, ANTAL_BATTLE_SKILL_SEQUENCE, ANTAL_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/antalEventFrames';
 import { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
 
 /** Map operator IDs to their basic attack frame sequences. */
@@ -56,6 +58,64 @@ const BASIC_ATTACK_FRAME_SEQUENCES: Record<string, readonly SkillEventSequence[]
   pogranichnik: POGRANICHNK_BASIC_ATTACK_SEQUENCES,
   alesh: ALESH_BASIC_ATTACK_SEQUENCES,
   arclight: ARCLIGHT_BASIC_ATTACK_SEQUENCES,
+  ardelia: ARDELIA_BASIC_ATTACK_SEQUENCES,
+  antal: ANTAL_BASIC_ATTACK_SEQUENCES,
+};
+
+/** Map operator IDs to their battle skill frame sequence. */
+const BATTLE_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence> = {
+  akekuri: AKEKURI_BATTLE_SKILL_SEQUENCE,
+  endministrator: ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE,
+  lifeng: LIFENG_BATTLE_SKILL_SEQUENCE,
+  chenQianyu: CHENQIANYU_BATTLE_SKILL_SEQUENCE,
+  estella: ESTELLA_BATTLE_SKILL_SEQUENCE,
+  ember: EMBER_BATTLE_SKILL_SEQUENCE,
+  snowshine: SNOWSHINE_BATTLE_SKILL_SEQUENCE,
+  catcher: CATCHER_BATTLE_SKILL_SEQUENCE,
+  gilberta: GILBERTA_BATTLE_SKILL_SEQUENCE,
+  xaihi: XAIHI_BATTLE_SKILL_SEQUENCE,
+  perlica: PERLICA_BATTLE_SKILL_SEQUENCE,
+  fluorite: FLUORITE_BATTLE_SKILL_SEQUENCE,
+  lastRite: LASTRITE_BATTLE_SKILL_SEQUENCE,
+  yvonne: YVONNE_BATTLE_SKILL_SEQUENCE,
+  avywenna: AVYWENNA_BATTLE_SKILL_SEQUENCE,
+  daPan: DAPAN_BATTLE_SKILL_SEQUENCE,
+  pogranichnik: POGRANICHNK_BATTLE_SKILL_SEQUENCE,
+  alesh: ALESH_BATTLE_SKILL_SEQUENCE,
+  arclight: ARCLIGHT_BATTLE_SKILL_SEQUENCE,
+  ardelia: ARDELIA_BATTLE_SKILL_SEQUENCE,
+  antal: ANTAL_BATTLE_SKILL_SEQUENCE,
+};
+
+/** Map operator IDs to their combo skill frame sequence(s). */
+const COMBO_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence | { sequences: SkillEventSequence[]; labels: string[] }> = {
+  akekuri: AKEKURI_COMBO_SKILL_SEQUENCE,
+  endministrator: ENDMINISTRATOR_COMBO_SKILL_SEQUENCE,
+  lifeng: LIFENG_COMBO_SKILL_SEQUENCE,
+  chenQianyu: CHENQIANYU_COMBO_SKILL_SEQUENCE,
+  estella: ESTELLA_COMBO_SKILL_SEQUENCE,
+  ember: EMBER_COMBO_SKILL_SEQUENCE,
+  snowshine: SNOWSHINE_COMBO_SKILL_SEQUENCE,
+  catcher: CATCHER_COMBO_SKILL_SEQUENCE,
+  gilberta: GILBERTA_COMBO_SKILL_SEQUENCE,
+  xaihi: XAIHI_COMBO_SKILL_SEQUENCE,
+  perlica: PERLICA_COMBO_SKILL_SEQUENCE,
+  fluorite: FLUORITE_COMBO_SKILL_SEQUENCE,
+  lastRite: LASTRITE_COMBO_SKILL_SEQUENCE,
+  yvonne: YVONNE_COMBO_SKILL_SEQUENCE,
+  avywenna: AVYWENNA_COMBO_SKILL_SEQUENCE,
+  daPan: DAPAN_COMBO_SKILL_SEQUENCE,
+  pogranichnik: POGRANICHNK_COMBO_SKILL_SEQUENCE,
+  alesh: ALESH_COMBO_SKILL_SEQUENCE,
+  arclight: ARCLIGHT_COMBO_SKILL_SEQUENCE,
+  ardelia: { sequences: [ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE], labels: ['Eruption Column', 'Explosion'] },
+  antal: ANTAL_COMBO_SKILL_SEQUENCE,
+};
+
+/** Map operator IDs to their ultimate frame sequence. */
+const ULTIMATE_FRAME_SEQUENCES: Record<string, SkillEventSequence> = {
+  akekuri: AKEKURI_ULTIMATE_SEQUENCE,
+  ardelia: ARDELIA_ULTIMATE_SEQUENCE,
 };
 
 export interface Slot {
@@ -81,7 +141,7 @@ export function buildColumns(
     source: TimelineSourceType.COMMON,
     ownerId: COMMON_OWNER_ID,
     columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-    label: 'SKILL POINTS',
+    label: ColumnLabel.SKILL_POINTS,
     color: '#ccaa33',
     headerVariant: 'skill',
     noAdd: true,
@@ -92,7 +152,7 @@ export function buildColumns(
     source: TimelineSourceType.COMMON,
     ownerId: COMMON_OWNER_ID,
     columnId: COMMON_COLUMN_IDS.TEAM_STATUS,
-    label: 'TEAM STATUS',
+    label: ColumnLabel.TEAM_STATUS,
     color: '#66aa88',
     headerVariant: 'skill',
     noAdd: true,
@@ -121,6 +181,10 @@ export function buildColumns(
               defaultActiveDuration: skill.defaultActiveDuration,
               defaultCooldownDuration: skill.defaultCooldownDuration,
               triggerCondition: skill.triggerCondition,
+              gaugeGain: skill.gaugeGain,
+              teamGaugeGain: skill.teamGaugeGain,
+              ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
+              animationDuration: skill.animationDuration,
             },
           };
           // Laevatain basic attack: multi-sequence event with frame markers
@@ -164,6 +228,8 @@ export function buildColumns(
               defaultActiveDuration: 0,
               defaultCooldownDuration: 0,
               segments: baseSeg.segments,
+              gaugeGain: skill.gaugeGain,
+              teamGaugeGain: skill.teamGaugeGain,
             };
             col.eventVariants = [
               {
@@ -172,6 +238,8 @@ export function buildColumns(
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
                 segments: baseSeg.segments,
+                gaugeGain: skill.gaugeGain,
+                teamGaugeGain: skill.teamGaugeGain,
               },
               {
                 name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED,
@@ -180,6 +248,8 @@ export function buildColumns(
                 defaultCooldownDuration: 0,
                 segments: enhSeg.segments,
                 triggerCondition: 'Requires: Twilight active',
+                gaugeGain: 0,
+                teamGaugeGain: 0,
               },
               {
                 name: CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
@@ -188,6 +258,8 @@ export function buildColumns(
                 defaultCooldownDuration: 0,
                 segments: empSeg.segments,
                 triggerCondition: 'Requires: Melting Flame ×4',
+                gaugeGain: skill.gaugeGain,
+                teamGaugeGain: skill.teamGaugeGain,
               },
               {
                 name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
@@ -196,6 +268,8 @@ export function buildColumns(
                 defaultCooldownDuration: 0,
                 segments: enhEmpSeg.segments,
                 triggerCondition: 'Requires: Twilight active + Melting Flame ×4',
+                gaugeGain: 0,
+                teamGaugeGain: 0,
               },
             ];
           }
@@ -220,6 +294,38 @@ export function buildColumns(
               segments: base.segments,
             };
           }
+          // Generic battle skill: map-based lookup for operators with frame data
+          const battleSeq = op && BATTLE_SKILL_FRAME_SEQUENCES[op.id];
+          if (battleSeq && skillType === 'battle' && !isLaevatain) {
+            const seg = SkillSegmentBuilder.buildSegments([battleSeq]);
+            col.defaultEvent = {
+              ...col.defaultEvent!,
+              defaultActivationDuration: seg.totalDurationFrames,
+              segments: seg.segments,
+            };
+          }
+          // Generic combo skill: map-based lookup for operators with frame data
+          const comboEntry = op && COMBO_SKILL_FRAME_SEQUENCES[op.id];
+          if (comboEntry && skillType === 'combo' && !isLaevatain) {
+            const isMulti = 'sequences' in comboEntry;
+            const seg = isMulti
+              ? SkillSegmentBuilder.buildSegments(comboEntry.sequences, { labels: comboEntry.labels })
+              : SkillSegmentBuilder.buildSegments([comboEntry]);
+            col.defaultEvent = {
+              ...col.defaultEvent!,
+              defaultActivationDuration: seg.totalDurationFrames,
+              segments: seg.segments,
+            };
+          }
+          // Generic ultimate: attach frame data without overriding durations
+          const ultSeq = op && ULTIMATE_FRAME_SEQUENCES[op.id];
+          if (ultSeq && skillType === 'ultimate') {
+            const seg = SkillSegmentBuilder.buildSegments([ultSeq]);
+            col.defaultEvent = {
+              ...col.defaultEvent!,
+              segments: seg.segments,
+            };
+          }
           columns.push(col);
           slotHasCols = true;
         }
@@ -233,7 +339,7 @@ export function buildColumns(
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
         columnId: 'melting-flame',
-        label: 'Melting Flames',
+        label: STATUS_LABELS[StatusType.MELTING_FLAME].toUpperCase(),
         color: op!.color,
         headerVariant: 'mf',
         microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
@@ -269,50 +375,151 @@ export function buildColumns(
     }
   }
 
-  // Single arts infliction mini-timeline for the enemy (stacking like MF)
-  const inflictionStatuses = enemy.statuses;
-  const inflictionColumnIds = inflictionStatuses.map((s) => s.id);
-  columns.push({
-    key: 'enemy-arts-infliction',
-    type: 'mini-timeline',
-    source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
-    columnId: 'arts-infliction',
-    label: 'INFLICTION',
-    color: '#cc3333',
-    headerVariant: 'infliction',
-    microColumns: inflictionStatuses.map((s) => ({
-      id: s.id,
-      label: s.label,
-      color: s.color,
-    })),
-    microColumnAssignment: 'by-order',
-    matchColumnIds: inflictionColumnIds,
-    reuseExpiredSlots: true,
-    derived: true,
-    defaultEvent: {
-      name: 'Infliction',
-      defaultActivationDuration: 2400, // 20 seconds at 120fps
-      defaultActiveDuration: 0,
-      defaultCooldownDuration: 0,
-    },
-  });
+  // ── Dynamic enemy columns based on team composition ──────────────────────
+  // Collect all published triggers and explicit enemy columns from team operators
+  const ARTS_INFLICTION_TRIGGERS = new Set([
+    TriggerConditionType.COMBUSTION,
+    TriggerConditionType.SOLIDIFICATION,
+    TriggerConditionType.CORROSION,
+    TriggerConditionType.ELECTRIFICATION,
+    TriggerConditionType.APPLY_ARTS_INFLICTION,
+    TriggerConditionType.APPLY_HEAT_INFLICTION,
+    TriggerConditionType.APPLY_CRYO_INFLICTION,
+    TriggerConditionType.APPLY_NATURE_INFLICTION,
+    TriggerConditionType.APPLY_ELECTRIC_INFLICTION,
+  ]);
 
-  // Arts reaction mini-timeline for the enemy
-  columns.push({
-    key: 'enemy-arts-reaction',
-    type: 'mini-timeline',
-    source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
-    columnId: 'arts-reaction',
-    label: 'ARTS REACTION',
-    color: '#dd6644',
-    headerVariant: 'infliction',
-    microColumns: REACTION_MICRO_COLUMNS,
-    microColumnAssignment: 'dynamic-split',
-    matchColumnIds: REACTION_MICRO_COLUMNS.map((mc) => mc.id),
-    derived: true,
-  });
+  const teamPublishedTriggers = new Set<TriggerConditionType>();
+  const teamEnemyColumns = new Set<string>();
+
+  for (const slot of slots) {
+    const op = slot.operator;
+    if (!op) continue;
+    const cap = op.triggerCapability;
+    if (!cap) continue;
+    for (const triggers of Object.values(cap.publishesTriggers)) {
+      if (triggers) triggers.forEach((t) => teamPublishedTriggers.add(t));
+    }
+    if (cap.derivedEnemyColumns) {
+      cap.derivedEnemyColumns.forEach((c) => teamEnemyColumns.add(c));
+    }
+  }
+
+  let hasArtsInfliction = false;
+  teamPublishedTriggers.forEach((t) => { if (ARTS_INFLICTION_TRIGGERS.has(t)) hasArtsInfliction = true; });
+  const hasPhysicalStatus = teamPublishedTriggers.has(TriggerConditionType.APPLY_PHYSICAL_STATUS);
+  const hasVulnerable = teamPublishedTriggers.has(TriggerConditionType.APPLY_VULNERABILITY);
+
+  if (hasArtsInfliction) {
+    // Arts infliction mini-timeline for the enemy (stacking like MF)
+    const inflictionStatuses = enemy.statuses;
+    const inflictionColumnIds = inflictionStatuses.map((s) => s.id);
+    columns.push({
+      key: 'enemy-arts-infliction',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: 'arts-infliction',
+      label: ColumnLabel.INFLICTION,
+      color: '#cc3333',
+      headerVariant: 'infliction',
+      microColumns: inflictionStatuses.map((s) => ({
+        id: s.id,
+        label: s.label,
+        color: s.color,
+      })),
+      microColumnAssignment: 'by-order',
+      matchColumnIds: inflictionColumnIds,
+      reuseExpiredSlots: true,
+      derived: true,
+      defaultEvent: {
+        name: 'Infliction',
+        defaultActivationDuration: 2400, // 20 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+
+    // Arts reaction mini-timeline for the enemy
+    columns.push({
+      key: 'enemy-arts-reaction',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: 'arts-reaction',
+      label: ColumnLabel.ARTS_REACTION,
+      color: '#dd6644',
+      headerVariant: 'infliction',
+      microColumns: REACTION_MICRO_COLUMNS,
+      microColumnAssignment: 'dynamic-split',
+      matchColumnIds: REACTION_MICRO_COLUMNS.map((mc) => mc.id),
+      derived: true,
+    });
+  }
+
+  if (hasVulnerable) {
+    // Physical infliction mini-timeline for the enemy (Vulnerable stacking)
+    columns.push({
+      key: 'enemy-physical-infliction',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: 'physical-infliction',
+      label: ColumnLabel.PHYSICAL_INFLICTION,
+      color: '#c0c8d0',
+      headerVariant: 'infliction',
+      microColumns: PHYSICAL_INFLICTION_MICRO_COLUMNS,
+      microColumnAssignment: 'by-order',
+      matchColumnIds: ['vulnerableInfliction'],
+      reuseExpiredSlots: true,
+      derived: true,
+      defaultEvent: {
+        name: 'Vulnerable',
+        defaultActivationDuration: 2400, // 20 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
+  if (hasPhysicalStatus) {
+    // Physical status mini-timeline for the enemy (Breach)
+    columns.push({
+      key: 'enemy-physical-status',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: 'physical-status',
+      label: ColumnLabel.PHYSICAL_STATUS,
+      color: '#c0c8d0',
+      headerVariant: 'infliction',
+      microColumns: PHYSICAL_STATUS_MICRO_COLUMNS,
+      microColumnAssignment: 'dynamic-split',
+      matchColumnIds: PHYSICAL_STATUS_MICRO_COLUMNS.map((mc) => mc.id),
+      derived: true,
+    });
+  }
+
+  if (teamEnemyColumns.has('enemy-focus')) {
+    // Focus status mini-timeline for the enemy (applied by Antal battle skill, 60s duration)
+    columns.push({
+      key: 'enemy-focus',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: StatusType.FOCUS,
+      label: STATUS_LABELS[StatusType.FOCUS].toUpperCase(),
+      color: '#55aadd',
+      headerVariant: 'skill',
+      derived: true,
+      defaultEvent: {
+        name: 'Focus',
+        defaultActivationDuration: 7200, // 60 seconds at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
 
   return columns;
 }

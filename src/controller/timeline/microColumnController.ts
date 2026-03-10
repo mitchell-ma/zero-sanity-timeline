@@ -51,27 +51,26 @@ export class MicroColumnController {
   static dynamicSplitPosition(
     ev: TimelineEvent,
     colEvents: TimelineEvent[],
-    typeOrder: Map<string, number>,
+    _typeOrder: Map<string, number>,
   ): { count: number; index: number } {
     const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
-    const overlappingTypes = new Set<string>();
-    overlappingTypes.add(ev.columnId);
+    // Collect all overlapping events (including self)
+    const overlapping: TimelineEvent[] = [ev];
     for (const other of colEvents) {
       if (other.id === ev.id) continue;
       const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
       if (other.startFrame < evEnd && otherEnd > ev.startFrame) {
-        overlappingTypes.add(other.columnId);
+        overlapping.push(other);
       }
     }
 
-    const sortedTypes = Array.from(overlappingTypes).sort(
-      (a, b) => (typeOrder.get(a) ?? 0) - (typeOrder.get(b) ?? 0),
-    );
+    // Sort by startFrame (earlier events on the left), break ties by id for stability
+    overlapping.sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
 
     return {
-      count: sortedTypes.length,
-      index: sortedTypes.indexOf(ev.columnId),
+      count: overlapping.length,
+      index: overlapping.findIndex((o) => o.id === ev.id),
     };
   }
 

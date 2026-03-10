@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   AllOutOffensive,
   ThePulverizingFront,
@@ -111,4 +111,9 @@ export class PogranichnikOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.APPLY_PHYSICAL_STATUS];
+  }
+  get comboDescription(): string { return 'Crush or Breach consumes Vulnerability'; }
 }

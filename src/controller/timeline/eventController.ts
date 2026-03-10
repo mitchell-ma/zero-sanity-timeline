@@ -94,6 +94,10 @@ export function createEvent(
     defaultActiveDuration?: number;
     defaultCooldownDuration?: number;
     segments?: EventSegmentData[];
+    gaugeGain?: number;
+    teamGaugeGain?: number;
+    gaugeGainByEnemies?: Record<number, number>;
+    animationDuration?: number;
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
@@ -111,6 +115,10 @@ export function createEvent(
       segments: defaultSkill.segments,
       nonOverlappableRange: defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0),
     } : {}),
+    ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
+    ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
+    ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),
+    ...(defaultSkill?.animationDuration ? { animationDuration: defaultSkill.animationDuration } : {}),
   };
 }
 

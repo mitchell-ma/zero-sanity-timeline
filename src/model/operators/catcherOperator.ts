@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   RigidInterdictionBasic,
   RigidInterdiction,
@@ -111,4 +111,9 @@ export class CatcherOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.OPERATOR_ATTACKED];
+  }
+  get comboDescription(): string { return 'Enemy charges up or operator below 40% HP'; }
 }

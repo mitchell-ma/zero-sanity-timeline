@@ -1,5 +1,6 @@
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
-import { TriggerConditionType } from '../../consts/enums';
+import { TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
+import { TOTAL_FRAMES } from '../../utils/timeline';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import {
@@ -17,6 +18,8 @@ export interface ActivationWindow {
   startFrame: number;
   endFrame: number;
   sourceEventId: string;
+  /** The trigger condition type that caused this window (e.g. COMBUSTION, APPLY_HEAT_INFLICTION). */
+  triggerType?: TriggerConditionType;
 }
 
 /** key = slotId, value = sorted activation windows for that slot's combo */
@@ -53,6 +56,46 @@ interface SlotWiring {
   capability: TriggerCapability;
   publisher: SlotPublisher;
   subscriber: SlotSubscriber;
+}
+
+/**
+ * Maps derived enemy event columnIds to the trigger conditions they represent.
+ * Used to generate combo windows from derived events at their actual frame timing.
+ */
+const ENEMY_COLUMN_TO_TRIGGERS: Record<string, TriggerConditionType[]> = {
+  heatInfliction:     [TriggerConditionType.APPLY_HEAT_INFLICTION],
+  cryoInfliction:     [TriggerConditionType.APPLY_CRYO_INFLICTION],
+  natureInfliction:   [TriggerConditionType.APPLY_NATURE_INFLICTION],
+  electricInfliction: [TriggerConditionType.APPLY_ELECTRIC_INFLICTION],
+  combustion:         [TriggerConditionType.COMBUSTION],
+  solidification:     [TriggerConditionType.SOLIDIFICATION],
+  corrosion:          [TriggerConditionType.CORROSION],
+  electrification:    [TriggerConditionType.ELECTRIFICATION],
+  vulnerableInfliction: [TriggerConditionType.APPLY_VULNERABILITY],
+  breach:             [TriggerConditionType.APPLY_PHYSICAL_STATUS],
+};
+
+/**
+ * Trigger conditions that are always satisfiable (not dependent on team skill
+ * publications).  Operators whose combo requires one of these get a full-timeline
+ * activation window regardless of team composition.
+ */
+export const ALWAYS_AVAILABLE_TRIGGERS = new Set<TriggerConditionType>([
+  TriggerConditionType.OPERATOR_ATTACKED,
+  TriggerConditionType.HP_BELOW_THRESHOLD,
+  TriggerConditionType.HP_ABOVE_THRESHOLD,
+  TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD,
+]);
+
+/** Set of trigger condition types that are produced by derived enemy events. */
+const DERIVED_TRIGGER_TYPES = new Set<TriggerConditionType>();
+for (const triggers of Object.values(ENEMY_COLUMN_TO_TRIGGERS)) {
+  for (const t of triggers) {
+    DERIVED_TRIGGER_TYPES.add(t);
+    // Also mark parent types as derived-sourced
+    const parent = TRIGGER_CONDITION_PARENTS[t];
+    if (parent) DERIVED_TRIGGER_TYPES.add(parent);
+  }
 }
 
 export class CombatLoadout {
@@ -137,16 +180,24 @@ export class CombatLoadout {
       }
 
       for (const required of subSlot.capability.comboRequires) {
-        if (!allPublished.has(required)) continue;
+        // Check if any published trigger matches (directly or via parent)
+        let anyMatch = false;
+        allPublished.forEach((t) => {
+          if (t === required || TRIGGER_CONDITION_PARENTS[t] === required) anyMatch = true;
+        });
+        if (!anyMatch) continue;
         const key = triggerKey(required);
         for (let pubIdx = 0; pubIdx < NUM_SLOTS; pubIdx++) {
           if (pubIdx === subIdx) continue;
           const pubSlot = this.slots[pubIdx];
           if (!pubSlot) continue;
           const publishes = pubSlot.capability.publishesTriggers;
-          const hasTrigger = Object.keys(publishes).some((k) =>
-            publishes[k]?.includes(required),
-          );
+          const hasTrigger = Object.keys(publishes).some((k) => {
+            const triggers = publishes[k];
+            if (!triggers) return false;
+            return triggers.includes(required) ||
+              triggers.some((t) => TRIGGER_CONDITION_PARENTS[t] === required);
+          });
           if (hasTrigger) {
             pubsubSubscribe(key, pubSlot.publisher, subSlot.subscriber);
           }
@@ -166,7 +217,8 @@ export class CombatLoadout {
       slotIdToIndex.set(this.slotIds[i], i);
     }
 
-    // For each event, determine what triggers it produces
+    // For each operator event, determine what triggers it produces
+    // (skip infliction/reaction triggers — those come from derived enemy events)
     for (const event of events) {
       const slotIndex = slotIdToIndex.get(event.ownerId);
       if (slotIndex === undefined) continue;
@@ -183,38 +235,47 @@ export class CombatLoadout {
       // For FINAL_STRIKE on sequenced events, start at the first hit of the last segment
       const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event) ?? defaultTriggerFrame;
 
-      // For each published trigger, find all slots whose combo requires it
       for (const trigger of publishedTriggers) {
-        for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
-          const subSlot = this.slots[subIdx];
-          if (!subSlot) continue;
-          if (!subSlot.capability.comboRequires.includes(trigger)) continue;
+        // Skip triggers that are sourced from derived enemy events
+        if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
 
-          const slotId = this.slotIds[subIdx];
-          if (!slotId) continue;
-
-          const triggerFrame = trigger === TriggerConditionType.FINAL_STRIKE
-            ? finalStrikeTriggerFrame
-            : defaultTriggerFrame;
-
-          // Check comboForbidsActiveColumns — skip if any forbidden event is active
-          const forbids = subSlot.capability.comboForbidsActiveColumns;
-          if (forbids && forbids.length > 0 && hasActiveEventInColumns(events, forbids, triggerFrame)) {
-            continue;
-          }
-
-          const window: ActivationWindow = {
-            startFrame: triggerFrame,
-            endFrame: triggerFrame + subSlot.capability.comboWindowFrames,
-            sourceEventId: event.id,
-          };
-
-          if (!newWindows.has(slotId)) {
-            newWindows.set(slotId, []);
-          }
-          newWindows.get(slotId)!.push(window);
-        }
+        this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex,
+          trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame);
       }
+    }
+
+    // For derived enemy events, use their startFrame as the trigger frame
+    for (const event of events) {
+      if (event.ownerId !== 'enemy') continue;
+
+      const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
+      if (!triggers) continue;
+
+      const triggerFrame = event.startFrame;
+
+      for (const trigger of triggers) {
+        this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex, triggerFrame);
+      }
+    }
+
+    // Always-available triggers: operators whose combo requires a passive condition
+    // (being hit, HP threshold, etc.) get a full-timeline activation window.
+    for (let i = 0; i < NUM_SLOTS; i++) {
+      const slot = this.slots[i];
+      if (!slot) continue;
+      const hasAlwaysAvailable = slot.capability.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t));
+      if (!hasAlwaysAvailable) continue;
+      const slotId = this.slotIds[i];
+      if (!slotId) continue;
+      const fullWindow: ActivationWindow = {
+        startFrame: 0,
+        endFrame: TOTAL_FRAMES,
+        sourceEventId: '__always_available__',
+      };
+      if (!newWindows.has(slotId)) {
+        newWindows.set(slotId, []);
+      }
+      newWindows.get(slotId)!.push(fullWindow);
     }
 
     // Sort and merge overlapping windows per slot
@@ -228,6 +289,52 @@ export class CombatLoadout {
     if (!windowsEqual(this.cachedWindows, newWindows)) {
       this.cachedWindows = newWindows;
       this.notify(newWindows);
+    }
+  }
+
+  /** Check if a trigger matches any slot's combo requirements, and add activation windows. */
+  private addWindowsForTrigger(
+    trigger: TriggerConditionType,
+    event: TimelineEvent,
+    allEvents: TimelineEvent[],
+    newWindows: WindowsMap,
+    slotIdToIndex: Map<string, number>,
+    triggerFrame: number,
+  ): void {
+    for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
+      const subSlot = this.slots[subIdx];
+      if (!subSlot) continue;
+      const matchesTrigger = subSlot.capability.comboRequires.includes(trigger) ||
+        (TRIGGER_CONDITION_PARENTS[trigger] !== undefined &&
+          subSlot.capability.comboRequires.includes(TRIGGER_CONDITION_PARENTS[trigger]!));
+      if (!matchesTrigger) continue;
+
+      const slotId = this.slotIds[subIdx];
+      if (!slotId) continue;
+
+      // Check comboForbidsActiveColumns — skip if any forbidden event is active
+      const forbids = subSlot.capability.comboForbidsActiveColumns;
+      if (forbids && forbids.length > 0 && hasActiveEventInColumns(allEvents, forbids, triggerFrame)) {
+        continue;
+      }
+
+      // Check comboRequiresActiveColumns — skip if none of the required events are active
+      const requires = subSlot.capability.comboRequiresActiveColumns;
+      if (requires && requires.length > 0 && !hasActiveEventInColumns(allEvents, requires, triggerFrame)) {
+        continue;
+      }
+
+      const window: ActivationWindow = {
+        startFrame: triggerFrame,
+        endFrame: triggerFrame + subSlot.capability.comboWindowFrames,
+        sourceEventId: event.id,
+        triggerType: trigger,
+      };
+
+      if (!newWindows.has(slotId)) {
+        newWindows.set(slotId, []);
+      }
+      newWindows.get(slotId)!.push(window);
     }
   }
 

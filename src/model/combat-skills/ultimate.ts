@@ -5,8 +5,11 @@ import { Skills } from "./skill";
 export abstract class Ultimate extends Skills {
   ultimateEnergyCost: number;
 
-  /** Duration in frames. */
+  /** Duration in seconds. */
   duration: number;
+
+  /** Duration of the cast animation in seconds (TIME_STOP sub-phase within activation). */
+  animationDuration: number;
 
   constructor(params: {
     operatorType: OperatorType;
@@ -15,6 +18,7 @@ export abstract class Ultimate extends Skills {
     operatorPotential?: Potential;
     ultimateEnergyCost: number;
     duration: number;
+    animationDuration?: number;
   }) {
     super({
       operatorType: params.operatorType,
@@ -24,6 +28,7 @@ export abstract class Ultimate extends Skills {
     });
     this.ultimateEnergyCost = params.ultimateEnergyCost;
     this.duration = params.duration;
+    this.animationDuration = params.animationDuration ?? params.duration;
   }
 
   abstract getUltimateEnergyCost(

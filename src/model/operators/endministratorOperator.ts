@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   DestructiveSequence,
   ConstructiveSequence,
@@ -111,4 +111,9 @@ export class EndministratorOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.CAST_COMBO_SKILL];
+  }
+  get comboDescription(): string { return 'Another operator casts combo skill'; }
 }

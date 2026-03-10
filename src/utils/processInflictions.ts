@@ -1,5 +1,6 @@
 import { TimelineEvent, FrameAbsorptionMarker } from '../consts/viewTypes';
-import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS } from '../model/channels';
+import { TargetType } from '../consts/enums';
+import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../model/channels';
 import { TOTAL_FRAMES } from './timeline';
 
 /** Maps forced reaction name → reaction columnId. */
@@ -27,6 +28,17 @@ const INFLICTION_DURATION = 2400;
 /** Number of micro-column slots for infliction stacking. */
 const INFLICTION_SLOTS = 4;
 
+/** Breach durations by status level (frames at 120fps). */
+const BREACH_DURATION: Record<number, number> = {
+  1: 1440,   // 12s
+  2: 2160,   // 18s
+  3: 2880,   // 24s
+  4: 3600,   // 30s
+};
+
+/** Default active duration for derived physical infliction events (20s at 120fps). */
+const PHYSICAL_INFLICTION_DURATION = 2400;
+
 /** Maps element key (from frame data) → infliction columnId. */
 const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
   HEAT: 'heatInfliction',
@@ -50,7 +62,8 @@ export function processInflictionEvents(rawEvents: TimelineEvent[]): TimelineEve
   const withAbsorptions = applyAbsorptions(withDerivedInflictions);
   const withReactions = deriveReactions(withAbsorptions);
   const mergedReactions = mergeReactions(withReactions);
-  return applySameElementRefresh(mergedReactions);
+  const withPhysicalRefresh = applyPhysicalInflictionRefresh(mergedReactions);
+  return applySameElementRefresh(withPhysicalRefresh);
 }
 
 /**
@@ -83,6 +96,47 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 activationDuration: INFLICTION_DURATION,
                 activeDuration: 0,
                 cooldownDuration: 0,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+              });
+            }
+          }
+
+          // Status applied by this frame (self or enemy target)
+          if (frame.applyStatus) {
+            if (frame.applyStatus.target === TargetType.SELF) {
+              // Self-targeted status (e.g. Melting Flame)
+              const grantColumnId = EXCHANGE_STATUS_COLUMN[frame.applyStatus.status];
+              if (grantColumnId) {
+                for (let s = 0; s < frame.applyStatus.stacks; s++) {
+                  derived.push({
+                    id: `${event.id}-status-${si}-${fi}-${s}`,
+                    name: frame.applyStatus.status,
+                    ownerId: event.ownerId,
+                    columnId: grantColumnId,
+                    startFrame: absoluteFrame,
+                    activationDuration: EXCHANGE_EVENT_DURATION,
+                    activeDuration: 0,
+                    cooldownDuration: 0,
+                    sourceOwnerId: event.ownerId,
+                    sourceSkillName: event.name,
+                  });
+                }
+              }
+            } else if (frame.applyStatus.target === TargetType.ENEMY) {
+              // Enemy-targeted status (e.g. Focus)
+              derived.push({
+                id: `${event.id}-status-${si}-${fi}`,
+                name: frame.applyStatus.status,
+                ownerId: 'enemy',
+                columnId: frame.applyStatus.status,
+                startFrame: absoluteFrame,
+                activationDuration: frame.applyStatus.durationFrames,
+                activeDuration: 0,
+                cooldownDuration: 0,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+                ...(frame.applyStatus.susceptibility && { susceptibility: frame.applyStatus.susceptibility }),
               });
             }
           }
@@ -97,12 +151,64 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 ownerId: 'enemy',
                 columnId: reactionColumnId,
                 startFrame: absoluteFrame,
-                activationDuration: FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
+                activationDuration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
                 activeDuration: 0,
                 cooldownDuration: 0,
                 statusLevel: frame.applyForcedReaction.statusLevel,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+                forcedReaction: true,
               });
             }
+          }
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  // Combo events with comboTriggerColumnId: generate derived infliction/status
+  // matching the trigger source at each tick frame
+  for (const event of events) {
+    if (!event.comboTriggerColumnId || !event.segments) continue;
+
+    let cumulativeOffset = 0;
+    for (let si = 0; si < event.segments.length; si++) {
+      const seg = event.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          const absoluteFrame = event.startFrame + cumulativeOffset + frame.offsetFrame;
+          const triggerCol = event.comboTriggerColumnId;
+
+          if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
+            // Arts infliction: generate infliction event
+            derived.push({
+              id: `${event.id}-combo-inflict-${si}-${fi}`,
+              name: triggerCol,
+              ownerId: 'enemy',
+              columnId: triggerCol,
+              startFrame: absoluteFrame,
+              activationDuration: INFLICTION_DURATION,
+              activeDuration: 0,
+              cooldownDuration: 0,
+              sourceOwnerId: event.ownerId,
+              sourceSkillName: event.name,
+            });
+          } else if (PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol)) {
+            // Physical status: generate physical infliction event
+            derived.push({
+              id: `${event.id}-combo-phys-${si}-${fi}`,
+              name: triggerCol,
+              ownerId: 'enemy',
+              columnId: triggerCol,
+              startFrame: absoluteFrame,
+              activationDuration: PHYSICAL_INFLICTION_DURATION,
+              activeDuration: 0,
+              cooldownDuration: 0,
+              sourceOwnerId: event.ownerId,
+              sourceSkillName: event.name,
+            });
           }
         }
       }
@@ -145,11 +251,19 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     ownerId: string;
     marker: FrameAbsorptionMarker;
     eventId: string;
+    eventName: string;
     segmentIndex: number;
     frameIndex: number;
   };
 
+  type ConsumptionPoint = {
+    absoluteFrame: number;
+    element: string;
+    stacks: number;
+  };
+
   const absorptions: AbsorptionPoint[] = [];
+  const consumptions: ConsumptionPoint[] = [];
 
   for (const event of events) {
     if (!event.segments || event.ownerId === 'enemy') continue;
@@ -166,8 +280,16 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
               ownerId: event.ownerId,
               marker: frame.absorbArtsInfliction,
               eventId: event.id,
+              eventName: event.name,
               segmentIndex: si,
               frameIndex: fi,
+            });
+          }
+          if (frame.consumeArtsInfliction) {
+            consumptions.push({
+              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              element: frame.consumeArtsInfliction.element,
+              stacks: frame.consumeArtsInfliction.stacks,
             });
           }
         }
@@ -176,7 +298,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
     }
   }
 
-  if (absorptions.length === 0) return events;
+  if (absorptions.length === 0 && consumptions.length === 0) return events;
 
   // Sort absorptions chronologically
   absorptions.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
@@ -254,7 +376,36 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: EXCHANGE_EVENT_DURATION,
         activeDuration: 0,
         cooldownDuration: 0,
+        sourceOwnerId: ownerId,
+        sourceSkillName: absorption.eventName,
       });
+    }
+  }
+
+  // Process consumptions: clamp inflictions without generating exchange events
+  consumptions.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
+  for (const consumption of consumptions) {
+    const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[consumption.element];
+    if (!inflictionColumnId) continue;
+
+    const activeInflictions: TimelineEvent[] = [];
+    for (const ev of events) {
+      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (removedIds.has(ev.id)) continue;
+      const clampFrame = clampMap.get(ev.id);
+      const endFrame = clampFrame !== undefined
+        ? clampFrame
+        : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      if (ev.startFrame <= consumption.absoluteFrame && endFrame > consumption.absoluteFrame) {
+        activeInflictions.push(ev);
+      }
+    }
+
+    if (activeInflictions.length === 0) continue;
+    activeInflictions.sort((a, b) => a.startFrame - b.startFrame);
+    const toConsume = Math.min(activeInflictions.length, consumption.stacks);
+    for (let i = 0; i < toConsume; i++) {
+      clampMap.set(activeInflictions[i].id, consumption.absoluteFrame);
     }
   }
 
@@ -278,6 +429,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: clampedActive,
         activeDuration: clampedLinger,
         cooldownDuration: clampedCooldown,
+        eventStatus: 'consumed',
       });
     } else {
       result.push(ev);
@@ -344,6 +496,8 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: REACTION_DURATION,
         activeDuration: 0,
         cooldownDuration: 0,
+        sourceOwnerId: incoming.sourceOwnerId,
+        sourceSkillName: incoming.sourceSkillName,
       });
 
       // Remove the triggering infliction
@@ -376,6 +530,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: clampedActive,
         activeDuration: clampedLinger,
         cooldownDuration: clampedCooldown,
+        eventStatus: 'consumed',
       });
     } else {
       result.push(ev);
@@ -386,11 +541,9 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
 }
 
 /**
- * Merges overlapping same-type arts reaction events.
- *
- * When two reactions of the same type overlap, the later one refreshes the
- * earlier's duration (extends to the later's end) and the merged result takes
- * the higher statusLevel. The later event is removed from output.
+ * Clamps overlapping same-type arts reaction events when the newer one
+ * would outlast the older. If the older event has a longer duration, both
+ * are kept as-is and allowed to overlap visually.
  */
 function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
@@ -404,58 +557,131 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
   if (reactionsByType.size === 0) return events;
 
-  const removedIds = new Set<string>();
-  const mergedMap = new Map<string, TimelineEvent>();
+  const clampMap = new Map<string, number>(); // event id → clamped activationDuration
 
   reactionsByType.forEach((group) => {
     if (group.length <= 1) return;
     const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
 
-    // Walk through chronologically, merging into the current "active" reaction
-    let active = sorted[0];
-    let activeEnd = active.startFrame + active.activationDuration;
-    let activeLevel = active.statusLevel ?? 1;
-
-    for (let i = 1; i < sorted.length; i++) {
-      const next = sorted[i];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i];
+      const currentEnd = current.startFrame + (clampMap.get(current.id) ?? current.activationDuration);
+      const next = sorted[i + 1];
       const nextEnd = next.startFrame + next.activationDuration;
-      const nextLevel = next.statusLevel ?? 1;
 
-      if (next.startFrame < activeEnd) {
-        // Overlap: extend duration to the later end, take max statusLevel
-        activeEnd = Math.max(activeEnd, nextEnd);
-        activeLevel = Math.max(activeLevel, nextLevel);
-        removedIds.add(next.id);
-      } else {
-        // No overlap: finalize the active reaction and start a new one
-        if (activeEnd !== active.startFrame + active.activationDuration || activeLevel !== (active.statusLevel ?? 1)) {
-          mergedMap.set(active.id, {
-            ...active,
-            activationDuration: activeEnd - active.startFrame,
-            statusLevel: activeLevel,
-          });
-        }
-        active = next;
-        activeEnd = nextEnd;
-        activeLevel = nextLevel;
+      // Only clamp if the newer event outlasts the older one (refresh)
+      if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
+        clampMap.set(current.id, Math.max(0, next.startFrame - current.startFrame));
       }
-    }
-
-    // Finalize the last active reaction
-    if (activeEnd !== active.startFrame + active.activationDuration || activeLevel !== (active.statusLevel ?? 1)) {
-      mergedMap.set(active.id, {
-        ...active,
-        activationDuration: activeEnd - active.startFrame,
-        statusLevel: activeLevel,
-      });
     }
   });
 
-  if (removedIds.size === 0 && mergedMap.size === 0) return events;
+  if (clampMap.size === 0) return events;
 
-  return events
-    .filter((ev) => !removedIds.has(ev.id))
-    .map((ev) => mergedMap.get(ev.id) ?? ev);
+  return events.map((ev) => {
+    const clamped = clampMap.get(ev.id);
+    return clamped !== undefined ? { ...ev, activationDuration: clamped, eventStatus: 'refreshed' as const } : ev;
+  });
+}
+
+/**
+ * Processes physical infliction (Vulnerable) stacking with the same
+ * slot refresh/clamp logic as arts inflictions.
+ */
+function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[] {
+  const physInflictionsByColumn = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    if (ev.ownerId === 'enemy' && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+      const group = physInflictionsByColumn.get(ev.columnId) ?? [];
+      group.push(ev);
+      physInflictionsByColumn.set(ev.columnId, group);
+    }
+  }
+
+  if (physInflictionsByColumn.size === 0) return events;
+
+  const processedMap = new Map<string, TimelineEvent>();
+
+  physInflictionsByColumn.forEach((group) => {
+    if (group.length <= 1) return;
+    const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
+    const lastSlot = INFLICTION_SLOTS - 1;
+
+    const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
+    for (let i = sorted.length - 2; i >= 0; i--) {
+      const ev = sorted[i];
+      let maxEnd = ev.startFrame + extendedActive[i];
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (sorted[j].startFrame > maxEnd) break;
+        const jEnd = sorted[j].startFrame + extendedActive[j];
+        if (jEnd > maxEnd) maxEnd = jEnd;
+      }
+      extendedActive[i] = maxEnd - ev.startFrame;
+    }
+
+    const slotEndFrames = new Array(INFLICTION_SLOTS).fill(-1);
+    const slotAssignment: number[] = [];
+
+    for (let i = 0; i < sorted.length; i++) {
+      const ev = sorted[i];
+      const endFrame = ev.startFrame + extendedActive[i];
+      let assigned = -1;
+      for (let s = 0; s < INFLICTION_SLOTS; s++) {
+        if (slotEndFrames[s] <= ev.startFrame) {
+          assigned = s;
+          break;
+        }
+      }
+      if (assigned < 0) assigned = lastSlot;
+      slotEndFrames[assigned] = endFrame;
+      slotAssignment.push(assigned);
+    }
+
+    for (let i = 0; i < sorted.length; i++) {
+      const ev = sorted[i];
+      const slot = slotAssignment[i];
+
+      if (slot < lastSlot) {
+        if (extendedActive[i] !== ev.activationDuration) {
+          processedMap.set(ev.id, { ...ev, activationDuration: extendedActive[i] });
+        }
+      }
+    }
+
+    const lastSlotIndices: number[] = [];
+    for (let i = 0; i < sorted.length; i++) {
+      if (slotAssignment[i] === lastSlot) lastSlotIndices.push(i);
+    }
+
+    for (let k = 0; k < lastSlotIndices.length - 1; k++) {
+      const idx = lastSlotIndices[k];
+      const nextIdx = lastSlotIndices[k + 1];
+      const ev = sorted[idx];
+      const nextStart = sorted[nextIdx].startFrame;
+      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      const originalEnd = ev.startFrame + totalDur;
+
+      if (nextStart < originalEnd) {
+        const available = Math.max(0, nextStart - ev.startFrame);
+        const clampedActive = Math.min(ev.activationDuration, available);
+        const remAfterActive = available - clampedActive;
+        const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
+        const remAfterLinger = remAfterActive - clampedLinger;
+        const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
+
+        processedMap.set(ev.id, {
+          ...(processedMap.get(ev.id) ?? ev),
+          activationDuration: clampedActive,
+          activeDuration: clampedLinger,
+          cooldownDuration: clampedCooldown,
+          eventStatus: 'refreshed' as const,
+        });
+      }
+    }
+  });
+
+  if (processedMap.size === 0) return events;
+  return events.map((ev) => processedMap.get(ev.id) ?? ev);
 }
 
 /**
@@ -563,6 +789,7 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
           activationDuration: clampedActive,
           activeDuration: clampedLinger,
           cooldownDuration: clampedCooldown,
+          eventStatus: 'refreshed' as const,
         });
       }
     }

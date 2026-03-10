@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   XaihiBasicAttack,
   DistributedDos,
@@ -111,4 +111,9 @@ export class XaihiOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.HP_TREATMENT];
+  }
+  get comboDescription(): string { return 'Auxiliary Crystal exhausts HP treatments'; }
 }

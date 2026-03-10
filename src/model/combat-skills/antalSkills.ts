@@ -3,6 +3,7 @@ import {
   CombatSkillsType,
   ElementType,
   OperatorType,
+  TriggerConditionType,
 } from "../../consts/enums";
 import { Potential, SkillLevel } from "../../consts/types";
 import { BasicAttack } from "./basicAttack";
@@ -96,6 +97,11 @@ export class SpecifiedResearchSubject extends BasicSkill {
       elementType: ElementType.ELECTRIC,
       ...params,
     });
+  }
+
+  /** Antal's battle skill does not apply electric infliction — it applies Focus. */
+  get publishesTriggers(): TriggerConditionType[] {
+    return [];
   }
 
   getDmgMultiplier(level: SkillLevel): number {

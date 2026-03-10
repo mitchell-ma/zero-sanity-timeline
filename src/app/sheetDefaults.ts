@@ -8,7 +8,7 @@
 import { Operator, TimelineEvent, VisibleSkills, SkillType } from '../consts/viewTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS, getDefaultLoadoutStats } from '../view/InformationPane';
-import { ALL_OPERATORS } from '../model/operators/operatorRegistry';
+import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
 import { setNextEventId } from '../controller/timeline/eventController';
@@ -16,7 +16,10 @@ import { setNextEventId } from '../controller/timeline/eventController';
 export const NUM_SLOTS = 4;
 export const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
 
-export const INITIAL_OPERATORS: (Operator | null)[] = ALL_OPERATORS.slice(0, NUM_SLOTS);
+const DEFAULT_OP_IDS = ['laevatain', 'akekuri', 'antal', 'ardelia'];
+export const INITIAL_OPERATORS: (Operator | null)[] = DEFAULT_OP_IDS.map(
+  (id) => ALL_OPERATORS.find((op) => op.id === id) ?? null,
+);
 
 export const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   SLOT_IDS.map((slotId) => [
@@ -66,6 +69,7 @@ export function applySheetData(data: SheetData) {
       ),
     ),
     visibleSkills: { ...INITIAL_VISIBLE, ...data.visibleSkills },
+    resourceConfigs: data.resourceConfigs ?? {},
   };
 }
 

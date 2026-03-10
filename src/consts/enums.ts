@@ -26,6 +26,16 @@ export enum ElementType {
   ELECTRIC = "ELECTRIC",
 }
 
+/** Maps status types to their associated element (for coloring). */
+export const STATUS_ELEMENT: Record<string, string> = {
+  MELTING_FLAME:    ElementType.HEAT,
+  SQUAD_BUFF:       ElementType.HEAT,
+  COMBUSTION:       ElementType.HEAT,
+  SOLIDIFICATION:   ElementType.CRYO,
+  CORROSION:        ElementType.NATURE,
+  ELECTRIFICATION:  ElementType.ELECTRIC,
+};
+
 export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.PHYSICAL]: '#c0c8d0',
   [ElementType.HEAT]:     '#f07030',
@@ -42,6 +52,9 @@ export enum StatusType {
   ELECTRIFICATION = "ELECTRIFICATION",
   // ── Operator buffs ─────────────────────────────────────────────────────────
   MELTING_FLAME = "MELTING_FLAME",
+  SQUAD_BUFF = "SQUAD_BUFF",
+  // ── Debuffs ────────────────────────────────────────────────────────────────
+  FOCUS = "FOCUS",
   // ── Physical statuses ───────────────────────────────────────────────────────
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -118,6 +131,11 @@ export enum TriggerConditionType {
   HP_TREATMENT = "HP_TREATMENT",
   HP_TREATMENT_EXCEEDS_MAX = "HP_TREATMENT_EXCEEDS_MAX",
   TEAM_CAST_BATTLE_SKILL = "TEAM_CAST_BATTLE_SKILL",
+  APPLY_ARTS_INFLICTION = "APPLY_ARTS_INFLICTION",
+  APPLY_HEAT_INFLICTION = "APPLY_HEAT_INFLICTION",
+  APPLY_CRYO_INFLICTION = "APPLY_CRYO_INFLICTION",
+  APPLY_NATURE_INFLICTION = "APPLY_NATURE_INFLICTION",
+  APPLY_ELECTRIC_INFLICTION = "APPLY_ELECTRIC_INFLICTION",
   APPLY_ARTS_INFLICTION_2_STACKS = "APPLY_ARTS_INFLICTION_2_STACKS",
   APPLY_BUFF = "APPLY_BUFF",
   HP_ABOVE_THRESHOLD = "HP_ABOVE_THRESHOLD",
@@ -125,6 +143,18 @@ export enum TriggerConditionType {
   ULTIMATE_ENERGY_BELOW_THRESHOLD = "ULTIMATE_ENERGY_BELOW_THRESHOLD",
   OPERATOR_ATTACKED = "OPERATOR_ATTACKED",
 }
+
+/**
+ * Subset relationships: if a publisher publishes a specific type (e.g.
+ * APPLY_HEAT_INFLICTION), listeners for the parent type (APPLY_ARTS_INFLICTION)
+ * should also match.
+ */
+export const TRIGGER_CONDITION_PARENTS: Partial<Record<TriggerConditionType, TriggerConditionType>> = {
+  [TriggerConditionType.APPLY_HEAT_INFLICTION]:     TriggerConditionType.APPLY_ARTS_INFLICTION,
+  [TriggerConditionType.APPLY_CRYO_INFLICTION]:     TriggerConditionType.APPLY_ARTS_INFLICTION,
+  [TriggerConditionType.APPLY_NATURE_INFLICTION]:   TriggerConditionType.APPLY_ARTS_INFLICTION,
+  [TriggerConditionType.APPLY_ELECTRIC_INFLICTION]: TriggerConditionType.APPLY_ARTS_INFLICTION,
+};
 
 export enum GearEffectType {
   AIC_HEAVY = "AIC_HEAVY",

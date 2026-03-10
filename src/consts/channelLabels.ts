@@ -1,13 +1,36 @@
-import { CombatSkillsType } from './enums';
+import { CombatSkillsType, StatusType, TriggerConditionType } from './enums';
 import { SkillType } from './viewTypes';
 
-// ── Skill labels ────────────────────────────────────────────────────────────
+// ── Column header labels ────────────────────────────────────────────────────
 
 export const SKILL_LABELS: Record<SkillType, string> = {
   basic:    'BASIC',
   battle:   'BATTLE',
   combo:    'COMBO',
-  ultimate: 'ULT',
+  ultimate: 'ULTIMATE',
+};
+
+export const enum ColumnLabel {
+  SKILL_POINTS         = 'SKILL POINTS',
+  TEAM_STATUS          = 'TEAM STATUS',
+  INFLICTION           = 'ARTS INFLICTION',
+  ARTS_REACTION        = 'ARTS REACTION',
+  PHYSICAL_INFLICTION  = 'PHYSICAL INFLICTION',
+  PHYSICAL_STATUS      = 'PHYSICAL STATUS',
+}
+
+export const STATUS_LABELS: Record<StatusType, string> = {
+  [StatusType.COMBUSTION]:      'Combustion',
+  [StatusType.SOLIDIFICATION]:  'Solidification',
+  [StatusType.CORROSION]:       'Corrosion',
+  [StatusType.ELECTRIFICATION]: 'Electrification',
+  [StatusType.MELTING_FLAME]:   'Melting Flame',
+  [StatusType.SQUAD_BUFF]:      'Squad Buff',
+  [StatusType.FOCUS]:           'Focus',
+  [StatusType.LIFT]:            'Lift',
+  [StatusType.KNOCK_DOWN]:      'Knock Down',
+  [StatusType.CRUSH]:           'Crush',
+  [StatusType.BREACH]:          'Breach',
 };
 
 // ── Combat skill display names ──────────────────────────────────────────────
@@ -134,6 +157,30 @@ export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
   [CombatSkillsType.EXPLODING_BLITZ]:                   'Exploding Blitz',
 };
 
+// ── Infliction event labels ────────────────────────────────────────────────
+
+export const INFLICTION_EVENT_LABELS: Record<string, string> = {
+  // Arts inflictions
+  heatInfliction:       'Heat',
+  cryoInfliction:       'Cryo',
+  natureInfliction:     'Nature',
+  electricInfliction:   'Electric',
+  // Physical inflictions
+  vulnerableInfliction: 'Vulnerable',
+  // Arts reactions (derived event names use lowercase columnId)
+  combustion:           'Combustion',
+  solidification:       'Solidification',
+  corrosion:            'Corrosion',
+  electrification:      'Electrification',
+  // Physical statuses
+  breach:               'Breach',
+  // Operator statuses (exchange status enum values)
+  MELTING_FLAME:        'Melting Flame',
+  // Enemy statuses (applied via applyStatus frames)
+  focus:                'Focus',
+  FOCUS:                'Focus',
+};
+
 // ── Reaction labels & micro-columns ─────────────────────────────────────────
 
 export const REACTION_LABELS: Record<string, { label: string; color: string }> = {
@@ -148,4 +195,55 @@ export const REACTION_MICRO_COLUMNS = [
   { id: 'solidification',  label: 'SOLID', color: '#88ddff' },
   { id: 'corrosion',       label: 'CORR',  color: '#33cc66' },
   { id: 'electrification', label: 'ELEC',  color: '#e8c840' },
+];
+
+// ── Physical infliction / status labels ──────────────────────────────────────
+
+export const PHYSICAL_INFLICTION_LABELS: Record<string, { label: string; color: string }> = {
+  vulnerableInfliction: { label: 'Vulnerable', color: '#c0c8d0' },
+};
+
+export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [
+  { id: 'vuln-0', label: 'VULN', color: '#c0c8d0' },
+  { id: 'vuln-1', label: 'VULN', color: '#c0c8d0' },
+  { id: 'vuln-2', label: 'VULN', color: '#c0c8d0' },
+  { id: 'vuln-3', label: 'VULN', color: '#c0c8d0' },
+];
+
+export const PHYSICAL_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  breach: { label: 'Breach', color: '#c0c8d0' },
+};
+
+export const TRIGGER_CONDITION_LABELS: Record<string, string> = {
+  [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL]: 'SP Recovery from Skill',
+  [TriggerConditionType.FINAL_STRIKE]:                    'Final Strike',
+  [TriggerConditionType.COMBUSTION]:                      'Combustion',
+  [TriggerConditionType.SOLIDIFICATION]:                  'Solidification',
+  [TriggerConditionType.CORROSION]:                       'Corrosion',
+  [TriggerConditionType.ELECTRIFICATION]:                 'Electrification',
+  [TriggerConditionType.DEFEAT_ENEMY]:                    'Defeat Enemy',
+  [TriggerConditionType.CAST_BATTLE_SKILL]:               'Cast Battle Skill',
+  [TriggerConditionType.CAST_COMBO_SKILL]:                'Cast Combo Skill',
+  [TriggerConditionType.CAST_ULTIMATE]:                   'Cast Ultimate',
+  [TriggerConditionType.APPLY_PHYSICAL_STATUS]:           'Apply Physical Status',
+  [TriggerConditionType.APPLY_VULNERABILITY]:             'Apply Vulnerability',
+  [TriggerConditionType.CRITICAL_HIT]:                    'Critical Hit',
+  [TriggerConditionType.HP_TREATMENT]:                    'HP Treatment',
+  [TriggerConditionType.HP_TREATMENT_EXCEEDS_MAX]:        'HP Treatment Exceeds Max',
+  [TriggerConditionType.TEAM_CAST_BATTLE_SKILL]:          'Team Cast Battle Skill',
+  [TriggerConditionType.APPLY_ARTS_INFLICTION]:           'Apply Arts Infliction',
+  [TriggerConditionType.APPLY_HEAT_INFLICTION]:           'Apply Heat Infliction',
+  [TriggerConditionType.APPLY_CRYO_INFLICTION]:           'Apply Cryo Infliction',
+  [TriggerConditionType.APPLY_NATURE_INFLICTION]:         'Apply Nature Infliction',
+  [TriggerConditionType.APPLY_ELECTRIC_INFLICTION]:       'Apply Electric Infliction',
+  [TriggerConditionType.APPLY_ARTS_INFLICTION_2_STACKS]:  'Apply Arts Infliction (2+ stacks)',
+  [TriggerConditionType.APPLY_BUFF]:                      'Apply Buff',
+  [TriggerConditionType.HP_ABOVE_THRESHOLD]:              'HP Above Threshold',
+  [TriggerConditionType.HP_BELOW_THRESHOLD]:              'HP Below Threshold',
+  [TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD]: 'Ultimate Energy Below Threshold',
+  [TriggerConditionType.OPERATOR_ATTACKED]:               'Operator Attacked',
+};
+
+export const PHYSICAL_STATUS_MICRO_COLUMNS = [
+  { id: 'breach', label: 'BREACH', color: '#c0c8d0' },
 ];

@@ -8,7 +8,7 @@ export class SkillSegmentBuilder {
    * Build segments + total duration from an array of skill sequences.
    * Returns the data needed to create a multi-sequence TimelineEvent.
    *
-   * For multi-sequence events (basic attacks), segments are labeled N1, N2, ..., Final Strike.
+   * For multi-sequence events (basic attacks), segments are labeled N1, N2, ..., N5.
    * For single-sequence events (battle/combo skills), no label is added.
    * Custom labels can be provided via the `labels` option.
    */
@@ -42,18 +42,28 @@ export class SkillSegmentBuilder {
           exchangeStatus: absorb.exchangeStatus,
           ratio: absorb.ratio,
         };
+        const consume = f.getConsumeArtsInfliction();
+        if (consume) marker.consumeArtsInfliction = { element: consume.element, stacks: consume.stacks };
         const forced = f.getApplyForcedReaction();
         if (forced) marker.applyForcedReaction = {
           reaction: forced.reaction,
           statusLevel: forced.statusLevel,
+          ...(forced.durationFrames != null && { durationFrames: forced.durationFrames }),
         };
+        const status = f.getApplyStatus();
+        if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }) };
         return marker;
       });
+
+      // Mark the last frame of the final sequence as a final strike (basic attacks only)
+      if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
+        frames[frames.length - 1].isFinalStrike = true;
+      }
 
       const label = customLabels
         ? customLabels[i]
         : isMulti
-          ? (i === sequences.length - 1 ? 'Final Strike' : `N${i + 1}`)
+          ? `${i + 1}`
           : undefined;
 
       segments.push({

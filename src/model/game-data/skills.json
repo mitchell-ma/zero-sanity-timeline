@@ -68,7 +68,12 @@
           "ARDELIA_BATTLE_SKILL_TICK_1": {
             "OFFSET_SECONDS": 1.07,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 10
+            "STAGGER": 10,
+            "APPLY_ARTS_INFLICTION": {
+              "NATURE": {
+                "STACKS": 1
+              }
+            }
           }
         }
       },
@@ -77,16 +82,25 @@
           "ARDELIA_COMBO_SKILL_DURATION": 0.77,
           "ARDELIA_COMBO_SKILL_COOLDOWN": 18,
           "ARDELIA_COMBO_SKILL_GAUGE_GAIN": 10,
-          "ARDELIA_COMBO_SKILL_TICKS": 2,
+          "ARDELIA_COMBO_SKILL_TICKS": 1,
           "ARDELIA_COMBO_SKILL_TICK_1": {
             "OFFSET_SECONDS": 0.67,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0
-          },
-          "ARDELIA_COMBO_SKILL_TICK_2": {
-            "OFFSET_SECONDS": 2.4,
+          }
+        },
+        "ARDELIA_COMBO_SKILL_EXPLOSION": {
+          "ARDELIA_COMBO_SKILL_EXPLOSION_DURATION": 1.83,
+          "ARDELIA_COMBO_SKILL_EXPLOSION_TICKS": 1,
+          "ARDELIA_COMBO_SKILL_EXPLOSION_TICK_1": {
+            "OFFSET_SECONDS": 1.63,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 10
+            "STAGGER": 10,
+            "APPLY_FORCED_REACTION": {
+              "REACTION": "CORROSION",
+              "STATUS_LEVEL": 1,
+              "DURATION_SECONDS": 7
+            }
           }
         }
       },
@@ -96,19 +110,54 @@
           "ARDELIA_ULTIMATE_ANIMATION_TIME": 2.5,
           "ARDELIA_ULTIMATE_GAUGE_MAX": 90,
           "ARDELIA_ULTIMATE_GAUGE_REPLY": 0,
-          "ARDELIA_ULTIMATE_TICKS": 3,
+          "ARDELIA_ULTIMATE_TICKS": 10,
           "ARDELIA_ULTIMATE_TICK_1": {
-            "OFFSET_SECONDS": 2.7,
+            "OFFSET_SECONDS": 0.3,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 2
           },
           "ARDELIA_ULTIMATE_TICK_2": {
-            "OFFSET_SECONDS": 1.8,
+            "OFFSET_SECONDS": 0.6,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 2
           },
           "ARDELIA_ULTIMATE_TICK_3": {
-            "OFFSET_SECONDS": 6.7,
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_4": {
+            "OFFSET_SECONDS": 1.2,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_5": {
+            "OFFSET_SECONDS": 1.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_6": {
+            "OFFSET_SECONDS": 1.8,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_7": {
+            "OFFSET_SECONDS": 2.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_8": {
+            "OFFSET_SECONDS": 2.4,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_9": {
+            "OFFSET_SECONDS": 2.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 2
+          },
+          "ARDELIA_ULTIMATE_TICK_10": {
+            "OFFSET_SECONDS": 3.0,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 2
           }
@@ -202,7 +251,11 @@
           "LAEVATAIN_BATTLE_SKILL_TICK_1": {
             "OFFSET_SECONDS": 0.73,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 0
+            "STAGGER": 10,
+            "GRANT_STATUS": {
+              "STATUS": "MELTING_FLAME",
+              "STACKS": 1
+            }
           },
           "LAEVATAIN_BATTLE_SKILL_TICK_2": {
             "OFFSET_SECONDS": 0.848,
@@ -252,7 +305,7 @@
           "LAEVATAIN_BATTLE_SKILL_TICK_11": {
             "OFFSET_SECONDS": 2.067,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 10
+            "STAGGER": 0
           }
         }
       },
@@ -368,7 +421,11 @@
           "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_1": {
             "OFFSET_SECONDS": 0.73,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 0
+            "STAGGER": 10,
+            "GRANT_STATUS": {
+              "STATUS": "MELTING_FLAME",
+              "STACKS": 1
+            }
           },
           "LAEVATAIN_EMPOWERED_BATTLE_SKILL_EXPLOSION_TICK_2": {
             "OFFSET_SECONDS": 0.848,
@@ -428,6 +485,11 @@
             "OFFSET_SECONDS": 1.267,
             "SKILL_POINT_RECOVERY": 0,
             "STAGGER": 0,
+            "CONSUME_ARTS_INFLICTION": {
+              "HEAT": {
+                "STACKS": 4
+              }
+            },
             "APPLY_FORCED_REACTION": {
               "REACTION": "COMBUSTION",
               "STATUS_LEVEL": 1
@@ -442,7 +504,9 @@
         "LAEVATAIN_COMBO_SKILL": {
           "LAEVATAIN_COMBO_SKILL_DURATION": 1.37,
           "LAEVATAIN_COMBO_SKILL_COOLDOWN": 10,
-          "LAEVATAIN_COMBO_SKILL_GAUGE_GAIN": 30,
+          "LAEVATAIN_COMBO_SKILL_GAUGE_GAIN_HIT_1_ENEMY": 25,
+          "LAEVATAIN_COMBO_SKILL_GAUGE_GAIN_HIT_2_ENEMIES": 30,
+          "LAEVATAIN_COMBO_SKILL_GAUGE_GAIN_HIT_3_ENEMIES": 35,
           "LAEVATAIN_COMBO_SKILL_TICKS": 1,
           "LAEVATAIN_COMBO_SKILL_TICK_1": {
             "OFFSET_SECONDS": 0.67,
@@ -782,7 +846,17 @@
           "AKEKURI_ULTIMATE_ANIMATION_TIME": 1.683,
           "AKEKURI_ULTIMATE_GAUGE_MAX": 108,
           "AKEKURI_ULTIMATE_GAUGE_REPLY": 0,
-          "AKEKURI_ULTIMATE_TICKS": 0
+          "AKEKURI_ULTIMATE_TICKS": 1,
+          "AKEKURI_ULTIMATE_TICK_1": {
+            "OFFSET_SECONDS": 0.03,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "GRANT_STATUS": {
+              "STATUS": "SQUAD_BUFF",
+              "STACKS": 1,
+              "TARGET": "SELF"
+            }
+          }
         }
       }
     },

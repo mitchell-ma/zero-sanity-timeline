@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, StatusType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   ExchangeCurrent,
   SpecifiedResearchSubject,
@@ -112,4 +112,11 @@ export class AntalOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.APPLY_PHYSICAL_STATUS, TriggerConditionType.APPLY_ARTS_INFLICTION];
+  }
+  get comboDescription(): string { return 'Enemy with Focus suffers Physical Status or Arts Infliction'; }
+  get comboRequiresActiveColumns(): string[] { return [StatusType.FOCUS]; }
+  get derivedEnemyColumns(): string[] { return ['enemy-focus']; }
 }

@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   ExuberantTrigger,
   BrrBrrBomb,
@@ -111,4 +111,9 @@ export class YvonneOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.FINAL_STRIKE];
+  }
+  get comboDescription(): string { return 'Final Strike on Solidified enemy'; }
 }

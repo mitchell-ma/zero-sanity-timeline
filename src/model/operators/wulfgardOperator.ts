@@ -1,4 +1,4 @@
-import { ElementType, OperatorClassType, StatType, WeaponType } from "../../consts/enums";
+import { ElementType, OperatorClassType, StatType, TriggerConditionType, WeaponType } from "../../consts/enums";
 import {
   RapidFireAkimbo,
   ThermiteTracers,
@@ -112,4 +112,9 @@ export class WulfgardOperator extends Operator {
       operatorPotential: params.potential,
     });
   }
+
+  get comboRequires(): TriggerConditionType[] {
+    return [TriggerConditionType.COMBUSTION];
+  }
+  get comboDescription(): string { return 'Enemy has Combustion'; }
 }

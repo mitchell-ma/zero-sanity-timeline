@@ -18,8 +18,8 @@ import {
   TOTAL_FRAMES,
 } from '../utils/timeline';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../model/channels';
-import { REACTION_LABELS, COMBAT_SKILL_LABELS } from '../consts/channelLabels';
-import { CombatSkillsType, TimelineSourceType } from '../consts/enums';
+import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../consts/channelLabels';
+import { CombatSkillsType, TimelineSourceType, ELEMENT_COLORS, ElementType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -28,9 +28,10 @@ import {
   ContextMenuState,
   Column,
   MiniTimeline,
+  SelectedFrame,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
-import { WindowsMap } from '../controller/combat-loadout';
+import { WindowsMap, ALWAYS_AVAILABLE_TRIGGERS } from '../controller/combat-loadout';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
@@ -71,8 +72,13 @@ interface CombatPlannerProps {
   onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
   onMoveEvent: (id: string, newStartFrame: number) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
-  onEditEvent: (id: string | null) => void;
+  onEditEvent: (id: string | null, context?: string) => void;
   onRemoveEvent: (id: string) => void;
+  onRemoveEvents?: (ids: string[]) => void;
+  onResetEvent?: (id: string) => void;
+  onResetEvents?: (ids: string[]) => void;
+  onResetSegments?: (id: string) => void;
+  onResetFrames?: (id: string) => void;
   onLoadoutChange: (slotId: string, state: OperatorLoadoutState) => void;
   onEditLoadout: (slotId: string) => void;
   allOperators?: Operator[];
@@ -82,10 +88,18 @@ interface CombatPlannerProps {
   activationWindows?: WindowsMap;
   /** Resource graph data keyed by column key (e.g. 'common-skill-points'). */
   resourceGraphs?: Map<string, { points: ReadonlyArray<{ frame: number; value: number }>; min: number; max: number }>;
+  onEditResource?: (columnKey: string) => void;
   onBatchStart?: () => void;
   onBatchEnd?: () => void;
   onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
-  selectedFrame?: import('../consts/viewTypes').SelectedFrame | null;
+  onRemoveFrame?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
+  onRemoveFrames?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
+  onRemoveSegment?: (eventId: string, segmentIndex: number) => void;
+  onAddSegment?: (eventId: string, segmentLabel: string) => void;
+  onAddFrame?: (eventId: string, segmentIndex: number, frameOffsetFrame: number) => void;
+  onMoveFrame?: (eventId: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => void;
+  selectedFrames?: import('../consts/viewTypes').SelectedFrame[];
+  onSelectedFramesChange?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
   /** Callback to expose the scroll container ref for external scroll sync. */
   onScrollRef?: (el: HTMLDivElement | null) => void;
   /** Callback when the timeline scrolls (for scroll sync). */
@@ -118,6 +132,11 @@ export default function CombatPlanner({
   onContextMenu,
   onEditEvent,
   onRemoveEvent,
+  onRemoveEvents,
+  onResetEvent,
+  onResetEvents,
+  onResetSegments,
+  onResetFrames,
   onLoadoutChange,
   onEditLoadout,
   allOperators,
@@ -126,10 +145,18 @@ export default function CombatPlanner({
   onSwapEnemy,
   activationWindows,
   resourceGraphs,
+  onEditResource,
   onBatchStart,
   onBatchEnd,
   onFrameClick,
-  selectedFrame,
+  onRemoveFrame,
+  onRemoveFrames,
+  onRemoveSegment,
+  onAddSegment,
+  onAddFrame,
+  onMoveFrame,
+  selectedFrames,
+  onSelectedFramesChange,
   onScrollRef,
   onScroll: onScrollProp,
   onLoadoutRowHeight,
@@ -142,7 +169,20 @@ export default function CombatPlanner({
   const timeAxisRef = useRef<HTMLDivElement>(null);
   const dragRef     = useRef<DragState | null>(null);
   const marqueeRef  = useRef<MarqueeState | null>(null);
+  const rmbMarqueeRef = useRef<{ startX: number; startY: number; moved: boolean; ctrlKey: boolean; priorFrames: SelectedFrame[] } | null>(null);
+  const rmbDraggedRef = useRef(false);
   const dragMovedRef = useRef(false);
+  const frameDragRef = useRef<{
+    eventId: string;
+    segmentIndex: number;
+    frameIndex: number;
+    startMouseY: number;
+    startOffsetFrame: number;
+    /** Minimum allowed offsetFrame (0 or prev frame's offset + 1). */
+    minOffset: number;
+    /** Maximum allowed offsetFrame (segDuration - 1 or next frame's offset - 1). */
+    maxOffset: number;
+  } | null>(null);
   const zoomRef     = useRef(zoom);
   const bodyTopRef  = useRef<number | null>(null);
 
@@ -163,6 +203,47 @@ export default function CombatPlanner({
   const [marqueeRect,      setMarqueeRect]      = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const enemyNameRef = useRef<HTMLDivElement>(null);
   const enemyMenuRef = useRef<HTMLDivElement>(null);
+
+  // Map slotId → element color for sequenced event coloring
+  const slotElementColor = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of slots) {
+      if (s.operator) map[s.slotId] = ELEMENT_COLORS[s.operator.element as ElementType] ?? s.operator.color;
+    }
+    return map;
+  }, [slots]);
+
+  // Slots whose combo is always available (passive triggers like being hit / HP threshold)
+  const alwaysAvailableComboSlots = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of slots) {
+      const cap = s.operator?.triggerCapability;
+      if (cap && cap.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t))) {
+        set.add(s.slotId);
+      }
+    }
+    return set;
+  }, [slots]);
+
+  // Combo events outside their activation windows get a warning
+  const invalidComboIds = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!activationWindows) return map;
+    for (const ev of events) {
+      if (ev.columnId !== 'combo') continue;
+      if (alwaysAvailableComboSlots.has(ev.ownerId)) continue;
+      const windows = activationWindows.get(ev.ownerId);
+      if (!windows || windows.length === 0) {
+        map.set(ev.id, 'No combo trigger window available');
+        continue;
+      }
+      const inWindow = windows.some((w) => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame);
+      if (!inWindow) {
+        map.set(ev.id, 'Outside combo trigger window');
+      }
+    }
+    return map;
+  }, [events, activationWindows, alwaysAvailableComboSlots]);
 
   const filteredEnemies = useMemo(() => {
     if (!allEnemies) return [];
@@ -185,6 +266,11 @@ export default function CombatPlanner({
   }, []);
 
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  // Clear event selection when frames become selected (mutual exclusion)
+  useEffect(() => {
+    if (selectedFrames && selectedFrames.length > 0) setSelectedIds(new Set());
+  }, [selectedFrames]);
 
   // ─── Enemy selector ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -238,7 +324,7 @@ export default function CombatPlanner({
     slotGroups.push({ slot, columnCount: count, startCol: colIdx });
     colIdx += count;
   }
-  const enemyColCount = 2; // arts-infliction + arts-reaction mini-timelines
+  const enemyColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY).length;
 
   // Build fluid gridTemplateColumns: equal-width operator/enemy groups, smaller TEAM
   // Each operator & enemy group gets GROUP_FR total fr; common (TEAM) gets COMMON_FR
@@ -307,14 +393,15 @@ export default function CombatPlanner({
     combinedHeaderHeight,
   });
 
-  // ─── Outer rect ────────────────────────────────────────────────────────────
+  // ─── Outer rect (updated on resize of the element itself, not just window) ─
   useEffect(() => {
-    const update = () => {
-      if (outerRef.current) setOuterRect(outerRef.current.getBoundingClientRect());
-    };
+    const el = outerRef.current;
+    if (!el) return;
+    const update = () => setOuterRect(el.getBoundingClientRect());
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // ─── Measure loadout row height dynamically ──────────────────────────────
@@ -340,11 +427,14 @@ export default function CombatPlanner({
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || !onScrollProp) return;
-    const handler = () => onScrollProp(el.scrollTop);
+    if (!el) return;
+    const handler = () => {
+      onScrollProp?.(el.scrollTop);
+      onContextMenu(null);
+    };
     el.addEventListener('scroll', handler, { passive: true });
     return () => el.removeEventListener('scroll', handler);
-  }, [onScrollProp]);
+  }, [onScrollProp, onContextMenu]);
 
   // Headers are now outside the scroll container, so body starts at top of scroll
   useEffect(() => {
@@ -374,10 +464,21 @@ export default function CombatPlanner({
       if (e.key === 'Delete' && selectedIds.size > 0) {
         e.preventDefault();
         const ids = Array.from(selectedIds);
-        onBatchStart?.();
-        ids.forEach((id) => onRemoveEvent(id));
-        onBatchEnd?.();
+        if (ids.length > 1 && onRemoveEvents) {
+          onRemoveEvents(ids);
+        } else {
+          ids.forEach((id) => onRemoveEvent(id));
+        }
         setSelectedIds(new Set());
+      } else if (e.key === 'Delete' && selectedFrames && selectedFrames.length > 0) {
+        e.preventDefault();
+        if (selectedFrames.length > 1) {
+          onRemoveFrames?.(selectedFrames);
+        } else {
+          const sf = selectedFrames[0];
+          onRemoveFrame?.(sf.eventId, sf.segmentIndex, sf.frameIndex);
+        }
+        onSelectedFramesChange?.([]);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
@@ -391,7 +492,7 @@ export default function CombatPlanner({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, events, onRemoveEvent, onBatchStart, onBatchEnd]);
+  }, [selectedIds, selectedFrames, events, onRemoveEvent, onRemoveEvents, onRemoveFrame, onRemoveFrames, onSelectedFramesChange]);
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
   const greedySlotAssignments = useMemo(
@@ -415,7 +516,7 @@ export default function CombatPlanner({
         const colEvents = events.filter(
           (ev) => ev.ownerId === col.ownerId &&
             (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-        );
+        ).sort((a, b) => a.startFrame - b.startFrame);
         colEvents.forEach((ev, i) => {
           // Use greedy assignment if available, else sequential
           const microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
@@ -477,7 +578,9 @@ export default function CombatPlanner({
         microColumnEventPositions.get(ev.id) ??
         columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
       if (!colPos) continue;
-      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      const totalDur = ev.segments && ev.segments.length > 0
+        ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+        : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
       const evBot = bodyTop + frameToPx(ev.startFrame + totalDur, zoomRef.current);
       // Check rect intersection
@@ -489,8 +592,39 @@ export default function CombatPlanner({
     return ids;
   }, [events, columnPositions, microColumnEventPositions]);
 
+  /** Find all frame diamonds within a content-space rect. */
+  const getFramesInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }): SelectedFrame[] => {
+    const bodyTop = bodyTopRef.current ?? 0;
+    const z = zoomRef.current;
+    const result: SelectedFrame[] = [];
+    for (const ev of events) {
+      if (!ev.segments || ev.segments.length === 0) continue;
+      const colPos = columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
+      if (!colPos) continue;
+      // Column X must overlap
+      if (colPos.right <= rect.left || colPos.left >= rect.right) continue;
+      let segOffset = 0;
+      for (let si = 0; si < ev.segments.length; si++) {
+        const seg = ev.segments[si];
+        if (seg.frames) {
+          for (let fi = 0; fi < seg.frames.length; fi++) {
+            const f = seg.frames[fi];
+            const absFrame = ev.startFrame + segOffset + f.offsetFrame;
+            const y = bodyTop + frameToPx(absFrame, z);
+            if (y >= rect.top && y <= rect.bottom) {
+              result.push({ eventId: ev.id, segmentIndex: si, frameIndex: fi });
+            }
+          }
+        }
+        segOffset += seg.durationFrames;
+      }
+    }
+    return result;
+  }, [events, columnPositions]);
+
   // ─── Event hover ──────────────────────────────────────────────────────────────
   const handleEventHover = useCallback((id: string | null) => {
+    if (rmbDraggedRef.current) return;
     setHoveredId(id);
   }, []);
 
@@ -498,6 +632,7 @@ export default function CombatPlanner({
   const handleEventSelect = useCallback((e: React.MouseEvent, eventId: string) => {
     if (dragMovedRef.current) return;
     onContextMenu(null); // dismiss any open context menu
+    onSelectedFramesChange?.([]); // deselect frames when selecting events
     if (e.ctrlKey || e.metaKey) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -522,10 +657,15 @@ export default function CombatPlanner({
         return new Set([eventId]);
       });
     }
-  }, [onContextMenu, onEditEvent]);
+  }, [onContextMenu, onEditEvent, onSelectedFramesChange]);
 
   // ─── Mouse move ─────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // Suppress hover line during right-click marquee drag
+    if (rmbMarqueeRef.current?.moved) {
+      setHoverClientY(null);
+      setHoverFrame(null);
+    } else
     // Hover line
     if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
       const scrollTop = scrollRef.current.scrollTop;
@@ -587,6 +727,16 @@ export default function CombatPlanner({
       return;
     }
 
+    // Frame diamond drag
+    if (frameDragRef.current) {
+      dragMovedRef.current = true;
+      const { eventId, segmentIndex, frameIndex, startMouseY, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
+      const deltaFrames = Math.round((e.clientY - startMouseY) / getPxPerFrame(zoomRef.current));
+      const newOffset = Math.max(minOffset, Math.min(maxOffset, startOffsetFrame + deltaFrames));
+      onMoveFrame?.(eventId, segmentIndex, frameIndex, newOffset);
+      return;
+    }
+
     // Marquee drag
     if (marqueeRef.current && scrollRef.current) {
       const scroll = scrollRef.current;
@@ -599,6 +749,7 @@ export default function CombatPlanner({
       const width = Math.abs(curX - startX);
       const height = Math.abs(curY - startY);
       setMarqueeRect({ left, top, width, height });
+      dragMovedRef.current = true;
 
       // Live-update selection as marquee is dragged
       const marqueeIds = getEventsInRect({
@@ -620,7 +771,49 @@ export default function CombatPlanner({
         onEditEvent(null);
       }
     }
-  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect]);
+
+    // Right-click marquee drag (frame selection)
+    if (rmbMarqueeRef.current && scrollRef.current) {
+      const scroll = scrollRef.current;
+      const scrollRect = scroll.getBoundingClientRect();
+      const curX = e.clientX - scrollRect.left + scroll.scrollLeft;
+      const curY = e.clientY - scrollRect.top + scroll.scrollTop;
+      const { startX, startY } = rmbMarqueeRef.current;
+      const dx = curX - startX;
+      const dy = curY - startY;
+      if (!rmbMarqueeRef.current.moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+      if (!rmbMarqueeRef.current.moved) setHoveredId(null);
+      rmbMarqueeRef.current.moved = true;
+      rmbDraggedRef.current = true;
+      const left = Math.min(startX, curX);
+      const top = Math.min(startY, curY);
+      const width = Math.abs(dx);
+      const height = Math.abs(dy);
+      setMarqueeRect({ left, top, width, height });
+      const newFrames = getFramesInRect({ left, top, right: left + width, bottom: top + height });
+      // Merge with prior selection when Ctrl is held
+      let frames: SelectedFrame[];
+      if (rmbMarqueeRef.current.ctrlKey && rmbMarqueeRef.current.priorFrames.length > 0) {
+        const prior = rmbMarqueeRef.current.priorFrames;
+        const seen = new Set(prior.map((f) => `${f.eventId}-${f.segmentIndex}-${f.frameIndex}`));
+        frames = [...prior];
+        for (const f of newFrames) {
+          const key = `${f.eventId}-${f.segmentIndex}-${f.frameIndex}`;
+          if (!seen.has(key)) { frames.push(f); seen.add(key); }
+        }
+      } else {
+        frames = newFrames;
+      }
+      // Open info pane first (onEditEvent may clear selectedFrames),
+      // then set selected frames so the later setState wins in the batch.
+      if (frames.length > 0) {
+        onEditEvent(frames[0].eventId);
+      } else {
+        onEditEvent(null);
+      }
+      onSelectedFramesChange?.(frames);
+    }
+  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverClientY(null);
@@ -632,12 +825,28 @@ export default function CombatPlanner({
       dragRef.current = null;
       onBatchEnd?.();
     }
+    if (frameDragRef.current) {
+      frameDragRef.current = null;
+      onBatchEnd?.();
+    }
     if (marqueeRef.current) {
+      // Click without drag — dismiss selection and info pane
+      if (!dragMovedRef.current) {
+        if (!marqueeRef.current.ctrlKey) {
+          setSelectedIds(new Set());
+          onSelectedFramesChange?.([]);
+        }
+        onEditEvent(null);
+      }
       marqueeRef.current = null;
       setMarqueeRect(null);
     }
-    requestAnimationFrame(() => { dragMovedRef.current = false; });
-  }, [onBatchEnd]);
+    if (rmbMarqueeRef.current) {
+      rmbMarqueeRef.current = null;
+      setMarqueeRect(null);
+    }
+    requestAnimationFrame(() => { dragMovedRef.current = false; rmbDraggedRef.current = false; });
+  }, [onBatchEnd, onEditEvent, onSelectedFramesChange]);
 
   // ─── Drag start (event move) ──────────────────────────────────────────────────
   const computeMonotonicBounds = useCallback(
@@ -676,7 +885,6 @@ export default function CombatPlanner({
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
         setSelectedIds(new Set());
-        onEditEvent(null);
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
@@ -684,9 +892,68 @@ export default function CombatPlanner({
     }
   }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart]);
 
+  // ─── Frame diamond drag start ────────────────────────────────────────────────
+  const handleFrameDragStart = useCallback((e: React.MouseEvent, eventId: string, segmentIndex: number, frameIndex: number) => {
+    if (e.button !== 0) return;
+    const ev = events.find((ev) => ev.id === eventId);
+    if (!ev?.segments) return;
+    const seg = ev.segments[segmentIndex];
+    if (!seg?.frames) return;
+    const frame = seg.frames[frameIndex];
+    if (!frame) return;
+
+    // Compute bounds: must stay within segment [0, segDuration-1] and preserve order with neighbors
+    const prevOffset = frameIndex > 0 ? seg.frames[frameIndex - 1].offsetFrame + 1 : 0;
+    const nextOffset = frameIndex < seg.frames.length - 1 ? seg.frames[frameIndex + 1].offsetFrame - 1 : seg.durationFrames - 1;
+
+    onBatchStart?.();
+    frameDragRef.current = {
+      eventId,
+      segmentIndex,
+      frameIndex,
+      startMouseY: e.clientY,
+      startOffsetFrame: frame.offsetFrame,
+      minOffset: prevOffset,
+      maxOffset: nextOffset,
+    };
+    dragMovedRef.current = false;
+  }, [events, onBatchStart]);
+
+  const handleFrameClickGuarded = useCallback((eid: string, si: number, fi: number) => {
+    if (!dragMovedRef.current) onFrameClick?.(eid, si, fi);
+  }, [onFrameClick]);
+
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    // Right-click: cancel left-click marquee, start frame marquee
+    if (e.button === 2) {
+      if (marqueeRef.current) {
+        marqueeRef.current = null;
+        setMarqueeRect(null);
+        return;
+      }
+      const scroll = scrollRef.current;
+      if (!scroll) return;
+      const scrollRect = scroll.getBoundingClientRect();
+      const contentX = e.clientX - scrollRect.left + scroll.scrollLeft;
+      const contentY = e.clientY - scrollRect.top + scroll.scrollTop;
+      const bodyTop = bodyTopRef.current ?? 0;
+      if (contentY < bodyTop || contentX < TIME_AXIS_WIDTH) return;
+      const ctrlKey = e.ctrlKey || e.metaKey;
+      rmbMarqueeRef.current = {
+        startX: contentX, startY: contentY, moved: false,
+        ctrlKey,
+        priorFrames: ctrlKey && selectedFrames ? [...selectedFrames] : [],
+      };
+      return;
+    }
     if (e.button !== 0) return;
+    // Left-click: cancel right-click marquee
+    if (rmbMarqueeRef.current) {
+      rmbMarqueeRef.current = null;
+      setMarqueeRect(null);
+      return;
+    }
     const scroll = scrollRef.current;
     if (!scroll) return;
     const scrollRect = scroll.getBoundingClientRect();
@@ -706,8 +973,9 @@ export default function CombatPlanner({
     // If not ctrl, clear selection immediately (will be set by marquee)
     if (!ctrlKey) {
       setSelectedIds(new Set());
+      onSelectedFramesChange?.([]);
     }
-  }, [selectedIds]);
+  }, [selectedIds, selectedFrames, onSelectedFramesChange]);
 
   // ─── Right-click on empty column ────────────────────────────────────────────
   const handleSubTimelineContextMenu = useCallback((
@@ -716,8 +984,24 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    // Suppress context menu if right-click marquee was dragged
+    if (rmbDraggedRef.current) return;
+    onSelectedFramesChange?.([]);
     if (col.type !== 'mini-timeline') return;
-    if (col.noAdd || col.derived) return;
+    if (col.derived) return;
+
+    // Resource columns: show "Edit Resource" context menu
+    if (col.noAdd && resourceGraphs?.has(col.key) && onEditResource) {
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [
+          { label: col.label, header: true },
+          { label: 'Edit Resource', action: () => { onEditResource(col.key); onContextMenu(null); } },
+        ],
+      });
+      return;
+    }
+    if (col.noAdd) return;
 
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
@@ -726,6 +1010,25 @@ export default function CombatPlanner({
     const relY    = e.clientY - rect.top + scrollTop - bodyTopRef.current;
     const atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
     const headerItem = { label: `Add @ ${frameToDetailLabel(atFrame)}`, header: true };
+
+    // Helper: check if placing a new event with the given non-overlappable range would overlap siblings
+    const checkOverlap = (ownerId: string, columnId: string, range: number): boolean => {
+      if (range <= 0) return false;
+      return events.some((sib) => {
+        if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
+        const sibRange = sib.nonOverlappableRange
+          ?? (sib.segments ? sib.segments.reduce((sum, s) => sum + s.durationFrames, 0) : 0);
+        if (sibRange > 0 && atFrame >= sib.startFrame && atFrame < sib.startFrame + sibRange) return true;
+        if (sib.startFrame >= atFrame && sib.startFrame < atFrame + range) return true;
+        return false;
+      });
+    };
+
+    // Compute the non-overlappable range for a prospective event
+    const prospectiveRange = (defaultSkill: { defaultActivationDuration?: number; segments?: any[] } | null): number => {
+      if (defaultSkill?.segments) return defaultSkill.segments.reduce((sum: number, s: any) => sum + (s.durationFrames ?? 0), 0);
+      return defaultSkill?.defaultActivationDuration ?? 0;
+    };
 
     if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
       // Dynamic-split: all micro-column types as options
@@ -779,7 +1082,8 @@ export default function CombatPlanner({
       } else {
         // Single-column stacking (MF)
         const disabled = full || beforePrev;
-        const eventName = col.defaultEvent?.name ?? col.label;
+        const rawName = col.defaultEvent?.name ?? col.label;
+        const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
         const disabledReason = full
           ? `(${col.maxEvents ?? '?'}/${col.maxEvents ?? '?'} stacks)`
           : beforePrev
@@ -790,63 +1094,137 @@ export default function CombatPlanner({
           items: [
             headerItem,
             {
-              label: disabled ? `${eventName} ${disabledReason}` : eventName,
+              label: eventName,
               action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
               disabled,
+              disabledReason: disabled ? disabledReason : undefined,
             },
           ],
         });
       }
     } else {
       // Simple single-column mini-timeline (skill columns)
-      const eventName = col.defaultEvent?.name ?? col.label;
+      const rawName = col.defaultEvent?.name ?? col.label;
+      const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
       if (col.columnId === 'combo' && activationWindows) {
         const windows = activationWindows.get(col.ownerId) ?? [];
-        const inWindow = windows.some((w) => atFrame >= w.startFrame && atFrame < w.endFrame);
+        const matchingWindow = windows.find((w) => atFrame >= w.startFrame && atFrame < w.endFrame);
+        const inWindow = !!matchingWindow;
+        const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(col.defaultEvent ?? null));
+        const disabled = !inWindow || overlap;
+        const reason = !inWindow ? 'No trigger active' : overlap ? 'Would overlap another event' : undefined;
+
+        // Find trigger source columnId from the source event
+        const sourceEvent = matchingWindow ? events.find((ev) => ev.id === matchingWindow.sourceEventId) : undefined;
+        const comboTriggerColumnId = sourceEvent?.columnId;
+
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [
             headerItem,
             {
-              label: inWindow ? eventName : `${eventName} (no trigger active)`,
-              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
-              disabled: !inWindow,
+              label: eventName,
+              action: () => onAddEvent(col.ownerId, col.columnId, atFrame,
+                { ...col.defaultEvent, comboTriggerColumnId }),
+              disabled,
+              disabledReason: disabled ? reason : undefined,
             },
           ],
         });
       } else if (col.eventVariants && col.eventVariants.length > 0) {
         // Multiple event variants (e.g. Laevatain battle skill)
+        // Check if the ultimate is active at this frame (for enhanced variant gating)
+        const ultActive = events.some((ev) =>
+          ev.ownerId === col.ownerId && ev.columnId === 'ultimate'
+          && atFrame >= ev.startFrame + ev.activationDuration
+          && atFrame < ev.startFrame + ev.activationDuration + ev.activeDuration,
+        );
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [
             headerItem,
             ...col.eventVariants.map((v) => {
-              const displayName = COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? v.name;
+              const isEnhanced = v.name.includes('ENHANCED');
+              const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(v));
+              const disabled = v.disabled || (isEnhanced && !ultActive) || overlap;
+              const displayName = COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
+              const reason = v.disabledReason ?? (isEnhanced && !ultActive ? 'No ultimate active' : overlap ? 'Would overlap another event' : undefined);
               return {
-                label: v.disabled ? `${displayName} ${v.disabledReason ?? ''}`.trim() : displayName,
+                label: displayName,
+                disabledReason: disabled ? reason : undefined,
                 action: () => onAddEvent(col.ownerId, col.columnId, atFrame, {
                   name: v.name,
                   defaultActivationDuration: v.defaultActivationDuration,
                   defaultActiveDuration: v.defaultActiveDuration,
                   defaultCooldownDuration: v.defaultCooldownDuration,
                   ...(v.segments ? { segments: v.segments } : {}),
+                  ...(v.gaugeGain != null ? { gaugeGain: v.gaugeGain } : {}),
+                  ...(v.teamGaugeGain != null ? { teamGaugeGain: v.teamGaugeGain } : {}),
+                  ...(v.gaugeGainByEnemies ? { gaugeGainByEnemies: v.gaugeGainByEnemies } : {}),
+                  ...(v.animationDuration != null ? { animationDuration: v.animationDuration } : {}),
                 }),
-                disabled: v.disabled,
+                disabled,
               };
             }),
           ],
         });
       } else {
+        const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(col.defaultEvent ?? null));
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [
             headerItem,
-            { label: eventName, action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null) },
+            ...(resourceGraphs?.has(col.key) && onEditResource ? [
+              { label: 'Edit Resource', action: () => { onEditResource(col.key); onContextMenu(null); } },
+              { separator: true } as const,
+            ] : []),
+            {
+              label: eventName,
+              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
+              disabled: overlap,
+              disabledReason: overlap ? 'Would overlap another event' : undefined,
+            },
           ],
         });
       }
     }
-  }, [onAddEvent, onContextMenu, events, columnPositions, activationWindows]);
+  }, [onAddEvent, onContextMenu, events, columnPositions, activationWindows, resourceGraphs, onEditResource, onSelectedFramesChange]);
+
+  // ─── Build "Add Segment" items for a sequenced event ────────────────────────
+  const buildSegmentAddItems = useCallback((eventId: string): import('../consts/viewTypes').ContextMenuItem[] => {
+    const ev = events.find((e) => e.id === eventId);
+    if (!ev?.segments) return [];
+    const col = columns.find((c): c is MiniTimeline =>
+      c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    const allSegments = col?.defaultEvent?.segments;
+    if (!allSegments || allSegments.length <= 1) return [];
+    const addable = allSegments.filter((s) => s.label);
+    if (addable.length === 0) return [];
+    // Current non-overlappable range
+    const currentRange = ev.nonOverlappableRange
+      ?? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+    // Siblings in the same column
+    const siblings = events.filter(
+      (sib) => sib.id !== ev.id && sib.ownerId === ev.ownerId && sib.columnId === ev.columnId,
+    );
+    return addable.map((s) => {
+      const newRange = currentRange + s.durationFrames;
+      // Check if expanded range would overlap a sibling
+      const wouldOverlap = siblings.some((sib) => {
+        const sibRange = sib.nonOverlappableRange
+          ?? (sib.segments ? sib.segments.reduce((sum, seg) => sum + seg.durationFrames, 0) : 0);
+        if (sibRange > 0 && ev.startFrame >= sib.startFrame && ev.startFrame < sib.startFrame + sibRange) return true;
+        if (newRange > 0 && sib.startFrame >= ev.startFrame && sib.startFrame < ev.startFrame + newRange) return true;
+        return false;
+      });
+      return {
+        label: `Add Sequence ${s.label}`,
+        action: () => { onAddSegment?.(eventId, s.label!); onContextMenu(null); },
+        disabled: wouldOverlap,
+        disabledReason: wouldOverlap ? 'Would overlap another event' : undefined,
+      };
+    });
+  }, [events, columns, onAddSegment, onContextMenu]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -855,6 +1233,9 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    // Suppress context menu if right-click marquee was dragged
+    if (rmbDraggedRef.current) return;
+    onSelectedFramesChange?.([]);
     // Block context menu for derived columns (e.g. melting flame)
     const target = events.find((ev) => ev.id === eventId);
     if (target) {
@@ -899,17 +1280,18 @@ export default function CombatPlanner({
             (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
         );
         const maxLabel = col.maxEvents ?? '?';
-        const disabledLabel = full
-          ? `${col.defaultEvent?.name ?? col.label} (${maxLabel}/${maxLabel} stacks)`
+        const rawName = col.defaultEvent?.name ?? col.label;
+        const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
+        const disabledReason2 = full
+          ? `${maxLabel}/${maxLabel} stacks`
           : beforePrev
-            ? `${col.defaultEvent?.name ?? col.label} (must be after stack ${existing.length})`
-            : '';
+            ? `Must be after stack ${existing.length}`
+            : undefined;
         addItems = [{
-          label: disabled
-            ? disabledLabel
-            : `Add ${col.defaultEvent?.name ?? col.label} at ${label}`,
+          label: `Add ${eventName} at ${label}`,
           action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
           disabled,
+          disabledReason: disabled ? disabledReason2 : undefined,
         }];
       }
     }
@@ -921,26 +1303,137 @@ export default function CombatPlanner({
       onContextMenu({
         x: e.clientX, y: e.clientY,
         items: [
+          ...(onResetEvents ? [{
+            label: `Reset ${count} Events to Default`,
+            action: () => { onResetEvents(ids); },
+          }] : []),
           {
             label: `Remove ${count} Events`,
-            action: () => { onBatchStart?.(); ids.forEach((id) => onRemoveEvent(id)); onBatchEnd?.(); setSelectedIds(new Set()); onContextMenu(null); },
+            action: () => { onRemoveEvents?.(ids); setSelectedIds(new Set()); onContextMenu(null); },
             danger: true,
           },
           ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
         ],
       });
     } else {
+      const hasSegments = ev?.segments && ev.segments.length > 0;
+      const multiSegment = (ev?.segments?.length ?? 0) > 1;
+      const segAddItems = multiSegment ? buildSegmentAddItems(eventId) : [];
       onContextMenu({
         x: e.clientX, y: e.clientY,
         items: [
-          { label: 'Edit Event',   action: () => { onEditEvent(eventId); onContextMenu(null); } },
+          ...(onResetEvent ? [{ label: 'Reset Event to Default', action: () => { onResetEvent(eventId); } }] : []),
+          ...(multiSegment && onResetSegments ? [{ label: 'Reset Segments to Default', action: () => { onResetSegments(eventId); } }] : []),
+          ...(hasSegments && onResetFrames ? [{ label: 'Reset Frames to Default', action: () => { onResetFrames(eventId); } }] : []),
           { separator: true },
+          ...(segAddItems.length > 0 ? [...segAddItems, { separator: true } as const] : []),
           { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
           ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
         ],
       });
     }
-  }, [onEditEvent, onRemoveEvent, onContextMenu, selectedIds, onBatchStart, onBatchEnd, events, columns, onAddEvent]);
+  }, [onEditEvent, onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onResetFrames, onContextMenu, selectedIds, events, columns, onAddEvent, onSelectedFramesChange, buildSegmentAddItems]);
+
+  // ─── Right-click on frame diamond ──────────────────────────────────────────
+  const handleFrameContextMenu = useCallback((
+    e: React.MouseEvent,
+    eventId: string,
+    segmentIndex: number,
+    frameIndex: number,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (rmbDraggedRef.current) return;
+    const isInSelection = selectedFrames?.some(
+      (sf) => sf.eventId === eventId && sf.segmentIndex === segmentIndex && sf.frameIndex === frameIndex,
+    );
+    if (isInSelection && selectedFrames && selectedFrames.length > 1) {
+      const frames = selectedFrames;
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [
+          {
+            label: `Remove ${frames.length} Frames`,
+            action: () => {
+              onRemoveFrames?.(frames);
+              onSelectedFramesChange?.([]);
+              onContextMenu(null);
+            },
+            danger: true,
+          },
+        ],
+      });
+    } else {
+      onContextMenu({
+        x: e.clientX, y: e.clientY,
+        items: [
+          {
+            label: 'Remove Frame',
+            action: () => { onRemoveFrame?.(eventId, segmentIndex, frameIndex); onContextMenu(null); },
+            danger: true,
+          },
+        ],
+      });
+    }
+  }, [onContextMenu, onRemoveFrame, onRemoveFrames, selectedFrames, onSelectedFramesChange]);
+
+  // ─── Build "Add Frame" items for a segment ─────────────────────────────────
+  const buildFrameAddItems = useCallback((eventId: string, segmentIndex: number): import('../consts/viewTypes').ContextMenuItem[] => {
+    const ev = events.find((e) => e.id === eventId);
+    if (!ev?.segments?.[segmentIndex]) return [];
+    const col = columns.find((c): c is MiniTimeline =>
+      c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
+    // Find the matching default segment by label
+    const seg = ev.segments[segmentIndex];
+    const allDefaultSegs = col?.defaultEvent?.segments;
+    const defaultSeg = allDefaultSegs?.find((s) => s.label === seg.label) ?? allDefaultSegs?.[segmentIndex];
+    const allFrames = defaultSeg?.frames;
+    if (!allFrames || allFrames.length <= 0) return [];
+    const presentOffsets = new Set((seg.frames ?? []).map((f) => f.offsetFrame));
+    const missing = allFrames.filter((f) => !presentOffsets.has(f.offsetFrame));
+    if (missing.length === 0) return [];
+    return missing.map((f, i) => {
+      const allIdx = allFrames.indexOf(f);
+      return {
+        label: `Add Frame ${allIdx + 1}`,
+        action: () => { onAddFrame?.(eventId, segmentIndex, f.offsetFrame); onContextMenu(null); },
+      };
+    });
+  }, [events, columns, onAddFrame, onContextMenu]);
+
+  // ─── Right-click on segment (multi-segment events only) ────────────────────
+  const handleSegmentContextMenu = useCallback((
+    e: React.MouseEvent,
+    eventId: string,
+    segmentIndex: number,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (rmbDraggedRef.current) return;
+    onSelectedFramesChange?.([]);
+    const ev = events.find((ev) => ev.id === eventId);
+    const segLabel = ev?.segments?.[segmentIndex]?.label;
+    const multiSegment = (ev?.segments?.length ?? 0) > 1;
+    const addSegItems = multiSegment ? buildSegmentAddItems(eventId) : [];
+    const addFrameItems = buildFrameAddItems(eventId, segmentIndex);
+    onContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: [
+        ...(onResetEvent ? [{ label: 'Reset Event to Default', action: () => { onResetEvent(eventId); } }] : []),
+        ...(multiSegment && onResetSegments ? [{ label: 'Reset Segments to Default', action: () => { onResetSegments(eventId); } }] : []),
+        ...(onResetFrames ? [{ label: 'Reset Frames to Default', action: () => { onResetFrames(eventId); } }] : []),
+        { separator: true },
+        ...(addFrameItems.length > 0 ? [...addFrameItems, { separator: true } as const] : []),
+        ...(addSegItems.length > 0 ? [...addSegItems, { separator: true } as const] : []),
+        ...(multiSegment && ev?.columnId === 'basic' ? [{
+          label: `Remove Sequence${segLabel ? ` ${segLabel}` : ` ${segmentIndex + 1}`}`,
+          action: () => { onRemoveSegment?.(eventId, segmentIndex); onContextMenu(null); },
+          danger: true,
+        }] : []),
+        { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
+      ],
+    });
+  }, [onContextMenu, onEditEvent, onRemoveEvent, onRemoveSegment, onResetEvent, onResetSegments, onResetFrames, onSelectedFramesChange, events, buildSegmentAddItems, buildFrameAddItems]);
 
   const showHoverLine = hoverClientY !== null && outerRect
     && hoverClientY > outerRect.top + combinedHeaderHeight
@@ -1165,6 +1658,10 @@ export default function CombatPlanner({
                 (ev) => ev.ownerId === col.ownerId && ev.columnId === col.columnId,
               );
             }
+            // Sort by startFrame for micro-columns and derived columns (events may arrive out of order)
+            if (col.microColumnAssignment === 'by-order' || col.derived) {
+              colEvents.sort((a, b) => a.startFrame - b.startFrame);
+            }
 
             const isMf = col.headerVariant === 'mf';
             const empowered = isMf && col.maxEvents != null && colEvents.length >= col.maxEvents;
@@ -1237,6 +1734,57 @@ export default function CombatPlanner({
                   );
                 })()}
 
+                {/* Combo disabled background + "No trigger condition" labels */}
+                {col.columnId === 'combo' && !alwaysAvailableComboSlots.has(col.ownerId) && (() => {
+                  const windows = activationWindows?.get(col.ownerId) ?? [];
+                  // Compute gaps between activation windows
+                  const gaps: { start: number; end: number }[] = [];
+                  let cursor = 0;
+                  for (const w of windows) {
+                    if (w.startFrame > cursor) gaps.push({ start: cursor, end: w.startFrame });
+                    cursor = Math.max(cursor, w.endFrame);
+                  }
+                  if (cursor < TOTAL_FRAMES) gaps.push({ start: cursor, end: TOTAL_FRAMES });
+
+                  // Place labels every LABEL_INTERVAL frames within each gap
+                  const LABEL_INTERVAL = 1800; // 15 seconds
+                  const LABEL_PAD = 60; // 0.5 seconds offset from gap start
+                  const labels: { frame: number }[] = [];
+                  for (const gap of gaps) {
+                    const gapDur = gap.end - gap.start;
+                    if (gapDur < 600) continue; // skip tiny gaps
+                    let f = gap.start + LABEL_PAD;
+                    while (f < gap.end - LABEL_PAD) {
+                      labels.push({ frame: f });
+                      f += LABEL_INTERVAL;
+                    }
+                  }
+
+                  return (
+                    <>
+                      {gaps.map((gap, i) => (
+                        <div
+                          key={`gap-${i}`}
+                          className="combo-disabled-bg"
+                          style={{
+                            top: frameToPx(gap.start, zoom),
+                            height: durationToPx(gap.end - gap.start, zoom),
+                          }}
+                        />
+                      ))}
+                      {labels.map((l, i) => (
+                        <div
+                          key={`no-trigger-${i}`}
+                          className="combo-no-trigger-label"
+                          style={{ top: frameToPx(l.frame, zoom) }}
+                        >
+                          No trigger condition
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+
                 {/* Activation windows (combo skills) */}
                 {col.columnId === 'combo' && activationWindows?.get(col.ownerId)?.map((win, i) => (
                   <div
@@ -1247,6 +1795,7 @@ export default function CombatPlanner({
                       height: durationToPx(win.endFrame - win.startFrame, zoom),
                       '--op-color': col.color,
                     } as React.CSSProperties}
+                    onClick={(e) => { e.stopPropagation(); onEditEvent(win.sourceEventId, `combo-trigger:${win.startFrame}:${win.endFrame}`); }}
                   />
                 ))}
 
@@ -1308,7 +1857,7 @@ export default function CombatPlanner({
                           zoom={zoom}
                           selected={false}
                           hovered={hoveredId === ev.id}
-                          label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
+                          label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name}
                           onDragStart={col.derived ? noop3 : handleEventDragStart}
                           onContextMenu={col.derived ? noop2 : handleEventContextMenu}
                           onSelect={handleEventSelect}
@@ -1323,24 +1872,36 @@ export default function CombatPlanner({
                   // Single-column events
                   colEvents.map((ev) => {
                     const isEnemy = col.source === TimelineSourceType.ENEMY;
+                    const isSequenced = ev.segments && ev.segments.length > 0;
+                    const eventColor = isSequenced && slotElementColor[col.ownerId]
+                      ? slotElementColor[col.ownerId]
+                      : col.color;
                     return (
                       <EventBlock
                         key={ev.id}
                         event={ev}
-                        color={col.color}
+                        color={eventColor}
                         zoom={zoom}
                         selected={selectedIds.has(ev.id)}
                         hovered={hoveredId === ev.id}
-                        label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? ev.name}
+                        label={COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name}
                         variant={col.columnId === 'ultimate' ? 'ultimate' : ev.segments && ev.segments.length > 0 ? 'sequenced' : 'default'}
+                        striped={col.columnId === 'combo' && !alwaysAvailableComboSlots.has(col.ownerId)}
+                        comboWarning={invalidComboIds.get(ev.id) ?? null}
                         onDragStart={handleEventDragStart}
                         onContextMenu={handleEventContextMenu}
                         onSelect={handleEventSelect}
                         onHover={handleEventHover}
                         onTouchStart={handleEventTouchStart}
-                        onFrameClick={onFrameClick}
-                        selectedFrame={selectedFrame?.eventId === ev.id ? selectedFrame : null}
+                        onFrameClick={handleFrameClickGuarded}
+                        onFrameContextMenu={handleFrameContextMenu}
+                        onFrameDragStart={handleFrameDragStart}
+                        onSegmentContextMenu={handleSegmentContextMenu}
+                        selectedFrames={selectedFrames?.filter((sf) => sf.eventId === ev.id)}
                         notDraggable={isEnemy}
+                        allSegmentLabels={col.defaultEvent?.segments?.map((s) => s.label!)}
+                        allDefaultSegments={col.defaultEvent?.segments}
+                        hoverFrame={isSequenced ? hoverFrame : undefined}
                       />
                     );
                   })
@@ -1355,6 +1916,7 @@ export default function CombatPlanner({
               </div>
             );
           })}
+
         </div>
 
         {/* Marquee selection box */}
