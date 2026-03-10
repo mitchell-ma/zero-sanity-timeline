@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/zero-sanity-timeline/static/css/main.2dbef5f3.css",
-    "main.js": "/zero-sanity-timeline/static/js/main.4ecf9c33.js",
+    "main.js": "/zero-sanity-timeline/static/js/main.0b2170d2.js",
     "static/media/Last_Rite_Banner.webp": "/zero-sanity-timeline/static/media/Last_Rite_Banner.cf6c15d2029d6e2ebabe.webp",
     "static/media/Xaihi_Banner.webp": "/zero-sanity-timeline/static/media/Xaihi_Banner.4e7acbddc9e7399a8458.webp",
     "static/media/Gilberta_Banner.webp": "/zero-sanity-timeline/static/media/Gilberta_Banner.e6c823fc2c164b593990.webp",
@@ -429,10 +429,10 @@
     "static/media/Rossi_icon.png": "/zero-sanity-timeline/static/media/Rossi_icon.14440ffb385c33812f3b.png",
     "index.html": "/zero-sanity-timeline/index.html",
     "main.2dbef5f3.css.map": "/zero-sanity-timeline/static/css/main.2dbef5f3.css.map",
-    "main.4ecf9c33.js.map": "/zero-sanity-timeline/static/js/main.4ecf9c33.js.map"
+    "main.0b2170d2.js.map": "/zero-sanity-timeline/static/js/main.0b2170d2.js.map"
   },
   "entrypoints": [
     "static/css/main.2dbef5f3.css",
-    "static/js/main.4ecf9c33.js"
+    "static/js/main.0b2170d2.js"
   ]
 }
