@@ -1,18 +1,34 @@
 # Devlog
 
 ## 2026-03-10
-- Loadout changes (operator swap, stats, equipment, resource configs) are now tracked by undo/redo
-- Potential level affects ultimate energy cost (e.g. P4 reduces charge by 15%)
-- Warning icons are non-interactive and positioned above events (combo + sequence warnings unified)
-- Ultimate info pane is now fully editable (animation, activation, active, cooldown, frame offsets)
-- Combo trigger bar uses striped pattern; operators with passive triggers (attacked, HP threshold) show solid bar
-- Arts infliction consumption pipeline (distinct from absorption — removes stacks without exchange)
-- Derived event status labels (expired/consumed/refreshed/triggered) and forced reaction indicator in info pane
-- Drag performance: React.memo on EventBlock, selective hoverFrame passing
-- Marquee selection fix: sequenced events use segment-based duration for accurate hit testing
-- Arts reaction events sorted by start frame; earlier events positioned left in micro-columns
-- Editable frame offsets in info pane; segment duration changes clamp inner frames
-- Event labels fade-disappear when overflowing (CSS mask-image)
+
+**What's new:**
+- Ultimate gauge now charges from battle and combo skills, and drains when you use it — the graph tracks it in real time
+- Changing operator potential now updates ultimate charge cost automatically (e.g. P4 reduces it by 15%)
+- Combo skills show when they can and can't be used — highlighted trigger windows on the timeline
+- Operators that can always combo (like being attacked or low HP) show a solid bar instead of striped
+- Antal's battle skill now applies Focus status to enemies (with element susceptibility bonuses)
+- Ardelia's full skill kit added — Dolly Rush, Eruption Column, and Wooly Party with forced nature reactions
+- Breach status system — consuming Vulnerable stacks on enemies triggers Breach (damage amplification)
+- You can now undo/redo equipment and stat changes, not just event edits
+- Ultimate skill details panel is now fully editable (animation, activation, active phase, cooldown, frame offsets)
+- Events show their outcome (expired, consumed, refreshed, triggered, forced) in the details panel
+- Resizable split between the timeline and damage sheet panels
+- Drag, select, and edit individual damage frames on events
+- Warning icons appear above events instead of covering them, and are no longer clickable
+- Better drag performance and more accurate marquee selection
+- Equipment saved by name instead of slot number (more resilient to future changes)
+
+**Technical:**
+- Operator registry moved to controller layer; builds view operators from model + skills.json timing data
+- Unified UndoableState: events, operators, enemy, loadouts, loadoutStats, resourceConfigs all in one history
+- Arts infliction consumption pipeline (CONSUME vs ABSORB — removes stacks without generating exchange events)
+- Derived event pipeline: status application (Focus, Melting Flame), combo trigger inflictions, physical infliction refresh
+- Combo activation windows generated from derived enemy events with trigger condition hierarchy
+- Frame manipulation: drag-to-reposition, right-click menus, multi-select, add/remove frames and segments
+- Segment duration edits clamp inner frame offsets; arts reactions sorted by start frame
+- ResourceConfig interface for editable SP/ultimate parameters with persistence
+- CSS: panel resizer, combo window visualization, animation phase styling, frame diamond hover/selection states
 
 ## 2026-03-09
 - Added 18 new operators: Endministrator, Lifeng, Chen Qianyu, Estella, Ember, Snowshine, Catcher, Gilberta, Xaihi, Perlica, Fluorite, Last Rite, Yvonne, Avywenna, Da Pan, Pogranichnik, Alesh, Arclight
