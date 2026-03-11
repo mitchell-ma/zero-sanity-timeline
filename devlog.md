@@ -16,6 +16,21 @@
 - Warning icons appear above events instead of covering them
 - Better drag performance and more accurate marquee selection
 - Equipment saved by name instead of slot number (more resilient to future updates)
+- Battle skills now consume SP — the shared SP bar drops when you use them
+- SP return mechanic: skills that refund SP (Last Rite, Snowshine, Catcher) reduce ultimate gauge gain proportionally
+- Wulfgard P4 reduces ultimate cost by 15%, P5 resets combo cooldown after using ultimate
+- Scorching Fangs status — Wulfgard gains a buff when Combustion triggers; P3 refreshes it on battle skill and shares with team at half power
+- Antal combo trigger fixed: now correctly requires Focus (not Susceptibility)
+- Ardelia combo skill frame timing adjusted
+- Perplexing Medication consumable added (+23.76% Ultimate Gain Efficiency)
+- Session sidebar with drag-and-drop folders, rename, and multi-session export/import
+- Confirm dialogs for destructive actions (clear session, clear all)
+- Undo/redo for session tree changes (rename, move, delete)
+- Extended status — infliction events that got their timer refreshed now show as "extended"
+- Debug mode toggle — bypasses all validation so you can freely place any event anywhere
+- New gear sets: Redeemer, Tide Surge
+- Loadout aggregator: centralizes stat collection from operator + weapon + gear + consumable
+- Tactical consumable events derived from loadout (e.g. consumable buff durations on timeline)
 
 ## 2026-03-09
 - Ctrl+D duplicates selected events — ghost preview follows your mouse (green = valid, red = overlap)
