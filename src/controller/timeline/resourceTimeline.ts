@@ -2,6 +2,12 @@ import { Subtimeline } from './subtimeline';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 
+/** A frame range where game-time is frozen (no regen). */
+export interface TimeStopRange {
+  startFrame: number;
+  endFrame: number;
+}
+
 /**
  * A point on the resource line graph.
  * `frame` is the x-axis (time), `value` is the y-axis (resource amount).
@@ -9,6 +15,10 @@ import { TOTAL_FRAMES } from '../../utils/timeline';
 export interface ResourcePoint {
   frame: number;
   value: number;
+  /** Pixel-frame adjustment for combo-origin gauge gains whose EventBlock
+   *  filters out its own time-stop zone. Subtract this × ppf from the
+   *  dilated Y position so the graph step aligns with the diamond. */
+  timeStopAdjust?: number;
 }
 
 export type ResourceGraphListener = (points: ResourcePoint[]) => void;
@@ -35,6 +45,8 @@ export abstract class ResourceTimeline {
   private cachedGraph: ResourcePoint[] = [];
   private graphListeners = new Set<ResourceGraphListener>();
   private unsubscribe: (() => void) | null = null;
+  /** Sorted time-stop ranges where regen is paused. */
+  private timeStops: TimeStopRange[] = [];
 
   constructor(subtimeline: Subtimeline) {
     this.subtimeline = subtimeline;
@@ -46,6 +58,12 @@ export abstract class ResourceTimeline {
 
   /** Call from subclass constructor after super() to run the initial computation. */
   protected init(): void {
+    this.recompute();
+  }
+
+  /** Set time-stop ranges (sorted by startFrame) and recompute. */
+  setTimeStops(stops: TimeStopRange[]): void {
+    this.timeStops = stops;
     this.recompute();
   }
 
@@ -66,8 +84,8 @@ export abstract class ResourceTimeline {
     for (const ev of events) {
       if (ev.startFrame > frame) break;
 
-      // Regen from lastFrame to this event
-      const regenFrames = ev.startFrame - lastFrame;
+      // Regen from lastFrame to this event (paused during time-stops)
+      const regenFrames = this.effectiveRegenFrames(lastFrame, ev.startFrame);
       value = this.clamp(value + regenFrames * this.regenPerFrame);
 
       // Apply cost
@@ -76,7 +94,7 @@ export abstract class ResourceTimeline {
     }
 
     // Regen from last event to query frame
-    const remaining = frame - lastFrame;
+    const remaining = this.effectiveRegenFrames(lastFrame, frame);
     value = this.clamp(value + remaining * this.regenPerFrame);
 
     return value;
@@ -120,8 +138,8 @@ export abstract class ResourceTimeline {
     points.push({ frame: 0, value });
 
     for (const ev of events) {
-      // Point just before consumption (after regen)
-      const regenFrames = ev.startFrame - lastFrame;
+      // Point just before consumption (after regen, paused during time-stops)
+      const regenFrames = this.effectiveRegenFrames(lastFrame, ev.startFrame);
       const preConsume = this.clamp(value + regenFrames * this.regenPerFrame);
 
       if (preConsume !== value || ev.startFrame !== lastFrame) {
@@ -140,12 +158,14 @@ export abstract class ResourceTimeline {
     }
 
     // Regen to end of timeline
-    const endValue = this.clamp(value + (TOTAL_FRAMES - lastFrame) * this.regenPerFrame);
+    const endRegenFrames = this.effectiveRegenFrames(lastFrame, TOTAL_FRAMES);
+    const endValue = this.clamp(value + endRegenFrames * this.regenPerFrame);
     if (endValue !== value) {
       // Find frame where max is reached (if regen is positive)
       if (this.regenPerFrame > 0 && value < this.max) {
         const framesToMax = Math.ceil((this.max - value) / this.regenPerFrame);
-        const maxFrame = Math.min(lastFrame + framesToMax, TOTAL_FRAMES);
+        // Account for time-stops: walk forward from lastFrame counting effective frames
+        const maxFrame = this.frameAfterEffectiveFrames(lastFrame, framesToMax);
         if (maxFrame < TOTAL_FRAMES) {
           points.push({ frame: maxFrame, value: this.max });
         }
@@ -155,6 +175,47 @@ export abstract class ResourceTimeline {
 
     this.cachedGraph = points;
     this.graphListeners.forEach((cb) => cb(points));
+  }
+
+  /**
+   * Find the actual game-frame that is `needed` effective (non-stopped) frames
+   * after `from`. Skips over time-stop ranges.
+   */
+  private frameAfterEffectiveFrames(from: number, needed: number): number {
+    let remaining = needed;
+    let cursor = from;
+
+    for (const ts of this.timeStops) {
+      if (ts.startFrame <= cursor) {
+        // Time-stop started before/at cursor — skip past it
+        cursor = Math.max(cursor, ts.endFrame);
+        continue;
+      }
+      // Gap before this time-stop
+      const gap = ts.startFrame - cursor;
+      if (remaining <= gap) return cursor + remaining;
+      remaining -= gap;
+      cursor = ts.endFrame;
+    }
+
+    return Math.min(cursor + remaining, TOTAL_FRAMES);
+  }
+
+  /**
+   * Compute effective regen frames between two game-frames,
+   * subtracting any overlapping time-stop durations where regen is paused.
+   */
+  private effectiveRegenFrames(from: number, to: number): number {
+    let total = to - from;
+    for (const ts of this.timeStops) {
+      if (ts.startFrame >= to) break;
+      if (ts.endFrame <= from) continue;
+      // Overlap between [from, to) and [ts.startFrame, ts.endFrame)
+      const overlapStart = Math.max(from, ts.startFrame);
+      const overlapEnd = Math.min(to, ts.endFrame);
+      total -= (overlapEnd - overlapStart);
+    }
+    return Math.max(0, total);
   }
 
   private clamp(value: number): number {

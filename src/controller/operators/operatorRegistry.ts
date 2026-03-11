@@ -8,7 +8,7 @@
  * - Gauge gain data from skills.json
  */
 import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
-import { OperatorClassType, TriggerConditionType } from '../../consts/enums';
+import { OperatorClassType, TriggerConditionType, ELEMENT_COLORS } from '../../consts/enums';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { LaevatainOperator } from '../../model/operators/laevatainOperator';
 import { AntalOperator } from '../../model/operators/antalOperator';
@@ -114,10 +114,13 @@ function getSkillData(opKey: string) {
     ? dur(ultData[`${ultKey}_ANIMATION_TIME`])
     : ultTotalDur;
   const ultCdRaw = ultData[`${ultKey}_COOLDOWN`];
+  const comboTimeStop = op.COMBO_SKILL[csKey][`${csKey}_TIME_STOP_DURATION`];
+  const comboAnimDur = comboTimeStop?.SECONDS != null ? dur(comboTimeStop.SECONDS) : dur(0.5);
   return {
     battleDur: dur(op.BATTLE_SKILL[bsKey][`${bsKey}_DURATION`]),
     comboDur: dur(op.COMBO_SKILL[csKey][`${csKey}_DURATION`]),
     comboCd: dur(op.COMBO_SKILL[csKey][`${csKey}_COOLDOWN`]),
+    comboAnimDur,
     ultDur: ultTotalDur,
     ultAnimDur,
     ultCd: ultCdRaw != null ? dur(ultCdRaw) : 0,
@@ -215,13 +218,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'laevatain',
     color: '#f0a040',
     splash: laevatainSplash,
-    weapon: 'Never Rest',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: L.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: L.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: L.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: L.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: L.comboCd, triggerCondition: null, animationDuration: L.comboAnimDur },
       ultimate: { defaultActivationDuration: L.ultDur, defaultActiveDuration: 1800, defaultCooldownDuration: 1200, triggerCondition: null, animationDuration: L.ultAnimDur },
     },
   },
@@ -230,15 +233,15 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'antal',
     color: '#55aadd',
     splash: antalSplash,
-    weapon: 'Stanza of Memorials',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     kit2: 'Hot Work Pyrometer',
 
     skills: {
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: 960, defaultActiveDuration: 0, defaultCooldownDuration: 1440, triggerCondition: null },
-      combo: { defaultActivationDuration: 360, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      ultimate: { defaultActivationDuration: AN.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 3000, triggerCondition: null, animationDuration: AN.ultAnimDur },
+      combo: { defaultActivationDuration: 360, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AN.comboAnimDur },
+      ultimate: { defaultActivationDuration: AN.ultDur, defaultActiveDuration: 1440, defaultCooldownDuration: 3000, triggerCondition: null, animationDuration: AN.ultAnimDur },
     },
   },
   // ── Akekuri ─────────────────────────────────────────────────────────────────
@@ -246,7 +249,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'akekuri',
     color: '#e05555',
     splash: akekuriSplash,
-    weapon: 'Thermite Cutter',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     gloves: 'Hot Work Gauntlets T1',
     kit1: 'Hot Work Power Cartridge',
@@ -255,7 +258,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     skills: {
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AK.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: AK.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AK.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: AK.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AK.comboCd, triggerCondition: null, animationDuration: AK.comboAnimDur },
       ultimate: { defaultActivationDuration: AK.ultAnimDur, defaultActiveDuration: dur(3.427), defaultCooldownDuration: AK.ultCd, triggerCondition: null, animationDuration: AK.ultAnimDur },
     },
   },
@@ -264,13 +267,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'wulfgard',
     color: '#9060e8',
     splash: wulfgardSplash,
-    weapon: 'Forgeborn Scathe',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: WF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: WF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: WF.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: WF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: WF.comboCd, triggerCondition: null, animationDuration: WF.comboAnimDur },
       ultimate: { defaultActivationDuration: WF.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: WF.ultAnimDur },
     },
   },
@@ -279,14 +282,14 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'ardelia',
     color: '#33cc88',
     splash: ardeliaSplash,
-    weapon: 'Verdant Lance',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     kit2: 'Hot Work Pyrometer',
 
     skills: {
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AR.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: AR.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AR.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: AR.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AR.comboCd, triggerCondition: null, animationDuration: AR.comboAnimDur },
       ultimate: { defaultActivationDuration: dur(2.688), defaultActiveDuration: dur(3), defaultCooldownDuration: 0, triggerCondition: null, animationDuration: dur(2.688) },
     },
   },
@@ -295,13 +298,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'endministrator',
     color: '#ccbb44',
     splash: endministratorSplash,
-    weapon: 'Endministrator Blade',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: EN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: EN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EN.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: EN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EN.comboCd, triggerCondition: null, animationDuration: EN.comboAnimDur },
       ultimate: { defaultActivationDuration: EN.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EN.ultAnimDur },
     },
   },
@@ -310,13 +313,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'lifeng',
     color: '#dd8844',
     splash: lifengSplash,
-    weapon: 'Vajra Fang',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: LF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: LF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LF.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: LF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LF.comboCd, triggerCondition: null, animationDuration: LF.comboAnimDur },
       ultimate: { defaultActivationDuration: LF.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LF.ultAnimDur },
     },
   },
@@ -325,13 +328,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'chenQianyu',
     color: '#4488cc',
     splash: chenQianyuSplash,
-    weapon: 'Dawn Breaker',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: CQ.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: CQ.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CQ.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: CQ.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CQ.comboCd, triggerCondition: null, animationDuration: CQ.comboAnimDur },
       ultimate: { defaultActivationDuration: CQ.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CQ.ultAnimDur },
     },
   },
@@ -340,13 +343,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'estella',
     color: '#6699cc',
     splash: estellaSplash,
-    weapon: 'Frost Spear',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: ES.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: ES.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: ES.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: ES.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: ES.comboCd, triggerCondition: null, animationDuration: ES.comboAnimDur },
       ultimate: { defaultActivationDuration: ES.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: ES.ultAnimDur },
     },
   },
@@ -355,13 +358,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'ember',
     color: '#cc4422',
     splash: emberSplash,
-    weapon: 'Iron Valor',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: EM.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: EM.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EM.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: EM.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EM.comboCd, triggerCondition: null, animationDuration: EM.comboAnimDur },
       ultimate: { defaultActivationDuration: EM.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EM.ultAnimDur },
     },
   },
@@ -370,13 +373,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'snowshine',
     color: '#88bbdd',
     splash: snowshineSplash,
-    weapon: 'Glacial Guard',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: SN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: SN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: SN.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: SN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: SN.comboCd, triggerCondition: null, animationDuration: SN.comboAnimDur },
       ultimate: { defaultActivationDuration: SN.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: SN.ultAnimDur },
     },
   },
@@ -385,13 +388,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'catcher',
     color: '#8899aa',
     splash: catcherSplash,
-    weapon: 'Iron Shield',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: CA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: CA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CA.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: CA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CA.comboCd, triggerCondition: null, animationDuration: CA.comboAnimDur },
       ultimate: { defaultActivationDuration: CA.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CA.ultAnimDur },
     },
   },
@@ -400,13 +403,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'gilberta',
     color: '#66bb66',
     splash: gilbertaSplash,
-    weapon: 'Arcane Staff',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: GI.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: GI.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: GI.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: GI.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: GI.comboCd, triggerCondition: null, animationDuration: GI.comboAnimDur },
       ultimate: { defaultActivationDuration: GI.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: GI.ultAnimDur },
     },
   },
@@ -415,13 +418,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'xaihi',
     color: '#77ccee',
     splash: xaihiSplash,
-    weapon: 'Crystal Prism',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: XA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: XA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: XA.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: XA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: XA.comboCd, triggerCondition: null, animationDuration: XA.comboAnimDur },
       ultimate: { defaultActivationDuration: XA.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: XA.ultAnimDur },
     },
   },
@@ -430,13 +433,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'perlica',
     color: '#ddbb33',
     splash: perlicaSplash,
-    weapon: 'Spark Emitter',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: PE.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: PE.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PE.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: PE.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PE.comboCd, triggerCondition: null, animationDuration: PE.comboAnimDur },
       ultimate: { defaultActivationDuration: PE.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PE.ultAnimDur },
     },
   },
@@ -445,13 +448,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'fluorite',
     color: '#99dd55',
     splash: fluoriteSplash,
-    weapon: 'Trick Shot',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: FL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: FL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: FL.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: FL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: FL.comboCd, triggerCondition: null, animationDuration: FL.comboAnimDur },
       ultimate: { defaultActivationDuration: FL.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: FL.ultAnimDur },
     },
   },
@@ -460,13 +463,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'lastRite',
     color: '#aaddff',
     splash: lastRiteSplash,
-    weapon: 'Frostbound Scythe',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: LR.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: LR.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LR.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: LR.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LR.comboCd, triggerCondition: null, animationDuration: LR.comboAnimDur },
       ultimate: { defaultActivationDuration: LR.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LR.ultAnimDur },
     },
   },
@@ -475,13 +478,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'yvonne',
     color: '#55ccdd',
     splash: yvonneSplash,
-    weapon: 'Frost Pistol',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: YV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: YV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: YV.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: YV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: YV.comboCd, triggerCondition: null, animationDuration: YV.comboAnimDur },
       ultimate: { defaultActivationDuration: YV.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: YV.ultAnimDur },
     },
   },
@@ -490,13 +493,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'avywenna',
     color: '#dd9933',
     splash: avywennaSplash,
-    weapon: 'Thunderlance',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: AV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AV.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: AV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AV.comboCd, triggerCondition: null, animationDuration: AV.comboAnimDur },
       ultimate: { defaultActivationDuration: AV.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AV.ultAnimDur },
     },
   },
@@ -505,13 +508,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'daPan',
     color: '#ee6633',
     splash: daPanSplash,
-    weapon: 'Wok of Justice',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: DP.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: DP.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: DP.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: DP.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: DP.comboCd, triggerCondition: null, animationDuration: DP.comboAnimDur },
       ultimate: { defaultActivationDuration: DP.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: DP.ultAnimDur },
     },
   },
@@ -520,13 +523,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'pogranichnik',
     color: '#bb5533',
     splash: pogranichnikSplash,
-    weapon: 'Banner Blade',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: PG.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: PG.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PG.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: PG.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PG.comboCd, triggerCondition: null, animationDuration: PG.comboAnimDur },
       ultimate: { defaultActivationDuration: PG.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PG.ultAnimDur },
     },
   },
@@ -535,13 +538,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'alesh',
     color: '#44aacc',
     splash: aleshSplash,
-    weapon: 'Fishing Rod',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: AL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AL.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: AL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AL.comboCd, triggerCondition: null, animationDuration: AL.comboAnimDur },
       ultimate: { defaultActivationDuration: AL.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AL.ultAnimDur },
     },
   },
@@ -550,13 +553,13 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     id: 'arclight',
     color: '#eebb44',
     splash: arclightSplash,
-    weapon: 'Storm Edge',
+    weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
 
     skills: {
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AC.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
-      combo: { defaultActivationDuration: AC.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AC.comboCd, triggerCondition: null },
+      combo: { defaultActivationDuration: AC.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AC.comboCd, triggerCondition: null, animationDuration: AC.comboAnimDur },
       ultimate: { defaultActivationDuration: AC.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AC.ultAnimDur },
     },
   },
@@ -650,6 +653,11 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     skills[key] = { name: ms?.skillName ?? key, element: ms.element, ...timing, publishesTriggers };
   }
 
+  // Attach SP cost to battle skill def
+  if (skills.battle && 'skillPointCost' in model.battleSkill) {
+    skills.battle = { ...skills.battle, skillPointCost: (model.battleSkill as any).skillPointCost };
+  }
+
   // Attach gauge gain values to battle and combo skill defs
   if (gg && skills.battle) {
     skills.battle = { ...skills.battle, gaugeGain: gg.battleGaugeGain, teamGaugeGain: gg.battleTeamGaugeGain };
@@ -688,7 +696,7 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
   return {
     id: config.id,
     name: model.name,
-    color: config.color,
+    color: ELEMENT_COLORS[model.element],
     element: model.element,
     role: ROLE_LABELS[model.operatorClass] ?? model.operatorClass,
     rarity: model.operatorRarity,
@@ -705,6 +713,8 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     ultimateEnergyCost: gaugeMax,
     maxTalentOneLevel: model.maxTalentOneLevel,
     maxTalentTwoLevel: model.maxTalentTwoLevel,
+    attributeIncreaseName: model.attributeIncreaseName,
+    attributeIncreaseAttribute: model.attributeIncreaseAttribute,
     triggerCapability,
   };
 }

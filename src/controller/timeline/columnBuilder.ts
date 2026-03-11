@@ -1,7 +1,11 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, StatusType, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/channelLabels';
+import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
+import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { TACTICALS } from '../../utils/loadoutRegistry';
+import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
@@ -143,6 +147,12 @@ export interface Slot {
   slotId: string;
   operator: Operator | null;
   potential?: number;
+  /** Equipped weapon name (for weapon skill subtimeline columns). */
+  weaponName?: string;
+  /** Equipped tactical name (for tactical subtimeline column). */
+  tacticalName?: string;
+  /** Active gear set effect type (3+ matching pieces). */
+  gearSetType?: import('../../consts/enums').GearEffectType;
 }
 
 const MF_MICRO_COLS = 4;
@@ -155,6 +165,10 @@ export function buildColumns(
   visibleSkills: VisibleSkills,
 ): Column[] {
   const columns: Column[] = [];
+
+  // Pre-scan: detect Wulfgard on the team (for Scorching Fangs talent columns)
+  const wulfgardSlot = slots.find((s) => s.operator?.id === 'wulfgard');
+  const SCORCHING_FANGS_DURATION = 10 * 120; // 10s at 120fps
 
   // Common (global) columns — before operator slots
   columns.push({
@@ -249,11 +263,138 @@ export function buildColumns(
     });
   }
 
+  // ── Shared team weapon buff column ────────────────────────────────────────
+  const teamWeaponBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
+  for (const slot of slots) {
+    if (!slot.operator || !slot.weaponName) continue;
+    const weaponEntry = getWeaponEffects(slot.weaponName);
+    if (!weaponEntry) continue;
+    for (const effect of weaponEntry.effects) {
+      if (effect.target === 'team') {
+        teamWeaponBuffs.push({
+          slotId: slot.slotId,
+          label: effect.label,
+          durationFrames: Math.round(effect.durationSeconds * 120),
+          color: slot.operator.color,
+        });
+      }
+    }
+  }
+  if (teamWeaponBuffs.length > 0) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-team-weapon-status`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.WEAPON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: 'team-weapon-status',
+      label: ColumnLabel.WEAPON_BUFF,
+      color: '#66aa88',
+      headerVariant: 'skill',
+      derived: true,
+      microColumns: teamWeaponBuffs.map((twb) => ({
+        id: `weapon-team-${twb.slotId}`,
+        label: twb.label,
+        color: twb.color,
+        defaultEvent: {
+          name: twb.label,
+          defaultActivationDuration: twb.durationFrames,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      })),
+      microColumnAssignment: 'dynamic-split',
+      matchColumnIds: teamWeaponBuffs.map((twb) => `weapon-team-${twb.slotId}`),
+    });
+  }
+
+  // ── Shared team gear set buff column ──────────────────────────────────────
+  const teamGearBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
+  for (const slot of slots) {
+    if (!slot.operator || !slot.gearSetType) continue;
+    const gearEntry = getGearSetEffects(slot.gearSetType);
+    if (!gearEntry) continue;
+    for (const effect of gearEntry.effects) {
+      if (effect.target === 'team') {
+        teamGearBuffs.push({
+          slotId: slot.slotId,
+          label: effect.label,
+          durationFrames: Math.round(effect.durationSeconds * 120),
+          color: slot.operator.color,
+        });
+      }
+    }
+  }
+  if (teamGearBuffs.length > 0) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-team-gear-status`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.GEAR_EFFECT,
+      ownerId: COMMON_OWNER_ID,
+      columnId: 'team-gear-status',
+      label: ColumnLabel.GEAR_BUFF,
+      color: '#88aa66',
+      headerVariant: 'skill',
+      derived: true,
+      microColumns: teamGearBuffs.map((tgb) => ({
+        id: `gear-team-${tgb.slotId}`,
+        label: tgb.label,
+        color: tgb.color,
+        defaultEvent: {
+          name: tgb.label,
+          defaultActivationDuration: tgb.durationFrames,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      })),
+      microColumnAssignment: 'dynamic-split',
+      matchColumnIds: teamGearBuffs.map((tgb) => `gear-team-${tgb.slotId}`),
+    });
+  }
+
   for (const slot of slots) {
     const op = slot.operator;
     const isLaevatain = op?.id === 'laevatain';
     let slotHasCols = false;
     if (op) {
+      // Dash subtimeline — before basic attack
+      const DASH_FRAMES = Math.round(0.416 * 120); // 0.416s
+      const DODGE_FRAMES = Math.round(0.351 * 120); // 0.351s game-time
+      columns.push({
+        key: `${slot.slotId}-dash`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: 'dash',
+        label: 'DASH',
+        color: op.color,
+        headerVariant: 'skill',
+        eventVariants: [
+          {
+            name: CombatSkillsType.DASH,
+            defaultActivationDuration: DASH_FRAMES,
+            defaultActiveDuration: 0,
+            defaultCooldownDuration: 0,
+          },
+          {
+            name: CombatSkillsType.DASH,
+            defaultActivationDuration: DODGE_FRAMES,
+            defaultActiveDuration: 0,
+            defaultCooldownDuration: 0,
+            isPerfectDodge: true,
+            timeInteraction: 'TIME_STOP',
+            animationDuration: DODGE_FRAMES,
+            timeDependency: TimeDependency.REAL_TIME,
+          },
+        ],
+        defaultEvent: {
+          name: CombatSkillsType.DASH,
+          defaultActivationDuration: DASH_FRAMES,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      });
+      slotHasCols = true;
+
       for (const skillType of SKILL_ORDER) {
         if (visibleSkills[slot.slotId]?.[skillType]) {
           const skill = op.skills[skillType];
@@ -278,6 +419,7 @@ export function buildColumns(
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
               animationDuration: skill.animationDuration,
               ...(skillType === 'ultimate' && slot.potential != null ? { operatorPotential: slot.potential } : {}),
+              ...(skillType === 'battle' && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
           };
           // Laevatain basic attack: multi-sequence event with frame markers
@@ -311,11 +453,12 @@ export function buildColumns(
           }
           // Laevatain battle skill: 4 variants with frame data from skills.json
           if (isLaevatain && skillType === 'battle') {
-            const baseSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_BATTLE_SKILL_SEQUENCE], { labels: ['Explosion'] });
-            const enhSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE]);
-            const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'] });
-            const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE]);
+            const baseSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_BATTLE_SKILL_SEQUENCE], { labels: ['Explosion'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const enhSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
+            const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
             col.defaultEvent = {
+              ...col.defaultEvent!,
               name: CombatSkillsType.SMOULDERING_FIRE,
               defaultActivationDuration: baseSeg.totalDurationFrames,
               defaultActiveDuration: 0,
@@ -326,39 +469,30 @@ export function buildColumns(
             };
             col.eventVariants = [
               {
-                name: CombatSkillsType.SMOULDERING_FIRE,
-                defaultActivationDuration: baseSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: baseSeg.segments,
-                gaugeGain: skill.gaugeGain,
-                teamGaugeGain: skill.teamGaugeGain,
+                ...col.defaultEvent!,
               },
               {
+                ...col.defaultEvent!,
                 name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED,
                 defaultActivationDuration: enhSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
                 segments: enhSeg.segments,
                 triggerCondition: 'Requires: Twilight active',
                 gaugeGain: 0,
                 teamGaugeGain: 0,
               },
               {
+                ...col.defaultEvent!,
                 name: CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
                 defaultActivationDuration: empSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
                 segments: empSeg.segments,
                 triggerCondition: 'Requires: Melting Flame ×4',
                 gaugeGain: skill.gaugeGain,
                 teamGaugeGain: skill.teamGaugeGain,
               },
               {
+                ...col.defaultEvent!,
                 name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
                 defaultActivationDuration: enhEmpSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
                 segments: enhEmpSeg.segments,
                 triggerCondition: 'Requires: Twilight active + Melting Flame ×4',
                 gaugeGain: 0,
@@ -368,7 +502,7 @@ export function buildColumns(
           }
           // Laevatain combo skill: single-sequence event with frame data
           if (isLaevatain && skillType === 'combo') {
-            const comboSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_COMBO_SKILL_SEQUENCE]);
+            const comboSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_COMBO_SKILL_SEQUENCE], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: comboSeg.totalDurationFrames,
@@ -390,7 +524,7 @@ export function buildColumns(
           // Generic battle skill: map-based lookup for operators with frame data
           const battleSeq = op && BATTLE_SKILL_FRAME_SEQUENCES[op.id];
           if (battleSeq && skillType === 'battle' && !isLaevatain) {
-            const seg = SkillSegmentBuilder.buildSegments([battleSeq]);
+            const seg = SkillSegmentBuilder.buildSegments([battleSeq], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
@@ -402,8 +536,8 @@ export function buildColumns(
           if (comboEntry && skillType === 'combo' && !isLaevatain) {
             const isMulti = 'sequences' in comboEntry;
             const seg = isMulti
-              ? SkillSegmentBuilder.buildSegments(comboEntry.sequences, { labels: comboEntry.labels })
-              : SkillSegmentBuilder.buildSegments([comboEntry]);
+              ? SkillSegmentBuilder.buildSegments(comboEntry.sequences, { labels: comboEntry.labels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain })
+              : SkillSegmentBuilder.buildSegments([comboEntry], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
@@ -490,12 +624,144 @@ export function buildColumns(
         },
       });
     }
+    // ── Weapon skill buff column (shared dynamic-split) ──────────────────────
+    let weaponColCount = 0;
+    if (op && slot.weaponName) {
+      const weaponEntry = getWeaponEffects(slot.weaponName);
+      if (weaponEntry) {
+        const wielderEffects = weaponEntry.effects.filter((e) => e.target === 'wielder');
+        if (wielderEffects.length > 0) {
+          const microCols = wielderEffects.map((eff, i) => ({
+            id: i === 0 ? 'weapon-buff' : `weapon-buff-${i}`,
+            label: eff.label,
+            color: op.color,
+            defaultEvent: {
+              name: eff.label,
+              defaultActivationDuration: Math.round(eff.durationSeconds * 120),
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+            },
+          }));
+          columns.push({
+            key: `${slot.slotId}-weapon-buff`,
+            type: 'mini-timeline',
+            source: TimelineSourceType.WEAPON,
+            ownerId: slot.slotId,
+            columnId: 'operator-weapon-status',
+            label: ColumnLabel.WEAPON_BUFF,
+            color: op.color,
+            headerVariant: 'skill',
+            derived: true,
+            microColumns: microCols,
+            microColumnAssignment: 'dynamic-split',
+            matchColumnIds: microCols.map((mc) => mc.id),
+          });
+          weaponColCount++;
+        }
+      }
+    }
+
+    // ── Gear set buff column (wielder effects) ─────────────────────────────────
+    let gearColCount = 0;
+    if (op && slot.gearSetType) {
+      const gearEntry = getGearSetEffects(slot.gearSetType);
+      if (gearEntry) {
+        const wielderEffects = gearEntry.effects.filter((e) => e.target === 'wielder');
+        if (wielderEffects.length > 0) {
+          const microCols = wielderEffects.map((eff, i) => ({
+            id: i === 0 ? 'gear-buff' : `gear-buff-${i}`,
+            label: eff.label,
+            color: op.color,
+            defaultEvent: {
+              name: eff.label,
+              defaultActivationDuration: Math.round(eff.durationSeconds * 120),
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+            },
+          }));
+          columns.push({
+            key: `${slot.slotId}-gear-buff`,
+            type: 'mini-timeline',
+            source: TimelineSourceType.GEAR_EFFECT,
+            ownerId: slot.slotId,
+            columnId: 'operator-gear-status',
+            label: ColumnLabel.GEAR_BUFF,
+            color: op.color,
+            headerVariant: 'skill',
+            derived: true,
+            microColumns: microCols,
+            microColumnAssignment: 'dynamic-split',
+            matchColumnIds: microCols.map((mc) => mc.id),
+          });
+          gearColCount++;
+        }
+      }
+    }
+
+    // ── Tactical subtimeline column ───────────────────────────────────────────
+    let tacticalColCount = 0;
+    if (op && slot.tacticalName) {
+      const entry = TACTICALS.find((t) => t.name === slot.tacticalName);
+      if (entry) {
+        const tactical = entry.create() as Tactical;
+        const TACTICAL_DURATION_FRAMES = Math.round(1 * 120); // 1 second at 120fps
+        columns.push({
+          key: `${slot.slotId}-tactical`,
+          type: 'mini-timeline',
+          source: TimelineSourceType.TACTICAL,
+          ownerId: slot.slotId,
+          columnId: 'tactical',
+          label: ColumnLabel.TACTICAL,
+          color: op.color,
+          headerVariant: 'skill',
+          derived: true,
+          microColumns: [{ id: 'tactical', label: tactical.name, color: op.color }],
+          microColumnAssignment: 'dynamic-split',
+          matchColumnIds: ['tactical'],
+          defaultEvent: {
+            name: tactical.name,
+            defaultActivationDuration: TACTICAL_DURATION_FRAMES,
+            defaultActiveDuration: 0,
+            defaultCooldownDuration: 0,
+          },
+        });
+        tacticalColCount++;
+      }
+    }
+
+    // ── Scorching Fangs talent buff column (Wulfgard on team) ───────────────
+    let scFangsColCount = 0;
+    if (op && wulfgardSlot) {
+      // Wulfgard always gets Scorching Fangs column; others only if Wulfgard has P3+
+      const isWulfgard = slot === wulfgardSlot;
+      if (isWulfgard || (wulfgardSlot.potential ?? 0) >= 3) {
+        columns.push({
+          key: `${slot.slotId}-scorching-fangs`,
+          type: 'mini-timeline',
+          source: TimelineSourceType.OPERATOR,
+          ownerId: slot.slotId,
+          columnId: StatusType.SCORCHING_FANGS,
+          label: ColumnLabel.SCORCHING_FANGS,
+          color: op.color,
+          headerVariant: 'skill',
+          derived: true,
+          defaultEvent: {
+            name: STATUS_LABELS[StatusType.SCORCHING_FANGS],
+            defaultActivationDuration: SCORCHING_FANGS_DURATION,
+            defaultActiveDuration: 0,
+            defaultCooldownDuration: 0,
+          },
+        });
+        scFangsColCount++;
+      }
+    }
+
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
     const mfColCount = isLaevatain ? 1 : isAvywenna ? 1 : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount + weaponColCount + gearColCount + tacticalColCount + scFangsColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -631,30 +897,8 @@ export function buildColumns(
     });
   }
 
-  if (teamEnemyColumns.has('enemy-focus')) {
-    // Focus status mini-timeline for the enemy (applied by Antal battle skill, 60s duration)
-    columns.push({
-      key: 'enemy-focus',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: StatusType.FOCUS,
-      label: STATUS_LABELS[StatusType.FOCUS].toUpperCase(),
-      color: '#55aadd',
-      headerVariant: 'skill',
-      derived: true,
-      defaultEvent: {
-        name: 'Focus',
-        defaultActivationDuration: 7200, // 60 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    });
-  }
-
   if (teamEnemyColumns.has('enemy-susceptibility')) {
-    // Susceptibility debuff on enemy (applied by Ardelia Dolly Rush, Gilberta Gravity Field,
-    // Avywenna Thunderlance: Final Shock talent 3)
+    // Susceptibility debuff on enemy (Focus from Antal, Susceptibility from Ardelia/Gilberta/Avywenna)
     columns.push({
       key: 'enemy-susceptibility',
       type: 'mini-timeline',
@@ -671,6 +915,50 @@ export function buildColumns(
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
       },
+    });
+  }
+
+  // ── Shared enemy fragility column from weapon effects ─────────────────────
+  const enemyWeaponDebuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
+  for (const slot of slots) {
+    if (!slot.operator || !slot.weaponName) continue;
+    const weaponEntry = getWeaponEffects(slot.weaponName);
+    if (!weaponEntry) continue;
+    for (const effect of weaponEntry.effects) {
+      if (effect.target === 'enemy') {
+        enemyWeaponDebuffs.push({
+          slotId: slot.slotId,
+          label: effect.label,
+          durationFrames: Math.round(effect.durationSeconds * 120),
+          color: slot.operator.color,
+        });
+      }
+    }
+  }
+  if (enemyWeaponDebuffs.length > 0) {
+    columns.push({
+      key: 'enemy-fragility',
+      type: 'mini-timeline',
+      source: TimelineSourceType.ENEMY,
+      ownerId: 'enemy',
+      columnId: 'enemy-fragility',
+      label: ColumnLabel.FRAGILITY,
+      color: '#cc6644',
+      headerVariant: 'skill',
+      derived: true,
+      microColumns: enemyWeaponDebuffs.map((ewd) => ({
+        id: `fragility-${ewd.slotId}`,
+        label: ewd.label,
+        color: ewd.color,
+        defaultEvent: {
+          name: ewd.label,
+          defaultActivationDuration: ewd.durationFrames,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      })),
+      microColumnAssignment: 'dynamic-split',
+      matchColumnIds: enemyWeaponDebuffs.map((ewd) => `fragility-${ewd.slotId}`),
     });
   }
 

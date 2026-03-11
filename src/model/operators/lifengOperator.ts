@@ -6,47 +6,19 @@ import {
   HeartOfTheUnmoving,
 } from "../combat-skills/lifengSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 25,
     [StatType.AGILITY]: 18,
     [StatType.INTELLECT]: 17,
     [StatType.WILL]: 17,
   },
-  20: {
-    [StatType.ATTACK]: 115,
-    [StatType.STRENGTH]: 59,
-    [StatType.AGILITY]: 35,
-    [StatType.INTELLECT]: 34,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 176,
-    [StatType.STRENGTH]: 95,
-    [StatType.AGILITY]: 55,
-    [StatType.INTELLECT]: 52,
-    [StatType.WILL]: 50,
-  },
-  60: {
-    [StatType.ATTACK]: 234,
-    [StatType.STRENGTH]: 129,
-    [StatType.AGILITY]: 73,
-    [StatType.INTELLECT]: 69,
-    [StatType.WILL]: 66,
-  },
-  80: {
-    [StatType.ATTACK]: 293,
-    [StatType.STRENGTH]: 163,
-    [StatType.AGILITY]: 91,
-    [StatType.INTELLECT]: 86,
-    [StatType.WILL]: 82,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 322,
     [StatType.STRENGTH]: 180,
     [StatType.AGILITY]: 100,
@@ -90,7 +62,9 @@ export class LifengOperator extends Operator {
       secondaryAttributeType: LifengOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: LifengOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: LifengOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class LifengOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.STRENGTH]: 15, [StatType.AGILITY]: 15, [StatType.INTELLECT]: 15, [StatType.WILL]: 15 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

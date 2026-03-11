@@ -3,18 +3,13 @@ import { AttackBoostL } from "../weapon-skills/weaponSkills";
 import { FlowReincarnation } from "../weapon-skills/namedWeaponSkills";
 import { WillBoostL } from "../weapon-skills/weaponSkills";
 import { WeaponRarity } from "../../consts/types";
-import { Weapon } from "./weapon";
+import { Weapon, WeaponBaseAttack } from "./weapon";
 
 const RARITY: WeaponRarity = 6;
 
-/** Never Rest base attack values at key levels. */
-const BASE_ATTACK_BY_LEVEL: Readonly<Record<number, number>> = {
-  1: 51,
-  20: 146,
-  40: 247,
-  60: 348,
-  80: 449,
-  90: 500,
+const BASE_ATTACK: WeaponBaseAttack = {
+  lv1: 51,
+  lv90: 500,
 };
 
 export class NeverRest extends Weapon {
@@ -39,7 +34,7 @@ export class NeverRest extends Weapon {
       weaponType: NeverRest.WEAPON_TYPE,
       weaponRarity: NeverRest.WEAPON_RARITY,
       level: params.level,
-      baseAttackByLevel: BASE_ATTACK_BY_LEVEL,
+      baseAttack: BASE_ATTACK,
       weaponSkillOne: skillOne,
       weaponSkillTwo: skillTwo,
       weaponSkillThree: skillThree,

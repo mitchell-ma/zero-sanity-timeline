@@ -6,47 +6,19 @@ import {
   CryoblastingPistolier,
 } from "../combat-skills/yvonneSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 17,
     [StatType.AGILITY]: 18,
     [StatType.INTELLECT]: 25,
     [StatType.WILL]: 16,
   },
-  20: {
-    [StatType.ATTACK]: 114,
-    [StatType.STRENGTH]: 32,
-    [StatType.AGILITY]: 38,
-    [StatType.INTELLECT]: 57,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 174,
-    [StatType.STRENGTH]: 50,
-    [StatType.AGILITY]: 60,
-    [StatType.INTELLECT]: 92,
-    [StatType.WILL]: 49,
-  },
-  60: {
-    [StatType.ATTACK]: 232,
-    [StatType.STRENGTH]: 66,
-    [StatType.AGILITY]: 80,
-    [StatType.INTELLECT]: 125,
-    [StatType.WILL]: 64,
-  },
-  80: {
-    [StatType.ATTACK]: 289,
-    [StatType.STRENGTH]: 82,
-    [StatType.AGILITY]: 100,
-    [StatType.INTELLECT]: 158,
-    [StatType.WILL]: 80,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 318,
     [StatType.STRENGTH]: 90,
     [StatType.AGILITY]: 110,
@@ -90,7 +62,9 @@ export class YvonneOperator extends Operator {
       secondaryAttributeType: YvonneOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: YvonneOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: YvonneOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Keen Mind',
+      attributeIncreaseAttribute: StatType.INTELLECT,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class YvonneOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.INTELLECT]: 20, [StatType.CRITICAL_RATE]: 0.07 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

@@ -2,17 +2,13 @@ import { WeaponType } from "../../consts/enums";
 import { AttackBoostM, IntellectBoostM } from '../weapon-skills/weaponSkills';
 import { TwilightLustrousPyre } from '../weapon-skills/namedWeaponSkills';
 import { WeaponRarity } from "../../consts/types";
-import { Weapon } from "./weapon";
+import { Weapon, WeaponBaseAttack } from "./weapon";
 
 const RARITY: WeaponRarity = 5;
 
-const BASE_ATTACK_BY_LEVEL: Readonly<Record<number, number>> = {
-   1:  42,
-  20: 120,
-  40: 203,
-  60: 286,
-  80: 369,
-  90: 411,
+const BASE_ATTACK: WeaponBaseAttack = {
+  lv1: 42,
+  lv90: 411,
 };
 
 export class StanzaOfMemorials extends Weapon {
@@ -37,7 +33,7 @@ export class StanzaOfMemorials extends Weapon {
       weaponType:      StanzaOfMemorials.WEAPON_TYPE,
       weaponRarity:    StanzaOfMemorials.WEAPON_RARITY,
       level:           params.level,
-      baseAttackByLevel: BASE_ATTACK_BY_LEVEL,
+      baseAttack: BASE_ATTACK,
       weaponSkillOne:   skillOne,
       weaponSkillTwo:   skillTwo,
       weaponSkillThree: skillThree,

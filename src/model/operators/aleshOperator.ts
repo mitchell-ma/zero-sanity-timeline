@@ -6,47 +6,19 @@ import {
   OneMonsterCatch,
 } from "../combat-skills/aleshSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 23,
     [StatType.AGILITY]: 17,
     [StatType.INTELLECT]: 18,
     [StatType.WILL]: 17,
   },
-  20: {
-    [StatType.ATTACK]: 108,
-    [StatType.STRENGTH]: 52,
-    [StatType.AGILITY]: 33,
-    [StatType.INTELLECT]: 35,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 164,
-    [StatType.STRENGTH]: 84,
-    [StatType.AGILITY]: 51,
-    [StatType.INTELLECT]: 55,
-    [StatType.WILL]: 50,
-  },
-  60: {
-    [StatType.ATTACK]: 218,
-    [StatType.STRENGTH]: 113,
-    [StatType.AGILITY]: 67,
-    [StatType.INTELLECT]: 73,
-    [StatType.WILL]: 66,
-  },
-  80: {
-    [StatType.ATTACK]: 271,
-    [StatType.STRENGTH]: 143,
-    [StatType.AGILITY]: 84,
-    [StatType.INTELLECT]: 91,
-    [StatType.WILL]: 82,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 298,
     [StatType.STRENGTH]: 158,
     [StatType.AGILITY]: 92,
@@ -90,7 +62,9 @@ export class AleshOperator extends Operator {
       secondaryAttributeType: AleshOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AleshOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AleshOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class AleshOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.STRENGTH]: 15, [StatType.INTELLECT]: 15 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

@@ -1,7 +1,16 @@
 import { WeaponType } from "../../consts/enums";
 import { WeaponRarity } from "../../consts/types";
-import { lookupByLevel } from "../../utils/lookupByLevel";
 import { WeaponSkill } from "../weapon-skills/weaponSkill";
+
+export interface WeaponBaseAttack {
+  lv1: number;
+  lv90: number;
+}
+
+export function interpolateAttack(base: WeaponBaseAttack, level: number): number {
+  const t = (level - 1) / 89;
+  return Math.round(base.lv1 + (base.lv90 - base.lv1) * t);
+}
 
 export abstract class Weapon {
   readonly weaponType: WeaponType;
@@ -13,13 +22,13 @@ export abstract class Weapon {
   weaponSkillTwo: WeaponSkill;
   weaponSkillThree: WeaponSkill | undefined;
 
-  protected readonly baseAttackByLevel: Readonly<Record<number, number>>;
+  readonly baseAttack: WeaponBaseAttack;
 
   constructor(params: {
     weaponType: WeaponType;
     weaponRarity: WeaponRarity;
     level: number;
-    baseAttackByLevel: Readonly<Record<number, number>>;
+    baseAttack: WeaponBaseAttack;
     weaponSkillOne: WeaponSkill;
     weaponSkillTwo: WeaponSkill;
     weaponSkillThree?: WeaponSkill;
@@ -28,7 +37,7 @@ export abstract class Weapon {
       weaponType,
       weaponRarity,
       level,
-      baseAttackByLevel,
+      baseAttack,
       weaponSkillOne,
       weaponSkillTwo,
       weaponSkillThree,
@@ -54,7 +63,7 @@ export abstract class Weapon {
     this.weaponType = weaponType;
     this.weaponRarity = weaponRarity;
     this.level = level;
-    this.baseAttackByLevel = baseAttackByLevel;
+    this.baseAttack = baseAttack;
     this.weaponSkillOne = weaponSkillOne;
     this.weaponSkillTwo = weaponSkillTwo;
     this.weaponSkillThree = weaponSkillThree;
@@ -66,6 +75,6 @@ export abstract class Weapon {
   }
 
   getBaseAttack(): number {
-    return lookupByLevel(this.baseAttackByLevel, this.level);
+    return interpolateAttack(this.baseAttack, this.level);
   }
 }

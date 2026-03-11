@@ -6,47 +6,19 @@ import {
   BladeGale,
 } from "../combat-skills/chenQianyuSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 20,
     [StatType.AGILITY]: 24,
     [StatType.INTELLECT]: 17,
     [StatType.WILL]: 16,
   },
-  20: {
-    [StatType.ATTACK]: 107,
-    [StatType.STRENGTH]: 44,
-    [StatType.AGILITY]: 54,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 30,
-  },
-  40: {
-    [StatType.ATTACK]: 163,
-    [StatType.STRENGTH]: 70,
-    [StatType.AGILITY]: 87,
-    [StatType.INTELLECT]: 50,
-    [StatType.WILL]: 46,
-  },
-  60: {
-    [StatType.ATTACK]: 216,
-    [StatType.STRENGTH]: 94,
-    [StatType.AGILITY]: 118,
-    [StatType.INTELLECT]: 66,
-    [StatType.WILL]: 60,
-  },
-  80: {
-    [StatType.ATTACK]: 269,
-    [StatType.STRENGTH]: 118,
-    [StatType.AGILITY]: 149,
-    [StatType.INTELLECT]: 82,
-    [StatType.WILL]: 75,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 295,
     [StatType.STRENGTH]: 130,
     [StatType.AGILITY]: 165,
@@ -90,7 +62,9 @@ export class ChenQianyuOperator extends Operator {
       secondaryAttributeType: ChenQianyuOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ChenQianyuOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ChenQianyuOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class ChenQianyuOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.AGILITY]: 15, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.08 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

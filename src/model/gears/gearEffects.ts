@@ -6,6 +6,7 @@ import {
 
 export abstract class GearEffect {
   readonly gearEffectType: GearEffectType;
+  readonly description: string;
   readonly passiveStats: Partial<Record<StatType, number>>;
   readonly triggerCondition: TriggerConditionType;
   readonly durationSeconds: number;
@@ -17,6 +18,7 @@ export abstract class GearEffect {
 
   constructor(params: {
     gearEffectType: GearEffectType;
+    description: string;
     passiveStats: Partial<Record<StatType, number>>;
     triggerCondition: TriggerConditionType;
     durationSeconds: number;
@@ -27,6 +29,7 @@ export abstract class GearEffect {
     usesRemaining?: number;
   }) {
     this.gearEffectType = params.gearEffectType;
+    this.description = params.description;
     this.passiveStats = params.passiveStats;
     this.triggerCondition = params.triggerCondition;
     this.durationSeconds = params.durationSeconds;
@@ -46,6 +49,7 @@ export class AicHeavy extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.AIC_HEAVY,
+      description: 'HP +500. After defeating an enemy, restore 100 HP. CD: 5s.',
       passiveStats: { [StatType.ATTACK]: 500 },
       triggerCondition: TriggerConditionType.DEFEAT_ENEMY,
       durationSeconds: 0,
@@ -63,6 +67,7 @@ export class AicLight extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.AIC_LIGHT,
+      description: 'HP +500. After defeating an enemy, ATK +20 for 5s.',
       passiveStats: { [StatType.ATTACK]: 500 },
       triggerCondition: TriggerConditionType.DEFEAT_ENEMY,
       durationSeconds: 5,
@@ -79,6 +84,7 @@ export class ArmoredMsgr extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.ARMORED_MSGR,
+      description: 'Strength +50. When HP below 50%, 30% DMG Reduction.',
       passiveStats: { [StatType.STRENGTH]: 50 },
       triggerCondition: TriggerConditionType.HP_BELOW_THRESHOLD,
       durationSeconds: 0,
@@ -93,6 +99,7 @@ export class RovingMsgr extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.ROVING_MSGR,
+      description: 'Agility +50. When HP above 80%, Physical DMG +20%.',
       passiveStats: { [StatType.AGILITY]: 50 },
       triggerCondition: TriggerConditionType.HP_ABOVE_THRESHOLD,
       durationSeconds: 0,
@@ -107,6 +114,7 @@ export class MordvoltInsulation extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.MORDVOLT_INSULATION,
+      description: 'Intellect +50. When HP above 80%, Arts DMG +20%.',
       passiveStats: { [StatType.INTELLECT]: 50 },
       triggerCondition: TriggerConditionType.HP_ABOVE_THRESHOLD,
       durationSeconds: 0,
@@ -121,6 +129,7 @@ export class MordvoltResistant extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
+      description: 'Will +50. When HP below 50%, Treatment Effect +30%.',
       passiveStats: { [StatType.WILL]: 50 },
       triggerCondition: TriggerConditionType.HP_BELOW_THRESHOLD,
       durationSeconds: 0,
@@ -138,6 +147,7 @@ export class AburreyLegacy extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.ABURREY_LEGACY,
+      description: 'Skill DMG +24%. On battle/combo/ultimate cast, ATK +5% for 15s.',
       passiveStats: {},
       triggerCondition: TriggerConditionType.CAST_BATTLE_SKILL,
       durationSeconds: 15,
@@ -155,6 +165,7 @@ export class Catastrophe extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.CATASTROPHE,
+      description: 'Ult Gain Eff +20%. On battle skill cast, +50 SP. Once per battle.',
       passiveStats: { [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.2 },
       triggerCondition: TriggerConditionType.CAST_BATTLE_SKILL,
       durationSeconds: 0,
@@ -174,6 +185,7 @@ export class Swordmancer extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.SWORDMANCER,
+      description: 'Stagger Eff +20%. After applying Physical Status, deal 250% ATK Physical DMG + 10 Stagger. CD: 15s.',
       passiveStats: { [StatType.STAGGER_EFFICIENCY_BONUS]: 0.2 },
       triggerCondition: TriggerConditionType.APPLY_PHYSICAL_STATUS,
       durationSeconds: 0,
@@ -193,6 +205,7 @@ export class Lynx extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.LYNX,
+      description: 'Treatment Eff +20%. After HP treatment, target gains 15% DMG Red for 10s.',
       passiveStats: { [StatType.TREATMENT_BONUS]: 0.2 },
       triggerCondition: TriggerConditionType.HP_TREATMENT,
       durationSeconds: 10,
@@ -212,6 +225,7 @@ export class Aethertech extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.AETHERTECH,
+      description: 'ATK +8%. After applying Vulnerability, Physical DMG +8% for 15s (max 4 stacks).',
       passiveStats: { [StatType.ATTACK_BONUS]: 0.08 },
       triggerCondition: TriggerConditionType.APPLY_VULNERABILITY,
       durationSeconds: 15,
@@ -229,6 +243,7 @@ export class Bonekrusha extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.BONEKRUSHA,
+      description: 'ATK +15%. On combo skill cast, next battle skill DMG +30%. Max 2 stacks.',
       passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
       triggerCondition: TriggerConditionType.CAST_COMBO_SKILL,
       durationSeconds: 0,
@@ -248,6 +263,7 @@ export class PulserLabs extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.PULSER_LABS,
+      description: 'Arts Intensity +30. After Electrification, Elec DMG +50% for 10s. After Solidification, Cryo DMG +50% for 10s.',
       passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
       triggerCondition: TriggerConditionType.ELECTRIFICATION,
       durationSeconds: 10,
@@ -265,6 +281,7 @@ export class Frontiers extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.FRONTIERS,
+      description: 'Combo CD Red +15%. After SP recovery from skill, team DMG +16% for 15s.',
       passiveStats: { [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 0.15 },
       triggerCondition: TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL,
       durationSeconds: 15,
@@ -283,6 +300,7 @@ export class HotWork extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.HOT_WORK,
+      description: 'Arts Intensity +30. After Combustion, Heat DMG +50% for 10s. After Corrosion, Nature DMG +50% for 10s.',
       passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
       triggerCondition: TriggerConditionType.COMBUSTION,
       durationSeconds: 10,
@@ -301,6 +319,7 @@ export class MiSecurity extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.MI_SECURITY,
+      description: 'Crit Rate +5%. After crit hit, ATK +5% for 5s (max 5 stacks). At max, Crit Rate +5%.',
       passiveStats: { [StatType.CRITICAL_RATE]: 0.05 },
       triggerCondition: TriggerConditionType.CRITICAL_HIT,
       durationSeconds: 5,
@@ -319,6 +338,7 @@ export class Type50Yinglung extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+      description: 'ATK +15%. When any op casts battle skill, next combo skill DMG +20%. Max 3 stacks.',
       passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
       triggerCondition: TriggerConditionType.TEAM_CAST_BATTLE_SKILL,
       durationSeconds: 0,
@@ -337,7 +357,8 @@ export class TideSurge extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.TIDE_SURGE,
-      passiveStats: {},
+      description: 'Skill DMG +20%. After applying 2+ Arts Infliction stacks, Arts DMG +35% for 15s.',
+      passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.20 },
       triggerCondition: TriggerConditionType.APPLY_ARTS_INFLICTION_2_STACKS,
       durationSeconds: 15,
       isStackable: false,
@@ -354,6 +375,7 @@ export class EternalXiranite extends GearEffect {
   constructor() {
     super({
       gearEffectType: GearEffectType.ETERNAL_XIRANITE,
+      description: 'HP +1000. After applying Amp/Protected/Susceptibility/Weakened, team DMG +16% for 15s.',
       passiveStats: {},
       triggerCondition: TriggerConditionType.APPLY_BUFF,
       durationSeconds: 15,

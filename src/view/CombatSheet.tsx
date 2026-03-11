@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
-import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
+import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, buildTimeMap } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
@@ -9,8 +9,10 @@ import {
   DamageTableColumn,
   DamageStatistics,
 } from '../controller/calculation/damageTableBuilder';
+import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
+import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 
 const ROW_HEIGHT = 20;
 
@@ -31,6 +33,7 @@ interface CombatSheetProps {
   columns: Column[];
   enemy: Enemy;
   loadoutStats: Record<string, LoadoutStats>;
+  loadouts?: Record<string, OperatorLoadoutState>;
   zoom: number;
   loadoutRowHeight: number;
   selectedFrames?: SelectedFrame[];
@@ -39,21 +42,33 @@ interface CombatSheetProps {
   onScroll?: (scrollTop: number) => void;
   onZoom?: (deltaY: number) => void;
   compact?: boolean;
+  showRealTime?: boolean;
 }
 
 export default function CombatSheet({
-  slots, events, columns, enemy, loadoutStats, zoom, loadoutRowHeight,
+  slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom, compact,
+  showRealTime = true,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const timeMap = useMemo(() => buildTimeMap(events), [events]);
+  const formatTime = useCallback((gameFrame: number) => {
+    if (showRealTime) return frameToTimeLabelPrecise(timeMap.gameToReal(gameFrame));
+    return frameToTimeLabelPrecise(gameFrame);
+  }, [showRealTime, timeMap]);
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
   const rows = useMemo(
-    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats),
-    [events, columns, slots, enemy, loadoutStats],
+    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts),
+    [events, columns, slots, enemy, loadoutStats, loadouts],
   );
+  const bossMaxHp = useMemo(() => {
+    const model = getModelEnemy(enemy.id);
+    return model ? model.getHp() : null;
+  }, [enemy.id]);
+  const hasBossHp = bossMaxHp != null;
   const statistics = useMemo(
-    () => computeDamageStatistics(rows, tableColumns),
-    [rows, tableColumns],
+    () => computeDamageStatistics(rows, tableColumns, bossMaxHp),
+    [rows, tableColumns, bossMaxHp],
   );
 
   // Forward shift+scroll to zoom handler (same as timeline)
@@ -230,6 +245,12 @@ export default function CombatSheet({
             </div>
           );
         })}
+        {hasBossHp && (
+          <div className="dmg-header-hp">
+            <span className="dmg-header-skill-label">Boss HP</span>
+            <span className="dmg-header-skill-total">{formatDamage(bossMaxHp!)}</span>
+          </div>
+        )}
       </div>
 
       {/* Scrollable body — same coordinate system as timeline body */}
@@ -256,6 +277,9 @@ export default function CombatSheet({
                     && sf.frameIndex === row.frameIndex,
                 ) ?? false}
                 hovered={row.key === hoveredRowKey}
+                hasBossHp={hasBossHp}
+                bossMaxHp={bossMaxHp}
+                formatTime={formatTime}
               />
             ))
           )}
@@ -265,19 +289,22 @@ export default function CombatSheet({
   );
 }
 
-function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered }: {
+function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, hasBossHp, bossMaxHp, formatTime }: {
   row: DamageTableRow;
   tableColumns: DamageTableColumn[];
   colFlexMap: Map<string, number>;
   top: number;
   selected: boolean;
   hovered: boolean;
+  hasBossHp: boolean;
+  bossMaxHp: number | null;
+  formatTime: (gameFrame: number) => string;
 }) {
   const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
   return (
     <div className={cls} style={{ top }}>
       <div className="dmg-cell dmg-cell-time">
-        {frameToTimeLabelPrecise(row.absoluteFrame)}
+        {formatTime(row.absoluteFrame)}
       </div>
       {tableColumns.map((col) => {
         const isMatch = col.key === row.columnKey;
@@ -303,6 +330,14 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered }: {
           </div>
         );
       })}
+      {hasBossHp && row.hpRemaining != null && (
+        <div
+          className={`dmg-cell dmg-cell-hp${row.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
+          title={`${row.hpRemaining.toLocaleString()} / ${bossMaxHp!.toLocaleString()} HP`}
+        >
+          {formatDamage(row.hpRemaining)}
+        </div>
+      )}
     </div>
   );
 }

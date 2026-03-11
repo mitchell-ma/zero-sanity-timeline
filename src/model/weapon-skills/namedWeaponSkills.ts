@@ -1,5 +1,5 @@
-import { WeaponSkillType } from "../../consts/enums";
-import { WeaponSkill } from "./weaponSkill";
+import { StatType, WeaponSkillType } from "../../consts/enums";
+import { NamedEffectGroup, WeaponSkill } from "./weaponSkill";
 
 const BRUTALITY_DISCIPLINARIAN: readonly number[] = [];
 // Twilight: Blazing Wail — triggers after wielder uses ultimate; lasts 20s
@@ -69,6 +69,19 @@ export class TwilightBlazingWail extends WeaponSkill {
   getBasicAtkDmgBonus(): number {
     return TWILIGHT_BLAZING_WAIL_BASIC_ATK_DMG_BONUS[this.level - 1] ?? 0;
   }
+
+  getPassiveStats(): Partial<Record<StatType, number>> {
+    return { [StatType.HEAT_DAMAGE_BONUS]: this.getValue() };
+  }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [{
+      stats: [
+        { stat: StatType.BASIC_ATTACK_DAMAGE_BONUS, value: this.getBasicAtkDmgBonus() },
+        { stat: StatType.HEAT_DAMAGE_BONUS, value: this.getValue() },
+      ],
+    }];
+  }
 }
 
 export class TwilightAzureClouds extends WeaponSkill {
@@ -115,6 +128,13 @@ export class FlowReincarnation extends WeaponSkill {
   getTeamAtkBonus(): number {
     return FLOW_REINCARNATION_TEAM_ATK_BONUS[this.level - 1] ?? 0;
   }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [
+      { stats: [{ stat: StatType.PHYSICAL_DAMAGE_BONUS, value: this.getValue() }] },
+      { stats: [{ stat: StatType.ATTACK_BONUS, value: this.getTeamAtkBonus() }] },
+    ];
+  }
 }
 
 export class InflictionLongTimeWish extends WeaponSkill {
@@ -145,6 +165,13 @@ export class FlowThermalRelease extends WeaponSkill {
   /** ATK bonus granted to the rest of the team per stack. */
   getTeamAtkBonus(): number {
     return FLOW_THERMAL_RELEASE_TEAM_ATK_BONUS[this.level - 1] ?? 0;
+  }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [
+      { stats: [{ stat: StatType.ATTACK_BONUS, value: this.getValue() }] },
+      { stats: [{ stat: StatType.ATTACK_BONUS, value: this.getTeamAtkBonus() }] },
+    ];
   }
 }
 
@@ -281,6 +308,16 @@ export class TwilightLustrousPyre extends WeaponSkill {
   getUltAtkBonus(): number {
     return TWILIGHT_LUSTROUS_PYRE_ULT_ATK_BONUS[this.level - 1] ?? 0;
   }
+
+  getPassiveStats(): Partial<Record<StatType, number>> {
+    return { [StatType.HP_BONUS]: this.getValue() };
+  }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [{
+      stats: [{ stat: StatType.ATTACK_BONUS, value: this.getUltAtkBonus() }],
+    }];
+  }
 }
 
 // Infliction: Vicious Purge — boosts Arts DMG and enemy Arts DMG taken; 15s duration, 25s cooldown
@@ -310,6 +347,13 @@ export class InflictionViciousPurge extends WeaponSkill {
   getEnemyArtsDmgTaken(): number {
     return INFLICTION_VICIOUS_PURGE_ENEMY_ARTS_DMG_TAKEN[this.level - 1] ?? 0;
   }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [
+      { stats: [{ stat: StatType.ARTS_DAMAGE_BONUS, value: this.getValue() }] },
+      { stats: [{ stat: StatType.ARTS_DAMAGE_BONUS, value: this.getEnemyArtsDmgTaken() }] },
+    ];
+  }
 }
 
 // Infliction: Tidal Murmurs — secondary attribute bonus; increases Arts DMG taken after Corrosion consumption; 25s
@@ -336,5 +380,12 @@ export class InflictionTidalMurmurs extends WeaponSkill {
   /** Increase to Arts DMG taken by the enemy (after Corrosion consumption). */
   getEnemyArtsDmgTaken(): number {
     return INFLICTION_TIDAL_MURMURS_ENEMY_ARTS_DMG_TAKEN[this.level - 1] ?? 0;
+  }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [
+      { stats: [{ stat: StatType.WILL_BONUS, value: this.getValue() }] },
+      { stats: [{ stat: StatType.ARTS_DAMAGE_BONUS, value: this.getEnemyArtsDmgTaken() }] },
+    ];
   }
 }

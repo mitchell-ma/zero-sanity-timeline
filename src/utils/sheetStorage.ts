@@ -1,6 +1,7 @@
 import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../view/InformationPane';
+import { SessionTree, SessionNode } from './sessionStorage';
 
 const STORAGE_KEY = 'zst-sheet';
 const CURRENT_VERSION = 1;
@@ -97,12 +98,15 @@ export function validateSheetData(raw: unknown): LoadResult {
     return { ok: false, error: 'Missing or invalid nextEventId field.' };
   }
 
-  // Migration: strip isFinalStrike from non-basic events (only basic attacks have final strikes)
+  // Migration: convert isFinalStrike boolean to hitType enum
   for (const ev of obj.events as any[]) {
-    if (ev.columnId !== 'basic' && ev.segments) {
+    if (ev.segments) {
       for (const seg of ev.segments) {
         if (seg.frames) {
           for (const f of seg.frames) {
+            if (f.isFinalStrike) {
+              f.hitType = 'FINAL_STRIKE';
+            }
             delete f.isFinalStrike;
           }
         }
@@ -167,6 +171,129 @@ export function importFromFile(): Promise<LoadResult> {
         try {
           const parsed = JSON.parse(reader.result as string);
           resolve(validateSheetData(parsed));
+        } catch (e) {
+          resolve({ ok: false, error: `Failed to parse file: ${e instanceof Error ? e.message : String(e)}` });
+        }
+      };
+      reader.onerror = () => {
+        resolve({ ok: false, error: 'Failed to read file.' });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  });
+}
+
+// ─── Multi-session bundle export/import ─────────────────────────────────
+
+const BUNDLE_VERSION = 1;
+
+export interface MultiSessionBundle {
+  bundleVersion: number;
+  tree: SessionTree;
+  sessions: Record<string, SheetData>;
+}
+
+export type BundleLoadResult =
+  | { ok: true; data: MultiSessionBundle }
+  | { ok: false; error: string };
+
+export function exportMultiSessionBundle(
+  tree: SessionTree,
+  selectedSessionIds: Set<string>,
+  getSessionData: (id: string) => SheetData | null,
+): void {
+  // Collect ancestor folder IDs for selected sessions to preserve structure
+  const selectedArr = Array.from(selectedSessionIds);
+  const includedIds = new Set<string>(selectedArr);
+  for (const sid of selectedArr) {
+    let node = tree.nodes.find((n) => n.id === sid);
+    while (node?.parentId) {
+      includedIds.add(node.parentId);
+      node = tree.nodes.find((n) => n.id === node!.parentId);
+    }
+  }
+
+  const filteredTree: SessionTree = {
+    nodes: tree.nodes.filter((n) => includedIds.has(n.id)),
+  };
+
+  const sessions: Record<string, SheetData> = {};
+  for (const sid of selectedArr) {
+    const data = getSessionData(sid);
+    if (data) sessions[sid] = data;
+  }
+
+  const bundle: MultiSessionBundle = {
+    bundleVersion: BUNDLE_VERSION,
+    tree: filteredTree,
+    sessions,
+  };
+
+  const json = JSON.stringify(bundle, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'endfield-timeline.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function validateMultiSessionBundle(raw: unknown): BundleLoadResult {
+  if (raw == null || typeof raw !== 'object') {
+    return { ok: false, error: 'Bundle is not a valid object.' };
+  }
+  const obj = raw as Record<string, unknown>;
+
+  if (typeof obj.bundleVersion !== 'number') {
+    return { ok: false, error: 'Missing or invalid bundleVersion field.' };
+  }
+  if (obj.bundleVersion > BUNDLE_VERSION) {
+    return { ok: false, error: `Bundle version (${obj.bundleVersion}) is newer than this app supports (${BUNDLE_VERSION}).` };
+  }
+
+  const tree = obj.tree as Record<string, unknown> | undefined;
+  if (!tree || !Array.isArray(tree.nodes)) {
+    return { ok: false, error: 'Missing or invalid tree field.' };
+  }
+  for (const node of tree.nodes as unknown[]) {
+    const n = node as Record<string, unknown>;
+    if (!n || typeof n.id !== 'string' || typeof n.name !== 'string' || typeof n.type !== 'string') {
+      return { ok: false, error: 'Invalid node in tree.' };
+    }
+  }
+
+  if (typeof obj.sessions !== 'object' || obj.sessions == null) {
+    return { ok: false, error: 'Missing or invalid sessions field.' };
+  }
+  const sessions = obj.sessions as Record<string, unknown>;
+  for (const [id, sessionData] of Object.entries(sessions)) {
+    const result = validateSheetData(sessionData);
+    if (!result.ok) {
+      return { ok: false, error: `Invalid session data for "${id}": ${result.error}` };
+    }
+  }
+
+  return { ok: true, data: obj as unknown as MultiSessionBundle };
+}
+
+export function importMultiSessionFile(): Promise<BundleLoadResult> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        resolve({ ok: false, error: 'No file selected.' });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result as string);
+          resolve(validateMultiSessionBundle(parsed));
         } catch (e) {
           resolve({ ok: false, error: `Failed to parse file: ${e instanceof Error ? e.message : String(e)}` });
         }

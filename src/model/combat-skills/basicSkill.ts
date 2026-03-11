@@ -25,4 +25,9 @@ export abstract class BasicSkill extends Skills {
   get publishesTriggers(): TriggerConditionType[] {
     return ELEMENT_TRIGGERS[this.elementType] ?? [];
   }
+
+  /** SP cost from the concrete subclass's static SP_COST. */
+  get skillPointCost(): number {
+    return (this.constructor as any).SP_COST ?? 100;
+  }
 }

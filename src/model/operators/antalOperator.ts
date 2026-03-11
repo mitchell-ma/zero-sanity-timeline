@@ -6,48 +6,20 @@ import {
   OverclockedMoment,
 } from "../combat-skills/antalSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
-/** Antal's base attribute scores by level (Elite 0–Max). */
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+/** Antal's base attribute scores at lv1 and lv90. */
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 30,
     [StatType.STRENGTH]: 15,
     [StatType.AGILITY]: 9,
     [StatType.INTELLECT]: 15,
     [StatType.WILL]: 9,
   },
-  20: {
-    [StatType.ATTACK]: 87,
-    [StatType.STRENGTH]: 40,
-    [StatType.AGILITY]: 25,
-    [StatType.INTELLECT]: 47,
-    [StatType.WILL]: 25,
-  },
-  40: {
-    [StatType.ATTACK]: 147,
-    [StatType.STRENGTH]: 65,
-    [StatType.AGILITY]: 43,
-    [StatType.INTELLECT]: 81,
-    [StatType.WILL]: 41,
-  },
-  60: {
-    [StatType.ATTACK]: 207,
-    [StatType.STRENGTH]: 91,
-    [StatType.AGILITY]: 60,
-    [StatType.INTELLECT]: 114,
-    [StatType.WILL]: 58,
-  },
-  80: {
-    [StatType.ATTACK]: 267,
-    [StatType.STRENGTH]: 116,
-    [StatType.AGILITY]: 78,
-    [StatType.INTELLECT]: 148,
-    [StatType.WILL]: 74,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 297,
     [StatType.STRENGTH]: 129,
     [StatType.AGILITY]: 86,
@@ -91,7 +63,9 @@ export class AntalOperator extends Operator {
       secondaryAttributeType: AntalOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AntalOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AntalOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Keen Mind',
+      attributeIncreaseAttribute: StatType.INTELLECT,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -113,11 +87,17 @@ export class AntalOperator extends Operator {
     });
   }
 
+  get potentialStatBonuses() {
+    return {
+      4: { [StatType.INTELLECT]: 10 },
+    };
+  }
+
   get comboRequires(): TriggerConditionType[] {
     return [TriggerConditionType.APPLY_PHYSICAL_STATUS, TriggerConditionType.APPLY_ARTS_INFLICTION];
   }
   get comboDescription(): string { return 'Enemy with Focus suffers Physical Status or Arts Infliction'; }
   get comboRequiresActiveColumns(): string[] { return [StatusType.FOCUS]; }
-  get derivedEnemyColumns(): string[] { return ['enemy-focus']; }
+  get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
   get derivedTeamColumns(): string[] { return ['team-amp']; }
 }

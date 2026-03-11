@@ -6,47 +6,19 @@ import {
   ApexPrankster,
 } from "../combat-skills/fluoriteSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 54,
     [StatType.STRENGTH]: 16,
     [StatType.AGILITY]: 18,
     [StatType.INTELLECT]: 22,
     [StatType.WILL]: 16,
   },
-  20: {
-    [StatType.ATTACK]: 105,
-    [StatType.STRENGTH]: 31,
-    [StatType.AGILITY]: 38,
-    [StatType.INTELLECT]: 48,
-    [StatType.WILL]: 30,
-  },
-  40: {
-    [StatType.ATTACK]: 160,
-    [StatType.STRENGTH]: 47,
-    [StatType.AGILITY]: 60,
-    [StatType.INTELLECT]: 77,
-    [StatType.WILL]: 46,
-  },
-  60: {
-    [StatType.ATTACK]: 212,
-    [StatType.STRENGTH]: 62,
-    [StatType.AGILITY]: 80,
-    [StatType.INTELLECT]: 104,
-    [StatType.WILL]: 60,
-  },
-  80: {
-    [StatType.ATTACK]: 264,
-    [StatType.STRENGTH]: 77,
-    [StatType.AGILITY]: 100,
-    [StatType.INTELLECT]: 131,
-    [StatType.WILL]: 75,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 290,
     [StatType.STRENGTH]: 85,
     [StatType.AGILITY]: 110,
@@ -90,7 +62,9 @@ export class FluoriteOperator extends Operator {
       secondaryAttributeType: FluoriteOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: FluoriteOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: FluoriteOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class FluoriteOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      1: { [StatType.AGILITY]: 10, [StatType.INTELLECT]: 10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

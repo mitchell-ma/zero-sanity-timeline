@@ -1,7 +1,14 @@
 import React from 'react';
-import { frameToPx, durationToPx, TOTAL_FRAMES } from '../utils/timeline';
+import { frameToPx, durationToPx, TOTAL_FRAMES, frameToPxDilated, durationToPxDilated, TimeDilationZone } from '../utils/timeline';
+import { TimeDependency } from '../consts/enums';
 import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
-import { ELEMENT_COLORS, ElementType, STATUS_ELEMENT } from '../consts/enums';
+import { ELEMENT_COLORS, ElementType, HitType, STATUS_ELEMENT } from '../consts/enums';
+
+function hasInflictionOrStatus(f: EventFrameMarker): boolean {
+  return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
+    f.applyForcedReaction || f.applyStatus || f.consumeStatus);
+}
+
 
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
   const el = f.applyArtsInfliction?.element
@@ -51,6 +58,8 @@ interface EventBlockProps {
   striped?: boolean;
   /** If set, shows a warning overlay on top of the event (e.g. combo outside trigger window). */
   comboWarning?: string | null;
+  /** Time dilation zones for visual stretching. */
+  dilationZones?: readonly TimeDilationZone[];
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -95,15 +104,42 @@ function EventBlock({
   skillElement,
   striped = false,
   comboWarning = null,
+  dilationZones,
 }: EventBlockProps) {
   const { id, startFrame, activationDuration, activeDuration, cooldownDuration, segments, animationDuration } = event;
+
+  // ── Dilation zone handling ─────────────────────────────────────────────────
+  // Time-stop events (combo, ultimate, dodge) have segments whose durationFrames
+  // already include the animation window. Pure-insertion zones (from any time-stop)
+  // within their range would double-count, so:
+  //   Position (fToPx): full zones minus own insertion → correct shift
+  //   Height   (dToPx): exclude ALL pure insertions → no double-count
+  // Non-time-stop events use full zones for both (foreign insertions = real stretch).
+  const isOwnTimeStop = animationDuration && animationDuration > 0 &&
+    (variant === 'ultimate' || event.isPerfectDodge || event.columnId === 'combo');
+
+  const positionZones = dilationZones && isOwnTimeStop
+    ? dilationZones.filter((z) => !(z.startFrame === startFrame && z.insertedFrames && z.durationFrames === 0))
+    : dilationZones;
+  const heightZones = dilationZones && isOwnTimeStop
+    ? dilationZones.filter((z) => !(z.insertedFrames && z.durationFrames === 0))
+    : dilationZones;
+
+  const hasPositionDilation = positionZones && positionZones.length > 0;
+  const hasHeightDilation = heightZones && heightZones.length > 0;
+  const fToPx = hasPositionDilation
+    ? (f: number, z: number) => frameToPxDilated(f, z, positionZones)
+    : frameToPx;
+  const dToPx = hasHeightDilation
+    ? (startF: number, dur: number, z: number, td?: TimeDependency) => durationToPxDilated(startF, dur, z, heightZones, td)
+    : (_startF: number, dur: number, z: number, _td?: TimeDependency) => durationToPx(dur, z);
 
   // ── Sequenced variant (multi-sequence with frame diamonds) ──────────────
   if (variant === 'sequenced' && segments && segments.length > 0) {
     const totalFrames = segments.reduce((sum, s) => sum + s.durationFrames, 0);
     const clampedEnd = Math.min(startFrame + totalFrames, TOTAL_FRAMES);
-    const topPx = frameToPx(startFrame, zoom);
-    const totalHeight = durationToPx(clampedEnd - startFrame, zoom);
+    const topPx = fToPx(startFrame, zoom);
+    const totalHeight = dToPx(startFrame, clampedEnd - startFrame, zoom, event.timeDependency);
 
     if (totalHeight <= 0) return null;
 
@@ -133,14 +169,15 @@ function EventBlock({
           const presentIndices = allFrameOffsets
             .map((o, i) => presentOffsets.has(o) ? i : -1)
             .filter((i) => i >= 0);
-          for (let j = 1; j < presentIndices.length; j++) {
-            if (presentIndices[j] !== presentIndices[j - 1] + 1) {
-              const missingNums = allFrameOffsets
-                .map((o, i) => presentOffsets.has(o) ? null : i + 1)
-                .filter((n) => n !== null);
-              warnings.push(`Sequence ${seg.label ?? si + 1}: non-contiguous frames (missing: ${missingNums.join(', ')})`);
-              break;
-            }
+          // Check contiguity: present frames must form a consecutive run starting at index 0
+          const isNonContiguous = presentIndices.length === 0 ||
+            presentIndices[0] !== 0 ||
+            presentIndices.some((idx, j) => j > 0 && idx !== presentIndices[j - 1] + 1);
+          if (isNonContiguous) {
+            const missingNums = allFrameOffsets
+              .map((o, i) => presentOffsets.has(o) ? null : i + 1)
+              .filter((n) => n !== null);
+            warnings.push(`Sequence ${seg.label ?? si + 1}: non-contiguous frames (missing: ${missingNums.join(', ')})`);
           }
         }
       }
@@ -155,11 +192,11 @@ function EventBlock({
       const seg = segments[i];
       const segStartFrame = startFrame + offsetFrames;
       const segEndFrame = Math.min(segStartFrame + seg.durationFrames, TOTAL_FRAMES);
-      const segH = durationToPx(segEndFrame - segStartFrame, zoom);
+      const segH = dToPx(segStartFrame, segEndFrame - segStartFrame, zoom, seg.timeDependency);
 
       if (segH <= 0) { offsetFrames += seg.durationFrames; continue; }
 
-      const segTopPx = durationToPx(offsetFrames, zoom);
+      const segTopPx = dToPx(startFrame, offsetFrames, zoom, seg.timeDependency);
       const isFirst = i === 0;
       const isLast = i === segments.length - 1;
       const alpha = 0.55 + (i % 2) * 0.15;
@@ -189,15 +226,16 @@ function EventBlock({
           )}
           {/* Frame diamonds */}
           {seg.frames?.map((f, fi) => {
-            const framePx = durationToPx(f.offsetFrame, zoom);
+            const framePx = dToPx(segStartFrame, f.offsetFrame, zoom);
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
+            const absFrame = segStartFrame + f.offsetFrame;
             const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(durationToPx(hoverFrameProp - (startFrame + offsetFrames + f.offsetFrame), zoom)) <= 4;
+              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
                 key={`f-${fi}`}
-                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.isFinalStrike ? ' event-frame-diamond--final-strike' : ''}`}
+                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.hitType === HitType.FINAL_STRIKE ? ' event-frame-diamond--final-strike' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}`}
                 style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
                 onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, i, fi); }}
                 onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, i, fi); }}
@@ -244,33 +282,34 @@ function EventBlock({
   }
 
   // ── Standard 3-phase layout (default / ultimate) ────────────────────────
-  const hasLinger   = activeDuration > 0;
+  const hasActive   = activeDuration > 0;
   const hasCooldown = cooldownDuration > 0;
 
-  const lingerStart = startFrame + activationDuration;
-  const coolStart   = lingerStart + activeDuration;
+  const activeStart = startFrame + activationDuration;
+  const coolStart   = activeStart + activeDuration;
   const totalEnd    = coolStart + cooldownDuration;
 
-  const clampedActiveEnd = Math.min(lingerStart, TOTAL_FRAMES);
-  const clampedLingerEnd = Math.min(coolStart,   TOTAL_FRAMES);
+  const clampedActivationEnd = Math.min(activeStart, TOTAL_FRAMES);
+  const clampedActiveEnd     = Math.min(coolStart,   TOTAL_FRAMES);
   const clampedCoolEnd   = Math.min(totalEnd,    TOTAL_FRAMES);
 
-  const activeH = durationToPx(clampedActiveEnd - startFrame, zoom);
-  const lingerH = hasLinger   ? durationToPx(clampedLingerEnd - lingerStart, zoom) : 0;
-  const coolH   = hasCooldown ? durationToPx(clampedCoolEnd   - coolStart,   zoom) : 0;
+  const activationH = dToPx(startFrame, clampedActivationEnd - startFrame, zoom, event.timeDependency);
+  const activePhaseH = hasActive ? dToPx(activeStart, clampedActiveEnd - activeStart, zoom) : 0;
+  const coolH   = hasCooldown ? dToPx(coolStart, clampedCoolEnd - coolStart, zoom, TimeDependency.REAL_TIME) : 0;
 
   // Animation sub-phase within activation (TIME_STOP portion)
-  const hasAnimation = variant === 'ultimate' && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration;
+  // Animation is a fixed real-time duration — never affected by any dilation
+  const hasAnimation = (variant === 'ultimate' || event.columnId === 'combo') && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration;
   const animH = hasAnimation ? durationToPx(animationDuration!, zoom) : 0;
-  const postAnimH = hasAnimation ? activeH - animH : 0;
+  const postAnimH = hasAnimation ? activationH - animH : 0;
 
-  const topPx      = frameToPx(startFrame, zoom);
-  const totalHeight = durationToPx(clampedCoolEnd - startFrame, zoom);
+  const topPx      = fToPx(startFrame, zoom);
+  const totalHeight = activationH + activePhaseH + coolH;
 
-  if (activeH <= 0 && lingerH <= 0) return null;
+  if (activationH <= 0 && activePhaseH <= 0) return null;
 
-  const activeRadius = !hasLinger && !hasCooldown ? '2px' : '2px 2px 0 0';
-  const lingerRadius = !hasCooldown ? '0 0 2px 2px' : '0';
+  const activationRadius = !hasActive && !hasCooldown ? '2px' : '2px 2px 0 0';
+  const activePhaseRadius = !hasCooldown ? '0 0 2px 2px' : '0';
 
   const wrapClass = `event-wrap${notDraggable ? ' event-wrap--static' : ''}${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
@@ -290,9 +329,9 @@ function EventBlock({
       onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
     >
       {/* Active / Activation segment */}
-      {activeH > 0 && hasAnimation ? (() => {
+      {activationH > 0 && hasAnimation ? (() => {
         // For ultimates with animation sub-phases but no active phase, render frame diamonds
-        const actFrames = !hasLinger && segments && segments.length > 0 ? segments[0].frames : undefined;
+        const actFrames = !hasActive && segments && segments.length > 0 ? segments[0].frames : undefined;
         return (
         <>
           {/* Animation sub-phase (TIME_STOP) — starts at top of activation */}
@@ -321,8 +360,8 @@ function EventBlock({
               background: hexAlpha(color, 0.55),
               border: `1px solid ${hexAlpha(color, 0.75)}`,
               borderTop: 'none',
-              borderBottom: hasLinger ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
-              borderRadius: hasLinger || hasCooldown ? '0' : '0 0 2px 2px',
+              borderBottom: hasActive ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
+              borderRadius: hasActive || hasCooldown ? '0' : '0 0 2px 2px',
             }}
             onMouseDown={(e) => onDragStart(e, id, startFrame)}
           >
@@ -332,16 +371,17 @@ function EventBlock({
             {actFrames?.map((f, fi) => {
               // offsetFrame is relative to ultimate start; subtract animation frames to position in post-anim segment
               const animFrames = animationDuration ?? 0;
-              const framePx = durationToPx(f.offsetFrame - animFrames, zoom);
+              const framePx = dToPx(startFrame, f.offsetFrame - animFrames, zoom);
               if (framePx < 0 || framePx > postAnimH) return null;
               const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
+              const absFrame = startFrame + f.offsetFrame;
               const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-                Math.abs(durationToPx(hoverFrameProp - (startFrame + f.offsetFrame), zoom)) <= 4;
+                Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
               const elColor = getFrameElementColor(f, skillElement);
               return (
                 <div
                   key={`f-${fi}`}
-                  className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
+                  className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}`}
                   style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
                   onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
                   onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
@@ -354,39 +394,40 @@ function EventBlock({
           </div>
         </>
         );
-      })() : activeH > 0 ? (() => {
+      })() : activationH > 0 ? (() => {
         // For ultimates with no active phase, render frame diamonds in the activation segment
-        const actFrames = variant === 'ultimate' && !hasLinger && segments && segments.length > 0 ? segments[0].frames : undefined;
+        const actFrames = variant === 'ultimate' && !hasActive && segments && segments.length > 0 ? segments[0].frames : undefined;
         return (
         <div
           className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
           style={variant === 'ultimate' ? {
             top: 0,
-            height: activeH,
+            height: activationH,
             background: hexAlpha(color, 0.55),
             border: `1px solid ${hexAlpha(color, 0.75)}`,
-            borderBottom: hasLinger ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
-            borderRadius: activeRadius,
+            borderBottom: hasActive ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
+            borderRadius: activationRadius,
           } : {
             top: 0,
-            height: activeH,
+            height: activationH,
             background: striped ? stripedBg(color) : hexAlpha(color, 0.80),
             border: `1px solid ${striped ? hexAlpha(color, 0.55) : hexAlpha(color, 0.95)}`,
             boxShadow: striped ? undefined : `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`,
-            borderRadius: activeRadius,
+            borderRadius: activationRadius,
           }}
           onMouseDown={(e) => onDragStart(e, id, startFrame)}
         >
-          {activeH > 14 && (
+          {activationH > 14 && (
             <span className="event-block-label" style={{ color: '#fff' }}>
               {variant === 'ultimate' ? 'Activation' : (label ?? 'ACT')}
             </span>
           )}
           {actFrames?.map((f, fi) => {
-            const framePx = durationToPx(f.offsetFrame, zoom);
+            const framePx = dToPx(startFrame, f.offsetFrame, zoom);
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
+            const absFrame = startFrame + f.offsetFrame;
             const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(durationToPx(hoverFrameProp - (startFrame + f.offsetFrame), zoom)) <= 4;
+              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
@@ -405,42 +446,43 @@ function EventBlock({
         );
       })() : null}
 
-      {/* Lingering / Active phase segment */}
-      {hasLinger && lingerH > 0 && (() => {
+      {/* Active phase segment */}
+      {hasActive && activePhaseH > 0 && (() => {
         const ultFrames = variant === 'ultimate' && segments && segments.length > 0 ? segments[0].frames : undefined;
         return (
         <div
           className={`event-segment${ultFrames ? ' event-segment--sequenced' : ''}`}
           style={variant === 'ultimate' ? {
-            top: activeH,
-            height: lingerH,
+            top: activationH,
+            height: activePhaseH,
             background: hexAlpha(color, 0.80),
             border: `1px solid ${hexAlpha(color, 0.95)}`,
             boxShadow: `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`,
             borderTop: `1px dashed ${hexAlpha(color, 0.95)}`,
             borderBottom: hasCooldown ? 'none' : `1px solid ${hexAlpha(color, 0.95)}`,
-            borderRadius: lingerRadius,
+            borderRadius: activePhaseRadius,
           } : {
-            top: activeH,
-            height: lingerH,
+            top: activationH,
+            height: activePhaseH,
             background: hexAlpha(color, 0.28),
             borderLeft:   `1px solid ${hexAlpha(color, 0.55)}`,
             borderRight:  `1px solid ${hexAlpha(color, 0.55)}`,
             borderTop:    `1px dashed ${hexAlpha(color, 0.55)}`,
             borderBottom: hasCooldown ? 'none' : `1px solid ${hexAlpha(color, 0.55)}`,
-            borderRadius: lingerRadius,
+            borderRadius: activePhaseRadius,
           }}
         >
-          {lingerH > 14 && (
+          {activePhaseH > 14 && (
             <span className="event-block-label" style={{ color: variant === 'ultimate' ? '#fff' : hexAlpha(color, 0.9) }}>
               {variant === 'ultimate' ? 'Active' : 'LNG'}
             </span>
           )}
           {ultFrames?.map((f, fi) => {
-            const framePx = durationToPx(f.offsetFrame, zoom);
+            const framePx = dToPx(activeStart, f.offsetFrame, zoom);
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
+            const absFrame = activeStart + f.offsetFrame;
             const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(durationToPx(hoverFrameProp - (startFrame + activationDuration + f.offsetFrame), zoom)) <= 4;
+              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
@@ -464,16 +506,16 @@ function EventBlock({
         <div
           className="event-segment"
           style={{
-            top: activeH + lingerH,
+            top: activationH + activePhaseH,
             height: coolH,
             background: stripedBg(color),
-            border: '1px solid rgba(80,100,140,0.3)',
+            border: '1px solid rgba(255,255,255,0.1)',
             borderTop: 'none',
             borderRadius: '0 0 2px 2px',
           }}
         >
           {coolH > 14 && (
-            <span className="event-block-label" style={{ color: 'rgba(120,150,180,0.7)' }}>Cooldown</span>
+            <span className="event-block-label" style={{ color: 'rgba(180,180,180,0.5)' }}>Cooldown</span>
           )}
         </div>
       )}

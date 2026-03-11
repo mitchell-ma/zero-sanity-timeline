@@ -6,47 +6,19 @@ import {
   Tremolo,
 } from "../combat-skills/estellaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 18,
     [StatType.AGILITY]: 21,
     [StatType.INTELLECT]: 17,
     [StatType.WILL]: 19,
   },
-  20: {
-    [StatType.ATTACK]: 107,
-    [StatType.STRENGTH]: 38,
-    [StatType.AGILITY]: 47,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 41,
-  },
-  40: {
-    [StatType.ATTACK]: 164,
-    [StatType.STRENGTH]: 59,
-    [StatType.AGILITY]: 75,
-    [StatType.INTELLECT]: 50,
-    [StatType.WILL]: 65,
-  },
-  60: {
-    [StatType.ATTACK]: 217,
-    [StatType.STRENGTH]: 78,
-    [StatType.AGILITY]: 101,
-    [StatType.INTELLECT]: 66,
-    [StatType.WILL]: 87,
-  },
-  80: {
-    [StatType.ATTACK]: 270,
-    [StatType.STRENGTH]: 98,
-    [StatType.AGILITY]: 127,
-    [StatType.INTELLECT]: 82,
-    [StatType.WILL]: 109,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 297,
     [StatType.STRENGTH]: 108,
     [StatType.AGILITY]: 140,
@@ -90,7 +62,9 @@ export class EstellaOperator extends Operator {
       secondaryAttributeType: EstellaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EstellaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EstellaOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Stalwart',
+      attributeIncreaseAttribute: StatType.WILL,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class EstellaOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      4: { [StatType.WILL]: 10, [StatType.STRENGTH]: 10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

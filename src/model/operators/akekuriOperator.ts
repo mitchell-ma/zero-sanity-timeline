@@ -6,48 +6,20 @@ import {
   SquadOnMe,
 } from "../combat-skills/akekuriSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
-/** Akekuri's base attribute scores by level (Elite 0–Max). */
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+/** Akekuri's base attribute scores at lv1 and lv90. */
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 30,
     [StatType.STRENGTH]: 13,
     [StatType.AGILITY]: 15,
     [StatType.INTELLECT]: 12,
     [StatType.WILL]: 9,
   },
-  20: {
-    [StatType.ATTACK]: 92,
-    [StatType.STRENGTH]: 34,
-    [StatType.AGILITY]: 42,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 30,
-  },
-  40: {
-    [StatType.ATTACK]: 157,
-    [StatType.STRENGTH]: 55,
-    [StatType.AGILITY]: 70,
-    [StatType.INTELLECT]: 53,
-    [StatType.WILL]: 52,
-  },
-  60: {
-    [StatType.ATTACK]: 222,
-    [StatType.STRENGTH]: 77,
-    [StatType.AGILITY]: 98,
-    [StatType.INTELLECT]: 75,
-    [StatType.WILL]: 74,
-  },
-  80: {
-    [StatType.ATTACK]: 287,
-    [StatType.STRENGTH]: 99,
-    [StatType.AGILITY]: 126,
-    [StatType.INTELLECT]: 96,
-    [StatType.WILL]: 96,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 319,
     [StatType.STRENGTH]: 110,
     [StatType.AGILITY]: 140,
@@ -91,7 +63,9 @@ export class AkekuriOperator extends Operator {
       secondaryAttributeType: AkekuriOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AkekuriOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AkekuriOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -111,6 +85,12 @@ export class AkekuriOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.AGILITY]: 10, [StatType.INTELLECT]: 10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

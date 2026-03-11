@@ -3,15 +3,6 @@ import { TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/en
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
-import {
-  Publisher,
-  Subscriber,
-  TriggerKey,
-  triggerKey,
-  subscribe as pubsubSubscribe,
-  unsubscribeAllSubscribers,
-  disconnectAllPublishers,
-} from '../pubsub';
 import { CommonSlotController } from '../slot/commonSlotController';
 
 export interface ActivationWindow {
@@ -28,34 +19,9 @@ export type CombatLoadoutListener = (windows: WindowsMap) => void;
 
 const NUM_SLOTS = 4;
 
-/** Lightweight Publisher proxy for a slot's skills. */
-class SlotPublisher implements Publisher {
-  readonly subscribers = new Map<TriggerKey, Subscriber[]>();
-
-  publish(key: TriggerKey): void {
-    const subs = this.subscribers.get(key);
-    if (subs) {
-      for (const sub of subs) {
-        sub.onPublish(key, this);
-      }
-    }
-  }
-}
-
-/** Lightweight Subscriber proxy for a slot's combo skill. */
-class SlotSubscriber implements Subscriber {
-  readonly publishers = new Map<TriggerKey, Publisher[]>();
-
-  onPublish(_key: TriggerKey, _publisher: Publisher): void {
-    // No-op — window computation is batch-based, not event-driven
-  }
-}
-
 interface SlotWiring {
   operatorId: string;
   capability: TriggerCapability;
-  publisher: SlotPublisher;
-  subscriber: SlotSubscriber;
 }
 
 /**
@@ -126,84 +92,17 @@ export class CombatLoadout {
   }
 
   setOperator(slotIndex: number, operator: Operator | null): void {
-    // Clean up old wiring
-    const old = this.slots[slotIndex];
-    if (old) {
-      unsubscribeAllSubscribers(old.publisher);
-      disconnectAllPublishers(old.subscriber);
-    }
-
     if (!operator) {
       this.slots[slotIndex] = null;
     } else {
       const capability = operator.triggerCapability;
-      if (!capability) {
-        this.slots[slotIndex] = null;
-      } else {
-        const publisher = new SlotPublisher();
-        const subscriber = new SlotSubscriber();
-        this.slots[slotIndex] = { operatorId: operator.id, capability, publisher, subscriber };
-      }
+      this.slots[slotIndex] = capability
+        ? { operatorId: operator.id, capability }
+        : null;
     }
-
-    // Re-wire all pubsub relationships
-    this.wireSubscriptions();
 
     // Recompute from cached events
     this.recomputeWindows(this.cachedEvents);
-  }
-
-  /** Re-wire all pubsub subscriptions between slots. */
-  private wireSubscriptions(): void {
-    // Clear all existing subscriptions first
-    for (const slot of this.slots) {
-      if (slot) {
-        unsubscribeAllSubscribers(slot.publisher);
-        disconnectAllPublishers(slot.subscriber);
-      }
-    }
-
-    // For each slot that has combo requirements, find all slots that publish matching triggers
-    for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
-      const subSlot = this.slots[subIdx];
-      if (!subSlot) continue;
-
-      const allPublished = new Set<TriggerConditionType>();
-      for (let pubIdx = 0; pubIdx < NUM_SLOTS; pubIdx++) {
-        if (pubIdx === subIdx) continue;
-        const pubSlot = this.slots[pubIdx];
-        if (!pubSlot) continue;
-
-        for (const triggers of Object.values(pubSlot.capability.publishesTriggers)) {
-          if (triggers) triggers.forEach((t) => allPublished.add(t));
-        }
-      }
-
-      for (const required of subSlot.capability.comboRequires) {
-        // Check if any published trigger matches (directly or via parent)
-        let anyMatch = false;
-        allPublished.forEach((t) => {
-          if (t === required || TRIGGER_CONDITION_PARENTS[t] === required) anyMatch = true;
-        });
-        if (!anyMatch) continue;
-        const key = triggerKey(required);
-        for (let pubIdx = 0; pubIdx < NUM_SLOTS; pubIdx++) {
-          if (pubIdx === subIdx) continue;
-          const pubSlot = this.slots[pubIdx];
-          if (!pubSlot) continue;
-          const publishes = pubSlot.capability.publishesTriggers;
-          const hasTrigger = Object.keys(publishes).some((k) => {
-            const triggers = publishes[k];
-            if (!triggers) return false;
-            return triggers.includes(required) ||
-              triggers.some((t) => TRIGGER_CONDITION_PARENTS[t] === required);
-          });
-          if (hasTrigger) {
-            pubsubSubscribe(key, pubSlot.publisher, subSlot.subscriber);
-          }
-        }
-      }
-    }
   }
 
   recomputeWindows(events: TimelineEvent[]): void {
@@ -312,6 +211,10 @@ export class CombatLoadout {
       const slotId = this.slotIds[subIdx];
       if (!slotId) continue;
 
+      // Skip self-trigger: don't let an operator's own derived events create
+      // trigger windows for its own combo (prevents feedback loop on drag).
+      if (event.sourceOwnerId === slotId) continue;
+
       // Check comboForbidsActiveColumns — skip if any forbidden event is active
       const forbids = subSlot.capability.comboForbidsActiveColumns;
       if (forbids && forbids.length > 0 && hasActiveEventInColumns(allEvents, forbids, triggerFrame)) {
@@ -358,7 +261,7 @@ export class CombatLoadout {
  */
 function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], frame: number): boolean {
   for (const ev of events) {
-    if (!columnIds.includes(ev.columnId)) continue;
+    if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.name)) continue;
     const totalDuration = ev.segments
       ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
       : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;

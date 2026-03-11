@@ -6,7 +6,7 @@
  * The active session ID lives in `zst-active-session`.
  */
 
-import { SheetData } from './sheetStorage';
+import { SheetData, MultiSessionBundle } from './sheetStorage';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -226,6 +226,80 @@ export function moveNode(tree: SessionTree, nodeId: string, newParentId: string 
       const ri = reindexed.find((r) => r.id === n.id);
       return ri ?? n;
     }),
+  };
+}
+
+// ─── Tree traversal ─────────────────────────────────────────────────────────
+
+/** Depth-first traversal of the tree in render order, returning nodes with their depth. */
+export function flattenTreeNodes(tree: SessionTree, parentId: string | null = null, depth: number = 0): { node: SessionNode; depth: number }[] {
+  const result: { node: SessionNode; depth: number }[] = [];
+  const children = getChildrenOf(tree, parentId);
+  for (const node of children) {
+    result.push({ node, depth });
+    if (node.type === 'folder') {
+      result.push(...flattenTreeNodes(tree, node.id, depth + 1));
+    }
+  }
+  return result;
+}
+
+// ─── Bundle merge ───────────────────────────────────────────────────────────
+
+/**
+ * Merge an imported bundle into the existing tree.
+ * All imported nodes get fresh IDs. Names are deduplicated globally.
+ * Returns the merged tree and a map of newId → SheetData for persistence.
+ */
+export function mergeBundle(
+  existingTree: SessionTree,
+  bundle: MultiSessionBundle,
+): { tree: SessionTree; sessionData: Record<string, SheetData> } {
+  const oldToNewId = new Map<string, string>();
+  const newNodes: SessionNode[] = [];
+  const sessionData: Record<string, SheetData> = {};
+
+  // Generate new IDs for all imported nodes
+  for (const node of bundle.tree.nodes) {
+    oldToNewId.set(node.id, generateId());
+  }
+
+  // Build a working tree for uniqueName checks (starts as existing tree, grows as we add)
+  let workingTree: SessionTree = { nodes: [...existingTree.nodes] };
+
+  // Process nodes in parent-first order so names are resolved correctly
+  const ordered = flattenTreeNodes(bundle.tree);
+  for (const { node } of ordered) {
+    const newId = oldToNewId.get(node.id)!;
+    // Remap parentId: if it was a root in the bundle, place at existing root.
+    // If it had a parent in the bundle, use the remapped ID.
+    const newParentId = node.parentId ? (oldToNewId.get(node.parentId) ?? null) : null;
+    const dedupedName = uniqueName(workingTree, node.name, newParentId);
+
+    // Compute order among new parent's children
+    const siblings = getChildrenOf(workingTree, newParentId);
+    const order = siblings.length > 0 ? Math.max(...siblings.map((s) => s.order)) + 1 : 0;
+
+    const newNode: SessionNode = {
+      id: newId,
+      type: node.type,
+      name: dedupedName,
+      parentId: newParentId,
+      order,
+      ...(node.collapsed !== undefined ? { collapsed: node.collapsed } : {}),
+    };
+    newNodes.push(newNode);
+    workingTree = { nodes: [...workingTree.nodes, newNode] };
+
+    // Map session data with new ID
+    if (node.type === 'session' && bundle.sessions[node.id]) {
+      sessionData[newId] = bundle.sessions[node.id];
+    }
+  }
+
+  return {
+    tree: { nodes: [...existingTree.nodes, ...newNodes] },
+    sessionData,
   };
 }
 

@@ -21,6 +21,11 @@ export const enum ColumnLabel {
   PHYSICAL_INFLICTION  = 'PHYSICAL INFLICTION',
   PHYSICAL_STATUS      = 'PHYSICAL STATUS',
   SUSCEPTIBILITY       = 'SUSCEPTIBILITY',
+  FRAGILITY            = 'FRAGILITY',
+  WEAPON_BUFF          = 'WEAPON',
+  GEAR_BUFF            = 'GEAR',
+  TACTICAL             = 'TACTICAL',
+  SCORCHING_FANGS      = 'SCORCHING FANGS',
 }
 
 export const STATUS_LABELS: Record<StatusType, string> = {
@@ -31,11 +36,13 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.MELTING_FLAME]:   'Melting Flame',
   [StatusType.THUNDERLANCE]:    'Thunderlance',
   [StatusType.SQUAD_BUFF]:      'Squad Buff',
+  [StatusType.SCORCHING_FANGS]: 'Scorching Fangs',
   [StatusType.LINK]:            'Link',
   [StatusType.ARTS_AMP]:        'Arts Amp',
   [StatusType.SHIELD]:          'Shield',
   [StatusType.FOCUS]:           'Focus',
   [StatusType.SUSCEPTIBILITY]:  'Susceptibility',
+  [StatusType.FRAGILITY]:       'Fragility',
   [StatusType.LIFT]:            'Lift',
   [StatusType.KNOCK_DOWN]:      'Knock Down',
   [StatusType.CRUSH]:           'Crush',
@@ -45,6 +52,9 @@ export const STATUS_LABELS: Record<StatusType, string> = {
 // ── Combat skill display names ──────────────────────────────────────────────
 
 export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
+  // Common
+  [CombatSkillsType.DASH]:                                'Dash',
+
   // Laevatain
   [CombatSkillsType.FLAMING_CINDERS]:                     'Flaming Cinders',
   [CombatSkillsType.FLAMING_CINDERS_ENHANCED]:            'Flaming Cinders (Enhanced)',
@@ -193,6 +203,8 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   // Team statuses
   ARTS_AMP:             'Arts Amp',
   SHIELD:               'Shield',
+  // Enemy debuffs
+  FRAGILITY:            'Fragility',
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────
@@ -258,6 +270,13 @@ export const TRIGGER_CONDITION_LABELS: Record<string, string> = {
   [TriggerConditionType.OPERATOR_ATTACKED]:               'Operator Attacked',
   [TriggerConditionType.STAGGER]:                        'Stagger',
   [TriggerConditionType.STAGGER_NODE]:                   'Stagger Node',
+  [TriggerConditionType.CONSUME_VULNERABILITY]:          'Consume Vulnerability',
+  [TriggerConditionType.APPLY_ARTS_REACTION]:            'Apply Arts Reaction',
+  [TriggerConditionType.CONSUME_ARTS_REACTION]:          'Consume Arts Reaction',
+  [TriggerConditionType.APPLY_LIFTED]:                   'Apply Lifted',
+  [TriggerConditionType.APPLY_KNOCKED_DOWN]:             'Apply Knock Down',
+  [TriggerConditionType.APPLY_ARTS_BURST]:               'Apply Arts Burst',
+  [TriggerConditionType.CONSUME_CORROSION]:              'Consume Corrosion',
 };
 
 export const PHYSICAL_STATUS_MICRO_COLUMNS = [

@@ -6,47 +6,19 @@ import {
   TextbookAssault,
 } from "../combat-skills/catcherSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 4;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 54,
     [StatType.STRENGTH]: 22,
     [StatType.AGILITY]: 15,
     [StatType.INTELLECT]: 16,
     [StatType.WILL]: 21,
   },
-  20: {
-    [StatType.ATTACK]: 104,
-    [StatType.STRENGTH]: 48,
-    [StatType.AGILITY]: 29,
-    [StatType.INTELLECT]: 30,
-    [StatType.WILL]: 46,
-  },
-  40: {
-    [StatType.ATTACK]: 158,
-    [StatType.STRENGTH]: 77,
-    [StatType.AGILITY]: 44,
-    [StatType.INTELLECT]: 45,
-    [StatType.WILL]: 72,
-  },
-  60: {
-    [StatType.ATTACK]: 209,
-    [StatType.STRENGTH]: 104,
-    [StatType.AGILITY]: 57,
-    [StatType.INTELLECT]: 59,
-    [StatType.WILL]: 97,
-  },
-  80: {
-    [StatType.ATTACK]: 260,
-    [StatType.STRENGTH]: 131,
-    [StatType.AGILITY]: 71,
-    [StatType.INTELLECT]: 73,
-    [StatType.WILL]: 122,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 285,
     [StatType.STRENGTH]: 145,
     [StatType.AGILITY]: 78,
@@ -90,7 +62,9 @@ export class CatcherOperator extends Operator {
       secondaryAttributeType: CatcherOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: CatcherOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: CatcherOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class CatcherOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.WILL]: 10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

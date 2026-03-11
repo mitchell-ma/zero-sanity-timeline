@@ -1,8 +1,49 @@
 import { TimelineEvent, FrameAbsorptionMarker } from '../consts/viewTypes';
-import { StatusType, TargetType } from '../consts/enums';
+import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../view/InformationPane';
+import { CombatSkillsType, StatusType, TargetType } from '../consts/enums';
 import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../model/channels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TOTAL_FRAMES } from './timeline';
+import { TOTAL_FRAMES, absoluteGameFrame } from './timeline';
+
+// ── Potential-based effects ──────────────────────────────────────────────────
+
+/** Map of ultimate skill names → combo cooldown reset at potential threshold. */
+const ULTIMATE_RESETS_COMBO: Record<string, number> = {
+  [CombatSkillsType.WOLVEN_FURY]: 5, // Wulfgard P5: Natural Predator
+};
+
+/**
+ * Applies potential-gated effects that modify operator events:
+ * - Combo cooldown reset on ultimate cast (e.g. Wulfgard P5)
+ */
+function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
+  const ultimates = events.filter(
+    (ev) => ev.columnId === 'ultimate' && ULTIMATE_RESETS_COMBO[ev.name] != null
+      && (ev.operatorPotential ?? 0) >= ULTIMATE_RESETS_COMBO[ev.name],
+  );
+  if (ultimates.length === 0) return events;
+
+  const modified = new Map<string, TimelineEvent>();
+  for (const ult of ultimates) {
+    const ultFrame = ult.startFrame;
+    for (const ev of events) {
+      if (ev.ownerId !== ult.ownerId || ev.columnId !== 'combo') continue;
+      const activeEnd = ev.startFrame + ev.activationDuration + ev.activeDuration;
+      const cooldownEnd = activeEnd + ev.cooldownDuration;
+      // If the combo is in its cooldown phase when the ultimate is cast, reset it
+      if (ultFrame >= activeEnd && ultFrame < cooldownEnd) {
+        modified.set(ev.id, {
+          ...ev,
+          cooldownDuration: Math.max(0, ultFrame - activeEnd),
+        });
+      }
+    }
+  }
+
+  if (modified.size === 0) return events;
+  return events.map((ev) => modified.get(ev.id) ?? ev);
+}
+
 
 /** Maps forced reaction name → reaction columnId. */
 const FORCED_REACTION_COLUMN: Record<string, string> = {
@@ -26,8 +67,6 @@ const FORCED_REACTION_DURATION: Record<string, number> = {
 /** Default active duration for derived infliction events (20s at 120fps). */
 const INFLICTION_DURATION = 2400;
 
-/** Number of micro-column slots for infliction stacking. */
-const INFLICTION_SLOTS = 4;
 
 /** Breach durations by status level (frames at 120fps). */
 const BREACH_DURATION: Record<number, number> = {
@@ -72,15 +111,23 @@ interface StatusSource {
  * 3. Same-element infliction refresh: slots 0–2 get durations extended to the
  *    newest stack's end time. Slot 3 shows sequential bars.
  */
-export function processInflictionEvents(rawEvents: TimelineEvent[]): TimelineEvent[] {
-  const withDerivedInflictions = deriveFrameInflictions(rawEvents);
-  const withConsumedOperatorStatuses = consumeOperatorStatuses(withDerivedInflictions);
+export function processInflictionEvents(rawEvents: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
+  const withPotentialEffects = applyPotentialEffects(rawEvents);
+  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats);
+  // Refresh same-element stacks BEFORE absorptions/reactions so that
+  // overlapping stacks get their durations extended using the original
+  // infliction duration. Later steps (absorption, reaction) can then
+  // clamp the already-extended events as needed.
+  const withSameElementRefresh = applySameElementRefresh(withDerivedInflictions);
+  const withPhysicalRefresh = applyPhysicalInflictionRefresh(withSameElementRefresh);
+  const withConsumedOperatorStatuses = consumeOperatorStatuses(withPhysicalRefresh);
   const withConsumedTeam = consumeTeamStatuses(withConsumedOperatorStatuses);
   const withAbsorptions = applyAbsorptions(withConsumedTeam);
   const withReactions = deriveReactions(withAbsorptions);
-  const mergedReactions = mergeReactions(withReactions);
-  const withPhysicalRefresh = applyPhysicalInflictionRefresh(mergedReactions);
-  return applySameElementRefresh(withPhysicalRefresh);
+  const withMergedReactions = mergeReactions(withReactions);
+  const withScorchingFangs = deriveScorchingFangs(withMergedReactions, loadoutStats);
+  const withSpReturnGaugeReduction = applySpReturnGaugeReduction(withScorchingFangs);
+  return withSpReturnGaugeReduction;
 }
 
 /** Skill column IDs that consume team statuses (Link) when cast. */
@@ -156,7 +203,7 @@ function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
           const frame = seg.frames[fi];
           if (frame.consumeStatus) {
             consumePoints.push({
-              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
               ownerId: event.ownerId,
               status: frame.consumeStatus,
               source: { ownerId: event.ownerId, skillName: event.name },
@@ -210,7 +257,29 @@ function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
  * Scans sequenced operator events for frames with `applyArtsInfliction` markers
  * and generates corresponding enemy infliction events at the correct absolute frame.
  */
-function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
+/** Resolves per-level susceptibility array to a scalar using the source operator's skill level. */
+function resolveSusceptibility(
+  raw: Record<string, readonly number[]>,
+  sourceColumnId: string,
+  sourceOwnerId: string,
+  loadoutStats?: Record<string, LoadoutStats>,
+): Record<string, number> {
+  const stats = loadoutStats?.[sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+  let skillLevel: number;
+  switch (sourceColumnId) {
+    case 'combo': skillLevel = stats.comboSkillLevel; break;
+    case 'ultimate': skillLevel = stats.ultimateLevel; break;
+    default: skillLevel = stats.battleSkillLevel; break;
+  }
+  const idx = Math.max(0, Math.min(skillLevel - 1, 11)); // 1-indexed level → 0-indexed array
+  const resolved: Record<string, number> = {};
+  for (const [element, table] of Object.entries(raw)) {
+    resolved[element] = table[Math.min(idx, table.length - 1)];
+  }
+  return resolved;
+}
+
+function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
@@ -222,11 +291,13 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          const absoluteFrame = event.startFrame + cumulativeOffset + frame.offsetFrame;
+          const absoluteFrame = absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration);
 
           if (frame.applyArtsInfliction) {
             const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
-            if (columnId) {
+            // Skip if this combo event's trigger column already handles this element
+            // (the comboTriggerColumnId loop below generates those)
+            if (columnId && columnId !== event.comboTriggerColumnId) {
               derived.push({
                 id: `${event.id}-inflict-${si}-${fi}`,
                 name: columnId,
@@ -288,10 +359,10 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 });
               }
             } else if (frame.applyStatus.target === TargetType.ENEMY) {
-              // Enemy-targeted status (e.g. Focus)
+              // Enemy-targeted status (e.g. Focus → Susceptibility column)
               derived.push({
                 id: `${event.id}-status-${si}-${fi}`,
-                name: frame.applyStatus.status,
+                name: frame.applyStatus.eventName ?? frame.applyStatus.status,
                 ownerId: 'enemy',
                 columnId: frame.applyStatus.status,
                 startFrame: absoluteFrame,
@@ -300,7 +371,9 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
                 cooldownDuration: 0,
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
-                ...(frame.applyStatus.susceptibility && { susceptibility: frame.applyStatus.susceptibility }),
+                ...(frame.applyStatus.susceptibility && {
+                  susceptibility: resolveSusceptibility(frame.applyStatus.susceptibility, event.columnId, event.ownerId, loadoutStats),
+                }),
               });
             }
           }
@@ -359,7 +432,7 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          const absoluteFrame = event.startFrame + cumulativeOffset + frame.offsetFrame;
+          const absoluteFrame = absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration);
           const triggerCol = event.comboTriggerColumnId;
 
           if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
@@ -394,6 +467,24 @@ function deriveFrameInflictions(events: TimelineEvent[]): TimelineEvent[] {
         }
       }
       cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  // Perfect dodge dash events → SP recovery (7.5 SP)
+  for (const event of events) {
+    if (event.columnId === 'dash' && event.isPerfectDodge) {
+      derived.push({
+        id: `${event.id}-sp-dodge`,
+        name: 'sp-recovery',
+        ownerId: COMMON_OWNER_ID,
+        columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+        startFrame: event.startFrame,
+        activationDuration: -7.5,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: event.ownerId,
+        sourceSkillName: event.name,
+      });
     }
   }
 
@@ -465,7 +556,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
           const frame = seg.frames[fi];
           if (frame.absorbArtsInfliction) {
             absorptions.push({
-              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
               ownerId: event.ownerId,
               marker: frame.absorbArtsInfliction,
               eventId: event.id,
@@ -476,7 +567,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
           }
           if (frame.consumeArtsInfliction) {
             consumptions.push({
-              absoluteFrame: event.startFrame + cumulativeOffset + frame.offsetFrame,
+              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
               element: frame.consumeArtsInfliction.element,
               stacks: frame.consumeArtsInfliction.stacks,
               source: { ownerId: event.ownerId, skillName: event.name },
@@ -612,13 +703,13 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
       const available = Math.max(0, clamp.frame - ev.startFrame);
       const clampedActive = Math.min(ev.activationDuration, available);
       const remAfterActive = available - clampedActive;
-      const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
-      const remAfterLinger = remAfterActive - clampedLinger;
-      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
+      const clampedActiveDur = Math.min(ev.activeDuration, remAfterActive);
+      const remAfterActiveDur = remAfterActive - clampedActiveDur;
+      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterActiveDur);
       result.push({
         ...ev,
         activationDuration: clampedActive,
-        activeDuration: clampedLinger,
+        activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
         eventStatus: 'consumed',
         eventStatusOwnerId: clamp.source.ownerId,
@@ -658,6 +749,8 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   for (let i = 0; i < inflictions.length; i++) {
     const incoming = inflictions[i];
     if (removedIds.has(incoming.id)) continue;
+    // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
+    if (incoming.eventStatus === 'consumed') continue;
 
     // Find active inflictions of a DIFFERENT element at incoming's start frame
     const activeOther: TimelineEvent[] = [];
@@ -665,6 +758,8 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       const prev = inflictions[j];
       if (removedIds.has(prev.id)) continue;
       if (prev.columnId === incoming.columnId) continue;
+      // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
+      if (prev.eventStatus === 'consumed') continue;
 
       // Use clamped end if already clamped by a prior reaction
       const clamp = clampMap.get(prev.id);
@@ -716,13 +811,13 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       const available = Math.max(0, clamp.frame - ev.startFrame);
       const clampedActive = Math.min(ev.activationDuration, available);
       const remAfterActive = available - clampedActive;
-      const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
-      const remAfterLinger = remAfterActive - clampedLinger;
-      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
+      const clampedActiveDur = Math.min(ev.activeDuration, remAfterActive);
+      const remAfterActiveDur = remAfterActive - clampedActiveDur;
+      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterActiveDur);
       result.push({
         ...ev,
         activationDuration: clampedActive,
-        activeDuration: clampedLinger,
+        activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
         eventStatus: 'consumed',
         eventStatusOwnerId: clamp.source.ownerId,
@@ -791,7 +886,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 
 /**
  * Processes physical infliction (Vulnerable) stacking with the same
- * slot refresh/clamp logic as arts inflictions.
+ * refresh logic as arts inflictions.
  */
 function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const physInflictionsByColumn = new Map<string, TimelineEvent[]>();
@@ -810,79 +905,26 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
   physInflictionsByColumn.forEach((group) => {
     if (group.length <= 1) return;
     const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
-    const lastSlot = INFLICTION_SLOTS - 1;
 
     const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
     for (let i = sorted.length - 2; i >= 0; i--) {
-      const ev = sorted[i];
-      let maxEnd = ev.startFrame + extendedActive[i];
-      for (let j = i + 1; j < sorted.length; j++) {
-        if (sorted[j].startFrame > maxEnd) break;
-        const jEnd = sorted[j].startFrame + extendedActive[j];
-        if (jEnd > maxEnd) maxEnd = jEnd;
+      const nextEnd = sorted[i + 1].startFrame + extendedActive[i + 1];
+      const currentEnd = sorted[i].startFrame + extendedActive[i];
+      if (nextEnd > currentEnd) {
+        extendedActive[i] = nextEnd - sorted[i].startFrame;
       }
-      extendedActive[i] = maxEnd - ev.startFrame;
-    }
-
-    const slotEndFrames = new Array(INFLICTION_SLOTS).fill(-1);
-    const slotAssignment: number[] = [];
-
-    for (let i = 0; i < sorted.length; i++) {
-      const ev = sorted[i];
-      const endFrame = ev.startFrame + extendedActive[i];
-      let assigned = -1;
-      for (let s = 0; s < INFLICTION_SLOTS; s++) {
-        if (slotEndFrames[s] <= ev.startFrame) {
-          assigned = s;
-          break;
-        }
-      }
-      if (assigned < 0) assigned = lastSlot;
-      slotEndFrames[assigned] = endFrame;
-      slotAssignment.push(assigned);
     }
 
     for (let i = 0; i < sorted.length; i++) {
       const ev = sorted[i];
-      const slot = slotAssignment[i];
-
-      if (slot < lastSlot) {
-        if (extendedActive[i] !== ev.activationDuration) {
-          processedMap.set(ev.id, { ...ev, activationDuration: extendedActive[i] });
-        }
-      }
-    }
-
-    const lastSlotIndices: number[] = [];
-    for (let i = 0; i < sorted.length; i++) {
-      if (slotAssignment[i] === lastSlot) lastSlotIndices.push(i);
-    }
-
-    for (let k = 0; k < lastSlotIndices.length - 1; k++) {
-      const idx = lastSlotIndices[k];
-      const nextIdx = lastSlotIndices[k + 1];
-      const ev = sorted[idx];
-      const nextEv = sorted[nextIdx];
-      const nextStart = nextEv.startFrame;
-      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
-      const originalEnd = ev.startFrame + totalDur;
-
-      if (nextStart < originalEnd) {
-        const available = Math.max(0, nextStart - ev.startFrame);
-        const clampedActive = Math.min(ev.activationDuration, available);
-        const remAfterActive = available - clampedActive;
-        const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
-        const remAfterLinger = remAfterActive - clampedLinger;
-        const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
-
+      if (extendedActive[i] !== ev.activationDuration) {
+        const next = sorted[i + 1];
         processedMap.set(ev.id, {
-          ...(processedMap.get(ev.id) ?? ev),
-          activationDuration: clampedActive,
-          activeDuration: clampedLinger,
-          cooldownDuration: clampedCooldown,
-          eventStatus: 'refreshed' as const,
-          eventStatusOwnerId: nextEv.sourceOwnerId,
-          eventStatusSkillName: nextEv.sourceSkillName,
+          ...ev,
+          activationDuration: extendedActive[i],
+          eventStatus: 'extended' as const,
+          eventStatusOwnerId: next.sourceOwnerId,
+          eventStatusSkillName: next.sourceSkillName,
         });
       }
     }
@@ -894,12 +936,10 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
 
 /**
  * Processes same-element infliction stacking:
- * - Extends slots 0–2 durations when later stacks refresh them
- * - Clamps slot 3 events sequentially (previous ends where next begins)
- *
- * Uses iterative refinement: extend durations first, then assign slots using
- * the extended durations so the slot assignment matches CombatPlanner's greedy
- * bin-packing on the processed output.
+ * Each event's activationDuration is extended to the latest end frame
+ * reachable through a chain of overlapping subsequent same-element stacks.
+ * This models the game mechanic where applying a new infliction refreshes
+ * the timer on all existing stacks of the same element.
  */
 function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
@@ -916,91 +956,33 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const processedMap = new Map<string, TimelineEvent>();
 
   inflictionsByColumn.forEach((group) => {
-    if (group.length <= 1) return; // nothing to refresh with a single event
+    if (group.length <= 1) return;
     const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
-    const lastSlot = INFLICTION_SLOTS - 1;
 
-    // Step 1: Compute the maximum extended duration for each event assuming
-    // all events in slots 0–2 get fully extended. We extend each event's
-    // activationDuration to the latest end frame reachable through a chain of
-    // overlapping subsequent stacks.
+    // Each earlier stack extends to the next stack's end time (backward pass
+    // so later extensions propagate). This models the game mechanic where
+    // applying a new same-element infliction refreshes all existing stacks.
     const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
     for (let i = sorted.length - 2; i >= 0; i--) {
-      const ev = sorted[i];
-      // Walk forward to find the latest chained end
-      let maxEnd = ev.startFrame + extendedActive[i];
-      for (let j = i + 1; j < sorted.length; j++) {
-        if (sorted[j].startFrame > maxEnd) break;
-        const jEnd = sorted[j].startFrame + extendedActive[j];
-        if (jEnd > maxEnd) maxEnd = jEnd;
-      }
-      extendedActive[i] = maxEnd - ev.startFrame;
-    }
-
-    // Step 2: Assign slots using extended durations (matching CombatPlanner's
-    // greedy algorithm on the processed output).
-    const slotEndFrames = new Array(INFLICTION_SLOTS).fill(-1);
-    const slotAssignment: number[] = [];
-
-    for (let i = 0; i < sorted.length; i++) {
-      const ev = sorted[i];
-      const endFrame = ev.startFrame + extendedActive[i];
-      let assigned = -1;
-      for (let s = 0; s < INFLICTION_SLOTS; s++) {
-        if (slotEndFrames[s] <= ev.startFrame) {
-          assigned = s;
-          break;
-        }
-      }
-      if (assigned < 0) assigned = lastSlot; // overflow to last slot
-      slotEndFrames[assigned] = endFrame;
-      slotAssignment.push(assigned);
-    }
-
-    // Step 3: Apply refresh to slots 0–(lastSlot-1), clamp sequential on lastSlot
-    for (let i = 0; i < sorted.length; i++) {
-      const ev = sorted[i];
-      const slot = slotAssignment[i];
-
-      if (slot < lastSlot) {
-        // Extend duration
-        if (extendedActive[i] !== ev.activationDuration) {
-          processedMap.set(ev.id, { ...ev, activationDuration: extendedActive[i] });
-        }
+      const nextEnd = sorted[i + 1].startFrame + extendedActive[i + 1];
+      const currentEnd = sorted[i].startFrame + extendedActive[i];
+      if (nextEnd > currentEnd) {
+        extendedActive[i] = nextEnd - sorted[i].startFrame;
       }
     }
 
-    // Clamp last-slot events: each ends when the next last-slot event starts
-    const lastSlotIndices: number[] = [];
+    // Apply extensions — mark with 'extended' status and attribute to the
+    // next stack that caused the refresh.
     for (let i = 0; i < sorted.length; i++) {
-      if (slotAssignment[i] === lastSlot) lastSlotIndices.push(i);
-    }
-
-    for (let k = 0; k < lastSlotIndices.length - 1; k++) {
-      const idx = lastSlotIndices[k];
-      const nextIdx = lastSlotIndices[k + 1];
-      const ev = sorted[idx];
-      const nextEv = sorted[nextIdx];
-      const nextStart = nextEv.startFrame;
-      const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
-      const originalEnd = ev.startFrame + totalDur;
-
-      if (nextStart < originalEnd) {
-        const available = Math.max(0, nextStart - ev.startFrame);
-        const clampedActive = Math.min(ev.activationDuration, available);
-        const remAfterActive = available - clampedActive;
-        const clampedLinger = Math.min(ev.activeDuration, remAfterActive);
-        const remAfterLinger = remAfterActive - clampedLinger;
-        const clampedCooldown = Math.min(ev.cooldownDuration, remAfterLinger);
-
+      const ev = sorted[i];
+      if (extendedActive[i] !== ev.activationDuration) {
+        const next = sorted[i + 1];
         processedMap.set(ev.id, {
-          ...(processedMap.get(ev.id) ?? ev),
-          activationDuration: clampedActive,
-          activeDuration: clampedLinger,
-          cooldownDuration: clampedCooldown,
-          eventStatus: 'refreshed' as const,
-          eventStatusOwnerId: nextEv.sourceOwnerId,
-          eventStatusSkillName: nextEv.sourceSkillName,
+          ...ev,
+          activationDuration: extendedActive[i],
+          eventStatus: 'extended' as const,
+          eventStatusOwnerId: next.sourceOwnerId,
+          eventStatusSkillName: next.sourceSkillName,
         });
       }
     }
@@ -1008,4 +990,253 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
 
   if (processedMap.size === 0) return events;
   return events.map((ev) => processedMap.get(ev.id) ?? ev);
+}
+
+// ── Scorching Fangs (Wulfgard talent) ────────────────────────────────────────
+
+/** Wulfgard's battle skill CombatSkillsType values. */
+const WULFGARD_BATTLE_SKILLS = new Set([
+  CombatSkillsType.THERMITE_TRACERS,
+]);
+
+/** Wulfgard's unique skill names for slot identification. */
+const WULFGARD_SKILLS = new Set([
+  CombatSkillsType.RAPID_FIRE_AKIMBO,
+  CombatSkillsType.THERMITE_TRACERS,
+  CombatSkillsType.FRAG_GRENADE_BETA,
+  CombatSkillsType.WOLVEN_FURY,
+]);
+
+/** Scorching Fangs base duration: 15s at 120fps. */
+const SCORCHING_FANGS_DURATION = 1800;
+
+/**
+ * Derives Scorching Fangs buff events from Combustion reaction events.
+ * Wulfgard gains Scorching Fangs when Combustion is applied to the enemy.
+ * P3+: Battle skill refreshes Scorching Fangs and shares it with teammates at 50%.
+ */
+function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
+  // Find Wulfgard's slot by scanning for his unique skill names
+  let wulfgardOwnerId: string | null = null;
+  let wulfgardPotential = 0;
+  for (const ev of events) {
+    if (WULFGARD_SKILLS.has(ev.name as CombatSkillsType)) {
+      wulfgardOwnerId = ev.ownerId;
+      wulfgardPotential = ev.operatorPotential ?? 0;
+      break;
+    }
+  }
+  if (!wulfgardOwnerId) return events;
+
+  // Collect combustion reaction events on enemy
+  const combustionEvents = events.filter(
+    (ev) => ev.columnId === 'combustion' && ev.ownerId === 'enemy',
+  );
+  if (combustionEvents.length === 0) return events;
+
+  // Collect all operator slot IDs
+  const operatorSlots = new Set<string>();
+  for (const ev of events) {
+    if (ev.ownerId !== 'enemy' && ev.ownerId !== COMMON_OWNER_ID) {
+      operatorSlots.add(ev.ownerId);
+    }
+  }
+
+  const hasP3 = wulfgardPotential >= 3;
+  const derived: TimelineEvent[] = [];
+  const clamped = new Map<string, TimelineEvent>();
+
+  // Track active Scorching Fangs per slot for P3 refresh
+  type ActiveFang = { id: string; startFrame: number; endFrame: number };
+  const activeFangs = new Map<string, ActiveFang[]>();
+
+  // Sort combustion events by start frame
+  const sortedCombustions = [...combustionEvents].sort((a, b) => a.startFrame - b.startFrame);
+
+  // Collect Wulfgard's battle skill cast frames for P3 refresh
+  const battleSkillFrames: number[] = [];
+  if (hasP3) {
+    for (const ev of events) {
+      if (ev.ownerId === wulfgardOwnerId && WULFGARD_BATTLE_SKILLS.has(ev.name as CombatSkillsType)) {
+        battleSkillFrames.push(ev.startFrame);
+      }
+    }
+    battleSkillFrames.sort((a, b) => a - b);
+  }
+
+  let idCounter = 0;
+  const makeFangId = (owner: string) => `sf-${owner}-${idCounter++}`;
+
+  // Create initial Scorching Fangs from combustion events
+  for (const combustion of sortedCombustions) {
+    const frame = combustion.startFrame;
+    const fangId = makeFangId(wulfgardOwnerId);
+    const fangEvent: TimelineEvent = {
+      id: fangId,
+      name: StatusType.SCORCHING_FANGS,
+      ownerId: wulfgardOwnerId,
+      columnId: StatusType.SCORCHING_FANGS,
+      startFrame: frame,
+      activationDuration: SCORCHING_FANGS_DURATION,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      sourceOwnerId: combustion.sourceOwnerId,
+      sourceSkillName: combustion.sourceSkillName,
+    };
+    derived.push(fangEvent);
+
+    // Track for P3 refresh
+    const wulfFangs = activeFangs.get(wulfgardOwnerId) ?? [];
+    wulfFangs.push({ id: fangId, startFrame: frame, endFrame: frame + SCORCHING_FANGS_DURATION });
+    activeFangs.set(wulfgardOwnerId, wulfFangs);
+  }
+
+  // P3: Refresh on battle skill and share with team
+  if (hasP3) {
+    for (const bsFrame of battleSkillFrames) {
+      // Check if any Scorching Fangs is active on Wulfgard at this frame
+      const wulfFangs = activeFangs.get(wulfgardOwnerId) ?? [];
+      const activeFang = wulfFangs.find(
+        (f) => bsFrame >= f.startFrame && bsFrame < f.endFrame,
+      );
+      if (!activeFang) continue;
+
+      // Clamp existing Wulfgard fangs at this frame
+      for (const f of wulfFangs) {
+        if (bsFrame >= f.startFrame && bsFrame < f.endFrame) {
+          const existing = derived.find((ev) => ev.id === f.id);
+          if (existing) {
+            clamped.set(f.id, {
+              ...existing,
+              activationDuration: bsFrame - f.startFrame,
+              eventStatus: 'refreshed' as const,
+              eventStatusOwnerId: wulfgardOwnerId,
+              eventStatusSkillName: CombatSkillsType.THERMITE_TRACERS,
+            });
+          }
+          f.endFrame = bsFrame;
+        }
+      }
+
+      // Create refreshed Scorching Fangs for Wulfgard
+      const refreshedId = makeFangId(wulfgardOwnerId);
+      derived.push({
+        id: refreshedId,
+        name: StatusType.SCORCHING_FANGS,
+        ownerId: wulfgardOwnerId,
+        columnId: StatusType.SCORCHING_FANGS,
+        startFrame: bsFrame,
+        activationDuration: SCORCHING_FANGS_DURATION,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: wulfgardOwnerId,
+        sourceSkillName: CombatSkillsType.THERMITE_TRACERS,
+      });
+      wulfFangs.push({ id: refreshedId, startFrame: bsFrame, endFrame: bsFrame + SCORCHING_FANGS_DURATION });
+
+      // Share with other operators at 50% duration
+      const sharedDuration = Math.floor(SCORCHING_FANGS_DURATION * 0.5);
+      for (const slotId of Array.from(operatorSlots)) {
+        if (slotId === wulfgardOwnerId) continue;
+        // Clamp any existing shared fangs on this slot
+        const slotFangs = activeFangs.get(slotId) ?? [];
+        for (const f of slotFangs) {
+          if (bsFrame >= f.startFrame && bsFrame < f.endFrame) {
+            const existing = derived.find((ev) => ev.id === f.id);
+            if (existing) {
+              clamped.set(f.id, {
+                ...existing,
+                activationDuration: bsFrame - f.startFrame,
+                eventStatus: 'refreshed' as const,
+                eventStatusOwnerId: wulfgardOwnerId,
+                eventStatusSkillName: CombatSkillsType.THERMITE_TRACERS,
+              });
+            }
+            f.endFrame = bsFrame;
+          }
+        }
+
+        const sharedId = makeFangId(slotId);
+        derived.push({
+          id: sharedId,
+          name: StatusType.SCORCHING_FANGS,
+          ownerId: slotId,
+          columnId: StatusType.SCORCHING_FANGS,
+          startFrame: bsFrame,
+          activationDuration: sharedDuration,
+          activeDuration: 0,
+          cooldownDuration: 0,
+          sourceOwnerId: wulfgardOwnerId,
+          sourceSkillName: CombatSkillsType.THERMITE_TRACERS,
+        });
+        slotFangs.push({ id: sharedId, startFrame: bsFrame, endFrame: bsFrame + sharedDuration });
+        activeFangs.set(slotId, slotFangs);
+      }
+    }
+  }
+
+  if (derived.length === 0) return events;
+
+  // Apply clamping to derived events
+  const finalDerived = derived.map((ev) => clamped.get(ev.id) ?? ev);
+  return [...events, ...finalDerived];
+}
+
+// ── SP Return → Gauge Gain Reduction ─────────────────────────────────────────
+
+/**
+ * For battle skill events whose frame data includes SKILL_POINT_RECOVERY,
+ * reduces gaugeGain and teamGaugeGain proportionally.
+ *
+ * ratio = (spCost - totalSpReturn) / spCost
+ *
+ * Affects: Last Rite (30 SP), Snowshine (30 SP), Catcher (30 SP).
+ */
+function applySpReturnGaugeReduction(events: TimelineEvent[]): TimelineEvent[] {
+  const modified = new Map<string, TimelineEvent>();
+
+  for (const ev of events) {
+    if (ev.columnId !== 'battle') continue;
+    if (!ev.segments) continue;
+
+    // Sum up all SP recovery from frame data
+    let totalSpReturn = 0;
+    for (const seg of ev.segments) {
+      if (!seg.frames) continue;
+      for (const frame of seg.frames) {
+        if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
+          totalSpReturn += frame.skillPointRecovery;
+        }
+      }
+    }
+
+    if (totalSpReturn <= 0) continue;
+
+    const spCost = ev.skillPointCost ?? 100;
+    if (spCost <= 0) continue;
+
+    const ratio = Math.max(0, (spCost - totalSpReturn) / spCost);
+
+    const updates: Partial<TimelineEvent> = {};
+    if (ev.gaugeGain != null) {
+      updates.gaugeGain = ev.gaugeGain * ratio;
+    }
+    if (ev.teamGaugeGain != null) {
+      updates.teamGaugeGain = ev.teamGaugeGain * ratio;
+    }
+    if (ev.gaugeGainByEnemies != null) {
+      const reduced: Record<number, number> = {};
+      for (const [k, v] of Object.entries(ev.gaugeGainByEnemies)) {
+        reduced[Number(k)] = v * ratio;
+      }
+      updates.gaugeGainByEnemies = reduced;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      modified.set(ev.id, { ...ev, ...updates });
+    }
+  }
+
+  if (modified.size === 0) return events;
+  return events.map((ev) => modified.get(ev.id) ?? ev);
 }

@@ -195,9 +195,9 @@ export function getSusceptibilityMultiplier(susceptibilityEffects: number): numb
 
 // ── Increased DMG Taken ─────────────────────────────────────────────────────
 
-/** IncreasedDMGTakenMultiplier = 1 + ∑increasedDmgTaken (additive). */
-export function getIncreasedDmgTakenMultiplier(increasedDmgTaken: number): number {
-  return 1 + increasedDmgTaken;
+/** IncreasedDMGTakenMultiplier = 1 + ∑fragility (additive). */
+export function getFragilityMultiplier(fragility: number): number {
+  return 1 + fragility;
 }
 
 // ── DMG Reduction ───────────────────────────────────────────────────────────
@@ -289,6 +289,67 @@ export function getCombustionDotMultiplier(statusLevel: StatusLevel): number {
   return 0.12 + 0.12 * statusLevel;
 }
 
+// ── Corrosion ──────────────────────────────────────────────────────────────
+
+/**
+ * Corrosion initial Nature DMG multiplier (percentage of ATK).
+ * Only applies to naturally triggered corrosion, NOT forced reactions.
+ *
+ * Status Level  |  1    |  2    |  3    |  4
+ * Multiplier    | 160%  | 240%  | 320%  | 400%
+ */
+export function getCorrosionInitialMultiplier(statusLevel: StatusLevel): number {
+  return 0.8 + 0.8 * statusLevel;
+}
+
+/**
+ * Corrosion resistance reduction table by status level.
+ * Returns { initial, max } reduction values (flat, not percentage).
+ *
+ * Status Level  |  1       |  2       |  3      |  4
+ * Initial       |  3.6     |  4.8     |  6      |  7.2
+ * Maximum       | 12       | 16       | 20      | 24
+ */
+const CORROSION_REDUCTION: Record<StatusLevel, { initial: number; max: number }> = {
+  1: { initial: 3.6, max: 12 },
+  2: { initial: 4.8, max: 16 },
+  3: { initial: 6, max: 20 },
+  4: { initial: 7.2, max: 24 },
+};
+
+/**
+ * Base corrosion resistance reduction at a given elapsed time.
+ * Linearly interpolates from initial to max over 10 seconds, then stays at max.
+ */
+export function getCorrosionBaseReduction(statusLevel: StatusLevel, elapsedSeconds: number): number {
+  const { initial, max } = CORROSION_REDUCTION[statusLevel];
+  if (elapsedSeconds >= 10) return max;
+  if (elapsedSeconds <= 0) return initial;
+  return initial + (max - initial) * (elapsedSeconds / 10);
+}
+
+/**
+ * Arts Intensity scaling for corrosion resistance reduction.
+ *
+ * CorrosionReduction = BaseCorrosionEffect × (1 + 2×ArtsIntensity / (ArtsIntensity + 300))
+ */
+export function getCorrosionReductionMultiplier(artsIntensity: number): number {
+  return 1 + (2 * artsIntensity) / (artsIntensity + 300);
+}
+
+/**
+ * Final corrosion resistance reduction at a given time, scaled by Arts Intensity.
+ * This value is subtracted from enemy resistance to all damage types.
+ */
+export function getCorrosionReduction(
+  statusLevel: StatusLevel,
+  elapsedSeconds: number,
+  artsIntensity: number,
+): number {
+  return getCorrosionBaseReduction(statusLevel, elapsedSeconds)
+    * getCorrosionReductionMultiplier(artsIntensity);
+}
+
 // ── Hidden Level Multiplier ─────────────────────────────────────────────────
 
 /**
@@ -331,8 +392,8 @@ export interface DamageParams {
   weakenMultiplier: number;
   /** 1 + ∑susceptibility. */
   susceptibilityMultiplier: number;
-  /** 1 + ∑increasedDmgTaken. */
-  increasedDmgTakenMultiplier: number;
+  /** 1 + ∑fragility. */
+  fragilityMultiplier: number;
   /** ∏(1 − dmgReduction). */
   dmgReductionMultiplier: number;
   /** 1 − max(protection). */
@@ -366,7 +427,7 @@ export function calculateDamage(params: DamageParams): number {
     params.linkMultiplier *
     params.weakenMultiplier *
     params.susceptibilityMultiplier *
-    params.increasedDmgTakenMultiplier *
+    params.fragilityMultiplier *
     params.dmgReductionMultiplier *
     params.protectionMultiplier *
     params.defenseMultiplier *
@@ -391,7 +452,7 @@ export interface StatusDamageParams {
   resistanceMultiplier: number;
   susceptibilityMultiplier: number;
   weakenMultiplier: number;
-  increasedDmgTakenMultiplier: number;
+  fragilityMultiplier: number;
   dmgReductionMultiplier: number;
 }
 
@@ -405,7 +466,7 @@ export function calculateStatusDamage(params: StatusDamageParams): number {
     params.resistanceMultiplier *
     params.susceptibilityMultiplier *
     params.weakenMultiplier *
-    params.increasedDmgTakenMultiplier *
+    params.fragilityMultiplier *
     params.dmgReductionMultiplier
   );
 }

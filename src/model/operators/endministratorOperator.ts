@@ -6,47 +6,19 @@ import {
   BombardmentSequence,
 } from "../combat-skills/endministratorSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 25,
     [StatType.AGILITY]: 17,
     [StatType.INTELLECT]: 19,
     [StatType.WILL]: 17,
   },
-  20: {
-    [StatType.ATTACK]: 114,
-    [StatType.STRENGTH]: 57,
-    [StatType.AGILITY]: 34,
-    [StatType.INTELLECT]: 41,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 175,
-    [StatType.STRENGTH]: 92,
-    [StatType.AGILITY]: 52,
-    [StatType.INTELLECT]: 65,
-    [StatType.WILL]: 50,
-  },
-  60: {
-    [StatType.ATTACK]: 233,
-    [StatType.STRENGTH]: 125,
-    [StatType.AGILITY]: 69,
-    [StatType.INTELLECT]: 87,
-    [StatType.WILL]: 66,
-  },
-  80: {
-    [StatType.ATTACK]: 291,
-    [StatType.STRENGTH]: 158,
-    [StatType.AGILITY]: 86,
-    [StatType.INTELLECT]: 109,
-    [StatType.WILL]: 82,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 320,
     [StatType.STRENGTH]: 175,
     [StatType.AGILITY]: 95,
@@ -90,7 +62,9 @@ export class EndministratorOperator extends Operator {
       secondaryAttributeType: EndministratorOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EndministratorOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EndministratorOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 

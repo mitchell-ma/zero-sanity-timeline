@@ -6,47 +6,19 @@ import {
   GravityField,
 } from "../combat-skills/gilbertaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 17,
     [StatType.AGILITY]: 16,
     [StatType.INTELLECT]: 25,
     [StatType.WILL]: 19,
   },
-  20: {
-    [StatType.ATTACK]: 114,
-    [StatType.STRENGTH]: 32,
-    [StatType.AGILITY]: 32,
-    [StatType.INTELLECT]: 58,
-    [StatType.WILL]: 41,
-  },
-  40: {
-    [StatType.ATTACK]: 174,
-    [StatType.STRENGTH]: 50,
-    [StatType.AGILITY]: 49,
-    [StatType.INTELLECT]: 94,
-    [StatType.WILL]: 65,
-  },
-  60: {
-    [StatType.ATTACK]: 232,
-    [StatType.STRENGTH]: 66,
-    [StatType.AGILITY]: 64,
-    [StatType.INTELLECT]: 127,
-    [StatType.WILL]: 87,
-  },
-  80: {
-    [StatType.ATTACK]: 289,
-    [StatType.STRENGTH]: 82,
-    [StatType.AGILITY]: 80,
-    [StatType.INTELLECT]: 161,
-    [StatType.WILL]: 109,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 318,
     [StatType.STRENGTH]: 90,
     [StatType.AGILITY]: 88,
@@ -90,7 +62,9 @@ export class GilbertaOperator extends Operator {
       secondaryAttributeType: GilbertaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: GilbertaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: GilbertaOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Stalwart',
+      attributeIncreaseAttribute: StatType.WILL,
+      baseStats: BASE_STATS,
       ...params,
     });
 

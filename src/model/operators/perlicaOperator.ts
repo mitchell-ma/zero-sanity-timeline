@@ -6,47 +6,19 @@ import {
   ProtocolEpsilon,
 } from "../combat-skills/perlicaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 16,
     [StatType.AGILITY]: 18,
     [StatType.INTELLECT]: 24,
     [StatType.WILL]: 16,
   },
-  20: {
-    [StatType.ATTACK]: 107,
-    [StatType.STRENGTH]: 32,
-    [StatType.AGILITY]: 35,
-    [StatType.INTELLECT]: 54,
-    [StatType.WILL]: 31,
-  },
-  40: {
-    [StatType.ATTACK]: 163,
-    [StatType.STRENGTH]: 49,
-    [StatType.AGILITY]: 55,
-    [StatType.INTELLECT]: 87,
-    [StatType.WILL]: 47,
-  },
-  60: {
-    [StatType.ATTACK]: 216,
-    [StatType.STRENGTH]: 64,
-    [StatType.AGILITY]: 73,
-    [StatType.INTELLECT]: 118,
-    [StatType.WILL]: 62,
-  },
-  80: {
-    [StatType.ATTACK]: 269,
-    [StatType.STRENGTH]: 80,
-    [StatType.AGILITY]: 91,
-    [StatType.INTELLECT]: 149,
-    [StatType.WILL]: 77,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 295,
     [StatType.STRENGTH]: 88,
     [StatType.AGILITY]: 100,
@@ -90,7 +62,9 @@ export class PerlicaOperator extends Operator {
       secondaryAttributeType: PerlicaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: PerlicaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: PerlicaOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Keen Mind',
+      attributeIncreaseAttribute: StatType.INTELLECT,
+      baseStats: BASE_STATS,
       ...params,
     });
 

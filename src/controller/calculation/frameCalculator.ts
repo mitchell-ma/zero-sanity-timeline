@@ -27,7 +27,7 @@ import {
   getProtectionMultiplier,
   getAmpMultiplier,
   getSusceptibilityMultiplier,
-  getIncreasedDmgTakenMultiplier,
+  getFragilityMultiplier,
   getLinkMultiplier,
   getArtsIntensityMultiplier,
 } from "../../model/calculation/damageFormulas";
@@ -62,8 +62,8 @@ export interface FrameContext {
   weakenEffects: number[];
   /** Susceptibility effects on the target (additive sum). */
   susceptibilityEffects: number;
-  /** Increased damage taken effects on the target (additive sum). */
-  increasedDmgTaken: number;
+  /** Fragility effects on the target — "DMG Taken +X%" not labeled Susceptibility (additive sum). */
+  fragility: number;
   /** Damage reduction effects on the target (each is a fraction). */
   dmgReductionEffects: number[];
   /** Protection effects on the target (each is a fraction; strongest wins). */
@@ -246,7 +246,7 @@ export class FrameCalculator {
       linkMultiplier: getLinkMultiplier(ctx.linkBonus, ctx.isLinkAttack),
       weakenMultiplier: getWeakenMultiplier(ctx.weakenEffects),
       susceptibilityMultiplier: getSusceptibilityMultiplier(ctx.susceptibilityEffects),
-      increasedDmgTakenMultiplier: getIncreasedDmgTakenMultiplier(ctx.increasedDmgTaken),
+      fragilityMultiplier: getFragilityMultiplier(ctx.fragility),
       dmgReductionMultiplier: getDmgReductionMultiplier(ctx.dmgReductionEffects),
       protectionMultiplier: getProtectionMultiplier(ctx.protectionEffects),
       defenseMultiplier,

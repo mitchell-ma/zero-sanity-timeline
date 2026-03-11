@@ -6,47 +6,19 @@ import {
   ReIgnitedOath,
 } from "../combat-skills/emberSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 25,
     [StatType.AGILITY]: 16,
     [StatType.INTELLECT]: 17,
     [StatType.WILL]: 20,
   },
-  20: {
-    [StatType.ATTACK]: 114,
-    [StatType.STRENGTH]: 58,
-    [StatType.AGILITY]: 31,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 44,
-  },
-  40: {
-    [StatType.ATTACK]: 175,
-    [StatType.STRENGTH]: 94,
-    [StatType.AGILITY]: 47,
-    [StatType.INTELLECT]: 50,
-    [StatType.WILL]: 70,
-  },
-  60: {
-    [StatType.ATTACK]: 233,
-    [StatType.STRENGTH]: 127,
-    [StatType.AGILITY]: 62,
-    [StatType.INTELLECT]: 66,
-    [StatType.WILL]: 94,
-  },
-  80: {
-    [StatType.ATTACK]: 291,
-    [StatType.STRENGTH]: 161,
-    [StatType.AGILITY]: 77,
-    [StatType.INTELLECT]: 82,
-    [StatType.WILL]: 118,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 320,
     [StatType.STRENGTH]: 178,
     [StatType.AGILITY]: 85,
@@ -90,7 +62,9 @@ export class EmberOperator extends Operator {
       secondaryAttributeType: EmberOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EmberOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EmberOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class EmberOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.STRENGTH]: 20, [StatType.WILL]: 20 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

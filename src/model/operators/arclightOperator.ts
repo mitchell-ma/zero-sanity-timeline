@@ -6,47 +6,19 @@ import {
   ExplodingBlitz,
 } from "../combat-skills/arclightSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 17,
     [StatType.AGILITY]: 23,
     [StatType.INTELLECT]: 18,
     [StatType.WILL]: 16,
   },
-  20: {
-    [StatType.ATTACK]: 107,
-    [StatType.STRENGTH]: 33,
-    [StatType.AGILITY]: 53,
-    [StatType.INTELLECT]: 35,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 163,
-    [StatType.STRENGTH]: 51,
-    [StatType.AGILITY]: 86,
-    [StatType.INTELLECT]: 55,
-    [StatType.WILL]: 49,
-  },
-  60: {
-    [StatType.ATTACK]: 216,
-    [StatType.STRENGTH]: 67,
-    [StatType.AGILITY]: 116,
-    [StatType.INTELLECT]: 73,
-    [StatType.WILL]: 64,
-  },
-  80: {
-    [StatType.ATTACK]: 269,
-    [StatType.STRENGTH]: 84,
-    [StatType.AGILITY]: 147,
-    [StatType.INTELLECT]: 91,
-    [StatType.WILL]: 80,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 296,
     [StatType.STRENGTH]: 92,
     [StatType.AGILITY]: 162,
@@ -90,7 +62,9 @@ export class ArclightOperator extends Operator {
       secondaryAttributeType: ArclightOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ArclightOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ArclightOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Skirmisher',
+      attributeIncreaseAttribute: StatType.AGILITY,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class ArclightOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.AGILITY]: 15, [StatType.INTELLECT]: 15 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

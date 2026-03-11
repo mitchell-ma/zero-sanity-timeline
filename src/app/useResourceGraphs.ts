@@ -3,7 +3,8 @@ import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadout } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TOTAL_FRAMES, FPS } from '../utils/timeline';
+import { TOTAL_FRAMES, FPS, absoluteGameFrame } from '../utils/timeline';
+import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
@@ -18,6 +19,7 @@ export function useResourceGraphs(
   events: TimelineEvent[],
   combatLoadout: CombatLoadout,
   resourceConfigs?: Record<string, ResourceConfig>,
+  tacticalNames?: Record<string, string | undefined>,
 ) {
   // ── Skill point graphs (from CommonSlot resource timeline) ──────────────
   const [spGraphs, setSpGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
@@ -36,22 +38,42 @@ export function useResourceGraphs(
     return sp.onGraphChange(update);
   }, [combatLoadout]);
 
-  // ── Ultimate energy graphs (computed from events + operator data) ───────
-  const ultimateGraphs = useMemo(() => {
+  // ── Ultimate energy graphs + tactical events ────────────────────────────
+  const { ultimateGraphs, tacticalEvents } = useMemo(() => {
     const graphs = new Map<string, ResourceGraphData>();
+    const allTacticalEvents: TimelineEvent[] = [];
 
     // Collect gauge gain events: battle/combo skills that affect ultimate charge
-    // Each event can grant gaugeGain to its own operator and teamGaugeGain to all operators
-    type GaugeEvent = { frame: number; selfSlotId: string; gaugeGain: number; teamGaugeGain: number };
+    // Gauge gain is tied to the first frame of the first segment; fall back to event-level for legacy data
+    type GaugeEvent = { frame: number; selfSlotId: string; gaugeGain: number; teamGaugeGain: number; timeStopAdjust: number };
     const gaugeEvents: GaugeEvent[] = [];
     for (const ev of events) {
       if (ev.columnId !== 'battle' && ev.columnId !== 'combo') continue;
-      if ((ev.gaugeGain ?? 0) > 0 || (ev.teamGaugeGain ?? 0) > 0) {
+      // Read gauge gain from first frame of first segment if available
+      const firstFrame = ev.segments?.[0]?.frames?.[0];
+      const selfGain = firstFrame?.gaugeGain ?? ev.gaugeGain ?? 0;
+      const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
+      if (selfGain > 0 || teamGain > 0) {
+        const frameOffset = firstFrame?.offsetFrame ?? 0;
+        // During time stops, game-time is frozen — clamp offsets within the
+        // animation window to startFrame.
+        const anim = ev.animationDuration ?? 0;
+        const gameFrame = absoluteGameFrame(ev.startFrame, frameOffset, ev.animationDuration);
+        // Combo events with time stops: EventBlock renders diamonds using ownZones
+        // (excluding the event's own time-stop insertion). The diamond is at
+        // frameToPxDilated(S+F, ownZones) = A + F*ppf, but the graph point at
+        // gameFrame=S has frameToPxDilated(S, fullZones) = A (zone not yet added).
+        // Add F*ppf to bridge the gap. For hits after the time stop (F > D),
+        // gameFrame already includes the offset, and fullZones adds the insertion,
+        // so no adjustment is needed.
+        const isOwnTimeStop = ev.columnId === 'combo' && anim > 0;
+        const timeStopAdjust = isOwnTimeStop && frameOffset <= anim ? frameOffset : 0;
         gaugeEvents.push({
-          frame: ev.startFrame,
+          frame: gameFrame,
           selfSlotId: ev.ownerId,
-          gaugeGain: ev.gaugeGain ?? 0,
-          teamGaugeGain: ev.teamGaugeGain ?? 0,
+          gaugeGain: selfGain,
+          teamGaugeGain: teamGain,
+          timeStopAdjust,
         });
       }
     }
@@ -68,7 +90,7 @@ export function useResourceGraphs(
       const chargePerFrame = (cfg?.regenPerSecond ?? 0) / FPS;
 
       // Merge ultimate consumption events and gauge gain events for this slot
-      type UltEvent = { frame: number; type: 'consume' | 'gain'; amount: number };
+      type UltEvent = { frame: number; type: 'consume' | 'gain'; amount: number; timeStopAdjust?: number };
       const timeline: UltEvent[] = [];
 
       // Ultimate activations consume the full gauge
@@ -82,12 +104,29 @@ export function useResourceGraphs(
       for (const ge of gaugeEvents) {
         const gain = (ge.selfSlotId === slotId ? ge.gaugeGain : 0) + ge.teamGaugeGain;
         if (gain > 0) {
-          timeline.push({ frame: ge.frame, type: 'gain', amount: gain });
+          timeline.push({ frame: ge.frame, type: 'gain', amount: gain, timeStopAdjust: ge.timeStopAdjust || undefined });
         }
       }
 
       timeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
 
+      // Generate tactical events (iteratively inserts gauge gains)
+      const tacticalName = tacticalNames?.[slotId];
+      if (tacticalName) {
+        const result = generateTacticalEvents(
+          slotId, tacticalName, max, timeline, chargePerFrame, startValue,
+        );
+        if (result) {
+          allTacticalEvents.push(...result.events);
+          // Inject tactical gauge gains into the timeline for graph computation
+          for (const g of result.gaugeGains) {
+            timeline.push({ frame: g.frame, type: 'gain', amount: g.amount });
+          }
+          timeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
+        }
+      }
+
+      // Compute the ult energy graph (now including tactical gains)
       const points: ResourcePoint[] = [];
       let value = startValue;
       let lastFrame = 0;
@@ -99,7 +138,7 @@ export function useResourceGraphs(
 
         if (preAction !== value || te.frame !== lastFrame) {
           if (preAction !== points[points.length - 1].value || te.frame !== points[points.length - 1].frame) {
-            points.push({ frame: te.frame, value: preAction });
+            points.push({ frame: te.frame, value: preAction, timeStopAdjust: te.timeStopAdjust });
           }
         }
 
@@ -109,7 +148,7 @@ export function useResourceGraphs(
         } else {
           postAction = Math.min(max, preAction + te.amount);
         }
-        points.push({ frame: te.frame, value: postAction });
+        points.push({ frame: te.frame, value: postAction, timeStopAdjust: te.timeStopAdjust });
         value = postAction;
         lastFrame = te.frame;
       }
@@ -126,8 +165,8 @@ export function useResourceGraphs(
 
       graphs.set(key, { points, min: 0, max });
     }
-    return graphs;
-  }, [operators, slotIds, events, resourceConfigs]);
+    return { ultimateGraphs: graphs, tacticalEvents: allTacticalEvents };
+  }, [operators, slotIds, events, resourceConfigs, tacticalNames]);
 
   // ── Merge SP + ultimate graphs ──────────────────────────────────────────
   const resourceGraphs = useMemo(() => {
@@ -138,5 +177,5 @@ export function useResourceGraphs(
     return merged;
   }, [spGraphs, ultimateGraphs]);
 
-  return { resourceGraphs };
+  return { resourceGraphs, tacticalEvents };
 }

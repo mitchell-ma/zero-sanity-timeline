@@ -1,4 +1,5 @@
 import { SkillEventSequence } from "../../model/event-frames/skillEventSequence";
+import { HitType } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 
@@ -14,7 +15,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[] },
+    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -24,13 +25,19 @@ export class SkillSegmentBuilder {
     let totalDurationFrames = 0;
     const segments: EventSegmentData[] = [];
 
+    // Sum SP recovery across all sequences — only granted on final strike
+    const allSequenceTotalSP = sequences.reduce((sum, seq) =>
+      sum + seq.getFrames().reduce((s, f) => s + f.getSkillPointRecovery(), 0), 0);
+
     for (let i = 0; i < sequences.length; i++) {
       const seq = sequences[i];
       const durationFrames = Math.round(seq.getDurationSeconds() * FPS);
-      const frames = seq.getFrames().map((f) => {
+      const seqFrames = seq.getFrames();
+
+      const frames = seqFrames.map((f) => {
         const marker: EventFrameMarker = {
           offsetFrame: Math.round(f.getOffsetSeconds() * FPS),
-          skillPointRecovery: f.getSkillPointRecovery(),
+          skillPointRecovery: 0,
           stagger: f.getStagger(),
         };
         const apply = f.getApplyArtsInfliction();
@@ -51,7 +58,7 @@ export class SkillSegmentBuilder {
           ...(forced.durationFrames != null && { durationFrames: forced.durationFrames }),
         };
         const status = f.getApplyStatus();
-        if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }) };
+        if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }), ...(status.eventName && { eventName: status.eventName }) };
         const consumeStatus = f.getConsumeStatus();
         if (consumeStatus) marker.consumeStatus = consumeStatus;
         const dmgEl = f.getDamageElement();
@@ -61,8 +68,19 @@ export class SkillSegmentBuilder {
       });
 
       // Mark the last frame of the final sequence as a final strike (basic attacks only)
+      // SP recovery is granted only on the final strike
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
-        frames[frames.length - 1].isFinalStrike = true;
+        const finalFrame = frames[frames.length - 1];
+        finalFrame.hitType = HitType.FINAL_STRIKE;
+        finalFrame.skillPointRecovery = allSequenceTotalSP;
+        finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
+        finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
+      }
+
+      // Assign gauge gain to the first frame of the first segment
+      if (i === 0 && frames.length > 0) {
+        if (options?.gaugeGain) frames[0].gaugeGain = options.gaugeGain;
+        if (options?.teamGaugeGain) frames[0].teamGaugeGain = options.teamGaugeGain;
       }
 
       const label = customLabels

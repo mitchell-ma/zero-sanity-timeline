@@ -6,47 +6,19 @@ import {
   ChopNDunk,
 } from "../combat-skills/daPanSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 23,
     [StatType.AGILITY]: 18,
     [StatType.INTELLECT]: 16,
     [StatType.WILL]: 17,
   },
-  20: {
-    [StatType.ATTACK]: 108,
-    [StatType.STRENGTH]: 53,
-    [StatType.AGILITY]: 35,
-    [StatType.INTELLECT]: 31,
-    [StatType.WILL]: 32,
-  },
-  40: {
-    [StatType.ATTACK]: 165,
-    [StatType.STRENGTH]: 86,
-    [StatType.AGILITY]: 55,
-    [StatType.INTELLECT]: 47,
-    [StatType.WILL]: 50,
-  },
-  60: {
-    [StatType.ATTACK]: 219,
-    [StatType.STRENGTH]: 116,
-    [StatType.AGILITY]: 73,
-    [StatType.INTELLECT]: 62,
-    [StatType.WILL]: 66,
-  },
-  80: {
-    [StatType.ATTACK]: 273,
-    [StatType.STRENGTH]: 147,
-    [StatType.AGILITY]: 91,
-    [StatType.INTELLECT]: 77,
-    [StatType.WILL]: 82,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 300,
     [StatType.STRENGTH]: 162,
     [StatType.AGILITY]: 100,
@@ -90,7 +62,9 @@ export class DaPanOperator extends Operator {
       secondaryAttributeType: DaPanOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: DaPanOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: DaPanOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class DaPanOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      3: { [StatType.STRENGTH]: 15, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.08 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

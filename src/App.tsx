@@ -12,7 +12,7 @@ import DevlogModal from './view/DevlogModal';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './view/OperatorLoadoutHeader';
 import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from './utils/enemies';
-import { WEAPONS } from './utils/loadoutRegistry';
+import { WEAPONS, ARMORS, GLOVES, KITS } from './utils/loadoutRegistry';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Enemy } from './consts/viewTypes';
 import { CombatLoadout } from './controller/combat-loadout';
 import { processInflictionEvents } from './utils/processInflictions';
@@ -27,11 +27,11 @@ import {
   setNextEventId,
   getNextEventId,
 } from './controller/timeline/eventController';
+import { buildTimeMap } from './utils/timeline';
 import {
   serializeSheet,
   clearLocalStorage,
-  exportToFile,
-  importFromFile,
+  importMultiSessionFile,
 } from './utils/sheetStorage';
 import {
   NUM_SLOTS,
@@ -53,14 +53,21 @@ import {
   saveSessionData,
   deleteSessionData,
   addSession as addSessionNode,
+  renameNode,
+  uniqueName,
   migrateLegacySheet,
+  mergeBundle,
 } from './utils/sessionStorage';
+import { useTreeHistory } from './utils/useTreeHistory';
+import ExportModal from './view/ExportModal';
+import ConfirmModal from './view/ConfirmModal';
 import { useKeyboardShortcuts } from './app/useKeyboardShortcuts';
 import { useCombatLoadout } from './app/useCombatLoadout';
 import { useResourceGraphs } from './app/useResourceGraphs';
 import { useAutoSave } from './app/useAutoSave';
-import { LOADOUT_ROW_HEIGHT, FPS } from './utils/timeline';
+import { LOADOUT_ROW_HEIGHT, FPS, frameToPx } from './utils/timeline';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './controller/slot/commonSlotController';
+import { TimeStopRange } from './controller/timeline/resourceTimeline';
 import './App.css';
 
 const initialLoad = loadInitialState();
@@ -187,18 +194,26 @@ export default function App() {
   const [hoverFrame,     setHoverFrame]     = useState<number | null>(null);
   const appBodyRef = useRef<HTMLDivElement | null>(null);
   const [scrollSynced,   setScrollSynced]   = useState(true);
+  const [showRealTime,   setShowRealTime]   = useState(true);
   const [splitPct,       setSplitPct]       = useState(65); // timeline gets 65% by default
   const resizerDragRef = useRef<{ startX: number; startPct: number } | null>(null);
   const [devlogOpen,     setDevlogOpen]     = useState(false);
   const [keysOpen,       setKeysOpen]       = useState(false);
+  const [debugMode,      setDebugMode]      = useState(false);
+  const debugModeRef = useRef(false);
+  debugModeRef.current = debugMode;
   const [warningMessage, setWarningMessage] = useState<string | null>(initialLoad.error);
 
   // ─── Session state ─────────────────────────────────────────────────────
-  const [sessionTree, setSessionTree] = useState<SessionTree>(initialSessions.tree);
+  const { tree: sessionTree, setTree: setSessionTree, undo: treeUndo, redo: treeRedo, resetTree: resetSessionTree } = useTreeHistory(initialSessions.tree);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(initialSessions.activeId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem('zst-sidebar-collapsed') === 'true'; } catch { return false; }
   });
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [confirmClearSession, setConfirmClearSession] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   // ─── Scroll sync ────────────────────────────────────────────────────────
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
@@ -251,15 +266,89 @@ export default function App() {
   }, [splitPct]);
 
   // ─── Derived state ───────────────────────────────────────────────────────
-  const processedEvents = useMemo(() => processInflictionEvents(events), [events]);
+  const processedEvents = useMemo(() => processInflictionEvents(events, loadoutStats), [events, loadoutStats]);
+  const timeMap = useMemo(() => buildTimeMap(events), [events]);
 
   // ─── Controllers & hooks ─────────────────────────────────────────────────
   const { activationWindows, activationWindowsRef, combatLoadout } =
     useCombatLoadout(SLOT_IDS, operators, processedEvents);
 
-  const { resourceGraphs } = useResourceGraphs(operators, SLOT_IDS, events, combatLoadout, resourceConfigs);
+  const tacticalNamesBySlot = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const slotId of SLOT_IDS) {
+      map[slotId] = loadouts[slotId]?.tacticalName ?? undefined;
+    }
+    return map;
+  }, [loadouts]);
 
-  useKeyboardShortcuts(undo, redo);
+  const { resourceGraphs, tacticalEvents } = useResourceGraphs(
+    operators, SLOT_IDS, events, combatLoadout, resourceConfigs, tacticalNamesBySlot,
+  );
+
+  // Merge tactical derived events into the processed events list
+  const allProcessedEvents = useMemo(
+    () => tacticalEvents.length > 0 ? [...processedEvents, ...tacticalEvents] : processedEvents,
+    [processedEvents, tacticalEvents],
+  );
+
+  // Scroll to changed events and select them after undo/redo
+  const undoRedoSnapshotRef = useRef<TimelineEvent[] | null>(null);
+  const [selectEventIds, setSelectEventIds] = useState<Set<string> | undefined>(undefined);
+
+  const undoWithScroll = useCallback(() => {
+    undoRedoSnapshotRef.current = events;
+    undo();
+  }, [undo, events]);
+
+  const redoWithScroll = useCallback(() => {
+    undoRedoSnapshotRef.current = events;
+    redo();
+  }, [redo, events]);
+
+  useEffect(() => {
+    const prev = undoRedoSnapshotRef.current;
+    if (!prev) return;
+    undoRedoSnapshotRef.current = null;
+
+    // Build lookup of previous events
+    const prevMap = new Map<string, TimelineEvent>();
+    for (const ev of prev) prevMap.set(ev.id, ev);
+    const nextIds = new Set(events.map((e) => e.id));
+
+    // Find changed event IDs and earliest frame
+    const changed = new Set<string>();
+    let earliestFrame = Infinity;
+    for (const ev of events) {
+      const prevEv = prevMap.get(ev.id);
+      if (!prevEv || prevEv.startFrame !== ev.startFrame) {
+        changed.add(ev.id);
+        earliestFrame = Math.min(earliestFrame, ev.startFrame);
+      }
+    }
+    // Removed events — can't highlight them, but scroll to where they were
+    for (const ev of prev) {
+      if (!nextIds.has(ev.id)) {
+        earliestFrame = Math.min(earliestFrame, ev.startFrame);
+      }
+    }
+
+    // Select changed events
+    if (changed.size > 0) {
+      setSelectEventIds(changed);
+    }
+
+    // Scroll to earliest changed frame if off-screen
+    if (!isFinite(earliestFrame)) return;
+    const el = tlScrollRef.current;
+    if (!el) return;
+    const targetPx = frameToPx(earliestFrame, zoom);
+    const viewportH = el.clientHeight;
+    if (targetPx < el.scrollTop || targetPx > el.scrollTop + viewportH) {
+      el.scrollTop = Math.max(0, targetPx - viewportH * 0.3);
+    }
+  }, [events, zoom]);
+
+  useKeyboardShortcuts(undoWithScroll, redoWithScroll, treeUndo, treeRedo, sidebarRef);
 
   // Sync SP resource config to the SP timeline controller
   const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
@@ -273,29 +362,82 @@ export default function App() {
     });
   }, [resourceConfigs, combatLoadout, spKey]);
 
-  // Sync derived SP recovery events onto the SP subtimeline for resource graph
+  // Sync SP events onto the SP subtimeline for resource graph:
+  // - SP recovery events (negative activationDuration = gain) from processInflictions
+  // - SP costs from battle skill events (positive activationDuration = cost)
   useEffect(() => {
     const spSubtimeline = combatLoadout.commonSlot.getSubtimeline(COMMON_COLUMN_IDS.SKILL_POINTS);
     if (!spSubtimeline) return;
-    const spEvents = processedEvents.filter(
+    const spRecovery = processedEvents.filter(
       (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS,
     );
-    spSubtimeline.setEvents(spEvents);
+    const battleCosts = processedEvents
+      .filter((ev) => ev.columnId === 'battle' && ev.skillPointCost)
+      .map((ev) => ({
+        id: `${ev.id}-sp`,
+        name: 'sp-cost',
+        ownerId: COMMON_OWNER_ID,
+        columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+        startFrame: ev.startFrame,
+        activationDuration: ev.skillPointCost!,
+        activeDuration: 0,
+        cooldownDuration: 0,
+      } as import('./consts/viewTypes').TimelineEvent));
+    spSubtimeline.setEvents([...spRecovery, ...battleCosts].sort((a, b) => a.startFrame - b.startFrame));
   }, [processedEvents, combatLoadout]);
 
-  const slots = SLOT_IDS.map((slotId, i) => ({
-    slotId,
-    operator: operators[i] ?? null,
-    potential: loadoutStats[slotId]?.potential,
-  }));
+  // Pause SP regen during time-stops (ultimate, dodge, and combo animations)
+  useEffect(() => {
+    const stops: TimeStopRange[] = [];
+    for (const ev of processedEvents) {
+      const isTimeStop = (ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+        (ev.columnId === 'dash' && ev.isPerfectDodge)) &&
+        ev.animationDuration && ev.animationDuration > 0;
+      if (isTimeStop) {
+        stops.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + ev.animationDuration! });
+      }
+    }
+    stops.sort((a, b) => a.startFrame - b.startFrame);
+    combatLoadout.commonSlot.skillPoints.setTimeStops(stops);
+  }, [processedEvents, combatLoadout]);
+
+  const slots = SLOT_IDS.map((slotId, i) => {
+    const op = operators[i] ?? null;
+    const lo = loadouts[slotId];
+    // Compute active gear set type (3+ pieces of same effect type)
+    let gearSetType: import('./consts/enums').GearEffectType | undefined;
+    if (lo) {
+      const gearNames = [lo.armorName, lo.glovesName, lo.kit1Name, lo.kit2Name];
+      const allGear = [...ARMORS, ...GLOVES, ...KITS];
+      const counts = new Map<string, number>();
+      for (const name of gearNames) {
+        if (!name) continue;
+        const entry = allGear.find((g) => g.name === name);
+        if (!entry) continue;
+        const et = entry.gearEffectType;
+        counts.set(et, (counts.get(et) ?? 0) + 1);
+      }
+      counts.forEach((count, et) => {
+        if (count >= 3) gearSetType = et as import('./consts/enums').GearEffectType;
+      });
+    }
+    return {
+      slotId,
+      operator: op,
+      potential: loadoutStats[slotId]?.potential,
+      weaponName: lo?.weaponName ?? undefined,
+      tacticalName: lo?.tacticalName ?? undefined,
+      gearSetType,
+    };
+  });
 
   const columns = useMemo(
     () => buildColumns(slots, enemy, visibleSkills),
-    [slots, enemy, visibleSkills, loadoutStats],
+    [slots, enemy, visibleSkills, loadoutStats, loadouts],
   );
 
   const editingEvent = editingEventId
-    ? processedEvents.find((e) => e.id === editingEventId) ?? null
+    ? allProcessedEvents.find((e) => e.id === editingEventId) ?? null
     : null;
 
   const editingEventReadOnly = editingEvent
@@ -364,11 +506,23 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [buildSheetData, activeSessionId]);
 
+  // ─── Escape to close info pane ──────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (editingEventId || editingSlotId || editingResourceKey)) {
+        e.preventDefault();
+        setInfoPanePinned(false);
+        setInfoPaneClosing(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [editingEventId, editingSlotId, editingResourceKey]);
+
   // ─── Session handlers ──────────────────────────────────────────────────
   const handleSessionTreeChange = useCallback((tree: SessionTree) => {
     setSessionTree(tree);
-    saveSessionTree(tree);
-  }, []);
+  }, [setSessionTree]);
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarCollapsed((p) => {
@@ -483,32 +637,28 @@ export default function App() {
   }, [activeSessionId, sessionTree, handleSelectSession]);
 
   const handleExport = useCallback(() => {
-    exportToFile(buildSheetData());
-  }, [buildSheetData]);
+    // Flush current session before opening export modal
+    if (activeSessionId) {
+      saveSessionData(activeSessionId, buildSheetData());
+    }
+    setExportModalOpen(true);
+  }, [activeSessionId, buildSheetData]);
 
   const handleImport = useCallback(async () => {
-    const result = await importFromFile();
+    const result = await importMultiSessionFile();
     if (!result.ok) {
       setWarningMessage(result.error);
       return;
     }
-    const resolved = applySheetData(result.data);
-    resetUndoable({
-      events: resolved.events,
-      operators: resolved.operators,
-      enemy: resolved.enemy,
-      loadouts: resolved.loadouts,
-      loadoutStats: resolved.loadoutStats,
-      resourceConfigs: resolved.resourceConfigs,
-    });
-    setVisibleSkills(resolved.visibleSkills);
-    setEditingEventId(null);
-    setEditingSlotId(null);
-    setEditingResourceKey(null);
-    setContextMenu(null);
-  }, [resetUndoable]);
+    const { tree: mergedTree, sessionData } = mergeBundle(sessionTree, result.data);
+    // Persist all imported session data
+    for (const [id, data] of Object.entries(sessionData)) {
+      saveSessionData(id, data);
+    }
+    setSessionTree(mergedTree);
+  }, [sessionTree, setSessionTree]);
 
-  const handleClear = useCallback(() => {
+  const handleClearSession = useCallback(() => {
     setNextEventId(1);
     resetUndoable({
       events: [],
@@ -524,7 +674,68 @@ export default function App() {
     setEditingResourceKey(null);
     setContextMenu(null);
     clearLocalStorage();
-  }, [resetUndoable]);
+    if (activeSessionId) {
+      saveSessionData(activeSessionId, serializeSheet(
+        [...INITIAL_OPERATORS].map((op) => op?.id ?? null),
+        DEFAULT_ENEMY.id, [], INITIAL_LOADOUTS, INITIAL_LOADOUT_STATS,
+        INITIAL_VISIBLE, 1, {},
+      ));
+    }
+    setConfirmClearSession(false);
+  }, [resetUndoable, activeSessionId]);
+
+  const handleClearAll = useCallback(() => {
+    // Delete all session data from localStorage
+    for (const node of sessionTree.nodes) {
+      if (node.type === 'session') {
+        deleteSessionData(node.id);
+      }
+    }
+    // Create a fresh Session 1
+    const freshTree: SessionTree = { nodes: [] };
+    const { tree: newTree, node } = addSessionNode(freshTree, 'Session 1', null);
+    resetSessionTree(newTree);
+
+    // Reset timeline state
+    setNextEventId(1);
+    const emptyState = {
+      events: [] as TimelineEvent[],
+      operators: [...INITIAL_OPERATORS],
+      enemy: DEFAULT_ENEMY,
+      loadouts: INITIAL_LOADOUTS,
+      loadoutStats: INITIAL_LOADOUT_STATS,
+      resourceConfigs: {} as Record<string, ResourceConfig>,
+    };
+    resetUndoable(emptyState);
+    setVisibleSkills(INITIAL_VISIBLE);
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingResourceKey(null);
+    setContextMenu(null);
+    clearLocalStorage();
+
+    // Save and activate
+    const sheetData = serializeSheet(
+      emptyState.operators.map((op) => op?.id ?? null),
+      emptyState.enemy.id,
+      emptyState.events,
+      emptyState.loadouts,
+      emptyState.loadoutStats,
+      INITIAL_VISIBLE,
+      1,
+      emptyState.resourceConfigs,
+    );
+    saveSessionData(node.id, sheetData);
+    setActiveSessionId(node.id);
+    saveActiveSessionId(node.id);
+    setConfirmClearAll(false);
+  }, [sessionTree, resetSessionTree, resetUndoable]);
+
+  const handleRenameActiveSession = useCallback((name: string) => {
+    if (!activeSessionId) return;
+    const dedupedName = uniqueName(sessionTree, name, null, activeSessionId);
+    setSessionTree(renameNode(sessionTree, activeSessionId, dedupedName));
+  }, [activeSessionId, sessionTree, setSessionTree]);
 
   // ─── Zoom ────────────────────────────────────────────────────────────────
   const handleZoom = useCallback((deltaY: number) => {
@@ -552,12 +763,12 @@ export default function App() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('./consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number } | null,
+    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('./consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('./consts/enums').TimeDependency; skillPointCost?: number } | null,
   ) => {
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
-      if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame)) return prev;
+      if (!debugModeRef.current && wouldOverlapNonOverlappable(prev, ev, ev.startFrame)) return prev;
       return [...prev, ev];
     });
     setContextMenu(null);
@@ -655,6 +866,7 @@ export default function App() {
         cooldownDuration: defaults.defaultCooldownDuration,
         ...(defaults.segments ? { segments: defaults.segments } : {}),
         ...(defaults.animationDuration !== undefined ? { animationDuration: defaults.animationDuration } : {}),
+        ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
       } : ev));
     });
     setContextMenu(null);
@@ -710,6 +922,7 @@ export default function App() {
           cooldownDuration: defaults.defaultCooldownDuration,
           ...(defaults.segments ? { segments: defaults.segments } : {}),
           ...(defaults.animationDuration !== undefined ? { animationDuration: defaults.animationDuration } : {}),
+          ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
         };
       });
       return changed ? result : prev;
@@ -912,13 +1125,17 @@ export default function App() {
         nextOperators[slotIndex] = newOp;
       }
 
-      // Update loadouts (clear incompatible weapon)
+      // Update loadouts — clear weapon if incompatible with new operator
       let nextLoadouts = prev.loadouts;
       const current = prev.loadouts[slotId];
       if (current.weaponName !== null) {
-        const equippedWeapon = WEAPONS.find((w) => w.name === current.weaponName);
-        if (equippedWeapon && !CombatLoadout.isWeaponCompatible(newOp, equippedWeapon)) {
+        if (!newOp) {
           nextLoadouts = { ...prev.loadouts, [slotId]: { ...current, weaponName: null } };
+        } else {
+          const equippedWeapon = WEAPONS.find((w) => w.name === current.weaponName);
+          if (equippedWeapon && !CombatLoadout.isWeaponCompatible(newOp, equippedWeapon)) {
+            nextLoadouts = { ...prev.loadouts, [slotId]: { ...current, weaponName: null } };
+          }
         }
       }
 
@@ -941,15 +1158,21 @@ export default function App() {
   return (
     <div className="app">
       <AppBar
-        onClear={handleClear}
+        activeSessionName={sessionTree.nodes.find((n) => n.id === activeSessionId)?.name ?? ''}
+        onRenameSession={handleRenameActiveSession}
+        onClearSession={() => setConfirmClearSession(true)}
+        onClearAll={() => setConfirmClearAll(true)}
         onExport={handleExport}
         onImport={handleImport}
         onDevlog={() => setDevlogOpen(true)}
         onKeys={() => setKeysOpen((p) => !p)}
+        debugMode={debugMode}
+        onToggleDebug={() => setDebugMode((v) => !v)}
       />
 
       <div ref={appBodyRef} className="app-body" style={{ '--tl-flex': `${splitPct} 0 0`, '--sheet-flex': `${100 - splitPct} 0 0` } as React.CSSProperties}>
         <SessionSidebar
+          ref={sidebarRef}
           tree={sessionTree}
           activeSessionId={activeSessionId}
           onTreeChange={handleSessionTreeChange}
@@ -964,7 +1187,7 @@ export default function App() {
         <CombatPlanner
           slots={slots}
           enemy={enemy}
-          events={processedEvents}
+          events={allProcessedEvents}
           columns={columns}
           visibleSkills={visibleSkills}
           loadouts={loadouts}
@@ -1019,6 +1242,11 @@ export default function App() {
           onHoverFrame={setHoverFrame}
           hideScrollbar={scrollSynced}
           onDuplicateEvents={handleDuplicateEvents}
+          selectEventIds={selectEventIds}
+          onSelectEventIdsConsumed={() => setSelectEventIds(undefined)}
+          showRealTime={showRealTime}
+          onToggleRealTime={() => setShowRealTime((v) => !v)}
+          debugMode={debugMode}
         />
 
         <div
@@ -1071,10 +1299,11 @@ export default function App() {
 
         <CombatSheet
           slots={slots}
-          events={processedEvents}
+          events={allProcessedEvents}
           columns={columns}
           enemy={enemy}
           loadoutStats={loadoutStats}
+          loadouts={loadouts}
           zoom={zoom}
           loadoutRowHeight={loadoutRowHeight}
           selectedFrames={selectedFrames}
@@ -1083,6 +1312,7 @@ export default function App() {
           onScroll={handleSheetScroll}
           onZoom={handleZoom}
           compact={!scrollSynced}
+          showRealTime={showRealTime}
         />
 
       </div>
@@ -1104,6 +1334,7 @@ export default function App() {
           slots={slots}
           enemy={enemy}
           columns={columns}
+          timeMap={timeMap}
           onUpdate={handleUpdateEvent}
           onRemove={handleRemoveEvent}
           onClose={() => { setEditingEventId(null); setSelectedFrames([]); setInfoPaneClosing(false); setInfoPanePinned(false); }}
@@ -1117,6 +1348,7 @@ export default function App() {
       ) : editingSlot && editingSlot.operator ? (
         <InformationPane
           mode="loadout"
+          operatorId={editingSlot.operator.id}
           operator={editingSlot.operator}
           loadout={loadouts[editingSlot.slotId]}
           stats={loadoutStats[editingSlot.slotId]}
@@ -1145,6 +1377,29 @@ export default function App() {
       {keysOpen && <KeyboardShortcutsModal onClose={() => setKeysOpen(false)} />}
 
       {warningMessage && <WarningModal message={warningMessage} onClose={() => setWarningMessage(null)} />}
+
+      <ExportModal
+        open={exportModalOpen}
+        tree={sessionTree}
+        activeSessionId={activeSessionId}
+        onClose={() => setExportModalOpen(false)}
+      />
+
+      <ConfirmModal
+        open={confirmClearSession}
+        message="Clear current session? This will reset all operators, events, and loadouts."
+        confirmLabel="Clear Session"
+        onConfirm={handleClearSession}
+        onClose={() => setConfirmClearSession(false)}
+      />
+
+      <ConfirmModal
+        open={confirmClearAll}
+        message="Delete ALL sessions and start fresh? This cannot be undone."
+        confirmLabel="Clear All"
+        onConfirm={handleClearAll}
+        onClose={() => setConfirmClearAll(false)}
+      />
     </div>
   );
 }

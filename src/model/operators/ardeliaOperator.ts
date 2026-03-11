@@ -6,48 +6,20 @@ import {
   WoolyParty,
 } from "../combat-skills/ardeliaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-/** Ardelia's base attribute scores by level (Elite 0–Max). */
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+/** Ardelia's base attribute scores at lv1 and lv90. */
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 30,
     [StatType.STRENGTH]: 9,
     [StatType.AGILITY]: 9,
     [StatType.INTELLECT]: 20,
     [StatType.WILL]: 15,
   },
-  20: {
-    [StatType.ATTACK]: 93,
-    [StatType.STRENGTH]: 31,
-    [StatType.AGILITY]: 27,
-    [StatType.INTELLECT]: 46,
-    [StatType.WILL]: 37,
-  },
-  40: {
-    [StatType.ATTACK]: 159,
-    [StatType.STRENGTH]: 54,
-    [StatType.AGILITY]: 46,
-    [StatType.INTELLECT]: 75,
-    [StatType.WILL]: 60,
-  },
-  60: {
-    [StatType.ATTACK]: 225,
-    [StatType.STRENGTH]: 77,
-    [StatType.AGILITY]: 65,
-    [StatType.INTELLECT]: 103,
-    [StatType.WILL]: 83,
-  },
-  80: {
-    [StatType.ATTACK]: 291,
-    [StatType.STRENGTH]: 100,
-    [StatType.AGILITY]: 84,
-    [StatType.INTELLECT]: 131,
-    [StatType.WILL]: 106,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 323,
     [StatType.STRENGTH]: 112,
     [StatType.AGILITY]: 93,
@@ -91,7 +63,9 @@ export class ArdeliaOperator extends Operator {
       secondaryAttributeType: ArdeliaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ArdeliaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ArdeliaOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Keen Mind',
+      attributeIncreaseAttribute: StatType.INTELLECT,
+      baseStats: BASE_STATS,
       ...params,
     });
 

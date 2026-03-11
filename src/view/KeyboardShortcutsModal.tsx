@@ -21,8 +21,11 @@ export default function KeyboardShortcutsModal({ onClose }: KeyboardShortcutsMod
             <tr><td>Redo</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td></tr>
             <tr><td>Select all events</td><td><kbd>Ctrl</kbd> + <kbd>A</kbd></td></tr>
             <tr><td>Multi-select</td><td><kbd>Ctrl</kbd> + <kbd>Click</kbd></td></tr>
+            <tr><td>Delete selected</td><td><kbd>Delete</kbd></td></tr>
+            <tr><td>Duplicate selected</td><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td></tr>
             <tr><td>Context menu</td><td><kbd>Right-click</kbd></td></tr>
             <tr><td>Move event / Marquee select</td><td><kbd>Drag</kbd></td></tr>
+            <tr><td>Close info panel</td><td><kbd>Esc</kbd></td></tr>
           </tbody>
         </table>
       </div>

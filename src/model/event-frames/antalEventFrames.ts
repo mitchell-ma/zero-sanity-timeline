@@ -97,9 +97,10 @@ class AntalBattleSkillSequence extends SkillEventSequence {
         // First tick applies Focus to the enemy
         const applyStatus = i === 1
           ? {
-              target: TargetType.ENEMY, status: StatusType.FOCUS, stacks: 1,
+              target: TargetType.ENEMY, status: StatusType.SUSCEPTIBILITY, stacks: 1,
               durationFrames: FOCUS_DURATION_FRAMES,
               susceptibility: { electric: FOCUS_SUSCEPTIBILITY, heat: FOCUS_SUSCEPTIBILITY },
+              eventName: StatusType.FOCUS,
             }
           : undefined;
         frames.push(new AntalSkillEventFrame(tick, applyStatus ? { applyStatus } : undefined));

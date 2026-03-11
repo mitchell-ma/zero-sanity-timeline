@@ -1,3 +1,5 @@
+import { HitType, TimeDependency } from './enums';
+
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
 
@@ -17,8 +19,10 @@ export interface SkillDef {
   teamGaugeGain?: number;
   /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
   gaugeGainByEnemies?: Record<number, number>;
-  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates only. */
+  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates and combo skills. */
   animationDuration?: number;
+  /** SP cost for battle skills. */
+  skillPointCost?: number;
 }
 
 export interface Operator {
@@ -41,6 +45,8 @@ export interface Operator {
   ultimateEnergyCost: number;
   maxTalentOneLevel: number;
   maxTalentTwoLevel: number;
+  attributeIncreaseName: string;
+  attributeIncreaseAttribute: string;
   triggerCapability?: import('./triggerCapabilities').TriggerCapability;
 }
 
@@ -89,15 +95,23 @@ export interface EventFrameMarker {
   /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
   applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
   /** Status applied by this frame to a target (self or enemy). */
-  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Record<string, readonly number[]> };
+  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Record<string, readonly number[]>; eventName?: string };
   /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
   consumeStatus?: string;
   /** Element of damage dealt by this frame (for coloring when no infliction). */
   damageElement?: string;
   /** Whether this frame duplicates the source infliction that triggered it. */
   duplicatesSourceInfliction?: boolean;
-  /** True only for the last frame of the final basic attack sequence. */
-  isFinalStrike?: boolean;
+  /** Hit type classification (Normal or Final Strike). */
+  hitType?: HitType;
+  /** Template SP recovery for this frame when it is the final strike (from model data). */
+  templateFinalStrikeSP?: number;
+  /** Template stagger for this frame when it is the final strike (from model data). */
+  templateFinalStrikeStagger?: number;
+  /** Ultimate gauge gained by this operator on this frame. */
+  gaugeGain?: number;
+  /** Ultimate gauge gained by all team operators on this frame. */
+  teamGaugeGain?: number;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -115,6 +129,8 @@ export interface EventSegmentData {
   label?: string;
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
+  /** Whether this segment's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
+  timeDependency?: TimeDependency;
 }
 
 export interface TimelineEvent {
@@ -127,7 +143,7 @@ export interface TimelineEvent {
   activationDuration: number;
   activeDuration: number;
   cooldownDuration: number;
-  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates only. */
+  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates and combo skills. */
   animationDuration?: number;
   /** If present, this event is multi-sequence. Segments replace the standard 3-phase layout. */
   segments?: EventSegmentData[];
@@ -149,16 +165,24 @@ export interface TimelineEvent {
   gaugeGainByEnemies?: Record<number, number>;
   /** Number of enemies hit (selectable in info pane when gaugeGainByEnemies exists). */
   enemiesHit?: number;
-  /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by element → per-level array. */
-  susceptibility?: Record<string, readonly number[]>;
+  /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by element → resolved percentage. */
+  susceptibility?: Record<string, number>;
   /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'breach'). */
   comboTriggerColumnId?: string;
+  /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */
+  timeInteraction?: string;
+  /** If true, this dash includes a perfect dodge (i-frame), applying TIME_STOP and generating 7.5 SP. */
+  isPerfectDodge?: boolean;
+  /** Visual time dilation factor: 1.0 = normal, >1.0 = stretched (e.g. perfect dodge ≈ 1.709). */
+  timeDilation?: number;
+  /** Whether this event's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
+  timeDependency?: TimeDependency;
   /** Operator slot ID that originally produced this derived event. */
   sourceOwnerId?: string;
   /** Skill name of the operator event that produced this derived event. */
   sourceSkillName?: string;
   /** Outcome of a derived event: how it ended. */
-  eventStatus?: 'expired' | 'consumed' | 'refreshed' | 'triggered';
+  eventStatus?: 'expired' | 'consumed' | 'refreshed' | 'triggered' | 'extended';
   /** Operator slot ID responsible for this event status change. */
   eventStatusOwnerId?: string;
   /** Skill name responsible for this event status change. */
@@ -167,6 +191,8 @@ export interface TimelineEvent {
   forcedReaction?: boolean;
   /** Operator potential (0–5) for potential-dependent derived effects. */
   operatorPotential?: number;
+  /** SP cost consumed when this battle skill event fires. */
+  skillPointCost?: number;
 }
 
 export interface ContextMenuItem {
@@ -201,6 +227,13 @@ export interface MicroColumn {
   id: string;         // used as columnId for events in this micro-column
   label: string;      // short display label (e.g. "HEAT", "1")
   color: string;      // render color for events in this micro-column
+  /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
+  defaultEvent?: {
+    name: string;
+    defaultActivationDuration: number;
+    defaultActiveDuration: number;
+    defaultCooldownDuration: number;
+  };
 }
 
 /** Unified mini-timeline column — replaces SkillColumn, StatusColumn, MeltingFlameColumn. */
@@ -238,6 +271,16 @@ export type MiniTimeline = {
     gaugeGainByEnemies?: Record<number, number>;
     /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
     animationDuration?: number;
+    /** How this event interacts with other timelines. */
+    timeInteraction?: string;
+    /** If true, this is a perfect dodge. */
+    isPerfectDodge?: boolean;
+    /** Visual time dilation factor. */
+    timeDilation?: number;
+    /** Whether this event's duration is game-time or real-time dependent. */
+    timeDependency?: TimeDependency;
+    /** SP cost for battle skills. */
+    skillPointCost?: number;
   };
 
   /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
@@ -261,6 +304,16 @@ export type MiniTimeline = {
     gaugeGainByEnemies?: Record<number, number>;
     /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
     animationDuration?: number;
+    /** How this event interacts with other timelines. */
+    timeInteraction?: string;
+    /** If true, this is a perfect dodge. */
+    isPerfectDodge?: boolean;
+    /** Visual time dilation factor. */
+    timeDilation?: number;
+    /** Whether this event's duration is game-time or real-time dependent. */
+    timeDependency?: TimeDependency;
+    /** SP cost for battle skills. */
+    skillPointCost?: number;
   }[];
 
   /** Element type of this skill column (for per-skill coloring). */

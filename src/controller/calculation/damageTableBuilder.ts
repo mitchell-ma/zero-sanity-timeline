@@ -8,9 +8,10 @@ import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../c
 import { COMBAT_SKILL_LABELS } from '../../consts/channelLabels';
 import { CombatSkillsType, CombatSkillType, ElementType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
-import { MODEL_FACTORIES } from '../operators/operatorRegistry';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier } from './skillMultiplierRegistry';
+import { aggregateLoadoutStats } from './loadoutAggregator';
+import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
   calculateDamage,
   DamageParams,
@@ -24,6 +25,7 @@ import {
   getTotalAttack,
 } from '../../model/calculation/damageFormulas';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
+import { absoluteGameFrame } from '../../utils/timeline';
 import type { Slot } from '../timeline/columnBuilder';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -47,6 +49,8 @@ export interface DamageTableRow {
   segmentLabel: string | undefined;
   /** Skill name (CombatSkillsType) for this tick. */
   skillName: string;
+  /** Remaining boss HP after this tick's damage (can go negative). Null if HP unknown. */
+  hpRemaining: number | null;
 }
 
 /** Column descriptor for the damage table header. */
@@ -84,6 +88,8 @@ export interface DamageStatistics {
   operators: OperatorDamageStats[];
   /** Quick lookup: columnKey → totalDamage. */
   columnTotals: Map<string, number>;
+  /** Boss max HP (null if enemy has no HP data). */
+  bossMaxHp: number | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -129,28 +135,32 @@ interface OperatorCalcData {
   element: ElementType;
 }
 
-function buildOperatorCalcData(operatorId: string): OperatorCalcData | null {
-  const factory = MODEL_FACTORIES[operatorId];
-  if (!factory) return null;
+function buildOperatorCalcData(
+  operatorId: string,
+  loadout: OperatorLoadoutState,
+  stats: LoadoutStats,
+): OperatorCalcData | null {
+  const agg = aggregateLoadoutStats(operatorId, loadout, stats);
+  if (!agg) return null;
 
-  const model = factory();
-  const stats = { ...model.stats };
-  const operatorAtk = model.getBaseAttack();
-  // Weapon ATK would be added here if loadout weapon data were available.
-  // For now, we use operator-only ATK. Future: pass weapon model here.
-  const totalAttack = getTotalAttack(operatorAtk, 0, stats[StatType.ATTACK_BONUS], 0);
+  const totalAttack = getTotalAttack(
+    agg.operatorBaseAttack,
+    agg.weaponBaseAttack,
+    agg.stats[StatType.ATTACK_BONUS],
+    agg.flatAttackBonuses,
+  );
   const attributeBonus = getAttributeBonus(
-    stats[model.mainAttributeType],
-    stats[model.secondaryAttributeType],
+    agg.stats[agg.mainAttributeType],
+    agg.stats[agg.secondaryAttributeType],
   );
 
   return {
     totalAttack,
     attributeBonus,
-    critRate: Math.min(Math.max(stats[StatType.CRITICAL_RATE], 0), 1),
-    critDamage: stats[StatType.CRITICAL_DAMAGE],
-    stats,
-    element: model.element,
+    critRate: Math.min(Math.max(agg.stats[StatType.CRITICAL_RATE], 0), 1),
+    critDamage: agg.stats[StatType.CRITICAL_DAMAGE],
+    stats: agg.stats,
+    element: agg.element,
   };
 }
 
@@ -166,6 +176,7 @@ export function buildDamageTableRows(
   slots: Slot[],
   enemy: ViewEnemy,
   loadoutStats: Record<string, LoadoutStats>,
+  loadouts?: Record<string, OperatorLoadoutState>,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
 
@@ -186,15 +197,18 @@ export function buildDamageTableRows(
       opIdCache.set(slot.slotId, null);
       continue;
     }
-    const data = buildOperatorCalcData(slot.operator.id);
+    const slotLoadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
+    const slotStats = loadoutStats[slot.slotId] ?? DEFAULT_LOADOUT_STATS;
+    const data = buildOperatorCalcData(slot.operator.id, slotLoadout, slotStats);
     opCache.set(slot.slotId, data);
     opIdCache.set(slot.slotId, slot.operator.id);
   }
 
-  // Get model enemy for DEF/resistance
+  // Get model enemy for DEF/resistance/HP
   const modelEnemy = getModelEnemy(enemy.id);
   const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
   const defMultiplier = getDefenseMultiplier(enemyDef);
+  const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
   for (const ev of events) {
     const effectiveColumnId = isUltEnhanced(ev.name) ? 'ultimate' : ev.columnId;
@@ -218,7 +232,7 @@ export function buildDamageTableRows(
         if (seg.frames) {
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
-            const absoluteFrame = ev.startFrame + segmentFrameOffset + frame.offsetFrame;
+            const absoluteFrame = absoluteGameFrame(ev.startFrame, segmentFrameOffset + frame.offsetFrame, ev.animationDuration);
 
             // Look up multiplier
             let multiplier: number | null = null;
@@ -272,7 +286,7 @@ export function buildDamageTableRows(
                   linkMultiplier: 1,
                   weakenMultiplier: 1,
                   susceptibilityMultiplier: 1,
-                  increasedDmgTakenMultiplier: 1,
+                  fragilityMultiplier: 1,
                   dmgReductionMultiplier: 1,
                   protectionMultiplier: 1,
                   defenseMultiplier: defMultiplier,
@@ -297,6 +311,7 @@ export function buildDamageTableRows(
               multiplier,
               segmentLabel: seg.label,
               skillName: ev.name,
+              hpRemaining: null, // computed after sorting
             });
           }
         }
@@ -306,6 +321,16 @@ export function buildDamageTableRows(
   }
 
   rows.sort((a, b) => a.absoluteFrame - b.absoluteFrame || a.label.localeCompare(b.label));
+
+  // Compute cumulative boss HP remaining
+  if (bossMaxHp != null) {
+    let cumDamage = 0;
+    for (const row of rows) {
+      if (row.damage != null) cumDamage += row.damage;
+      row.hpRemaining = bossMaxHp - cumDamage;
+    }
+  }
+
   return rows;
 }
 
@@ -336,6 +361,7 @@ export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] 
 export function computeDamageStatistics(
   rows: DamageTableRow[],
   tableColumns: DamageTableColumn[],
+  bossMaxHp?: number | null,
 ): DamageStatistics {
   // Aggregate per-column totals
   const columnTotals = new Map<string, number>();
@@ -383,5 +409,5 @@ export function computeDamageStatistics(
     });
   });
 
-  return { teamTotalDamage, operators, columnTotals };
+  return { teamTotalDamage, operators, columnTotals, bossMaxHp: bossMaxHp ?? null };
 }

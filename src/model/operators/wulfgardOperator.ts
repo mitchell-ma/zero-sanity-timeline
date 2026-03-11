@@ -6,48 +6,20 @@ import {
   WolvenFury,
 } from "../combat-skills/wulfgardSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-/** Wulfgard's base attribute scores by level (Elite 0–Max). */
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+/** Wulfgard's base attribute scores at lv1 and lv90. */
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 30,
     [StatType.STRENGTH]: 18,
     [StatType.AGILITY]: 9,
     [StatType.INTELLECT]: 9,
     [StatType.WILL]: 13,
   },
-  20: {
-    [StatType.ATTACK]: 86,
-    [StatType.STRENGTH]: 49,
-    [StatType.AGILITY]: 27,
-    [StatType.INTELLECT]: 27,
-    [StatType.WILL]: 34,
-  },
-  40: {
-    [StatType.ATTACK]: 146,
-    [StatType.STRENGTH]: 81,
-    [StatType.AGILITY]: 47,
-    [StatType.INTELLECT]: 45,
-    [StatType.WILL]: 56,
-  },
-  60: {
-    [StatType.ATTACK]: 205,
-    [StatType.STRENGTH]: 113,
-    [StatType.AGILITY]: 66,
-    [StatType.INTELLECT]: 64,
-    [StatType.WILL]: 78,
-  },
-  80: {
-    [StatType.ATTACK]: 264,
-    [StatType.STRENGTH]: 145,
-    [StatType.AGILITY]: 85,
-    [StatType.INTELLECT]: 83,
-    [StatType.WILL]: 100,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 294,
     [StatType.STRENGTH]: 161,
     [StatType.AGILITY]: 95,
@@ -91,7 +63,9 @@ export class WulfgardOperator extends Operator {
       secondaryAttributeType: WulfgardOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: WulfgardOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: WulfgardOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -111,6 +85,12 @@ export class WulfgardOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      1: { [StatType.STRENGTH]: 15, [StatType.AGILITY]: 15 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

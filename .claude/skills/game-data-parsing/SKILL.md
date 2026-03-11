@@ -37,6 +37,7 @@ Each character in `characterRoster` has:
 | `link_cooldown` | `*_COMBO_SKILL_COOLDOWN` | Combo skill cooldown (seconds) |
 | `link_gaugeGain` | `*_COMBO_SKILL_GAUGE_GAIN` | Ultimate gauge gained |
 | `link_damage_ticks[]` | `*_COMBO_SKILL_TICK_N` | Same tick format |
+| *(not in gamedata)* | `*_COMBO_SKILL_TIME_STOP_DURATION` | Time-stop duration struct (see below) |
 | `ultimate_duration` | `*_ULTIMATE_DURATION` | Ultimate cast/activation animation (seconds) |
 | `ultimate_animationTime` | `*_ULTIMATE_ANIMATION_TIME` | Ultimate animation time (seconds) |
 | `ultimate_gaugeMax` | `*_ULTIMATE_GAUGE_MAX` | Gauge required to activate |
@@ -200,6 +201,37 @@ Single-sequence ultimates remain as plain `SkillEventSequence`:
 endministrator: ENDMINISTRATOR_ULTIMATE_SEQUENCE,
 ```
 
+## Combo skill TIME_STOP_DURATION
+
+Combo skills have a time-stop phase (game-time freezes during the combo animation). This is stored as a struct:
+```json
+"OPERATOR_COMBO_SKILL_TIME_STOP_DURATION": {
+  "SECONDS": 0.5,
+  "DATA_SOURCE": "NONE"
+}
+```
+
+- `SECONDS` — Duration of the time-stop in seconds
+- `DATA_SOURCE` — Source of this value (`"SELF"` = measured, `"NONE"` = default/unmeasured)
+- Default is `0.5` seconds with `DATA_SOURCE: "NONE"` for new operators
+- This field is **not sourced from gamedata.json** — it must be manually measured or left at default
+
+## DATA_SOURCE field
+
+Every event/sequence object and every tick object in skills.json must include a `DATA_SOURCE` field indicating where the data was sourced from.
+
+| Value | Meaning | Trust level |
+|---|---|---|
+| `"END-AXIS"` | Parsed from END-AXIS website data | Secondary — cross-reference with gamedata.json when possible |
+| `"SELF"` | Manually measured/verified by the project maintainer | **Authoritative** — treat as ground truth, do not overwrite with gamedata.json values |
+| `"NONE"` | Default/placeholder value, not yet measured or sourced | Lowest — use as fallback for fields not available in any data source |
+
+### Rules
+- When adding new entries parsed from `gamedata.json`, set `DATA_SOURCE: "END-AXIS"` (the default source)
+- **Never overwrite** a `"SELF"` entry with gamedata.json values — `"SELF"` data has been manually verified and takes precedence
+- When manually correcting or verifying a value, change its `DATA_SOURCE` from `"END-AXIS"` to `"SELF"`
+- `DATA_SOURCE` goes on both the event/sequence object level and on each individual tick object
+
 ## Parsing workflow
 
 1. Find operator in `characterRoster` by `id`
@@ -210,4 +242,6 @@ endministrator: ENDMINISTRATOR_ULTIMATE_SEQUENCE,
 6. For each damage tick, map anomalies using the type mapping above
 7. Check for out-of-bounds ultimate ticks (`OFFSET_SECONDS > DURATION`) and split into delayed sequences if found; name using wiki descriptions
 8. Check `variants[]` for enhanced/empowered forms
-9. Output to skills.json following the tick format above
+9. For combo skills, add `TIME_STOP_DURATION` struct with default `{ SECONDS: 0.5, DATA_SOURCE: "NONE" }`
+10. Output to skills.json following the tick format above, with `DATA_SOURCE: "END-AXIS"` on all new entries
+11. **Before writing**, check if any existing entries have `DATA_SOURCE: "SELF"` — preserve those values unchanged

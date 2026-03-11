@@ -6,47 +6,19 @@ import {
   StackOverflow,
 } from "../combat-skills/xaihiSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 16,
     [StatType.AGILITY]: 16,
     [StatType.INTELLECT]: 24,
     [StatType.WILL]: 19,
   },
-  20: {
-    [StatType.ATTACK]: 106,
-    [StatType.STRENGTH]: 31,
-    [StatType.AGILITY]: 30,
-    [StatType.INTELLECT]: 55,
-    [StatType.WILL]: 41,
-  },
-  40: {
-    [StatType.ATTACK]: 161,
-    [StatType.STRENGTH]: 47,
-    [StatType.AGILITY]: 46,
-    [StatType.INTELLECT]: 89,
-    [StatType.WILL]: 64,
-  },
-  60: {
-    [StatType.ATTACK]: 213,
-    [StatType.STRENGTH]: 62,
-    [StatType.AGILITY]: 60,
-    [StatType.INTELLECT]: 120,
-    [StatType.WILL]: 85,
-  },
-  80: {
-    [StatType.ATTACK]: 266,
-    [StatType.STRENGTH]: 77,
-    [StatType.AGILITY]: 75,
-    [StatType.INTELLECT]: 152,
-    [StatType.WILL]: 107,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 292,
     [StatType.STRENGTH]: 85,
     [StatType.AGILITY]: 82,
@@ -90,7 +62,9 @@ export class XaihiOperator extends Operator {
       secondaryAttributeType: XaihiOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: XaihiOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: XaihiOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Stalwart',
+      attributeIncreaseAttribute: StatType.WILL,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class XaihiOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      4: { [StatType.INTELLECT]: 15, [StatType.TREATMENT_BONUS]: 0.10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

@@ -17,7 +17,7 @@ export class GenericWeapon extends Weapon {
       weaponType: params.weaponType,
       weaponRarity: rarity,
       level: params.level ?? 90,
-      baseAttackByLevel: { 1: 100, 90: 1000 },
+      baseAttack: { lv1: 100, lv90: 1000 },
       weaponSkillOne: new PlaceholderSkill(),
       weaponSkillTwo: new PlaceholderSkill(),
       ...(rarity >= 4 ? { weaponSkillThree: new PlaceholderSkill() } : {}),

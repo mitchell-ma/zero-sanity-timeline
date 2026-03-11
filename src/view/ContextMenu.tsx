@@ -40,6 +40,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
       ref={menuRef}
       className="context-menu"
       style={{ left: clampedX, top: clampedY }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {items.map((item, i) => {
         if (item.separator) {

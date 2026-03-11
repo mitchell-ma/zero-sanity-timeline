@@ -13,7 +13,7 @@ export class GenericGear extends Gear {
   }) {
     super({
       gearType: params.gearType,
-      gearEffectType: params.gearEffectType ?? GearEffectType.HOT_WORK,
+      gearEffectType: params.gearEffectType ?? GearEffectType.NONE,
       rank: params.rank ?? 1,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
     });

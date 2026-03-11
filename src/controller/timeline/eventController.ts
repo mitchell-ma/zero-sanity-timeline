@@ -5,6 +5,7 @@
  * independently and keeps the view layer thin.
  */
 
+import { HitType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { REACTION_COLUMN_IDS } from '../../model/channels';
 import { MeltingFlameController } from './meltingFlameController';
@@ -99,6 +100,11 @@ export function createEvent(
     gaugeGainByEnemies?: Record<number, number>;
     animationDuration?: number;
     operatorPotential?: number;
+    timeInteraction?: string;
+    isPerfectDodge?: boolean;
+    timeDilation?: number;
+    timeDependency?: import('../../consts/enums').TimeDependency;
+    skillPointCost?: number;
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
@@ -121,11 +127,19 @@ export function createEvent(
         + (defaultSkill?.defaultActiveDuration ?? 0)
         + (defaultSkill?.defaultCooldownDuration ?? 0),
     } : {}),
+    ...(columnId === 'dash' ? {
+      nonOverlappableRange: defaultSkill?.defaultActivationDuration ?? 120,
+    } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),
     ...(defaultSkill?.animationDuration ? { animationDuration: defaultSkill.animationDuration } : {}),
     ...(defaultSkill?.operatorPotential != null ? { operatorPotential: defaultSkill.operatorPotential } : {}),
+    ...(defaultSkill?.timeInteraction ? { timeInteraction: defaultSkill.timeInteraction } : {}),
+    ...(defaultSkill?.isPerfectDodge ? { isPerfectDodge: defaultSkill.isPerfectDodge } : {}),
+    ...(defaultSkill?.timeDilation ? { timeDilation: defaultSkill.timeDilation } : {}),
+    ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
+    ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
   };
 }
 
@@ -141,7 +155,50 @@ export function validateUpdate(
   updates: Partial<TimelineEvent>,
   activationWindows: WindowsMap,
 ): TimelineEvent | null {
-  let validated = MeltingFlameController.validateUpdate(allEvents, target, updates);
+  // ── Field-level clamping ──────────────────────────────────────────────────
+  const clamped = { ...updates };
+
+  // Clamp durations to >= 0
+  if (clamped.activationDuration != null) clamped.activationDuration = Math.max(0, clamped.activationDuration);
+  if (clamped.activeDuration != null) clamped.activeDuration = Math.max(0, clamped.activeDuration);
+  if (clamped.cooldownDuration != null) clamped.cooldownDuration = Math.max(0, clamped.cooldownDuration);
+  if (clamped.startFrame != null) clamped.startFrame = Math.max(0, clamped.startFrame);
+
+  // Clamp animation duration to activation duration
+  if (clamped.animationDuration != null) {
+    const activation = clamped.activationDuration ?? target.activationDuration;
+    clamped.animationDuration = Math.max(0, Math.min(clamped.animationDuration, activation));
+  }
+
+  // Clamp segment durations and inner frame offsets
+  if (clamped.segments) {
+    clamped.segments = clamped.segments.map((seg) => {
+      const dur = Math.max(1, seg.durationFrames);
+      const updated = { ...seg, durationFrames: dur };
+      if (updated.frames) {
+        const maxOffset = Math.max(0, dur - 1);
+        updated.frames = updated.frames
+          .map((f) => {
+            const clamped = { ...f, offsetFrame: Math.max(0, Math.min(maxOffset, f.offsetFrame)) };
+            // Populate final strike values from templates, clear for normal hits
+            if (clamped.hitType === HitType.FINAL_STRIKE) {
+              if (clamped.skillPointRecovery === 0 && clamped.templateFinalStrikeSP) {
+                clamped.skillPointRecovery = clamped.templateFinalStrikeSP;
+              }
+              if (clamped.stagger === 0 && clamped.templateFinalStrikeStagger) {
+                clamped.stagger = clamped.templateFinalStrikeStagger;
+              }
+            } else if (clamped.hitType != null) {
+              clamped.skillPointRecovery = 0;
+            }
+            return clamped;
+          });
+      }
+      return updated;
+    });
+  }
+
+  let validated = MeltingFlameController.validateUpdate(allEvents, target, clamped);
   validated = ComboSkillEventController.validateUpdate(target, validated, activationWindows);
   const merged = { ...target, ...validated };
   if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame)) return null;

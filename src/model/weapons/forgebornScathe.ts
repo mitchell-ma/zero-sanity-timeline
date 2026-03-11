@@ -2,17 +2,13 @@ import { WeaponType } from "../../consts/enums";
 import { AttackBoostL, IntellectBoostL } from "../weapon-skills/weaponSkills";
 import { TwilightBlazingWail } from "../weapon-skills/namedWeaponSkills";
 import { WeaponRarity } from "../../consts/types";
-import { Weapon } from "./weapon";
+import { Weapon, WeaponBaseAttack } from "./weapon";
 
 const RARITY: WeaponRarity = 6;
 
-const BASE_ATTACK_BY_LEVEL: Readonly<Record<number, number>> = {
-  1: 52,
-  20: 149,
-  40: 252,
-  60: 355,
-  80: 458,
-  90: 510,
+const BASE_ATTACK: WeaponBaseAttack = {
+  lv1: 52,
+  lv90: 510,
 };
 
 export class ForgebornScathe extends Weapon {
@@ -37,7 +33,7 @@ export class ForgebornScathe extends Weapon {
       weaponType: ForgebornScathe.WEAPON_TYPE,
       weaponRarity: ForgebornScathe.WEAPON_RARITY,
       level: params.level,
-      baseAttackByLevel: BASE_ATTACK_BY_LEVEL,
+      baseAttack: BASE_ATTACK,
       weaponSkillOne: skillOne,
       weaponSkillTwo: skillTwo,
       weaponSkillThree: skillThree,

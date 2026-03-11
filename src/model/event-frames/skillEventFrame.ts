@@ -30,10 +30,12 @@ export interface FrameForcedReaction {
 /** Status applied by a frame tick to a target. */
 export interface FrameApplyStatus {
   target: TargetType;          // SELF (e.g. Melting Flame) or ENEMY (e.g. Focus)
-  status: string;              // StatusType or columnId
+  status: string;              // StatusType or columnId — determines which column the event routes to
   stacks: number;              // stack count (for self-targeted statuses)
   durationFrames: number;      // duration in frames (for enemy-targeted statuses)
   susceptibility?: Record<string, readonly number[]>;  // element → per-level bonus array (12 levels)
+  /** Override event name (defaults to status). Use when the in-game name differs from the column. */
+  eventName?: string;
 }
 
 /** A single damage tick within a skill sequence. */

@@ -6,47 +6,19 @@ import {
   ShieldguardBanner,
 } from "../combat-skills/pogranichnikSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 57,
     [StatType.STRENGTH]: 25,
     [StatType.AGILITY]: 17,
     [StatType.INTELLECT]: 16,
     [StatType.WILL]: 20,
   },
-  20: {
-    [StatType.ATTACK]: 115,
-    [StatType.STRENGTH]: 57,
-    [StatType.AGILITY]: 34,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 43,
-  },
-  40: {
-    [StatType.ATTACK]: 176,
-    [StatType.STRENGTH]: 93,
-    [StatType.AGILITY]: 52,
-    [StatType.INTELLECT]: 49,
-    [StatType.WILL]: 67,
-  },
-  60: {
-    [StatType.ATTACK]: 234,
-    [StatType.STRENGTH]: 126,
-    [StatType.AGILITY]: 69,
-    [StatType.INTELLECT]: 64,
-    [StatType.WILL]: 90,
-  },
-  80: {
-    [StatType.ATTACK]: 293,
-    [StatType.STRENGTH]: 159,
-    [StatType.AGILITY]: 86,
-    [StatType.INTELLECT]: 80,
-    [StatType.WILL]: 113,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 322,
     [StatType.STRENGTH]: 176,
     [StatType.AGILITY]: 95,
@@ -90,7 +62,9 @@ export class PogranichnikOperator extends Operator {
       secondaryAttributeType: PogranichnikOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: PogranichnikOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: PogranichnikOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Stalwart',
+      attributeIncreaseAttribute: StatType.WILL,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class PogranichnikOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.WILL]: 20, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.10 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

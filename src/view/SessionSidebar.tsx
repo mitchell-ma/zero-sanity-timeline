@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   SessionTree,
   SessionNode,
@@ -26,7 +27,36 @@ interface SessionSidebarProps {
   onWarning?: (message: string) => void;
 }
 
-export default function SessionSidebar({
+/** Collect all node IDs in a subtree (inclusive). */
+function collectSubtreeIds(tree: SessionTree, nodeId: string): string[] {
+  const ids: string[] = [nodeId];
+  const children = tree.nodes.filter((n) => n.parentId === nodeId);
+  for (const child of children) {
+    ids.push(...collectSubtreeIds(tree, child.id));
+  }
+  return ids;
+}
+
+/** Get a flattened list of visible node IDs in render order. */
+function flattenVisibleNodes(
+  tree: SessionTree,
+  parentId: string | null,
+  visibleIds: Set<string> | null,
+  filterActive: boolean,
+): string[] {
+  const result: string[] = [];
+  const children = getChildrenOf(tree, parentId);
+  for (const node of children) {
+    if (visibleIds && !visibleIds.has(node.id)) continue;
+    result.push(node.id);
+    if (node.type === 'folder' && (!node.collapsed || filterActive)) {
+      result.push(...flattenVisibleNodes(tree, node.id, visibleIds, filterActive));
+    }
+  }
+  return result;
+}
+
+const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function SessionSidebar({
   tree,
   activeSessionId,
   onTreeChange,
@@ -36,7 +66,7 @@ export default function SessionSidebar({
   collapsed,
   onToggleCollapsed,
   onWarning,
-}: SessionSidebarProps) {
+}, ref) {
   const [filter, setFilter] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -44,6 +74,15 @@ export default function SessionSidebar({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string | null; position: 'before' | 'inside' | 'after' } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string | null; parentId: string | null } | null>(null);
+
+  // ─── Multi-select state ───────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastClickedRef = useRef<string | null>(null);
+
+  // ─── Marquee state ────────────────────────────────────────────────────
+  const [marquee, setMarquee] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+  const marqueeActiveRef = useRef(false);
+  const treeRef = useRef<HTMLDivElement>(null);
 
   // Focus rename input when it appears
   useEffect(() => {
@@ -75,6 +114,12 @@ export default function SessionSidebar({
     return matching;
   }, [tree, filterLower]);
 
+  // Flattened visible node order for shift-click range selection
+  const flatOrder = useMemo(
+    () => flattenVisibleNodes(tree, null, visibleIds, !!filterLower),
+    [tree, visibleIds, filterLower],
+  );
+
   const handleAddSession = useCallback((parentId: string | null) => {
     onNewSession(parentId);
   }, [onNewSession]);
@@ -105,9 +150,111 @@ export default function SessionSidebar({
     onTreeChange(newTree);
   }, [tree, onTreeChange, onDeleteSession]);
 
+  const handleBatchDelete = useCallback((nodeIds: string[]) => {
+    let currentTree = tree;
+    const allRemovedSessionIds: string[] = [];
+    for (const nodeId of nodeIds) {
+      // Node may have been removed already as child of a previously deleted folder
+      if (!currentTree.nodes.find((n) => n.id === nodeId)) continue;
+      const { tree: newTree, removedSessionIds } = removeNode(currentTree, nodeId);
+      currentTree = newTree;
+      allRemovedSessionIds.push(...removedSessionIds);
+    }
+    // Use the first nodeId for the onDeleteSession callback
+    onDeleteSession(allRemovedSessionIds, nodeIds[0]);
+    onTreeChange(currentTree);
+    setSelectedIds(new Set());
+  }, [tree, onTreeChange, onDeleteSession]);
+
   const handleToggleFolder = useCallback((folderId: string) => {
     onTreeChange(toggleFolder(tree, folderId));
   }, [tree, onTreeChange]);
+
+  // ─── Click selection logic ────────────────────────────────────────────
+  const handleNodeClick = useCallback((e: React.MouseEvent, node: SessionNode) => {
+    if (e.ctrlKey || e.metaKey) {
+      // Toggle individual selection
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(node.id)) next.delete(node.id);
+        else next.add(node.id);
+        return next;
+      });
+      lastClickedRef.current = node.id;
+    } else if (e.shiftKey && lastClickedRef.current) {
+      // Range select from last clicked to this node
+      const lastIdx = flatOrder.indexOf(lastClickedRef.current);
+      const curIdx = flatOrder.indexOf(node.id);
+      if (lastIdx >= 0 && curIdx >= 0) {
+        const start = Math.min(lastIdx, curIdx);
+        const end = Math.max(lastIdx, curIdx);
+        const range = new Set(flatOrder.slice(start, end + 1));
+        setSelectedIds(range);
+      }
+    } else {
+      // Normal click — select single, also trigger session switch / folder toggle
+      setSelectedIds(new Set([node.id]));
+      lastClickedRef.current = node.id;
+      if (node.type === 'session') onSelectSession(node.id);
+      else handleToggleFolder(node.id);
+    }
+  }, [flatOrder, onSelectSession, handleToggleFolder]);
+
+  // ─── Marquee selection ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!treeRef.current) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      // Only start marquee on direct clicks on the tree container (not on nodes)
+      const isNode = (e.target as HTMLElement).closest('.session-node');
+      if (isNode || e.button !== 0) return;
+      marqueeActiveRef.current = true;
+      setMarquee({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!marqueeActiveRef.current) return;
+      setMarquee((prev) => prev ? { ...prev, endX: e.clientX, endY: e.clientY } : null);
+    };
+
+    const handleMouseUp = () => {
+      marqueeActiveRef.current = false;
+      setMarquee(null);
+    };
+
+    const el = treeRef.current;
+    el.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      el.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  // Compute marquee-selected nodes
+  useEffect(() => {
+    if (!marquee || !treeRef.current) return;
+    const rect = {
+      left: Math.min(marquee.startX, marquee.endX),
+      top: Math.min(marquee.startY, marquee.endY),
+      right: Math.max(marquee.startX, marquee.endX),
+      bottom: Math.max(marquee.startY, marquee.endY),
+    };
+    const nodeEls = treeRef.current.querySelectorAll('.session-node');
+    const selected = new Set<string>();
+    nodeEls.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const nodeId = (el as HTMLElement).dataset.nodeId;
+      if (!nodeId) return;
+      // Check overlap
+      if (r.right >= rect.left && r.left <= rect.right && r.bottom >= rect.top && r.top <= rect.bottom) {
+        selected.add(nodeId);
+      }
+    });
+    setSelectedIds(selected);
+  }, [marquee]);
 
   // ─── Drag & Drop ───────────────────────────────────────────────────────
   const handleDragStart = useCallback((e: React.DragEvent, nodeId: string) => {
@@ -170,6 +317,7 @@ export default function SessionSidebar({
     if (visibleIds && !visibleIds.has(node.id)) return null;
 
     const isActive = node.type === 'session' && node.id === activeSessionId;
+    const isSelected = selectedIds.has(node.id);
     const isDragging = node.id === dragId;
     const isDropInside = dropTarget?.id === node.id && dropTarget.position === 'inside';
     const isDropBefore = dropTarget?.id === node.id && dropTarget.position === 'before';
@@ -182,8 +330,9 @@ export default function SessionSidebar({
       <div key={node.id} style={{ opacity: isDragging ? 0.4 : 1 }}>
         {isDropBefore && <div className="session-drop-indicator" style={{ marginLeft: depth * 16 }} />}
         <div
-          className={`session-node${isActive ? ' session-node--active' : ''}${isDropInside ? ' session-node--drop-target' : ''}`}
+          className={`session-node${isActive ? ' session-node--active' : ''}${isSelected && !isActive ? ' session-node--selected' : ''}${isDropInside ? ' session-node--drop-target' : ''}`}
           style={{ paddingLeft: 8 + depth * 16 }}
+          data-node-id={node.id}
           draggable
           onDragStart={(e) => handleDragStart(e, node.id)}
           onDragOver={(e) => {
@@ -201,10 +350,7 @@ export default function SessionSidebar({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onDragEnd={handleDragEnd}
-          onClick={() => {
-            if (node.type === 'session') onSelectSession(node.id);
-            else handleToggleFolder(node.id);
-          }}
+          onClick={(e) => handleNodeClick(e, node)}
           onDoubleClick={() => {
             setRenamingId(node.id);
             setRenameValue(node.name);
@@ -212,6 +358,12 @@ export default function SessionSidebar({
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            // If right-clicking a selected node with multi-selection, keep the selection
+            if (!selectedIds.has(node.id) || selectedIds.size <= 1) {
+              setSelectedIds(new Set([node.id]));
+              // Load the session when right-clicking it
+              if (node.type === 'session') onSelectSession(node.id);
+            }
             setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, parentId: node.type === 'folder' ? node.id : node.parentId });
           }}
         >
@@ -283,7 +435,7 @@ export default function SessionSidebar({
 
   if (collapsed) {
     return (
-      <div className="session-sidebar session-sidebar--collapsed">
+      <div ref={ref} className="session-sidebar session-sidebar--collapsed" tabIndex={-1}>
         <button className="session-sidebar-toggle" onClick={onToggleCollapsed} title="Expand sessions">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
@@ -293,8 +445,16 @@ export default function SessionSidebar({
     );
   }
 
+  // Marquee rectangle in CSS coordinates
+  const marqueeRect = marquee ? {
+    left: Math.min(marquee.startX, marquee.endX),
+    top: Math.min(marquee.startY, marquee.endY),
+    width: Math.abs(marquee.endX - marquee.startX),
+    height: Math.abs(marquee.endY - marquee.startY),
+  } : null;
+
   return (
-    <div className="session-sidebar">
+    <div ref={ref} className="session-sidebar" tabIndex={-1}>
       <div className="session-sidebar-header">
         <span className="session-sidebar-title">SESSIONS</span>
         <div className="session-sidebar-header-actions">
@@ -330,6 +490,7 @@ export default function SessionSidebar({
       </div>
 
       <div
+        ref={treeRef}
         className="session-tree"
         onDragOver={(e) => {
           // Allow dropping at root level (after all nodes)
@@ -346,6 +507,11 @@ export default function SessionSidebar({
             setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: null, parentId: null });
           }
         }}
+        onClick={(e) => {
+          // Click on empty space clears selection
+          const isOverNode = (e.target as HTMLElement).closest('.session-node');
+          if (!isOverNode) setSelectedIds(new Set());
+        }}
       >
         {rootNodes.length === 0 && !filter && (
           <div className="session-empty">No sessions yet</div>
@@ -356,13 +522,27 @@ export default function SessionSidebar({
         )}
       </div>
 
-      {ctxMenu && (
+      {marqueeRect && marqueeRect.width > 3 && marqueeRect.height > 3 && (
+        <div
+          className="session-marquee"
+          style={{
+            position: 'fixed',
+            left: marqueeRect.left,
+            top: marqueeRect.top,
+            width: marqueeRect.width,
+            height: marqueeRect.height,
+          }}
+        />
+      )}
+
+      {ctxMenu && createPortal(
         <SessionContextMenu
           x={ctxMenu.x}
           y={ctxMenu.y}
           nodeId={ctxMenu.nodeId}
           node={ctxMenu.nodeId ? tree.nodes.find((n) => n.id === ctxMenu.nodeId) ?? null : null}
           parentId={ctxMenu.parentId}
+          selectedIds={selectedIds}
           onNewSession={(parentId) => { handleAddSession(parentId); setCtxMenu(null); }}
           onNewFolder={(parentId) => { handleAddFolder(parentId); setCtxMenu(null); }}
           onRename={(nodeId) => {
@@ -371,38 +551,45 @@ export default function SessionSidebar({
             setCtxMenu(null);
           }}
           onDelete={(nodeId) => { handleDelete(nodeId); setCtxMenu(null); }}
+          onBatchDelete={(ids) => { handleBatchDelete(ids); setCtxMenu(null); }}
           onClose={() => setCtxMenu(null)}
-        />
+        />,
+        document.body,
       )}
     </div>
   );
-}
+});
+
+export default SessionSidebar;
 
 // ─── Context menu sub-component ──────────────────────────────────────────────
 
 function SessionContextMenu({
-  x, y, nodeId, node, parentId,
-  onNewSession, onNewFolder, onRename, onDelete, onClose,
+  x, y, nodeId, node, parentId, selectedIds,
+  onNewSession, onNewFolder, onRename, onDelete, onBatchDelete, onClose,
 }: {
   x: number;
   y: number;
   nodeId: string | null;
   node: SessionNode | null;
   parentId: string | null;
+  selectedIds: Set<string>;
   onNewSession: (parentId: string | null) => void;
   onNewFolder: (parentId: string | null) => void;
   onRename: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
+  onBatchDelete: (ids: string[]) => void;
   onClose: () => void;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { if (confirmDelete) setConfirmDelete(false); else onClose(); }
     };
     window.addEventListener('mousedown', handleClick);
     window.addEventListener('keydown', handleKey);
@@ -410,7 +597,7 @@ function SessionContextMenu({
       window.removeEventListener('mousedown', handleClick);
       window.removeEventListener('keydown', handleKey);
     };
-  }, [onClose]);
+  }, [onClose, confirmDelete]);
 
   // Position: clamp to viewport
   const style: React.CSSProperties = {
@@ -420,22 +607,53 @@ function SessionContextMenu({
     zIndex: 9999,
   };
 
+  const isBatch = selectedIds.size > 1 && nodeId && selectedIds.has(nodeId);
+  const batchCount = selectedIds.size;
+
   return (
     <div ref={menuRef} className="session-ctx-menu" style={style}>
-      <button className="session-ctx-item" onClick={() => onNewSession(parentId)}>
-        New Session
-      </button>
-      <button className="session-ctx-item" onClick={() => onNewFolder(parentId)}>
-        New Folder
-      </button>
-      {nodeId && node && (
+      {!confirmDelete ? (
         <>
-          <div className="session-ctx-separator" />
-          <button className="session-ctx-item" onClick={() => onRename(nodeId)}>
-            Rename
+          <button className="session-ctx-item" onClick={() => onNewSession(parentId)}>
+            New Session
           </button>
-          <button className="session-ctx-item session-ctx-item--danger" onClick={() => onDelete(nodeId)}>
-            Delete
+          <button className="session-ctx-item" onClick={() => onNewFolder(parentId)}>
+            New Folder
+          </button>
+          {nodeId && node && (
+            <>
+              <div className="session-ctx-separator" />
+              {!isBatch && (
+                <button className="session-ctx-item" onClick={() => onRename(nodeId)}>
+                  Rename
+                </button>
+              )}
+              <button
+                className="session-ctx-item session-ctx-item--danger"
+                onClick={() => setConfirmDelete(true)}
+              >
+                {isBatch ? `Delete ${batchCount} items` : 'Delete'}
+              </button>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="session-ctx-confirm-label">
+            {isBatch ? `Delete ${batchCount} items?` : `Delete "${node?.name}"?`}
+          </div>
+          <div className="session-ctx-separator" />
+          <button
+            className="session-ctx-item session-ctx-item--danger"
+            onClick={() => {
+              if (isBatch) onBatchDelete(Array.from(selectedIds));
+              else if (nodeId) onDelete(nodeId);
+            }}
+          >
+            Confirm Delete
+          </button>
+          <button className="session-ctx-item" onClick={() => setConfirmDelete(false)}>
+            Cancel
           </button>
         </>
       )}

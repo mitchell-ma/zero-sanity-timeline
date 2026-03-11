@@ -8,11 +8,11 @@
 - Foced Corrosion
     - Does it ramp up like a normal corrosion?
     - Can a forced corrosion extend the duration of a normal corrosion?
-- If a skill can consume different kinds of arts reactions (eg. Wulgard battle skill), which reaction is consumed?
-    - Wulfgard consumes combustion or electrification. It looks like he prioritizes combustion over electrification if both are present, regardless of the application order and category (forced vs natural) of the arts reactions.
+- [PARTIALLY ANSWERED] If a skill can consume different kinds of arts reactions (eg. Wulgard battle skill), which reaction is consumed?
+    - Wulfgard consumes combustion or electrification. It looks like he prioritizes combustion over electrification if both are present, regardless of the application order and category (forced vs natural) of the arts reactions. Skill description has "combustion or electrification" in this order. Not sure if that's relevant to the actual implementation or arbitrary.
 
 ## Skill Interactions
-- Laevatain FinalStrike proccing Ardelia combo
+- Laevatain FinalStrike activates Ardelia combo
     - Laevatain's talent description is "After the controlled operator's Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction icon.pngHeat Infliction from nearby enemies."
     - When I perform N5 with Laevatain as the controlled operator, it looks like heat is absorbed BEFORE the N5 damage contrary to talent description
     - Ardelia combo will therefore proc

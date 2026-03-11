@@ -2,6 +2,41 @@ import { GearEffectType, GearType, StatType } from "../../consts/enums";
 import { GearRank } from "../../consts/types";
 import { Gear } from "./gear";
 
+// ── Tide Fall Light Armor (Armor) ───────────────────────────────────────────
+export class TideFallLightArmor extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.ARMOR,
+      gearEffectType: GearEffectType.TIDE_SURGE,
+      rank,
+      statsByRank: {
+        1: {
+          [StatType.INTELLECT]: 87,
+          [StatType.STRENGTH]: 58,
+          [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.123,
+        },
+        2: {
+          [StatType.INTELLECT]: 95,
+          [StatType.STRENGTH]: 63,
+          [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.136,
+        },
+        3: {
+          [StatType.INTELLECT]: 104,
+          [StatType.STRENGTH]: 69,
+          [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.148,
+        },
+        4: {
+          [StatType.INTELLECT]: 113,
+          [StatType.STRENGTH]: 75,
+          [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.160,
+        },
+      },
+    });
+  }
+
+  static readonly DEFENSE = 56;
+}
+
 // ── Tide Surge Gauntlets (Gloves) ───────────────────────────────────────────
 export class TideSurgeGauntlets extends Gear {
   constructor(rank: GearRank = 1) {

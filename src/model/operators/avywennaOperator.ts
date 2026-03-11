@@ -6,47 +6,19 @@ import {
   ThunderlanceFinalShock,
 } from "../combat-skills/avywennaSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 55,
     [StatType.STRENGTH]: 16,
     [StatType.AGILITY]: 24,
     [StatType.INTELLECT]: 17,
     [StatType.WILL]: 19,
   },
-  20: {
-    [StatType.ATTACK]: 107,
-    [StatType.STRENGTH]: 32,
-    [StatType.AGILITY]: 54,
-    [StatType.INTELLECT]: 32,
-    [StatType.WILL]: 41,
-  },
-  40: {
-    [StatType.ATTACK]: 163,
-    [StatType.STRENGTH]: 49,
-    [StatType.AGILITY]: 87,
-    [StatType.INTELLECT]: 50,
-    [StatType.WILL]: 64,
-  },
-  60: {
-    [StatType.ATTACK]: 216,
-    [StatType.STRENGTH]: 64,
-    [StatType.AGILITY]: 118,
-    [StatType.INTELLECT]: 66,
-    [StatType.WILL]: 85,
-  },
-  80: {
-    [StatType.ATTACK]: 269,
-    [StatType.STRENGTH]: 80,
-    [StatType.AGILITY]: 149,
-    [StatType.INTELLECT]: 82,
-    [StatType.WILL]: 107,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 295,
     [StatType.STRENGTH]: 88,
     [StatType.AGILITY]: 165,
@@ -90,7 +62,9 @@ export class AvywennaOperator extends Operator {
       secondaryAttributeType: AvywennaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AvywennaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AvywennaOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Stalwart',
+      attributeIncreaseAttribute: StatType.WILL,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class AvywennaOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      3: { [StatType.WILL]: 15, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.08 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

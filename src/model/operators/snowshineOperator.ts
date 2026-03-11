@@ -6,47 +6,19 @@ import {
   FrigidSnowfield,
 } from "../combat-skills/snowshineSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 5;
 
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 54,
     [StatType.STRENGTH]: 23,
     [StatType.AGILITY]: 16,
     [StatType.INTELLECT]: 16,
     [StatType.WILL]: 20,
   },
-  20: {
-    [StatType.ATTACK]: 105,
-    [StatType.STRENGTH]: 53,
-    [StatType.AGILITY]: 30,
-    [StatType.INTELLECT]: 31,
-    [StatType.WILL]: 44,
-  },
-  40: {
-    [StatType.ATTACK]: 160,
-    [StatType.STRENGTH]: 85,
-    [StatType.AGILITY]: 46,
-    [StatType.INTELLECT]: 47,
-    [StatType.WILL]: 70,
-  },
-  60: {
-    [StatType.ATTACK]: 212,
-    [StatType.STRENGTH]: 115,
-    [StatType.AGILITY]: 60,
-    [StatType.INTELLECT]: 62,
-    [StatType.WILL]: 94,
-  },
-  80: {
-    [StatType.ATTACK]: 264,
-    [StatType.STRENGTH]: 145,
-    [StatType.AGILITY]: 75,
-    [StatType.INTELLECT]: 77,
-    [StatType.WILL]: 118,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 290,
     [StatType.STRENGTH]: 160,
     [StatType.AGILITY]: 82,
@@ -90,7 +62,9 @@ export class SnowshineOperator extends Operator {
       secondaryAttributeType: SnowshineOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: SnowshineOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: SnowshineOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Forged',
+      attributeIncreaseAttribute: StatType.STRENGTH,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -110,6 +84,12 @@ export class SnowshineOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      4: { [StatType.WILL]: 20 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

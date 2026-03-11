@@ -6,48 +6,20 @@ import {
   Twilight,
 } from "../combat-skills/laevatainSkills";
 import { OperatorRarity, Potential, SkillLevel } from "../../consts/types";
-import { Operator } from "./operator";
+import { BaseStats, Operator } from "./operator";
 
 const RARITY: OperatorRarity = 6;
 
-/** Laevatain's base attribute scores by level (Elite 0–Max). */
-const STATS_BY_LEVEL: Readonly<Record<number, Partial<Record<StatType, number>>>> = {
-  1: {
+/** Laevatain's base attribute scores at lv1 and lv90. */
+const BASE_STATS: BaseStats = {
+  lv1: {
     [StatType.ATTACK]: 30,
     [StatType.STRENGTH]: 13,
     [StatType.AGILITY]: 9,
     [StatType.INTELLECT]: 22,
     [StatType.WILL]: 9,
   },
-  20: {
-    [StatType.ATTACK]: 91,
-    [StatType.STRENGTH]: 36,
-    [StatType.AGILITY]: 28,
-    [StatType.INTELLECT]: 55,
-    [StatType.WILL]: 26,
-  },
-  40: {
-    [StatType.ATTACK]: 156,
-    [StatType.STRENGTH]: 60,
-    [StatType.AGILITY]: 49,
-    [StatType.INTELLECT]: 90,
-    [StatType.WILL]: 44,
-  },
-  60: {
-    [StatType.ATTACK]: 221,
-    [StatType.STRENGTH]: 85,
-    [StatType.AGILITY]: 69,
-    [StatType.INTELLECT]: 125,
-    [StatType.WILL]: 62,
-  },
-  80: {
-    [StatType.ATTACK]: 285,
-    [StatType.STRENGTH]: 109,
-    [StatType.AGILITY]: 89,
-    [StatType.INTELLECT]: 160,
-    [StatType.WILL]: 80,
-  },
-  90: {
+  lv90: {
     [StatType.ATTACK]: 318,
     [StatType.STRENGTH]: 121,
     [StatType.AGILITY]: 99,
@@ -91,7 +63,9 @@ export class LaevatainOperator extends Operator {
       secondaryAttributeType: LaevatainOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: LaevatainOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: LaevatainOperator.MAX_TALENT_TWO_LEVEL,
-      statsByLevel: STATS_BY_LEVEL,
+      attributeIncreaseName: 'Keen Mind',
+      attributeIncreaseAttribute: StatType.INTELLECT,
+      baseStats: BASE_STATS,
       ...params,
     });
 
@@ -111,6 +85,12 @@ export class LaevatainOperator extends Operator {
       level: params.ultimateLevel,
       operatorPotential: params.potential,
     });
+  }
+
+  get potentialStatBonuses() {
+    return {
+      2: { [StatType.INTELLECT]: 20 },
+    };
   }
 
   get comboRequires(): TriggerConditionType[] {

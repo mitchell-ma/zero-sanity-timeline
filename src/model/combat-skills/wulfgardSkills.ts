@@ -163,11 +163,14 @@ export class WolvenFury extends Ultimate {
     });
   }
 
+  /** P4: Will of the Pack — Ultimate Energy cost -15%. */
   getUltimateEnergyCost(
     _level: SkillLevel,
-    _operatorPotential: Potential,
+    potential: Potential,
   ): number {
-    return WolvenFury.ULTIMATE_ENERGY_COST;
+    return potential >= 4
+      ? Math.floor(WolvenFury.ULTIMATE_ENERGY_COST * 0.85)
+      : WolvenFury.ULTIMATE_ENERGY_COST;
   }
 
   getDuration(_level: SkillLevel, _operatorPotential: Potential): number {

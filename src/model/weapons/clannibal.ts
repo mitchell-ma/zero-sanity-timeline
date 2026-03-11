@@ -2,17 +2,13 @@ import { WeaponType } from "../../consts/enums";
 import { ArtsBoostL, MainAttributeBoostL } from "../weapon-skills/weaponSkills";
 import { InflictionViciousPurge } from "../weapon-skills/namedWeaponSkills";
 import { WeaponRarity } from "../../consts/types";
-import { Weapon } from "./weapon";
+import { Weapon, WeaponBaseAttack } from "./weapon";
 
 const RARITY: WeaponRarity = 6;
 
-const BASE_ATTACK_BY_LEVEL: Readonly<Record<number, number>> = {
-  1: 50,
-  20: 144,
-  40: 243,
-  60: 342,
-  80: 441,
-  90: 490,
+const BASE_ATTACK: WeaponBaseAttack = {
+  lv1: 50,
+  lv90: 490,
 };
 
 export class Clannibal extends Weapon {
@@ -37,7 +33,7 @@ export class Clannibal extends Weapon {
       weaponType: Clannibal.WEAPON_TYPE,
       weaponRarity: Clannibal.WEAPON_RARITY,
       level: params.level,
-      baseAttackByLevel: BASE_ATTACK_BY_LEVEL,
+      baseAttack: BASE_ATTACK,
       weaponSkillOne: skillOne,
       weaponSkillTwo: skillTwo,
       weaponSkillThree: skillThree,

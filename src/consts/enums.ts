@@ -18,6 +18,11 @@ export enum CombatResourceType {
   ULTIMATE_ENERGY = "ULTIMATE_ENERGY",
 }
 
+export enum HitType {
+  NORMAL = "NORMAL",
+  FINAL_STRIKE = "FINAL_STRIKE",
+}
+
 export enum ElementType {
   NONE = "NONE",
   PHYSICAL = "PHYSICAL",
@@ -39,11 +44,11 @@ export const STATUS_ELEMENT: Record<string, string> = {
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
-  [ElementType.NONE]:     '#ffffff',
-  [ElementType.PHYSICAL]: '#c0c8d0',
-  [ElementType.HEAT]:     '#f07030',
-  [ElementType.CRYO]:     '#40c8f0',
-  [ElementType.NATURE]:   '#50d050',
+  [ElementType.NONE]:     '#cccccc',
+  [ElementType.PHYSICAL]: '#b0b8c0',
+  [ElementType.HEAT]:     '#e85535',
+  [ElementType.CRYO]:     '#55ccee',
+  [ElementType.NATURE]:   '#55cc55',
   [ElementType.ELECTRIC]: '#e8c840',
 };
 
@@ -57,6 +62,7 @@ export enum StatusType {
   MELTING_FLAME = "MELTING_FLAME",
   THUNDERLANCE = "THUNDERLANCE",
   SQUAD_BUFF = "SQUAD_BUFF",
+  SCORCHING_FANGS = "SCORCHING_FANGS",
   // ── Team statuses ─────────────────────────────────────────────────────────
   LINK = "LINK",
   ARTS_AMP = "ARTS_AMP",
@@ -64,6 +70,7 @@ export enum StatusType {
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
+  FRAGILITY = "FRAGILITY",
   // ── Physical statuses ───────────────────────────────────────────────────────
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -153,6 +160,14 @@ export enum TriggerConditionType {
   OPERATOR_ATTACKED = "OPERATOR_ATTACKED",
   STAGGER = "STAGGER",
   STAGGER_NODE = "STAGGER_NODE",
+  // ── Weapon skill triggers ─────────────────────────────────────────────────
+  CONSUME_VULNERABILITY = "CONSUME_VULNERABILITY",
+  APPLY_ARTS_REACTION = "APPLY_ARTS_REACTION",
+  CONSUME_ARTS_REACTION = "CONSUME_ARTS_REACTION",
+  APPLY_LIFTED = "APPLY_LIFTED",
+  APPLY_KNOCKED_DOWN = "APPLY_KNOCKED_DOWN",
+  APPLY_ARTS_BURST = "APPLY_ARTS_BURST",
+  CONSUME_CORROSION = "CONSUME_CORROSION",
 }
 
 /**
@@ -168,6 +183,7 @@ export const TRIGGER_CONDITION_PARENTS: Partial<Record<TriggerConditionType, Tri
 };
 
 export enum GearEffectType {
+  NONE = "NONE",
   AIC_HEAVY = "AIC_HEAVY",
   AIC_LIGHT = "AIC_LIGHT",
   ARMORED_MSGR = "ARMORED_MSGR",
@@ -196,8 +212,18 @@ export enum EventType {
 
 /** Time manipulation effects that prevent other events from starting. */
 export enum TimeInteractionType {
+  /** No interaction with other timelines — purely cosmetic/tracking. */
+  NONE = "NONE",
   /** No other events can start on any timeline while this is active. */
   TIME_STOP = "TIME_STOP",
+  /** Delays all other timelines by this event's duration (e.g. dash with dodge). */
+  TIME_DELAY = "TIME_DELAY",
+}
+
+/** Whether an event segment's duration is tied to game-time (affected by dilation) or real-time (unaffected). */
+export enum TimeDependency {
+  GAME_TIME = "GAME_TIME",
+  REAL_TIME = "REAL_TIME",
 }
 
 export enum TimelineSourceType {
@@ -206,6 +232,7 @@ export enum TimelineSourceType {
   WEAPON = "WEAPON",
   ENEMY = "ENEMY",
   COMMON = "COMMON",
+  TACTICAL = "TACTICAL",
 }
 
 export enum TargetType {
@@ -260,6 +287,9 @@ export enum StatType {
 }
 
 export enum CombatSkillsType {
+  // Common
+  DASH = "DASH",
+
   // Laevatain
   FLAMING_CINDERS = "FLAMING_CINDERS",
   FLAMING_CINDERS_ENHANCED = "FLAMING_CINDERS_ENHANCED",
@@ -617,4 +647,31 @@ export enum WeaponSkillType {
   TWILIGHT_LUSTROUS_PYRE = "TWILIGHT_LUSTROUS_PYRE",
   INFLICTION_VICIOUS_PURGE = "INFLICTION_VICIOUS_PURGE",
   INFLICTION_TIDAL_MURMURS = "INFLICTION_TIDAL_MURMURS",
+
+  // ── Additional named weapon skills ────────────────────────────────────────
+  CRUSHER_PRINCELY_DETERRENCE = "CRUSHER_PRINCELY_DETERRENCE",
+  CRUSHER_HONED_INTO_LEGION = "CRUSHER_HONED_INTO_LEGION",
+  SUPPRESSION_STACKED_HEW = "SUPPRESSION_STACKED_HEW",
+  SUPPRESSION_ASTROPHYSICS = "SUPPRESSION_ASTROPHYSICS",
+  SUPPRESSION_CONCENTRIC_CIRCLES = "SUPPRESSION_CONCENTRIC_CIRCLES",
+  COMBATIVE_VIRTUOUS_GAIN = "COMBATIVE_VIRTUOUS_GAIN",
+  BRUTALITY_CEMENTED_FURY = "BRUTALITY_CEMENTED_FURY",
+  BRUTALITY_LANDS_OF_YORE = "BRUTALITY_LANDS_OF_YORE",
+  DETONATE_BONECHILLING = "DETONATE_BONECHILLING",
+  DETONATE_SEEKER_OF_THE_ESOTERIC = "DETONATE_SEEKER_OF_THE_ESOTERIC",
+  DETONATE_IMPOSING_CHAMPION = "DETONATE_IMPOSING_CHAMPION",
+  EFFICACY_TENACIOUS_WILL = "EFFICACY_TENACIOUS_WILL",
+  FRACTURE_ARTZY_EXAGGERATION = "FRACTURE_ARTZY_EXAGGERATION",
+  PURSUIT_AID_FROM_THE_PAST = "PURSUIT_AID_FROM_THE_PAST",
+  PURSUIT_DUTY_FULFILLED = "PURSUIT_DUTY_FULFILLED",
+  PURSUIT_TRANSCENDENT_ARTS = "PURSUIT_TRANSCENDENT_ARTS",
+  INFLICTION_ROAD_HOME_FOR_ALL_LIFE = "INFLICTION_ROAD_HOME_FOR_ALL_LIFE",
+  INFLICTION_WILDERNESS_CLUSTER = "INFLICTION_WILDERNESS_CLUSTER",
+  INFLICTION_WEDGE_OF_CIVILIZATION = "INFLICTION_WEDGE_OF_CIVILIZATION",
+  INFLICTION_CONQUEST_OF_ICY_PEAKS = "INFLICTION_CONQUEST_OF_ICY_PEAKS",
+  TWILIGHT_HUMILIATION = "TWILIGHT_HUMILIATION",
+  MEDICANT_BLIGHT_FERVOR = "MEDICANT_BLIGHT_FERVOR",
+  MEDICANT_EYE_OF_TALOS = "MEDICANT_EYE_OF_TALOS",
+  MEDICANT_REDEMPTION_OF_FAITH = "MEDICANT_REDEMPTION_OF_FAITH",
+  MINCING_THERAPY = "MINCING_THERAPY",
 }
