@@ -1,8 +1,8 @@
 import React from 'react';
-import { frameToPx, durationToPx, TOTAL_FRAMES, frameToPxDilated, durationToPxDilated, TimeDilationZone } from '../utils/timeline';
-import { TimeDependency } from '../consts/enums';
+import { frameToPx, durationToPx, pxPerFrame, TOTAL_FRAMES } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, HitType, STATUS_ELEMENT } from '../consts/enums';
+import type { EventLayout } from '../controller/timeline/timelineLayout';
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
   return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
@@ -31,7 +31,7 @@ interface EventBlockProps {
   hovered?: boolean;
   /** Display name shown on the event block. */
   label?: string;
-  /** "ultimate" renders Activation → Active → Cooldown. "sequenced" renders multi-sequence segments with frame diamonds. */
+  /** "ultimate" renders Animation → Statis → Active → Cooldown. "sequenced" renders multi-sequence segments with frame diamonds. */
   variant?: "default" | "ultimate" | "sequenced";
   onDragStart: (e: React.MouseEvent, eventId: string, startFrame: number) => void;
   onContextMenu: (e: React.MouseEvent, eventId: string) => void;
@@ -46,20 +46,24 @@ interface EventBlockProps {
   selectedFrames?: { segmentIndex: number; frameIndex: number }[];
   /** If true, event cannot be dragged — shows pointer cursor instead of grab. */
   notDraggable?: boolean;
+  /** If true, event is derived (controller-generated) — shows default cursor. */
+  derived?: boolean;
   /** Full ordered segment labels from the column definition (for contiguity validation). */
   allSegmentLabels?: string[];
   /** Full default segments from the column definition (for frame contiguity validation). */
   allDefaultSegments?: import('../consts/viewTypes').EventSegmentData[];
-  /** Current hover-line frame (absolute). Diamonds at this frame get hover-selected styling. */
+  /** Current hover-line real-frame. Diamonds near this frame get hover-selected styling. */
   hoverFrame?: number | null;
   /** Element type of the skill (e.g. "HEAT", "NATURE") for frame diamond coloring. */
   skillElement?: string;
   /** If true, use diagonal stripe pattern for the active segment (e.g. combo trigger). */
   striped?: boolean;
+  /** If true, event is non-interactive: translucent, default cursor, no highlight. */
+  passive?: boolean;
   /** If set, shows a warning overlay on top of the event (e.g. combo outside trigger window). */
   comboWarning?: string | null;
-  /** Time dilation zones for visual stretching. */
-  dilationZones?: readonly TimeDilationZone[];
+  /** Pre-computed layout from the controller (real-time positions). */
+  eventLayout?: EventLayout;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -98,48 +102,38 @@ function EventBlock({
   onSegmentContextMenu,
   selectedFrames,
   notDraggable = false,
+  derived = false,
   allSegmentLabels,
   allDefaultSegments,
   hoverFrame: hoverFrameProp,
   skillElement,
   striped = false,
+  passive = false,
   comboWarning = null,
-  dilationZones,
+  eventLayout,
 }: EventBlockProps) {
   const { id, startFrame, activationDuration, activeDuration, cooldownDuration, segments, animationDuration } = event;
 
-  // ── Dilation zone handling ─────────────────────────────────────────────────
-  // Time-stop events (combo, ultimate, dodge) have segments whose durationFrames
-  // already include the animation window. Pure-insertion zones (from any time-stop)
-  // within their range would double-count, so:
-  //   Position (fToPx): full zones minus own insertion → correct shift
-  //   Height   (dToPx): exclude ALL pure insertions → no double-count
-  // Non-time-stop events use full zones for both (foreign insertions = real stretch).
-  const isOwnTimeStop = animationDuration && animationDuration > 0 &&
-    (variant === 'ultimate' || event.isPerfectDodge || event.columnId === 'combo');
+  // ── Layout-aware positioning ────────────────────────────────────────────────
+  // When eventLayout is provided (from controller), use real-time positions.
+  // This eliminates fragile time-stop zone filtering in the view layer.
+  const layout = eventLayout;
+  const ppf = pxPerFrame(zoom);
 
-  const positionZones = dilationZones && isOwnTimeStop
-    ? dilationZones.filter((z) => !(z.startFrame === startFrame && z.insertedFrames && z.durationFrames === 0))
-    : dilationZones;
-  const heightZones = dilationZones && isOwnTimeStop
-    ? dilationZones.filter((z) => !(z.insertedFrames && z.durationFrames === 0))
-    : dilationZones;
-
-  const hasPositionDilation = positionZones && positionZones.length > 0;
-  const hasHeightDilation = heightZones && heightZones.length > 0;
-  const fToPx = hasPositionDilation
-    ? (f: number, z: number) => frameToPxDilated(f, z, positionZones)
-    : frameToPx;
-  const dToPx = hasHeightDilation
-    ? (startF: number, dur: number, z: number, td?: TimeDependency) => durationToPxDilated(startF, dur, z, heightZones, td)
-    : (_startF: number, dur: number, z: number, _td?: TimeDependency) => durationToPx(dur, z);
+  /** Check if a frame diamond is near the hover line (within 4px). */
+  const isFrameHovered = (frameAbsReal: number): boolean => {
+    if (hoverFrameProp == null) return false;
+    return Math.abs((hoverFrameProp - frameAbsReal) * ppf) <= 4;
+  };
 
   // ── Sequenced variant (multi-sequence with frame diamonds) ──────────────
   if (variant === 'sequenced' && segments && segments.length > 0) {
-    const totalFrames = segments.reduce((sum, s) => sum + s.durationFrames, 0);
-    const clampedEnd = Math.min(startFrame + totalFrames, TOTAL_FRAMES);
-    const topPx = fToPx(startFrame, zoom);
-    const totalHeight = dToPx(startFrame, clampedEnd - startFrame, zoom, event.timeDependency);
+    const topPx = layout
+      ? frameToPx(layout.realStartFrame, zoom)
+      : frameToPx(startFrame, zoom);
+    const totalHeight = layout
+      ? durationToPx(layout.realTotalDuration, zoom)
+      : durationToPx(segments.reduce((sum, s) => sum + s.durationFrames, 0), zoom);
 
     if (totalHeight <= 0) return null;
 
@@ -183,23 +177,28 @@ function EventBlock({
       }
     }
 
-    const wrapClass = `event-wrap${notDraggable ? ' event-wrap--static' : ''}${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+    const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
     let offsetFrames = 0;
     const segmentElements: React.ReactNode[] = [];
 
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
-      const segStartFrame = startFrame + offsetFrames;
-      const segEndFrame = Math.min(segStartFrame + seg.durationFrames, TOTAL_FRAMES);
-      const segH = dToPx(segStartFrame, segEndFrame - segStartFrame, zoom, seg.timeDependency);
+      const segLayout = layout?.segments?.[i];
+
+      const segH = segLayout
+        ? durationToPx(segLayout.realDuration, zoom)
+        : durationToPx(seg.durationFrames, zoom);
 
       if (segH <= 0) { offsetFrames += seg.durationFrames; continue; }
 
-      const segTopPx = dToPx(startFrame, offsetFrames, zoom, seg.timeDependency);
+      const segTopPx = segLayout
+        ? durationToPx(segLayout.realOffset, zoom)
+        : durationToPx(offsetFrames, zoom);
+
       const isFirst = i === 0;
       const isLast = i === segments.length - 1;
-      const alpha = 0.55 + (i % 2) * 0.15;
+      const alpha = passive ? 0.15 : 0.55 + (i % 2) * 0.15;
       const borderRadius = isFirst && isLast ? '2px'
         : isFirst ? '2px 2px 0 0'
         : isLast ? '0 0 2px 2px'
@@ -213,24 +212,25 @@ function EventBlock({
             top: segTopPx,
             height: segH,
             background: hexAlpha(color, alpha),
-            border: `1px solid ${hexAlpha(color, alpha + 0.15)}`,
-            borderTop: isFirst ? undefined : `1px dashed ${hexAlpha(color, 0.5)}`,
-            borderRadius,
+            border: passive ? 'none' : `1px solid ${hexAlpha(color, alpha + 0.15)}`,
+            borderTop: passive ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, 0.5)}`,
+            borderRadius: passive ? '2px' : borderRadius,
             padding: 0,
             margin: 0,
           }}
           onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
         >
-          {segH > 14 && (seg.label || (isFirst && label)) && (
-            <span className="event-block-label" style={{ color: '#fff' }}>{seg.label ?? label}</span>
+          {(passive || segH > 14) && (seg.label || (isFirst && label)) && (
+            <span className="event-block-label" style={passive ? undefined : { color: '#fff' }}>{seg.label ?? label}</span>
           )}
           {/* Frame diamonds */}
           {seg.frames?.map((f, fi) => {
-            const framePx = dToPx(segStartFrame, f.offsetFrame, zoom);
+
+            const framePx = durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
             const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === i && sf.frameIndex === fi) ?? false;
-            const absFrame = segStartFrame + f.offsetFrame;
-            const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
+            // Hover highlight: compare absolute real-frame positions
+            const frameAbsReal = f.absoluteFrame ?? (startFrame + offsetFrames + f.offsetFrame);
+            const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
@@ -266,14 +266,16 @@ function EventBlock({
         onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
       >
         {(warnings.length > 0 || comboWarning) && (
-          <div
-            className="event-segment-warning"
-            title={[...warnings, ...(comboWarning ? [comboWarning] : [])].join('\n')}
-          >
+          <div className="event-segment-warning">
             <svg width="16" height="16" viewBox="0 0 16 16">
               <path d="M8 1L15 14H1L8 1Z" fill="#f0a030" stroke="#000" strokeWidth="0.5"/>
               <text x="8" y="12.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#000">!</text>
             </svg>
+            <div className="warning-tooltip">
+              {[...warnings, ...(comboWarning ? [comboWarning] : [])].map((msg, i) => (
+                <div key={i} className="warning-tooltip-line">{msg}</div>
+              ))}
+            </div>
           </div>
         )}
         {segmentElements}
@@ -282,28 +284,46 @@ function EventBlock({
   }
 
   // ── Standard 3-phase layout (default / ultimate) ────────────────────────
-  const hasActive   = activeDuration > 0;
-  const hasCooldown = cooldownDuration > 0;
+  // For ultimates with 4 segments, derive phase durations from segments directly
+  // to avoid the activationDuration = sum(all segments) issue after time-stop extension.
+  const ultSegs = variant === 'ultimate' && segments && segments.length >= 4 ? segments : null;
 
-  const activeStart = startFrame + activationDuration;
-  const coolStart   = activeStart + activeDuration;
-  const totalEnd    = coolStart + cooldownDuration;
+  const hasActive   = ultSegs ? ultSegs[2].durationFrames > 0 : activeDuration > 0;
+  const hasCooldown = ultSegs ? ultSegs[3].durationFrames > 0 : cooldownDuration > 0;
 
-  const clampedActivationEnd = Math.min(activeStart, TOTAL_FRAMES);
-  const clampedActiveEnd     = Math.min(coolStart,   TOTAL_FRAMES);
-  const clampedCoolEnd   = Math.min(totalEnd,    TOTAL_FRAMES);
-
-  const activationH = dToPx(startFrame, clampedActivationEnd - startFrame, zoom, event.timeDependency);
-  const activePhaseH = hasActive ? dToPx(activeStart, clampedActiveEnd - activeStart, zoom) : 0;
-  const coolH   = hasCooldown ? dToPx(coolStart, clampedCoolEnd - coolStart, zoom, TimeDependency.REAL_TIME) : 0;
+  const phases = layout?.phases;
+  const activationH = ultSegs
+    ? durationToPx(ultSegs[0].durationFrames + ultSegs[1].durationFrames, zoom)
+    : (phases
+        ? durationToPx(phases.realActivationDuration, zoom)
+        : durationToPx(Math.min(activationDuration, TOTAL_FRAMES - startFrame), zoom));
+  const activePhaseH = hasActive
+    ? (ultSegs
+        ? durationToPx(ultSegs[2].durationFrames, zoom)
+        : (phases
+            ? durationToPx(phases.realActiveDuration, zoom)
+            : durationToPx(activeDuration, zoom)))
+    : 0;
+  const coolH = hasCooldown
+    ? (ultSegs
+        ? durationToPx(ultSegs[3].durationFrames, zoom)
+        : durationToPx(phases?.realCooldownDuration ?? cooldownDuration, zoom))
+    : 0;
 
   // Animation sub-phase within activation (TIME_STOP portion)
-  // Animation is a fixed real-time duration — never affected by any dilation
-  const hasAnimation = (variant === 'ultimate' || event.columnId === 'combo') && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration;
-  const animH = hasAnimation ? durationToPx(animationDuration!, zoom) : 0;
-  const postAnimH = hasAnimation ? activationH - animH : 0;
+  const hasAnimation = ultSegs
+    ? ultSegs[0].durationFrames > 0
+    : ((variant === 'ultimate' || event.columnId === 'combo') && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration);
+  const animH = ultSegs
+    ? durationToPx(ultSegs[0].durationFrames, zoom)
+    : (hasAnimation ? durationToPx(phases?.realAnimationDuration ?? animationDuration!, zoom) : 0);
+  const postAnimH = ultSegs
+    ? durationToPx(ultSegs[1].durationFrames, zoom)
+    : (hasAnimation ? activationH - animH : 0);
 
-  const topPx      = fToPx(startFrame, zoom);
+  const topPx = layout
+    ? frameToPx(layout.realStartFrame, zoom)
+    : frameToPx(startFrame, zoom);
   const totalHeight = activationH + activePhaseH + coolH;
 
   if (activationH <= 0 && activePhaseH <= 0) return null;
@@ -311,7 +331,9 @@ function EventBlock({
   const activationRadius = !hasActive && !hasCooldown ? '2px' : '2px 2px 0 0';
   const activePhaseRadius = !hasCooldown ? '0 0 2px 2px' : '0';
 
-  const wrapClass = `event-wrap${notDraggable ? ' event-wrap--static' : ''}${selected ? ' event-wrap--selected' : ''}${hovered && !selected ? ' event-wrap--hovered' : ''}`;
+  const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
+
+
 
   return (
     <div
@@ -331,7 +353,8 @@ function EventBlock({
       {/* Active / Activation segment */}
       {activationH > 0 && hasAnimation ? (() => {
         // For ultimates with animation sub-phases but no active phase, render frame diamonds
-        const actFrames = !hasActive && segments && segments.length > 0 ? segments[0].frames : undefined;
+        // Statis frames are in segments[1] (Animation=0, Statis=1, Active=2)
+        const actFrames = !hasActive && segments && segments.length > 1 ? segments[1].frames : undefined;
         return (
         <>
           {/* Animation sub-phase (TIME_STOP) — starts at top of activation */}
@@ -351,7 +374,7 @@ function EventBlock({
               <span className="event-block-label" style={{ color: hexAlpha(color, 0.8) }}>Animation</span>
             )}
           </div>
-          {/* Activation sub-phase (post-animation) */}
+          {/* Statis sub-phase (post-animation) */}
           <div
             className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
             style={{
@@ -366,26 +389,24 @@ function EventBlock({
             onMouseDown={(e) => onDragStart(e, id, startFrame)}
           >
             {postAnimH > 14 && (
-              <span className="event-block-label" style={{ color: '#fff' }}>Activation</span>
+              <span className="event-block-label" style={{ color: '#fff' }}>Statis</span>
             )}
             {actFrames?.map((f, fi) => {
-              // offsetFrame is relative to ultimate start; subtract animation frames to position in post-anim segment
-              const animFrames = animationDuration ?? 0;
-              const framePx = dToPx(startFrame, f.offsetFrame - animFrames, zoom);
+
+              const framePx = durationToPx((f.derivedOffsetFrame ?? f.offsetFrame) - (animationDuration ?? 0), zoom);
               if (framePx < 0 || framePx > postAnimH) return null;
-              const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
-              const absFrame = startFrame + f.offsetFrame;
-              const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-                Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
+              const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 1 && sf.frameIndex === fi) ?? false;
+              const frameAbsReal = f.absoluteFrame ?? (startFrame + f.offsetFrame);
+              const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
               const elColor = getFrameElementColor(f, skillElement);
               return (
                 <div
                   key={`f-${fi}`}
                   className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}`}
                   style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
-                  onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
-                  onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 0, fi); }}
+                  onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 1, fi); }}
+                  onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 1, fi); }}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 1, fi); }}
                   onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                   onMouseOut={(e) => { e.stopPropagation(); }}
                 />
@@ -395,8 +416,8 @@ function EventBlock({
         </>
         );
       })() : activationH > 0 ? (() => {
-        // For ultimates with no active phase, render frame diamonds in the activation segment
-        const actFrames = variant === 'ultimate' && !hasActive && segments && segments.length > 0 ? segments[0].frames : undefined;
+        // For ultimates with no active phase, render frame diamonds in the statis segment
+        const actFrames = variant === 'ultimate' && !hasActive && segments && segments.length > 1 ? segments[1].frames : undefined;
         return (
         <div
           className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
@@ -419,24 +440,24 @@ function EventBlock({
         >
           {activationH > 14 && (
             <span className="event-block-label" style={{ color: '#fff' }}>
-              {variant === 'ultimate' ? 'Activation' : (label ?? 'ACT')}
+              {variant === 'ultimate' ? 'Statis' : (label ?? 'ACT')}
             </span>
           )}
           {actFrames?.map((f, fi) => {
-            const framePx = dToPx(startFrame, f.offsetFrame, zoom);
-            const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
-            const absFrame = startFrame + f.offsetFrame;
-            const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
+
+            const framePx = durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
+            const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 1 && sf.frameIndex === fi) ?? false;
+            const frameAbsReal = f.absoluteFrame ?? (startFrame + f.offsetFrame);
+            const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
                 key={`f-${fi}`}
                 className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
                 style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
-                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
-                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 0, fi); }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 1, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 1, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 1, fi); }}
                 onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                 onMouseOut={(e) => { e.stopPropagation(); }}
               />
@@ -448,7 +469,7 @@ function EventBlock({
 
       {/* Active phase segment */}
       {hasActive && activePhaseH > 0 && (() => {
-        const ultFrames = variant === 'ultimate' && segments && segments.length > 0 ? segments[0].frames : undefined;
+        const ultFrames = variant === 'ultimate' && segments && segments.length > 2 ? segments[2].frames : undefined;
         return (
         <div
           className={`event-segment${ultFrames ? ' event-segment--sequenced' : ''}`}
@@ -478,20 +499,20 @@ function EventBlock({
             </span>
           )}
           {ultFrames?.map((f, fi) => {
-            const framePx = dToPx(activeStart, f.offsetFrame, zoom);
-            const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 0 && sf.frameIndex === fi) ?? false;
-            const absFrame = activeStart + f.offsetFrame;
-            const isHoverHighlight = !isSelected && hoverFrameProp != null &&
-              Math.abs(fToPx(hoverFrameProp, zoom) - fToPx(absFrame, zoom)) <= 4;
+
+            const framePx = durationToPx(f.derivedOffsetFrame ?? f.offsetFrame, zoom);
+            const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 2 && sf.frameIndex === fi) ?? false;
+            const frameAbsReal = f.absoluteFrame ?? (startFrame + activationDuration + f.offsetFrame);
+            const isHoverHighlight = !isSelected && isFrameHovered(frameAbsReal);
             const elColor = getFrameElementColor(f, skillElement);
             return (
               <div
                 key={`f-${fi}`}
                 className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
                 style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
-                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 0, fi); }}
-                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 0, fi); }}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 0, fi); }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 2, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 2, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 2, fi); }}
                 onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                 onMouseOut={(e) => { e.stopPropagation(); }}
               />
@@ -522,11 +543,16 @@ function EventBlock({
 
       {/* Combo warning icon above event */}
       {comboWarning && (
-        <div className="event-segment-warning" title={comboWarning}>
+        <div className="event-segment-warning">
           <svg width="16" height="16" viewBox="0 0 16 16">
             <path d="M8 1L15 14H1L8 1Z" fill="#f0a030" stroke="#000" strokeWidth="0.5"/>
             <text x="8" y="12.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#000">!</text>
           </svg>
+          <div className="warning-tooltip">
+            {comboWarning.split('\n').map((msg, i) => (
+              <div key={i} className="warning-tooltip-line">{msg}</div>
+            ))}
+          </div>
         </div>
       )}
     </div>

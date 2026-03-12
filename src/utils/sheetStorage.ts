@@ -1,15 +1,17 @@
 import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../view/InformationPane';
-import { SessionTree, SessionNode } from './sessionStorage';
+import { EnemyStats } from '../controller/appStateController';
+import { LoadoutTree, LoadoutNode } from './loadoutStorage';
 
 const STORAGE_KEY = 'zst-sheet';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export interface SheetData {
   version: number;
   operatorIds: (string | null)[];
   enemyId: string;
+  enemyStats?: EnemyStats;
   events: TimelineEvent[];
   loadouts: Record<string, OperatorLoadoutState>;
   loadoutStats: Record<string, LoadoutStats>;
@@ -21,6 +23,7 @@ export interface SheetData {
 export function serializeSheet(
   operatorIds: (string | null)[],
   enemyId: string,
+  enemyStats: EnemyStats | undefined,
   events: TimelineEvent[],
   loadouts: Record<string, OperatorLoadoutState>,
   loadoutStats: Record<string, LoadoutStats>,
@@ -32,6 +35,7 @@ export function serializeSheet(
     version: CURRENT_VERSION,
     operatorIds,
     enemyId,
+    ...(enemyStats ? { enemyStats } : {}),
     events,
     loadouts,
     loadoutStats,
@@ -117,11 +121,35 @@ export function validateSheetData(raw: unknown): LoadResult {
   return { ok: true, data: obj as unknown as SheetData };
 }
 
+// ─── Clean & normalize ───────────────────────────────────────────────────
+
+/** Stamp current version and strip legacy fields before persisting. */
+export function cleanSheetData(data: SheetData): SheetData {
+  const events = data.events.map((ev) => {
+    const cleaned = { ...ev };
+    // Strip legacy isFinalStrike boolean (replaced by hitType enum)
+    if (cleaned.segments) {
+      cleaned.segments = cleaned.segments.map((seg) => {
+        if (!seg.frames) return seg;
+        return {
+          ...seg,
+          frames: seg.frames.map((f) => {
+            const { isFinalStrike, ...rest } = f as any;
+            return rest;
+          }),
+        };
+      });
+    }
+    return cleaned;
+  });
+  return { ...data, version: CURRENT_VERSION, events };
+}
+
 // ─── LocalStorage ────────────────────────────────────────────────────────
 
 export function saveToLocalStorage(data: SheetData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanSheetData(data)));
   } catch {
     // Storage full or unavailable — silently fail
   }
@@ -145,7 +173,7 @@ export function clearLocalStorage(): void {
 // ─── File export/import ──────────────────────────────────────────────────
 
 export function exportToFile(data: SheetData): void {
-  const json = JSON.stringify(data, null, 2);
+  const json = JSON.stringify(cleanSheetData(data), null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -184,27 +212,27 @@ export function importFromFile(): Promise<LoadResult> {
   });
 }
 
-// ─── Multi-session bundle export/import ─────────────────────────────────
+// ─── Multi-loadout bundle export/import ──────────────────────────────────
 
 const BUNDLE_VERSION = 1;
 
-export interface MultiSessionBundle {
+export interface MultiLoadoutBundle {
   bundleVersion: number;
-  tree: SessionTree;
-  sessions: Record<string, SheetData>;
+  tree: LoadoutTree;
+  loadouts: Record<string, SheetData>;
 }
 
 export type BundleLoadResult =
-  | { ok: true; data: MultiSessionBundle }
+  | { ok: true; data: MultiLoadoutBundle }
   | { ok: false; error: string };
 
-export function exportMultiSessionBundle(
-  tree: SessionTree,
-  selectedSessionIds: Set<string>,
-  getSessionData: (id: string) => SheetData | null,
+export function exportMultiLoadoutBundle(
+  tree: LoadoutTree,
+  selectedLoadoutIds: Set<string>,
+  getLoadoutData: (id: string) => SheetData | null,
 ): void {
-  // Collect ancestor folder IDs for selected sessions to preserve structure
-  const selectedArr = Array.from(selectedSessionIds);
+  // Collect ancestor folder IDs for selected loadouts to preserve structure
+  const selectedArr = Array.from(selectedLoadoutIds);
   const includedIds = new Set<string>(selectedArr);
   for (const sid of selectedArr) {
     let node = tree.nodes.find((n) => n.id === sid);
@@ -214,20 +242,22 @@ export function exportMultiSessionBundle(
     }
   }
 
-  const filteredTree: SessionTree = {
-    nodes: tree.nodes.filter((n) => includedIds.has(n.id)),
+  const filteredTree: LoadoutTree = {
+    nodes: tree.nodes
+      .filter((n) => includedIds.has(n.id))
+      .map((n) => (n.type as string) === 'session' ? { ...n, type: 'loadout' as const } : n),
   };
 
-  const sessions: Record<string, SheetData> = {};
+  const loadouts: Record<string, SheetData> = {};
   for (const sid of selectedArr) {
-    const data = getSessionData(sid);
-    if (data) sessions[sid] = data;
+    const data = getLoadoutData(sid);
+    if (data) loadouts[sid] = cleanSheetData(data);
   }
 
-  const bundle: MultiSessionBundle = {
+  const bundle: MultiLoadoutBundle = {
     bundleVersion: BUNDLE_VERSION,
     tree: filteredTree,
-    sessions,
+    loadouts,
   };
 
   const json = JSON.stringify(bundle, null, 2);
@@ -240,7 +270,7 @@ export function exportMultiSessionBundle(
   URL.revokeObjectURL(url);
 }
 
-export function validateMultiSessionBundle(raw: unknown): BundleLoadResult {
+export function validateMultiLoadoutBundle(raw: unknown): BundleLoadResult {
   if (raw == null || typeof raw !== 'object') {
     return { ok: false, error: 'Bundle is not a valid object.' };
   }
@@ -262,23 +292,29 @@ export function validateMultiSessionBundle(raw: unknown): BundleLoadResult {
     if (!n || typeof n.id !== 'string' || typeof n.name !== 'string' || typeof n.type !== 'string') {
       return { ok: false, error: 'Invalid node in tree.' };
     }
+    // Migrate legacy "session" type to "loadout"
+    if (n.type === 'session') n.type = 'loadout';
   }
 
-  if (typeof obj.sessions !== 'object' || obj.sessions == null) {
-    return { ok: false, error: 'Missing or invalid sessions field.' };
+  // Support both old 'sessions' and new 'loadouts' field names
+  const loadoutsObj = (obj.loadouts ?? obj.sessions) as Record<string, unknown> | undefined;
+  if (typeof loadoutsObj !== 'object' || loadoutsObj == null) {
+    return { ok: false, error: 'Missing or invalid loadouts field.' };
   }
-  const sessions = obj.sessions as Record<string, unknown>;
-  for (const [id, sessionData] of Object.entries(sessions)) {
-    const result = validateSheetData(sessionData);
+  for (const [id, loadoutData] of Object.entries(loadoutsObj)) {
+    const result = validateSheetData(loadoutData);
     if (!result.ok) {
-      return { ok: false, error: `Invalid session data for "${id}": ${result.error}` };
+      return { ok: false, error: `Invalid loadout data for "${id}": ${result.error}` };
     }
   }
 
-  return { ok: true, data: obj as unknown as MultiSessionBundle };
+  // Normalize: drop legacy 'sessions' key, keep only 'loadouts'
+  const { sessions: _legacy, ...rest } = obj as any;
+  const normalized = { ...rest, tree: obj.tree, loadouts: loadoutsObj };
+  return { ok: true, data: normalized as unknown as MultiLoadoutBundle };
 }
 
-export function importMultiSessionFile(): Promise<BundleLoadResult> {
+export function importMultiLoadoutFile(): Promise<BundleLoadResult> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -293,7 +329,7 @@ export function importMultiSessionFile(): Promise<BundleLoadResult> {
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result as string);
-          resolve(validateMultiSessionBundle(parsed));
+          resolve(validateMultiLoadoutBundle(parsed));
         } catch (e) {
           resolve({ ok: false, error: `Failed to parse file: ${e instanceof Error ? e.message : String(e)}` });
         }

@@ -63,6 +63,8 @@ export class LaevatainOperator extends Operator {
       secondaryAttributeType: LaevatainOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: LaevatainOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: LaevatainOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Scorching Heart',
+      talentTwoName: 'Re-Ignition',
       attributeIncreaseName: 'Keen Mind',
       attributeIncreaseAttribute: StatType.INTELLECT,
       baseStats: BASE_STATS,
@@ -97,4 +99,7 @@ export class LaevatainOperator extends Operator {
     return [TriggerConditionType.COMBUSTION, TriggerConditionType.CORROSION];
   }
   get comboDescription(): string { return 'Enemy has Combustion or Corrosion'; }
+  get spReturnNotes(): string[] {
+    return ['P1: +20 SP on Additional Attack hit'];
+  }
 }

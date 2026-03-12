@@ -63,6 +63,8 @@ export class AntalOperator extends Operator {
       secondaryAttributeType: AntalOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AntalOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AntalOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Improviser',
+      talentTwoName: 'Subconscious Act',
       attributeIncreaseName: 'Keen Mind',
       attributeIncreaseAttribute: StatType.INTELLECT,
       baseStats: BASE_STATS,

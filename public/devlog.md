@@ -1,5 +1,20 @@
 # Devlog
 
+## 2026-03-11
+- Damage table now accounts for stagger, susceptibility, link, and arts amp — numbers change in real time as statuses activate on the timeline
+- Stagger timeline with node thresholds and break periods — the enemy's stagger meter builds up and breaks when maxed out
+- Battle skill ultimate charge now triggers on the actual hit frame, not when you press the button
+- Events can't be dragged into ultimate or combo animation time-stops anymore — they snap to the edge instead of getting stuck
+- Fast dragging no longer lets events teleport through each other or through time-stop zones
+- Combo skill warning icon now appears while dragging (not just after releasing)
+- Weapon skill system — Edge of Lightness and TARR-11 with stat bonuses and effects
+- Loadout sidebar replaces session sidebar — tree-based loadout management with folders
+- App state extracted into useApp hook and appStateController — cleaner architecture
+- processInflictions moved from utils to controller layer where it belongs
+- Resource graph lines are thinner and less visually noisy
+- All 20+ operators now have element type data on their base class
+- Named weapon skills expanded with new effects and stat contributions
+
 ## 2026-03-10
 - Ultimate gauge now charges from battle and combo skills, and drains when you use it — the graph tracks it in real time
 - Changing operator potential updates ultimate charge cost automatically (e.g. P4 reduces it by 15%)

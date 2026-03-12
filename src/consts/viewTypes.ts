@@ -23,6 +23,8 @@ export interface SkillDef {
   animationDuration?: number;
   /** SP cost for battle skills. */
   skillPointCost?: number;
+  /** Description of SP return mechanics (potentials, talents, gear effects). */
+  spReturnNotes?: string[];
 }
 
 export interface Operator {
@@ -45,8 +47,11 @@ export interface Operator {
   ultimateEnergyCost: number;
   maxTalentOneLevel: number;
   maxTalentTwoLevel: number;
+  talentOneName: string;
+  talentTwoName: string;
   attributeIncreaseName: string;
   attributeIncreaseAttribute: string;
+  maxAttributeIncreaseLevel: number;
   triggerCapability?: import('./triggerCapabilities').TriggerCapability;
 }
 
@@ -62,6 +67,14 @@ export interface Enemy {
   tier: string;
   sprite?: string;
   statuses: EnemyStatus[];
+  /** Total stagger HP per node. */
+  staggerHp: number;
+  /** Number of stagger nodes (bosses). 0 or 1 for normal enemies. */
+  staggerNodes: number;
+  /** Seconds the enemy is frail after a stagger node is broken. */
+  staggerNodeRecoverySeconds: number;
+  /** Seconds the enemy is staggered after the meter reaches max (also the drain duration). */
+  staggerBreakDurationSeconds: number;
 }
 
 /** Arts infliction applied or absorbed by a frame. */
@@ -80,8 +93,12 @@ export interface FrameAbsorptionMarker {
 
 /** A damage frame marker within a segment. */
 export interface EventFrameMarker {
-  /** Frame offset from the start of the parent segment. */
+  /** Frame offset from the start of the parent segment (base/raw value). */
   offsetFrame: number;
+  /** Derived frame offset accounting for time-stop extension within the segment (set by processInflictionEvents). */
+  derivedOffsetFrame?: number;
+  /** Pre-computed absolute frame position (set by processInflictionEvents). */
+  absoluteFrame?: number;
   /** SP recovered on this frame hit. */
   skillPointRecovery?: number;
   /** Stagger dealt on this frame hit. */
@@ -173,8 +190,8 @@ export interface TimelineEvent {
   timeInteraction?: string;
   /** If true, this dash includes a perfect dodge (i-frame), applying TIME_STOP and generating 7.5 SP. */
   isPerfectDodge?: boolean;
-  /** Visual time dilation factor: 1.0 = normal, >1.0 = stretched (e.g. perfect dodge ≈ 1.709). */
-  timeDilation?: number;
+  /** Visual time-stop stretch factor: 1.0 = normal, >1.0 = stretched (e.g. perfect dodge ≈ 1.709). */
+  timeStop?: number;
   /** Whether this event's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
   timeDependency?: TimeDependency;
   /** Operator slot ID that originally produced this derived event. */
@@ -193,6 +210,10 @@ export interface TimelineEvent {
   operatorPotential?: number;
   /** SP cost consumed when this battle skill event fires. */
   skillPointCost?: number;
+  /** For chained combo time-stops: game frames [startFrame, comboChainFreezeEnd) are frozen in real-time layout. */
+  comboChainFreezeEnd?: number;
+  /** Validation warnings (e.g. event starts inside an invalid time-stop period). */
+  warnings?: string[];
 }
 
 export interface ContextMenuItem {
@@ -275,8 +296,8 @@ export type MiniTimeline = {
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
     isPerfectDodge?: boolean;
-    /** Visual time dilation factor. */
-    timeDilation?: number;
+    /** Visual time-stop stretch factor. */
+    timeStop?: number;
     /** Whether this event's duration is game-time or real-time dependent. */
     timeDependency?: TimeDependency;
     /** SP cost for battle skills. */
@@ -308,8 +329,8 @@ export type MiniTimeline = {
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
     isPerfectDodge?: boolean;
-    /** Visual time dilation factor. */
-    timeDilation?: number;
+    /** Visual time-stop stretch factor. */
+    timeStop?: number;
     /** Whether this event's duration is game-time or real-time dependent. */
     timeDependency?: TimeDependency;
     /** SP cost for battle skills. */

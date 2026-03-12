@@ -7,7 +7,7 @@ import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { TOTAL_FRAMES } from '../../utils/timeline';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import {
   LAEVATAIN_BASIC_ATTACK_SEQUENCES,
@@ -263,6 +263,37 @@ export function buildColumns(
     });
   }
 
+  // ── Unbridled Edge team buff (OBJ Edge of Lightness) ─────────────────────
+  const UNBRIDLED_EDGE_MAX_STACKS = 3;
+  const hasUnbridledEdge = slots.some((s) => s.weaponName === 'OBJ Edge of Lightness');
+  if (hasUnbridledEdge) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-unbridled-edge`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.WEAPON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.UNBRIDLED_EDGE,
+      label: STATUS_LABELS[StatusType.UNBRIDLED_EDGE].toUpperCase(),
+      color: '#88ddaa',
+      headerVariant: 'mf',
+      microColumns: Array.from({ length: UNBRIDLED_EDGE_MAX_STACKS }, (_, i) => ({
+        id: `ue-${i}`,
+        label: String(i + 1),
+        color: '#88ddaa',
+      })),
+      microColumnAssignment: 'by-order',
+      maxEvents: UNBRIDLED_EDGE_MAX_STACKS,
+      reuseExpiredSlots: true,
+      derived: true,
+      defaultEvent: {
+        name: StatusType.UNBRIDLED_EDGE,
+        defaultActivationDuration: 2400, // 20s at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    });
+  }
+
   // ── Shared team weapon buff column ────────────────────────────────────────
   const teamWeaponBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
   for (const slot of slots) {
@@ -422,6 +453,10 @@ export function buildColumns(
               ...(skillType === 'battle' && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
           };
+          // Combo columns also match derived activation window events
+          if (skillType === 'combo') {
+            col.matchColumnIds = ['combo', 'comboActivationWindow'];
+          }
           // Laevatain basic attack: multi-sequence event with frame markers
           if (isLaevatain && skillType === 'basic') {
             const base = SkillSegmentBuilder.buildSegments(LAEVATAIN_BASIC_ATTACK_SEQUENCES);
@@ -544,21 +579,37 @@ export function buildColumns(
               segments: seg.segments,
             };
           }
-          // Generic ultimate: attach frame data, stretch segment to match activeDuration
-          const ultEntry = op && ULTIMATE_FRAME_SEQUENCES[op.id];
-          if (ultEntry && skillType === 'ultimate') {
-            const isMultiUlt = 'sequences' in ultEntry;
-            const seg = isMultiUlt
-              ? SkillSegmentBuilder.buildSegments(ultEntry.sequences, { labels: ultEntry.labels })
-              : SkillSegmentBuilder.buildSegments([ultEntry]);
+          // Generic ultimate: build Animation / Statis / Active / Cooldown segments
+          if (skillType === 'ultimate') {
+            const animDur = col.defaultEvent!.animationDuration ?? 0;
+            const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
+            const statisDur = Math.max(0, activationDur - animDur);
             const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
-            // Stretch segment to cover the full Active phase so frames are draggable
-            if (activeDur > 0 && seg.segments.length > 0) {
-              seg.segments[0].durationFrames = activeDur;
+            const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
+
+            // Build active-phase segment from frame data if available
+            const ultEntry = op && ULTIMATE_FRAME_SEQUENCES[op.id];
+            let activeSegment: import('../../consts/viewTypes').EventSegmentData;
+            if (ultEntry) {
+              const isMultiUlt = 'sequences' in ultEntry;
+              const seg = isMultiUlt
+                ? SkillSegmentBuilder.buildSegments(ultEntry.sequences, { labels: ultEntry.labels })
+                : SkillSegmentBuilder.buildSegments([ultEntry]);
+              activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active' };
+            } else {
+              activeSegment = { durationFrames: activeDur, label: 'Active' };
             }
+
+            const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
+              { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME },
+              { durationFrames: statisDur, label: 'Statis' },
+              activeSegment,
+              { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME },
+            ];
+
             col.defaultEvent = {
               ...col.defaultEvent!,
-              segments: seg.segments,
+              segments: ultSegments,
             };
           }
           columns.push(col);
@@ -771,6 +822,55 @@ export function buildColumns(
       });
     }
   }
+
+  // ── Enemy stagger resource ─────────────────────────────────────────────────
+  columns.push({
+    key: `enemy-${COMMON_COLUMN_IDS.STAGGER}`,
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: 'enemy',
+    columnId: COMMON_COLUMN_IDS.STAGGER,
+    label: ColumnLabel.STAGGER,
+    color: '#dd8844',
+    headerVariant: 'skill',
+    noAdd: true,
+  });
+
+  // ── Stagger status (node stagger + full stagger break) ───────────────────
+  const nodeStaggerFrames = Math.round(enemy.staggerNodeRecoverySeconds * FPS);
+  const fullStaggerFrames = Math.round(enemy.staggerBreakDurationSeconds * FPS);
+  columns.push({
+    key: 'enemy-stagger-frailty',
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: 'enemy',
+    columnId: 'stagger-frailty',
+    label: ColumnLabel.STAGGER_FRAILTY,
+    color: '#dd8844',
+    headerVariant: 'skill',
+    noAdd: true,
+    derived: true,
+    eventVariants: [
+      {
+        name: 'Node Stagger',
+        defaultActivationDuration: nodeStaggerFrames,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+      {
+        name: 'Full Stagger',
+        defaultActivationDuration: fullStaggerFrames,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    ],
+    defaultEvent: {
+      name: 'Node Stagger',
+      defaultActivationDuration: nodeStaggerFrames,
+      defaultActiveDuration: 0,
+      defaultCooldownDuration: 0,
+    },
+  });
 
   // ── Dynamic enemy columns based on team composition ──────────────────────
   // Collect all published triggers and explicit enemy columns from team operators

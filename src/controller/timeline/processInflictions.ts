@@ -1,9 +1,269 @@
-import { TimelineEvent, FrameAbsorptionMarker } from '../consts/viewTypes';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../view/InformationPane';
-import { CombatSkillsType, StatusType, TargetType } from '../consts/enums';
-import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../model/channels';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TOTAL_FRAMES, absoluteGameFrame } from './timeline';
+import { TimelineEvent, FrameAbsorptionMarker } from '../../consts/viewTypes';
+import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
+import { CombatSkillsType, StatusType, TargetType, TimeDependency, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
+import { TriggerCapability } from '../../consts/triggerCapabilities';
+import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { TOTAL_FRAMES } from '../../utils/timeline';
+
+// ── Combo time-stop chaining ─────────────────────────────────────────────────
+
+/**
+ * Combo time-stop chaining: combo time-stops are special — other combos can
+ * be triggered within a combo's time-stop region. A combo's time-stop covers
+ * the game-frame range [startFrame, startFrame + animationDuration). When
+ * another combo's startFrame falls within that range, the earlier combo's
+ * time-stop is cut short at the interruption point.
+ *
+ * Effective animDur = B.startFrame - A.startFrame (truncated band width).
+ * The game frames [A.startFrame, B.startFrame) become a "frozen range" in
+ * the layout — they collapse to zero real-time width, with A's truncated
+ * time-stop band filling that space. The two bands render adjacent (no gap).
+ */
+function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
+  const comboStops: { id: string; startFrame: number; animDur: number }[] = [];
+  for (const ev of events) {
+    if (ev.columnId !== 'combo') continue;
+    const anim = ev.animationDuration;
+    if (!anim || anim <= 0) continue;
+    comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur: anim });
+  }
+  if (comboStops.length <= 1) return events;
+
+  comboStops.sort((a, b) => a.startFrame - b.startFrame);
+
+  const overrides = new Map<string, number>();
+  for (let i = 0; i < comboStops.length; i++) {
+    const a = comboStops[i];
+    const effectiveAnimDur = overrides.get(a.id) ?? a.animDur;
+    const coveredEnd = a.startFrame + effectiveAnimDur;
+
+    for (let j = i + 1; j < comboStops.length; j++) {
+      const b = comboStops[j];
+      if (b.startFrame >= coveredEnd) break;
+
+      // B starts within A's time-stop band (real-time overlap) — truncate
+      // A's animation at B's start.
+      overrides.set(a.id, b.startFrame - a.startFrame);
+      break;
+    }
+  }
+
+  if (overrides.size === 0) return events;
+  return events.map((ev) => {
+    const truncatedAnim = overrides.get(ev.id);
+    if (truncatedAnim == null) return ev;
+    return {
+      ...ev,
+      animationDuration: truncatedAnim,
+      activationDuration: Math.min(ev.activationDuration, truncatedAnim),
+    };
+  });
+}
+
+// ── Time-stop duration extension ─────────────────────────────────────────────
+//
+// All durations in the system are real-time. When an event overlaps with a
+// foreign time-stop region, its duration is extended by the overlapping
+// time-stop duration — the result is still real-time.
+//
+// An event's own time-stop does NOT extend itself.
+
+export interface TimeStopRegion {
+  startFrame: number;
+  durationFrames: number;
+  eventId: string;
+}
+
+function isTimeStopEvent(ev: TimelineEvent): boolean {
+  const anim = ev.animationDuration ?? 0;
+  if (anim <= 0) return false;
+  return ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+    (ev.columnId === 'dash' && !!ev.isPerfectDodge);
+}
+
+/** Collect all time-stop regions from combo/ultimate/dodge events. */
+export function collectTimeStopRegions(events: TimelineEvent[]): readonly TimeStopRegion[] {
+  const stops: TimeStopRegion[] = [];
+  for (const ev of events) {
+    if (!isTimeStopEvent(ev)) continue;
+    stops.push({
+      startFrame: ev.startFrame,
+      durationFrames: ev.animationDuration!,
+      eventId: ev.id,
+    });
+  }
+  stops.sort((a, b) => a.startFrame - b.startFrame);
+  return stops;
+}
+
+/**
+ * Compute the absolute frame position of a frame within an event,
+ * accounting for time-stop extension.
+ *
+ * segStartOffset is the cumulative offset of preceding (already extended)
+ * segments. frameOffset is the frame's local offset within its segment,
+ * extended by any time-stops it spans.
+ */
+function absoluteFrame(
+  eventStart: number,
+  segStartOffset: number,
+  frameOffset: number,
+  foreignStops: readonly TimeStopRegion[],
+): number {
+  const segAbsStart = eventStart + segStartOffset;
+  return segAbsStart + extendByTimeStops(segAbsStart, frameOffset, foreignStops);
+}
+
+/**
+ * Compute foreign time-stop regions for an event (all stops except its own).
+ */
+function foreignStopsFor(ev: TimelineEvent, stops: readonly TimeStopRegion[]): readonly TimeStopRegion[] {
+  return isTimeStopEvent(ev) ? stops.filter((s) => s.eventId !== ev.id) : stops;
+}
+
+/**
+ * Extend a base duration by any time-stop regions it overlaps with.
+ *
+ * Walks forward from `startFrame` for `baseDuration` frames, adding the
+ * duration of any time-stop regions encountered (since the event's timer
+ * is paused during those periods). Returns the extended real-time duration.
+ */
+export function extendByTimeStops(
+  startFrame: number,
+  baseDuration: number,
+  stops: readonly TimeStopRegion[],
+): number {
+  if (baseDuration <= 0 || stops.length === 0) return baseDuration;
+  let remaining = baseDuration;
+  let cursor = startFrame;
+
+  for (const s of stops) {
+    const stopEnd = s.startFrame + s.durationFrames;
+    if (stopEnd <= cursor) continue;
+    if (s.startFrame >= cursor + remaining) break;
+
+    if (s.startFrame > cursor) {
+      const gap = s.startFrame - cursor;
+      if (gap >= remaining) break;
+      remaining -= gap;
+      cursor = stopEnd;
+    } else {
+      cursor = stopEnd;
+    }
+  }
+
+  return (cursor + remaining) - startFrame;
+}
+
+/**
+ * Extends all event durations that overlap with foreign time-stop regions.
+ * Events whose IDs are in `alreadyExtended` are skipped (prevents double extension).
+ * Returns the updated events and adds newly extended IDs to the set.
+ *
+ * For time-stop events (combos/ultimates/dodges), the animation sub-phase
+ * is itself the time-stop and is not extended. Only post-animation portions
+ * of time-stop events are extended by OTHER time-stops.
+ */
+function applyTimeStopExtension(
+  events: TimelineEvent[],
+  stops: readonly TimeStopRegion[],
+  alreadyExtended?: Set<string>,
+): TimelineEvent[] {
+  if (stops.length === 0) return events;
+
+  const extended = alreadyExtended ?? new Set<string>();
+
+  const result = events.map((ev) => {
+    if (extended.has(ev.id)) return ev;
+
+    const isOwn = isTimeStopEvent(ev);
+    const animDur = ev.animationDuration ?? 0;
+
+    // Foreign stops = all stops except this event's own
+    const foreignStops = isOwn
+      ? stops.filter((s) => s.eventId !== ev.id)
+      : stops;
+    if (foreignStops.length === 0) return ev;
+
+    // ── Sequenced events ─────────────────────────────────────────────────
+    if (ev.segments && ev.segments.length > 0) {
+      let rawOffset = 0;      // cumulative raw (base) offset — for animation boundary checks
+      let derivedOffset = 0;  // cumulative derived offset — real start of next segment
+      let changed = false;
+      const newSegments = ev.segments.map((seg) => {
+        const rawSegStart = rawOffset;
+        rawOffset += seg.durationFrames;
+
+        if (seg.timeDependency === TimeDependency.REAL_TIME || seg.durationFrames === 0) {
+          derivedOffset += seg.durationFrames;
+          return seg;
+        }
+
+        // For time-stop events, segments within animation are not extended
+        if (isOwn && animDur > 0 && rawSegStart + seg.durationFrames <= animDur) {
+          derivedOffset += seg.durationFrames;
+          return seg;
+        }
+
+        let ext: number;
+        if (isOwn && animDur > 0 && rawSegStart < animDur) {
+          // Segment straddles animation boundary — only extend post-anim portion
+          const animPortion = animDur - rawSegStart;
+          const postAnimPortion = seg.durationFrames - animPortion;
+          ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
+        } else {
+          // Use derived offset for real start position, raw duration as base
+          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.durationFrames, foreignStops);
+        }
+
+        derivedOffset += ext;
+
+        if (ext === seg.durationFrames) return seg;
+        changed = true;
+        return { ...seg, durationFrames: ext };
+      });
+
+      if (!changed) return ev;
+      extended.add(ev.id);
+      return {
+        ...ev,
+        activationDuration: newSegments.reduce((sum, s) => sum + s.durationFrames, 0),
+        segments: newSegments,
+      };
+    }
+
+    // ── 3-phase events ───────────────────────────────────────────────────
+    if (ev.timeDependency === TimeDependency.REAL_TIME) return ev;
+
+    let newActivation = ev.activationDuration;
+    let newActive = ev.activeDuration;
+
+    if (!isOwn || animDur <= 0) {
+      if (ev.activationDuration > 0) {
+        newActivation = extendByTimeStops(ev.startFrame, ev.activationDuration, foreignStops);
+      }
+      if (ev.activeDuration > 0) {
+        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
+      }
+    } else {
+      // Time-stop event: animation portion not extended, post-anim is
+      if (ev.activationDuration > animDur) {
+        const postAnim = ev.activationDuration - animDur;
+        newActivation = animDur + extendByTimeStops(ev.startFrame + animDur, postAnim, foreignStops);
+      }
+      if (ev.activeDuration > 0) {
+        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
+      }
+    }
+
+    if (newActivation === ev.activationDuration && newActive === ev.activeDuration) return ev;
+    extended.add(ev.id);
+    return { ...ev, activationDuration: newActivation, activeDuration: newActive };
+  });
+
+  return result;
+}
 
 // ── Potential-based effects ──────────────────────────────────────────────────
 
@@ -95,10 +355,379 @@ const TEAM_STATUS_COLUMN: Record<string, string> = {
 /** P5 link extension: extra frames added to link duration when operator potential >= 5. */
 const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
 
+// ── Frame position resolution ─────────────────────────────────────────────
+//
+// Pre-computes `absoluteFrame` on every EventFrameMarker so consumers
+// (damage table, resource graphs, view) never need time-stop knowledge.
+
+function resolveFramePositions(
+  events: TimelineEvent[],
+  stops: readonly TimeStopRegion[],
+): TimelineEvent[] {
+  if (stops.length === 0) {
+    // No time-stops: offsets unchanged, absoluteFrame = eventStart + cumulativeOffset + offsetFrame
+    return events.map((ev) => {
+      if (!ev.segments) return ev;
+      let cumulativeOffset = 0;
+      const newSegments = ev.segments.map((seg) => {
+        const segStart = cumulativeOffset;
+        cumulativeOffset += seg.durationFrames;
+        if (!seg.frames) return seg;
+        return {
+          ...seg,
+          frames: seg.frames.map((f) => ({
+            ...f,
+            derivedOffsetFrame: f.offsetFrame,
+            absoluteFrame: ev.startFrame + segStart + f.offsetFrame,
+          })),
+        };
+      });
+      return { ...ev, segments: newSegments };
+    });
+  }
+
+  return events.map((ev) => {
+    if (!ev.segments) return ev;
+    const fStops = foreignStopsFor(ev, stops);
+    let cumulativeOffset = 0;
+    const newSegments = ev.segments.map((seg) => {
+      const segStart = cumulativeOffset;
+      cumulativeOffset += seg.durationFrames;
+      if (!seg.frames) return seg;
+      const segAbsStart = ev.startFrame + segStart;
+      return {
+        ...seg,
+        frames: seg.frames.map((f) => {
+          const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
+          return {
+            ...f,
+            derivedOffsetFrame: extOffset,
+            absoluteFrame: segAbsStart + extOffset,
+          };
+        }),
+      };
+    });
+    return { ...ev, segments: newSegments };
+  });
+}
+
+// ── Time-stop start validation ────────────────────────────────────────────
+//
+// Validates that events starting inside a time-stop period are allowed per
+// the game rules defined in docs/specifications/time_stop.
+
+function validateTimeStopStarts(
+  events: TimelineEvent[],
+  stops: readonly TimeStopRegion[],
+): TimelineEvent[] {
+  if (stops.length === 0) return events;
+
+  // Build a lookup from eventId → event for time-stop source identification
+  const evById = new Map<string, TimelineEvent>();
+  for (const ev of events) evById.set(ev.id, ev);
+
+  return events.map((ev) => {
+    const warnings: string[] = [];
+
+    for (const stop of stops) {
+      if (stop.eventId === ev.id) continue;
+      const stopEnd = stop.startFrame + stop.durationFrames;
+      if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
+
+      // ev starts inside this time-stop region — check if allowed
+      const source = evById.get(stop.eventId);
+      if (!source) continue;
+
+      const sourceIsUltimate = source.columnId === 'ultimate';
+      const sourceIsCombo = source.columnId === 'combo';
+      const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
+
+      // All time-stops can start within dodge's time-stop
+      if (sourceIsDodge) continue;
+
+      // Combo cannot start during ultimate animation time-stop
+      if (ev.columnId === 'combo' && sourceIsUltimate) {
+        warnings.push(`Combo skill cannot start during ultimate animation time-stop`);
+      }
+
+      // Ultimate cannot start during another ultimate's animation time-stop
+      if (ev.columnId === 'ultimate' && sourceIsUltimate) {
+        warnings.push(`Ultimate cannot start during another ultimate's animation time-stop`);
+      }
+
+      // Combo can start within combo time-stops (chaining) and stagger — OK
+      // Ultimate can start within combo and stagger and dodge — OK
+      // Everything else within combo/stagger is OK
+    }
+
+    if (warnings.length === 0) return ev;
+    return { ...ev, warnings: [...(ev.warnings ?? []), ...warnings] };
+  });
+}
+
 /** Source information for event status changes (consumed/refreshed). */
 interface StatusSource {
   ownerId: string;
   skillName?: string;
+}
+
+// ── Combo activation window derivation ──────────────────────────────────────
+
+/** Column ID for derived combo activation window events. */
+export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
+
+/**
+ * Maps derived enemy event columnIds to the trigger conditions they represent.
+ * Used to generate combo windows from derived events at their actual frame timing.
+ */
+export const ENEMY_COLUMN_TO_TRIGGERS: Record<string, TriggerConditionType[]> = {
+  heatInfliction:     [TriggerConditionType.APPLY_HEAT_INFLICTION],
+  cryoInfliction:     [TriggerConditionType.APPLY_CRYO_INFLICTION],
+  natureInfliction:   [TriggerConditionType.APPLY_NATURE_INFLICTION],
+  electricInfliction: [TriggerConditionType.APPLY_ELECTRIC_INFLICTION],
+  combustion:         [TriggerConditionType.COMBUSTION],
+  solidification:     [TriggerConditionType.SOLIDIFICATION],
+  corrosion:          [TriggerConditionType.CORROSION],
+  electrification:    [TriggerConditionType.ELECTRIFICATION],
+  vulnerableInfliction: [TriggerConditionType.APPLY_VULNERABILITY],
+  breach:             [TriggerConditionType.APPLY_PHYSICAL_STATUS],
+};
+
+/**
+ * Trigger conditions that are always satisfiable (not dependent on team skill
+ * publications).  Operators whose combo requires one of these get a full-timeline
+ * activation window regardless of team composition.
+ */
+export const ALWAYS_AVAILABLE_TRIGGERS = new Set<TriggerConditionType>([
+  TriggerConditionType.OPERATOR_ATTACKED,
+  TriggerConditionType.HP_BELOW_THRESHOLD,
+  TriggerConditionType.HP_ABOVE_THRESHOLD,
+  TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD,
+]);
+
+/** Set of trigger condition types that are produced by derived enemy events. */
+export const DERIVED_TRIGGER_TYPES = new Set<TriggerConditionType>();
+for (const triggers of Object.values(ENEMY_COLUMN_TO_TRIGGERS)) {
+  for (const t of triggers) {
+    DERIVED_TRIGGER_TYPES.add(t);
+    const parent = TRIGGER_CONDITION_PARENTS[t];
+    if (parent) DERIVED_TRIGGER_TYPES.add(parent);
+  }
+}
+
+/** Slot-level trigger wiring for the pipeline. */
+export interface SlotTriggerWiring {
+  slotId: string;
+  capability: TriggerCapability;
+}
+
+/**
+ * Derive combo activation window events from processed events + operator trigger capabilities.
+ * Each window becomes a single-segment derived TimelineEvent.
+ */
+function deriveComboActivationWindows(
+  events: TimelineEvent[],
+  slotWirings: SlotTriggerWiring[],
+  stops: readonly TimeStopRegion[],
+): TimelineEvent[] {
+  // Intermediate accumulator: slotId → unsorted windows
+  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerType?: TriggerConditionType }[]>();
+
+  // Build slotId → index for event ownership lookup
+  const slotIdToIndex = new Map<string, number>();
+  for (let i = 0; i < slotWirings.length; i++) {
+    slotIdToIndex.set(slotWirings[i].slotId, i);
+  }
+
+  // Build set of combo time-stop event IDs per slot, so a slot's own combo
+  // time stops don't extend its combo activation window duration.
+  const comboStopIdsBySlot = new Map<string, Set<string>>();
+  for (const ev of events) {
+    if (ev.columnId !== 'combo' || !isTimeStopEvent(ev)) continue;
+    if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
+    comboStopIdsBySlot.get(ev.ownerId)!.add(ev.id);
+  }
+
+  const addWindow = (
+    trigger: TriggerConditionType,
+    event: TimelineEvent,
+    triggerFrame: number,
+  ) => {
+    for (const wiring of slotWirings) {
+      const cap = wiring.capability;
+      const matchesTrigger = cap.comboRequires.includes(trigger) ||
+        (TRIGGER_CONDITION_PARENTS[trigger] !== undefined &&
+          cap.comboRequires.includes(TRIGGER_CONDITION_PARENTS[trigger]!));
+      if (!matchesTrigger) continue;
+
+      // Skip self-trigger
+      if (event.sourceOwnerId === wiring.slotId) continue;
+
+      // Check comboForbidsActiveColumns
+      const forbids = cap.comboForbidsActiveColumns;
+      if (forbids && forbids.length > 0 && hasActiveEventInColumns(events, forbids, triggerFrame)) continue;
+
+      // Check comboRequiresActiveColumns
+      const requires = cap.comboRequiresActiveColumns;
+      if (requires && requires.length > 0 && !hasActiveEventInColumns(events, requires, triggerFrame)) continue;
+
+      const baseDuration = cap.comboWindowFrames;
+      // Exclude this slot's own combo time stops from window extension
+      const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
+      const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventId)) : stops;
+      const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
+
+      if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
+      windowsBySlot.get(wiring.slotId)!.push({
+        startFrame: triggerFrame,
+        endFrame: triggerFrame + extendedDuration,
+        sourceEventId: event.id,
+        sourceOwnerId: event.ownerId !== 'enemy' ? event.ownerId : event.sourceOwnerId,
+        sourceSkillName: event.name,
+        sourceColumnId: event.columnId,
+        triggerType: trigger,
+      });
+    }
+  };
+
+  // Phase 1: operator-published triggers (skip derived trigger types)
+  for (const event of events) {
+    const slotIndex = slotIdToIndex.get(event.ownerId);
+    if (slotIndex === undefined) continue;
+    const cap = slotWirings[slotIndex].capability;
+    const publishedTriggers = cap.publishesTriggers[event.columnId];
+    if (!publishedTriggers || publishedTriggers.length === 0) continue;
+
+    const defaultTriggerFrame = event.startFrame + event.activationDuration;
+    const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
+
+    for (const trigger of publishedTriggers) {
+      if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
+      const frame = trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame;
+      addWindow(trigger, event, frame);
+    }
+  }
+
+  // Phase 2: derived enemy event triggers
+  for (const event of events) {
+    if (event.ownerId !== 'enemy') continue;
+    const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
+    if (!triggers) continue;
+    for (const trigger of triggers) {
+      addWindow(trigger, event, event.startFrame);
+    }
+  }
+
+  // Phase 3: always-available triggers → full-timeline windows
+  for (const wiring of slotWirings) {
+    const hasAlwaysAvailable = wiring.capability.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t));
+    if (!hasAlwaysAvailable) continue;
+    if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
+    windowsBySlot.get(wiring.slotId)!.push({
+      startFrame: 0,
+      endFrame: TOTAL_FRAMES,
+      sourceEventId: '__always_available__',
+    });
+  }
+
+  // Sort, merge, and convert to TimelineEvents
+  const derived: TimelineEvent[] = [];
+  windowsBySlot.forEach((wins, slotId) => {
+    wins.sort((a, b) => a.startFrame - b.startFrame);
+    // Merge overlapping
+    const merged: typeof wins = [];
+    for (const w of wins) {
+      const prev = merged.length > 0 ? merged[merged.length - 1] : null;
+      if (prev && w.startFrame <= prev.endFrame) {
+        prev.endFrame = Math.max(prev.endFrame, w.endFrame);
+      } else {
+        merged.push({ ...w });
+      }
+    }
+    for (let i = 0; i < merged.length; i++) {
+      const w = merged[i];
+      const duration = w.endFrame - w.startFrame;
+      derived.push({
+        id: `combo-window-${slotId}-${i}`,
+        name: COMBO_WINDOW_COLUMN_ID,
+        ownerId: slotId,
+        columnId: COMBO_WINDOW_COLUMN_ID,
+        startFrame: w.startFrame,
+        activationDuration: duration,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: w.sourceOwnerId,
+        sourceSkillName: w.sourceSkillName,
+        comboTriggerColumnId: w.sourceColumnId,
+        segments: [{ durationFrames: duration }],
+      });
+    }
+  });
+
+  return derived;
+}
+
+/**
+ * Check if any event whose columnId is in `columnIds` is active at `frame`.
+ * An event is "active" if frame falls within [startFrame, startFrame + totalDuration).
+ */
+export function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], frame: number): boolean {
+  for (const ev of events) {
+    if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.name)) continue;
+    const totalDuration = ev.segments
+      ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+      : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+    if (frame >= ev.startFrame && frame < ev.startFrame + totalDuration) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * For a sequenced event, compute the frame at which the final strike's last
+ * hit lands.  Returns null if the event has no segments or fewer than 2.
+ *
+ * When `stops` is provided, the last hit's offset within its segment is
+ * extended by any overlapping time-stop regions, matching how
+ * `deriveFrameInflictions` / `absoluteFrame()` position the actual hit.
+ */
+export function getFinalStrikeTriggerFrame(
+  event: TimelineEvent,
+  stops?: readonly TimeStopRegion[],
+): number | null {
+  const segs = event.segments;
+  if (!segs || segs.length < 2) return null;
+
+  let offsetFrames = 0;
+  for (let i = 0; i < segs.length - 1; i++) {
+    offsetFrames += segs[i].durationFrames;
+  }
+
+  const lastSeg = segs[segs.length - 1];
+  const frames = lastSeg.frames;
+  if (frames && frames.length > 0) {
+    const lastFrame = frames[frames.length - 1];
+    if (lastFrame.absoluteFrame != null) return lastFrame.absoluteFrame;
+  }
+  const lastHitOffset = frames && frames.length > 0
+    ? frames[frames.length - 1].offsetFrame
+    : 0;
+
+  const segAbsStart = event.startFrame + offsetFrames;
+  if (stops && stops.length > 0) {
+    const fStops = foreignStopsFor(event, stops);
+    return segAbsStart + extendByTimeStops(segAbsStart, lastHitOffset, fStops);
+  }
+  return segAbsStart + lastHitOffset;
+}
+
+/** Get the end frame of a combo activation window event. */
+export function comboWindowEndFrame(ev: TimelineEvent): number {
+  const duration = ev.segments
+    ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+    : ev.activationDuration;
+  return ev.startFrame + duration;
 }
 
 /**
@@ -111,23 +740,59 @@ interface StatusSource {
  * 3. Same-element infliction refresh: slots 0–2 get durations extended to the
  *    newest stack's end time. Slot 3 shows sequential bars.
  */
-export function processInflictionEvents(rawEvents: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
-  const withPotentialEffects = applyPotentialEffects(rawEvents);
-  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats);
+export function processInflictionEvents(
+  rawEvents: TimelineEvent[],
+  loadoutStats?: Record<string, LoadoutStats>,
+  slotWeapons?: Record<string, string | undefined>,
+  slotWirings?: SlotTriggerWiring[],
+): TimelineEvent[] {
+  // ── Phase 1: Finalize time-stop regions ──────────────────────────────────
+  // Combo chaining truncates overlapping combo animations, finalizing the
+  // time-stop regions used throughout the pipeline.
+  const withComboChaining = applyComboChaining(rawEvents);
+  const stops = collectTimeStopRegions(withComboChaining);
+
+  // Shared set tracks which event IDs have already been extended to prevent
+  // double-extension across multiple applyTimeStopExtension passes.
+  const extendedIds = new Set<string>();
+
+  // ── Phase 2: Extend user-placed events by time-stop overlap ──────────────
+  // All durations are real-time. Events that overlap foreign time-stop regions
+  // have their durations extended (timer paused during time-stops).
+  const ext1 = applyTimeStopExtension(withComboChaining, stops, extendedIds);
+
+  // ── Phase 3: Process pipeline (all durations are extended real-time) ──────
+  const withPotentialEffects = applyPotentialEffects(ext1);
+  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats, stops);
+  // Extend newly derived events by time-stop overlap
+  const ext2 = applyTimeStopExtension(withDerivedInflictions, stops, extendedIds);
   // Refresh same-element stacks BEFORE absorptions/reactions so that
   // overlapping stacks get their durations extended using the original
   // infliction duration. Later steps (absorption, reaction) can then
   // clamp the already-extended events as needed.
-  const withSameElementRefresh = applySameElementRefresh(withDerivedInflictions);
+  const withSameElementRefresh = applySameElementRefresh(ext2);
   const withPhysicalRefresh = applyPhysicalInflictionRefresh(withSameElementRefresh);
-  const withConsumedOperatorStatuses = consumeOperatorStatuses(withPhysicalRefresh);
+  const withConsumedOperatorStatuses = consumeOperatorStatuses(withPhysicalRefresh, stops);
   const withConsumedTeam = consumeTeamStatuses(withConsumedOperatorStatuses);
-  const withAbsorptions = applyAbsorptions(withConsumedTeam);
+  const withAbsorptions = applyAbsorptions(withConsumedTeam, stops);
   const withReactions = deriveReactions(withAbsorptions);
-  const withMergedReactions = mergeReactions(withReactions);
+  const ext3 = applyTimeStopExtension(withReactions, stops, extendedIds);
+  const withMergedReactions = mergeReactions(ext3);
   const withScorchingFangs = deriveScorchingFangs(withMergedReactions, loadoutStats);
-  const withSpReturnGaugeReduction = applySpReturnGaugeReduction(withScorchingFangs);
-  return withSpReturnGaugeReduction;
+  const withUnbridledEdge = deriveUnbridledEdge(withScorchingFangs, slotWeapons, stops);
+  // Final extension for Scorching Fangs, Unbridled Edge, and any other derived events
+  const ext4 = applyTimeStopExtension(withUnbridledEdge, stops, extendedIds);
+  const withSpReturnGaugeReduction = applySpReturnGaugeReduction(ext4);
+
+  // ── Derive combo activation windows ────────────────────────────────────
+  const withComboWindows = slotWirings && slotWirings.length > 0
+    ? [...withSpReturnGaugeReduction, ...deriveComboActivationWindows(withSpReturnGaugeReduction, slotWirings, stops)]
+    : withSpReturnGaugeReduction;
+
+  // ── Phase 4: Resolve frame positions & validate ────────────────────────
+  const withResolvedFrames = resolveFramePositions(withComboWindows, stops);
+  const withValidation = validateTimeStopStarts(withResolvedFrames, stops);
+  return withValidation;
 }
 
 /** Skill column IDs that consume team statuses (Link) when cast. */
@@ -187,7 +852,7 @@ function consumeTeamStatuses(events: TimelineEvent[]): TimelineEvent[] {
  * `consumeStatus`. All active events of the matching status owned by the same
  * operator are clamped at the consumption frame.
  */
-function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
+function consumeOperatorStatuses(events: TimelineEvent[], stops: readonly TimeStopRegion[]): TimelineEvent[] {
   // Collect consume-status points from frame markers
   type ConsumePoint = { absoluteFrame: number; ownerId: string; status: string; source: StatusSource };
   const consumePoints: ConsumePoint[] = [];
@@ -195,6 +860,7 @@ function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
   for (const event of events) {
     if (!event.segments || event.ownerId === 'enemy' || event.ownerId === COMMON_OWNER_ID) continue;
 
+    const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
@@ -203,7 +869,7 @@ function consumeOperatorStatuses(events: TimelineEvent[]): TimelineEvent[] {
           const frame = seg.frames[fi];
           if (frame.consumeStatus) {
             consumePoints.push({
-              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
+              absoluteFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
               ownerId: event.ownerId,
               status: frame.consumeStatus,
               source: { ownerId: event.ownerId, skillName: event.name },
@@ -279,19 +945,20 @@ function resolveSusceptibility(
   return resolved;
 }
 
-function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
+function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>, stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
     if (!event.segments || event.ownerId === 'enemy') continue;
 
+    const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          const absoluteFrame = absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration);
+          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
 
           if (frame.applyArtsInfliction) {
             const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
@@ -303,7 +970,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                 name: columnId,
                 ownerId: 'enemy',
                 columnId,
-                startFrame: absoluteFrame,
+                startFrame: absFrame,
                 activationDuration: INFLICTION_DURATION,
                 activeDuration: 0,
                 cooldownDuration: 0,
@@ -326,7 +993,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                     name: frame.applyStatus.status,
                     ownerId: event.ownerId,
                     columnId: grantColumnId,
-                    startFrame: absoluteFrame,
+                    startFrame: absFrame,
                     activationDuration: statusDuration,
                     activeDuration: 0,
                     cooldownDuration: 0,
@@ -340,7 +1007,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               if (teamColumnId) {
                 // Link duration = remaining ultimate active phase from grant frame
                 const ultActiveEnd = event.startFrame + event.activationDuration + event.activeDuration;
-                let linkDuration = Math.max(0, ultActiveEnd - absoluteFrame);
+                let linkDuration = Math.max(0, ultActiveEnd - absFrame);
                 // P5: extend link buff duration beyond ultimate active phase
                 if ((event.operatorPotential ?? 0) >= 5) {
                   linkDuration += P5_LINK_EXTENSION_FRAMES;
@@ -350,7 +1017,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                   name: 'Squad Buff (Link)',
                   ownerId: COMMON_OWNER_ID,
                   columnId: teamColumnId,
-                  startFrame: absoluteFrame,
+                  startFrame: absFrame,
                   activationDuration: linkDuration,
                   activeDuration: 0,
                   cooldownDuration: 0,
@@ -365,7 +1032,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                 name: frame.applyStatus.eventName ?? frame.applyStatus.status,
                 ownerId: 'enemy',
                 columnId: frame.applyStatus.status,
-                startFrame: absoluteFrame,
+                startFrame: absFrame,
                 activationDuration: frame.applyStatus.durationFrames,
                 activeDuration: 0,
                 cooldownDuration: 0,
@@ -387,7 +1054,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                 name: reactionColumnId,
                 ownerId: 'enemy',
                 columnId: reactionColumnId,
-                startFrame: absoluteFrame,
+                startFrame: absFrame,
                 activationDuration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
                 activeDuration: 0,
                 cooldownDuration: 0,
@@ -406,7 +1073,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               name: 'sp-recovery',
               ownerId: COMMON_OWNER_ID,
               columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-              startFrame: absoluteFrame,
+              startFrame: absFrame,
               // Negative activationDuration = negative cost = SP gain in ResourceTimeline
               activationDuration: -(frame.skillPointRecovery!),
               activeDuration: 0,
@@ -426,13 +1093,14 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
   for (const event of events) {
     if (!event.comboTriggerColumnId || !event.segments) continue;
 
+    const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          const absoluteFrame = absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration);
+          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
           const triggerCol = event.comboTriggerColumnId;
 
           if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
@@ -442,7 +1110,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               name: triggerCol,
               ownerId: 'enemy',
               columnId: triggerCol,
-              startFrame: absoluteFrame,
+              startFrame: absFrame,
               activationDuration: INFLICTION_DURATION,
               activeDuration: 0,
               cooldownDuration: 0,
@@ -456,7 +1124,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               name: triggerCol,
               ownerId: 'enemy',
               columnId: triggerCol,
-              startFrame: absoluteFrame,
+              startFrame: absFrame,
               activationDuration: PHYSICAL_INFLICTION_DURATION,
               activeDuration: 0,
               cooldownDuration: 0,
@@ -523,7 +1191,7 @@ const EXCHANGE_EVENT_DURATION = TOTAL_FRAMES * 10;
  * 4. Clamp consumed inflictions at the absorption frame
  * 5. Generate new exchange status events
  */
-function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
+function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegion[]): TimelineEvent[] {
   // Collect all absorption points: { absoluteFrame, ownerId, marker }
   type AbsorptionPoint = {
     absoluteFrame: number;
@@ -548,6 +1216,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
   for (const event of events) {
     if (!event.segments || event.ownerId === 'enemy') continue;
 
+    const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
     for (let si = 0; si < event.segments.length; si++) {
       const seg = event.segments[si];
@@ -556,7 +1225,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
           const frame = seg.frames[fi];
           if (frame.absorbArtsInfliction) {
             absorptions.push({
-              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
+              absoluteFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
               ownerId: event.ownerId,
               marker: frame.absorbArtsInfliction,
               eventId: event.id,
@@ -567,7 +1236,7 @@ function applyAbsorptions(events: TimelineEvent[]): TimelineEvent[] {
           }
           if (frame.consumeArtsInfliction) {
             consumptions.push({
-              absoluteFrame: absoluteGameFrame(event.startFrame, cumulativeOffset + frame.offsetFrame, event.animationDuration),
+              absoluteFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
               element: frame.consumeArtsInfliction.element,
               stacks: frame.consumeArtsInfliction.stacks,
               source: { ownerId: event.ownerId, skillName: event.name },
@@ -1178,6 +1847,125 @@ function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<str
   if (derived.length === 0) return events;
 
   // Apply clamping to derived events
+  const finalDerived = derived.map((ev) => clamped.get(ev.id) ?? ev);
+  return [...events, ...finalDerived];
+}
+
+// ── Unbridled Edge (OBJ Edge of Lightness weapon buff) ───────────────────────
+
+const UNBRIDLED_EDGE_WEAPON = 'OBJ Edge of Lightness';
+const UNBRIDLED_EDGE_DURATION = 2400; // 20s at 120fps
+const UNBRIDLED_EDGE_MAX_STACKS = 3;
+
+/**
+ * Derives Unbridled Edge team buff events from SP recovery frame hits.
+ * The weapon grants a stacking team buff (max 3) when the wielder's skill
+ * recovers SP. Additional stacks beyond 3 refresh the earliest expiring stack.
+ */
+function deriveUnbridledEdge(
+  events: TimelineEvent[],
+  slotWeapons?: Record<string, string | undefined>,
+  stops: readonly TimeStopRegion[] = [],
+): TimelineEvent[] {
+  if (!slotWeapons) return events;
+
+  // Find the slot that has Edge of Lightness equipped
+  let wielderSlotId: string | null = null;
+  for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
+    if (weaponName === UNBRIDLED_EDGE_WEAPON) {
+      wielderSlotId = slotId;
+      break;
+    }
+  }
+  if (!wielderSlotId) return events;
+
+  // Collect all SP recovery frames from the wielder's events
+  type SpRecoveryHit = { frame: number; sourceEventId: string; sourceSkillName: string };
+  const spRecoveryHits: SpRecoveryHit[] = [];
+
+  for (const ev of events) {
+    if (ev.ownerId !== wielderSlotId) continue;
+    if (!ev.segments) continue;
+    const fStops = foreignStopsFor(ev, stops);
+    let cumulativeOffset = 0;
+    for (const seg of ev.segments) {
+      if (seg.frames) {
+        for (const frame of seg.frames) {
+          if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
+            const absFrame = absoluteFrame(ev.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
+            spRecoveryHits.push({
+              frame: absFrame,
+              sourceEventId: ev.id,
+              sourceSkillName: ev.name,
+            });
+          }
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  if (spRecoveryHits.length === 0) return events;
+  spRecoveryHits.sort((a, b) => a.frame - b.frame);
+
+  // Build stacking buff events with max 3 stacks and refresh-on-overflow
+  const derived: TimelineEvent[] = [];
+  const clamped = new Map<string, TimelineEvent>();
+  // Track active stacks as { id, startFrame, endFrame }
+  const activeStacks: { id: string; startFrame: number; endFrame: number }[] = [];
+  let idCounter = 0;
+
+  for (const hit of spRecoveryHits) {
+    // Remove expired stacks
+    for (let i = activeStacks.length - 1; i >= 0; i--) {
+      if (activeStacks[i].endFrame <= hit.frame) {
+        activeStacks.splice(i, 1);
+      }
+    }
+
+    // If at max stacks, refresh the earliest-expiring one
+    if (activeStacks.length >= UNBRIDLED_EDGE_MAX_STACKS) {
+      // Find the stack with the earliest end frame
+      let earliestIdx = 0;
+      for (let i = 1; i < activeStacks.length; i++) {
+        if (activeStacks[i].endFrame < activeStacks[earliestIdx].endFrame) {
+          earliestIdx = i;
+        }
+      }
+      const earliest = activeStacks[earliestIdx];
+      // Clamp it at the current frame
+      const existingDerived = derived.find((ev) => ev.id === earliest.id);
+      if (existingDerived) {
+        clamped.set(earliest.id, {
+          ...existingDerived,
+          activationDuration: hit.frame - earliest.startFrame,
+          eventStatus: 'refreshed' as const,
+          eventStatusOwnerId: wielderSlotId,
+          eventStatusSkillName: hit.sourceSkillName,
+        });
+      }
+      activeStacks.splice(earliestIdx, 1);
+    }
+
+    // Create new stack
+    const stackId = `ue-${idCounter++}`;
+    const endFrame = hit.frame + UNBRIDLED_EDGE_DURATION;
+    derived.push({
+      id: stackId,
+      name: StatusType.UNBRIDLED_EDGE,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.UNBRIDLED_EDGE,
+      startFrame: hit.frame,
+      activationDuration: UNBRIDLED_EDGE_DURATION,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      sourceOwnerId: wielderSlotId,
+      sourceSkillName: hit.sourceSkillName,
+    });
+    activeStacks.push({ id: stackId, startFrame: hit.frame, endFrame });
+  }
+
+  if (derived.length === 0) return events;
   const finalDerived = derived.map((ev) => clamped.get(ev.id) ?? ev);
   return [...events, ...finalDerived];
 }

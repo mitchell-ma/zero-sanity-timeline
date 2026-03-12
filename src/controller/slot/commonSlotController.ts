@@ -3,6 +3,7 @@ import { ColumnLabel } from '../../consts/channelLabels';
 import { MiniTimeline } from '../../consts/viewTypes';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline } from '../timeline/skillPointTimeline';
+import { StaggerTimeline } from '../timeline/staggerTimeline';
 
 // ── Column IDs ───────────────────────────────────────────────────────────────
 
@@ -10,6 +11,7 @@ export const COMMON_OWNER_ID = 'common';
 
 export const COMMON_COLUMN_IDS = {
   SKILL_POINTS: 'skill-points',
+  STAGGER: 'stagger',
   TEAM_STATUS: 'team-status',
 } as const;
 
@@ -30,6 +32,7 @@ export class CommonSlotController {
   readonly ownerId = COMMON_OWNER_ID;
 
   readonly skillPoints: SkillPointTimeline;
+  readonly stagger: StaggerTimeline;
 
   private readonly subtimelines = new Map<string, Subtimeline>();
   private readonly changeListeners = new Set<CommonSlotChangeListener>();
@@ -38,6 +41,10 @@ export class CommonSlotController {
     const spSubtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.SKILL_POINTS);
     this.subtimelines.set(COMMON_COLUMN_IDS.SKILL_POINTS, spSubtimeline);
     this.skillPoints = new SkillPointTimeline(spSubtimeline);
+
+    const staggerSubtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.STAGGER);
+    this.subtimelines.set(COMMON_COLUMN_IDS.STAGGER, staggerSubtimeline);
+    this.stagger = new StaggerTimeline(staggerSubtimeline);
 
     this.subtimelines.set(
       COMMON_COLUMN_IDS.TEAM_STATUS,
@@ -102,6 +109,7 @@ export class CommonSlotController {
 
   destroy(): void {
     this.skillPoints.destroy();
+    this.stagger.destroy();
     this.changeListeners.clear();
   }
 }

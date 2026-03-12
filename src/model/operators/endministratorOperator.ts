@@ -62,6 +62,8 @@ export class EndministratorOperator extends Operator {
       secondaryAttributeType: EndministratorOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EndministratorOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EndministratorOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Essence Disintegration',
+      talentTwoName: 'Realspace Stasis',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,

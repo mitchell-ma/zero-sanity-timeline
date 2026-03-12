@@ -63,6 +63,8 @@ export class AkekuriOperator extends Operator {
       secondaryAttributeType: AkekuriOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AkekuriOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AkekuriOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Cheer of Victory',
+      talentTwoName: 'Staying in the Zone',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,
@@ -98,4 +100,7 @@ export class AkekuriOperator extends Operator {
   }
   get comboDescription(): string { return 'Enemy becomes Staggered or hits a Stagger Node'; }
   get derivedTeamColumns(): string[] | undefined { return ['team-link']; }
+  get spReturnNotes(): string[] {
+    return ['T2: Combo SP recovery scales with Intellect (+1%/10 INT, max +50%; E2: +1.5%/10 INT, max +75%)'];
+  }
 }

@@ -166,17 +166,19 @@ function IconDropdown<T>({
   const menuRef = useRef<HTMLDivElement>(null);
   const selected = selectedIdx !== null ? entries[selectedIdx] : null;
 
-  // Compute available rarities from entries
-  const rarities = useMemo(() => {
+  // Compute available rarities from entries (stable string key for comparison)
+  const raritiesKey = useMemo(() => {
     const s = new Set<number>();
     entries.forEach((e) => s.add(e.rarity));
-    return Array.from(s).sort((a, b) => a - b);
+    return Array.from(s).sort((a, b) => a - b).join(',');
   }, [entries]);
 
-  // Initialize activeRarities when rarities change
+  const rarities = useMemo(() => raritiesKey.split(',').filter(Boolean).map(Number), [raritiesKey]);
+
+  // Initialize activeRarities only when the set of rarities actually changes
   useEffect(() => {
     setActiveRarities(new Set(rarities));
-  }, [rarities]);
+  }, [raritiesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter & sort entries
   const filtered = useMemo(() => {
@@ -382,8 +384,9 @@ export default function OperatorLoadoutHeader({
   };
 
   // Filter weapons by operator's compatible weapon types
-  const compatibleWeapons = WEAPONS.filter(
-    (w) => operatorWeaponTypes.includes(w.weaponType),
+  const compatibleWeapons = useMemo(
+    () => WEAPONS.filter((w) => operatorWeaponTypes.includes(w.weaponType)),
+    [operatorWeaponTypes],
   );
 
   const wpnIdx = state.weaponName !== null ? compatibleWeapons.findIndex((w) => w.name === state.weaponName) : -1;

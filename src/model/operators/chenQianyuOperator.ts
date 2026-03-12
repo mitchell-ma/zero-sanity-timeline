@@ -62,6 +62,8 @@ export class ChenQianyuOperator extends Operator {
       secondaryAttributeType: ChenQianyuOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ChenQianyuOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ChenQianyuOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Slashing Edge',
+      talentTwoName: 'Momentum Breaker',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,

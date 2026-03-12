@@ -62,6 +62,8 @@ export class FluoriteOperator extends Operator {
       secondaryAttributeType: FluoriteOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: FluoriteOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: FluoriteOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Love the Stab and Twist',
+      talentTwoName: 'Unpredictable',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,

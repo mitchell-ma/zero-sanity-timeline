@@ -133,3 +133,10 @@ export function getModelEnemy(enemyId: string, level: number = 90): ModelEnemy |
   const factory = ENEMY_FACTORIES[enemyId];
   return factory ? factory(level) : null;
 }
+
+/** Get available level options for an enemy (from its statsByLevel keys). */
+export function getEnemyLevels(enemyId: string): number[] {
+  const model = getModelEnemy(enemyId, 1);
+  if (!model) return [90];
+  return Object.keys(model.statsByLevel).map(Number).sort((a, b) => a - b);
+}

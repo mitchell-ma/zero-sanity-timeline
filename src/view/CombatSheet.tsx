@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
-import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, buildTimeMap } from '../utils/timeline';
+import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
@@ -10,7 +10,9 @@ import {
   DamageStatistics,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
+import { StatusQueryService } from '../controller/calculation/statusQueryService';
 import type { Slot } from '../controller/timeline/columnBuilder';
+import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 
@@ -41,25 +43,30 @@ interface CombatSheetProps {
   onScrollRef?: (el: HTMLDivElement | null) => void;
   onScroll?: (scrollTop: number) => void;
   onZoom?: (deltaY: number) => void;
+  staggerBreaks?: readonly StaggerBreak[];
   compact?: boolean;
   showRealTime?: boolean;
+  contentFrames?: number;
 }
 
 export default function CombatSheet({
   slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
-  selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom, compact,
-  showRealTime = true,
+  selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
+  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const timeMap = useMemo(() => buildTimeMap(events), [events]);
-  const formatTime = useCallback((gameFrame: number) => {
-    if (showRealTime) return frameToTimeLabelPrecise(timeMap.gameToReal(gameFrame));
-    return frameToTimeLabelPrecise(gameFrame);
-  }, [showRealTime, timeMap]);
+  const formatTime = useCallback(
+    (frame: number) => frameToTimeLabelPrecise(frame),
+    [],
+  );
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
+  const statusQuery = useMemo(
+    () => new StatusQueryService(events, staggerBreaks ?? []),
+    [events, staggerBreaks],
+  );
   const rows = useMemo(
-    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts),
-    [events, columns, slots, enemy, loadoutStats, loadouts],
+    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts, statusQuery),
+    [events, columns, slots, enemy, loadoutStats, loadouts, statusQuery],
   );
   const bossMaxHp = useMemo(() => {
     const model = getModelEnemy(enemy.id);
@@ -153,12 +160,12 @@ export default function CombatSheet({
 
 
   const tlHeight = useMemo(() => {
-    const baseHeight = timelineHeight(zoom);
+    const baseHeight = timelineHeight(zoom, contentFramesProp);
     if (rowLayout.length === 0) return baseHeight;
     const lastRow = rowLayout[rowLayout.length - 1];
     // Extend body if clamped rows push past the natural timeline height
     return Math.max(baseHeight, lastRow.top + ROW_HEIGHT + 16);
-  }, [zoom, rowLayout]);
+  }, [zoom, rowLayout, contentFramesProp]);
   const numCols = tableColumns.length;
 
   if (numCols === 0) {
@@ -298,7 +305,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, hasB
   hovered: boolean;
   hasBossHp: boolean;
   bossMaxHp: number | null;
-  formatTime: (gameFrame: number) => string;
+  formatTime: (frame: number) => string;
 }) {
   const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
   return (

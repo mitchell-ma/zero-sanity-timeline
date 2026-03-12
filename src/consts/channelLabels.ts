@@ -25,6 +25,8 @@ export const enum ColumnLabel {
   WEAPON_BUFF          = 'WEAPON',
   GEAR_BUFF            = 'GEAR',
   TACTICAL             = 'TACTICAL',
+  STAGGER              = 'STAGGER',
+  STAGGER_FRAILTY      = 'STAGGER FRAILTY',
   SCORCHING_FANGS      = 'SCORCHING FANGS',
 }
 
@@ -40,6 +42,7 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.LINK]:            'Link',
   [StatusType.ARTS_AMP]:        'Arts Amp',
   [StatusType.SHIELD]:          'Shield',
+  [StatusType.UNBRIDLED_EDGE]:  'Unbridled Edge',
   [StatusType.FOCUS]:           'Focus',
   [StatusType.SUSCEPTIBILITY]:  'Susceptibility',
   [StatusType.FRAGILITY]:       'Fragility',
@@ -205,6 +208,9 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   SHIELD:               'Shield',
   // Enemy debuffs
   FRAGILITY:            'Fragility',
+  // Stagger status events
+  STAGGER_NODE:         'Node Stagger',
+  STAGGER:              'Stagger',
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────

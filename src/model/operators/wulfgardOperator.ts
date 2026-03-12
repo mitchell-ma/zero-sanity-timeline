@@ -63,6 +63,8 @@ export class WulfgardOperator extends Operator {
       secondaryAttributeType: WulfgardOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: WulfgardOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: WulfgardOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Scorching Fangs',
+      talentTwoName: 'Code of Restraint',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

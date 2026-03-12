@@ -62,6 +62,8 @@ export class EstellaOperator extends Operator {
       secondaryAttributeType: EstellaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EstellaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EstellaOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Commiseration',
+      talentTwoName: 'Laziness Pays Off Now',
       attributeIncreaseName: 'Stalwart',
       attributeIncreaseAttribute: StatType.WILL,
       baseStats: BASE_STATS,

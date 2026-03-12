@@ -62,6 +62,8 @@ export class LifengOperator extends Operator {
       secondaryAttributeType: LifengOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: LifengOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: LifengOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Illumination',
+      talentTwoName: 'Subduer of Evil',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,

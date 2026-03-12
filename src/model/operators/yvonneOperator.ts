@@ -62,6 +62,8 @@ export class YvonneOperator extends Operator {
       secondaryAttributeType: YvonneOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: YvonneOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: YvonneOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Barrage of Technology',
+      talentTwoName: 'Freezing Point',
       attributeIncreaseName: 'Keen Mind',
       attributeIncreaseAttribute: StatType.INTELLECT,
       baseStats: BASE_STATS,

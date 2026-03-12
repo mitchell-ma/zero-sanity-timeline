@@ -70,7 +70,9 @@ export class StrengthBoostL extends WeaponSkill {
 // ── Agility Boost ─────────────────────────────────────────────────────────────
 
 const AGILITY_BOOST_S: readonly number[] = [];
-const AGILITY_BOOST_M: readonly number[] = [];
+const AGILITY_BOOST_M: readonly number[] = [
+  16, 28, 41, 54, 67, 80, 92, 105, 124,
+];
 const AGILITY_BOOST_L: readonly number[] = [];
 
 export class AgilityBoostS extends WeaponSkill {
@@ -168,7 +170,9 @@ export class WillBoostL extends WeaponSkill {
 
 // ── Main Attribute Boost ──────────────────────────────────────────────────────
 
-const MAIN_ATTRIBUTE_BOOST_S: readonly number[] = [];
+const MAIN_ATTRIBUTE_BOOST_S: readonly number[] = [
+  10, 18, 26, 34, 42, 51, 59, 67, 79,
+];
 const MAIN_ATTRIBUTE_BOOST_M: readonly number[] = [];
 const MAIN_ATTRIBUTE_BOOST_L: readonly number[] = [
   17, 30, 44, 57, 71, 85, 98, 112, 132,

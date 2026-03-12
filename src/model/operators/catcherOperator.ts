@@ -62,6 +62,8 @@ export class CatcherOperator extends Operator {
       secondaryAttributeType: CatcherOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: CatcherOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: CatcherOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Resilient Defense',
+      talentTwoName: 'Comprehensive Mindset',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

@@ -11,7 +11,7 @@ import { LoadoutStats, DEFAULT_LOADOUT_STATS, getDefaultLoadoutStats } from '../
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
-import { setNextEventId } from '../controller/timeline/eventController';
+import { setNextEventId, genEventId } from '../controller/timeline/eventController';
 
 export const NUM_SLOTS = 4;
 export const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
@@ -54,13 +54,34 @@ function resolveOperatorId(id: string | null): Operator | null {
 export function applySheetData(data: SheetData) {
   setNextEventId(data.nextEventId);
   // Migrate v1 events: backfill missing `name` field with columnId
-  const events: TimelineEvent[] = data.events.map((ev) => {
+  let events: TimelineEvent[] = data.events.map((ev) => {
     if (!ev.name) return { ...ev, name: ev.columnId };
     return ev;
   });
+  // Deduplicate: if saved data has duplicate IDs (data corruption), assign fresh IDs
+  const seen = new Set<string>();
+  let hasDupes = false;
+  for (const ev of events) {
+    if (seen.has(ev.id)) { hasDupes = true; break; }
+    seen.add(ev.id);
+  }
+  if (hasDupes) {
+    console.warn('[zst] Duplicate event IDs detected in saved data — reassigning IDs');
+    const deduped = new Set<string>();
+    events = events.map((ev) => {
+      if (deduped.has(ev.id)) {
+        const newId = genEventId();
+        console.warn(`[zst]   ${ev.id} (${ev.ownerId}/${ev.columnId}) → ${newId}`);
+        return { ...ev, id: newId };
+      }
+      deduped.add(ev.id);
+      return ev;
+    });
+  }
   return {
     operators: data.operatorIds.map(resolveOperatorId),
     enemy: ALL_ENEMIES.find((e) => e.id === data.enemyId) ?? DEFAULT_ENEMY,
+    enemyStats: data.enemyStats,
     events,
     loadouts: { ...INITIAL_LOADOUTS, ...data.loadouts },
     loadoutStats: Object.fromEntries(

@@ -62,6 +62,8 @@ export class PerlicaOperator extends Operator {
       secondaryAttributeType: PerlicaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: PerlicaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: PerlicaOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Obliteration Protocol',
+      talentTwoName: 'Cycle Protocol',
       attributeIncreaseName: 'Keen Mind',
       attributeIncreaseAttribute: StatType.INTELLECT,
       baseStats: BASE_STATS,

@@ -6,18 +6,17 @@
  */
 
 import { HitType } from '../../consts/enums';
-import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
+import { TimelineEvent, EventSegmentData, Operator } from '../../consts/viewTypes';
 import { REACTION_COLUMN_IDS } from '../../model/channels';
 import { MeltingFlameController } from './meltingFlameController';
 import { ComboSkillEventController } from './comboSkillEventController';
-import { WindowsMap } from '../combat-loadout';
 
 // ── ID generation ───────────────────────────────────────────────────────────
 
 let _id = 1;
 
 export function genEventId(): string {
-  return `ev-${_id++}`;
+  return `ev-${_id++}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 export function setNextEventId(id: number): void {
@@ -36,18 +35,31 @@ function getRange(ev: TimelineEvent): number {
 }
 
 /**
+ * Look up the processed (time-stop-extended) version of a sibling for range
+ * calculation. Falls back to the raw event if no processed list is provided.
+ */
+function getSibRange(sib: TimelineEvent, processedEvents?: readonly TimelineEvent[]): number {
+  const resolved = processedEvents?.find((e) => e.id === sib.id) ?? sib;
+  return getRange(resolved);
+}
+
+/**
  * Returns true if placing `ev` at `startFrame` would conflict with a sibling's
  * non-overlappable range, or if `ev`'s own range would cover a sibling.
+ *
+ * When `processedEvents` is provided, sibling ranges use their time-stop-extended
+ * durations so that overlap checks account for the visual (real-time) footprint.
  */
 export function wouldOverlapNonOverlappable(
   allEvents: TimelineEvent[],
   ev: TimelineEvent,
   startFrame: number,
+  processedEvents?: readonly TimelineEvent[],
 ): boolean {
   const evRange = getRange(ev);
   for (const sib of allEvents) {
     if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
-    const sibRange = getRange(sib);
+    const sibRange = getSibRange(sib, processedEvents);
     if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
     if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
   }
@@ -57,26 +69,39 @@ export function wouldOverlapNonOverlappable(
 /**
  * Clamp `desiredFrame` so that `ev` doesn't overlap any sibling's non-overlappable range.
  * Returns the closest valid frame in the direction of `desiredFrame` from `ev.startFrame`.
+ *
+ * When `processedEvents` is provided, sibling ranges use their time-stop-extended
+ * durations so that overlap checks account for the visual (real-time) footprint.
  */
 export function clampNonOverlappable(
   allEvents: TimelineEvent[],
   ev: TimelineEvent,
   desiredFrame: number,
+  processedEvents?: readonly TimelineEvent[],
 ): number {
   const evRange = getRange(ev);
   if (evRange === 0) return desiredFrame;
+  const movingForward = desiredFrame >= ev.startFrame;
   let result = desiredFrame;
   for (const sib of allEvents) {
     if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
-    const sibRange = getRange(sib);
+    const sibRange = getSibRange(sib, processedEvents);
     if (sibRange === 0 && evRange === 0) continue;
-    const evEnd = result + evRange;
     const sibEnd = sib.startFrame + sibRange;
+    const evEnd = result + evRange;
     if (evEnd > sib.startFrame && result < sibEnd) {
-      if (desiredFrame < ev.startFrame) {
-        result = Math.max(result, sibEnd);
-      } else {
+      // Direct overlap at target — clamp to nearest edge
+      if (movingForward) {
         result = Math.min(result, sib.startFrame - evRange);
+      } else {
+        result = Math.max(result, sibEnd);
+      }
+    } else if (sibRange > 0) {
+      // Fast drag skipped entirely past sibling — clamp to the entry edge
+      if (movingForward && ev.startFrame + evRange <= sib.startFrame && result >= sibEnd) {
+        result = Math.min(result, sib.startFrame - evRange);
+      } else if (!movingForward && ev.startFrame >= sibEnd && result + evRange <= sib.startFrame) {
+        result = Math.max(result, sibEnd);
       }
     }
   }
@@ -102,7 +127,7 @@ export function createEvent(
     operatorPotential?: number;
     timeInteraction?: string;
     isPerfectDodge?: boolean;
-    timeDilation?: number;
+    timeStop?: number;
     timeDependency?: import('../../consts/enums').TimeDependency;
     skillPointCost?: number;
   } | null,
@@ -137,10 +162,99 @@ export function createEvent(
     ...(defaultSkill?.operatorPotential != null ? { operatorPotential: defaultSkill.operatorPotential } : {}),
     ...(defaultSkill?.timeInteraction ? { timeInteraction: defaultSkill.timeInteraction } : {}),
     ...(defaultSkill?.isPerfectDodge ? { isPerfectDodge: defaultSkill.isPerfectDodge } : {}),
-    ...(defaultSkill?.timeDilation ? { timeDilation: defaultSkill.timeDilation } : {}),
+    ...(defaultSkill?.timeStop ? { timeStop: defaultSkill.timeStop } : {}),
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
   };
+}
+
+// ── Ultimate animation constraint ────────────────────────────────────────────
+
+/**
+ * Returns true if `frame` falls within any ultimate's animation region,
+ * excluding the ultimate event itself (an ultimate can exist at its own start).
+ */
+export function isInUltimateAnimation(
+  allEvents: TimelineEvent[],
+  frame: number,
+  excludeEventId?: string,
+): boolean {
+  for (const ev of allEvents) {
+    if (ev.id === excludeEventId) continue;
+    if (ev.columnId !== 'ultimate') continue;
+    const animDur = ev.animationDuration;
+    if (!animDur || animDur <= 0) continue;
+    if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
+  }
+  return false;
+}
+
+/**
+ * If `desiredFrame` lands inside an ultimate animation region, clamp to the
+ * nearest edge based on drag direction. Events are allowed to skip over
+ * the region entirely — only landing inside is blocked.
+ */
+function clampToUltimateEdge(
+  allEvents: TimelineEvent[],
+  target: TimelineEvent,
+  desiredFrame: number,
+): number {
+  const movingForward = desiredFrame >= target.startFrame;
+  let result = desiredFrame;
+  for (const ev of allEvents) {
+    if (ev.id === target.id || ev.columnId !== 'ultimate') continue;
+    const animDur = ev.animationDuration;
+    if (!animDur || animDur <= 0) continue;
+    const animEnd = ev.startFrame + animDur;
+    if (result >= ev.startFrame && result < animEnd) {
+      result = movingForward ? ev.startFrame - 1 : animEnd;
+    }
+  }
+  return result;
+}
+
+// ── Combo animation constraint ───────────────────────────────────────────────
+
+/**
+ * Returns true if `frame` falls within any combo skill's animation region.
+ * Battle skills cannot start during a combo animation time-stop.
+ */
+export function isInComboAnimation(
+  allEvents: TimelineEvent[],
+  frame: number,
+  excludeEventId?: string,
+): boolean {
+  for (const ev of allEvents) {
+    if (ev.id === excludeEventId) continue;
+    if (ev.columnId !== 'combo') continue;
+    const animDur = ev.animationDuration;
+    if (!animDur || animDur <= 0) continue;
+    if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
+  }
+  return false;
+}
+
+/**
+ * If `desiredFrame` lands inside a combo animation region and the target is a
+ * battle skill, clamp to the nearest edge based on drag direction.
+ */
+function clampToComboEdge(
+  allEvents: TimelineEvent[],
+  target: TimelineEvent,
+  desiredFrame: number,
+): number {
+  const movingForward = desiredFrame >= target.startFrame;
+  let result = desiredFrame;
+  for (const ev of allEvents) {
+    if (ev.id === target.id || ev.columnId !== 'combo') continue;
+    const animDur = ev.animationDuration;
+    if (!animDur || animDur <= 0) continue;
+    const animEnd = ev.startFrame + animDur;
+    if (result >= ev.startFrame && result < animEnd) {
+      result = movingForward ? ev.startFrame - 1 : animEnd;
+    }
+  }
+  return result;
 }
 
 // ── Event validation ────────────────────────────────────────────────────────
@@ -153,7 +267,7 @@ export function validateUpdate(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   updates: Partial<TimelineEvent>,
-  activationWindows: WindowsMap,
+  processedEvents?: readonly TimelineEvent[] | null,
 ): TimelineEvent | null {
   // ── Field-level clamping ──────────────────────────────────────────────────
   const clamped = { ...updates };
@@ -199,9 +313,13 @@ export function validateUpdate(
   }
 
   let validated = MeltingFlameController.validateUpdate(allEvents, target, clamped);
-  validated = ComboSkillEventController.validateUpdate(target, validated, activationWindows);
+  validated = ComboSkillEventController.validateUpdate(target, validated, processedEvents as TimelineEvent[] | null);
   const merged = { ...target, ...validated };
-  if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame)) return null;
+  if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame, processedEvents ?? undefined)) return null;
+  // Block non-ultimate events from being placed during an ultimate animation
+  if (merged.columnId !== 'ultimate' && isInUltimateAnimation(allEvents, merged.startFrame, merged.id)) return null;
+  // Block battle skills from being placed during a combo animation
+  if (merged.columnId === 'battle' && isInComboAnimation(allEvents, merged.startFrame, merged.id)) return null;
   return merged;
 }
 
@@ -213,11 +331,19 @@ export function validateMove(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   newStartFrame: number,
-  activationWindows: WindowsMap,
+  processedEvents?: readonly TimelineEvent[] | null,
 ): number {
   let clamped = MeltingFlameController.validateMove(allEvents, target, newStartFrame);
-  clamped = ComboSkillEventController.validateMove(target, clamped, activationWindows);
-  clamped = clampNonOverlappable(allEvents, target, clamped);
+  clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
+  clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
+  // Clamp non-ultimate events to the edge of ultimate animation regions
+  if (target.columnId !== 'ultimate') {
+    clamped = clampToUltimateEdge(allEvents, target, clamped);
+  }
+  // Clamp battle skills to the edge of combo animation regions
+  if (target.columnId === 'battle') {
+    clamped = clampToComboEdge(allEvents, target, clamped);
+  }
   return clamped;
 }
 
@@ -230,14 +356,14 @@ export function validateBatchMoveDelta(
   allEvents: TimelineEvent[],
   targetIds: string[],
   delta: number,
-  activationWindows: WindowsMap,
+  processedEvents?: readonly TimelineEvent[] | null,
 ): number {
   let clampedDelta = delta;
   for (const id of targetIds) {
     const target = allEvents.find((ev) => ev.id === id);
     if (!target) continue;
     const desired = target.startFrame + clampedDelta;
-    const clamped = validateMove(allEvents, target, desired, activationWindows);
+    const clamped = validateMove(allEvents, target, desired, processedEvents);
     // The difference between the clamped result and the original start is the
     // effective delta this event allows. Restrict the global delta to it.
     const effectiveDelta = clamped - target.startFrame;
@@ -248,4 +374,58 @@ export function validateBatchMoveDelta(
     }
   }
   return clampedDelta;
+}
+
+// ── Column-based event filtering ─────────────────────────────────────────
+
+/**
+ * Build a Set of valid "ownerId:columnId" pairs from the controller-produced
+ * columns. Used both for filtering stale events and for gating new additions.
+ */
+export function buildValidColumnPairs(
+  columns: readonly { type: string; ownerId: string; columnId?: string; matchColumnIds?: string[] }[],
+): Set<string> {
+  const pairs = new Set<string>();
+  for (const col of columns) {
+    if (col.type !== 'mini-timeline' || !col.columnId) continue;
+    pairs.add(`${col.ownerId}:${col.columnId}`);
+    if (col.matchColumnIds) {
+      for (const id of col.matchColumnIds) {
+        pairs.add(`${col.ownerId}:${id}`);
+      }
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Filter events to only those whose ownerId/columnId match a column produced
+ * by the controller. The columns array is the source of truth for what
+ * subtimelines exist — events with no matching column are discarded.
+ */
+export function filterEventsToColumns(
+  events: TimelineEvent[],
+  columns: readonly { type: string; ownerId: string; columnId?: string; matchColumnIds?: string[] }[],
+): TimelineEvent[] {
+  const validPairs = buildValidColumnPairs(columns);
+  return events.filter((ev) => validPairs.has(`${ev.ownerId}:${ev.columnId}`));
+}
+
+// ── Operator swap validation ─────────────────────────────────────────────
+
+/**
+ * Remove events that belong to a slot whose operator changed.
+ * Events carry operator-specific skill names, durations, and frame data,
+ * so they are invalid when the operator is swapped.
+ *
+ * If the new operator is the same as the previous one, events are kept.
+ */
+export function filterEventsOnOperatorChange(
+  events: TimelineEvent[],
+  slotId: string,
+  prevOperator: Operator | null,
+  newOperator: Operator | null,
+): TimelineEvent[] {
+  if (prevOperator?.id === newOperator?.id) return events;
+  return events.filter((ev) => ev.ownerId !== slotId);
 }

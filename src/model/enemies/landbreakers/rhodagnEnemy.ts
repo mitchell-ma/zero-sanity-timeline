@@ -55,8 +55,8 @@ export class RhodagnEnemy extends BossEnemy {
         [EnemyStatType.ATTACK_RANGE]: 12,
         [EnemyStatType.WEIGHT]: 2,
       },
-      staggerNodes: 4,
-      staggerNodeRecoverySeconds: 10,
+      staggerNodes: 1,
+      staggerNodeRecoverySeconds: 3.5,
       ...params,
     });
   }

@@ -62,6 +62,8 @@ export class DaPanOperator extends Operator {
       secondaryAttributeType: DaPanOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: DaPanOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: DaPanOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Reduce and Thicken',
+      talentTwoName: 'Salty or Mild',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

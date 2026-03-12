@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { CombatLoadout, WindowsMap } from '../controller/combat-loadout';
+import { useEffect, useRef } from 'react';
+import { CombatLoadout } from '../controller/combat-loadout';
 import { Operator, TimelineEvent } from '../consts/viewTypes';
 
-/** Manages CombatLoadout controller lifecycle, operator syncing, and activation window computation. */
+/** Manages CombatLoadout controller lifecycle and operator syncing. */
 export function useCombatLoadout(
   slotIds: string[],
   operators: (Operator | null)[],
@@ -14,15 +14,6 @@ export function useCombatLoadout(
     combatLoadoutRef.current.setSlotIds(slotIds);
   }
 
-  const [activationWindows, setActivationWindows] = useState<WindowsMap>(new Map());
-  const activationWindowsRef = useRef<WindowsMap>(activationWindows);
-  activationWindowsRef.current = activationWindows;
-
-  // Subscribe to window changes
-  useEffect(() => {
-    return combatLoadoutRef.current.subscribe(setActivationWindows);
-  }, []);
-
   // Sync operators into loadout
   useEffect(() => {
     operators.forEach((op, i) => {
@@ -30,14 +21,12 @@ export function useCombatLoadout(
     });
   }, [operators]);
 
-  // Recompute windows when events change
+  // Keep common slot aware of events for SP tracking
   useEffect(() => {
     combatLoadoutRef.current.recomputeWindows(events);
   }, [events]);
 
   return {
-    activationWindows,
-    activationWindowsRef,
     combatLoadout: combatLoadoutRef.current,
   };
 }

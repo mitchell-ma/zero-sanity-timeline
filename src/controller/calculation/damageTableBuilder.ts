@@ -15,17 +15,22 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutH
 import {
   calculateDamage,
   DamageParams,
+  getAmpMultiplier,
   getAttributeBonus,
   getDamageBonus,
   getDefenseMultiplier,
   getElementDamageBonusStat,
   getExpectedCritMultiplier,
+  getFragilityMultiplier,
+  getLinkMultiplier,
   getResistanceMultiplier,
   getSkillTypeDamageBonusStat,
+  getStaggerMultiplier,
+  getSusceptibilityMultiplier,
   getTotalAttack,
 } from '../../model/calculation/damageFormulas';
+import { StatusQueryService } from './statusQueryService';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
-import { absoluteGameFrame } from '../../utils/timeline';
 import type { Slot } from '../timeline/columnBuilder';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -177,6 +182,7 @@ export function buildDamageTableRows(
   enemy: ViewEnemy,
   loadoutStats: Record<string, LoadoutStats>,
   loadouts?: Record<string, OperatorLoadoutState>,
+  statusQuery?: StatusQueryService,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
 
@@ -232,7 +238,7 @@ export function buildDamageTableRows(
         if (seg.frames) {
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
-            const absoluteFrame = absoluteGameFrame(ev.startFrame, segmentFrameOffset + frame.offsetFrame, ev.animationDuration);
+            const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
 
             // Look up multiplier
             let multiplier: number | null = null;
@@ -280,15 +286,15 @@ export function buildDamageTableRows(
                   attributeBonus: opData.attributeBonus,
                   multiplierGroup,
                   critMultiplier: expectedCrit,
-                  ampMultiplier: 1,
-                  staggerMultiplier: 1,
-                  finisherMultiplier: 1,
-                  linkMultiplier: 1,
-                  weakenMultiplier: 1,
-                  susceptibilityMultiplier: 1,
-                  fragilityMultiplier: 1,
-                  dmgReductionMultiplier: 1,
-                  protectionMultiplier: 1,
+                  ampMultiplier: getAmpMultiplier(statusQuery?.isArtsAmpActive(absFrame) ? 0.15 : 0), // TODO: read amp bonus from operator ult skill level instead of 0.15 placeholder
+                  staggerMultiplier: getStaggerMultiplier(statusQuery?.isStaggered(absFrame) ?? false),
+                  finisherMultiplier: 1, // TODO: wire up finisher detection (final strike + enemy tier)
+                  linkMultiplier: getLinkMultiplier(0.15, statusQuery?.isLinkActive(absFrame) ?? false), // TODO: read link bonus from operator ult skill level instead of 0.15 placeholder
+                  weakenMultiplier: 1, // TODO: wire up weaken status events
+                  susceptibilityMultiplier: getSusceptibilityMultiplier(statusQuery?.getSusceptibilityBonus(absFrame, element) ?? 0),
+                  fragilityMultiplier: getFragilityMultiplier(statusQuery?.getFragilityBonus(absFrame) ?? 0),
+                  dmgReductionMultiplier: 1, // TODO: wire up damage reduction status events
+                  protectionMultiplier: 1, // TODO: wire up protection status events
                   defenseMultiplier: defMultiplier,
                   resistanceMultiplier: resMultiplier,
                 };
@@ -299,7 +305,7 @@ export function buildDamageTableRows(
 
             rows.push({
               key: `${ev.id}-s${si}-f${fi}`,
-              absoluteFrame,
+              absoluteFrame: absFrame,
               label: `${eventName} > ${segLabel} > Tick ${fi + 1}`,
               columnKey: col.key,
               ownerId: ev.ownerId,

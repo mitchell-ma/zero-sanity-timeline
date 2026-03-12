@@ -62,6 +62,8 @@ export class SnowshineOperator extends Operator {
       secondaryAttributeType: SnowshineOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: SnowshineOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: SnowshineOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Forged',
+      talentTwoName: 'Polar Survival',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

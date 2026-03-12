@@ -225,7 +225,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: L.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: L.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: L.comboCd, triggerCondition: null, animationDuration: L.comboAnimDur },
-      ultimate: { defaultActivationDuration: L.ultDur, defaultActiveDuration: 1800, defaultCooldownDuration: 1200, triggerCondition: null, animationDuration: L.ultAnimDur },
+      ultimate: { defaultActivationDuration: L.ultAnimDur, defaultActiveDuration: 1800, defaultCooldownDuration: 1200, triggerCondition: null, animationDuration: L.ultAnimDur },
     },
   },
   // ── Antal ───────────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: 960, defaultActiveDuration: 0, defaultCooldownDuration: 1440, triggerCondition: null },
       combo: { defaultActivationDuration: 360, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AN.comboAnimDur },
-      ultimate: { defaultActivationDuration: AN.ultDur, defaultActiveDuration: 1440, defaultCooldownDuration: 3000, triggerCondition: null, animationDuration: AN.ultAnimDur },
+      ultimate: { defaultActivationDuration: AN.ultAnimDur, defaultActiveDuration: 1440, defaultCooldownDuration: 3000, triggerCondition: null, animationDuration: AN.ultAnimDur },
     },
   },
   // ── Akekuri ─────────────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: WF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: WF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: WF.comboCd, triggerCondition: null, animationDuration: WF.comboAnimDur },
-      ultimate: { defaultActivationDuration: WF.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: WF.ultAnimDur },
+      ultimate: { defaultActivationDuration: WF.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: WF.ultAnimDur },
     },
   },
   // ── Ardelia ─────────────────────────────────────────────────────────────────
@@ -305,7 +305,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: EN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: EN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EN.comboCd, triggerCondition: null, animationDuration: EN.comboAnimDur },
-      ultimate: { defaultActivationDuration: EN.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EN.ultAnimDur },
+      ultimate: { defaultActivationDuration: EN.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EN.ultAnimDur },
     },
   },
   // ── Lifeng ──────────────────────────────────────────────────────────────────
@@ -320,7 +320,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: LF.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: LF.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LF.comboCd, triggerCondition: null, animationDuration: LF.comboAnimDur },
-      ultimate: { defaultActivationDuration: LF.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LF.ultAnimDur },
+      ultimate: { defaultActivationDuration: LF.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LF.ultAnimDur },
     },
   },
   // ── Chen Qianyu ─────────────────────────────────────────────────────────────
@@ -335,7 +335,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: CQ.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: CQ.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CQ.comboCd, triggerCondition: null, animationDuration: CQ.comboAnimDur },
-      ultimate: { defaultActivationDuration: CQ.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CQ.ultAnimDur },
+      ultimate: { defaultActivationDuration: CQ.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CQ.ultAnimDur },
     },
   },
   // ── Estella ─────────────────────────────────────────────────────────────────
@@ -350,7 +350,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: ES.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: ES.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: ES.comboCd, triggerCondition: null, animationDuration: ES.comboAnimDur },
-      ultimate: { defaultActivationDuration: ES.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: ES.ultAnimDur },
+      ultimate: { defaultActivationDuration: ES.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: ES.ultAnimDur },
     },
   },
   // ── Ember ───────────────────────────────────────────────────────────────────
@@ -365,7 +365,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: EM.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: EM.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: EM.comboCd, triggerCondition: null, animationDuration: EM.comboAnimDur },
-      ultimate: { defaultActivationDuration: EM.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EM.ultAnimDur },
+      ultimate: { defaultActivationDuration: EM.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: EM.ultAnimDur },
     },
   },
   // ── Snowshine ───────────────────────────────────────────────────────────────
@@ -380,7 +380,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 30, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: SN.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: SN.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: SN.comboCd, triggerCondition: null, animationDuration: SN.comboAnimDur },
-      ultimate: { defaultActivationDuration: SN.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: SN.ultAnimDur },
+      ultimate: { defaultActivationDuration: SN.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: SN.ultAnimDur },
     },
   },
   // ── Catcher ─────────────────────────────────────────────────────────────────
@@ -395,7 +395,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: CA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: CA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: CA.comboCd, triggerCondition: null, animationDuration: CA.comboAnimDur },
-      ultimate: { defaultActivationDuration: CA.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CA.ultAnimDur },
+      ultimate: { defaultActivationDuration: CA.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: CA.ultAnimDur },
     },
   },
   // ── Gilberta ────────────────────────────────────────────────────────────────
@@ -410,7 +410,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: GI.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: GI.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: GI.comboCd, triggerCondition: null, animationDuration: GI.comboAnimDur },
-      ultimate: { defaultActivationDuration: GI.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: GI.ultAnimDur },
+      ultimate: { defaultActivationDuration: GI.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: GI.ultAnimDur },
     },
   },
   // ── Xaihi ───────────────────────────────────────────────────────────────────
@@ -425,7 +425,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: XA.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: XA.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: XA.comboCd, triggerCondition: null, animationDuration: XA.comboAnimDur },
-      ultimate: { defaultActivationDuration: XA.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: XA.ultAnimDur },
+      ultimate: { defaultActivationDuration: XA.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: XA.ultAnimDur },
     },
   },
   // ── Perlica ─────────────────────────────────────────────────────────────────
@@ -440,7 +440,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: PE.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: PE.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PE.comboCd, triggerCondition: null, animationDuration: PE.comboAnimDur },
-      ultimate: { defaultActivationDuration: PE.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PE.ultAnimDur },
+      ultimate: { defaultActivationDuration: PE.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PE.ultAnimDur },
     },
   },
   // ── Fluorite ────────────────────────────────────────────────────────────────
@@ -455,7 +455,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: FL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: FL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: FL.comboCd, triggerCondition: null, animationDuration: FL.comboAnimDur },
-      ultimate: { defaultActivationDuration: FL.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: FL.ultAnimDur },
+      ultimate: { defaultActivationDuration: FL.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: FL.ultAnimDur },
     },
   },
   // ── Last Rite ───────────────────────────────────────────────────────────────
@@ -470,7 +470,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: LR.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: LR.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: LR.comboCd, triggerCondition: null, animationDuration: LR.comboAnimDur },
-      ultimate: { defaultActivationDuration: LR.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LR.ultAnimDur },
+      ultimate: { defaultActivationDuration: LR.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: LR.ultAnimDur },
     },
   },
   // ── Yvonne ──────────────────────────────────────────────────────────────────
@@ -485,7 +485,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: YV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: YV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: YV.comboCd, triggerCondition: null, animationDuration: YV.comboAnimDur },
-      ultimate: { defaultActivationDuration: YV.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: YV.ultAnimDur },
+      ultimate: { defaultActivationDuration: YV.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: YV.ultAnimDur },
     },
   },
   // ── Avywenna ────────────────────────────────────────────────────────────────
@@ -500,7 +500,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: AV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AV.comboCd, triggerCondition: null, animationDuration: AV.comboAnimDur },
-      ultimate: { defaultActivationDuration: AV.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AV.ultAnimDur },
+      ultimate: { defaultActivationDuration: AV.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AV.ultAnimDur },
     },
   },
   // ── Da Pan ──────────────────────────────────────────────────────────────────
@@ -515,7 +515,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 22, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: DP.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: DP.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: DP.comboCd, triggerCondition: null, animationDuration: DP.comboAnimDur },
-      ultimate: { defaultActivationDuration: DP.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: DP.ultAnimDur },
+      ultimate: { defaultActivationDuration: DP.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: DP.ultAnimDur },
     },
   },
   // ── Pogranichnik ────────────────────────────────────────────────────────────
@@ -530,7 +530,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: PG.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: PG.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: PG.comboCd, triggerCondition: null, animationDuration: PG.comboAnimDur },
-      ultimate: { defaultActivationDuration: PG.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PG.ultAnimDur },
+      ultimate: { defaultActivationDuration: PG.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: PG.ultAnimDur },
     },
   },
   // ── Alesh ───────────────────────────────────────────────────────────────────
@@ -545,7 +545,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AL.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: AL.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AL.comboCd, triggerCondition: null, animationDuration: AL.comboAnimDur },
-      ultimate: { defaultActivationDuration: AL.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AL.ultAnimDur },
+      ultimate: { defaultActivationDuration: AL.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AL.ultAnimDur },
     },
   },
   // ── Arclight ────────────────────────────────────────────────────────────────
@@ -560,37 +560,37 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 18, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: AC.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: AC.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: AC.comboCd, triggerCondition: null, animationDuration: AC.comboAnimDur },
-      ultimate: { defaultActivationDuration: AC.ultDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AC.ultAnimDur },
+      ultimate: { defaultActivationDuration: AC.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AC.ultAnimDur },
     },
   },
 ];
 
-// ── Model operator factories (instantiated at default level 90) ─────────────
+// ── Model operator factories (level defaults to 90) ─────────────────────────
 
-export const MODEL_FACTORIES: Record<string, () => ModelOperator> = {
-  laevatain: () => new LaevatainOperator({ level: 90 }),
-  antal: () => new AntalOperator({ level: 90 }),
-  akekuri: () => new AkekuriOperator({ level: 90 }),
-  wulfgard: () => new WulfgardOperator({ level: 90 }),
-  ardelia: () => new ArdeliaOperator({ level: 90 }),
-  endministrator: () => new EndministratorOperator({ level: 90 }),
-  lifeng: () => new LifengOperator({ level: 90 }),
-  chenQianyu: () => new ChenQianyuOperator({ level: 90 }),
-  estella: () => new EstellaOperator({ level: 90 }),
-  ember: () => new EmberOperator({ level: 90 }),
-  snowshine: () => new SnowshineOperator({ level: 90 }),
-  catcher: () => new CatcherOperator({ level: 90 }),
-  gilberta: () => new GilbertaOperator({ level: 90 }),
-  xaihi: () => new XaihiOperator({ level: 90 }),
-  perlica: () => new PerlicaOperator({ level: 90 }),
-  fluorite: () => new FluoriteOperator({ level: 90 }),
-  lastRite: () => new LastRiteOperator({ level: 90 }),
-  yvonne: () => new YvonneOperator({ level: 90 }),
-  avywenna: () => new AvywennaOperator({ level: 90 }),
-  daPan: () => new DaPanOperator({ level: 90 }),
-  pogranichnik: () => new PogranichnikOperator({ level: 90 }),
-  alesh: () => new AleshOperator({ level: 90 }),
-  arclight: () => new ArclightOperator({ level: 90 }),
+export const MODEL_FACTORIES: Record<string, (level?: number) => ModelOperator> = {
+  laevatain: (level = 90) => new LaevatainOperator({ level }),
+  antal: (level = 90) => new AntalOperator({ level }),
+  akekuri: (level = 90) => new AkekuriOperator({ level }),
+  wulfgard: (level = 90) => new WulfgardOperator({ level }),
+  ardelia: (level = 90) => new ArdeliaOperator({ level }),
+  endministrator: (level = 90) => new EndministratorOperator({ level }),
+  lifeng: (level = 90) => new LifengOperator({ level }),
+  chenQianyu: (level = 90) => new ChenQianyuOperator({ level }),
+  estella: (level = 90) => new EstellaOperator({ level }),
+  ember: (level = 90) => new EmberOperator({ level }),
+  snowshine: (level = 90) => new SnowshineOperator({ level }),
+  catcher: (level = 90) => new CatcherOperator({ level }),
+  gilberta: (level = 90) => new GilbertaOperator({ level }),
+  xaihi: (level = 90) => new XaihiOperator({ level }),
+  perlica: (level = 90) => new PerlicaOperator({ level }),
+  fluorite: (level = 90) => new FluoriteOperator({ level }),
+  lastRite: (level = 90) => new LastRiteOperator({ level }),
+  yvonne: (level = 90) => new YvonneOperator({ level }),
+  avywenna: (level = 90) => new AvywennaOperator({ level }),
+  daPan: (level = 90) => new DaPanOperator({ level }),
+  pogranichnik: (level = 90) => new PogranichnikOperator({ level }),
+  alesh: (level = 90) => new AleshOperator({ level }),
+  arclight: (level = 90) => new ArclightOperator({ level }),
 };
 
 // skills.json key mapping (operator ID → skills.json key)
@@ -671,6 +671,11 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     };
   }
 
+  // Attach SP return notes from model
+  if (skills.battle && model.spReturnNotes.length > 0) {
+    skills.battle = { ...skills.battle, spReturnNotes: model.spReturnNotes };
+  }
+
   // Build triggerCapability from model's skill triggers + operator combo config
   let triggerCapability: TriggerCapability | undefined;
   const comboRequires = model.comboRequires;
@@ -713,8 +718,11 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     ultimateEnergyCost: gaugeMax,
     maxTalentOneLevel: model.maxTalentOneLevel,
     maxTalentTwoLevel: model.maxTalentTwoLevel,
+    talentOneName: model.talentOneName,
+    talentTwoName: model.talentTwoName,
     attributeIncreaseName: model.attributeIncreaseName,
     attributeIncreaseAttribute: model.attributeIncreaseAttribute,
+    maxAttributeIncreaseLevel: model.maxAttributeIncreaseLevel,
     triggerCapability,
   };
 }

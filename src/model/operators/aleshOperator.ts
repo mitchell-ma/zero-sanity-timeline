@@ -62,6 +62,8 @@ export class AleshOperator extends Operator {
       secondaryAttributeType: AleshOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AleshOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AleshOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Flash-frozen for Freshness',
+      talentTwoName: 'Veteran Angler',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

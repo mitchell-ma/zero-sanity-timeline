@@ -67,6 +67,7 @@ export enum StatusType {
   LINK = "LINK",
   ARTS_AMP = "ARTS_AMP",
   SHIELD = "SHIELD",
+  UNBRIDLED_EDGE = "UNBRIDLED_EDGE",
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
@@ -77,6 +78,50 @@ export enum StatusType {
   CRUSH = "CRUSH",
   BREACH = "BREACH",
 }
+
+/** Damage formula multiplier factor that a status contributes to. */
+export enum DamageFactorType {
+  NONE = "NONE",
+  MULTIPLIER_GROUP = "MULTIPLIER_GROUP",
+  AMP = "AMP",
+  STAGGER = "STAGGER",
+  LINK = "LINK",
+  WEAKEN = "WEAKEN",
+  SUSCEPTIBILITY = "SUSCEPTIBILITY",
+  FRAGILITY = "FRAGILITY",
+  DMG_REDUCTION = "DMG_REDUCTION",
+  PROTECTION = "PROTECTION",
+  DEFENSE = "DEFENSE",
+  RESISTANCE = "RESISTANCE",
+}
+
+/** Maps each StatusType to the damage formula factor it contributes to. */
+export const STATUS_DAMAGE_FACTOR: Record<StatusType, DamageFactorType> = {
+  // Arts reactions — deal damage, don't directly map to a single multiplier factor
+  [StatusType.COMBUSTION]: DamageFactorType.NONE,
+  [StatusType.SOLIDIFICATION]: DamageFactorType.NONE,
+  [StatusType.CORROSION]: DamageFactorType.RESISTANCE,
+  [StatusType.ELECTRIFICATION]: DamageFactorType.FRAGILITY,
+  // Operator buffs
+  [StatusType.MELTING_FLAME]: DamageFactorType.NONE,
+  [StatusType.THUNDERLANCE]: DamageFactorType.NONE,
+  [StatusType.SQUAD_BUFF]: DamageFactorType.MULTIPLIER_GROUP,
+  [StatusType.SCORCHING_FANGS]: DamageFactorType.RESISTANCE,
+  // Team statuses
+  [StatusType.LINK]: DamageFactorType.LINK,
+  [StatusType.ARTS_AMP]: DamageFactorType.AMP,
+  [StatusType.SHIELD]: DamageFactorType.NONE,
+  [StatusType.UNBRIDLED_EDGE]: DamageFactorType.MULTIPLIER_GROUP,
+  // Enemy debuffs
+  [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
+  [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
+  [StatusType.FRAGILITY]: DamageFactorType.FRAGILITY,
+  // Physical statuses
+  [StatusType.LIFT]: DamageFactorType.STAGGER,
+  [StatusType.KNOCK_DOWN]: DamageFactorType.STAGGER,
+  [StatusType.CRUSH]: DamageFactorType.NONE,
+  [StatusType.BREACH]: DamageFactorType.FRAGILITY,
+};
 
 /** Elemental inflictions that can be applied to a target, plus the universal VULNERABLE debuff. */
 export enum InflictionType {
@@ -220,7 +265,7 @@ export enum TimeInteractionType {
   TIME_DELAY = "TIME_DELAY",
 }
 
-/** Whether an event segment's duration is tied to game-time (affected by dilation) or real-time (unaffected). */
+/** Whether an event segment's duration is tied to game-time (affected by time-stops) or real-time (unaffected). */
 export enum TimeDependency {
   GAME_TIME = "GAME_TIME",
   REAL_TIME = "REAL_TIME",
@@ -233,6 +278,7 @@ export enum TimelineSourceType {
   ENEMY = "ENEMY",
   COMMON = "COMMON",
   TACTICAL = "TACTICAL",
+  DEBUGGER = "DEBUGGER",
 }
 
 export enum TargetType {
@@ -674,4 +720,11 @@ export enum WeaponSkillType {
   MEDICANT_EYE_OF_TALOS = "MEDICANT_EYE_OF_TALOS",
   MEDICANT_REDEMPTION_OF_FAITH = "MEDICANT_REDEMPTION_OF_FAITH",
   MINCING_THERAPY = "MINCING_THERAPY",
+  MEDICANT_GLORY_OF_KNIGHTHOOD = "MEDICANT_GLORY_OF_KNIGHTHOOD",
+  WEIGHT_OF_MOUNTAIN = "WEIGHT_OF_MOUNTAIN",
+  INSPIRING_START_OF_A_SAGA = "INSPIRING_START_OF_A_SAGA",
+  INFLICTION_LONE_AND_DISTANT_SAIL = "INFLICTION_LONE_AND_DISTANT_SAIL",
+  DETONATE_RAPID_STRIKE = "DETONATE_RAPID_STRIKE",
+  SUPPRESSION_TILLITE_ETCHINGS = "SUPPRESSION_TILLITE_ETCHINGS",
+  INSPIRING_MORTISE_AND_TENON_ANALYSIS = "INSPIRING_MORTISE_AND_TENON_ANALYSIS",
 }

@@ -62,6 +62,8 @@ export class EmberOperator extends Operator {
       secondaryAttributeType: EmberOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: EmberOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: EmberOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Inflamed for the Assault',
+      talentTwoName: 'Pay the Ferric Price',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

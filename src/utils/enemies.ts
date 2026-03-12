@@ -1,4 +1,7 @@
 import { Enemy } from "../consts/viewTypes";
+import { EnemyStatType } from "../consts/enums";
+import { getModelEnemy } from "../controller/calculation/enemyRegistry";
+import { BossEnemy } from "../model/enemies/bossEnemy";
 
 // ─── Enemy sprite imports ──────────────────────────────────────────────────
 import rhodagnSprite from "../assets/enemies/rhodagn_the_bonekrushing_fist_sprite.png";
@@ -68,7 +71,12 @@ const DEFAULT_STATUSES = [
 ];
 
 function e(id: string, name: string, tier: string, sprite?: string): Enemy {
-  return { id, name, tier, sprite, statuses: DEFAULT_STATUSES };
+  const model = getModelEnemy(id);
+  const staggerHp = model?.stats[EnemyStatType.STAGGER_HP] ?? 60;
+  const staggerNodes = model instanceof BossEnemy ? model.staggerNodes : 0;
+  const staggerNodeRecoverySeconds = model instanceof BossEnemy ? model.staggerNodeRecoverySeconds : 0;
+  const staggerBreakDurationSeconds = model?.stats[EnemyStatType.STAGGER_RECOVERY] ?? 6;
+  return { id, name, tier, sprite, statuses: DEFAULT_STATUSES, staggerHp, staggerNodes, staggerNodeRecoverySeconds, staggerBreakDurationSeconds };
 }
 
 export const ENEMY_TIERS = ['Boss', 'Aggeloi', 'Landbreaker', 'Wildlife', 'Pirate'] as const;

@@ -62,6 +62,8 @@ export class ArclightOperator extends Operator {
       secondaryAttributeType: ArclightOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ArclightOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ArclightOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Skirmisher',
+      talentTwoName: 'Wildland Trekker',
       attributeIncreaseName: 'Skirmisher',
       attributeIncreaseAttribute: StatType.AGILITY,
       baseStats: BASE_STATS,

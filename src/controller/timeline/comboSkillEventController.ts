@@ -1,15 +1,22 @@
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ActivationWindow, WindowsMap } from '../combat-loadout';
+import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInflictions';
 
 /**
  * Controller for combo skill event validation.
  *
- * Combo events must have their startFrame within an activation window:
- *   startFrame >= window.startFrame && startFrame < window.endFrame
+ * Combo events must have their startFrame within a combo activation window event:
+ *   startFrame >= window.startFrame && startFrame < windowEndFrame
  */
 export class ComboSkillEventController {
   static isCombo(event: TimelineEvent): boolean {
     return event.columnId === 'combo';
+  }
+
+  /** Get combo activation window events for a given ownerId from processed events. */
+  private static getWindows(ownerId: string, processedEvents: TimelineEvent[]): TimelineEvent[] {
+    return processedEvents.filter(
+      (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === ownerId,
+    );
   }
 
   /**
@@ -21,16 +28,17 @@ export class ComboSkillEventController {
   static validateMove(
     target: TimelineEvent,
     newStartFrame: number,
-    activationWindows: WindowsMap | null,
+    processedEvents: TimelineEvent[] | null,
   ): number {
-    if (!this.isCombo(target) || !activationWindows) return newStartFrame;
+    if (!this.isCombo(target) || !processedEvents) return newStartFrame;
 
-    const windows = activationWindows.get(target.ownerId);
-    if (!windows || windows.length === 0) return newStartFrame;
+    const windows = this.getWindows(target.ownerId, processedEvents);
+    if (windows.length === 0) return newStartFrame;
 
     // If already inside a window, allow it
     for (const w of windows) {
-      if (newStartFrame >= w.startFrame && newStartFrame < w.endFrame) {
+      const endFrame = comboWindowEndFrame(w);
+      if (newStartFrame >= w.startFrame && newStartFrame < endFrame) {
         return newStartFrame;
       }
     }
@@ -39,8 +47,8 @@ export class ComboSkillEventController {
     let closest = newStartFrame;
     let minDist = Infinity;
     for (const w of windows) {
-      // Clamp to [startFrame, endFrame - 1]
-      const clamped = Math.max(w.startFrame, Math.min(w.endFrame - 1, newStartFrame));
+      const endFrame = comboWindowEndFrame(w);
+      const clamped = Math.max(w.startFrame, Math.min(endFrame - 1, newStartFrame));
       const dist = Math.abs(clamped - newStartFrame);
       if (dist < minDist) {
         minDist = dist;
@@ -57,12 +65,12 @@ export class ComboSkillEventController {
   static validateUpdate(
     target: TimelineEvent,
     updates: Partial<TimelineEvent>,
-    activationWindows: WindowsMap | null,
+    processedEvents: TimelineEvent[] | null,
   ): Partial<TimelineEvent> {
     if (updates.startFrame === undefined || !this.isCombo(target)) return updates;
     return {
       ...updates,
-      startFrame: this.validateMove(target, updates.startFrame, activationWindows),
+      startFrame: this.validateMove(target, updates.startFrame, processedEvents),
     };
   }
 }

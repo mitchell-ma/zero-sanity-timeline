@@ -62,6 +62,8 @@ export class LastRiteOperator extends Operator {
       secondaryAttributeType: LastRiteOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: LastRiteOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: LastRiteOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Hypothermia',
+      talentTwoName: 'Cryogenic Embrittlement',
       attributeIncreaseName: 'Forged',
       attributeIncreaseAttribute: StatType.STRENGTH,
       baseStats: BASE_STATS,

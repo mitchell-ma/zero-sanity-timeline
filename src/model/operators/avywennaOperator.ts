@@ -62,6 +62,8 @@ export class AvywennaOperator extends Operator {
       secondaryAttributeType: AvywennaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: AvywennaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: AvywennaOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Expedited Delivery',
+      talentTwoName: 'Tactful Approach',
       attributeIncreaseName: 'Stalwart',
       attributeIncreaseAttribute: StatType.WILL,
       baseStats: BASE_STATS,

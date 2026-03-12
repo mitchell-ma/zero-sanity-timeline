@@ -39,8 +39,11 @@ export abstract class Operator {
   readonly secondaryAttributeType: StatType;
   readonly maxTalentOneLevel: number;
   readonly maxTalentTwoLevel: number;
+  readonly talentOneName: string;
+  readonly talentTwoName: string;
   readonly attributeIncreaseName: string;
   readonly attributeIncreaseAttribute: StatType;
+  readonly maxAttributeIncreaseLevel: number;
 
   abstract readonly basicAttack: BasicAttack;
   abstract readonly battleSkill: BasicSkill;
@@ -74,8 +77,11 @@ export abstract class Operator {
     baseStats: BaseStats;
     maxTalentOneLevel: number;
     maxTalentTwoLevel: number;
+    talentOneName: string;
+    talentTwoName: string;
     attributeIncreaseName: string;
     attributeIncreaseAttribute: StatType;
+    maxAttributeIncreaseLevel?: number;
     potential?: Potential;
     talentOneLevel?: number;
     talentTwoLevel?: number;
@@ -96,8 +102,11 @@ export abstract class Operator {
       baseStats,
       maxTalentOneLevel,
       maxTalentTwoLevel,
+      talentOneName,
+      talentTwoName,
       attributeIncreaseName,
       attributeIncreaseAttribute,
+      maxAttributeIncreaseLevel = 4,
       potential = 0,
       talentOneLevel = 0,
       talentTwoLevel = 0,
@@ -138,8 +147,11 @@ export abstract class Operator {
     this.secondaryAttributeType = secondaryAttributeType;
     this.maxTalentOneLevel = maxTalentOneLevel;
     this.maxTalentTwoLevel = maxTalentTwoLevel;
+    this.talentOneName = talentOneName;
+    this.talentTwoName = talentTwoName;
     this.attributeIncreaseName = attributeIncreaseName;
     this.attributeIncreaseAttribute = attributeIncreaseAttribute;
+    this.maxAttributeIncreaseLevel = maxAttributeIncreaseLevel;
     this.potential = potential;
     this.talentOneLevel = talentOneLevel;
     this.talentTwoLevel = talentTwoLevel;
@@ -215,4 +227,6 @@ export abstract class Operator {
   get derivedEnemyColumns(): string[] | undefined { return undefined; }
   /** Team column keys that should be shown when this operator is on the team. */
   get derivedTeamColumns(): string[] | undefined { return undefined; }
+  /** Notes describing SP return mechanics from potentials, talents, or skills. */
+  get spReturnNotes(): string[] { return []; }
 }

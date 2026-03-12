@@ -42,7 +42,7 @@ export abstract class Enemy {
   level: number;
   stats: Record<EnemyStatType, number>;
 
-  protected readonly statsByLevel: EnemyStatsByLevel;
+  readonly statsByLevel: EnemyStatsByLevel;
 
   constructor(params: {
     enemyType: EnemyType;

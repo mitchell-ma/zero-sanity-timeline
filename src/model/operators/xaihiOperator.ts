@@ -62,6 +62,8 @@ export class XaihiOperator extends Operator {
       secondaryAttributeType: XaihiOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: XaihiOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: XaihiOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Execute Process',
+      talentTwoName: 'Freeze Protocol',
       attributeIncreaseName: 'Stalwart',
       attributeIncreaseAttribute: StatType.WILL,
       baseStats: BASE_STATS,

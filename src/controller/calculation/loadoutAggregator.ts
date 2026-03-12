@@ -93,6 +93,16 @@ export interface AggregatedStats {
   gearSetDescription: string | null;
 }
 
+// ── Attribute → bonus stat mapping ──────────────────────────────────────────
+
+/** Maps flat attribute stat types to their percentage bonus counterparts. */
+const ATTR_TO_BONUS: Partial<Record<StatType, StatType>> = {
+  [StatType.STRENGTH]: StatType.STRENGTH_BONUS,
+  [StatType.AGILITY]: StatType.AGILITY_BONUS,
+  [StatType.INTELLECT]: StatType.INTELLECT_BONUS,
+  [StatType.WILL]: StatType.WILL_BONUS,
+};
+
 // ── Weapon skill → stat mapping ─────────────────────────────────────────────
 
 /** Maps a weapon skill type to the StatType it modifies.
@@ -175,8 +185,8 @@ export function aggregateLoadoutStats(
   const factory = MODEL_FACTORIES[operatorId];
   if (!factory) return null;
 
-  // 1. Create operator model (factory creates at max level with base stats)
-  const model = factory();
+  // 1. Create operator model at the user's configured level
+  const model = factory(loadoutStats.operatorLevel);
   const operatorBaseAttack = model.getBaseAttack();
   const stats: Record<StatType, number> = { ...model.stats };
   let flatAttackBonuses = 0;
@@ -211,20 +221,31 @@ export function aggregateLoadoutStats(
       weapon.level = loadoutStats.weaponLevel;
       weaponBaseAttack = weapon.getBaseAttack();
 
-      // Apply weapon skill stat boosts
-      weapon.weaponSkillOne.level = loadoutStats.weaponSkill1Level;
-      applyWeaponSkill(weapon.weaponSkillOne, stats, model.mainAttributeType);
-
-      weapon.weaponSkillTwo.level = loadoutStats.weaponSkill2Level;
-      applyWeaponSkill(weapon.weaponSkillTwo, stats, model.mainAttributeType);
-
+      // Apply weapon skill stat boosts and passive stats
+      const allSkills: { skill: WeaponSkill; levelKey: number }[] = [
+        { skill: weapon.weaponSkillOne, levelKey: loadoutStats.weaponSkill1Level },
+        { skill: weapon.weaponSkillTwo, levelKey: loadoutStats.weaponSkill2Level },
+      ];
       if (weapon.weaponSkillThree) {
-        weapon.weaponSkillThree.level = loadoutStats.weaponSkill3Level;
-        applyWeaponSkill(weapon.weaponSkillThree, stats, model.mainAttributeType);
+        allSkills.push({ skill: weapon.weaponSkillThree, levelKey: loadoutStats.weaponSkill3Level });
+      }
+      for (const { skill, levelKey } of allSkills) {
+        skill.level = levelKey;
+        applyWeaponSkill(skill, stats, model.mainAttributeType);
         // Apply passive (always-active) stats from named skills
-        const passiveStats = weapon.weaponSkillThree.getPassiveStats();
+        const passiveStats = skill.getPassiveStats();
         for (const [key, value] of Object.entries(passiveStats)) {
           addStat(key as StatType, value as number);
+        }
+        // Handle secondary attribute bonus for skills that grant it (e.g. Flow: Unbridled Edge)
+        if ('getElementDmgBonus' in skill) {
+          const secAttrBonus = (skill as any).getValue();
+          if (secAttrBonus > 0) {
+            const secBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
+            if (secBonusStat) {
+              stats[secBonusStat] += secAttrBonus;
+            }
+          }
         }
       }
     }
@@ -303,8 +324,13 @@ export function aggregateLoadoutStats(
   const atkBonus = stats[StatType.ATTACK_BONUS];
   const atkPercentageBonus = baseAttack * atkBonus;
   const totalAttack = baseAttack * (1 + atkBonus) + flatAttackBonuses;
-  const mainAttributeBonus = 0.005 * stats[model.mainAttributeType];
-  const secondaryAttributeBonus = 0.002 * stats[model.secondaryAttributeType];
+  // Apply percentage bonuses to flat attributes before computing attribute bonus
+  const mainAttrBonusStat = ATTR_TO_BONUS[model.mainAttributeType];
+  const effectiveMainAttr = Math.floor(stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0)));
+  const secAttrBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
+  const effectiveSecAttr = Math.floor(stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0)));
+  const mainAttributeBonus = 0.005 * effectiveMainAttr;
+  const secondaryAttributeBonus = 0.002 * effectiveSecAttr;
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;
   const effectiveAttack = totalAttack * attributeBonus;
 

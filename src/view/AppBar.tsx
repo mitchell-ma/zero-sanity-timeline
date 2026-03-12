@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 
 interface AppBarProps {
-  activeSessionName: string;
-  onRenameSession: (name: string) => void;
-  onClearSession: () => void;
+  activeLoadoutName: string;
+  onRenameLoadout: (name: string) => void;
+  onClearLoadout: () => void;
   onClearAll: () => void;
   onExport: () => void;
   onImport: () => void;
@@ -14,8 +14,8 @@ interface AppBarProps {
 }
 
 export default function AppBar({
-  activeSessionName, onRenameSession,
-  onClearSession, onClearAll,
+  activeLoadoutName, onRenameLoadout,
+  onClearLoadout, onClearAll,
   onExport, onImport, onDevlog, onKeys,
   debugMode, onToggleDebug,
 }: AppBarProps) {
@@ -32,15 +32,15 @@ export default function AppBar({
   }, [renaming]);
 
   const handleRenameStart = () => {
-    setRenameValue(activeSessionName);
+    setRenameValue(activeLoadoutName);
     setRenaming(true);
   };
 
   const handleRenameSubmit = () => {
     if (cancellingRef.current) { cancellingRef.current = false; return; }
     const trimmed = renameValue.trim();
-    if (trimmed && trimmed !== activeSessionName) {
-      onRenameSession(trimmed);
+    if (trimmed && trimmed !== activeLoadoutName) {
+      onRenameLoadout(trimmed);
     }
     setRenaming(false);
   };
@@ -57,11 +57,11 @@ export default function AppBar({
 
       <div className="app-bar-divider" />
 
-      <div className="app-bar-session">
+      <div className="app-bar-loadout">
         {renaming ? (
           <input
             ref={inputRef}
-            className="app-bar-session-input"
+            className="app-bar-loadout-input"
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
             onBlur={handleRenameSubmit}
@@ -71,12 +71,12 @@ export default function AppBar({
             }}
           />
         ) : (
-          <span className="app-bar-session-name" title={activeSessionName}>
-            {activeSessionName}
+          <span className="app-bar-loadout-name" title={activeLoadoutName}>
+            {activeLoadoutName}
           </span>
         )}
         {!renaming && (
-          <button className="app-bar-session-rename" onClick={handleRenameStart} title="Rename session">
+          <button className="app-bar-loadout-rename" onClick={handleRenameStart} title="Rename loadout">
             <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
               <path d="M12.146.854a.5.5 0 01.708 0l2.292 2.292a.5.5 0 010 .708L5.854 13.146a.5.5 0 01-.233.131l-3.5 1a.5.5 0 01-.612-.612l1-3.5a.5.5 0 01.131-.233L12.146.854zM11.5 2.207L3.207 10.5l-.646 2.262 2.261-.646L13.086 3.854 11.5 2.207z"/>
             </svg>
@@ -86,7 +86,7 @@ export default function AppBar({
 
       <div className="app-bar-divider" />
 
-      <button className="btn-clear" onClick={onClearSession}>
+      <button className="btn-clear" onClick={onClearLoadout}>
         CLEAR
       </button>
       <button className="btn-clear" onClick={onClearAll}>

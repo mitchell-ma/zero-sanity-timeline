@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
-import { SessionTree, saveSessionTree } from './sessionStorage';
+import { LoadoutTree, saveLoadoutTree } from './loadoutStorage';
 
 const MAX_HISTORY = 100;
 const HISTORY_KEY = 'zst-tree-history';
 
 interface PersistedStacks {
-  undoStack: SessionTree[];
-  redoStack: SessionTree[];
+  undoStack: LoadoutTree[];
+  redoStack: LoadoutTree[];
 }
 
 function loadStacks(): PersistedStacks {
@@ -25,29 +25,29 @@ function loadStacks(): PersistedStacks {
   return { undoStack: [], redoStack: [] };
 }
 
-function persistStacks(undoStack: SessionTree[], redoStack: SessionTree[]): void {
+function persistStacks(undoStack: LoadoutTree[], redoStack: LoadoutTree[]): void {
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify({ undoStack, redoStack }));
   } catch { /* ignore */ }
 }
 
 export interface TreeHistory {
-  tree: SessionTree;
-  setTree: (next: SessionTree) => void;
+  tree: LoadoutTree;
+  setTree: (next: LoadoutTree) => void;
   undo: () => void;
   redo: () => void;
-  resetTree: (next: SessionTree) => void;
+  resetTree: (next: LoadoutTree) => void;
 }
 
-export function useTreeHistory(initial: SessionTree): TreeHistory {
-  const [tree, setTreeRaw] = useState<SessionTree>(initial);
-  const treeRef = useRef<SessionTree>(initial);
+export function useTreeHistory(initial: LoadoutTree): TreeHistory {
+  const [tree, setTreeRaw] = useState<LoadoutTree>(initial);
+  const treeRef = useRef<LoadoutTree>(initial);
 
   const initialStacks = useRef(loadStacks());
-  const undoRef = useRef<SessionTree[]>(initialStacks.current.undoStack);
-  const redoRef = useRef<SessionTree[]>(initialStacks.current.redoStack);
+  const undoRef = useRef<LoadoutTree[]>(initialStacks.current.undoStack);
+  const redoRef = useRef<LoadoutTree[]>(initialStacks.current.redoStack);
 
-  const setTree = useCallback((next: SessionTree) => {
+  const setTree = useCallback((next: LoadoutTree) => {
     const prev = treeRef.current;
     if (prev === next) return;
     undoRef.current.push(prev);
@@ -55,7 +55,7 @@ export function useTreeHistory(initial: SessionTree): TreeHistory {
     redoRef.current = [];
     treeRef.current = next;
     setTreeRaw(next);
-    saveSessionTree(next);
+    saveLoadoutTree(next);
     persistStacks(undoRef.current, redoRef.current);
   }, []);
 
@@ -65,7 +65,7 @@ export function useTreeHistory(initial: SessionTree): TreeHistory {
     redoRef.current.push(treeRef.current);
     treeRef.current = prev;
     setTreeRaw(prev);
-    saveSessionTree(prev);
+    saveLoadoutTree(prev);
     persistStacks(undoRef.current, redoRef.current);
   }, []);
 
@@ -75,16 +75,16 @@ export function useTreeHistory(initial: SessionTree): TreeHistory {
     undoRef.current.push(treeRef.current);
     treeRef.current = next;
     setTreeRaw(next);
-    saveSessionTree(next);
+    saveLoadoutTree(next);
     persistStacks(undoRef.current, redoRef.current);
   }, []);
 
-  const resetTree = useCallback((next: SessionTree) => {
+  const resetTree = useCallback((next: LoadoutTree) => {
     treeRef.current = next;
     undoRef.current = [];
     redoRef.current = [];
     setTreeRaw(next);
-    saveSessionTree(next);
+    saveLoadoutTree(next);
     persistStacks([], []);
   }, []);
 

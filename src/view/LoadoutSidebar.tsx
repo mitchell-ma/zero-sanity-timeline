@@ -1,34 +1,34 @@
 import { useState, useCallback, useRef, useEffect, useMemo, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  SessionTree,
-  SessionNode,
+  LoadoutTree,
+  LoadoutNode,
   getChildrenOf,
-  addSession,
+  addLoadout,
   addFolder,
   removeNode,
   renameNode,
   toggleFolder,
   moveNode,
   uniqueName,
-  saveSessionTree,
-  deleteSessionData,
-} from '../utils/sessionStorage';
+  saveLoadoutTree,
+  deleteLoadoutData,
+} from '../utils/loadoutStorage';
 
-interface SessionSidebarProps {
-  tree: SessionTree;
-  activeSessionId: string | null;
-  onTreeChange: (tree: SessionTree) => void;
-  onSelectSession: (id: string) => void;
-  onNewSession: (parentId: string | null) => void;
-  onDeleteSession: (sessionIds: string[], nodeId: string) => void;
+interface LoadoutSidebarProps {
+  tree: LoadoutTree;
+  activeLoadoutId: string | null;
+  onTreeChange: (tree: LoadoutTree) => void;
+  onSelectLoadout: (id: string) => void;
+  onNewLoadout: (parentId: string | null) => void;
+  onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
   onWarning?: (message: string) => void;
 }
 
 /** Collect all node IDs in a subtree (inclusive). */
-function collectSubtreeIds(tree: SessionTree, nodeId: string): string[] {
+function collectSubtreeIds(tree: LoadoutTree, nodeId: string): string[] {
   const ids: string[] = [nodeId];
   const children = tree.nodes.filter((n) => n.parentId === nodeId);
   for (const child of children) {
@@ -39,7 +39,7 @@ function collectSubtreeIds(tree: SessionTree, nodeId: string): string[] {
 
 /** Get a flattened list of visible node IDs in render order. */
 function flattenVisibleNodes(
-  tree: SessionTree,
+  tree: LoadoutTree,
   parentId: string | null,
   visibleIds: Set<string> | null,
   filterActive: boolean,
@@ -56,13 +56,13 @@ function flattenVisibleNodes(
   return result;
 }
 
-const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function SessionSidebar({
+const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function LoadoutSidebar({
   tree,
-  activeSessionId,
+  activeLoadoutId,
   onTreeChange,
-  onSelectSession,
-  onNewSession,
-  onDeleteSession,
+  onSelectLoadout,
+  onNewLoadout,
+  onDeleteLoadout,
   collapsed,
   onToggleCollapsed,
   onWarning,
@@ -82,6 +82,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
   // ─── Marquee state ────────────────────────────────────────────────────
   const [marquee, setMarquee] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
   const marqueeActiveRef = useRef(false);
+  const marqueeJustEndedRef = useRef(false);
   const treeRef = useRef<HTMLDivElement>(null);
 
   // Focus rename input when it appears
@@ -120,9 +121,9 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
     [tree, visibleIds, filterLower],
   );
 
-  const handleAddSession = useCallback((parentId: string | null) => {
-    onNewSession(parentId);
-  }, [onNewSession]);
+  const handleAddLoadout = useCallback((parentId: string | null) => {
+    onNewLoadout(parentId);
+  }, [onNewLoadout]);
 
   const handleAddFolder = useCallback((parentId: string | null) => {
     const result = addFolder(tree, 'New Folder', parentId);
@@ -145,33 +146,33 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
   }, [renamingId, renameValue, tree, onTreeChange]);
 
   const handleDelete = useCallback((nodeId: string) => {
-    const { tree: newTree, removedSessionIds } = removeNode(tree, nodeId);
-    onDeleteSession(removedSessionIds, nodeId);
+    const { tree: newTree, removedLoadoutIds } = removeNode(tree, nodeId);
+    onDeleteLoadout(removedLoadoutIds, nodeId);
     onTreeChange(newTree);
-  }, [tree, onTreeChange, onDeleteSession]);
+  }, [tree, onTreeChange, onDeleteLoadout]);
 
   const handleBatchDelete = useCallback((nodeIds: string[]) => {
     let currentTree = tree;
-    const allRemovedSessionIds: string[] = [];
+    const allRemovedLoadoutIds: string[] = [];
     for (const nodeId of nodeIds) {
       // Node may have been removed already as child of a previously deleted folder
       if (!currentTree.nodes.find((n) => n.id === nodeId)) continue;
-      const { tree: newTree, removedSessionIds } = removeNode(currentTree, nodeId);
+      const { tree: newTree, removedLoadoutIds } = removeNode(currentTree, nodeId);
       currentTree = newTree;
-      allRemovedSessionIds.push(...removedSessionIds);
+      allRemovedLoadoutIds.push(...removedLoadoutIds);
     }
-    // Use the first nodeId for the onDeleteSession callback
-    onDeleteSession(allRemovedSessionIds, nodeIds[0]);
+    // Use the first nodeId for the onDeleteLoadout callback
+    onDeleteLoadout(allRemovedLoadoutIds, nodeIds[0]);
     onTreeChange(currentTree);
     setSelectedIds(new Set());
-  }, [tree, onTreeChange, onDeleteSession]);
+  }, [tree, onTreeChange, onDeleteLoadout]);
 
   const handleToggleFolder = useCallback((folderId: string) => {
     onTreeChange(toggleFolder(tree, folderId));
   }, [tree, onTreeChange]);
 
   // ─── Click selection logic ────────────────────────────────────────────
-  const handleNodeClick = useCallback((e: React.MouseEvent, node: SessionNode) => {
+  const handleNodeClick = useCallback((e: React.MouseEvent, node: LoadoutNode) => {
     if (e.ctrlKey || e.metaKey) {
       // Toggle individual selection
       setSelectedIds((prev) => {
@@ -192,13 +193,13 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
         setSelectedIds(range);
       }
     } else {
-      // Normal click — select single, also trigger session switch / folder toggle
+      // Normal click — select single, also trigger loadout switch / folder toggle
       setSelectedIds(new Set([node.id]));
       lastClickedRef.current = node.id;
-      if (node.type === 'session') onSelectSession(node.id);
+      if (node.type === 'loadout') onSelectLoadout(node.id);
       else handleToggleFolder(node.id);
     }
-  }, [flatOrder, onSelectSession, handleToggleFolder]);
+  }, [flatOrder, onSelectLoadout, handleToggleFolder]);
 
   // ─── Marquee selection ────────────────────────────────────────────────
   useEffect(() => {
@@ -206,7 +207,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
 
     const handleMouseDown = (e: MouseEvent) => {
       // Only start marquee on direct clicks on the tree container (not on nodes)
-      const isNode = (e.target as HTMLElement).closest('.session-node');
+      const isNode = (e.target as HTMLElement).closest('.loadout-node');
       if (isNode || e.button !== 0) return;
       marqueeActiveRef.current = true;
       setMarquee({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
@@ -218,6 +219,10 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
     };
 
     const handleMouseUp = () => {
+      if (marqueeActiveRef.current) {
+        // Suppress the click event that fires after mouseup so it doesn't clear the selection
+        marqueeJustEndedRef.current = true;
+      }
       marqueeActiveRef.current = false;
       setMarquee(null);
     };
@@ -242,7 +247,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
       right: Math.max(marquee.startX, marquee.endX),
       bottom: Math.max(marquee.startY, marquee.endY),
     };
-    const nodeEls = treeRef.current.querySelectorAll('.session-node');
+    const nodeEls = treeRef.current.querySelectorAll('.loadout-node');
     const selected = new Set<string>();
     nodeEls.forEach((el) => {
       const r = el.getBoundingClientRect();
@@ -313,10 +318,10 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
   }, []);
 
   // ─── Tree rendering ────────────────────────────────────────────────────
-  const renderNode = (node: SessionNode, depth: number) => {
+  const renderNode = (node: LoadoutNode, depth: number) => {
     if (visibleIds && !visibleIds.has(node.id)) return null;
 
-    const isActive = node.type === 'session' && node.id === activeSessionId;
+    const isActive = node.type === 'loadout' && node.id === activeLoadoutId;
     const isSelected = selectedIds.has(node.id);
     const isDragging = node.id === dragId;
     const isDropInside = dropTarget?.id === node.id && dropTarget.position === 'inside';
@@ -328,9 +333,9 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
 
     return (
       <div key={node.id} style={{ opacity: isDragging ? 0.4 : 1 }}>
-        {isDropBefore && <div className="session-drop-indicator" style={{ marginLeft: depth * 16 }} />}
+        {isDropBefore && <div className="loadout-drop-indicator" style={{ marginLeft: depth * 16 }} />}
         <div
-          className={`session-node${isActive ? ' session-node--active' : ''}${isSelected && !isActive ? ' session-node--selected' : ''}${isDropInside ? ' session-node--drop-target' : ''}`}
+          className={`loadout-node${isActive ? ' loadout-node--active' : ''}${isSelected && !isActive ? ' loadout-node--selected' : ''}${isDropInside ? ' loadout-node--drop-target' : ''}`}
           style={{ paddingLeft: 8 + depth * 16 }}
           data-node-id={node.id}
           draggable
@@ -361,18 +366,18 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
             // If right-clicking a selected node with multi-selection, keep the selection
             if (!selectedIds.has(node.id) || selectedIds.size <= 1) {
               setSelectedIds(new Set([node.id]));
-              // Load the session when right-clicking it
-              if (node.type === 'session') onSelectSession(node.id);
+              // Load the loadout when right-clicking it
+              if (node.type === 'loadout') onSelectLoadout(node.id);
             }
             setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id, parentId: node.type === 'folder' ? node.id : node.parentId });
           }}
         >
           {node.type === 'folder' ? (
-            <span className="session-node-icon session-node-chevron">
+            <span className="loadout-node-icon loadout-node-chevron">
               {isCollapsed ? '\u25B6' : '\u25BC'}
             </span>
           ) : (
-            <span className="session-node-icon session-node-dot">
+            <span className="loadout-node-icon loadout-node-dot">
               {isActive ? '\u25CF' : '\u25CB'}
             </span>
           )}
@@ -380,7 +385,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
           {renamingId === node.id ? (
             <input
               ref={renameRef}
-              className="session-rename-input"
+              className="loadout-rename-input"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               onBlur={handleRenameSubmit}
@@ -391,19 +396,19 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="session-node-name">{node.name}</span>
+            <span className="loadout-node-name">{node.name}</span>
           )}
 
-          <span className="session-node-actions" onClick={(e) => e.stopPropagation()}>
+          <span className="loadout-node-actions" onClick={(e) => e.stopPropagation()}>
             {node.type === 'folder' && (
               <>
                 <button
-                  className="session-action-btn"
-                  title="New session"
-                  onClick={() => handleAddSession(node.id)}
+                  className="loadout-action-btn"
+                  title="New loadout"
+                  onClick={() => handleAddLoadout(node.id)}
                 >+</button>
                 <button
-                  className="session-action-btn"
+                  className="loadout-action-btn"
                   title="New folder"
                   onClick={() => handleAddFolder(node.id)}
                 >
@@ -414,7 +419,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
               </>
             )}
             <button
-              className="session-action-btn session-action-btn--delete"
+              className="loadout-action-btn loadout-action-btn--delete"
               title="Delete"
               onClick={() => handleDelete(node.id)}
             >
@@ -424,7 +429,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
             </button>
           </span>
         </div>
-        {isDropAfter && <div className="session-drop-indicator" style={{ marginLeft: depth * 16 }} />}
+        {isDropAfter && <div className="loadout-drop-indicator" style={{ marginLeft: depth * 16 }} />}
 
         {node.type === 'folder' && !isCollapsed && children.map((child) => renderNode(child, depth + 1))}
       </div>
@@ -435,8 +440,8 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
 
   if (collapsed) {
     return (
-      <div ref={ref} className="session-sidebar session-sidebar--collapsed" tabIndex={-1}>
-        <button className="session-sidebar-toggle" onClick={onToggleCollapsed} title="Expand sessions">
+      <div ref={ref} className="loadout-sidebar loadout-sidebar--collapsed" tabIndex={-1}>
+        <button className="loadout-sidebar-toggle" onClick={onToggleCollapsed} title="Expand loadouts">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
           </svg>
@@ -454,17 +459,17 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
   } : null;
 
   return (
-    <div ref={ref} className="session-sidebar" tabIndex={-1}>
-      <div className="session-sidebar-header">
-        <span className="session-sidebar-title">SESSIONS</span>
-        <div className="session-sidebar-header-actions">
+    <div ref={ref} className="loadout-sidebar" tabIndex={-1}>
+      <div className="loadout-sidebar-header">
+        <span className="loadout-sidebar-title">LOADOUTS</span>
+        <div className="loadout-sidebar-header-actions">
           <button
-            className="session-action-btn"
-            title="New session"
-            onClick={() => handleAddSession(null)}
+            className="loadout-action-btn"
+            title="New loadout"
+            onClick={() => handleAddLoadout(null)}
           >+</button>
           <button
-            className="session-action-btn"
+            className="loadout-action-btn"
             title="New folder"
             onClick={() => handleAddFolder(null)}
           >
@@ -472,7 +477,7 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
               <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
             </svg>
           </button>
-          <button className="session-sidebar-toggle" onClick={onToggleCollapsed} title="Collapse sidebar">
+          <button className="loadout-sidebar-toggle" onClick={onToggleCollapsed} title="Collapse sidebar">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
             </svg>
@@ -480,9 +485,9 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
         </div>
       </div>
 
-      <div className="session-filter-row">
+      <div className="loadout-filter-row">
         <input
-          className="session-filter-input"
+          className="loadout-filter-input"
           placeholder="Filter..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -491,40 +496,45 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
 
       <div
         ref={treeRef}
-        className="session-tree"
+        className="loadout-tree"
         onDragOver={(e) => {
           // Allow dropping at root level (after all nodes)
           e.preventDefault();
-          const isOverChild = (e.target as HTMLElement).closest('.session-node');
+          const isOverChild = (e.target as HTMLElement).closest('.loadout-node');
           if (!isOverChild) setDropTarget({ id: null, position: 'inside' });
         }}
         onDrop={handleDrop}
         onContextMenu={(e) => {
           // Right-click on empty space → root-level context menu
-          const isOverNode = (e.target as HTMLElement).closest('.session-node');
+          const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
           if (!isOverNode) {
             e.preventDefault();
             setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: null, parentId: null });
           }
         }}
         onClick={(e) => {
+          // After marquee ends, a click fires — suppress it so selection persists
+          if (marqueeJustEndedRef.current) {
+            marqueeJustEndedRef.current = false;
+            return;
+          }
           // Click on empty space clears selection
-          const isOverNode = (e.target as HTMLElement).closest('.session-node');
+          const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
           if (!isOverNode) setSelectedIds(new Set());
         }}
       >
         {rootNodes.length === 0 && !filter && (
-          <div className="session-empty">No sessions yet</div>
+          <div className="loadout-empty">No loadouts yet</div>
         )}
         {rootNodes.map((node) => renderNode(node, 0))}
         {filter && visibleIds?.size === 0 && (
-          <div className="session-empty">No matches</div>
+          <div className="loadout-empty">No matches</div>
         )}
       </div>
 
       {marqueeRect && marqueeRect.width > 3 && marqueeRect.height > 3 && (
         <div
-          className="session-marquee"
+          className="loadout-marquee"
           style={{
             position: 'fixed',
             left: marqueeRect.left,
@@ -536,14 +546,14 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
       )}
 
       {ctxMenu && createPortal(
-        <SessionContextMenu
+        <LoadoutContextMenu
           x={ctxMenu.x}
           y={ctxMenu.y}
           nodeId={ctxMenu.nodeId}
           node={ctxMenu.nodeId ? tree.nodes.find((n) => n.id === ctxMenu.nodeId) ?? null : null}
           parentId={ctxMenu.parentId}
           selectedIds={selectedIds}
-          onNewSession={(parentId) => { handleAddSession(parentId); setCtxMenu(null); }}
+          onNewLoadout={(parentId) => { handleAddLoadout(parentId); setCtxMenu(null); }}
           onNewFolder={(parentId) => { handleAddFolder(parentId); setCtxMenu(null); }}
           onRename={(nodeId) => {
             const node = tree.nodes.find((n) => n.id === nodeId);
@@ -560,21 +570,21 @@ const SessionSidebar = forwardRef<HTMLDivElement, SessionSidebarProps>(function 
   );
 });
 
-export default SessionSidebar;
+export default LoadoutSidebar;
 
 // ─── Context menu sub-component ──────────────────────────────────────────────
 
-function SessionContextMenu({
+function LoadoutContextMenu({
   x, y, nodeId, node, parentId, selectedIds,
-  onNewSession, onNewFolder, onRename, onDelete, onBatchDelete, onClose,
+  onNewLoadout, onNewFolder, onRename, onDelete, onBatchDelete, onClose,
 }: {
   x: number;
   y: number;
   nodeId: string | null;
-  node: SessionNode | null;
+  node: LoadoutNode | null;
   parentId: string | null;
   selectedIds: Set<string>;
-  onNewSession: (parentId: string | null) => void;
+  onNewLoadout: (parentId: string | null) => void;
   onNewFolder: (parentId: string | null) => void;
   onRename: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
@@ -607,44 +617,53 @@ function SessionContextMenu({
     zIndex: 9999,
   };
 
-  const isBatch = selectedIds.size > 1 && nodeId && selectedIds.has(nodeId);
+  const isBatch = selectedIds.size > 1 && (!nodeId || selectedIds.has(nodeId));
   const batchCount = selectedIds.size;
 
   return (
-    <div ref={menuRef} className="session-ctx-menu" style={style}>
+    <div ref={menuRef} className="loadout-ctx-menu" style={style}>
       {!confirmDelete ? (
         <>
-          <button className="session-ctx-item" onClick={() => onNewSession(parentId)}>
-            New Session
+          <button className="loadout-ctx-item" onClick={() => onNewLoadout(parentId)}>
+            New Loadout
           </button>
-          <button className="session-ctx-item" onClick={() => onNewFolder(parentId)}>
+          <button className="loadout-ctx-item" onClick={() => onNewFolder(parentId)}>
             New Folder
           </button>
-          {nodeId && node && (
+          {nodeId && node && !isBatch && (
             <>
-              <div className="session-ctx-separator" />
-              {!isBatch && (
-                <button className="session-ctx-item" onClick={() => onRename(nodeId)}>
-                  Rename
-                </button>
-              )}
+              <div className="loadout-ctx-separator" />
+              <button className="loadout-ctx-item" onClick={() => onRename(nodeId)}>
+                Rename
+              </button>
               <button
-                className="session-ctx-item session-ctx-item--danger"
+                className="loadout-ctx-item loadout-ctx-item--danger"
                 onClick={() => setConfirmDelete(true)}
               >
-                {isBatch ? `Delete ${batchCount} items` : 'Delete'}
+                Delete
+              </button>
+            </>
+          )}
+          {isBatch && (
+            <>
+              <div className="loadout-ctx-separator" />
+              <button
+                className="loadout-ctx-item loadout-ctx-item--danger"
+                onClick={() => setConfirmDelete(true)}
+              >
+                {`Delete ${batchCount} items`}
               </button>
             </>
           )}
         </>
       ) : (
         <>
-          <div className="session-ctx-confirm-label">
+          <div className="loadout-ctx-confirm-label">
             {isBatch ? `Delete ${batchCount} items?` : `Delete "${node?.name}"?`}
           </div>
-          <div className="session-ctx-separator" />
+          <div className="loadout-ctx-separator" />
           <button
-            className="session-ctx-item session-ctx-item--danger"
+            className="loadout-ctx-item loadout-ctx-item--danger"
             onClick={() => {
               if (isBatch) onBatchDelete(Array.from(selectedIds));
               else if (nodeId) onDelete(nodeId);
@@ -652,7 +671,7 @@ function SessionContextMenu({
           >
             Confirm Delete
           </button>
-          <button className="session-ctx-item" onClick={() => setConfirmDelete(false)}>
+          <button className="loadout-ctx-item" onClick={() => setConfirmDelete(false)}>
             Cancel
           </button>
         </>

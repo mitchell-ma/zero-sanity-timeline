@@ -4,6 +4,7 @@ import { TOTAL_FRAMES } from '../../utils/timeline';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { CommonSlotController } from '../slot/commonSlotController';
+import { collectTimeStopRegions, extendByTimeStops, getFinalStrikeTriggerFrame, TimeStopRegion } from '../timeline/processInflictions';
 
 export interface ActivationWindow {
   startFrame: number;
@@ -109,6 +110,7 @@ export class CombatLoadout {
     this.cachedEvents = events;
 
     const newWindows: WindowsMap = new Map();
+    const stops = collectTimeStopRegions(events);
 
     // Build a map: slotId → slot index for quick lookup
     const slotIdToIndex = new Map<string, number>();
@@ -132,14 +134,14 @@ export class CombatLoadout {
       const defaultTriggerFrame = event.startFrame + event.activationDuration;
 
       // For FINAL_STRIKE on sequenced events, start at the first hit of the last segment
-      const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event) ?? defaultTriggerFrame;
+      const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
 
       for (const trigger of publishedTriggers) {
         // Skip triggers that are sourced from derived enemy events
         if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
 
         this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex,
-          trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame);
+          trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame, stops);
       }
     }
 
@@ -153,7 +155,7 @@ export class CombatLoadout {
       const triggerFrame = event.startFrame;
 
       for (const trigger of triggers) {
-        this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex, triggerFrame);
+        this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex, triggerFrame, stops);
       }
     }
 
@@ -199,6 +201,7 @@ export class CombatLoadout {
     newWindows: WindowsMap,
     slotIdToIndex: Map<string, number>,
     triggerFrame: number,
+    stops: readonly TimeStopRegion[],
   ): void {
     for (let subIdx = 0; subIdx < NUM_SLOTS; subIdx++) {
       const subSlot = this.slots[subIdx];
@@ -227,9 +230,11 @@ export class CombatLoadout {
         continue;
       }
 
+      const baseDuration = subSlot.capability.comboWindowFrames;
+      const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, stops);
       const window: ActivationWindow = {
         startFrame: triggerFrame,
-        endFrame: triggerFrame + subSlot.capability.comboWindowFrames,
+        endFrame: triggerFrame + extendedDuration,
         sourceEventId: event.id,
         triggerType: trigger,
       };
@@ -270,30 +275,6 @@ function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], f
     }
   }
   return false;
-}
-
-/**
- * For a sequenced event, compute the frame at which the final strike's first
- * hit lands.  Returns null if the event has no segments or fewer than 2.
- */
-function getFinalStrikeTriggerFrame(event: TimelineEvent): number | null {
-  const segs = event.segments;
-  if (!segs || segs.length < 2) return null;
-
-  // Sum durations of all segments before the last one
-  let offsetFrames = 0;
-  for (let i = 0; i < segs.length - 1; i++) {
-    offsetFrames += segs[i].durationFrames;
-  }
-
-  const lastSeg = segs[segs.length - 1];
-  // Use the last hit of the final strike segment (the actual finishing blow)
-  const frames = lastSeg.frames;
-  const lastHitOffset = frames && frames.length > 0
-    ? frames[frames.length - 1].offsetFrame
-    : 0;
-
-  return event.startFrame + offsetFrames + lastHitOffset;
 }
 
 function mergeWindows(sorted: ActivationWindow[]): ActivationWindow[] {

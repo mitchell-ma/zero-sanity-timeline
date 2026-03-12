@@ -62,6 +62,8 @@ export class PogranichnikOperator extends Operator {
       secondaryAttributeType: PogranichnikOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: PogranichnikOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: PogranichnikOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'The Living Banner',
+      talentTwoName: 'Tactical Instruction',
       attributeIncreaseName: 'Stalwart',
       attributeIncreaseAttribute: StatType.WILL,
       baseStats: BASE_STATS,

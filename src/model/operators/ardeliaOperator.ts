@@ -63,6 +63,8 @@ export class ArdeliaOperator extends Operator {
       secondaryAttributeType: ArdeliaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: ArdeliaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: ArdeliaOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: 'Friendly Presence',
+      talentTwoName: 'Mountainpeak Surfer',
       attributeIncreaseName: 'Keen Mind',
       attributeIncreaseAttribute: StatType.INTELLECT,
       baseStats: BASE_STATS,

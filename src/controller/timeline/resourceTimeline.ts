@@ -15,10 +15,6 @@ export interface TimeStopRange {
 export interface ResourcePoint {
   frame: number;
   value: number;
-  /** Pixel-frame adjustment for combo-origin gauge gains whose EventBlock
-   *  filters out its own time-stop zone. Subtract this × ppf from the
-   *  dilated Y position so the graph step aligns with the diamond. */
-  timeStopAdjust?: number;
 }
 
 export type ResourceGraphListener = (points: ResourcePoint[]) => void;
@@ -42,11 +38,11 @@ export abstract class ResourceTimeline {
 
   readonly subtimeline: Subtimeline;
 
-  private cachedGraph: ResourcePoint[] = [];
-  private graphListeners = new Set<ResourceGraphListener>();
+  protected cachedGraph: ResourcePoint[] = [];
+  protected graphListeners = new Set<ResourceGraphListener>();
   private unsubscribe: (() => void) | null = null;
   /** Sorted time-stop ranges where regen is paused. */
-  private timeStops: TimeStopRange[] = [];
+  protected timeStops: TimeStopRange[] = [];
 
   constructor(subtimeline: Subtimeline) {
     this.subtimeline = subtimeline;
@@ -127,7 +123,7 @@ export abstract class ResourceTimeline {
    * Recompute the line graph from the current events.
    * Produces a point at every change (event consumption, regen hitting max).
    */
-  private recompute(): void {
+  protected recompute(): void {
     const events = this.subtimeline.getEvents();
     const points: ResourcePoint[] = [];
 
@@ -173,15 +169,24 @@ export abstract class ResourceTimeline {
     }
     points.push({ frame: TOTAL_FRAMES, value: endValue });
 
-    this.cachedGraph = points;
-    this.graphListeners.forEach((cb) => cb(points));
+    // Insert points at time-stop boundaries so the graph shows flat segments
+    // where regen is paused, instead of interpolating straight through.
+    const finalPoints = this.insertTimeStopPoints(points);
+
+    this.cachedGraph = finalPoints;
+    this.onRecompute();
+    this.graphListeners.forEach((cb) => cb(finalPoints));
   }
+
+  /** Hook for subclasses to react after the graph is recomputed. */
+  protected onRecompute(): void {}
+
 
   /**
    * Find the actual game-frame that is `needed` effective (non-stopped) frames
    * after `from`. Skips over time-stop ranges.
    */
-  private frameAfterEffectiveFrames(from: number, needed: number): number {
+  protected frameAfterEffectiveFrames(from: number, needed: number): number {
     let remaining = needed;
     let cursor = from;
 
@@ -205,7 +210,7 @@ export abstract class ResourceTimeline {
    * Compute effective regen frames between two game-frames,
    * subtracting any overlapping time-stop durations where regen is paused.
    */
-  private effectiveRegenFrames(from: number, to: number): number {
+  protected effectiveRegenFrames(from: number, to: number): number {
     let total = to - from;
     for (const ts of this.timeStops) {
       if (ts.startFrame >= to) break;
@@ -218,7 +223,60 @@ export abstract class ResourceTimeline {
     return Math.max(0, total);
   }
 
-  private clamp(value: number): number {
+  /**
+   * Walk through graph points and insert extra points at time-stop boundaries.
+   * Between any two consecutive points where regen is happening, if a time-stop
+   * falls in that interval, we insert a point at the stop start (with regened value)
+   * and at the stop end (same value, flat).
+   */
+  private insertTimeStopPoints(points: ResourcePoint[]): ResourcePoint[] {
+    if (this.timeStops.length === 0 || points.length < 2) return points;
+
+    const result: ResourcePoint[] = [points[0]];
+
+    for (let i = 1; i < points.length; i++) {
+      const prev = result[result.length - 1];
+      const curr = points[i];
+
+      // If same frame (e.g. pre/post consume at same frame), just add it
+      if (curr.frame === prev.frame) {
+        result.push(curr);
+        continue;
+      }
+
+      // Check for time-stops between prev.frame and curr.frame
+      // Only insert if there's actual regen happening (values differ or could differ)
+      for (const ts of this.timeStops) {
+        if (ts.startFrame >= curr.frame) break;
+        if (ts.endFrame <= prev.frame) continue;
+
+        const stopStart = Math.max(ts.startFrame, prev.frame);
+        const stopEnd = Math.min(ts.endFrame, curr.frame);
+
+        if (stopStart <= prev.frame && stopEnd >= curr.frame) continue; // entire span is stopped
+
+        // Insert point at time-stop start (value regened from last result point)
+        if (stopStart > result[result.length - 1].frame) {
+          const lastPt = result[result.length - 1];
+          const regenFrames = this.effectiveRegenFrames(lastPt.frame, stopStart);
+          const val = this.clamp(lastPt.value + regenFrames * this.regenPerFrame);
+          result.push({ frame: stopStart, value: val });
+        }
+
+        // Insert point at time-stop end (same value — no regen during stop)
+        if (stopEnd < curr.frame && stopEnd > result[result.length - 1].frame) {
+          const lastPt = result[result.length - 1];
+          result.push({ frame: stopEnd, value: lastPt.value });
+        }
+      }
+
+      result.push(curr);
+    }
+
+    return result;
+  }
+
+  protected clamp(value: number): number {
     return Math.max(this.min, Math.min(this.max, value));
   }
 }

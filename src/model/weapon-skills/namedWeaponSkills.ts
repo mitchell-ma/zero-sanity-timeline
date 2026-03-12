@@ -37,12 +37,24 @@ const INFLICTION_COVETOUS_BUILDUP: readonly number[] = [];
 const COMBATIVE_ANTHEM_OF_CINDER: readonly number[] = [];
 const INSPIRING_BACK_TO_THE_BROKEN_CITY: readonly number[] = [];
 const TWILIGHT_IMPOSING_PEAK: readonly number[] = [];
-const FLOW_UNBRIDLED_EDGE: readonly number[] = [];
+// Flow: Unbridled Edge — triggers on SP recovery from skill; secondary attr bonus (passive)
+// + team Heat/Electric DMG bonus (triggered), 20s, max 3 stacks
+const FLOW_UNBRIDLED_EDGE_SECONDARY_ATTR_BONUS: readonly number[] = [
+  0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.14,
+];
+const FLOW_UNBRIDLED_EDGE_HEAT_ELECTRIC_DMG_BONUS: readonly number[] = [
+  0.03, 0.036, 0.042, 0.048, 0.054, 0.06, 0.066, 0.072, 0.084,
+];
+const FLOW_UNBRIDLED_EDGE_DURATION_SECONDS = 20;
+const FLOW_UNBRIDLED_EDGE_MAX_STACKS = 3;
+const FLOW_UNBRIDLED_EDGE: readonly number[] = FLOW_UNBRIDLED_EDGE_SECONDARY_ATTR_BONUS;
 const INFLICTION_SINCERE_INTERROGATION: readonly number[] = [];
 const SUPPRESSION_FIN_CHASERS_INTENT: readonly number[] = [];
 const PURSUIT_UNENDING_CYCLE: readonly number[] = [];
 const SUPPRESSION_EMERGENCY_BOOST: readonly number[] = [];
-const ASSAULT_ARMAMENT_PREP: readonly number[] = [];
+const ASSAULT_ARMAMENT_PREP: readonly number[] = [
+  12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6,
+];
 
 export class BrutalityDisciplinarian extends WeaponSkill {
   constructor(level: number) {
@@ -221,11 +233,30 @@ export class TwilightImposingPeak extends WeaponSkill {
 }
 
 export class FlowUnbridledEdge extends WeaponSkill {
+  static readonly DURATION_SECONDS = FLOW_UNBRIDLED_EDGE_DURATION_SECONDS;
+  static readonly MAX_STACKS = FLOW_UNBRIDLED_EDGE_MAX_STACKS;
+
   constructor(level: number) {
     super({ weaponSkillType: WeaponSkillType.FLOW_UNBRIDLED_EDGE, level });
   }
+
+  /** Secondary attribute bonus (passive). */
   getValue(): number {
     return FLOW_UNBRIDLED_EDGE[this.level - 1] ?? 0;
+  }
+
+  /** Heat/Electric DMG bonus per stack (triggered). */
+  getElementDmgBonus(): number {
+    return FLOW_UNBRIDLED_EDGE_HEAT_ELECTRIC_DMG_BONUS[this.level - 1] ?? 0;
+  }
+
+  getNamedEffectGroups(): NamedEffectGroup[] {
+    return [{
+      stats: [
+        { stat: StatType.HEAT_DAMAGE_BONUS, value: this.getElementDmgBonus() },
+        { stat: StatType.ELECTRIC_DAMAGE_BONUS, value: this.getElementDmgBonus() },
+      ],
+    }];
   }
 }
 
@@ -278,8 +309,12 @@ export class AssaultArmamentPrep extends WeaponSkill {
   constructor(level: number) {
     super({ weaponSkillType: WeaponSkillType.ASSAULT_ARMAMENT_PREP, level });
   }
+  /** Flat ATK bonus value. */
   getValue(): number {
     return ASSAULT_ARMAMENT_PREP[this.level - 1] ?? 0;
+  }
+  getPassiveStats(): Partial<Record<StatType, number>> {
+    return { [StatType.ATTACK]: this.getValue() };
   }
 }
 
@@ -354,6 +389,137 @@ export class InflictionViciousPurge extends WeaponSkill {
       { stats: [{ stat: StatType.ARTS_DAMAGE_BONUS, value: this.getEnemyArtsDmgTaken() }] },
     ];
   }
+}
+
+// ── Stub named skills (data arrays empty — to be filled when wiki data is available) ──
+
+export class CrusherPrincelyDeterrence extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_PRINCELY_DETERRENCE, level }); }
+  getValue(): number { return 0; }
+}
+export class CrusherHonedIntoLegion extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_HONED_INTO_LEGION, level }); }
+  getValue(): number { return 0; }
+}
+export class SuppressionStackedHew extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_STACKED_HEW, level }); }
+  getValue(): number { return 0; }
+}
+export class SuppressionAstrophysics extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_ASTROPHYSICS, level }); }
+  getValue(): number { return 0; }
+}
+export class SuppressionConcentricCircles extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_CONCENTRIC_CIRCLES, level }); }
+  getValue(): number { return 0; }
+}
+export class CombativeVirtuousGain extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.COMBATIVE_VIRTUOUS_GAIN, level }); }
+  getValue(): number { return 0; }
+}
+export class BrutalityCementedFury extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_CEMENTED_FURY, level }); }
+  getValue(): number { return 0; }
+}
+export class BrutalityLandsOfYore extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_LANDS_OF_YORE, level }); }
+  getValue(): number { return 0; }
+}
+export class DetonateBonechilling extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_BONECHILLING, level }); }
+  getValue(): number { return 0; }
+}
+export class DetonateSeekerOfTheEsoteric extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_SEEKER_OF_THE_ESOTERIC, level }); }
+  getValue(): number { return 0; }
+}
+export class DetonateImposingChampion extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_IMPOSING_CHAMPION, level }); }
+  getValue(): number { return 0; }
+}
+export class EfficacyTenaciousWill extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.EFFICACY_TENACIOUS_WILL, level }); }
+  getValue(): number { return 0; }
+}
+export class FractureArtzyExaggeration extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.FRACTURE_ARTZY_EXAGGERATION, level }); }
+  getValue(): number { return 0; }
+}
+export class PursuitAidFromThePast extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_AID_FROM_THE_PAST, level }); }
+  getValue(): number { return 0; }
+}
+export class PursuitDutyFulfilled extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_DUTY_FULFILLED, level }); }
+  getValue(): number { return 0; }
+}
+export class PursuitTranscendentArts extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_TRANSCENDENT_ARTS, level }); }
+  getValue(): number { return 0; }
+}
+export class InflictionRoadHomeForAllLife extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_ROAD_HOME_FOR_ALL_LIFE, level }); }
+  getValue(): number { return 0; }
+}
+export class InflictionWildernessCluster extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WILDERNESS_CLUSTER, level }); }
+  getValue(): number { return 0; }
+}
+export class InflictionWedgeOfCivilization extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WEDGE_OF_CIVILIZATION, level }); }
+  getValue(): number { return 0; }
+}
+export class InflictionConquestOfIcyPeaks extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_CONQUEST_OF_ICY_PEAKS, level }); }
+  getValue(): number { return 0; }
+}
+export class TwilightHumiliation extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.TWILIGHT_HUMILIATION, level }); }
+  getValue(): number { return 0; }
+}
+export class MedicantBlightFervor extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_BLIGHT_FERVOR, level }); }
+  getValue(): number { return 0; }
+}
+export class MedicantEyeOfTalos extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_EYE_OF_TALOS, level }); }
+  getValue(): number { return 0; }
+}
+export class MedicantRedemptionOfFaith extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_REDEMPTION_OF_FAITH, level }); }
+  getValue(): number { return 0; }
+}
+export class MincingTherapy extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MINCING_THERAPY, level }); }
+  getValue(): number { return 0; }
+}
+export class MedicantGloryOfKnighthood extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_GLORY_OF_KNIGHTHOOD, level }); }
+  getValue(): number { return 0; }
+}
+export class WeightOfMountain extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.WEIGHT_OF_MOUNTAIN, level }); }
+  getValue(): number { return 0; }
+}
+export class InspiringStartOfASaga extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_START_OF_A_SAGA, level }); }
+  getValue(): number { return 0; }
+}
+export class InflictionLoneAndDistantSail extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_LONE_AND_DISTANT_SAIL, level }); }
+  getValue(): number { return 0; }
+}
+export class DetonateRapidStrike extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_RAPID_STRIKE, level }); }
+  getValue(): number { return 0; }
+}
+export class SuppressionTilliteEtchings extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_TILLITE_ETCHINGS, level }); }
+  getValue(): number { return 0; }
+}
+export class InspiringMortiseAndTenonAnalysis extends WeaponSkill {
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_MORTISE_AND_TENON_ANALYSIS, level }); }
+  getValue(): number { return 0; }
 }
 
 // Infliction: Tidal Murmurs — secondary attribute bonus; increases Arts DMG taken after Corrosion consumption; 25s

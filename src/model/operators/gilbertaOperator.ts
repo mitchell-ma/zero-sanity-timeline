@@ -62,6 +62,8 @@ export class GilbertaOperator extends Operator {
       secondaryAttributeType: GilbertaOperator.SECONDARY_ATTRIBUTE_TYPE,
       maxTalentOneLevel: GilbertaOperator.MAX_TALENT_ONE_LEVEL,
       maxTalentTwoLevel: GilbertaOperator.MAX_TALENT_TWO_LEVEL,
+      talentOneName: "Messenger's Song",
+      talentTwoName: 'Late Reply',
       attributeIncreaseName: 'Stalwart',
       attributeIncreaseAttribute: StatType.WILL,
       baseStats: BASE_STATS,

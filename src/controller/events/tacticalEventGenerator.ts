@@ -73,9 +73,11 @@ export function generateTacticalEvents(
   ultTimeline: { frame: number; type: 'consume' | 'gain'; amount: number }[],
   chargePerFrame: number,
   startValue: number,
+  maxUsesOverride?: number,
 ): TacticalEventResult | null {
   const config = getTacticalConfig(tacticalName);
   if (!config) return null;
+  if (maxUsesOverride !== undefined) config.maxUses = maxUsesOverride;
 
   const threshold = config.ultThreshold * ultMax;
   const restoreAmount = config.ultEnergyRestore * ultMax;
