@@ -1,5 +1,6 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
+import type { Potential } from '../../consts/types';
 import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/channelLabels';
 import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
@@ -512,6 +513,11 @@ export function buildColumns(
               enhSeg.segments[0].frames[1].gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
             }
             const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            // P1: Empowered additional attack restores 20 SP on hit
+            const empSpReturn = new SmoulderingFire().getAdditionalAtkSpReturnOnHit((slot.potential ?? 0) as Potential);
+            if (empSpReturn > 0 && empSeg.segments[1]?.frames?.[0]) {
+              empSeg.segments[1].frames[0].skillPointRecovery = empSpReturn;
+            }
             const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
             col.defaultEvent = {
               ...col.defaultEvent!,

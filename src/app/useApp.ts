@@ -496,9 +496,15 @@ export function useApp() {
     combatLoadout.commonSlot.skillPoints.setTimeStops(stops);
   }, [processedEvents, combatLoadout]);
 
-  // ─── Escape to close info pane ───────────────────────────────────────────
+  // ─── Ctrl+S to save, Escape to close info pane ─────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (activeLoadoutId) {
+          saveLoadoutData(activeLoadoutId, buildSheetData());
+        }
+      }
       if (e.key === 'Escape' && (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow)) {
         e.preventDefault();
         setInfoPanePinned(false);
@@ -507,7 +513,7 @@ export function useApp() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow]);
+  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow, activeLoadoutId, buildSheetData]);
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   const buildSheetData = useCallback(() => {
@@ -987,7 +993,10 @@ export function useApp() {
     if (activeLoadoutId) {
       saveLoadoutData(activeLoadoutId, buildSheetData());
     }
-    const { tree: newTree, node } = addLoadoutNode(loadoutTree, 'New Loadout', parentId);
+    const existingNames = new Set(loadoutTree.nodes.map((n) => n.name));
+    let num = 1;
+    while (existingNames.has(`Loadout ${num}`)) num++;
+    const { tree: newTree, node } = addLoadoutNode(loadoutTree, `Loadout ${num}`, parentId);
     setLoadoutTree(newTree);
     saveLoadoutTree(newTree);
 

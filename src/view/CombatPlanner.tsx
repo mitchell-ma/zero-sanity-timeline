@@ -286,8 +286,8 @@ export default function CombatPlanner({
     [events, slots, draggingIds],
   );
   const invalidResourceIds = useMemo(
-    () => resourceGraphs ? validateResources(events, resourceGraphs, slots) : new Map<string, string>(),
-    [events, resourceGraphs, slots],
+    () => resourceGraphs ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined) : new Map<string, string>(),
+    [events, resourceGraphs, slots, draggingIds],
   );
   const invalidEmpoweredIds = useMemo(
     () => validateEmpowered(events),

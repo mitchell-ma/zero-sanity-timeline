@@ -624,11 +624,13 @@ export function validateResources(
   events: TimelineEvent[],
   resourceGraphs: Map<string, ResourceGraphData>,
   slots: Slot[],
+  skipIds?: ReadonlySet<string>,
 ): Map<string, string> {
   const map = new Map<string, string>();
   const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
 
   for (const ev of events) {
+    if (skipIds?.has(ev.id)) continue;
     if (ev.columnId === 'ultimate') {
       const ultKey = `${ev.ownerId}-ultimate`;
       const graph = resourceGraphs.get(ultKey);
