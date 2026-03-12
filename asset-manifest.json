@@ -1,7 +1,12 @@
 {
   "files": {
-    "main.css": "/zero-sanity-timeline/static/css/main.e1f11d80.css",
-    "main.js": "/zero-sanity-timeline/static/js/main.f86cff16.js",
+    "main.css": "/zero-sanity-timeline/static/css/main.89088842.css",
+    "main.js": "/zero-sanity-timeline/static/js/main.2f43ed0a.js",
+    "static/js/429.24641926.chunk.js": "/zero-sanity-timeline/static/js/429.24641926.chunk.js",
+    "static/js/487.44986f22.chunk.js": "/zero-sanity-timeline/static/js/487.44986f22.chunk.js",
+    "static/js/826.c0150456.chunk.js": "/zero-sanity-timeline/static/js/826.c0150456.chunk.js",
+    "static/js/983.37e71d7c.chunk.js": "/zero-sanity-timeline/static/js/983.37e71d7c.chunk.js",
+    "static/js/963.10a0d45d.chunk.js": "/zero-sanity-timeline/static/js/963.10a0d45d.chunk.js",
     "static/media/Last_Rite_Banner.webp": "/zero-sanity-timeline/static/media/Last_Rite_Banner.cf6c15d2029d6e2ebabe.webp",
     "static/media/Xaihi_Banner.webp": "/zero-sanity-timeline/static/media/Xaihi_Banner.4e7acbddc9e7399a8458.webp",
     "static/media/Gilberta_Banner.webp": "/zero-sanity-timeline/static/media/Gilberta_Banner.e6c823fc2c164b593990.webp",
@@ -429,11 +434,16 @@
     "static/media/Tangtang_icon.png": "/zero-sanity-timeline/static/media/Tangtang_icon.f94a4dc29291703a7e6e.png",
     "static/media/Rossi_icon.png": "/zero-sanity-timeline/static/media/Rossi_icon.14440ffb385c33812f3b.png",
     "index.html": "/zero-sanity-timeline/index.html",
-    "main.e1f11d80.css.map": "/zero-sanity-timeline/static/css/main.e1f11d80.css.map",
-    "main.f86cff16.js.map": "/zero-sanity-timeline/static/js/main.f86cff16.js.map"
+    "main.89088842.css.map": "/zero-sanity-timeline/static/css/main.89088842.css.map",
+    "main.2f43ed0a.js.map": "/zero-sanity-timeline/static/js/main.2f43ed0a.js.map",
+    "429.24641926.chunk.js.map": "/zero-sanity-timeline/static/js/429.24641926.chunk.js.map",
+    "487.44986f22.chunk.js.map": "/zero-sanity-timeline/static/js/487.44986f22.chunk.js.map",
+    "826.c0150456.chunk.js.map": "/zero-sanity-timeline/static/js/826.c0150456.chunk.js.map",
+    "983.37e71d7c.chunk.js.map": "/zero-sanity-timeline/static/js/983.37e71d7c.chunk.js.map",
+    "963.10a0d45d.chunk.js.map": "/zero-sanity-timeline/static/js/963.10a0d45d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e1f11d80.css",
-    "static/js/main.f86cff16.js"
+    "static/css/main.89088842.css",
+    "static/js/main.2f43ed0a.js"
   ]
 }
