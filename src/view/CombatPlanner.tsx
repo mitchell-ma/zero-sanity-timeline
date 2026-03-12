@@ -35,17 +35,27 @@ import {
   SkillType,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
-import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInflictions';
+import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
   computeTimeStopRegions,
-  preConsumptionValue,
   getAlwaysAvailableComboSlots,
   validateComboWindows,
   validateResources,
   validateEmpowered,
   validateTimeStops,
+  checkVariantAvailability,
+  checkComboWindowAvailability,
+  computeSpInsufficientZones,
+  clampDeltaBySpZones,
+  wouldOverlapSiblings,
+  isBlockedByTimeStop,
+  computeProspectiveRange,
+  checkResourceAvailability,
+  wouldSegmentAdditionOverlap,
+  isDuplicatePlacementInSpZone,
+  clampDeltaByComboWindow,
 } from '../controller/timeline/eventValidator';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
@@ -60,6 +70,7 @@ interface DragState {
   startFrames: Map<string, number>; // original startFrame per event
   monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
   lastAppliedDelta: number; // tracks the delta already applied to events (for incremental batch moves)
+  spZonesSnapshot: Map<string, import('../controller/timeline/eventValidator').SpZone[]>; // SP zones captured at drag start
 }
 
 interface MarqueeState {
@@ -291,71 +302,10 @@ export default function CombatPlanner({
     [events, timeStopRegions],
   );
 
-  // Compute SP-insufficient zones: frame ranges where SP < battle skill cost.
-  // Returns a map from ownerId → array of { start, end } gaps.
-  const spInsufficientZones = useMemo(() => {
-    const zones = new Map<string, { start: number; end: number }[]>();
-    if (!resourceGraphs) return zones;
-    const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
-    const graph = resourceGraphs.get(spKey);
-    if (!graph || graph.points.length < 2) return zones;
-    const pts = graph.points;
-
-    // For each slot with a battle column, compute insufficient zones
-    for (const slot of slots) {
-      if (!slot.operator) continue;
-      const cost = slot.operator.skills.battle.skillPointCost ?? 100;
-
-      // Walk through graph points and find frame ranges where SP < cost
-      const gaps: { start: number; end: number }[] = [];
-      let insuffStart: number | null = pts[0].value < cost ? pts[0].frame : null;
-
-      for (let i = 1; i < pts.length; i++) {
-        const prev = pts[i - 1];
-        const curr = pts[i];
-
-        if (prev.frame === curr.frame) {
-          // Instant change (cost consumption) at same frame
-          if (curr.value < cost && insuffStart === null) {
-            insuffStart = curr.frame;
-          } else if (curr.value >= cost && insuffStart !== null) {
-            gaps.push({ start: insuffStart, end: curr.frame });
-            insuffStart = null;
-          }
-          continue;
-        }
-
-        // Linear segment: find crossing point if it crosses the threshold
-        const prevBelow = prev.value < cost;
-        const currBelow = curr.value < cost;
-
-        if (prevBelow && !currBelow) {
-          // Crosses upward — find exact crossing frame
-          const t = (cost - prev.value) / (curr.value - prev.value);
-          const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
-          if (insuffStart !== null) {
-            gaps.push({ start: insuffStart, end: crossFrame });
-            insuffStart = null;
-          }
-        } else if (!prevBelow && currBelow) {
-          // Crosses downward — find exact crossing frame
-          const t = (cost - prev.value) / (curr.value - prev.value);
-          const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
-          insuffStart = crossFrame;
-        }
-      }
-
-      if (insuffStart !== null) {
-        const lastFrame = pts[pts.length - 1].frame;
-        gaps.push({ start: insuffStart, end: lastFrame });
-      }
-
-      if (gaps.length > 0) {
-        zones.set(slot.slotId, gaps);
-      }
-    }
-    return zones;
-  }, [resourceGraphs, slots]);
+  const spInsufficientZones = useMemo(
+    () => resourceGraphs ? computeSpInsufficientZones(resourceGraphs, slots) : new Map(),
+    [resourceGraphs, slots],
+  );
 
   const filteredEnemies = useMemo(() => {
     if (!allEnemies) return [];
@@ -872,16 +822,7 @@ export default function CombatPlanner({
           if (ghostFrame < 0 || ghostFrame >= TOTAL_FRAMES) { valid = false; break; }
           const ghost = { ...src, id: `__dup_ghost_${src.id}` };
           if (wouldOverlapNonOverlappable(eventsRef.current, ghost, ghostFrame)) { valid = false; break; }
-          // SP zone check for battle skill duplicates
-          if (!debugModeRef.current && src.columnId === 'battle') {
-            const zones = spZonesRef.current.get(src.ownerId);
-            if (zones) {
-              for (const z of zones) {
-                if (ghostFrame >= z.start && ghostFrame < z.end) { valid = false; break; }
-              }
-            }
-          }
-          if (!valid) break;
+          if (!debugModeRef.current && isDuplicatePlacementInSpZone(src, ghostFrame, spZonesRef.current)) { valid = false; break; }
         }
         setDupValid(valid);
       }
@@ -916,33 +857,20 @@ export default function CombatPlanner({
 
       // SP zone clamping: prevent battle events from being dragged into
       // SP-insufficient zones (where SP < skill cost).
+      // Uses zones snapshot from drag start so zones don't shift as the event moves.
       if (!debugModeRef.current) {
-        const spZones = spZonesRef.current;
+        const spZones = dragRef.current.spZonesSnapshot;
         for (const eid of eventIds) {
-          const ev = eventsRef.current.find((e) => e.id === eid);
-          if (!ev || ev.columnId !== 'battle') continue;
-          const zones = spZones.get(ev.ownerId);
-          if (!zones || zones.length === 0) continue;
           const orig = startFrames.get(eid) ?? 0;
-          const target = orig + clampedDelta;
-          // Find if target lands in an insufficient zone — clamp to the edge
-          // the event entered from (so it stops, not snaps past the zone).
-          // Skip zones that contain the event's current position, since
-          // those are created by the event's own SP cost and would trap it.
-          const currentFrame = ev.startFrame;
-          for (const zone of zones) {
-            if (currentFrame >= zone.start && currentFrame < zone.end) continue;
-            if (target >= zone.start && target < zone.end) {
-              if (clampedDelta >= 0) {
-                // Dragging down (later) → stop just before zone
-                clampedDelta = Math.max(0, zone.start - 1 - orig);
-              } else {
-                // Dragging up (earlier) → stop just after zone
-                clampedDelta = Math.min(0, zone.end - orig);
-              }
-              break;
-            }
-          }
+          clampedDelta = clampDeltaBySpZones(clampedDelta, eid, eventsRef.current, orig, spZones);
+        }
+      }
+
+      // Combo window clamping: keep combo events within their activation window.
+      if (!debugModeRef.current) {
+        for (const eid of eventIds) {
+          const orig = startFrames.get(eid) ?? 0;
+          clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, eventsRef.current, orig, eventsRef.current);
         }
       }
 
@@ -1128,7 +1056,7 @@ export default function CombatPlanner({
           startFrames.set(ev.id, ev.startFrame);
         }
       }
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0 };
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, spZonesSnapshot: spZonesRef.current };
       setDraggingIds(new Set(draggedIds));
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
@@ -1136,7 +1064,7 @@ export default function CombatPlanner({
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0 };
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, spZonesSnapshot: spZonesRef.current };
       setDraggingIds(new Set([eventId]));
     }
   }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart]);
@@ -1281,39 +1209,14 @@ export default function CombatPlanner({
     const headerItem = { label: `Add @ ${frameToDetailLabel(atFrame)}`, header: true };
 
     // Helper: get resource value at a frame from a resource graph
-    const resourceValueAt = (graphKey: string, frame: number): number | null => {
-      return preConsumptionValue(resourceGraphs?.get(graphKey), frame);
-    };
 
     // Helper: check if placing a new event with the given non-overlappable range would overlap siblings
-    const checkOverlap = (ownerId: string, columnId: string, range: number): boolean => {
-      if (range <= 0) return false;
-      return events.some((sib) => {
-        if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
-        const sibRange = sib.nonOverlappableRange
-          ?? (sib.segments ? sib.segments.reduce((sum, s) => sum + s.durationFrames, 0) : 0);
-        if (sibRange > 0 && atFrame >= sib.startFrame && atFrame < sib.startFrame + sibRange) return true;
-        if (sib.startFrame >= atFrame && sib.startFrame < atFrame + range) return true;
-        return false;
-      });
-    };
+    const checkOverlap = (ownerId: string, columnId: string, range: number) =>
+      wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
 
-    // Check if placing an event at atFrame is blocked by an ultimate animation (time-stop)
-    const inUltTimeStop = col.columnId !== 'ultimate' && timeStopRegions.some(
-      (stop) => stop.sourceColumnId === 'ultimate' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
-    );
-    // Check if placing a battle skill at atFrame is blocked by a combo animation (time-stop)
-    const inComboTimeStop = col.columnId === 'battle' && timeStopRegions.some(
-      (stop) => stop.sourceColumnId === 'combo' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
-    );
-    const inTimeStop = inUltTimeStop || inComboTimeStop;
-    const timeStopReason = inUltTimeStop ? 'Ultimate animation active' : inComboTimeStop ? 'Combo animation active' : undefined;
-
-    // Compute the non-overlappable range for a prospective event
-    const prospectiveRange = (defaultSkill: { defaultActivationDuration?: number; segments?: any[] } | null): number => {
-      if (defaultSkill?.segments) return defaultSkill.segments.reduce((sum: number, s: any) => sum + (s.durationFrames ?? 0), 0);
-      return defaultSkill?.defaultActivationDuration ?? 0;
-    };
+    const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions);
+    const inTimeStop = timeStop.blocked;
+    const timeStopReason = timeStop.reason;
 
     if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
       // Dynamic-split: all micro-column types as options
@@ -1398,23 +1301,12 @@ export default function CombatPlanner({
       const rawName = col.defaultEvent?.name ?? col.label;
       const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
       if (col.columnId === 'combo') {
-        const windowEvents = events.filter(
-          (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === col.ownerId,
-        );
-        const matchingWindow = windowEvents.find((w) => {
-          const endFrame = w.startFrame + w.activationDuration;
-          return atFrame >= w.startFrame && atFrame < endFrame;
-        });
-        const inWindow = !!matchingWindow;
-        const windowConsumed = inWindow && events.some((ev) =>
-          ev.columnId === 'combo' && ev.ownerId === col.ownerId &&
-          ev.startFrame >= matchingWindow!.startFrame && ev.startFrame < matchingWindow!.startFrame + matchingWindow!.activationDuration,
-        );
-        const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(col.defaultEvent ?? null));
-        const disabled = !debugMode && (inTimeStop || !inWindow || windowConsumed || overlap);
-        const reason = inTimeStop ? timeStopReason : !inWindow ? 'No trigger active' : windowConsumed ? 'Combo skill already activated' : overlap ? 'Would overlap another event' : undefined;
-
-        const comboTriggerColumnId = matchingWindow?.comboTriggerColumnId;
+        const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
+        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null));
+        const disabled = !debugMode && (inTimeStop || !comboAvail.available || overlap);
+        const reason = inTimeStop ? timeStopReason
+          : !comboAvail.available ? comboAvail.reason
+          : overlap ? 'Would overlap another event' : undefined;
 
         onContextMenu({
           x: e.clientX, y: e.clientY,
@@ -1423,7 +1315,7 @@ export default function CombatPlanner({
             {
               label: eventName,
               action: () => onAddEvent(col.ownerId, col.columnId, atFrame,
-                { ...col.defaultEvent, comboTriggerColumnId }),
+                { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId }),
               disabled,
               disabledReason: disabled ? reason : undefined,
             },
@@ -1431,52 +1323,25 @@ export default function CombatPlanner({
         });
       } else if (col.eventVariants && col.eventVariants.length > 0) {
         // Multiple event variants (e.g. Laevatain battle skill)
-        // Check if the ultimate is active at this frame (for enhanced variant gating)
-        const ultActive = events.some((ev) =>
-          ev.ownerId === col.ownerId && ev.columnId === 'ultimate'
-          && atFrame >= ev.startFrame + ev.activationDuration
-          && atFrame < ev.startFrame + ev.activationDuration + ev.activeDuration,
-        );
-        // SP check for battle skill variants
-        let spInsufficient = false;
-        let spReason: string | undefined;
-        if (col.columnId === 'battle') {
-          const slot = slots.find((s) => s.slotId === col.ownerId);
-          const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
-          const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
-          const spVal = resourceValueAt(spKey, atFrame);
-          if (spVal !== null && spVal < spCost) {
-            spInsufficient = true;
-            spReason = `Not enough SP (${Math.floor(spVal)}/${spCost})`;
-          }
-        }
-        // Check Melting Flame stacks active at this frame (for empowered variant gating)
-        const mfActiveCount = events.filter(
-          (ev) =>
-            ev.ownerId === col.ownerId &&
-            ev.columnId === 'melting-flame' &&
-            ev.startFrame <= atFrame &&
-            ev.startFrame + ev.activeDuration > atFrame,
-        ).length;
+        const spAvail = resourceGraphs ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots) : { sufficient: true };
+        const spInsufficient = !spAvail.sufficient;
+        const spReason = spAvail.reason;
 
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [
             headerItem,
             ...col.eventVariants.map((v) => {
-              const isEnhanced = v.name.includes('ENHANCED');
-              const isEmpowered = v.name.includes('EMPOWERED');
-              const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(v));
-              const mfInsufficient = isEmpowered && mfActiveCount < 4;
-              const disabled = !debugMode && (inTimeStop || v.disabled || (isEnhanced && !ultActive) || mfInsufficient || overlap || spInsufficient);
+              const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame);
+              const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v));
+              const disabled = !debugMode && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient);
               const displayName = v.isPerfectDodge ? 'Dodge'
                 : col.columnId === 'dash' ? 'Dash'
                 : COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
               const reason = v.disabledReason
                 ?? (inTimeStop ? timeStopReason
                 : spInsufficient ? spReason
-                : isEnhanced && !ultActive ? 'No ultimate active'
-                : mfInsufficient ? `Requires max Melting Flame (${mfActiveCount}/4)`
+                : availability.disabled ? availability.reason
                 : overlap ? 'Would overlap another event'
                 : undefined);
               return {
@@ -1503,34 +1368,10 @@ export default function CombatPlanner({
           ],
         });
       } else {
-        const overlap = checkOverlap(col.ownerId, col.columnId, prospectiveRange(col.defaultEvent ?? null));
-
-        // Resource checks
-        let resourceDisabled = false;
-        let resourceReason: string | undefined;
-        if (col.columnId === 'ultimate') {
-          const ultKey = `${col.ownerId}-ultimate`;
-          const graph = resourceGraphs?.get(ultKey);
-          if (graph) {
-            const val = resourceValueAt(ultKey, atFrame);
-            if (val !== null && val < graph.max) {
-              resourceDisabled = true;
-              resourceReason = `Not enough ultimate energy (${Math.floor(val)}/${graph.max})`;
-            }
-          }
-        } else if (col.columnId === 'battle') {
-          const slot = slots.find((s) => s.slotId === col.ownerId);
-          const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
-          const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
-          const spVal = resourceValueAt(spKey, atFrame);
-          if (spVal !== null && spVal < spCost) {
-            resourceDisabled = true;
-            resourceReason = `Not enough SP (${Math.floor(spVal)}/${spCost})`;
-          }
-        }
-
-        const disabled = !debugMode && (inTimeStop || overlap || resourceDisabled);
-        const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resourceReason;
+        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null));
+        const resAvail = resourceGraphs ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots) : { sufficient: true };
+        const disabled = !debugMode && (inTimeStop || overlap || !resAvail.sufficient);
+        const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resAvail.reason;
         onContextMenu({
           x: e.clientX, y: e.clientY,
           items: [
@@ -1561,23 +1402,8 @@ export default function CombatPlanner({
     if (!allSegments || allSegments.length <= 1) return [];
     const addable = allSegments.filter((s) => s.label);
     if (addable.length === 0) return [];
-    // Current non-overlappable range
-    const currentRange = ev.nonOverlappableRange
-      ?? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0);
-    // Siblings in the same column
-    const siblings = events.filter(
-      (sib) => sib.id !== ev.id && sib.ownerId === ev.ownerId && sib.columnId === ev.columnId,
-    );
     return addable.map((s) => {
-      const newRange = currentRange + s.durationFrames;
-      // Check if expanded range would overlap a sibling
-      const wouldOverlap = siblings.some((sib) => {
-        const sibRange = sib.nonOverlappableRange
-          ?? (sib.segments ? sib.segments.reduce((sum, seg) => sum + seg.durationFrames, 0) : 0);
-        if (sibRange > 0 && ev.startFrame >= sib.startFrame && ev.startFrame < sib.startFrame + sibRange) return true;
-        if (newRange > 0 && sib.startFrame >= ev.startFrame && sib.startFrame < ev.startFrame + newRange) return true;
-        return false;
-      });
+      const wouldOverlap = wouldSegmentAdditionOverlap(ev, s.durationFrames, events);
       return {
         label: `Add Sequence ${s.label}`,
         action: () => { onAddSegment?.(eventId, s.label!); onContextMenu(null); },

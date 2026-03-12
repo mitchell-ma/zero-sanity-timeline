@@ -227,6 +227,7 @@ export function computeSlots(
       weaponName: lo?.weaponName ?? undefined,
       tacticalName: lo?.tacticalName ?? undefined,
       gearSetType,
+      comboSkillLevel: loadoutStats[slotId]?.comboSkillLevel,
     };
   });
 }

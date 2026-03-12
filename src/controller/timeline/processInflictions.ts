@@ -348,7 +348,7 @@ const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
 };
 
 /** Maps self-targeted grant status → team-level derived column. */
-const TEAM_STATUS_COLUMN: Record<string, string> = {
+export const TEAM_STATUS_COLUMN: Record<string, string> = {
   [StatusType.SQUAD_BUFF]: StatusType.LINK,
 };
 
@@ -466,7 +466,7 @@ function validateTimeStopStarts(
 }
 
 /** Source information for event status changes (consumed/refreshed). */
-interface StatusSource {
+export interface StatusSource {
   ownerId: string;
   skillName?: string;
 }
@@ -548,6 +548,14 @@ function deriveComboActivationWindows(
     comboStopIdsBySlot.get(ev.ownerId)!.add(ev.id);
   }
 
+  // Pre-index combo events per slot for cooldown checks
+  const comboEventsBySlot = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    if (ev.columnId !== 'combo') continue;
+    if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
+    comboEventsBySlot.get(ev.ownerId)!.push(ev);
+  }
+
   const addWindow = (
     trigger: TriggerConditionType,
     event: TimelineEvent,
@@ -562,6 +570,16 @@ function deriveComboActivationWindows(
 
       // Skip self-trigger
       if (event.sourceOwnerId === wiring.slotId) continue;
+
+      // Skip if combo skill is on cooldown at trigger time
+      const slotCombos = comboEventsBySlot.get(wiring.slotId);
+      if (slotCombos) {
+        const onCooldown = slotCombos.some((ce) => {
+          const totalDur = ce.activationDuration + ce.activeDuration + ce.cooldownDuration;
+          return triggerFrame >= ce.startFrame && triggerFrame < ce.startFrame + totalDur;
+        });
+        if (onCooldown) continue;
+      }
 
       // Check comboForbidsActiveColumns
       const forbids = cap.comboForbidsActiveColumns;
@@ -1161,7 +1179,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
 }
 
 /** Maps absorption exchange status → columnId for generated events. */
-const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
+export const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
   MELTING_FLAME: 'melting-flame',
   THUNDERLANCE: 'thunderlance',
 };

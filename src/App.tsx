@@ -162,6 +162,7 @@ export default function App() {
             compact={!app.scrollSynced}
             showRealTime={app.showRealTime}
             contentFrames={app.contentFrames}
+            onDamageClick={app.handleDamageClick}
           />
         </Suspense>
       </div>
@@ -232,6 +233,15 @@ export default function App() {
             config={app.editingResourceConfig}
             onChange={(cfg) => app.handleResourceConfigChange(app.editingResourceKey!, cfg)}
             onClose={app.handleCloseResourcePane}
+            triggerClose={app.infoPaneClosing}
+            pinned={app.infoPanePinned}
+            onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+          />
+        ) : app.editingDamageRow ? (
+          <InformationPane
+            mode="damage"
+            damageRow={app.editingDamageRow}
+            onClose={app.handleCloseDamagePane}
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}

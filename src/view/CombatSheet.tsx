@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
 import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
 import {
@@ -47,12 +47,13 @@ interface CombatSheetProps {
   compact?: boolean;
   showRealTime?: boolean;
   contentFrames?: number;
+  onDamageClick?: (row: DamageTableRow) => void;
 }
 
 export default function CombatSheet({
   slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
-  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp,
+  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -129,20 +130,27 @@ export default function CombatSheet({
   }, [onScrollProp]);
 
   // Find nearest row within a generous pixel tolerance for hover highlighting
-  const hoveredRowKey = useMemo(() => {
+  const hoveredRow = useMemo(() => {
     if (hoverFrame == null || rows.length === 0) return null;
     const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom)); // 8px hit area
-    let bestKey: string | null = null;
+    let best: DamageTableRow | null = null;
     let bestDist = Infinity;
     for (const row of rows) {
       const dist = Math.abs(row.absoluteFrame - hoverFrame);
       if (dist < bestDist && dist <= toleranceFrames) {
         bestDist = dist;
-        bestKey = row.key;
+        best = row;
       }
     }
-    return bestKey;
+    return best;
   }, [hoverFrame, rows, zoom]);
+  const hoveredRowKey = hoveredRow?.key ?? null;
+  const hoveredColumnKey = hoveredRow?.columnKey ?? null;
+
+  // Track row+column hover from mouse interaction on cells (for + cross highlight)
+  const [mouseHover, setMouseHover] = useState<{ rowKey: string; colKey: string } | null>(null);
+  const activeRowKey = mouseHover?.rowKey ?? hoveredRowKey;
+  const activeColumnKey = mouseHover?.colKey ?? hoveredColumnKey;
 
   // Compute clamped top positions so rows never overlap
   const rowLayout = useMemo(() => {
@@ -239,7 +247,7 @@ export default function CombatSheet({
           return (
             <div
               key={col.key}
-              className="dmg-header-skill"
+              className={`dmg-header-skill${col.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
               style={{
                 '--op-color': col.color,
                 flex: colFlexMap.get(col.key) ?? 1,
@@ -283,7 +291,10 @@ export default function CombatSheet({
                     && sf.segmentIndex === row.segmentIndex
                     && sf.frameIndex === row.frameIndex,
                 ) ?? false}
-                hovered={row.key === hoveredRowKey}
+                hovered={row.key === activeRowKey}
+                highlightedColumnKey={activeColumnKey}
+                onCellHover={setMouseHover}
+                onDamageClick={onDamageClick}
                 hasBossHp={hasBossHp}
                 bossMaxHp={bossMaxHp}
                 formatTime={formatTime}
@@ -296,13 +307,16 @@ export default function CombatSheet({
   );
 }
 
-function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, hasBossHp, bossMaxHp, formatTime }: {
+function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, highlightedColumnKey, onCellHover, onDamageClick, hasBossHp, bossMaxHp, formatTime }: {
   row: DamageTableRow;
   tableColumns: DamageTableColumn[];
   colFlexMap: Map<string, number>;
   top: number;
   selected: boolean;
   hovered: boolean;
+  highlightedColumnKey: string | null;
+  onCellHover: (hover: { rowKey: string; colKey: string } | null) => void;
+  onDamageClick?: (row: DamageTableRow) => void;
   hasBossHp: boolean;
   bossMaxHp: number | null;
   formatTime: (frame: number) => string;
@@ -315,6 +329,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, hasB
       </div>
       {tableColumns.map((col) => {
         const isMatch = col.key === row.columnKey;
+        const isColHighlighted = col.key === highlightedColumnKey;
         const flex = colFlexMap.get(col.key) ?? 1;
         let displayValue = '';
         if (isMatch) {
@@ -329,9 +344,12 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, hasB
         return (
           <div
             key={col.key}
-            className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}`}
+            className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${isMatch && row.params ? ' dmg-cell-clickable' : ''}`}
             style={isMatch ? { color: col.color, flex } : { flex }}
             title={isMatch && row.damage != null ? `${row.label}\n${row.damage.toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(0)}% ATK)` : ''}` : undefined}
+            onClick={isMatch && row.params ? () => onDamageClick?.(row) : undefined}
+            onMouseEnter={() => onCellHover({ rowKey: row.key, colKey: col.key })}
+            onMouseLeave={() => onCellHover(null)}
           >
             {displayValue}
           </div>

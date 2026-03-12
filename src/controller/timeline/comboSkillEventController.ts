@@ -1,5 +1,5 @@
 import { TimelineEvent } from '../../consts/viewTypes';
-import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInflictions';
+import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInteractions';
 
 /**
  * Controller for combo skill event validation.

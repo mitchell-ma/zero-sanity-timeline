@@ -3,6 +3,7 @@ import { frameToPx, durationToPx, pxPerFrame, TOTAL_FRAMES } from '../utils/time
 import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, HitType, STATUS_ELEMENT } from '../consts/enums';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
+import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
   return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
@@ -137,45 +138,7 @@ function EventBlock({
 
     if (totalHeight <= 0) return null;
 
-    // Validation: collect warnings for non-contiguous segments and frames
-    const warnings: string[] = [];
-    if (allSegmentLabels && allSegmentLabels.length > 1 && segments.length < allSegmentLabels.length) {
-      const presentLabels = new Set(segments.map((s) => s.label));
-      const indices = allSegmentLabels
-        .map((l, i) => presentLabels.has(l) ? i : -1)
-        .filter((i) => i >= 0);
-      for (let j = 1; j < indices.length; j++) {
-        if (indices[j] !== indices[j - 1] + 1) {
-          const missingLabels = allSegmentLabels.filter((l) => !presentLabels.has(l));
-          warnings.push(`Non-contiguous sequences (missing: ${missingLabels.join(', ')})`);
-          break;
-        }
-      }
-    }
-    // Frame contiguity per segment
-    if (allDefaultSegments) {
-      for (let si = 0; si < segments.length; si++) {
-        const seg = segments[si];
-        const defaultSeg = allDefaultSegments.find((ds) => ds.label === seg.label) ?? allDefaultSegments[si];
-        const allFrameOffsets = defaultSeg?.frames?.map((f) => f.offsetFrame) ?? [];
-        const presentOffsets = new Set((seg.frames ?? []).map((f) => f.offsetFrame));
-        if (allFrameOffsets.length > 0 && presentOffsets.size < allFrameOffsets.length) {
-          const presentIndices = allFrameOffsets
-            .map((o, i) => presentOffsets.has(o) ? i : -1)
-            .filter((i) => i >= 0);
-          // Check contiguity: present frames must form a consecutive run starting at index 0
-          const isNonContiguous = presentIndices.length === 0 ||
-            presentIndices[0] !== 0 ||
-            presentIndices.some((idx, j) => j > 0 && idx !== presentIndices[j - 1] + 1);
-          if (isNonContiguous) {
-            const missingNums = allFrameOffsets
-              .map((o, i) => presentOffsets.has(o) ? null : i + 1)
-              .filter((n) => n !== null);
-            warnings.push(`Sequence ${seg.label ?? si + 1}: non-contiguous frames (missing: ${missingNums.join(', ')})`);
-          }
-        }
-      }
-    }
+    const warnings = validateSegmentContiguity(segments, allSegmentLabels, allDefaultSegments);
 
     const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${derived ? ' event-wrap--derived' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
@@ -198,7 +161,8 @@ function EventBlock({
 
       const isFirst = i === 0;
       const isLast = i === segments.length - 1;
-      const alpha = passive ? 0.15 : 0.55 + (i % 2) * 0.15;
+      const isCooldown = seg.label === 'Cooldown';
+      const alpha = passive ? 0.15 : isCooldown ? 0.15 : 0.55 + (i % 2) * 0.15;
       const borderRadius = isFirst && isLast ? '2px'
         : isFirst ? '2px 2px 0 0'
         : isLast ? '0 0 2px 2px'
@@ -211,9 +175,9 @@ function EventBlock({
           style={{
             top: segTopPx,
             height: segH,
-            background: hexAlpha(color, alpha),
-            border: passive ? 'none' : `1px solid ${hexAlpha(color, alpha + 0.15)}`,
-            borderTop: passive ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, 0.5)}`,
+            background: isCooldown ? stripedBg(color) : hexAlpha(color, alpha),
+            border: passive ? 'none' : isCooldown ? '1px solid rgba(255,255,255,0.1)' : `1px solid ${hexAlpha(color, alpha + 0.15)}`,
+            borderTop: passive ? 'none' : isCooldown ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, 0.5)}`,
             borderRadius: passive ? '2px' : borderRadius,
             padding: 0,
             margin: 0,
@@ -221,7 +185,7 @@ function EventBlock({
           onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
         >
           {(passive || segH > 14) && (seg.label || (isFirst && label)) && (
-            <span className="event-block-label" style={passive ? undefined : { color: '#fff' }}>{seg.label ?? label}</span>
+            <span className="event-block-label" style={passive ? undefined : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }}>{seg.label ?? label}</span>
           )}
           {/* Frame diamonds */}
           {seg.frames?.map((f, fi) => {

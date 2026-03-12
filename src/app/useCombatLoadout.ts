@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { CombatLoadout } from '../controller/combat-loadout';
-import { Operator, TimelineEvent } from '../consts/viewTypes';
+import { TimelineEvent } from '../consts/viewTypes';
+import type { Slot } from '../controller/timeline/columnBuilder';
 
-/** Manages CombatLoadout controller lifecycle and operator syncing. */
+/** Manages CombatLoadout controller lifecycle and slot syncing. */
 export function useCombatLoadout(
   slotIds: string[],
-  operators: (Operator | null)[],
+  slots: Slot[],
   events: TimelineEvent[],
 ) {
   const combatLoadoutRef = useRef<CombatLoadout>(null!);
@@ -14,14 +15,12 @@ export function useCombatLoadout(
     combatLoadoutRef.current.setSlotIds(slotIds);
   }
 
-  // Sync operators into loadout
+  // Sync slots (operators + SP costs + trigger wiring)
   useEffect(() => {
-    operators.forEach((op, i) => {
-      combatLoadoutRef.current.setOperator(i, op);
-    });
-  }, [operators]);
+    combatLoadoutRef.current.syncSlots(slots);
+  }, [slots]);
 
-  // Keep common slot aware of events for SP tracking
+  // Recompute combo windows when events change
   useEffect(() => {
     combatLoadoutRef.current.recomputeWindows(events);
   }, [events]);

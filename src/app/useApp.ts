@@ -10,8 +10,9 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHead
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Enemy, Column } from '../consts/viewTypes';
+import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { CombatLoadout } from '../controller/combat-loadout';
-import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInflictions';
+import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
   createEvent,
@@ -24,6 +25,8 @@ import {
   getNextEventId,
   filterEventsToColumns,
   buildValidColumnPairs,
+  setCombatLoadout,
+  hasSufficientSP,
 } from '../controller/timeline/eventController';
 import {
   serializeSheet,
@@ -73,6 +76,8 @@ import {
   findEventDefaults,
   getDefaultEnemyStats,
 } from '../controller/appStateController';
+import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
+import { StatType } from '../consts/enums';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
 
@@ -159,6 +164,7 @@ export function useApp() {
   const [editingSlotId,    setEditingSlotId]    = useState<string | null>(null);
   const [editingEnemyOpen, setEditingEnemyOpen] = useState(false);
   const [editingResourceKey, setEditingResourceKey] = useState<string | null>(null);
+  const [editingDamageRow, setEditingDamageRow] = useState<DamageTableRow | null>(null);
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
@@ -238,7 +244,7 @@ export function useApp() {
   );
 
   const { combatLoadout } =
-    useCombatLoadout(SLOT_IDS, operators, processedEvents);
+    useCombatLoadout(SLOT_IDS, slots, processedEvents);
 
   const tacticalNamesBySlot = useMemo(() => {
     const map: Record<string, string | undefined> = {};
@@ -256,8 +262,21 @@ export function useApp() {
     return map;
   }, [loadoutStats]);
 
+  const gaugeGainMultipliers = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const slotId of SLOT_IDS) {
+      const op = operators[SLOT_IDS.indexOf(slotId)];
+      if (!op) continue;
+      const agg = aggregateLoadoutStats(op.id, loadouts[slotId] ?? EMPTY_LOADOUT, loadoutStats[slotId] ?? getDefaultLoadoutStats(op));
+      if (agg) {
+        map[slotId] = agg.stats[StatType.ULTIMATE_GAIN_EFFICIENCY] ?? 0;
+      }
+    }
+    return map;
+  }, [operators, loadouts, loadoutStats]);
+
   const { resourceGraphs, tacticalEvents } = useResourceGraphs(
-    operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides,
+    operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
   );
 
   const allProcessedEvents = useMemo(
@@ -266,10 +285,6 @@ export function useApp() {
   );
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
-  const resourceGraphsRef = useRef(resourceGraphs);
-  resourceGraphsRef.current = resourceGraphs;
-  const slotsRef = useRef(slots);
-  slotsRef.current = slots;
 
   const staggerBreaks = useMemo(
     () => combatLoadout.commonSlot.stagger.getBreaks(),
@@ -395,6 +410,11 @@ export function useApp() {
     });
   }, [resourceConfigs, combatLoadout, spKey]);
 
+  // ─── Sync combat context to event controller ────────────────────────────
+  useEffect(() => {
+    setCombatLoadout(combatLoadout);
+  }, [combatLoadout]);
+
   // ─── Stagger sync effects ────────────────────────────────────────────────
   useEffect(() => {
     const stagger = combatLoadout.commonSlot.stagger;
@@ -479,7 +499,7 @@ export function useApp() {
   // ─── Escape to close info pane ───────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey)) {
+      if (e.key === 'Escape' && (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow)) {
         e.preventDefault();
         setInfoPanePinned(false);
         setInfoPaneClosing(true);
@@ -487,7 +507,7 @@ export function useApp() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey]);
+  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow]);
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   const buildSheetData = useCallback(() => {
@@ -602,7 +622,29 @@ export function useApp() {
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
-      if (!debugModeRef.current && wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
+      if (!debugModeRef.current) {
+        if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
+        // Check SP sufficiency for battle skills
+        if (columnId === 'battle' && !hasSufficientSP(ownerId, atFrame)) return prev;
+        // Empowered battle skills require 4 active Melting Flame stacks
+        if (ev.name?.includes('EMPOWERED')) {
+          const processed = processedEventsRef.current;
+          const mfCount = (processed ?? prev).filter(
+            (e) => e.ownerId === ownerId && e.columnId === 'melting-flame'
+              && e.startFrame <= atFrame && e.startFrame + e.activationDuration > atFrame,
+          ).length;
+          if (mfCount < 4) return prev;
+        }
+        // Enhanced battle skills require an active ultimate
+        if (ev.name?.includes('ENHANCED') && !ev.name?.includes('EMPOWERED')) {
+          const ultActive = prev.some(
+            (e) => e.ownerId === ownerId && e.columnId === 'ultimate'
+              && atFrame >= e.startFrame + e.activationDuration
+              && atFrame < e.startFrame + e.activationDuration + e.activeDuration,
+          );
+          if (!ultActive) return prev;
+        }
+      }
       return [...prev, ev];
     });
     setContextMenu(null);
@@ -619,36 +661,6 @@ export function useApp() {
     });
   }, []);
 
-  /** Check if a battle skill has enough SP at the given frame.
-   *  The SP graph includes this event's own consumption at its current position,
-   *  so we add back the cost when checking frames at or after the current consumption. */
-  const hasSufficientSP = useCallback((ev: TimelineEvent, frame: number): boolean => {
-    if (debugModeRef.current || ev.columnId !== 'battle') return true;
-    const graphs = resourceGraphsRef.current;
-    if (!graphs) return true;
-    const graph = graphs.get(spKey);
-    if (!graph || graph.points.length === 0) return true;
-    const slot = slotsRef.current.find((s) => s.slotId === ev.ownerId);
-    const cost = slot?.operator?.skills.battle.skillPointCost ?? 100;
-    // Find SP value at this frame (pre-consumption: highest value at frame)
-    const pts = graph.points;
-    let val = pts[0].value;
-    for (let i = 0; i < pts.length; i++) {
-      if (pts[i].frame > frame) break;
-      val = pts[i].value;
-      // At the same frame, take the max (pre-consumption level)
-      if (i + 1 < pts.length && pts[i + 1].frame === pts[i].frame) {
-        val = Math.max(val, pts[i + 1].value);
-      }
-    }
-    // The graph includes this event's own cost at ev.startFrame.
-    // If the target frame is at or after that consumption, SP is artificially
-    // low by `cost`. Add it back to get the true pre-consumption value.
-    if (frame >= ev.startFrame) {
-      val += cost;
-    }
-    return val >= cost;
-  }, [spKey]);
 
   const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
     setEvents((prev) => {
@@ -657,26 +669,19 @@ export function useApp() {
       const processed = debugModeRef.current ? null : processedEventsRef.current;
       const clamped = validateMove(prev, target, newStartFrame, processed);
       if (clamped === target.startFrame) return prev;
-      // Reject if battle skill would land in an SP-insufficient zone
-      if (!hasSufficientSP(target, clamped)) return prev;
       return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped } : ev));
     });
-  }, [hasSufficientSP]);
+  }, []);
 
   const handleMoveEvents = useCallback((ids: string[], delta: number) => {
     setEvents((prev) => {
       const processed = debugModeRef.current ? null : processedEventsRef.current;
       const clampedDelta = validateBatchMoveDelta(prev, ids, delta, processed);
       if (clampedDelta === 0) return prev;
-      // Reject if any battle skill would land in an SP-insufficient zone
-      for (const id of ids) {
-        const ev = prev.find((e) => e.id === id);
-        if (ev && !hasSufficientSP(ev, ev.startFrame + clampedDelta)) return prev;
-      }
       const idSet = new Set(ids);
       return prev.map((ev) => idSet.has(ev.id) ? { ...ev, startFrame: ev.startFrame + clampedDelta } : ev);
     });
-  }, [hasSufficientSP]);
+  }, []);
 
   const handleRemoveEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
@@ -1213,13 +1218,14 @@ export function useApp() {
       setEditContext(context ?? null);
       setEditingSlotId(null);
       setEditingResourceKey(null);
+      setEditingDamageRow(null);
       setSelectedFrames([]);
       setInfoPaneClosing(false);
     } else if (!infoPanePinned) {
-      if (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey) setInfoPaneClosing(true);
+      if (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow) setInfoPaneClosing(true);
       else { setEditingEventId(null); setEditContext(null); setSelectedFrames([]); }
     }
-  }, [infoPanePinned, editingEventId, editingSlotId, editingResourceKey]);
+  }, [infoPanePinned, editingEventId, editingSlotId, editingResourceKey, editingDamageRow]);
 
   const handleEditLoadout = useCallback((slotId: string) => {
     if (editingSlotId === slotId) {
@@ -1229,6 +1235,7 @@ export function useApp() {
       setEditingEventId(null);
       setEditingEnemyOpen(false);
       setEditingResourceKey(null);
+      setEditingDamageRow(null);
       setInfoPaneClosing(false);
     }
   }, [editingSlotId]);
@@ -1241,6 +1248,7 @@ export function useApp() {
       setEditingEventId(null);
       setEditingSlotId(null);
       setEditingResourceKey(null);
+      setEditingDamageRow(null);
       setInfoPaneClosing(false);
     }
   }, [editingEnemyOpen]);
@@ -1256,6 +1264,7 @@ export function useApp() {
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingEnemyOpen(false);
+    setEditingDamageRow(null);
   }, []);
 
   const handleCloseInfoPane = useCallback(() => {
@@ -1278,6 +1287,21 @@ export function useApp() {
     setInfoPanePinned(false);
   }, []);
 
+  const handleDamageClick = useCallback((row: DamageTableRow) => {
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingEnemyOpen(false);
+    setEditingResourceKey(null);
+    setEditingDamageRow(row);
+    setInfoPaneClosing(false);
+  }, []);
+
+  const handleCloseDamagePane = useCallback(() => {
+    setEditingDamageRow(null);
+    setInfoPaneClosing(false);
+    setInfoPanePinned(false);
+  }, []);
+
   const handleToggleScrollSync = useCallback(() => {
     setScrollSynced((p) => {
       if (!p && tlScrollRef.current && dmgScrollRef.current) {
@@ -1296,6 +1320,7 @@ export function useApp() {
     // UI state
     zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editContext,
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
+    editingDamageRow,
     infoPaneClosing, infoPanePinned, selectedFrames, hoverFrame,
     scrollSynced, showRealTime, splitPct, debugMode, warningMessage,
     loadoutRowHeight, selectEventIds,
@@ -1326,7 +1351,8 @@ export function useApp() {
     // UI handlers
     handleZoom, handleToggleSkill,
     handleEditEvent, handleEditLoadout, handleEditEnemy, handleEditResource,
-    handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane,
+    handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane, handleCloseDamagePane,
+    handleDamageClick,
     handleResizerMouseDown, handleToggleScrollSync,
     handleTimelineScroll, handleSheetScroll,
     handleDmgScrollRef, handleTlScrollRef,

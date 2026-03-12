@@ -1,5 +1,17 @@
 # Devlog
 
+## 2026-03-11 (evening)
+- Warning tooltips styled to match the dark theme instead of browser defaults
+- Battle skills blocked during combo animation time-stops, not just ultimate ones
+- SP constraint enforced when placing and dragging battle skills — can't use them when you don't have enough SP
+- Empowered battle skills require max Melting Flame stacks to use (controller-enforced, not just visual)
+- Enhanced vs empowered skill detection fixed — "Enhanced Empowered" variants no longer falsely require an active ultimate
+- Basic attack overlap checks now use time-stop-extended durations so events can't clip into each other
+- CombatLoadout refactored into a combat context facade — SP validation, slot data, and operator wiring all live in one place instead of scattered module globals
+- Save files now stamp the current version and strip legacy fields on export
+- Stagger subtimeline shows dashed lines at node threshold positions
+- Panel resizer and loadout sidebar restyled from blue to grey theme
+
 ## 2026-03-11
 - Damage table now accounts for stagger, susceptibility, link, and arts amp — numbers change in real time as statuses activate on the timeline
 - Stagger timeline with node thresholds and break periods — the enemy's stagger meter builds up and breaks when maxed out

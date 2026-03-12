@@ -1,10 +1,11 @@
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
+import type { Slot } from '../timeline/columnBuilder';
 import { TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { CommonSlotController } from '../slot/commonSlotController';
-import { collectTimeStopRegions, extendByTimeStops, getFinalStrikeTriggerFrame, TimeStopRegion } from '../timeline/processInflictions';
+import { collectTimeStopRegions, extendByTimeStops, getFinalStrikeTriggerFrame, TimeStopRegion } from '../timeline/processInteractions';
 
 export interface ActivationWindow {
   startFrame: number;
@@ -81,6 +82,8 @@ export class CombatLoadout {
 
   private slots: (SlotWiring | null)[] = Array(NUM_SLOTS).fill(null);
   private slotIds: string[] = [];
+  private cachedSlots: Slot[] = [];
+  private spCosts: Map<string, number> = new Map();
   private cachedEvents: TimelineEvent[] = [];
   private cachedWindows: WindowsMap = new Map();
   private listeners: Set<CombatLoadoutListener> = new Set();
@@ -92,18 +95,44 @@ export class CombatLoadout {
     this.slotIds = ids;
   }
 
-  setOperator(slotIndex: number, operator: Operator | null): void {
-    if (!operator) {
-      this.slots[slotIndex] = null;
-    } else {
-      const capability = operator.triggerCapability;
-      this.slots[slotIndex] = capability
-        ? { operatorId: operator.id, capability }
-        : null;
+  /**
+   * Sync the full slot array into the combat context.
+   * Rebuilds operator wiring, SP costs, and recomputes combo windows.
+   */
+  syncSlots(slots: Slot[]): void {
+    this.cachedSlots = slots;
+    this.spCosts.clear();
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      const op = slot.operator;
+      if (!op) {
+        this.slots[i] = null;
+      } else {
+        const capability = op.triggerCapability;
+        this.slots[i] = capability
+          ? { operatorId: op.id, capability }
+          : null;
+        this.spCosts.set(slot.slotId, op.skills.battle.skillPointCost ?? 100);
+      }
     }
-
-    // Recompute from cached events
     this.recomputeWindows(this.cachedEvents);
+  }
+
+  // ── SP queries ─────────────────────────────────────────────────────────
+
+  hasSufficientSP(ownerId: string, frame: number): boolean {
+    const cost = this.spCosts.get(ownerId) ?? 100;
+    return this.commonSlot.skillPoints.valueAt(frame) >= cost;
+  }
+
+  getSpCost(ownerId: string): number {
+    return this.spCosts.get(ownerId) ?? 100;
+  }
+
+  // ── Slot queries ───────────────────────────────────────────────────────
+
+  getSlots(): readonly Slot[] {
+    return this.cachedSlots;
   }
 
   recomputeWindows(events: TimelineEvent[]): void {

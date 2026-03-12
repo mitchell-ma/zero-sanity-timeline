@@ -21,6 +21,7 @@ export function useResourceGraphs(
   resourceConfigs?: Record<string, ResourceConfig>,
   tacticalNames?: Record<string, string | undefined>,
   tacticalMaxUsesOverrides?: Record<string, number | undefined>,
+  gaugeGainMultipliers?: Record<string, number>,
 ) {
   // ── Skill point graphs (from CommonSlot resource timeline) ──────────────
   const [spGraphs, setSpGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
@@ -108,10 +109,12 @@ export function useResourceGraphs(
         }
       }
 
-      // Gauge gains from skills (self + team)
+      // Gauge gains from skills (self + team), scaled by ultimate gain efficiency
+      const multiplier = 1 + (gaugeGainMultipliers?.[slotId] ?? 0);
       for (const ge of gaugeEvents) {
-        const gain = (ge.selfSlotId === slotId ? ge.gaugeGain : 0) + ge.teamGaugeGain;
-        if (gain > 0) {
+        const rawGain = (ge.selfSlotId === slotId ? ge.gaugeGain : 0) + ge.teamGaugeGain;
+        if (rawGain > 0) {
+          const gain = rawGain * multiplier;
           timeline.push({ frame: ge.frame, type: 'gain', amount: gain });
         }
       }
@@ -175,7 +178,7 @@ export function useResourceGraphs(
       graphs.set(key, { points, min: 0, max });
     }
     return { ultimateGraphs: graphs, tacticalEvents: allTacticalEvents };
-  }, [operators, slotIds, events, resourceConfigs, tacticalNames, tacticalMaxUsesOverrides]);
+  }, [operators, slotIds, events, resourceConfigs, tacticalNames, tacticalMaxUsesOverrides, gaugeGainMultipliers]);
 
   // ── Merge SP + stagger + ultimate graphs ───────────────────────────────
   const resourceGraphs = useMemo(() => {

@@ -10,10 +10,23 @@ import { TimelineEvent, EventSegmentData, Operator } from '../../consts/viewType
 import { REACTION_COLUMN_IDS } from '../../model/channels';
 import { MeltingFlameController } from './meltingFlameController';
 import { ComboSkillEventController } from './comboSkillEventController';
+import type { CombatLoadout } from '../combat-loadout/combatLoadout';
 
 // ── ID generation ───────────────────────────────────────────────────────────
 
 let _id = 1;
+
+// ── Combat context ──────────────────────────────────────────────────────────
+
+let _combatLoadout: CombatLoadout | null = null;
+
+export function setCombatLoadout(ctx: CombatLoadout | null): void {
+  _combatLoadout = ctx;
+}
+
+export function hasSufficientSP(ownerId: string, frame: number): boolean {
+  return _combatLoadout?.hasSufficientSP(ownerId, frame) ?? true;
+}
 
 export function genEventId(): string {
   return `ev-${_id++}-${Math.random().toString(36).slice(2, 6)}`;
@@ -30,8 +43,9 @@ export function getNextEventId(): number {
 // ── Non-overlappable range helpers ──────────────────────────────────────────
 
 function getRange(ev: TimelineEvent): number {
-  return ev.nonOverlappableRange
-    ?? (ev.segments ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0) : 0);
+  // Prefer segments (may be time-stop-extended) over static nonOverlappableRange
+  if (ev.segments) return ev.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+  return ev.nonOverlappableRange ?? 0;
 }
 
 /**
@@ -56,7 +70,7 @@ export function wouldOverlapNonOverlappable(
   startFrame: number,
   processedEvents?: readonly TimelineEvent[],
 ): boolean {
-  const evRange = getRange(ev);
+  const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
     if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     const sibRange = getSibRange(sib, processedEvents);
@@ -79,7 +93,7 @@ export function clampNonOverlappable(
   desiredFrame: number,
   processedEvents?: readonly TimelineEvent[],
 ): number {
-  const evRange = getRange(ev);
+  const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return desiredFrame;
   const movingForward = desiredFrame >= ev.startFrame;
   let result = desiredFrame;
@@ -320,6 +334,24 @@ export function validateUpdate(
   if (merged.columnId !== 'ultimate' && isInUltimateAnimation(allEvents, merged.startFrame, merged.id)) return null;
   // Block battle skills from being placed during a combo animation
   if (merged.columnId === 'battle' && isInComboAnimation(allEvents, merged.startFrame, merged.id)) return null;
+  // Empowered battle skills require 4 active Melting Flame stacks
+  if (merged.name?.includes('EMPOWERED')) {
+    const mfSource = processedEvents ?? allEvents;
+    const mfCount = mfSource.filter(
+      (e) => e.ownerId === merged.ownerId && e.columnId === 'melting-flame'
+        && e.startFrame <= merged.startFrame && e.startFrame + e.activationDuration > merged.startFrame,
+    ).length;
+    if (mfCount < 4) return null;
+  }
+  // Enhanced battle skills require an active ultimate
+  if (merged.name?.includes('ENHANCED') && !merged.name?.includes('EMPOWERED')) {
+    const ultActive = allEvents.some(
+      (e) => e.id !== merged.id && e.ownerId === merged.ownerId && e.columnId === 'ultimate'
+        && merged.startFrame >= e.startFrame + e.activationDuration
+        && merged.startFrame < e.startFrame + e.activationDuration + e.activeDuration,
+    );
+    if (!ultActive) return null;
+  }
   return merged;
 }
 
@@ -364,8 +396,6 @@ export function validateBatchMoveDelta(
     if (!target) continue;
     const desired = target.startFrame + clampedDelta;
     const clamped = validateMove(allEvents, target, desired, processedEvents);
-    // The difference between the clamped result and the original start is the
-    // effective delta this event allows. Restrict the global delta to it.
     const effectiveDelta = clamped - target.startFrame;
     if (delta >= 0) {
       clampedDelta = Math.min(clampedDelta, effectiveDelta);

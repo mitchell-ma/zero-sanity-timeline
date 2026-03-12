@@ -7,6 +7,7 @@ import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { MODEL_FACTORIES } from '../operators/operatorRegistry';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import {
@@ -18,6 +19,7 @@ import {
   LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE,
   LAEVATAIN_COMBO_SKILL_SEQUENCE,
 } from '../../model/event-frames/laevatainEventFrames';
+import { SmoulderingFire } from '../../model/combat-skills/laevatainSkills';
 import { AKEKURI_BASIC_ATTACK_SEQUENCES, AKEKURI_BATTLE_SKILL_SEQUENCE, AKEKURI_COMBO_SKILL_SEQUENCE, AKEKURI_ULTIMATE_SEQUENCE } from '../../model/event-frames/akekuriEventFrames';
 import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES, ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE, ENDMINISTRATOR_COMBO_SKILL_SEQUENCE, ENDMINISTRATOR_ULTIMATE_SEQUENCE } from '../../model/event-frames/endministratorEventFrames';
 import { LIFENG_BASIC_ATTACK_SEQUENCES, LIFENG_BATTLE_SKILL_SEQUENCE, LIFENG_COMBO_SKILL_SEQUENCE, LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE } from '../../model/event-frames/lifengEventFrames';
@@ -153,6 +155,8 @@ export interface Slot {
   tacticalName?: string;
   /** Active gear set effect type (3+ matching pieces). */
   gearSetType?: import('../../consts/enums').GearEffectType;
+  /** Combo skill level (1–12) for level-dependent cooldown computation. */
+  comboSkillLevel?: number;
 }
 
 const MF_MICRO_COLS = 4;
@@ -397,7 +401,7 @@ export function buildColumns(
         ownerId: slot.slotId,
         columnId: 'dash',
         label: 'DASH',
-        color: op.color,
+        color: ELEMENT_COLORS[ElementType.PHYSICAL],
         headerVariant: 'skill',
         eventVariants: [
           {
@@ -428,7 +432,7 @@ export function buildColumns(
 
       for (const skillType of SKILL_ORDER) {
         if (visibleSkills[slot.slotId]?.[skillType]) {
-          const skill = op.skills[skillType];
+          let skill = op.skills[skillType];
           const col: MiniTimeline = {
             key: `${slot.slotId}-${skillType}`,
             type: 'mini-timeline',
@@ -453,9 +457,22 @@ export function buildColumns(
               ...(skillType === 'battle' && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
           };
-          // Combo columns also match derived activation window events
+          // Combo columns: use model's level-dependent cooldown + match activation windows
           if (skillType === 'combo') {
             col.matchColumnIds = ['combo', 'comboActivationWindow'];
+            // Override cooldown with level-dependent value from operator model
+            const comboLevel = slot.comboSkillLevel;
+            if (comboLevel && op.id) {
+              const factory = MODEL_FACTORIES[op.id];
+              if (factory) {
+                const model = factory();
+                if ('getCooldownSeconds' in model.comboSkill) {
+                  const cdSeconds = (model.comboSkill as any).getCooldownSeconds(comboLevel as import('../../consts/types').SkillLevel);
+                  skill = { ...skill, defaultCooldownDuration: Math.round(cdSeconds * FPS) };
+                }
+              }
+            }
+            col.defaultEvent!.defaultCooldownDuration = skill.defaultCooldownDuration;
           }
           // Laevatain basic attack: multi-sequence event with frame markers
           if (isLaevatain && skillType === 'basic') {
@@ -490,6 +507,10 @@ export function buildColumns(
           if (isLaevatain && skillType === 'battle') {
             const baseSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_BATTLE_SKILL_SEQUENCE], { labels: ['Explosion'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const enhSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
+            // Enhanced battle skill: tick 2 grants 100 ult energy (additional attack hit)
+            if (enhSeg.segments[0]?.frames && enhSeg.segments[0].frames.length >= 2) {
+              enhSeg.segments[0].frames[1].gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
+            }
             const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
             col.defaultEvent = {
@@ -538,10 +559,11 @@ export function buildColumns(
           // Laevatain combo skill: single-sequence event with frame data
           if (isLaevatain && skillType === 'combo') {
             const comboSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_COMBO_SKILL_SEQUENCE], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: comboSeg.totalDurationFrames,
-              segments: comboSeg.segments,
+              segments: [...comboSeg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }],
             };
           }
           // Generic basic attack: map-based lookup for operators with frame data
@@ -573,10 +595,11 @@ export function buildColumns(
             const seg = isMulti
               ? SkillSegmentBuilder.buildSegments(comboEntry.sequences, { labels: comboEntry.labels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain })
               : SkillSegmentBuilder.buildSegments([comboEntry], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
-              segments: seg.segments,
+              segments: [...seg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }],
             };
           }
           // Generic ultimate: build Animation / Statis / Active / Cooldown segments

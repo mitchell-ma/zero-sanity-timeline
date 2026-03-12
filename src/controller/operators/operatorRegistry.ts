@@ -240,7 +240,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
     skills: {
       basic: { defaultActivationDuration: 24, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: 960, defaultActiveDuration: 0, defaultCooldownDuration: 1440, triggerCondition: null },
-      combo: { defaultActivationDuration: 360, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: AN.comboAnimDur },
+      combo: { defaultActivationDuration: 360, defaultActiveDuration: 0, defaultCooldownDuration: AN.comboCd, triggerCondition: null, animationDuration: AN.comboAnimDur },
       ultimate: { defaultActivationDuration: AN.ultAnimDur, defaultActiveDuration: 1440, defaultCooldownDuration: 3000, triggerCondition: null, animationDuration: AN.ultAnimDur },
     },
   },

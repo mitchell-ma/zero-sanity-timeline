@@ -56,6 +56,8 @@ export interface DamageTableRow {
   skillName: string;
   /** Remaining boss HP after this tick's damage (can go negative). Null if HP unknown. */
   hpRemaining: number | null;
+  /** Full damage calculation parameters. Null if damage could not be computed. */
+  params: DamageParams | null;
 }
 
 /** Column descriptor for the damage table header. */
@@ -243,6 +245,7 @@ export function buildDamageTableRows(
             // Look up multiplier
             let multiplier: number | null = null;
             let damage: number | null = null;
+            let params: DamageParams | null = null;
 
             if (operatorId && opData) {
               multiplier = getSkillMultiplier(
@@ -280,7 +283,7 @@ export function buildDamageTableRows(
                 // Expected crit multiplier
                 const expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
 
-                const params: DamageParams = {
+                params = {
                   attack: opData.totalAttack,
                   baseMultiplier: multiplier,
                   attributeBonus: opData.attributeBonus,
@@ -318,6 +321,7 @@ export function buildDamageTableRows(
               segmentLabel: seg.label,
               skillName: ev.name,
               hpRemaining: null, // computed after sorting
+              params,
             });
           }
         }
