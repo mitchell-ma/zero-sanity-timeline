@@ -1,5 +1,18 @@
 # Devlog
 
+## 2026-03-12
+- Skill multipliers for all 20+ operators added to the codebase — every battle skill, combo skill, and ultimate now has its actual ATK% values stored and accessible to the damage calculator
+- Arts reaction damage (Combustion, Solidification, Corrosion, Electrification) now runs through the full damage formula with defense, resistance, fragility, and amplification all accounted for
+- Damage calculation split into dedicated controllers: a skill multiplier registry, arts reaction controller, status query service, and damage breakdown builder — business logic moved out of the view
+- Information pane logic extracted into controller layer (eventPaneController, loadoutPaneController, damageBreakdownController) — views are now presentation-only
+- New enemy status types: Crit Stacks, Weaken, DMG Reduction, Protection, Scorching Heart, Originium Crystal, Messenger's Song, Wildland Trekker
+- Status consumption now correctly accounts for time-stop extension when checking active duration at consume frames
+- EventStatusType (expired/consumed/refreshed/triggered/extended) migrated from string literals to a proper enum
+- Element type labels added for display in UI
+- Gear set effects and weapon skill data expanded across most sets
+- All operator models updated with element type and additional stat data
+- Specifications folder added for design docs
+
 ## 2026-03-11 (evening)
 - Warning tooltips styled to match the dark theme instead of browser defaults
 - Battle skills blocked during combo animation time-stops, not just ultimate ones
