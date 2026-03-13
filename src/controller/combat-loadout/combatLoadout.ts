@@ -1,7 +1,8 @@
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import type { Slot } from '../timeline/columnBuilder';
-import { TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
+import { CombatSkillsType, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TOTAL_FRAMES } from '../../utils/timeline';
+import { ENEMY_OWNER_ID } from '../../model/channels';
 import { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { CommonSlotController } from '../slot/commonSlotController';
@@ -159,6 +160,9 @@ export class CombatLoadout {
       const publishedTriggers = pubSlot.capability.publishesTriggers[event.columnId];
       if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
+      // Finisher/Dive events don't publish FINAL_STRIKE — only normal basic attack sequences do
+      const isNonSequenceBasic = event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE;
+
       // Default: window starts at end of active duration
       const defaultTriggerFrame = event.startFrame + event.activationDuration;
 
@@ -168,6 +172,7 @@ export class CombatLoadout {
       for (const trigger of publishedTriggers) {
         // Skip triggers that are sourced from derived enemy events
         if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
+        if (isNonSequenceBasic && trigger === TriggerConditionType.FINAL_STRIKE) continue;
 
         this.addWindowsForTrigger(trigger, event, events, newWindows, slotIdToIndex,
           trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame, stops);
@@ -176,7 +181,7 @@ export class CombatLoadout {
 
     // For derived enemy events, use their startFrame as the trigger frame
     for (const event of events) {
-      if (event.ownerId !== 'enemy') continue;
+      if (event.ownerId !== ENEMY_OWNER_ID) continue;
 
       const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
       if (!triggers) continue;

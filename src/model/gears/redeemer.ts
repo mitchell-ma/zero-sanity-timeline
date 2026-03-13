@@ -2,6 +2,24 @@ import { GearEffectType, GearType, StatType } from "../../consts/enums";
 import { GearRank } from "../../consts/types";
 import { Gear } from "./gear";
 
+// ── Redeemer Hands (Gloves) ───────────────────────────────────────────────────
+export class RedeemerHands extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.GLOVES,
+      gearEffectType: GearEffectType.NONE,
+      rank,
+      statsByRank: {
+        1: { [StatType.STRENGTH]: 86, [StatType.SKILL_DAMAGE_BONUS]: 0.240 },
+        2: { [StatType.STRENGTH]: 94, [StatType.SKILL_DAMAGE_BONUS]: 0.264 },
+        3: { [StatType.STRENGTH]: 103, [StatType.SKILL_DAMAGE_BONUS]: 0.288 },
+        4: { [StatType.STRENGTH]: 111, [StatType.SKILL_DAMAGE_BONUS]: 0.312 },
+      },
+      defense: 42,
+    });
+  }
+}
+
 // ── Redeemer Seal (Kit) ─────────────────────────────────────────────────────
 // Intellect + Ultimate Gain Efficiency
 export class RedeemerSeal extends Gear {
@@ -16,10 +34,9 @@ export class RedeemerSeal extends Gear {
         3: { [StatType.INTELLECT]: 51, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.309 },
         4: { [StatType.INTELLECT]: 55, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.334 },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Redeemer Seal T1 (Kit) ──────────────────────────────────────────────────
@@ -36,10 +53,9 @@ export class RedeemerSealT1 extends Gear {
         3: { [StatType.WILL]: 51, [StatType.CRITICAL_RATE]: 0.130 },
         4: { [StatType.WILL]: 55, [StatType.CRITICAL_RATE]: 0.140 },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Redeemer Tag (Kit) ──────────────────────────────────────────────────────
@@ -56,10 +72,9 @@ export class RedeemerTag extends Gear {
         3: { [StatType.STRENGTH]: 51, [StatType.FINAL_DAMAGE_REDUCTION]: 0.206 },
         4: { [StatType.STRENGTH]: 55, [StatType.FINAL_DAMAGE_REDUCTION]: 0.219 },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Redeemer Tag T1 (Kit) ───────────────────────────────────────────────────
@@ -76,8 +91,7 @@ export class RedeemerTagT1 extends Gear {
         3: { [StatType.AGILITY]: 51, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.518 },
         4: { [StatType.AGILITY]: 55, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.562 },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

@@ -6,7 +6,7 @@ import {
   StatType,
   StatusType,
 } from "../../consts/enums";
-import { StatusLevel } from "../../consts/types";
+import { StatusLevel, TalentLevel } from "../../consts/types";
 import { Operator } from "../operators/operator";
 import { Weapon } from "../weapons/weapon";
 import { Enemy } from "../enemies/enemy";
@@ -61,6 +61,7 @@ export function getAttributeBonus(
  * Damage bonuses are additive within this group:
  * - Element damage bonus (e.g. HEAT_DAMAGE_BONUS)
  * - Skill type damage bonus (e.g. BASIC_ATTACK_DAMAGE_BONUS)
+ * - Stagger damage bonus (DMG Bonus vs. Staggered — only when target is staggered)
  * - Generic bonuses (SKILL_DAMAGE_BONUS, ARTS_DAMAGE_BONUS)
  */
 export function getDamageBonus(
@@ -68,8 +69,10 @@ export function getDamageBonus(
   skillTypeDamageBonus: number,
   skillDamageBonus: number,
   artsDamageBonus: number,
+  staggerDamageBonus: number = 0,
+  talentDmgDealBonus: number = 0,
 ): number {
-  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus;
+  return 1 + elementDamageBonus + skillTypeDamageBonus + skillDamageBonus + artsDamageBonus + staggerDamageBonus + talentDmgDealBonus;
 }
 
 /** Map an element to its corresponding damage bonus stat. */
@@ -350,6 +353,23 @@ export function getCorrosionReduction(
     * getCorrosionReductionMultiplier(artsIntensity);
 }
 
+// ── Scorching Heart (Ignored Resistance) ────────────────────────────────────
+
+/**
+ * Heat Resistance points ignored by Laevatain's Scorching Heart talent.
+ * E0 (talent 0–1): 10, E1 (talent 2): 15, E3 (talent 3): 20.
+ */
+const SCORCHING_HEART_IGNORED: Record<TalentLevel, number> = {
+  0: 10,
+  1: 10,
+  2: 15,
+  3: 20,
+};
+
+export function getScorchingHeartIgnoredResistance(talentLevel: TalentLevel): number {
+  return SCORCHING_HEART_IGNORED[talentLevel];
+}
+
 // ── Hidden Level Multiplier ─────────────────────────────────────────────────
 
 /**
@@ -368,6 +388,37 @@ export function getArtsHiddenMultiplier(operatorLevel: number): number {
 }
 
 // ── Composite Damage Formula ────────────────────────────────────────────────
+
+/** Sub-component values for multipliers that aggregate multiple sources. */
+export interface DamageSubComponents {
+  // Damage Bonus sub-components (additive)
+  element: ElementType;
+  elementDmgBonus: number;
+  allElementDmgBonuses: Partial<Record<ElementType, number>>;
+  skillTypeDmgBonus: number;
+  skillDmgBonus: number;
+  artsDmgBonus: number;
+  staggerDmgBonus: number;
+  talentDmgDealBonus: number;
+  // Critical sub-components
+  critRate: number;
+  critDamage: number;
+  talentCritDmgBonus: number;
+  // Resistance sub-components
+  baseResistance: number;
+  corrosionReduction: number;
+  ignoredResistance: number;
+  // Fragility sub-components
+  fragilityBonus: number;
+  // Weaken sub-components
+  weakenEffects: number[];
+  // DMG Reduction sub-components
+  dmgReductionEffects: number[];
+  // Protection sub-components
+  protectionEffects: number[];
+  // Special multiplier sources
+  specialSources: { label: string; value: number }[];
+}
 
 export interface DamageParams {
   /** Total computed attack (after all bonuses). */
@@ -402,6 +453,10 @@ export interface DamageParams {
   defenseMultiplier: number;
   /** Enemy elemental resistance multiplier. */
   resistanceMultiplier: number;
+  /** Operator talent special multiplier (e.g. Last Rite T2, Avywenna P5). Default 1. */
+  specialMultiplier?: number;
+  /** Individual sub-component values for breakdown display. */
+  sub?: DamageSubComponents;
 }
 
 /**
@@ -431,7 +486,8 @@ export function calculateDamage(params: DamageParams): number {
     params.dmgReductionMultiplier *
     params.protectionMultiplier *
     params.defenseMultiplier *
-    params.resistanceMultiplier
+    params.resistanceMultiplier *
+    (params.specialMultiplier ?? 1)
   );
 }
 

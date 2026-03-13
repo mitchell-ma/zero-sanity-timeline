@@ -31,10 +31,9 @@ export class SwordmancerHeavyArmor extends Gear {
           [StatType.ARTS_INTENSITY]: 26.9,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Swordmancer Light Armor (Armor) ─────────────────────────────────────────
@@ -45,10 +44,9 @@ export class SwordmancerLightArmor extends Gear {
       gearEffectType: GearEffectType.SWORDMANCER,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Swordmancer TAC Fists (Gloves) ──────────────────────────────────────────
@@ -80,10 +78,9 @@ export class SwordmancerTacFists extends Gear {
           [StatType.ULTIMATE_DAMAGE_BONUS]: 0.561,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Swordmancer TAC Gauntlets (Gloves) ──────────────────────────────────────
@@ -93,11 +90,33 @@ export class SwordmancerTacGauntlets extends Gear {
       gearType: GearType.GLOVES,
       gearEffectType: GearEffectType.SWORDMANCER,
       rank,
-      statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      statsByRank: {
+        1: { [StatType.STRENGTH]: 65, [StatType.WILL]: 43, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.192 },
+        2: { [StatType.STRENGTH]: 71, [StatType.WILL]: 47, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.211 },
+        3: { [StatType.STRENGTH]: 78, [StatType.WILL]: 51, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.230 },
+        4: { [StatType.STRENGTH]: 84, [StatType.WILL]: 55, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.249 },
+      },
+      defense: 42,
     });
   }
+}
 
-  static readonly DEFENSE = 42;
+// ── Swordmancer TAC Gloves (Gloves) ──────────────────────────────────────────
+export class SwordmancerTacGloves extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.GLOVES,
+      gearEffectType: GearEffectType.SWORDMANCER,
+      rank,
+      statsByRank: {
+        1: { [StatType.STRENGTH]: 65, [StatType.WILL]: 43, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.192 },
+        2: { [StatType.STRENGTH]: 71, [StatType.WILL]: 47, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.211 },
+        3: { [StatType.STRENGTH]: 78, [StatType.WILL]: 51, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.230 },
+        4: { [StatType.STRENGTH]: 84, [StatType.WILL]: 55, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.249 },
+      },
+      defense: 42,
+    });
+  }
 }
 
 // ── Swordmancer Flint (Kit) ─────────────────────────────────────────────────
@@ -129,10 +148,9 @@ export class SwordmancerFlint extends Gear {
           [StatType.PHYSICAL_DAMAGE_BONUS]: 0.299,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Swordmancer Micro Filter (Kit) ──────────────────────────────────────────
@@ -143,10 +161,9 @@ export class SwordmancerMicroFilter extends Gear {
       gearEffectType: GearEffectType.SWORDMANCER,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Swordmancer NAV Beacon (Kit) ────────────────────────────────────────────
@@ -157,8 +174,7 @@ export class SwordmancerNavBeacon extends Gear {
       gearEffectType: GearEffectType.SWORDMANCER,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

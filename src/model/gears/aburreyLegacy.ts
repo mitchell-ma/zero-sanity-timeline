@@ -19,10 +19,9 @@ export class AburreyHeavyArmor extends Gear {
         3: {},
         4: {},
       },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Aburrey Heavy Armor T1 (Armor) ──────────────────────────────────────────
@@ -33,10 +32,9 @@ export class AburreyHeavyArmorT1 extends Gear {
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Aburrey Light Armor (Armor) ─────────────────────────────────────────────
@@ -47,10 +45,9 @@ export class AburreyLightArmor extends Gear {
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Aburrey Light Armor T1 (Armor) ──────────────────────────────────────────
@@ -61,10 +58,9 @@ export class AburreyLightArmorT1 extends Gear {
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Aburrey Gauntlets (Gloves) ──────────────────────────────────────────────
@@ -84,10 +80,9 @@ export class AburreyGauntlets extends Gear {
         3: {},
         4: {},
       },
+      defense: 30,
     });
   }
-
-  static readonly DEFENSE = 30;
 }
 
 // ── Aburrey Auditory Chip (Kit) ─────────────────────────────────────────────
@@ -107,10 +102,9 @@ export class AburreyAuditoryChip extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Aburrey Auditory Chip T1 (Kit) ──────────────────────────────────────────
@@ -121,10 +115,9 @@ export class AburreyAuditoryChipT1 extends Gear {
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Aburrey Flashlight (Kit) ────────────────────────────────────────────────
@@ -144,10 +137,9 @@ export class AburreyFlashlight extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Aburrey Sensor Chip (Kit) ───────────────────────────────────────────────
@@ -167,10 +159,9 @@ export class AburreySensorChip extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Aburrey Sensor Chip T1 (Kit) ────────────────────────────────────────────
@@ -181,10 +172,9 @@ export class AburreySensorChipT1 extends Gear {
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Aburrey UV Lamp (Kit) ───────────────────────────────────────────────────
@@ -204,8 +194,7 @@ export class AburreyUvLamp extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }

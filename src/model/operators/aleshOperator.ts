@@ -98,4 +98,36 @@ export class AleshOperator extends Operator {
     return [TriggerConditionType.COMBUSTION, TriggerConditionType.SOLIDIFICATION, TriggerConditionType.CORROSION, TriggerConditionType.ELECTRIFICATION];
   }
   get comboDescription(): string { return 'Arts Reaction or Originium Crystals consumed nearby'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Hooks ice dealing Physical DMG. Consumes Cryo Infliction stacks to apply Solidification and recover SP.',
+      combo: 'Opens angling hole dealing Physical DMG with SP recovery. Chance to catch Rare Fin for enhanced damage.',
+      ultimate: 'Hooks massive fin dealing Cryo DMG in large AoE. Applies Cryo Infliction and recovers SP.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Gain 3 Ultimate Energy when Solidification/Originium Crystals applied nearby; +6 if Alesh applies it (3s cooldown).',
+        'Gain 4 Ultimate Energy when Solidification/Originium Crystals applied nearby; +8 if Alesh applies it (3s cooldown).',
+      ],
+      2: [
+        'Every 10 Intellect grants Rare Fin catching chance +0.2% (max: +30%).',
+        'Each 10 Intellect increases catch chance +0.5% (max: +30%).',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Battle skill grants additional 10 SP recovery.',
+      'Strength +15, Intellect +15.',
+      'Combo skill grants team ATK +15% for 10s after catching Rare Fin.',
+      'Ultimate cost -15%.',
+      'Ultimate damage x1.5 against targets below 50% HP.',
+    ];
+  }
 }

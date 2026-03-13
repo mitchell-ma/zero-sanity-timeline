@@ -31,10 +31,9 @@ export class TideFallLightArmor extends Gear {
           [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.160,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Tide Surge Gauntlets (Gloves) ───────────────────────────────────────────
@@ -70,8 +69,7 @@ export class TideSurgeGauntlets extends Gear {
           [StatType.ELECTRIC_DAMAGE_BONUS]: 0.249,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }

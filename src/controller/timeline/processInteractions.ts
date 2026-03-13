@@ -7,8 +7,8 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { LoadoutStats } from '../../view/InformationPane';
 import { collectTimeStopRegions, applyTimeStopExtension, resolveFramePositions, validateTimeStopStarts } from './processTimeStop';
 import { applyComboChaining, applyPotentialEffects, deriveComboActivationWindows, SlotTriggerWiring } from './processComboSkill';
-import { deriveFrameInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh } from './processInfliction';
-import { consumeTeamStatuses, consumeOperatorStatuses, deriveScorchingFangs, deriveUnbridledEdge } from './processStatus';
+import { deriveFrameInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh, attachReactionFrames, attachSusceptibilityFrames, consumeReactionsForStatus } from './processInfliction';
+import { consumeTeamStatuses, consumeOperatorStatuses, consumeOriginiumCrystals, deriveScorchingHeart, deriveScorchingFangs, deriveUnbridledEdge, deriveMessengersSong, deriveWildlandTrekker, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
 import { applySpReturnGaugeReduction } from './processSP';
 
 // Re-export commonly used types and constants from sub-modules
@@ -59,16 +59,28 @@ export function processInflictionEvents(
   // clamp the already-extended events as needed.
   const withSameElementRefresh = applySameElementRefresh(ext2);
   const withPhysicalRefresh = applyPhysicalInflictionRefresh(withSameElementRefresh);
-  const withConsumedOperatorStatuses = consumeOperatorStatuses(withPhysicalRefresh, stops);
-  const withConsumedTeam = consumeTeamStatuses(withConsumedOperatorStatuses);
+  const withConsumedTeam = consumeTeamStatuses(withPhysicalRefresh);
   const withAbsorptions = applyAbsorptions(withConsumedTeam, stops);
-  const withReactions = deriveReactions(withAbsorptions);
-  const ext3 = applyTimeStopExtension(withReactions, stops, extendedIds);
+  // Consume operator statuses (e.g. Melting Flame) after absorptions derive them
+  const withConsumedOperatorStatuses = consumeOperatorStatuses(withAbsorptions, stops, extendedIds);
+  // Derive Scorching Heart enemy debuff when Laevatain reaches 4 MF stacks
+  const withScorchingHeart = deriveScorchingHeart(withConsumedOperatorStatuses, loadoutStats);
+  const withConsumedCrystals = consumeOriginiumCrystals(withScorchingHeart);
+  const withReactions = deriveReactions(withConsumedCrystals);
+  const withReactionFrames = attachReactionFrames(withReactions);
+  const withSusceptibilityFrames = attachSusceptibilityFrames(withReactionFrames, loadoutStats);
+  const ext3 = applyTimeStopExtension(withSusceptibilityFrames, stops, extendedIds);
   const withMergedReactions = mergeReactions(ext3);
-  const withScorchingFangs = deriveScorchingFangs(withMergedReactions, loadoutStats);
+  const withConsumedReactions = consumeReactionsForStatus(withMergedReactions, loadoutStats, stops);
+  const withVulnConsumed = consumeVulnerabilityForSusceptibility(withConsumedReactions, loadoutStats);
+  const withCryoConsumed = consumeCryoForSusceptibility(withVulnConsumed, loadoutStats);
+  const withXaihiP5 = applyXaihiP5AmpBoost(withCryoConsumed, loadoutStats);
+  const withScorchingFangs = deriveScorchingFangs(withXaihiP5, loadoutStats);
   const withUnbridledEdge = deriveUnbridledEdge(withScorchingFangs, slotWeapons, stops);
+  const withMessengersSong = deriveMessengersSong(withUnbridledEdge);
+  const withWildlandTrekker = deriveWildlandTrekker(withMessengersSong, loadoutStats);
   // Final extension for Scorching Fangs, Unbridled Edge, and any other derived events
-  const ext4 = applyTimeStopExtension(withUnbridledEdge, stops, extendedIds);
+  const ext4 = applyTimeStopExtension(withWildlandTrekker, stops, extendedIds);
   const withSpReturnGaugeReduction = applySpReturnGaugeReduction(ext4);
 
   // ── Derive combo activation windows ────────────────────────────────────

@@ -1,7 +1,7 @@
 import React from 'react';
 import { frameToPx, durationToPx, pxPerFrame, TOTAL_FRAMES } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
-import { ELEMENT_COLORS, ElementType, HitType, STATUS_ELEMENT } from '../consts/enums';
+import { ELEMENT_COLORS, ElementType, EventFrameType, STATUS_ELEMENT } from '../consts/enums';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
 
@@ -12,13 +12,16 @@ function hasInflictionOrStatus(f: EventFrameMarker): boolean {
 
 
 function getFrameElementColor(f: EventFrameMarker, skillElement?: string): string | undefined {
-  const el = f.applyArtsInfliction?.element
-    ?? f.absorbArtsInfliction?.element
-    ?? f.consumeArtsInfliction?.element
-    ?? (f.applyForcedReaction ? STATUS_ELEMENT[f.applyForcedReaction.reaction] : undefined)
-    ?? (f.applyStatus ? STATUS_ELEMENT[f.applyStatus.status] : undefined)
-    ?? f.damageElement
-    ?? skillElement;
+  // If the frame has a specific action (infliction, absorption, status grant, etc.),
+  // use that action's element. Don't fallthrough to skillElement — a Squad Buff grant
+  // on a Heat operator shouldn't render as a Heat diamond.
+  let el: string | undefined;
+  if (f.applyArtsInfliction) el = f.applyArtsInfliction.element;
+  else if (f.absorbArtsInfliction) el = f.absorbArtsInfliction.element;
+  else if (f.consumeArtsInfliction) el = f.consumeArtsInfliction.element;
+  else if (f.applyForcedReaction) el = STATUS_ELEMENT[f.applyForcedReaction.reaction];
+  else if (f.applyStatus) el = STATUS_ELEMENT[f.applyStatus.status];
+  else el = f.damageElement ?? skillElement;
   if (!el) return undefined;
   const base = ELEMENT_COLORS[el as ElementType];
   return base ? `color-mix(in srgb, ${base} 75%, #fff)` : undefined;
@@ -199,8 +202,9 @@ function EventBlock({
             return (
               <div
                 key={`f-${fi}`}
-                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.hitType === HitType.FINAL_STRIKE ? ' event-frame-diamond--final-strike' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}`}
+                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.hitType === EventFrameType.FINAL_STRIKE ? ' event-frame-diamond--final-strike' : ''}${f.hitType === EventFrameType.FINISHER ? ' event-frame-diamond--finisher' : ''}${f.hitType === EventFrameType.DIVE ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
                 style={{ top: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) }}
+                title={f.statusLabel ?? undefined}
                 onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, i, fi); }}
                 onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, i, fi); }}
                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, i, fi); }}

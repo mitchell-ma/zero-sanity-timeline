@@ -1,10 +1,11 @@
-import { TimelineEvent, FrameAbsorptionMarker } from '../../consts/viewTypes';
+import { TimelineEvent, FrameAbsorptionMarker, SkillType } from '../../consts/viewTypes';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
-import { CombatSkillsType, StatusType, TargetType, TimeDependency, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
+import { CombatSkillsType, EventStatusType, StatusType, TargetType, TimeDependency, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
-import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { TOTAL_FRAMES } from '../../utils/timeline';
+import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
 
 // ── Combo time-stop chaining ─────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = ev.animationDuration ?? 0;
   if (anim <= 0) return false;
   return ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
-    (ev.columnId === 'dash' && !!ev.isPerfectDodge);
+    (ev.columnId === OPERATOR_COLUMNS.DASH && !!ev.isPerfectDodge);
 }
 
 /** Collect all time-stop regions from combo/ultimate/dodge events. */
@@ -307,10 +308,10 @@ function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
 
 /** Maps forced reaction name → reaction columnId. */
 const FORCED_REACTION_COLUMN: Record<string, string> = {
-  COMBUSTION: 'combustion',
-  SOLIDIFICATION: 'solidification',
-  CORROSION: 'corrosion',
-  ELECTRIFICATION: 'electrification',
+  [StatusType.COMBUSTION]:      REACTION_COLUMNS.COMBUSTION,
+  [StatusType.SOLIDIFICATION]:  REACTION_COLUMNS.SOLIDIFICATION,
+  [StatusType.CORROSION]:       REACTION_COLUMNS.CORROSION,
+  [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -440,7 +441,7 @@ function validateTimeStopStarts(
 
       const sourceIsUltimate = source.columnId === 'ultimate';
       const sourceIsCombo = source.columnId === 'combo';
-      const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
+      const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.DASH && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop
       if (sourceIsDodge) continue;
@@ -600,7 +601,7 @@ function deriveComboActivationWindows(
         startFrame: triggerFrame,
         endFrame: triggerFrame + extendedDuration,
         sourceEventId: event.id,
-        sourceOwnerId: event.ownerId !== 'enemy' ? event.ownerId : event.sourceOwnerId,
+        sourceOwnerId: event.ownerId !== ENEMY_OWNER_ID ? event.ownerId : event.sourceOwnerId,
         sourceSkillName: event.name,
         sourceColumnId: event.columnId,
         triggerType: trigger,
@@ -616,11 +617,15 @@ function deriveComboActivationWindows(
     const publishedTriggers = cap.publishesTriggers[event.columnId];
     if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
+    // Finisher/Dive events don't publish FINAL_STRIKE — only normal basic attack sequences do
+    const isNonSequenceBasic = event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE;
+
     const defaultTriggerFrame = event.startFrame + event.activationDuration;
     const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
 
     for (const trigger of publishedTriggers) {
       if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
+      if (isNonSequenceBasic && trigger === TriggerConditionType.FINAL_STRIKE) continue;
       const frame = trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame;
       addWindow(trigger, event, frame);
     }
@@ -628,7 +633,7 @@ function deriveComboActivationWindows(
 
   // Phase 2: derived enemy event triggers
   for (const event of events) {
-    if (event.ownerId !== 'enemy') continue;
+    if (event.ownerId !== ENEMY_OWNER_ID) continue;
     const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
     if (!triggers) continue;
     for (const trigger of triggers) {
@@ -828,7 +833,7 @@ function consumeTeamStatuses(events: TimelineEvent[]): TimelineEvent[] {
   if (teamStatuses.length === 0) return events;
 
   const skillCasts = events
-    .filter((ev) => ev.ownerId !== 'enemy' && ev.ownerId !== COMMON_OWNER_ID && CONSUMING_COLUMNS.has(ev.columnId))
+    .filter((ev) => ev.ownerId !== ENEMY_OWNER_ID && ev.ownerId !== COMMON_OWNER_ID && CONSUMING_COLUMNS.has(ev.columnId))
     .sort((a, b) => a.startFrame - b.startFrame);
 
   if (skillCasts.length === 0) return events;
@@ -858,7 +863,7 @@ function consumeTeamStatuses(events: TimelineEvent[]): TimelineEvent[] {
     return {
       ...ev,
       activationDuration: clamped,
-      eventStatus: 'consumed' as const,
+      eventStatus: EventStatusType.CONSUMED,
       eventStatusOwnerId: clamp.source.ownerId,
       eventStatusSkillName: clamp.source.skillName,
     };
@@ -876,7 +881,7 @@ function consumeOperatorStatuses(events: TimelineEvent[], stops: readonly TimeSt
   const consumePoints: ConsumePoint[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === 'enemy' || event.ownerId === COMMON_OWNER_ID) continue;
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -930,7 +935,7 @@ function consumeOperatorStatuses(events: TimelineEvent[], stops: readonly TimeSt
     return {
       ...ev,
       activationDuration: clamped,
-      eventStatus: 'consumed' as const,
+      eventStatus: EventStatusType.CONSUMED,
       eventStatusOwnerId: clamp.source.ownerId,
       eventStatusSkillName: clamp.source.skillName,
     };
@@ -949,16 +954,18 @@ function resolveSusceptibility(
   loadoutStats?: Record<string, LoadoutStats>,
 ): Record<string, number> {
   const stats = loadoutStats?.[sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+  const skillType = sourceColumnId as SkillType;
   let skillLevel: number;
-  switch (sourceColumnId) {
+  switch (skillType) {
     case 'combo': skillLevel = stats.comboSkillLevel; break;
     case 'ultimate': skillLevel = stats.ultimateLevel; break;
     default: skillLevel = stats.battleSkillLevel; break;
   }
-  const idx = Math.max(0, Math.min(skillLevel - 1, 11)); // 1-indexed level → 0-indexed array
+  const idx = Math.max(0, Math.min(skillLevel - 1, MAX_SKILL_LEVEL_INDEX));
   const resolved: Record<string, number> = {};
   for (const [element, table] of Object.entries(raw)) {
-    resolved[element] = table[Math.min(idx, table.length - 1)];
+    // Normalize key to uppercase to match ElementType enum values
+    resolved[element.toUpperCase()] = table[Math.min(idx, table.length - 1)];
   }
   return resolved;
 }
@@ -967,7 +974,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === 'enemy') continue;
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -986,7 +993,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               derived.push({
                 id: `${event.id}-inflict-${si}-${fi}`,
                 name: columnId,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId,
                 startFrame: absFrame,
                 activationDuration: INFLICTION_DURATION,
@@ -1005,7 +1012,18 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               const grantColumnId = EXCHANGE_STATUS_COLUMN[frame.applyStatus.status];
               if (grantColumnId) {
                 const statusDuration = EXCHANGE_STATUS_DURATION[frame.applyStatus.status] ?? EXCHANGE_EVENT_DURATION;
-                for (let s = 0; s < frame.applyStatus.stacks; s++) {
+                const maxSlots = EXCHANGE_STATUS_MAX_SLOTS[frame.applyStatus.status];
+                // Count active stacks at this frame (stacks don't refresh at max)
+                let activeCount = 0;
+                if (maxSlots) {
+                  for (const ev of [...events, ...derived]) {
+                    if (ev.ownerId !== event.ownerId || ev.columnId !== grantColumnId) continue;
+                    const endFrame = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+                    if (ev.startFrame <= absFrame && endFrame > absFrame) activeCount++;
+                  }
+                }
+                const slotsAvailable = maxSlots ? maxSlots - activeCount : frame.applyStatus.stacks;
+                for (let s = 0; s < Math.min(frame.applyStatus.stacks, slotsAvailable); s++) {
                   derived.push({
                     id: `${event.id}-status-${si}-${fi}-${s}`,
                     name: frame.applyStatus.status,
@@ -1048,7 +1066,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               derived.push({
                 id: `${event.id}-status-${si}-${fi}`,
                 name: frame.applyStatus.eventName ?? frame.applyStatus.status,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId: frame.applyStatus.status,
                 startFrame: absFrame,
                 activationDuration: frame.applyStatus.durationFrames,
@@ -1070,7 +1088,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
               derived.push({
                 id: `${event.id}-forced-${si}-${fi}`,
                 name: reactionColumnId,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId: reactionColumnId,
                 startFrame: absFrame,
                 activationDuration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
@@ -1126,7 +1144,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
             derived.push({
               id: `${event.id}-combo-inflict-${si}-${fi}`,
               name: triggerCol,
-              ownerId: 'enemy',
+              ownerId: ENEMY_OWNER_ID,
               columnId: triggerCol,
               startFrame: absFrame,
               activationDuration: INFLICTION_DURATION,
@@ -1140,7 +1158,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
             derived.push({
               id: `${event.id}-combo-phys-${si}-${fi}`,
               name: triggerCol,
-              ownerId: 'enemy',
+              ownerId: ENEMY_OWNER_ID,
               columnId: triggerCol,
               startFrame: absFrame,
               activationDuration: PHYSICAL_INFLICTION_DURATION,
@@ -1158,7 +1176,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
 
   // Perfect dodge dash events → SP recovery (7.5 SP)
   for (const event of events) {
-    if (event.columnId === 'dash' && event.isPerfectDodge) {
+    if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
       derived.push({
         id: `${event.id}-sp-dodge`,
         name: 'sp-recovery',
@@ -1232,7 +1250,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
   const consumptions: ConsumptionPoint[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === 'enemy') continue;
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -1287,7 +1305,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
     // Find active enemy infliction events of the matching element at this frame
     const activeInflictions: TimelineEvent[] = [];
     for (const ev of events) {
-      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
 
       const clamp = clampMap.get(ev.id);
@@ -1359,7 +1377,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
 
     const activeInflictions: TimelineEvent[] = [];
     for (const ev of events) {
-      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
       const clamp = clampMap.get(ev.id);
       const endFrame = clamp !== undefined
@@ -1398,7 +1416,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
         activationDuration: clampedActive,
         activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
-        eventStatus: 'consumed',
+        eventStatus: EventStatusType.CONSUMED,
         eventStatusOwnerId: clamp.source.ownerId,
         eventStatusSkillName: clamp.source.skillName,
       });
@@ -1421,7 +1439,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
 function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Collect all enemy infliction events, sorted by start frame
   const inflictions = events
-    .filter((ev) => ev.ownerId === 'enemy' && INFLICTION_COLUMN_IDS.has(ev.columnId))
+    .filter((ev) => ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
     .sort((a, b) => a.startFrame - b.startFrame);
 
   if (inflictions.length === 0) return events;
@@ -1437,7 +1455,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
     const incoming = inflictions[i];
     if (removedIds.has(incoming.id)) continue;
     // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-    if (incoming.eventStatus === 'consumed') continue;
+    if (incoming.eventStatus === EventStatusType.CONSUMED) continue;
 
     // Find active inflictions of a DIFFERENT element at incoming's start frame
     const activeOther: TimelineEvent[] = [];
@@ -1446,7 +1464,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       if (removedIds.has(prev.id)) continue;
       if (prev.columnId === incoming.columnId) continue;
       // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-      if (prev.eventStatus === 'consumed') continue;
+      if (prev.eventStatus === EventStatusType.CONSUMED) continue;
 
       // Use clamped end if already clamped by a prior reaction
       const clamp = clampMap.get(prev.id);
@@ -1465,7 +1483,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       generatedReactions.push({
         id: `${incoming.id}-reaction`,
         name: reactionColumnId,
-        ownerId: 'enemy',
+        ownerId: ENEMY_OWNER_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
         activationDuration: REACTION_DURATION,
@@ -1479,7 +1497,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       removedIds.add(incoming.id);
 
       // Clamp all active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? 'enemy', skillName: incoming.sourceSkillName };
+      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
         clampMap.set(consumed.id, { frame: incoming.startFrame, source: reactionSource });
       }
@@ -1506,7 +1524,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: clampedActive,
         activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
-        eventStatus: 'consumed',
+        eventStatus: EventStatusType.CONSUMED,
         eventStatusOwnerId: clamp.source.ownerId,
         eventStatusSkillName: clamp.source.skillName,
       });
@@ -1526,7 +1544,7 @@ function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
 function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && REACTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
       const group = reactionsByType.get(ev.columnId) ?? [];
       group.push(ev);
       reactionsByType.set(ev.columnId, group);
@@ -1551,7 +1569,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
       if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
         clampMap.set(current.id, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? 'enemy', skillName: next.sourceSkillName },
+          source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
         });
       }
     }
@@ -1564,7 +1582,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
     return clamp !== undefined ? {
       ...ev,
       activationDuration: clamp.duration,
-      eventStatus: 'refreshed' as const,
+      eventStatus: EventStatusType.REFRESHED,
       eventStatusOwnerId: clamp.source.ownerId,
       eventStatusSkillName: clamp.source.skillName,
     } : ev;
@@ -1578,7 +1596,7 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const physInflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = physInflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       physInflictionsByColumn.set(ev.columnId, group);
@@ -1609,7 +1627,7 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
         processedMap.set(ev.id, {
           ...ev,
           activationDuration: extendedActive[i],
-          eventStatus: 'extended' as const,
+          eventStatus: EventStatusType.EXTENDED,
           eventStatusOwnerId: next.sourceOwnerId,
           eventStatusSkillName: next.sourceSkillName,
         });
@@ -1631,7 +1649,7 @@ function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[
 function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = inflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       inflictionsByColumn.set(ev.columnId, group);
@@ -1667,7 +1685,7 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
         processedMap.set(ev.id, {
           ...ev,
           activationDuration: extendedActive[i],
-          eventStatus: 'extended' as const,
+          eventStatus: EventStatusType.EXTENDED,
           eventStatusOwnerId: next.sourceOwnerId,
           eventStatusSkillName: next.sourceSkillName,
         });
@@ -1717,14 +1735,14 @@ function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<str
 
   // Collect combustion reaction events on enemy
   const combustionEvents = events.filter(
-    (ev) => ev.columnId === 'combustion' && ev.ownerId === 'enemy',
+    (ev) => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_OWNER_ID,
   );
   if (combustionEvents.length === 0) return events;
 
   // Collect all operator slot IDs
   const operatorSlots = new Set<string>();
   for (const ev of events) {
-    if (ev.ownerId !== 'enemy' && ev.ownerId !== COMMON_OWNER_ID) {
+    if (ev.ownerId !== ENEMY_OWNER_ID && ev.ownerId !== COMMON_OWNER_ID) {
       operatorSlots.add(ev.ownerId);
     }
   }
@@ -1796,7 +1814,7 @@ function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<str
             clamped.set(f.id, {
               ...existing,
               activationDuration: bsFrame - f.startFrame,
-              eventStatus: 'refreshed' as const,
+              eventStatus: EventStatusType.REFRESHED,
               eventStatusOwnerId: wulfgardOwnerId,
               eventStatusSkillName: CombatSkillsType.THERMITE_TRACERS,
             });
@@ -1834,7 +1852,7 @@ function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<str
               clamped.set(f.id, {
                 ...existing,
                 activationDuration: bsFrame - f.startFrame,
-                eventStatus: 'refreshed' as const,
+                eventStatus: EventStatusType.REFRESHED,
                 eventStatusOwnerId: wulfgardOwnerId,
                 eventStatusSkillName: CombatSkillsType.THERMITE_TRACERS,
               });
@@ -1957,7 +1975,7 @@ function deriveUnbridledEdge(
         clamped.set(earliest.id, {
           ...existingDerived,
           activationDuration: hit.frame - earliest.startFrame,
-          eventStatus: 'refreshed' as const,
+          eventStatus: EventStatusType.REFRESHED,
           eventStatusOwnerId: wielderSlotId,
           eventStatusSkillName: hit.sourceSkillName,
         });

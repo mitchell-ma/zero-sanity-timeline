@@ -27,7 +27,7 @@ import {
 } from "../model/gears/hotWork";
 import { TideFallLightArmor, TideSurgeGauntlets } from "../model/gears/tideSurge";
 import { GenericGear } from "../model/gears/genericGear";
-import { RedeemerSeal, RedeemerSealT1, RedeemerTag, RedeemerTagT1 } from "../model/gears/redeemer";
+import { RedeemerHands, RedeemerSeal, RedeemerSealT1, RedeemerTag, RedeemerTagT1 } from "../model/gears/redeemer";
 import {
   AburreyAuditoryChip,
   AburreyAuditoryChipT1,
@@ -44,8 +44,10 @@ import {
 import {
   AethertechAnalysisBand,
   AethertechGloves,
+  AethertechLightGloves,
   AethertechPlating,
   AethertechStabilizer,
+  AethertechStabilizerT1,
   AethertechVisor,
   AethertechWatch,
 } from "../model/gears/aethertech";
@@ -73,9 +75,11 @@ import {
   BonekrushaFigurineT1,
   BonekrushaHeavyArmor,
   BonekrushaHeavyArmorT1,
+  BonekrushaHeavyArmorT2,
   BonekrushaMask,
   BonekrushaMaskMod,
   BonekrushaMaskT1,
+  BonekrushaMaskT2,
   BonekrushaPoncho,
   BonekrushaPonchoMod,
   BonekrushaPonchoT1,
@@ -116,6 +120,7 @@ import {
   FrontiersFiberGlovesMod,
   FrontiersO2Tether,
   FrontiersO2TetherMod,
+  FrontiersProtectionSuit,
 } from "../model/gears/frontiers";
 import {
   LynxAegisInjector,
@@ -123,6 +128,7 @@ import {
   LynxConnector,
   LynxConnectorMod,
   LynxConnectorT1,
+  LynxConnectorT2,
   LynxCuirass,
   LynxCuirassMod,
   LynxGauntlets,
@@ -216,15 +222,19 @@ import {
   SwordmancerNavBeacon,
   SwordmancerTacFists,
   SwordmancerTacGauntlets,
+  SwordmancerTacGloves,
 } from "../model/gears/swordmancer";
 import {
   Type50YinglungGloves,
   Type50YinglungGlovesT1,
   Type50YinglungHeavyArmor,
   Type50YinglungKnife,
+  Type50YinglungHeavyArmorT1,
+  Type50YinglungHeavyArmorT2,
   Type50YinglungKnifeT1,
   Type50YinglungLightArmor,
   Type50YinglungRadar,
+  Type50YinglungRadarT2,
 } from "../model/gears/type50Yinglung";
 import { Consumable } from "../model/consumables/consumable";
 import { GinsengMeatStew } from "../model/consumables/ginsengMeatStew";
@@ -771,6 +781,7 @@ const GEARS_RAW: GI[] = [
   { name: "Basic PPE",                    icon: basicPPE,              gearType: A, create: () => createGenericGear(A) },
   { name: "Bonekrusha Heavy Armor",       icon: bkHeavyArmor,          gearType: A, create: () => new BonekrushaHeavyArmor() },
   { name: "Bonekrusha Heavy Armor T1",    icon: bkHeavyArmorT1,        gearType: A, create: () => new BonekrushaHeavyArmorT1() },
+  { name: "Bonekrusha Heavy Armor T2",    icon: bkHeavyArmorT1,        gearType: A, create: () => new BonekrushaHeavyArmorT2() },
   { name: "Bonekrusha Poncho",            icon: bkPoncho,              gearType: A, create: () => new BonekrushaPoncho() },
   { name: "Bonekrusha Poncho MOD",        icon: bkPonchoMod,           gearType: A, create: () => new BonekrushaPonchoMod() },
   { name: "Bonekrusha Poncho T1",         icon: bkPonchoT1,            gearType: A, create: () => new BonekrushaPonchoT1() },
@@ -784,6 +795,7 @@ const GEARS_RAW: GI[] = [
   { name: "Frontiers Armor T1",           icon: frArmorT1,             gearType: A, create: () => new FrontiersArmorT1() },
   { name: "Frontiers Armor T2",           icon: frArmorT2,             gearType: A, create: () => new FrontiersArmorT2() },
   { name: "Frontiers Armor T3",           icon: frArmorT3,             gearType: A, create: () => new FrontiersArmorT3() },
+  { name: "Frontiers Protection Suit",   icon: frArmorT1,             gearType: A, create: () => new FrontiersProtectionSuit() },
   { name: "Hot Work Exo-Rig",             icon: hwExoRig,              gearType: A, create: () => createGenericGear(A, E.HOT_WORK) },
   { name: "Hot Work Exoskeleton",         icon: hotWorkExoskeletonIcon, gearType: A, create: () => new HotWorkExoskeleton() },
   { name: "LYNX Cuirass",                 icon: lynxCuirass,           gearType: A, create: () => new LynxCuirass() },
@@ -826,6 +838,8 @@ const GEARS_RAW: GI[] = [
   { name: "Swordmancer Light Armor",      icon: swLightArmor,          gearType: A, create: () => new SwordmancerLightArmor() },
   { name: "Tide Fall Light Armor",        icon: tfLightArmor,          gearType: A, create: () => new TideFallLightArmor() },
   { name: "Type 50 Yinglung Heavy Armor", icon: ylHeavyArmor,          gearType: A, create: () => new Type50YinglungHeavyArmor() },
+  { name: "Type 50 Yinglung Heavy Armor T1", icon: ylHeavyArmor,    gearType: A, create: () => new Type50YinglungHeavyArmorT1() },
+  { name: "Type 50 Yinglung Heavy Armor T2", icon: ylHeavyArmor,    gearType: A, create: () => new Type50YinglungHeavyArmorT2() },
   { name: "Type 50 Yinglung Light Armor", icon: ylLightArmor,          gearType: A, create: () => new Type50YinglungLightArmor() },
   { name: "Æthertech Plating",            icon: aetPlating,            gearType: A, create: () => new AethertechPlating() },
 
@@ -882,16 +896,19 @@ const GEARS_RAW: GI[] = [
   { name: "Mordvolt Resistant Gloves T1",    icon: mvResGlovesT1,      gearType: G, create: () => new MordvoltResistantGlovesT1() },
   { name: "Pulser Labs Gloves",              icon: plGloves,           gearType: G, create: () => new PulserLabsGloves() },
   { name: "Redeemer Gloves DEX",             icon: redGlovesDex,       gearType: G, create: () => createGenericGear(G) },
+  { name: "Redeemer Hands",                  icon: redGlovesForce,     gearType: G, create: () => new RedeemerHands() },
   { name: "Redeemer Gloves FORCE",           icon: redGlovesForce,     gearType: G, create: () => createGenericGear(G) },
   { name: "Roving MSGR Fists",              icon: rmsgrFists,          gearType: G, create: () => new RovingMsgrFists() },
   { name: "Roving MSGR Fists MOD",          icon: rmsgrFistsMod,       gearType: G, create: () => new RovingMsgrFistsMod() },
   { name: "Roving MSGR Fists T1",           icon: rmsgrFistsT1,        gearType: G, create: () => new RovingMsgrFistsT1() },
   { name: "Swordmancer TAC Fists",          icon: swTacFists,          gearType: G, create: () => new SwordmancerTacFists() },
   { name: "Swordmancer TAC Gauntlets",      icon: swTacGauntlets,      gearType: G, create: () => new SwordmancerTacGauntlets() },
+  { name: "Swordmancer TAC Gloves",         icon: swTacGauntlets,      gearType: G, create: () => new SwordmancerTacGloves() },
   { name: "Tide Surge Gauntlets",            icon: tsGauntlets,         gearType: G, create: () => new TideSurgeGauntlets() },
   { name: "Type 50 Yinglung Gloves",        icon: ylGloves,            gearType: G, create: () => new Type50YinglungGloves() },
   { name: "Type 50 Yinglung Gloves T1",     icon: ylGlovesT1,          gearType: G, create: () => new Type50YinglungGlovesT1() },
   { name: "Æthertech Gloves",               icon: aetGloves,           gearType: G, create: () => new AethertechGloves() },
+  { name: "Æthertech Light Gloves",          icon: aetGloves,           gearType: G, create: () => new AethertechLightGloves() },
 
   // ── Kit (124) ───────────────────────────────────────────────────────────────
   { name: "Aburrey Auditory Chip",       icon: aAuditoryChip,       gearType: K, create: () => new AburreyAuditoryChip() },
@@ -917,6 +934,7 @@ const GEARS_RAW: GI[] = [
   { name: "Bonekrusha Mask",             icon: bkMask,               gearType: K, create: () => new BonekrushaMask() },
   { name: "Bonekrusha Mask MOD",         icon: bkMaskMod,            gearType: K, create: () => new BonekrushaMaskMod() },
   { name: "Bonekrusha Mask T1",          icon: bkMaskT1,             gearType: K, create: () => new BonekrushaMaskT1() },
+  { name: "Bonekrusha Mask T2",          icon: bkMaskT1,             gearType: K, create: () => new BonekrushaMaskT2() },
   { name: "Catastrophe Filter",          icon: catFilter,            gearType: K, create: () => new CatastropheFilter() },
   { name: "Catastrophe Gauze Cartridge", icon: catGauze,             gearType: K, create: () => new CatastropheGauzeCartridge() },
   { name: "Catastrophe Gauze Cartridge T1", icon: catGauzeT1,        gearType: K, create: () => new CatastropheGauzeCartridgeT1() },
@@ -943,6 +961,7 @@ const GEARS_RAW: GI[] = [
   { name: "LYNX Connector",              icon: lynxConnector,        gearType: K, create: () => new LynxConnector() },
   { name: "LYNX Connector MOD",          icon: lynxConnectorMod,     gearType: K, create: () => new LynxConnectorMod() },
   { name: "LYNX Connector T1",           icon: lynxConnectorT1,      gearType: K, create: () => new LynxConnectorT1() },
+  { name: "LYNX Connector T2",           icon: lynxConnectorT1,      gearType: K, create: () => new LynxConnectorT2() },
   { name: "LYNX Slab",                   icon: lynxSlab,             gearType: K, create: () => new LynxSlab() },
   { name: "LYNX Slab MOD",               icon: lynxSlabMod,          gearType: K, create: () => new LynxSlabMod() },
   { name: "MI Security Armband",         icon: miArmband,            gearType: K, create: () => new MiSecurityArmband() },
@@ -1014,8 +1033,10 @@ const GEARS_RAW: GI[] = [
   { name: "Type 50 Yinglung Knife",      icon: ylKnife,              gearType: K, create: () => new Type50YinglungKnife() },
   { name: "Type 50 Yinglung Knife T1",   icon: ylKnifeT1,            gearType: K, create: () => new Type50YinglungKnifeT1() },
   { name: "Type 50 Yinglung Radar",      icon: ylRadar,              gearType: K, create: () => new Type50YinglungRadar() },
+  { name: "Type 50 Yinglung Radar T2",  icon: ylRadar,              gearType: K, create: () => new Type50YinglungRadarT2() },
   { name: "Æthertech Analysis Band",     icon: aetAnalysisBand,      gearType: K, create: () => new AethertechAnalysisBand() },
   { name: "Æthertech Stabilizer",        icon: aetStabilizer,        gearType: K, create: () => new AethertechStabilizer() },
+  { name: "Æthertech Stabilizer T1",    icon: aetStabilizer,        gearType: K, create: () => new AethertechStabilizerT1() },
   { name: "Æthertech Visor",             icon: aetVisor,             gearType: K, create: () => new AethertechVisor() },
   { name: "Æthertech Watch",             icon: aetWatch,             gearType: K, create: () => new AethertechWatch() },
 ];

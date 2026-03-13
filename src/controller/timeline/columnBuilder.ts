@@ -1,7 +1,7 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
 import type { Potential } from '../../consts/types';
-import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
+import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/channelLabels';
 import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
@@ -34,7 +34,7 @@ import { XAIHI_BASIC_ATTACK_SEQUENCES, XAIHI_BATTLE_SKILL_SEQUENCE, XAIHI_COMBO_
 import { PERLICA_BASIC_ATTACK_SEQUENCES, PERLICA_BATTLE_SKILL_SEQUENCE, PERLICA_COMBO_SKILL_SEQUENCE, PERLICA_ULTIMATE_SEQUENCE } from '../../model/event-frames/perlicaEventFrames';
 import { FLUORITE_BASIC_ATTACK_SEQUENCES, FLUORITE_BATTLE_SKILL_SEQUENCE, FLUORITE_COMBO_SKILL_SEQUENCE, FLUORITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/fluoriteEventFrames';
 import { LASTRITE_BASIC_ATTACK_SEQUENCES, LASTRITE_BATTLE_SKILL_SEQUENCE, LASTRITE_COMBO_SKILL_SEQUENCE, LASTRITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/lastRiteEventFrames';
-import { YVONNE_BASIC_ATTACK_SEQUENCES, YVONNE_BATTLE_SKILL_SEQUENCE, YVONNE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/yvonneEventFrames';
+import { YVONNE_BASIC_ATTACK_SEQUENCES, YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCES, YVONNE_BATTLE_SKILL_SEQUENCE, YVONNE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/yvonneEventFrames';
 import { AVYWENNA_BASIC_ATTACK_SEQUENCES, AVYWENNA_BATTLE_SKILL_SEQUENCE, AVYWENNA_COMBO_SKILL_SEQUENCE, AVYWENNA_ULTIMATE_SEQUENCE } from '../../model/event-frames/avywennaEventFrames';
 import { DAPAN_BASIC_ATTACK_SEQUENCES, DAPAN_BATTLE_SKILL_SEQUENCE, DAPAN_COMBO_SKILL_SEQUENCE, DAPAN_ULTIMATE_SEQUENCE } from '../../model/event-frames/daPanEventFrames';
 import { POGRANICHNK_BASIC_ATTACK_SEQUENCES, POGRANICHNK_BATTLE_SKILL_SEQUENCE, POGRANICHNK_COMBO_SKILL_SEQUENCE, POGRANICHNK_ULTIMATE_SEQUENCE } from '../../model/event-frames/pogranichnikEventFrames';
@@ -268,6 +268,34 @@ export function buildColumns(
     });
   }
 
+  if (teamTeamColumns.has('team-wildland-trekker')) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-wildland-trekker`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.COMMON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.WILDLAND_TREKKER,
+      label: ColumnLabel.WILDLAND_TREKKER,
+      color: '#eebb44',
+      headerVariant: 'skill',
+      derived: true,
+    });
+  }
+
+  if (teamTeamColumns.has('team-ultimate-gain')) {
+    columns.push({
+      key: `${COMMON_OWNER_ID}-messengers-song`,
+      type: 'mini-timeline',
+      source: TimelineSourceType.COMMON,
+      ownerId: COMMON_OWNER_ID,
+      columnId: StatusType.MESSENGERS_SONG,
+      label: ColumnLabel.MESSENGERS_SONG,
+      color: '#88cc88',
+      headerVariant: 'skill',
+      derived: true,
+    });
+  }
+
   // ── Unbridled Edge team buff (OBJ Edge of Lightness) ─────────────────────
   const UNBRIDLED_EDGE_MAX_STACKS = 3;
   const hasUnbridledEdge = slots.some((s) => s.weaponName === 'OBJ Edge of Lightness');
@@ -390,17 +418,20 @@ export function buildColumns(
   for (const slot of slots) {
     const op = slot.operator;
     const isLaevatain = op?.id === 'laevatain';
+    const isYvonne = op?.id === 'yvonne';
     let slotHasCols = false;
     if (op) {
       // Dash subtimeline — before basic attack
       const DASH_FRAMES = Math.round(0.416 * 120); // 0.416s
       const DODGE_FRAMES = Math.round(0.351 * 120); // 0.351s game-time
+      const FINISHER_FRAMES = Math.round(1.0 * 120); // ~1.0s
+      const DIVE_FRAMES = Math.round(0.8 * 120); // ~0.8s
       columns.push({
         key: `${slot.slotId}-dash`,
         type: 'mini-timeline',
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
-        columnId: 'dash',
+        columnId: OPERATOR_COLUMNS.DASH,
         label: 'DASH',
         color: ELEMENT_COLORS[ElementType.PHYSICAL],
         headerVariant: 'skill',
@@ -502,6 +533,63 @@ export function buildColumns(
                 segments: enhanced.segments,
                 triggerCondition: 'Requires: Twilight active',
               },
+              {
+                name: CombatSkillsType.FINISHER,
+                defaultActivationDuration: FINISHER_FRAMES,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.FINISHER }] }],
+              },
+              {
+                name: CombatSkillsType.DIVE,
+                defaultActivationDuration: DIVE_FRAMES,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.DIVE }] }],
+              },
+            ];
+          }
+          // Yvonne basic attack: multi-sequence event with enhanced variant during ultimate
+          if (isYvonne && skillType === 'basic') {
+            const base = SkillSegmentBuilder.buildSegments(YVONNE_BASIC_ATTACK_SEQUENCES);
+            const enhanced = SkillSegmentBuilder.buildSegments(YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCES);
+            col.defaultEvent = {
+              name: CombatSkillsType.EXUBERANT_TRIGGER,
+              defaultActivationDuration: base.totalDurationFrames,
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+              segments: base.segments,
+            };
+            col.eventVariants = [
+              {
+                name: CombatSkillsType.EXUBERANT_TRIGGER,
+                defaultActivationDuration: base.totalDurationFrames,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: base.segments,
+              },
+              {
+                name: CombatSkillsType.EXUBERANT_TRIGGER_ENHANCED,
+                defaultActivationDuration: enhanced.totalDurationFrames,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: enhanced.segments,
+                triggerCondition: 'Requires: Cryoblasting Pistolier active',
+              },
+              {
+                name: CombatSkillsType.FINISHER,
+                defaultActivationDuration: FINISHER_FRAMES,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.FINISHER }] }],
+              },
+              {
+                name: CombatSkillsType.DIVE,
+                defaultActivationDuration: DIVE_FRAMES,
+                defaultActiveDuration: 0,
+                defaultCooldownDuration: 0,
+                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.DIVE }] }],
+              },
             ];
           }
           // Laevatain battle skill: 4 variants with frame data from skills.json
@@ -513,10 +601,17 @@ export function buildColumns(
               enhSeg.segments[0].frames[1].gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
             }
             const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-            // P1: Empowered additional attack restores 20 SP on hit
-            const empSpReturn = new SmoulderingFire().getAdditionalAtkSpReturnOnHit((slot.potential ?? 0) as Potential);
-            if (empSpReturn > 0 && empSeg.segments[1]?.frames?.[0]) {
-              empSeg.segments[1].frames[0].skillPointRecovery = empSpReturn;
+            // Empowered additional attack: stagger + ult gauge + P1 SP recovery
+            if (empSeg.segments[1]?.frames?.[0]) {
+              const addFrame = empSeg.segments[1].frames[0];
+              addFrame.stagger = SmoulderingFire.ADDITIONAL_ATK_STAGGER;
+              addFrame.gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
+              addFrame.consumeStatus = 'MELTING_FLAME';
+              // skills.json has CONSUME_ARTS_INFLICTION: HEAT x4 but the actual
+              // mechanic consumes Melting Flame stacks (self-status), not enemy heat
+              delete addFrame.consumeArtsInfliction;
+              const empSpReturn = new SmoulderingFire().getAdditionalAtkSpReturnOnHit((slot.potential ?? 0) as Potential);
+              if (empSpReturn > 0) addFrame.skillPointRecovery = empSpReturn;
             }
             const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
             col.defaultEvent = {
@@ -654,7 +749,7 @@ export function buildColumns(
         type: 'mini-timeline',
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
-        columnId: 'thunderlance',
+        columnId: OPERATOR_COLUMNS.THUNDERLANCE,
         label: STATUS_LABELS[StatusType.THUNDERLANCE].toUpperCase(),
         color: op!.color,
         headerVariant: 'mf',
@@ -676,6 +771,36 @@ export function buildColumns(
         },
       });
     }
+    // Add Crit Stacks subtimeline column for Yvonne
+    if (isYvonne) {
+      const CRIT_STACK_MICRO_COLS = 4;
+      columns.push({
+        key: `${slot.slotId}-crit-stacks`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: OPERATOR_COLUMNS.CRIT_STACKS,
+        label: STATUS_LABELS[StatusType.CRIT_STACKS].toUpperCase(),
+        color: op!.color,
+        headerVariant: 'mf',
+        microColumns: Array.from({ length: CRIT_STACK_MICRO_COLS }, (_, i) => ({
+          id: `cs-${i}`,
+          label: String(i + 1),
+          color: ELEMENT_COLORS[ElementType.CRYO],
+        })),
+        microColumnAssignment: 'by-order',
+        maxEvents: CRIT_STACK_MICRO_COLS,
+        requiresMonotonicOrder: true,
+        reuseExpiredSlots: true,
+        derived: true,
+        defaultEvent: {
+          name: 'Crit Stack',
+          defaultActivationDuration: 840, // 7s at 120fps (lasts duration of ultimate)
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      });
+    }
     // Add single MeltingFlame subtimeline column for Laevatain
     if (isLaevatain) {
       columns.push({
@@ -683,7 +808,7 @@ export function buildColumns(
         type: 'mini-timeline',
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
-        columnId: 'melting-flame',
+        columnId: OPERATOR_COLUMNS.MELTING_FLAME,
         label: STATUS_LABELS[StatusType.MELTING_FLAME].toUpperCase(),
         color: op!.color,
         headerVariant: 'mf',
@@ -694,6 +819,7 @@ export function buildColumns(
         })),
         microColumnAssignment: 'by-order',
         maxEvents: MF_MICRO_COLS,
+        reuseExpiredSlots: true,
         requiresMonotonicOrder: true,
         derived: true,
         defaultEvent: {
@@ -702,6 +828,31 @@ export function buildColumns(
           defaultActiveDuration: 0,
           defaultCooldownDuration: 0,
         },
+      });
+    }
+    // Add Wildland Trekker trigger counter for Arclight
+    const isArclight = op?.id === 'arclight';
+    if (isArclight) {
+      const WT_TRIGGER_COLS = 3;
+      columns.push({
+        key: `${slot.slotId}-wildland-trekker-trigger`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: OPERATOR_COLUMNS.WILDLAND_TREKKER_TRIGGER,
+        label: ColumnLabel.WILDLAND_TREKKER,
+        color: op!.color,
+        headerVariant: 'mf',
+        microColumns: Array.from({ length: WT_TRIGGER_COLS }, (_, i) => ({
+          id: `wt-${i}`,
+          label: String(i + 1),
+          color: ELEMENT_COLORS[ElementType.ELECTRIC],
+        })),
+        microColumnAssignment: 'by-order',
+        maxEvents: WT_TRIGGER_COLS,
+        reuseExpiredSlots: true,
+        requiresMonotonicOrder: true,
+        derived: true,
       });
     }
     // ── Weapon skill buff column (shared dynamic-split) ──────────────────────
@@ -840,7 +991,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const mfColCount = isLaevatain ? 1 : isAvywenna ? 1 : 0;
+    const mfColCount = isLaevatain ? 1 : isAvywenna ? 1 : isArclight ? 1 : isYvonne ? 1 : 0;
     const needed = MIN_SLOT_COLS - (skillColCount + mfColCount + weaponColCount + gearColCount + tacticalColCount + scFangsColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
@@ -857,7 +1008,7 @@ export function buildColumns(
     key: `enemy-${COMMON_COLUMN_IDS.STAGGER}`,
     type: 'mini-timeline',
     source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
+    ownerId: ENEMY_OWNER_ID,
     columnId: COMMON_COLUMN_IDS.STAGGER,
     label: ColumnLabel.STAGGER,
     color: '#dd8844',
@@ -872,8 +1023,8 @@ export function buildColumns(
     key: 'enemy-stagger-frailty',
     type: 'mini-timeline',
     source: TimelineSourceType.ENEMY,
-    ownerId: 'enemy',
-    columnId: 'stagger-frailty',
+    ownerId: ENEMY_OWNER_ID,
+    columnId: ENEMY_GROUP_COLUMNS.STAGGER_FRAILTY,
     label: ColumnLabel.STAGGER_FRAILTY,
     color: '#dd8844',
     headerVariant: 'skill',
@@ -944,8 +1095,8 @@ export function buildColumns(
       key: 'enemy-arts-infliction',
       type: 'mini-timeline',
       source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: 'arts-infliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: ENEMY_GROUP_COLUMNS.ARTS_INFLICTION,
       label: ColumnLabel.INFLICTION,
       color: '#cc3333',
       headerVariant: 'infliction',
@@ -956,6 +1107,7 @@ export function buildColumns(
       })),
       microColumnAssignment: 'by-order',
       matchColumnIds: inflictionColumnIds,
+      maxEvents: 4,
       reuseExpiredSlots: true,
       derived: true,
       defaultEvent: {
@@ -971,8 +1123,8 @@ export function buildColumns(
       key: 'enemy-arts-reaction',
       type: 'mini-timeline',
       source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: 'arts-reaction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: ENEMY_GROUP_COLUMNS.ARTS_REACTION,
       label: ColumnLabel.ARTS_REACTION,
       color: '#dd6644',
       headerVariant: 'infliction',
@@ -989,8 +1141,8 @@ export function buildColumns(
       key: 'enemy-physical-infliction',
       type: 'mini-timeline',
       source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: 'physical-infliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: ENEMY_GROUP_COLUMNS.PHYSICAL_INFLICTION,
       label: ColumnLabel.PHYSICAL_INFLICTION,
       color: '#c0c8d0',
       headerVariant: 'infliction',
@@ -1014,8 +1166,8 @@ export function buildColumns(
       key: 'enemy-physical-status',
       type: 'mini-timeline',
       source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: 'physical-status',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: ENEMY_GROUP_COLUMNS.PHYSICAL_STATUS,
       label: ColumnLabel.PHYSICAL_STATUS,
       color: '#c0c8d0',
       headerVariant: 'infliction',
@@ -1026,28 +1178,44 @@ export function buildColumns(
     });
   }
 
-  if (teamEnemyColumns.has('enemy-susceptibility')) {
-    // Susceptibility debuff on enemy (Focus from Antal, Susceptibility from Ardelia/Gilberta/Avywenna)
+  // ── Originium Crystal column (Endministrator) ──────────────────────────────
+  // When Endministrator is in the team, add a micro-column subtimeline on the enemy
+  // to track attached Originium Crystals (from Sealing Sequence).
+  const hasEndministrator = slots.some((s) => s.operator?.id === 'endministrator');
+  if (hasEndministrator) {
+    const OC_MICRO_COLS = 4;
+    const endSlot = slots.find((s) => s.operator?.id === 'endministrator')!;
     columns.push({
-      key: 'enemy-susceptibility',
+      key: 'enemy-originium-crystal',
       type: 'mini-timeline',
       source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: StatusType.SUSCEPTIBILITY,
-      label: ColumnLabel.SUSCEPTIBILITY,
-      color: '#cc8866',
-      headerVariant: 'skill',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
+      label: ColumnLabel.ORIGINIUM_CRYSTAL,
+      color: endSlot.operator!.color,
+      headerVariant: 'mf',
+      microColumns: Array.from({ length: OC_MICRO_COLS }, (_, i) => ({
+        id: `oc-${i}`,
+        label: String(i + 1),
+        color: endSlot.operator!.color,
+      })),
+      microColumnAssignment: 'by-order',
+      maxEvents: OC_MICRO_COLS,
+      reuseExpiredSlots: true,
+      requiresMonotonicOrder: true,
       derived: true,
       defaultEvent: {
-        name: 'Susceptibility',
-        defaultActivationDuration: 1800, // 15 seconds at 120fps
+        name: 'Originium Crystal',
+        defaultActivationDuration: TOTAL_FRAMES * 10,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
       },
     });
   }
 
-  // ── Shared enemy fragility column from weapon effects ─────────────────────
+  // ── Unified enemy status column ─────────────────────────────────────────────
+  // Collects all enemy debuff statuses (Focus, Susceptibility, Fragility, weapon debuffs).
+  // Always present — supports both derived events from operator skills and manual debug additions.
   const enemyWeaponDebuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
   for (const slot of slots) {
     if (!slot.operator || !slot.weaponName) continue;
@@ -1064,32 +1232,81 @@ export function buildColumns(
       }
     }
   }
-  if (enemyWeaponDebuffs.length > 0) {
-    columns.push({
-      key: 'enemy-fragility',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: 'enemy',
-      columnId: 'enemy-fragility',
-      label: ColumnLabel.FRAGILITY,
+
+  const statusMicroColumns = [
+    {
+      id: StatusType.FOCUS,
+      label: STATUS_LABELS[StatusType.FOCUS],
+      color: '#55aadd',
+      defaultEvent: {
+        name: StatusType.FOCUS,
+        defaultActivationDuration: 7200, // 60s at 120fps (Focus duration)
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: DEBUGGER_OWNER_ID,
+        sourceSkillName: 'Debug',
+      },
+    },
+    {
+      id: StatusType.SUSCEPTIBILITY,
+      label: STATUS_LABELS[StatusType.SUSCEPTIBILITY],
+      color: '#cc8866',
+      defaultEvent: {
+        name: StatusType.SUSCEPTIBILITY,
+        defaultActivationDuration: 1800, // 15s at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: DEBUGGER_OWNER_ID,
+        sourceSkillName: 'Debug',
+      },
+    },
+    {
+      id: StatusType.FRAGILITY,
+      label: STATUS_LABELS[StatusType.FRAGILITY],
       color: '#cc6644',
-      headerVariant: 'skill',
-      derived: true,
-      microColumns: enemyWeaponDebuffs.map((ewd) => ({
-        id: `fragility-${ewd.slotId}`,
-        label: ewd.label,
-        color: ewd.color,
-        defaultEvent: {
-          name: ewd.label,
-          defaultActivationDuration: ewd.durationFrames,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      })),
-      microColumnAssignment: 'dynamic-split',
-      matchColumnIds: enemyWeaponDebuffs.map((ewd) => `fragility-${ewd.slotId}`),
-    });
-  }
+      defaultEvent: {
+        name: StatusType.FRAGILITY,
+        defaultActivationDuration: 1800, // 15s at 120fps
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: DEBUGGER_OWNER_ID,
+        sourceSkillName: 'Debug',
+      },
+    },
+    // Scorching Heart (Laevatain talent — ignored Heat RES for 20s)
+    ...(slots.some((s) => s.operator?.id === 'laevatain') ? [{
+      id: StatusType.SCORCHING_HEART,
+      label: STATUS_LABELS[StatusType.SCORCHING_HEART],
+      color: '#f0a040',
+    }] : []),
+    ...enemyWeaponDebuffs.map((ewd) => ({
+      id: `fragility-${ewd.slotId}`,
+      label: ewd.label,
+      color: ewd.color,
+      defaultEvent: {
+        name: ewd.label,
+        defaultActivationDuration: ewd.durationFrames,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: DEBUGGER_OWNER_ID,
+        sourceSkillName: 'Debug',
+      },
+    })),
+  ];
+
+  columns.push({
+    key: ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: ENEMY_OWNER_ID,
+    columnId: ENEMY_GROUP_COLUMNS.ENEMY_STATUS,
+    label: ColumnLabel.STATUS,
+    color: '#cc8866',
+    headerVariant: 'infliction',
+    microColumns: statusMicroColumns,
+    microColumnAssignment: 'dynamic-split',
+    matchColumnIds: statusMicroColumns.map((mc) => mc.id),
+  });
 
   return columns;
 }

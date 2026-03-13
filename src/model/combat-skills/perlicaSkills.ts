@@ -12,6 +12,17 @@ import { Ultimate } from "./ultimate";
 
 // ── Perlica Basic Attack ────────────────────────────────────────────────────
 
+const PROTOCOL_ALPHA_SEQ: Record<BasicAttackType, readonly number[]> = {
+  [BasicAttackType.SEQUENCE_1]: [0.25, 0.28, 0.31, 0.33, 0.36, 0.38, 0.41, 0.43, 0.46, 0.49, 0.53, 0.57],
+  [BasicAttackType.SEQUENCE_2]: [0.30, 0.33, 0.36, 0.39, 0.42, 0.45, 0.48, 0.51, 0.54, 0.58, 0.62, 0.68],
+  [BasicAttackType.SEQUENCE_3]: [0.37, 0.41, 0.45, 0.48, 0.52, 0.56, 0.59, 0.63, 0.67, 0.71, 0.77, 0.84],
+  [BasicAttackType.SEQUENCE_4]: [0.57, 0.62, 0.68, 0.73, 0.79, 0.85, 0.90, 0.96, 1.02, 1.09, 1.17, 1.27],
+  [BasicAttackType.SEQUENCE_5]: [],
+  [BasicAttackType.FINISHER]: [4.0, 4.4, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 7.2, 7.7, 8.3, 9.0],
+  [BasicAttackType.DIVE]: [0.8, 0.88, 0.96, 1.04, 1.12, 1.20, 1.28, 1.36, 1.44, 1.54, 1.66, 1.80],
+  [BasicAttackType.FINAL_STRIKE]: [0.57, 0.62, 0.68, 0.73, 0.79, 0.85, 0.90, 0.96, 1.02, 1.09, 1.17, 1.27],
+};
+
 export class ProtocolAlphaBreach extends BasicAttack {
   static readonly SKILL_NAME = CombatSkillsType.PROTOCOL_ALPHA_BREACH;
 
@@ -27,29 +38,31 @@ export class ProtocolAlphaBreach extends BasicAttack {
   }
 
   getBasicAttackSequenceMultiplier(
-    _sequence: BasicAttackType,
-    _level: SkillLevel,
+    sequence: BasicAttackType,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0; // Multiplier data not yet extracted
+    return PROTOCOL_ALPHA_SEQ[sequence][level - 1] ?? 0;
   }
 
   getFinisherAttackMultiplier(
-    _level: SkillLevel,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0;
+    return PROTOCOL_ALPHA_SEQ[BasicAttackType.FINISHER][level - 1];
   }
 
   getDiveAttackMultiplier(
-    _level: SkillLevel,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0;
+    return PROTOCOL_ALPHA_SEQ[BasicAttackType.DIVE][level - 1];
   }
 }
 
 // ── Perlica Battle Skill ──────────────────────────────────────────────────
+
+const PROTOCOL_OMEGA_DMG = [1.78, 1.96, 2.13, 2.31, 2.49, 2.67, 2.85, 3.02, 3.20, 3.42, 3.69, 4.00] as const;
 
 export class ProtocolOmegaStrike extends BasicSkill {
   static readonly SKILL_NAME = CombatSkillsType.PROTOCOL_OMEGA_STRIKE;
@@ -64,9 +77,15 @@ export class ProtocolOmegaStrike extends BasicSkill {
       ...params,
     });
   }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return PROTOCOL_OMEGA_DMG[level - 1];
+  }
 }
 
 // ── Perlica Combo Skill ───────────────────────────────────────────────────
+
+const INSTANT_PROTOCOL_DMG = [0.80, 0.88, 0.96, 1.04, 1.12, 1.20, 1.28, 1.36, 1.44, 1.54, 1.66, 1.80] as const;
 
 export class InstantProtocolChain extends ComboSkill {
   static readonly SKILL_NAME = CombatSkillsType.INSTANT_PROTOCOL_CHAIN;
@@ -80,9 +99,15 @@ export class InstantProtocolChain extends ComboSkill {
       ...params,
     });
   }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return INSTANT_PROTOCOL_DMG[level - 1];
+  }
 }
 
 // ── Perlica Ultimate ──────────────────────────────────────────────────────
+
+const PROTOCOL_EPSILON_DMG = [4.45, 4.89, 5.34, 5.78, 6.22, 6.67, 7.11, 7.56, 8.00, 8.56, 9.23, 10.00] as const;
 
 export class ProtocolEpsilon extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.PROTOCOL_EPSILON;
@@ -119,5 +144,9 @@ export class ProtocolEpsilon extends Ultimate {
 
   getDuration(_level: SkillLevel, _operatorPotential: Potential): number {
     return 0;
+  }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return PROTOCOL_EPSILON_DMG[level - 1];
   }
 }

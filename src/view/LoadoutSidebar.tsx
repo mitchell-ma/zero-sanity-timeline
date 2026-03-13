@@ -21,6 +21,7 @@ interface LoadoutSidebarProps {
   onTreeChange: (tree: LoadoutTree) => void;
   onSelectLoadout: (id: string) => void;
   onNewLoadout: (parentId: string | null) => void;
+  onDuplicateLoadout: (sourceId: string) => void;
   onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
@@ -62,6 +63,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onTreeChange,
   onSelectLoadout,
   onNewLoadout,
+  onDuplicateLoadout,
   onDeleteLoadout,
   collapsed,
   onToggleCollapsed,
@@ -555,6 +557,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           selectedIds={selectedIds}
           onNewLoadout={(parentId) => { handleAddLoadout(parentId); setCtxMenu(null); }}
           onNewFolder={(parentId) => { handleAddFolder(parentId); setCtxMenu(null); }}
+          onDuplicate={(nodeId) => { onDuplicateLoadout(nodeId); setCtxMenu(null); }}
           onRename={(nodeId) => {
             const node = tree.nodes.find((n) => n.id === nodeId);
             if (node) { setRenamingId(nodeId); setRenameValue(node.name); }
@@ -576,7 +579,7 @@ export default LoadoutSidebar;
 
 function LoadoutContextMenu({
   x, y, nodeId, node, parentId, selectedIds,
-  onNewLoadout, onNewFolder, onRename, onDelete, onBatchDelete, onClose,
+  onNewLoadout, onNewFolder, onDuplicate, onRename, onDelete, onBatchDelete, onClose,
 }: {
   x: number;
   y: number;
@@ -586,6 +589,7 @@ function LoadoutContextMenu({
   selectedIds: Set<string>;
   onNewLoadout: (parentId: string | null) => void;
   onNewFolder: (parentId: string | null) => void;
+  onDuplicate: (nodeId: string) => void;
   onRename: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   onBatchDelete: (ids: string[]) => void;
@@ -633,6 +637,11 @@ function LoadoutContextMenu({
           {nodeId && node && !isBatch && (
             <>
               <div className="loadout-ctx-separator" />
+              {node.type === 'loadout' && (
+                <button className="loadout-ctx-item" onClick={() => onDuplicate(nodeId)}>
+                  Duplicate
+                </button>
+              )}
               <button className="loadout-ctx-item" onClick={() => onRename(nodeId)}>
                 Rename
               </button>

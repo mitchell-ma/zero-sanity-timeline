@@ -10,11 +10,14 @@ import {
   DamageStatistics,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { StatusQueryService } from '../controller/calculation/statusQueryService';
+import { StatusQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/calculation/statusQueryService';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
+import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
+import { ElementType, StatType } from '../consts/enums';
+import { getWeaponEffects } from '../consts/weaponSkillEffects';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
-import { OperatorLoadoutState } from './OperatorLoadoutHeader';
+import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
 
 const ROW_HEIGHT = 20;
 
@@ -48,12 +51,13 @@ interface CombatSheetProps {
   showRealTime?: boolean;
   contentFrames?: number;
   onDamageClick?: (row: DamageTableRow) => void;
+  onDamageRows?: (rows: DamageTableRow[]) => void;
 }
 
 export default function CombatSheet({
   slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
-  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick,
+  staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -61,9 +65,72 @@ export default function CombatSheet({
     [],
   );
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
+
+  // Build aggregated stats per operator for corrosion Arts Intensity lookup
+  const aggregatedStats = useMemo(() => {
+    const result: Record<string, { stats: Record<StatType, number> }> = {};
+    for (const slot of slots) {
+      if (!slot.operator) continue;
+      const slotLoadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
+      const slotStats = loadoutStats[slot.slotId] ?? DEFAULT_LOADOUT_STATS;
+      const agg = aggregateLoadoutStats(slot.operator.id, slotLoadout, slotStats);
+      if (agg) {
+        result[slot.slotId] = { stats: agg.stats };
+      }
+    }
+    return result;
+  }, [slots, loadouts, loadoutStats]);
+
+  // Pre-compute weapon fragility config: which slots have enemy-targeting DMG Taken debuffs
+  const weaponFragility = useMemo(() => {
+    const result: Record<string, WeaponFragilityEffect[]> = {};
+    for (const slot of slots) {
+      if (!slot.operator || !slot.weaponName) continue;
+      const entry = getWeaponEffects(slot.weaponName);
+      if (!entry) continue;
+      const effects: WeaponFragilityEffect[] = [];
+      for (const eff of entry.effects) {
+        if (eff.target !== 'enemy') continue;
+        for (const buff of eff.buffs) {
+          const elements = statToFragilityElements(buff.stat as string);
+          if (elements) {
+            effects.push({ elements, bonus: buff.valueMax });
+          }
+        }
+      }
+      if (effects.length > 0) {
+        result[slot.slotId] = effects;
+      }
+    }
+    return result;
+  }, [slots]);
+
+  // Pre-compute operator talent fragility (e.g. Xaihi Execute Process)
+  const talentFragility = useMemo(() => {
+    const effects: OperatorTalentFragility[] = [];
+    for (const slot of slots) {
+      if (!slot.operator) continue;
+      const stats = loadoutStats[slot.slotId];
+      if (!stats) continue;
+
+      // Xaihi Execute Process: Cryo DMG Taken +7%/10% while Cryo Infliction active
+      if (slot.operator.id === 'xaihi' && stats.talentOneLevel >= 1) {
+        const bonus = stats.talentOneLevel >= 2 ? 0.10 : 0.07;
+        effects.push({ elements: [ElementType.CRYO], bonus, requiredColumnId: 'cryoInfliction' });
+      }
+
+      // Endministrator Realspace Stasis: Physical DMG Taken +10%/20% while Originium Crystals attached
+      if (slot.operator.id === 'endministrator' && stats.talentTwoLevel >= 1) {
+        const bonus = stats.talentTwoLevel >= 2 ? 0.20 : 0.10;
+        effects.push({ elements: [ElementType.PHYSICAL], bonus, requiredColumnId: 'originium-crystal' });
+      }
+    }
+    return effects;
+  }, [slots, loadoutStats]);
+
   const statusQuery = useMemo(
-    () => new StatusQueryService(events, staggerBreaks ?? []),
-    [events, staggerBreaks],
+    () => new StatusQueryService(events, staggerBreaks ?? [], loadoutStats, aggregatedStats, weaponFragility, talentFragility),
+    [events, staggerBreaks, loadoutStats, aggregatedStats, weaponFragility, talentFragility],
   );
   const rows = useMemo(
     () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts, statusQuery),
@@ -78,6 +145,9 @@ export default function CombatSheet({
     () => computeDamageStatistics(rows, tableColumns, bossMaxHp),
     [rows, tableColumns, bossMaxHp],
   );
+
+  // Lift damage rows to parent
+  useEffect(() => { onDamageRows?.(rows); }, [rows, onDamageRows]);
 
   // Forward shift+scroll to zoom handler (same as timeline)
   useEffect(() => {

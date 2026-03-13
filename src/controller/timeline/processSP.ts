@@ -1,4 +1,5 @@
 import { TimelineEvent } from '../../consts/viewTypes';
+import { computeSpReturnSummary } from '../calculation/frameCalculator';
 
 // ── SP Return → Gauge Gain Reduction ─────────────────────────────────────────
 
@@ -17,35 +18,20 @@ export function applySpReturnGaugeReduction(events: TimelineEvent[]): TimelineEv
     if (ev.columnId !== 'battle') continue;
     if (!ev.segments) continue;
 
-    // Sum up all SP recovery from frame data
-    let totalSpReturn = 0;
-    for (const seg of ev.segments) {
-      if (!seg.frames) continue;
-      for (const frame of seg.frames) {
-        if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
-          totalSpReturn += frame.skillPointRecovery;
-        }
-      }
-    }
-
-    if (totalSpReturn <= 0) continue;
-
-    const spCost = ev.skillPointCost ?? 100;
-    if (spCost <= 0) continue;
-
-    const ratio = Math.max(0, (spCost - totalSpReturn) / spCost);
+    const sp = computeSpReturnSummary(ev);
+    if (!sp.hasReduction) continue;
 
     const updates: Partial<TimelineEvent> = {};
     if (ev.gaugeGain != null) {
-      updates.gaugeGain = ev.gaugeGain * ratio;
+      updates.gaugeGain = ev.gaugeGain * sp.gaugeReduction;
     }
     if (ev.teamGaugeGain != null) {
-      updates.teamGaugeGain = ev.teamGaugeGain * ratio;
+      updates.teamGaugeGain = ev.teamGaugeGain * sp.gaugeReduction;
     }
     if (ev.gaugeGainByEnemies != null) {
       const reduced: Record<number, number> = {};
       for (const [k, v] of Object.entries(ev.gaugeGainByEnemies)) {
-        reduced[Number(k)] = v * ratio;
+        reduced[Number(k)] = v * sp.gaugeReduction;
       }
       updates.gaugeGainByEnemies = reduced;
     }

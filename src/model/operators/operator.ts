@@ -162,6 +162,7 @@ export abstract class Operator {
     this.baseStats = baseStats;
     this.stats = {
       ...DEFAULT_STATS,
+      [StatType.BASE_HP]: Math.round(500 + (5495 - 500) * ((level - 1) / 89)),
       [StatType.CRITICAL_RATE]: 0.05,
       [StatType.CRITICAL_DAMAGE]: 0.5,
       ...interpolateStats(baseStats, level),
@@ -229,4 +230,19 @@ export abstract class Operator {
   get derivedTeamColumns(): string[] | undefined { return undefined; }
   /** Notes describing SP return mechanics from potentials, talents, or skills. */
   get spReturnNotes(): string[] { return []; }
+
+  // ── Skill descriptions ──────────────────────────────────────────────────────
+
+  /** In-game description for each skill type. Override in subclass. */
+  get skillDescriptions(): Partial<Record<string, string>> { return {}; }
+
+  // ── Talent descriptions ─────────────────────────────────────────────────────
+
+  /** Per-level talent descriptions. Key = talent index (1 or 2), value = array indexed by level. */
+  get talentDescriptions(): Record<number, string[]> { return {}; }
+
+  // ── Potential descriptions ──────────────────────────────────────────────────
+
+  /** Per-potential-level descriptions. Index 0 = P1. */
+  get potentialDescriptions(): string[] { return []; }
 }

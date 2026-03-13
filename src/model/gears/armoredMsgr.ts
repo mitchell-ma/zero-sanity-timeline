@@ -15,9 +15,9 @@ export class ArmoredMsgrJacket extends Gear {
         3: {},
         4: {},
       },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Armored MSGR Jacket MOD (Armor) ─────────────────────────────────────────
@@ -28,9 +28,9 @@ export class ArmoredMsgrJacketMod extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Armored MSGR Jacket T1 (Armor) ──────────────────────────────────────────
@@ -41,9 +41,9 @@ export class ArmoredMsgrJacketT1 extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Armored MSGR Gloves (Gloves) ────────────────────────────────────────────
@@ -59,9 +59,9 @@ export class ArmoredMsgrGloves extends Gear {
         3: {},
         4: {},
       },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Armored MSGR Gloves MOD (Gloves) ────────────────────────────────────────
@@ -72,9 +72,9 @@ export class ArmoredMsgrGlovesMod extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Armored MSGR Gloves T1 (Gloves) ────────────────────────────────────────
@@ -85,9 +85,9 @@ export class ArmoredMsgrGlovesT1 extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Armored MSGR Gloves T2 (Gloves) ────────────────────────────────────────
@@ -98,9 +98,9 @@ export class ArmoredMsgrGlovesT2 extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Armored MSGR Flashlight (Kit) ───────────────────────────────────────────
@@ -116,9 +116,9 @@ export class ArmoredMsgrFlashlight extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Flashlight T1 (Kit) ────────────────────────────────────────
@@ -129,9 +129,9 @@ export class ArmoredMsgrFlashlightT1 extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Flashspike (Kit) ───────────────────────────────────────────
@@ -142,9 +142,9 @@ export class ArmoredMsgrFlashspike extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Flashspike MOD (Kit) ───────────────────────────────────────
@@ -155,9 +155,9 @@ export class ArmoredMsgrFlashspikeMod extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Gyro (Kit) ─────────────────────────────────────────────────
@@ -173,9 +173,9 @@ export class ArmoredMsgrGyro extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Gyro MOD (Kit) ─────────────────────────────────────────────
@@ -186,9 +186,9 @@ export class ArmoredMsgrGyroMod extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Armored MSGR Gyro T1 (Kit) ──────────────────────────────────────────────
@@ -199,7 +199,7 @@ export class ArmoredMsgrGyroT1 extends Gear {
       gearEffectType: GearEffectType.ARMORED_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }

@@ -19,10 +19,9 @@ export class MordvoltResistantVest extends Gear {
         3: {},
         4: {},
       },
+      defense: 28.8,
     });
   }
-
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Mordvolt Resistant Vest MOD (Armor) ─────────────────────────────────────
@@ -33,10 +32,9 @@ export class MordvoltResistantVestMod extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Mordvolt Resistant Vest T1 (Armor) ──────────────────────────────────────
@@ -47,10 +45,9 @@ export class MordvoltResistantVestT1 extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Mordvolt Resistant Gloves (Gloves) ──────────────────────────────────────
@@ -70,10 +67,9 @@ export class MordvoltResistantGloves extends Gear {
         3: {},
         4: {},
       },
+      defense: 21.6,
     });
   }
-
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Mordvolt Resistant Gloves MOD (Gloves) ──────────────────────────────────
@@ -84,10 +80,9 @@ export class MordvoltResistantGlovesMod extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Mordvolt Resistant Gloves T1 (Gloves) ───────────────────────────────────
@@ -98,10 +93,9 @@ export class MordvoltResistantGlovesT1 extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Mordvolt Resistant Battery (Kit) ────────────────────────────────────────
@@ -120,10 +114,9 @@ export class MordvoltResistantBattery extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Mordvolt Resistant Battery MOD (Kit) ────────────────────────────────────
@@ -134,10 +127,9 @@ export class MordvoltResistantBatteryMod extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Mordvolt Resistant Battery T1 (Kit) ─────────────────────────────────────
@@ -148,10 +140,9 @@ export class MordvoltResistantBatteryT1 extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Mordvolt Resistant Wrench (Kit) ─────────────────────────────────────────
@@ -170,10 +161,9 @@ export class MordvoltResistantWrench extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Mordvolt Resistant Wrench MOD (Kit) ─────────────────────────────────────
@@ -184,10 +174,9 @@ export class MordvoltResistantWrenchMod extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Mordvolt Resistant Wrench T1 (Kit) ──────────────────────────────────────
@@ -198,8 +187,7 @@ export class MordvoltResistantWrenchT1 extends Gear {
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-
-  static readonly DEFENSE = 10.8;
 }

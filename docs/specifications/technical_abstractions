@@ -1,0 +1,16 @@
+- event
+    - high-level umbrella term for user-input events or derived events as a consequence of user events
+    - has a duration
+- segment
+    - events may be divided into multiple segments
+    - by default, an event is at least one segment (in which case they're practically equivalent)
+    - most segments are affected by time-stops
+    - cooldown segments are not affected by time-stops
+- frame
+    - a discrete point in time (120 frames in a second)
+    - point in time when important game mechanics occur, such as:
+        - status effects are applied
+        - skills cause damage
+    - segments may contain multiple frames 
+- status
+    - event applying buff or debuff

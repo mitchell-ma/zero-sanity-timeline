@@ -18,9 +18,19 @@ export enum CombatResourceType {
   ULTIMATE_ENERGY = "ULTIMATE_ENERGY",
 }
 
-export enum HitType {
+export enum EventFrameType {
   NORMAL = "NORMAL",
   FINAL_STRIKE = "FINAL_STRIKE",
+  FINISHER = "FINISHER",
+  DIVE = "DIVE",
+}
+
+export enum EventStatusType {
+  EXPIRED = "EXPIRED",
+  CONSUMED = "CONSUMED",
+  REFRESHED = "REFRESHED",
+  TRIGGERED = "TRIGGERED",
+  EXTENDED = "EXTENDED",
 }
 
 export enum ElementType {
@@ -35,12 +45,21 @@ export enum ElementType {
 /** Maps status types to their associated element (for coloring). */
 export const STATUS_ELEMENT: Record<string, string> = {
   MELTING_FLAME:    ElementType.HEAT,
-  SQUAD_BUFF:       ElementType.HEAT,
   COMBUSTION:       ElementType.HEAT,
   SOLIDIFICATION:   ElementType.CRYO,
+  CRIT_STACKS:      ElementType.CRYO,
   CORROSION:        ElementType.NATURE,
   ELECTRIFICATION:  ElementType.ELECTRIC,
   THUNDERLANCE:     ElementType.ELECTRIC,
+};
+
+export const ELEMENT_LABELS: Record<ElementType, string> = {
+  [ElementType.NONE]:     'None',
+  [ElementType.PHYSICAL]: 'Physical',
+  [ElementType.HEAT]:     'Heat',
+  [ElementType.CRYO]:     'Cryo',
+  [ElementType.NATURE]:   'Nature',
+  [ElementType.ELECTRIC]: 'Electric',
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
@@ -61,6 +80,7 @@ export enum StatusType {
   // ── Operator buffs ─────────────────────────────────────────────────────────
   MELTING_FLAME = "MELTING_FLAME",
   THUNDERLANCE = "THUNDERLANCE",
+  CRIT_STACKS = "CRIT_STACKS",
   SQUAD_BUFF = "SQUAD_BUFF",
   SCORCHING_FANGS = "SCORCHING_FANGS",
   // ── Team statuses ─────────────────────────────────────────────────────────
@@ -68,10 +88,17 @@ export enum StatusType {
   ARTS_AMP = "ARTS_AMP",
   SHIELD = "SHIELD",
   UNBRIDLED_EDGE = "UNBRIDLED_EDGE",
+  WILDLAND_TREKKER = "WILDLAND_TREKKER",
+  MESSENGERS_SONG = "MESSENGERS_SONG",
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
+  SCORCHING_HEART = "SCORCHING_HEART",
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
+  ORIGINIUM_CRYSTAL = "ORIGINIUM_CRYSTAL",
+  WEAKEN = "WEAKEN",
+  DMG_REDUCTION = "DMG_REDUCTION",
+  PROTECTION = "PROTECTION",
   // ── Physical statuses ───────────────────────────────────────────────────────
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -105,6 +132,7 @@ export const STATUS_DAMAGE_FACTOR: Record<StatusType, DamageFactorType> = {
   // Operator buffs
   [StatusType.MELTING_FLAME]: DamageFactorType.NONE,
   [StatusType.THUNDERLANCE]: DamageFactorType.NONE,
+  [StatusType.CRIT_STACKS]: DamageFactorType.NONE,
   [StatusType.SQUAD_BUFF]: DamageFactorType.MULTIPLIER_GROUP,
   [StatusType.SCORCHING_FANGS]: DamageFactorType.RESISTANCE,
   // Team statuses
@@ -112,15 +140,23 @@ export const STATUS_DAMAGE_FACTOR: Record<StatusType, DamageFactorType> = {
   [StatusType.ARTS_AMP]: DamageFactorType.AMP,
   [StatusType.SHIELD]: DamageFactorType.NONE,
   [StatusType.UNBRIDLED_EDGE]: DamageFactorType.MULTIPLIER_GROUP,
+  [StatusType.WILDLAND_TREKKER]: DamageFactorType.MULTIPLIER_GROUP,
+  [StatusType.SCORCHING_HEART]: DamageFactorType.RESISTANCE,
   // Enemy debuffs
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.FRAGILITY]: DamageFactorType.FRAGILITY,
+  [StatusType.ORIGINIUM_CRYSTAL]: DamageFactorType.FRAGILITY,
+  [StatusType.WEAKEN]: DamageFactorType.WEAKEN,
+  [StatusType.DMG_REDUCTION]: DamageFactorType.DMG_REDUCTION,
+  [StatusType.PROTECTION]: DamageFactorType.PROTECTION,
   // Physical statuses
   [StatusType.LIFT]: DamageFactorType.STAGGER,
   [StatusType.KNOCK_DOWN]: DamageFactorType.STAGGER,
   [StatusType.CRUSH]: DamageFactorType.NONE,
   [StatusType.BREACH]: DamageFactorType.FRAGILITY,
+  // Team passives
+  [StatusType.MESSENGERS_SONG]: DamageFactorType.NONE,
 };
 
 /** Elemental inflictions that can be applied to a target, plus the universal VULNERABLE debuff. */
@@ -291,6 +327,8 @@ export enum TargetType {
 export enum StatType {
   // ── Attributes ───────────────────────────────────────────────────────────────
   // _BONUS suffix = non-flat multiplicative factor (e.g. 0.10 = ×1.10)
+  BASE_HP = "BASE_HP",
+  DEFENSE = "DEFENSE",
   ATTACK = "ATTACK",
   ATTACK_BONUS = "ATTACK_BONUS",
   STRENGTH = "STRENGTH",
@@ -330,11 +368,14 @@ export enum StatType {
   SKILL_DAMAGE_BONUS = "SKILL_DAMAGE_BONUS",
   ARTS_DAMAGE_BONUS = "ARTS_DAMAGE_BONUS",
   HP_BONUS = "HP_BONUS",
+  FLAT_HP = "FLAT_HP",
 }
 
 export enum CombatSkillsType {
   // Common
   DASH = "DASH",
+  FINISHER = "FINISHER",
+  DIVE = "DIVE",
 
   // Laevatain
   FLAMING_CINDERS = "FLAMING_CINDERS",
@@ -427,6 +468,7 @@ export enum CombatSkillsType {
   VIGIL_SERVICES = "VIGIL_SERVICES",
   // Yvonne
   EXUBERANT_TRIGGER = "EXUBERANT_TRIGGER",
+  EXUBERANT_TRIGGER_ENHANCED = "EXUBERANT_TRIGGER_ENHANCED",
   BRR_BRR_BOMB = "BRR_BRR_BOMB",
   FLASHFREEZER = "FLASHFREEZER",
   CRYOBLASTING_PISTOLIER = "CRYOBLASTING_PISTOLIER",

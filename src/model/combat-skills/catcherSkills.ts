@@ -13,6 +13,17 @@ import { Ultimate } from "./ultimate";
 
 // ── Catcher Basic Attack ────────────────────────────────────────────────────
 
+const CATCHER_BASIC_SEQ: Record<BasicAttackType, readonly number[]> = {
+  [BasicAttackType.SEQUENCE_1]: [0.35, 0.39, 0.42, 0.46, 0.49, 0.53, 0.56, 0.60, 0.63, 0.67, 0.73, 0.79],
+  [BasicAttackType.SEQUENCE_2]: [0.39, 0.42, 0.46, 0.50, 0.54, 0.58, 0.62, 0.65, 0.69, 0.74, 0.80, 0.87],
+  [BasicAttackType.SEQUENCE_3]: [0.54, 0.59, 0.65, 0.70, 0.76, 0.81, 0.86, 0.92, 0.97, 1.04, 1.12, 1.22],
+  [BasicAttackType.SEQUENCE_4]: [0.71, 0.78, 0.85, 0.92, 0.99, 1.07, 1.14, 1.21, 1.28, 1.37, 1.47, 1.60],
+  [BasicAttackType.SEQUENCE_5]: [],
+  [BasicAttackType.FINISHER]: [4.0, 4.4, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 7.2, 7.7, 8.3, 9.0],
+  [BasicAttackType.DIVE]: [0.8, 0.88, 0.96, 1.04, 1.12, 1.20, 1.28, 1.36, 1.44, 1.54, 1.66, 1.80],
+  [BasicAttackType.FINAL_STRIKE]: [0.71, 0.78, 0.85, 0.92, 0.99, 1.07, 1.14, 1.21, 1.28, 1.37, 1.47, 1.60],
+};
+
 export class RigidInterdictionBasic extends BasicAttack {
   static readonly SKILL_NAME = CombatSkillsType.RIGID_INTERDICTION_BASIC;
 
@@ -28,29 +39,31 @@ export class RigidInterdictionBasic extends BasicAttack {
   }
 
   getBasicAttackSequenceMultiplier(
-    _sequence: BasicAttackType,
-    _level: SkillLevel,
+    sequence: BasicAttackType,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0; // Multiplier data not yet extracted
+    return CATCHER_BASIC_SEQ[sequence][level - 1] ?? 0;
   }
 
   getFinisherAttackMultiplier(
-    _level: SkillLevel,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0;
+    return CATCHER_BASIC_SEQ[BasicAttackType.FINISHER][level - 1];
   }
 
   getDiveAttackMultiplier(
-    _level: SkillLevel,
+    level: SkillLevel,
     _operatorPotential: Potential,
   ): number {
-    return 0;
+    return CATCHER_BASIC_SEQ[BasicAttackType.DIVE][level - 1];
   }
 }
 
 // ── Catcher Battle Skill ──────────────────────────────────────────────────
+
+const RIGID_INTERDICTION_DMG = [1.78, 1.96, 2.13, 2.31, 2.49, 2.67, 2.85, 3.02, 3.20, 3.42, 3.69, 4.00] as const;
 
 export class RigidInterdiction extends BasicSkill {
   static readonly SKILL_NAME = CombatSkillsType.RIGID_INTERDICTION;
@@ -69,9 +82,15 @@ export class RigidInterdiction extends BasicSkill {
   get publishesTriggers(): TriggerConditionType[] {
     return [TriggerConditionType.APPLY_VULNERABILITY];
   }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return RIGID_INTERDICTION_DMG[level - 1];
+  }
 }
 
 // ── Catcher Combo Skill ───────────────────────────────────────────────────
+
+const TIMELY_SUPPRESSION_DMG = [1.00, 1.10, 1.20, 1.30, 1.40, 1.50, 1.60, 1.70, 1.80, 1.93, 2.08, 2.25] as const;
 
 export class TimelySuppression extends ComboSkill {
   static readonly SKILL_NAME = CombatSkillsType.TIMELY_SUPPRESSION;
@@ -85,9 +104,15 @@ export class TimelySuppression extends ComboSkill {
       ...params,
     });
   }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return TIMELY_SUPPRESSION_DMG[level - 1];
+  }
 }
 
 // ── Catcher Ultimate ──────────────────────────────────────────────────────
+
+const TEXTBOOK_ASSAULT_DMG = [1.78, 1.96, 2.13, 2.31, 2.49, 2.67, 2.84, 3.02, 3.20, 3.42, 3.69, 4.00] as const;
 
 export class TextbookAssault extends Ultimate {
   static readonly SKILL_NAME = CombatSkillsType.TEXTBOOK_ASSAULT;
@@ -124,5 +149,9 @@ export class TextbookAssault extends Ultimate {
 
   getDuration(_level: SkillLevel, _operatorPotential: Potential): number {
     return 0;
+  }
+
+  getDmgMultiplier(level: SkillLevel): number {
+    return TEXTBOOK_ASSAULT_DMG[level - 1];
   }
 }

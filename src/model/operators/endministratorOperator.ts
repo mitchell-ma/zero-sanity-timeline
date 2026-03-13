@@ -92,4 +92,36 @@ export class EndministratorOperator extends Operator {
     return [TriggerConditionType.CAST_COMBO_SKILL];
   }
   get comboDescription(): string { return 'Another operator casts combo skill'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Dive Attack: Basic attack performed in mid-air becomes a dive attack. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.',
+      battle: 'Forceful burst of Originium Crystals attacking enemies in AoE. Deals Physical DMG and applies Crush.',
+      combo: 'Rushes to attack and applies sealing crystals to the enemy. Shattering the crystals deals bonus damage.',
+      ultimate: 'Wide area bombardment dealing massive Physical DMG. Extra hits if enemies have crystals attached.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Gains ATK +15% for 15s when crystals are consumed.',
+        'Gains ATK +30% for 15s when crystals are consumed.',
+      ],
+      2: [
+        'Enemies with attached crystals suffer Physical DMG Taken +10%.',
+        'Enemies with attached crystals suffer Physical DMG Taken +20%.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Final Awakening: Constructive Sequence returns 50 SP when consuming crystals.',
+      'Reflection of Authority: Allied operators gain half the ATK buff.',
+      '???',
+      '???',
+      '???',
+    ];
+  }
 }

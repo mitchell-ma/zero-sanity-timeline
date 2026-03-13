@@ -94,8 +94,42 @@ export class ArclightOperator extends Operator {
     };
   }
 
+  get derivedTeamColumns(): string[] { return ['team-wildland-trekker']; }
+
   get comboRequires(): TriggerConditionType[] {
     return [TriggerConditionType.ELECTRIFICATION];
   }
   get comboDescription(): string { return 'Enemy has or consumed Electrification'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Blinks to enemy\'s side for 2 slashes. If enemy has Electrification, consumes it for additional Electric DMG attack plus SP recovery.',
+      combo: 'Flurry of slashes dealing Physical DMG and recovering SP.',
+      ultimate: 'Forward dash wreathed in electricity dealing Electric DMG and applying Electric Infliction. Explodes after short delay for another hit.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After triggering Tempestuous Arc\'s additional effect 3 times, grants team Electric DMG Dealt +0.05% per Intellect point (15s, non-stacking).',
+        'After triggering Tempestuous Arc\'s additional effect 3 times, grants team Electric DMG Dealt +0.08% per Intellect point (15s, non-stacking).',
+      ],
+      2: [
+        'Ultimate applies 6% Electric Susceptibility for 10s.',
+        'Ultimate applies 10% Electric Susceptibility for 10s.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Child of the Storm: Tempestuous Arc recovers additional 10 SP after triggering extra effects.',
+      'Speed Battler: Agility +15, Intellect +15.',
+      '"Hanna": Wildland Trekker DMG Boost increased to 1.3x original.',
+      'Aldertone\'s Teachings: Exploding Blitz Ultimate Energy cost -15%.',
+      'Servant of the Wildlands: Wildland Trekker trigger requirement reduced to 2 times.',
+    ];
+  }
 }

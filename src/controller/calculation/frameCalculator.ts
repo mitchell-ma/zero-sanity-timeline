@@ -4,6 +4,8 @@ import {
   EnemyTierType,
   StatType,
 } from "../../consts/enums";
+import { weaponSkillStat } from "./loadoutAggregator";
+import { TimelineEvent } from "../../consts/viewTypes";
 import { OperatorLoadout } from "../../model/loadout/operatorLoadout";
 import { Enemy } from "../../model/enemies/enemy";
 import {
@@ -225,6 +227,7 @@ export class FrameCalculator {
       stats[skillTypeBonusStat],
       stats[StatType.SKILL_DAMAGE_BONUS],
       isArts ? stats[StatType.ARTS_DAMAGE_BONUS] : 0,
+      ctx.isStaggered ? (stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) : 0,
     );
 
     // Crit
@@ -263,51 +266,59 @@ export class FrameCalculator {
     if (weapon.weaponSkillThree) skills.push(weapon.weaponSkillThree);
 
     for (const skill of skills) {
-      const value = skill.getValue();
-      const type = skill.weaponSkillType;
-
-      // Map weapon skill types to stat types
-      // The naming convention is consistent: e.g. ATTACK_BOOST_L → ATTACK_BONUS
-      // For main attribute boosts, we need the operator's main attribute
-      if (type.startsWith("MAIN_ATTRIBUTE_BOOST")) {
-        const bonusStat = (operator.mainAttributeType + "_BONUS") as StatType;
-        if (bonusStat in stats) {
-          stats[bonusStat] += value;
-        }
-      } else if (type.startsWith("ATTACK_BOOST")) {
-        stats[StatType.ATTACK_BONUS] += value;
-      } else if (type.startsWith("STRENGTH_BOOST")) {
-        stats[StatType.STRENGTH_BONUS] += value;
-      } else if (type.startsWith("AGILITY_BOOST")) {
-        stats[StatType.AGILITY_BONUS] += value;
-      } else if (type.startsWith("INTELLECT_BOOST")) {
-        stats[StatType.INTELLECT_BONUS] += value;
-      } else if (type.startsWith("WILL_BOOST")) {
-        stats[StatType.WILL_BONUS] += value;
-      } else if (type.startsWith("PHYSICAL_DAMAGE_BOOST")) {
-        stats[StatType.PHYSICAL_DAMAGE_BONUS] += value;
-      } else if (type.startsWith("HEAT_DAMAGE_BOOST")) {
-        stats[StatType.HEAT_DAMAGE_BONUS] += value;
-      } else if (type.startsWith("CRYO_DAMAGE_BOOST")) {
-        stats[StatType.CRYO_DAMAGE_BONUS] += value;
-      } else if (type.startsWith("NATURE_DAMAGE_BOOST")) {
-        stats[StatType.NATURE_DAMAGE_BONUS] += value;
-      } else if (type.startsWith("ELECTRIC_DAMAGE_BOOST")) {
-        stats[StatType.ELECTRIC_DAMAGE_BONUS] += value;
-      } else if (type.startsWith("ULTIMATE_GAIN_EFFICIENCY_BOOST")) {
-        stats[StatType.ULTIMATE_GAIN_EFFICIENCY] += value;
-      } else if (type.startsWith("HP_BOOST")) {
-        stats[StatType.HP_BONUS] += value;
-      } else if (type.startsWith("ARTS_INTENSITY_BOOST")) {
-        stats[StatType.ARTS_INTENSITY] += value;
-      } else if (type.startsWith("CRITICAL_RATE_BOOST")) {
-        stats[StatType.CRITICAL_RATE] += value;
-      } else if (type.startsWith("TREATMENT_EFFICIENCY_BOOST")) {
-        stats[StatType.TREATMENT_BONUS] += value;
-      } else if (type.startsWith("ARTS_BOOST")) {
-        stats[StatType.ARTS_DAMAGE_BONUS] += value;
+      const stat = weaponSkillStat(skill.weaponSkillType, operator.mainAttributeType);
+      if (stat != null) {
+        stats[stat] += skill.getValue();
       }
-      // Named weapon skills have operator-specific effects handled elsewhere
     }
   }
+}
+
+// ── SP Return → Gauge Reduction ──────────────────────────────────────────────
+
+export interface SpReturnSummary {
+  spCost: number;
+  totalSpReturn: number;
+  netSp: number;
+  /** ratio = max(0, (spCost - totalSpReturn) / spCost).  1 = no reduction. */
+  gaugeReduction: number;
+  rawGauge: number;
+  rawTeamGauge: number;
+  effectiveGauge: number;
+  effectiveTeamGauge: number;
+  hasReduction: boolean;
+}
+
+/** Compute SP-return gauge reduction summary for a battle skill event. */
+export function computeSpReturnSummary(event: TimelineEvent): SpReturnSummary {
+  let totalSpReturn = 0;
+  let totalGauge = 0;
+  let totalTeamGauge = 0;
+  if (event.columnId === 'battle' && event.segments) {
+    for (const seg of event.segments) {
+      if (!seg.frames) continue;
+      for (const f of seg.frames) {
+        if (f.skillPointRecovery) totalSpReturn += f.skillPointRecovery;
+        if (f.gaugeGain) totalGauge += f.gaugeGain;
+        if (f.teamGaugeGain) totalTeamGauge += f.teamGaugeGain;
+      }
+    }
+  }
+  const spCost = event.skillPointCost ?? 100;
+  const netSp = Math.max(0, spCost - totalSpReturn);
+  const gaugeReduction = totalSpReturn > 0 && spCost > 0
+    ? Math.max(0, (spCost - totalSpReturn) / spCost) : 1;
+  const rawGauge = event.gaugeGain ?? totalGauge;
+  const rawTeamGauge = event.teamGaugeGain ?? totalTeamGauge;
+  return {
+    spCost,
+    totalSpReturn,
+    netSp,
+    gaugeReduction,
+    rawGauge,
+    rawTeamGauge,
+    effectiveGauge: rawGauge * gaugeReduction,
+    effectiveTeamGauge: rawTeamGauge * gaugeReduction,
+    hasReduction: totalSpReturn > 0 && gaugeReduction < 1,
+  };
 }

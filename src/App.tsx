@@ -40,6 +40,7 @@ export default function App() {
           onTreeChange={app.handleLoadoutTreeChange}
           onSelectLoadout={app.handleSelectLoadout}
           onNewLoadout={app.handleNewLoadout}
+          onDuplicateLoadout={app.handleDuplicateLoadout}
           onDeleteLoadout={app.handleDeleteLoadout}
           collapsed={app.sidebarCollapsed}
           onToggleCollapsed={app.handleToggleSidebar}
@@ -99,6 +100,7 @@ export default function App() {
             showRealTime={app.showRealTime}
             onToggleRealTime={() => app.setShowRealTime((v) => !v)}
             debugMode={app.debugMode}
+            staggerBreaks={app.staggerBreaks}
             contentFrames={app.contentFrames}
           />
         </Suspense>
@@ -163,6 +165,7 @@ export default function App() {
             showRealTime={app.showRealTime}
             contentFrames={app.contentFrames}
             onDamageClick={app.handleDamageClick}
+            onDamageRows={app.setDamageRows}
           />
         </Suspense>
       </div>
@@ -195,9 +198,13 @@ export default function App() {
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+            verbose={app.infoPaneVerbose}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
             debugMode={app.debugMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
+            loadoutStats={app.loadoutStats}
+            damageRows={app.damageRows}
           />
         ) : app.editingSlot && app.editingSlot.operator ? (
           <InformationPane
@@ -212,6 +219,8 @@ export default function App() {
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+            verbose={app.infoPaneVerbose}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
             allProcessedEvents={app.allProcessedEvents}
           />
         ) : app.editingEnemyOpen ? (
@@ -224,6 +233,8 @@ export default function App() {
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+            verbose={app.infoPaneVerbose}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
           />
         ) : app.editingResourceCol && app.editingResourceConfig ? (
           <InformationPane
@@ -236,6 +247,8 @@ export default function App() {
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+            verbose={app.infoPaneVerbose}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
           />
         ) : app.editingDamageRow ? (
           <InformationPane
@@ -245,6 +258,8 @@ export default function App() {
             triggerClose={app.infoPaneClosing}
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
+            verbose={app.infoPaneVerbose}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
           />
         ) : null}
 
@@ -269,6 +284,14 @@ export default function App() {
         onConfirm={app.handleClearLoadout}
         onClose={() => app.setConfirmClearLoadout(false)}
       />
+
+      {app.saveFlash && (
+        <div className="save-flash">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+            <path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+          </svg>
+        </div>
+      )}
 
       <ConfirmModal
         open={app.confirmClearAll}

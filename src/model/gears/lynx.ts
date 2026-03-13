@@ -2,6 +2,24 @@ import { GearEffectType, GearType, StatType } from "../../consts/enums";
 import { GearRank } from "../../consts/types";
 import { Gear } from "./gear";
 
+// ── LYNX Connector T2 (Kit) ─────────────────────────────────────────────────
+export class LynxConnectorT2 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.KIT,
+      gearEffectType: GearEffectType.LYNX,
+      rank,
+      statsByRank: {
+        1: { [StatType.STRENGTH]: 41, [StatType.HP_BONUS]: 0.414 },
+        2: { [StatType.STRENGTH]: 45, [StatType.HP_BONUS]: 0.455 },
+        3: { [StatType.STRENGTH]: 49, [StatType.HP_BONUS]: 0.497 },
+        4: { [StatType.STRENGTH]: 53, [StatType.HP_BONUS]: 0.538 },
+      },
+      defense: 21,
+    });
+  }
+}
+
 // ── LYNX Cuirass (Armor) ────────────────────────────────────────────────────
 export class LynxCuirass extends Gear {
   constructor(rank: GearRank = 1) {
@@ -31,10 +49,9 @@ export class LynxCuirass extends Gear {
           [StatType.TREATMENT_BONUS]: 0.135,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── LYNX Cuirass MOD (Armor) ────────────────────────────────────────────────
@@ -45,10 +62,9 @@ export class LynxCuirassMod extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── LYNX Heavy Armor (Armor) ────────────────────────────────────────────────
@@ -59,10 +75,9 @@ export class LynxHeavyArmor extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── LYNX Gauntlets (Gloves) ─────────────────────────────────────────────────
@@ -94,10 +109,9 @@ export class LynxGauntlets extends Gear {
           [StatType.TREATMENT_BONUS]: 0.224,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── LYNX Gloves (Gloves) ────────────────────────────────────────────────────
@@ -108,10 +122,9 @@ export class LynxGloves extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── LYNX Gloves MOD (Gloves) ────────────────────────────────────────────────
@@ -122,10 +135,9 @@ export class LynxGlovesMod extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── LYNX Aegis Injector (Kit) ───────────────────────────────────────────────
@@ -136,10 +148,9 @@ export class LynxAegisInjector extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Aegis Injector MOD (Kit) ───────────────────────────────────────────
@@ -150,10 +161,9 @@ export class LynxAegisInjectorMod extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Connector (Kit) ────────────────────────────────────────────────────
@@ -185,10 +195,9 @@ export class LynxConnector extends Gear {
           [StatType.FINAL_DAMAGE_REDUCTION]: 0.212,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Connector MOD (Kit) ────────────────────────────────────────────────
@@ -199,10 +208,9 @@ export class LynxConnectorMod extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Connector T1 (Kit) ─────────────────────────────────────────────────
@@ -213,10 +221,9 @@ export class LynxConnectorT1 extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Slab (Kit) ─────────────────────────────────────────────────────────
@@ -227,10 +234,9 @@ export class LynxSlab extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── LYNX Slab MOD (Kit) ─────────────────────────────────────────────────────
@@ -241,8 +247,7 @@ export class LynxSlabMod extends Gear {
       gearEffectType: GearEffectType.LYNX,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

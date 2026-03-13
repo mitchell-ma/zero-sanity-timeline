@@ -7,7 +7,7 @@
  * Mirrors the structure of weaponSkillEffects.ts.
  * Only gear sets with triggered timed effects are included — passive-only
  * or instant effects (AIC, Armored/Roving MSGR, Mordvolt, Catastrophe,
- * Swordmancer, Bonekrusha, Type 50 Yinglung) are omitted.
+ * Swordmancer) are omitted.
  */
 import { GearEffectType, TriggerConditionType, StatType } from './enums';
 
@@ -121,21 +121,35 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
 
   // ── Æthertech ──────────────────────────────────────────────────────────────
   // After applying Vulnerability, Physical DMG +8% for 15s (max 4 stacks).
+  // At 4 stacks, additional Physical DMG +16% for 10s.
   {
     gearEffectType: GearEffectType.AETHERTECH,
     label: 'Æthertech',
-    effects: [{
-      label: 'Æthertech',
-      triggers: [TriggerConditionType.APPLY_VULNERABILITY],
-      target: 'wielder',
-      durationSeconds: 15,
-      maxStacks: 4,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.PHYSICAL_DAMAGE_BONUS, value: 0.08, perStack: true },
-      ],
-      note: 'At 4 stacks of Vulnerability, additional Physical DMG +16% for 10s',
-    }],
+    effects: [
+      {
+        label: 'Æthertech',
+        triggers: [TriggerConditionType.APPLY_VULNERABILITY],
+        target: 'wielder',
+        durationSeconds: 15,
+        maxStacks: 4,
+        cooldownSeconds: 0,
+        buffs: [
+          { stat: StatType.PHYSICAL_DAMAGE_BONUS, value: 0.08, perStack: true },
+        ],
+      },
+      {
+        label: 'Æthertech (Max)',
+        triggers: [TriggerConditionType.APPLY_VULNERABILITY],
+        target: 'wielder',
+        durationSeconds: 10,
+        maxStacks: 1,
+        cooldownSeconds: 0,
+        buffs: [
+          { stat: StatType.PHYSICAL_DAMAGE_BONUS, value: 0.16 },
+        ],
+        note: 'Activates at 4 stacks of Vulnerability',
+      },
+    ],
   },
 
   // ── Pulser Labs ────────────────────────────────────────────────────────────
@@ -223,21 +237,35 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
 
   // ── MI Security ────────────────────────────────────────────────────────────
   // After crit hit, ATK +5% for 5s (max 5 stacks).
+  // At max stacks, additional Crit Rate +5%.
   {
     gearEffectType: GearEffectType.MI_SECURITY,
     label: 'MI Security',
-    effects: [{
-      label: 'MI Security',
-      triggers: [TriggerConditionType.CRITICAL_HIT],
-      target: 'wielder',
-      durationSeconds: 5,
-      maxStacks: 5,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.ATTACK_BONUS, value: 0.05, perStack: true },
-      ],
-      note: 'At max stacks, additional Crit Rate +5%',
-    }],
+    effects: [
+      {
+        label: 'MI Security',
+        triggers: [TriggerConditionType.CRITICAL_HIT],
+        target: 'wielder',
+        durationSeconds: 5,
+        maxStacks: 5,
+        cooldownSeconds: 0,
+        buffs: [
+          { stat: StatType.ATTACK_BONUS, value: 0.05, perStack: true },
+        ],
+      },
+      {
+        label: 'MI Security (Max)',
+        triggers: [TriggerConditionType.CRITICAL_HIT],
+        target: 'wielder',
+        durationSeconds: 5,
+        maxStacks: 1,
+        cooldownSeconds: 0,
+        buffs: [
+          { stat: StatType.CRITICAL_RATE, value: 0.05 },
+        ],
+        note: 'Activates at 5 stacks',
+      },
+    ],
   },
 
   // ── Tide Surge ─────────────────────────────────────────────────────────────
@@ -275,6 +303,80 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
         { stat: StatType.SKILL_DAMAGE_BONUS, value: 0.16 },
       ],
       note: 'On applying Amp/Protected/Susceptibility/Weakened',
+    }],
+  },
+
+  // ── Catastrophe ──────────────────────────────────────────────────────────
+  // On battle skill cast, +50 SP. Once per battle.
+  {
+    gearEffectType: GearEffectType.CATASTROPHE,
+    label: 'Catastrophe',
+    effects: [{
+      label: 'Catastrophe',
+      triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
+      target: 'wielder',
+      durationSeconds: 1,
+      maxStacks: 1,
+      cooldownSeconds: 0,
+      buffs: [],
+      note: '+50 SP, once per battle',
+    }],
+  },
+
+  // ── Swordmancer ──────────────────────────────────────────────────────────
+  // After applying Physical Status, deal 250% ATK Physical DMG + 10 Stagger. CD: 15s.
+  {
+    gearEffectType: GearEffectType.SWORDMANCER,
+    label: 'Swordmancer',
+    effects: [{
+      label: 'Swordmancer',
+      triggers: [TriggerConditionType.APPLY_PHYSICAL_STATUS],
+      target: 'enemy',
+      durationSeconds: 1,
+      maxStacks: 1,
+      cooldownSeconds: 14,
+      buffs: [],
+      note: '250% ATK Physical DMG + 10 Stagger',
+    }],
+  },
+
+  // ── Bonekrusha ───────────────────────────────────────────────────────────
+  // On combo skill cast, next battle skill DMG +30%. Max 2 stacks.
+  // Consumed on next battle skill cast.
+  {
+    gearEffectType: GearEffectType.BONEKRUSHA,
+    label: 'Bonekrusha',
+    effects: [{
+      label: 'Bonekrusha',
+      triggers: [TriggerConditionType.CAST_COMBO_SKILL],
+      target: 'wielder',
+      durationSeconds: 0,
+      maxStacks: 2,
+      cooldownSeconds: 0,
+      buffs: [
+        { stat: StatType.BATTLE_SKILL_DAMAGE_BONUS, value: 0.30, perStack: true },
+      ],
+      note: 'Consumed on next battle skill cast',
+    }],
+  },
+
+  // ── Type 50 Yinglung ─────────────────────────────────────────────────────
+  // When any operator casts battle skill, next combo skill DMG +20%. Max 3 stacks.
+  // Consumed on next combo skill cast.
+  {
+    gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+    label: 'Type 50 Yinglung',
+    effects: [{
+      label: 'Type 50 Yinglung',
+      triggers: [TriggerConditionType.TEAM_CAST_BATTLE_SKILL],
+      target: 'wielder',
+      durationSeconds: 0,
+      maxStacks: 3,
+      cooldownSeconds: 0,
+      buffs: [
+        { stat: StatType.COMBO_SKILL_DAMAGE_BONUS, value: 0.20, perStack: true },
+      ],
+      note: 'Consumed on next combo skill cast',
     }],
   },
 ];

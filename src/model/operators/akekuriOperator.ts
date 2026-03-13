@@ -103,4 +103,35 @@ export class AkekuriOperator extends Operator {
   get spReturnNotes(): string[] {
     return ['T2: Combo SP recovery scales with Intellect (+1%/10 INT, max +50%; E2: +1.5%/10 INT, max +75%)'];
   }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals 17 Stagger. Dive Attack: Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.',
+      battle: 'A frontal slash that deals Heat DMG and applies Heat Infliction.',
+      combo: 'Performs a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.',
+      ultimate: 'Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +1% (max: 50%).',
+        'Combo skill Flash and Dash improved: For every 10 points of Intellect, SP Recovery +1.5% (max: 75%).',
+      ],
+      2: [
+        'Ultimate SQUAD! ON ME! improved: When ultimate is active, gains Link.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Positive Feedback: After recovering SP with skills, gains ATK +10% for 10s. Max 5 stacks.',
+      'Passionate Idealist: Agility +10, Intellect +10.',
+      'Committed Team Player: While ultimate is active, entire team gains ATK +10%.',
+      'Super Perfect Status: Ultimate Energy cost -10%.',
+      'Tempo of Awareness: When ultimate ends, Link buff persists for 5s.',
+    ];
+  }
 }

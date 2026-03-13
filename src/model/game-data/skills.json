@@ -575,12 +575,8 @@
           "LAEVATAIN_EMPOWERED_BATTLE_SKILL_ADDITIONAL_ATTACK_TICK_1": {
             "OFFSET_SECONDS": 1.267,
             "SKILL_POINT_RECOVERY": 0,
-            "STAGGER": 0,
-            "CONSUME_ARTS_INFLICTION": {
-              "HEAT": {
-                "STACKS": 4
-              }
-            },
+            "STAGGER": 10,
+            "CONSUME_STATUS": "MELTING_FLAME",
             "APPLY_FORCED_REACTION": {
               "REACTION": "COMBUSTION",
               "STATUS_LEVEL": 1
@@ -1728,6 +1724,159 @@
             "OFFSET_SECONDS": 0.7,
             "SKILL_POINT_RECOVERY": 17,
             "STAGGER": 17,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "DATA_SOURCE": "END-AXIS"
+        }
+      },
+      "ENHANCED_BASIC_ATTACK": {
+        "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1": {
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1_DURATION": 0.73,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICKS": 3,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICK_1": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICK_2": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_1_TICK_3": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "DATA_SOURCE": "END-AXIS"
+        },
+        "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_2": {
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_2_DURATION": 0.8,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_2_TICKS": 0,
+          "DATA_SOURCE": "END-AXIS"
+        },
+        "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3": {
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_DURATION": 1.4,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICKS": 8,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_1": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_2": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_3": {
+            "OFFSET_SECONDS": 0.567,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_4": {
+            "OFFSET_SECONDS": 0.63,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_5": {
+            "OFFSET_SECONDS": 0.7,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_6": {
+            "OFFSET_SECONDS": 0.767,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_7": {
+            "OFFSET_SECONDS": 0.83,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_3_TICK_8": {
+            "OFFSET_SECONDS": 0.9,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "DATA_SOURCE": "END-AXIS"
+        },
+        "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4": {
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_DURATION": 4.4,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICKS": 8,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_1": {
+            "OFFSET_SECONDS": 0.03,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_2": {
+            "OFFSET_SECONDS": 0.1,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_3": {
+            "OFFSET_SECONDS": 0.167,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_4": {
+            "OFFSET_SECONDS": 0.23,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_5": {
+            "OFFSET_SECONDS": 0.3,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_6": {
+            "OFFSET_SECONDS": 0.367,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_7": {
+            "OFFSET_SECONDS": 0.43,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_4_TICK_8": {
+            "OFFSET_SECONDS": 0.5,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "DATA_SOURCE": "END-AXIS"
+        },
+        "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_5": {
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_5_DURATION": 1.0,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_5_TICKS": 2,
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_5_TICK_1": {
+            "OFFSET_SECONDS": 0.27,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 0,
+            "DATA_SOURCE": "END-AXIS"
+          },
+          "YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_5_TICK_2": {
+            "OFFSET_SECONDS": 0.93,
+            "SKILL_POINT_RECOVERY": 0,
+            "STAGGER": 20,
             "DATA_SOURCE": "END-AXIS"
           },
           "DATA_SOURCE": "END-AXIS"

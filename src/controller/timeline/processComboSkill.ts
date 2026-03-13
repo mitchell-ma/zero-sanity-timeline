@@ -2,6 +2,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { CombatSkillsType, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { TOTAL_FRAMES } from '../../utils/timeline';
+import { ENEMY_OWNER_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 
 // ── Combo time-stop chaining ─────────────────────────────────────────────────
@@ -243,7 +244,7 @@ export function deriveComboActivationWindows(
         startFrame: triggerFrame,
         endFrame: triggerFrame + extendedDuration,
         sourceEventId: event.id,
-        sourceOwnerId: event.ownerId !== 'enemy' ? event.ownerId : event.sourceOwnerId,
+        sourceOwnerId: event.ownerId !== ENEMY_OWNER_ID ? event.ownerId : event.sourceOwnerId,
         sourceSkillName: event.name,
         sourceColumnId: event.columnId,
         triggerType: trigger,
@@ -259,11 +260,15 @@ export function deriveComboActivationWindows(
     const publishedTriggers = cap.publishesTriggers[event.columnId];
     if (!publishedTriggers || publishedTriggers.length === 0) continue;
 
+    // Finisher/Dive events don't publish FINAL_STRIKE — only normal basic attack sequences do
+    const isNonSequenceBasic = event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE;
+
     const defaultTriggerFrame = event.startFrame + event.activationDuration;
     const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
 
     for (const trigger of publishedTriggers) {
       if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
+      if (isNonSequenceBasic && trigger === TriggerConditionType.FINAL_STRIKE) continue;
       const frame = trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame;
       addWindow(trigger, event, frame);
     }
@@ -271,7 +276,7 @@ export function deriveComboActivationWindows(
 
   // Phase 2: derived enemy event triggers
   for (const event of events) {
-    if (event.ownerId !== 'enemy') continue;
+    if (event.ownerId !== ENEMY_OWNER_ID) continue;
     const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
     if (!triggers) continue;
     for (const trigger of triggers) {

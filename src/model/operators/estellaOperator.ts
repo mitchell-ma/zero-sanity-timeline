@@ -98,4 +98,36 @@ export class EstellaOperator extends Operator {
     return [TriggerConditionType.SOLIDIFICATION];
   }
   get comboDescription(): string { return 'Enemy has Solidification'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Fires freezing sound waves applying Cryo Infliction.',
+      combo: 'Moves to enemy and applies Lift with bonus damage to Solidified targets.',
+      ultimate: 'Spear shaft slam dealing Physical DMG in circular area, applying Lift to susceptible enemies.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'When triggering Shatter, the next Onomatopoeia cast returns 7.5 SP.',
+        'When triggering Shatter, the next Onomatopoeia cast returns 15 SP.',
+      ],
+      2: [
+        'Ignores Cryo Infliction and receives Cryo DMG -10%.',
+        'Ignores Cryo Infliction and receives Cryo DMG -20%.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Distortion Physical Susceptibility duration +3s.',
+      'Ultimate energy cost -10%.',
+      'Onomatopoeia range +50%, first enemy damage +40%.',
+      'Will +10, Strength +10.',
+      'Gain 5 Ultimate Energy when applying Solidification (once per second max).',
+    ];
+  }
 }

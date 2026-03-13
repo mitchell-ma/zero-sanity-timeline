@@ -485,7 +485,7 @@ const DISPLAY_CONFIGS: OperatorDisplayConfig[] = [
       basic: { defaultActivationDuration: 20, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       battle: { defaultActivationDuration: YV.battleDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null },
       combo: { defaultActivationDuration: YV.comboDur, defaultActiveDuration: 0, defaultCooldownDuration: YV.comboCd, triggerCondition: null, animationDuration: YV.comboAnimDur },
-      ultimate: { defaultActivationDuration: YV.ultAnimDur, defaultActiveDuration: 0, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: YV.ultAnimDur },
+      ultimate: { defaultActivationDuration: YV.ultAnimDur, defaultActiveDuration: 840, defaultCooldownDuration: 0, triggerCondition: null, animationDuration: YV.ultAnimDur },
     },
   },
   // ── Avywenna ────────────────────────────────────────────────────────────────
@@ -650,7 +650,8 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     if (key === 'ultimate') defaultTriggers.push(TriggerConditionType.CAST_ULTIMATE);
     const merged = [...defaultTriggers, ...ms.publishesTriggers];
     const publishesTriggers = merged.length > 0 ? merged : undefined;
-    skills[key] = { name: ms?.skillName ?? key, element: ms.element, ...timing, publishesTriggers };
+    const desc = model.skillDescriptions[key];
+    skills[key] = { name: ms?.skillName ?? key, element: ms.element, ...timing, publishesTriggers, ...(desc ? { description: desc } : {}) };
   }
 
   // Attach SP cost to battle skill def
@@ -724,6 +725,8 @@ function buildViewOperator(config: OperatorDisplayConfig): ViewOperator {
     attributeIncreaseAttribute: model.attributeIncreaseAttribute,
     maxAttributeIncreaseLevel: model.maxAttributeIncreaseLevel,
     triggerCapability,
+    ...(Object.keys(model.talentDescriptions).length > 0 ? { talentDescriptions: model.talentDescriptions } : {}),
+    ...(model.potentialDescriptions.length > 0 ? { potentialDescriptions: model.potentialDescriptions } : {}),
   };
 }
 

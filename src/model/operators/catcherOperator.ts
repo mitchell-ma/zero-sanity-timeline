@@ -99,4 +99,36 @@ export class CatcherOperator extends Operator {
   }
   get comboDescription(): string { return 'Enemy charges up or operator below 40% HP'; }
   get derivedTeamColumns(): string[] { return ['team-shield']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. Final Strike deals 22 Stagger.',
+      battle: 'Raises shield providing protection to self and nearby operators. Retaliates with bash dealing Physical DMG and applying Vulnerability.',
+      combo: 'Downward punch dealing Physical DMG. Grants shields to self and a teammate.',
+      ultimate: 'Two consecutive slashes applying Weaken, then powerful slam dealing massive DMG and Knock Down.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'For every 10 Will, DEF +1.0.',
+        'For every 10 Will, DEF +1.2.',
+      ],
+      2: [
+        'Ultimate creates 2 shockwaves dealing 30% ATK Physical DMG each.',
+        'Ultimate creates 3 shockwaves dealing 45% ATK Physical DMG each.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Multi-layered Readiness: Battle and ultimate skills gain additional strike dealing [300 + DEF x5.0] Physical DMG.',
+      'Bonus Spec Training: DEF +20, Will +10.',
+      'Unwavering Post: Combo skill shield duration +5 seconds.',
+      'Compensated Suffering: Ultimate energy cost -10%.',
+      'Choice Without Regrets: Hitting enemies while shield active returns 10 SP.',
+    ];
+  }
 }

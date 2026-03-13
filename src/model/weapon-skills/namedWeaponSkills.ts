@@ -58,7 +58,9 @@ const ASSAULT_ARMAMENT_PREP: readonly number[] = [
 
 export class BrutalityDisciplinarian extends WeaponSkill {
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.BRUTALITY_DISCIPLINARIAN, level });
+    super({ weaponSkillType: WeaponSkillType.BRUTALITY_DISCIPLINARIAN, level,
+      description: 'After consuming Vulnerability stacks, wielder gains ATK bonus scaling with consumed stacks for 20s. Team gets half. Does not stack.',
+    });
   }
   getValue(): number {
     return BRUTALITY_DISCIPLINARIAN[this.level - 1] ?? 0;
@@ -69,7 +71,9 @@ export class TwilightBlazingWail extends WeaponSkill {
   static readonly DURATION_SECONDS = TWILIGHT_BLAZING_WAIL_DURATION_SECONDS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.TWILIGHT_BLAZING_WAIL, level });
+    super({ weaponSkillType: WeaponSkillType.TWILIGHT_BLAZING_WAIL, level,
+      description: 'When the wielder casts an ultimate, gains Basic ATK DMG Dealt and Heat DMG Dealt bonus for 20s. Does not stack.',
+    });
   }
 
   /** Heat DMG bonus per stack. */
@@ -98,7 +102,9 @@ export class TwilightBlazingWail extends WeaponSkill {
 
 export class TwilightAzureClouds extends WeaponSkill {
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.TWILIGHT_AZURE_CLOUDS, level });
+    super({ weaponSkillType: WeaponSkillType.TWILIGHT_AZURE_CLOUDS, level,
+      description: 'Battle skills and ultimates gain Physical DMG Dealt bonus. Against Staggered enemies, gains additional Physical DMG Dealt bonus.',
+    });
   }
   getValue(): number {
     return TWILIGHT_AZURE_CLOUDS[this.level - 1] ?? 0;
@@ -110,6 +116,7 @@ export class InflictionWhiteNightNova extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.INFLICTION_WHITE_NIGHT_NOVA,
       level,
+      description: 'After applying Combustion or Electrification, wielder gains Arts DMG Dealt and Arts Intensity bonus for 15s. Does not stack.',
     });
   }
   getValue(): number {
@@ -123,7 +130,9 @@ export class FlowReincarnation extends WeaponSkill {
   static readonly DURATION_SECONDS = FLOW_REINCARNATION_DURATION_SECONDS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.FLOW_REINCARNATION, level });
+    super({ weaponSkillType: WeaponSkillType.FLOW_REINCARNATION, level,
+      description: "After the wielder's skill recovers SP, wielder gains Physical DMG Dealt bonus and team gains ATK bonus for 30s. Max 5 stacks, duration counted separately.",
+    });
   }
 
   /** Physical DMG bonus applied per stack. */
@@ -154,6 +163,7 @@ export class InflictionLongTimeWish extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.INFLICTION_LONG_TIME_WISH,
       level,
+      description: 'When applying Originium Crystals or Solidification, during the next battle skill or ultimate within 20s, wielder gains Physical DMG Dealt bonus. Does not stack.',
     });
   }
   getValue(): number {
@@ -166,7 +176,9 @@ export class FlowThermalRelease extends WeaponSkill {
   static readonly MAX_STACKS = FLOW_THERMAL_RELEASE_MAX_STACKS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.FLOW_THERMAL_RELEASE, level });
+    super({ weaponSkillType: WeaponSkillType.FLOW_THERMAL_RELEASE, level,
+      description: "After the wielder's skill recovers SP or grants Link state, wielder and team gain ATK bonus for 20s. Max 2 stacks.",
+    });
   }
 
   /** ATK bonus granted to the wielder per stack. */
@@ -192,6 +204,7 @@ export class InflictionCovetousBuildup extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.INFLICTION_COVETOUS_BUILDUP,
       level,
+      description: 'When Combustion or Corrosion is applied, wielder gains Heat DMG, Nature DMG, and ATK bonus for 20s. Max 2 stacks.',
     });
   }
   getValue(): number {
@@ -204,6 +217,7 @@ export class CombativeAnthemOfCinder extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.COMBATIVE_ANTHEM_OF_CINDER,
       level,
+      description: 'When applying a Physical Status, wielder gains ATK bonus for 20s. Max 2 stacks.',
     });
   }
   getValue(): number {
@@ -216,6 +230,7 @@ export class InspiringBackToTheBrokenCity extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.INSPIRING_BACK_TO_THE_BROKEN_CITY,
       level,
+      description: 'ATK bonus and Arts Intensity bonus (passive).',
     });
   }
   getValue(): number {
@@ -225,7 +240,9 @@ export class InspiringBackToTheBrokenCity extends WeaponSkill {
 
 export class TwilightImposingPeak extends WeaponSkill {
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.TWILIGHT_IMPOSING_PEAK, level });
+    super({ weaponSkillType: WeaponSkillType.TWILIGHT_IMPOSING_PEAK, level,
+      description: 'After applying Lifted, during the next ultimate within 30s, wielder gains Physical DMG Dealt bonus. Max 3 stacks, duration counted separately.',
+    });
   }
   getValue(): number {
     return TWILIGHT_IMPOSING_PEAK[this.level - 1] ?? 0;
@@ -237,7 +254,9 @@ export class FlowUnbridledEdge extends WeaponSkill {
   static readonly MAX_STACKS = FLOW_UNBRIDLED_EDGE_MAX_STACKS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.FLOW_UNBRIDLED_EDGE, level });
+    super({ weaponSkillType: WeaponSkillType.FLOW_UNBRIDLED_EDGE, level,
+      description: "Secondary attribute bonus (passive). After the wielder's skill recovers SP, team gains Heat and Electric DMG Dealt bonus for 20s. Max 3 stacks.",
+    });
   }
 
   /** Secondary attribute bonus (passive). */
@@ -265,6 +284,7 @@ export class InflictionSincereInterrogation extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.INFLICTION_SINCERE_INTERROGATION,
       level,
+      description: 'After consuming an Arts Reaction, wielder gains ATK bonus for 20s. Max 2 stacks, duration counted separately.',
     });
   }
   getValue(): number {
@@ -277,6 +297,7 @@ export class SuppressionFinChasersIntent extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.SUPPRESSION_FIN_CHASERS_INTENT,
       level,
+      description: "When battle skill applies Solidification, enemy suffers Cryo DMG Taken bonus for 15s. Does not stack.",
     });
   }
   getValue(): number {
@@ -286,7 +307,9 @@ export class SuppressionFinChasersIntent extends WeaponSkill {
 
 export class PursuitUnendingCycle extends WeaponSkill {
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.PURSUIT_UNENDING_CYCLE, level });
+    super({ weaponSkillType: WeaponSkillType.PURSUIT_UNENDING_CYCLE, level,
+      description: 'When casting a combo skill, wielder gains ATK bonus for 20s. Does not stack.',
+    });
   }
   getValue(): number {
     return PURSUIT_UNENDING_CYCLE[this.level - 1] ?? 0;
@@ -298,6 +321,7 @@ export class SuppressionEmergencyBoost extends WeaponSkill {
     super({
       weaponSkillType: WeaponSkillType.SUPPRESSION_EMERGENCY_BOOST,
       level,
+      description: 'When battle skill hits enemy, wielder gains ATK bonus for 20s. Does not stack.',
     });
   }
   getValue(): number {
@@ -307,7 +331,9 @@ export class SuppressionEmergencyBoost extends WeaponSkill {
 
 export class AssaultArmamentPrep extends WeaponSkill {
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.ASSAULT_ARMAMENT_PREP, level });
+    super({ weaponSkillType: WeaponSkillType.ASSAULT_ARMAMENT_PREP, level,
+      description: 'Flat ATK bonus (passive).',
+    });
   }
   /** Flat ATK bonus value. */
   getValue(): number {
@@ -331,7 +357,9 @@ export class TwilightLustrousPyre extends WeaponSkill {
   static readonly DURATION_SECONDS = TWILIGHT_LUSTROUS_PYRE_DURATION_SECONDS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.TWILIGHT_LUSTROUS_PYRE, level });
+    super({ weaponSkillType: WeaponSkillType.TWILIGHT_LUSTROUS_PYRE, level,
+      description: 'Max HP bonus (passive). When the wielder casts an ultimate, operators with differing elements gain ATK bonus for 20s. Does not stack.',
+    });
   }
 
   /** Max HP bonus granted. */
@@ -370,7 +398,9 @@ export class InflictionViciousPurge extends WeaponSkill {
   static readonly COOLDOWN_SECONDS = INFLICTION_VICIOUS_PURGE_COOLDOWN_SECONDS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.INFLICTION_VICIOUS_PURGE, level });
+    super({ weaponSkillType: WeaponSkillType.INFLICTION_VICIOUS_PURGE, level,
+      description: 'After consuming an Arts Reaction, wielder gains Arts DMG Dealt bonus and enemy suffers Arts DMG Taken increase for 15s. 25s cooldown.',
+    });
   }
 
   /** Arts DMG bonus granted to the wielder. */
@@ -394,131 +424,195 @@ export class InflictionViciousPurge extends WeaponSkill {
 // ── Stub named skills (data arrays empty — to be filled when wiki data is available) ──
 
 export class CrusherPrincelyDeterrence extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_PRINCELY_DETERRENCE, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_PRINCELY_DETERRENCE, level,
+    description: 'On Final Strike, wielder gains ATK and Stagger Efficiency bonus for 8s. ATK doubled when controlled. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class CrusherHonedIntoLegion extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_HONED_INTO_LEGION, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.CRUSHER_HONED_INTO_LEGION, level,
+    description: 'On Final Strike, wielder gains ATK bonus for 10s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class SuppressionStackedHew extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_STACKED_HEW, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_STACKED_HEW, level,
+    description: 'When battle skill or ultimate hits enemy, wielder gains Physical DMG Dealt bonus for 30s. Max 3 stacks, duration counted separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class SuppressionAstrophysics extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_ASTROPHYSICS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_ASTROPHYSICS, level,
+    description: 'When casting battle skill or combo skill, wielder gains Arts DMG Dealt bonus for 15s. The two effects apply separately and do not stack with themselves.',
+  }); }
   getValue(): number { return 0; }
 }
 export class SuppressionConcentricCircles extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_CONCENTRIC_CIRCLES, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_CONCENTRIC_CIRCLES, level,
+    description: 'When casting combo skill, during the next battle skill within 30s, wielder gains Combo Skill DMG and Electric DMG bonus. Max 3 stacks, duration counted separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class CombativeVirtuousGain extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.COMBATIVE_VIRTUOUS_GAIN, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.COMBATIVE_VIRTUOUS_GAIN, level,
+    description: 'After applying Physical Status, wielder deals additional Physical DMG hit and gains ATK bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class BrutalityCementedFury extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_CEMENTED_FURY, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_CEMENTED_FURY, level,
+    description: 'When applying Vulnerability to 0-stack enemy, wielder gains ATK and Crit Rate bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class BrutalityLandsOfYore extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_LANDS_OF_YORE, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.BRUTALITY_LANDS_OF_YORE, level,
+    description: 'After consuming Vulnerability stacks, wielder gains Physical DMG Dealt bonus scaling with consumed stacks for 20s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class DetonateBonechilling extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_BONECHILLING, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_BONECHILLING, level,
+    description: 'When battle skill applies Cryo Infliction, wielder gains Cryo DMG Dealt bonus for 15s. Combo on Cryo-inflicted enemy doubles the bonus. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class DetonateSeekerOfTheEsoteric extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_SEEKER_OF_THE_ESOTERIC, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_SEEKER_OF_THE_ESOTERIC, level,
+    description: 'When applying Arts Burst, wielder gains ATK bonus for 30s. Max 3 stacks, duration counted separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class DetonateImposingChampion extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_IMPOSING_CHAMPION, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_IMPOSING_CHAMPION, level,
+    description: 'When applying Arts Burst, wielder gains secondary attribute bonus and enemy suffers Arts DMG Taken increase for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class EfficacyTenaciousWill extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.EFFICACY_TENACIOUS_WILL, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.EFFICACY_TENACIOUS_WILL, level,
+    description: 'When applying Knocked Down or Weakened, wielder gains DEF bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class FractureArtzyExaggeration extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.FRACTURE_ARTZY_EXAGGERATION, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.FRACTURE_ARTZY_EXAGGERATION, level,
+    description: 'After scoring a critical hit with battle or combo skill, wielder gains Cryo DMG Dealt bonus for 30s. Max 3 stacks, duration counted separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class PursuitAidFromThePast extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_AID_FROM_THE_PAST, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_AID_FROM_THE_PAST, level,
+    description: 'When combo skill applies Arts Burst or Combustion, wielder gains Battle Skill DMG and ATK bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class PursuitDutyFulfilled extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_DUTY_FULFILLED, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_DUTY_FULFILLED, level,
+    description: 'After combo skill applies Lifted, team gains Arts DMG and Nature DMG Dealt bonus for 15s. Additional Arts DMG per enemy Lifted. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class PursuitTranscendentArts extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_TRANSCENDENT_ARTS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.PURSUIT_TRANSCENDENT_ARTS, level,
+    description: 'When combo skill applies Arts Burst or Physical Status, team gains Heat and Electric DMG Dealt bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InflictionRoadHomeForAllLife extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_ROAD_HOME_FOR_ALL_LIFE, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_ROAD_HOME_FOR_ALL_LIFE, level,
+    description: 'When applying an Arts Reaction, wielder gains ATK bonus for 20s. Max 2 stacks, duration counted separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InflictionWildernessCluster extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WILDERNESS_CLUSTER, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WILDERNESS_CLUSTER, level,
+    description: 'When applying Electrification, team gains Physical and Electric DMG Dealt bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InflictionWedgeOfCivilization extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WEDGE_OF_CIVILIZATION, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_WEDGE_OF_CIVILIZATION, level,
+    description: 'When casting battle skill, wielder gains Arts DMG Dealt bonus for 15s. If battle skill applies Arts Reaction, bonus doubles. Does not stack with itself.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InflictionConquestOfIcyPeaks extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_CONQUEST_OF_ICY_PEAKS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_CONQUEST_OF_ICY_PEAKS, level,
+    description: 'Against enemies with Cryo Infliction or Solidification, wielder gains Cryo DMG bonus. After consuming Solidification, wielder gains ATK bonus for 15s.',
+  }); }
   getValue(): number { return 0; }
 }
 export class TwilightHumiliation extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.TWILIGHT_HUMILIATION, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.TWILIGHT_HUMILIATION, level,
+    description: 'When casting ultimate or combo skill, wielder gains Arts DMG Dealt bonus for 15s. Ultimate grants double bonus. The two effects apply separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class MedicantBlightFervor extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_BLIGHT_FERVOR, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_BLIGHT_FERVOR, level,
+    description: 'After skill provides HP treatment, team gains ATK bonus for 15s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class MedicantEyeOfTalos extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_EYE_OF_TALOS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_EYE_OF_TALOS, level,
+    description: "After combo skill provides HP treatment, controlled operator gains Shield based on wielder's Max HP for 15s. 15s cooldown.",
+  }); }
   getValue(): number { return 0; }
 }
 export class MedicantRedemptionOfFaith extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_REDEMPTION_OF_FAITH, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_REDEMPTION_OF_FAITH, level,
+    description: 'When battle skill provides HP treatment, controlled operator is restored for additional HP. 15s cooldown.',
+  }); }
   getValue(): number { return 0; }
 }
 export class MincingTherapy extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MINCING_THERAPY, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MINCING_THERAPY, level,
+    description: "After a Protected operator takes DMG, wielder restores that operator's HP. 15s cooldown.",
+  }); }
   getValue(): number { return 0; }
 }
 export class MedicantGloryOfKnighthood extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_GLORY_OF_KNIGHTHOOD, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.MEDICANT_GLORY_OF_KNIGHTHOOD, level,
+    description: 'Secondary attribute bonus and Combo Skill HP Treatment enhancement (passive).',
+  }); }
   getValue(): number { return 0; }
 }
 export class WeightOfMountain extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.WEIGHT_OF_MOUNTAIN, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.WEIGHT_OF_MOUNTAIN, level,
+    description: 'Against vulnerable enemies, DMG Dealt increases. When battle skill applies Vulnerability or Physical Susceptibility, all attributes increase for 15s. Effects apply separately.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InspiringStartOfASaga extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_START_OF_A_SAGA, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_START_OF_A_SAGA, level,
+    description: 'When wielder HP is above 80%, gains ATK bonus (passive conditional).',
+  }); }
   getValue(): number { return 0; }
 }
 export class InflictionLoneAndDistantSail extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_LONE_AND_DISTANT_SAIL, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INFLICTION_LONE_AND_DISTANT_SAIL, level,
+    description: 'When Solidification or Corrosion is applied, wielder gains Cryo DMG, Nature DMG, and Crit Rate bonus for 15s. Self-triggered doubles bonuses. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class DetonateRapidStrike extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_RAPID_STRIKE, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.DETONATE_RAPID_STRIKE, level,
+    description: 'After consuming Arts Infliction, wielder gains Nature DMG bonus for 20s. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class SuppressionTilliteEtchings extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_TILLITE_ETCHINGS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.SUPPRESSION_TILLITE_ETCHINGS, level,
+    description: 'When battle skill applies Nature Infliction, other operators gain Arts DMG Dealt bonus for 15s. Stacking bonus per enemy with Nature Infliction. Does not stack.',
+  }); }
   getValue(): number { return 0; }
 }
 export class InspiringMortiseAndTenonAnalysis extends WeaponSkill {
-  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_MORTISE_AND_TENON_ANALYSIS, level }); }
+  constructor(level: number) { super({ weaponSkillType: WeaponSkillType.INSPIRING_MORTISE_AND_TENON_ANALYSIS, level,
+    description: 'Main attribute bonus and Arts Intensity bonus (passive).',
+  }); }
   getValue(): number { return 0; }
 }
 
@@ -535,7 +629,9 @@ export class InflictionTidalMurmurs extends WeaponSkill {
   static readonly DURATION_SECONDS = INFLICTION_TIDAL_MURMURS_DURATION_SECONDS;
 
   constructor(level: number) {
-    super({ weaponSkillType: WeaponSkillType.INFLICTION_TIDAL_MURMURS, level });
+    super({ weaponSkillType: WeaponSkillType.INFLICTION_TIDAL_MURMURS, level,
+      description: 'After consuming Corrosion, wielder gains secondary attribute bonus and enemy suffers Arts DMG Taken increase for 25s. Does not stack.',
+    });
   }
 
   /** Secondary attribute bonus. */

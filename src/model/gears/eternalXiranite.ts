@@ -31,10 +31,9 @@ export class EternalXiraniteArmor extends Gear {
           [StatType.ARTS_INTENSITY]: 26.9,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Eternal Xiranite Gloves (Gloves) ────────────────────────────────────────
@@ -66,10 +65,9 @@ export class EternalXiraniteGloves extends Gear {
           [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.267,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Eternal Xiranite Gloves T1 (Gloves) ─────────────────────────────────────
@@ -101,10 +99,9 @@ export class EternalXiraniteGlovesT1 extends Gear {
           [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.267,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Eternal Xiranite Auxiliary Arm (Kit) ─────────────────────────────────────
@@ -136,10 +133,9 @@ export class EternalXiraniteAuxiliaryArm extends Gear {
           [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.320,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Eternal Xiranite Power Core (Kit) ───────────────────────────────────────
@@ -171,10 +167,9 @@ export class EternalXiranitePowerCore extends Gear {
           [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.320,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Eternal Xiranite Power Core T1 (Kit) ────────────────────────────────────
@@ -206,8 +201,7 @@ export class EternalXiranitePowerCoreT1 extends Gear {
           [StatType.TREATMENT_BONUS]: 0.269,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

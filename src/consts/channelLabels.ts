@@ -25,9 +25,14 @@ export const enum ColumnLabel {
   WEAPON_BUFF          = 'WEAPON',
   GEAR_BUFF            = 'GEAR',
   TACTICAL             = 'TACTICAL',
+  STATUS               = 'STATUS',
   STAGGER              = 'STAGGER',
   STAGGER_FRAILTY      = 'STAGGER FRAILTY',
   SCORCHING_FANGS      = 'SCORCHING FANGS',
+  SCORCHING_HEART      = 'SCORCHING HEART',
+  ORIGINIUM_CRYSTAL    = 'CRYSTAL',
+  WILDLAND_TREKKER     = 'WILDLAND TREKKER',
+  MESSENGERS_SONG      = "MESSENGER'S SONG",
 }
 
 export const STATUS_LABELS: Record<StatusType, string> = {
@@ -37,15 +42,23 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.ELECTRIFICATION]: 'Electrification',
   [StatusType.MELTING_FLAME]:   'Melting Flame',
   [StatusType.THUNDERLANCE]:    'Thunderlance',
+  [StatusType.CRIT_STACKS]:     'Crit Stacks',
   [StatusType.SQUAD_BUFF]:      'Squad Buff',
   [StatusType.SCORCHING_FANGS]: 'Scorching Fangs',
   [StatusType.LINK]:            'Link',
   [StatusType.ARTS_AMP]:        'Arts Amp',
   [StatusType.SHIELD]:          'Shield',
   [StatusType.UNBRIDLED_EDGE]:  'Unbridled Edge',
+  [StatusType.WILDLAND_TREKKER]: 'Wildland Trekker',
+  [StatusType.MESSENGERS_SONG]: "Messenger's Song",
+  [StatusType.SCORCHING_HEART]: 'Scorching Heart',
   [StatusType.FOCUS]:           'Focus',
   [StatusType.SUSCEPTIBILITY]:  'Susceptibility',
   [StatusType.FRAGILITY]:       'Fragility',
+  [StatusType.ORIGINIUM_CRYSTAL]: 'Originium Crystal',
+  [StatusType.WEAKEN]:          'Weaken',
+  [StatusType.DMG_REDUCTION]:   'DMG Reduction',
+  [StatusType.PROTECTION]:      'Protection',
   [StatusType.LIFT]:            'Lift',
   [StatusType.KNOCK_DOWN]:      'Knock Down',
   [StatusType.CRUSH]:           'Crush',
@@ -57,6 +70,8 @@ export const STATUS_LABELS: Record<StatusType, string> = {
 export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
   // Common
   [CombatSkillsType.DASH]:                                'Dash',
+  [CombatSkillsType.FINISHER]:                            'Finisher',
+  [CombatSkillsType.DIVE]:                                'Dive Attack',
 
   // Laevatain
   [CombatSkillsType.FLAMING_CINDERS]:                     'Flaming Cinders',
@@ -149,6 +164,7 @@ export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
   [CombatSkillsType.VIGIL_SERVICES]:                  'Vigil Services',
   // Yvonne
   [CombatSkillsType.EXUBERANT_TRIGGER]:               'Exuberant Trigger',
+  [CombatSkillsType.EXUBERANT_TRIGGER_ENHANCED]:      'Exuberant Trigger (Enhanced)',
   [CombatSkillsType.BRR_BRR_BOMB]:                    'Brr-Brr-Bomb \u03b2',
   [CombatSkillsType.FLASHFREEZER]:                     'Flashfreezer \u03c5-37',
   [CombatSkillsType.CRYOBLASTING_PISTOLIER]:           'Cryoblasting Pistolier',
@@ -207,7 +223,11 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   ARTS_AMP:             'Arts Amp',
   SHIELD:               'Shield',
   // Enemy debuffs
+  SCORCHING_HEART:      'Scorching Heart',
   FRAGILITY:            'Fragility',
+  ORIGINIUM_CRYSTAL:    'Originium Crystal',
+  'originium-crystal':  'Originium Crystal',
+  WILDLAND_TREKKER:     'Wildland Trekker',
   // Stagger status events
   STAGGER_NODE:         'Node Stagger',
   STAGGER:              'Stagger',

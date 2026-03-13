@@ -19,10 +19,9 @@ export class AicLightArmor extends Gear {
         3: {},
         4: {},
       },
+      defense: 22.4,
     });
   }
-
-  static readonly DEFENSE = 22.4;
 }
 
 // ── AIC Tactical Gloves (Gloves) ────────────────────────────────────────────
@@ -42,10 +41,9 @@ export class AicTacticalGloves extends Gear {
         3: {},
         4: {},
       },
+      defense: 16.8,
     });
   }
-
-  static readonly DEFENSE = 16.8;
 }
 
 // ── AIC Ceramic Plate (Kit) ─────────────────────────────────────────────────
@@ -64,10 +62,9 @@ export class AicCeramicPlate extends Gear {
         3: {},
         4: {},
       },
+      defense: 8.4,
     });
   }
-
-  static readonly DEFENSE = 8.4;
 }
 
 // ── AIC Light Plate (Kit) ───────────────────────────────────────────────────
@@ -78,8 +75,7 @@ export class AicLightPlate extends Gear {
       gearEffectType: GearEffectType.AIC_LIGHT,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 8.4,
     });
   }
-
-  static readonly DEFENSE = 8.4;
 }

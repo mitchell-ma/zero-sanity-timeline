@@ -3,7 +3,9 @@ import { WeaponSkill } from "./weaponSkill";
 
 // ── Attack Boost ──────────────────────────────────────────────────────────────
 
-const ATTACK_BOOST_S: readonly number[] = [];
+const ATTACK_BOOST_S: readonly number[] = [
+  0.03, 0.054, 0.078, 0.102, 0.126, 0.15, 0.174, 0.198, 0.234,
+];
 const ATTACK_BOOST_M: readonly number[] = [
   0.04, 0.072, 0.104, 0.136, 0.168, 0.2, 0.232, 0.264, 0.312,
 ];
@@ -38,9 +40,15 @@ export class AttackBoostL extends WeaponSkill {
 
 // ── Strength Boost ────────────────────────────────────────────────────────────
 
-const STRENGTH_BOOST_S: readonly number[] = [];
-const STRENGTH_BOOST_M: readonly number[] = [];
-const STRENGTH_BOOST_L: readonly number[] = [];
+const STRENGTH_BOOST_S: readonly number[] = [
+  12, 21, 31, 40, 50, 60, 69, 79, 93,
+];
+const STRENGTH_BOOST_M: readonly number[] = [
+  16, 28, 41, 54, 67, 80, 92, 105, 124,
+];
+const STRENGTH_BOOST_L: readonly number[] = [
+  20, 36, 52, 68, 84, 100, 116, 132, 156,
+];
 
 export class StrengthBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -69,11 +77,15 @@ export class StrengthBoostL extends WeaponSkill {
 
 // ── Agility Boost ─────────────────────────────────────────────────────────────
 
-const AGILITY_BOOST_S: readonly number[] = [];
+const AGILITY_BOOST_S: readonly number[] = [
+  12, 21, 31, 40, 50, 60, 69, 79, 93,
+];
 const AGILITY_BOOST_M: readonly number[] = [
   16, 28, 41, 54, 67, 80, 92, 105, 124,
 ];
-const AGILITY_BOOST_L: readonly number[] = [];
+const AGILITY_BOOST_L: readonly number[] = [
+  20, 36, 52, 68, 84, 100, 116, 132, 156,
+];
 
 export class AgilityBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -102,7 +114,9 @@ export class AgilityBoostL extends WeaponSkill {
 
 // ── Intellect Boost ───────────────────────────────────────────────────────────
 
-const INTELLECT_BOOST_S: readonly number[] = [];
+const INTELLECT_BOOST_S: readonly number[] = [
+  12, 21, 31, 40, 50, 60, 69, 79, 93,
+];
 const INTELLECT_BOOST_M: readonly number[] = [
   16, 28, 41, 54, 67, 80, 92, 105, 124,
 ];
@@ -137,8 +151,12 @@ export class IntellectBoostL extends WeaponSkill {
 
 // ── Will Boost ────────────────────────────────────────────────────────────────
 
-const WILL_BOOST_S: readonly number[] = [];
-const WILL_BOOST_M: readonly number[] = [];
+const WILL_BOOST_S: readonly number[] = [
+  12, 21, 31, 40, 50, 60, 69, 79, 93,
+];
+const WILL_BOOST_M: readonly number[] = [
+  16, 28, 41, 54, 67, 80, 92, 105, 124,
+];
 const WILL_BOOST_L: readonly number[] = [
   20, 36, 52, 68, 84, 100, 116, 132, 156,
 ];
@@ -173,7 +191,9 @@ export class WillBoostL extends WeaponSkill {
 const MAIN_ATTRIBUTE_BOOST_S: readonly number[] = [
   10, 18, 26, 34, 42, 51, 59, 67, 79,
 ];
-const MAIN_ATTRIBUTE_BOOST_M: readonly number[] = [];
+const MAIN_ATTRIBUTE_BOOST_M: readonly number[] = [
+  16, 28, 41, 54, 67, 80, 92, 105, 124,
+];
 const MAIN_ATTRIBUTE_BOOST_L: readonly number[] = [
   17, 30, 44, 57, 71, 85, 98, 112, 132,
 ];
@@ -205,9 +225,15 @@ export class MainAttributeBoostL extends WeaponSkill {
 
 // ── Physical Damage Boost ─────────────────────────────────────────────────────
 
-const PHYSICAL_DAMAGE_BOOST_S: readonly number[] = [];
-const PHYSICAL_DAMAGE_BOOST_M: readonly number[] = [];
-const PHYSICAL_DAMAGE_BOOST_L: readonly number[] = [];
+const PHYSICAL_DAMAGE_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const PHYSICAL_DAMAGE_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
+const PHYSICAL_DAMAGE_BOOST_L: readonly number[] = [
+  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
+];
 
 export class PhysicalDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -236,9 +262,15 @@ export class PhysicalDamageBoostL extends WeaponSkill {
 
 // ── Heat Damage Boost ─────────────────────────────────────────────────────────
 
-const HEAT_DAMAGE_BOOST_S: readonly number[] = [];
-const HEAT_DAMAGE_BOOST_M: readonly number[] = [];
-const HEAT_DAMAGE_BOOST_L: readonly number[] = [];
+const HEAT_DAMAGE_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const HEAT_DAMAGE_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
+const HEAT_DAMAGE_BOOST_L: readonly number[] = [
+  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
+];
 
 export class HeatDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -267,9 +299,15 @@ export class HeatDamageBoostL extends WeaponSkill {
 
 // ── Cryo Damage Boost ─────────────────────────────────────────────────────────
 
-const CRYO_DAMAGE_BOOST_S: readonly number[] = [];
-const CRYO_DAMAGE_BOOST_M: readonly number[] = [];
-const CRYO_DAMAGE_BOOST_L: readonly number[] = [];
+const CRYO_DAMAGE_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const CRYO_DAMAGE_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
+const CRYO_DAMAGE_BOOST_L: readonly number[] = [
+  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
+];
 
 export class CryoDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -298,9 +336,15 @@ export class CryoDamageBoostL extends WeaponSkill {
 
 // ── Nature Damage Boost ───────────────────────────────────────────────────────
 
-const NATURE_DAMAGE_BOOST_S: readonly number[] = [];
-const NATURE_DAMAGE_BOOST_M: readonly number[] = [];
-const NATURE_DAMAGE_BOOST_L: readonly number[] = [];
+const NATURE_DAMAGE_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const NATURE_DAMAGE_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
+const NATURE_DAMAGE_BOOST_L: readonly number[] = [
+  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
+];
 
 export class NatureDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -329,9 +373,15 @@ export class NatureDamageBoostL extends WeaponSkill {
 
 // ── Electric Damage Boost ─────────────────────────────────────────────────────
 
-const ELECTRIC_DAMAGE_BOOST_S: readonly number[] = [];
-const ELECTRIC_DAMAGE_BOOST_M: readonly number[] = [];
-const ELECTRIC_DAMAGE_BOOST_L: readonly number[] = [];
+const ELECTRIC_DAMAGE_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const ELECTRIC_DAMAGE_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
+const ELECTRIC_DAMAGE_BOOST_L: readonly number[] = [
+  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
+];
 
 export class ElectricDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -360,9 +410,13 @@ export class ElectricDamageBoostL extends WeaponSkill {
 
 // ── Ultimate Gain Efficiency Boost ────────────────────────────────────────────
 
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_S: readonly number[] = [];
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_M: readonly number[] = [];
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_L: readonly number[] = [];
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_S: readonly number[] = []; // No weapon uses this tier
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_M: readonly number[] = [
+  0.0476, 0.0857, 0.1238, 0.1619, 0.20, 0.2381, 0.2762, 0.3143, 0.3714,
+];
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_L: readonly number[] = [
+  0.0595, 0.1071, 0.1548, 0.2024, 0.25, 0.2976, 0.3452, 0.3929, 0.4643,
+];
 
 export class UltimateGainEfficiencyBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -400,9 +454,13 @@ export class UltimateGainEfficiencyBoostL extends WeaponSkill {
 
 // ── HP Boost ──────────────────────────────────────────────────────────────────
 
-const HP_BOOST_S: readonly number[] = [];
-const HP_BOOST_M: readonly number[] = [];
-const HP_BOOST_L: readonly number[] = [];
+const HP_BOOST_S: readonly number[] = []; // No weapon uses this tier
+const HP_BOOST_M: readonly number[] = [
+  0.08, 0.144, 0.208, 0.272, 0.336, 0.40, 0.464, 0.528, 0.624,
+];
+const HP_BOOST_L: readonly number[] = [
+  0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58, 0.66, 0.78,
+];
 
 export class HpBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -431,8 +489,12 @@ export class HpBoostL extends WeaponSkill {
 
 // ── Arts Boost ────────────────────────────────────────────────────────────────
 
-const ARTS_BOOST_S: readonly number[] = [];
-const ARTS_BOOST_M: readonly number[] = [];
+const ARTS_BOOST_S: readonly number[] = [
+  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
+];
+const ARTS_BOOST_M: readonly number[] = [
+  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
+];
 const ARTS_BOOST_L: readonly number[] = [
   0.0556, 0.1, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
 ];
@@ -464,9 +526,13 @@ export class ArtsBoostL extends WeaponSkill {
 
 // ── Arts Intensity Boost ──────────────────────────────────────────────────────
 
-const ARTS_INTENSITY_BOOST_S: readonly number[] = [];
-const ARTS_INTENSITY_BOOST_M: readonly number[] = [];
-const ARTS_INTENSITY_BOOST_L: readonly number[] = [];
+const ARTS_INTENSITY_BOOST_S: readonly number[] = []; // No weapon uses this tier
+const ARTS_INTENSITY_BOOST_M: readonly number[] = [
+  8, 14, 20, 27, 33, 40, 46, 52, 62,
+];
+const ARTS_INTENSITY_BOOST_L: readonly number[] = [
+  10, 18, 26, 34, 42, 50, 58, 66, 78,
+];
 
 export class ArtsIntensityBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -495,9 +561,11 @@ export class ArtsIntensityBoostL extends WeaponSkill {
 
 // ── Critical Rate Boost ───────────────────────────────────────────────────────
 
-const CRITICAL_RATE_BOOST_S: readonly number[] = [];
-const CRITICAL_RATE_BOOST_M: readonly number[] = [];
-const CRITICAL_RATE_BOOST_L: readonly number[] = [];
+const CRITICAL_RATE_BOOST_S: readonly number[] = []; // No weapon uses this tier
+const CRITICAL_RATE_BOOST_M: readonly number[] = []; // No weapon uses this tier
+const CRITICAL_RATE_BOOST_L: readonly number[] = [
+  0.025, 0.045, 0.065, 0.085, 0.105, 0.125, 0.145, 0.165, 0.195,
+];
 
 export class CriticalRateBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -526,8 +594,10 @@ export class CriticalRateBoostL extends WeaponSkill {
 
 // ── Treatment Efficiency Boost ────────────────────────────────────────────────
 
-const TREATMENT_EFFICIENCY_BOOST_S: readonly number[] = [];
-const TREATMENT_EFFICIENCY_BOOST_M: readonly number[] = [];
+const TREATMENT_EFFICIENCY_BOOST_S: readonly number[] = []; // No weapon uses this tier
+const TREATMENT_EFFICIENCY_BOOST_M: readonly number[] = [
+  0.0476, 0.0857, 0.1238, 0.1619, 0.20, 0.2381, 0.2762, 0.3143, 0.3714,
+];
 const TREATMENT_EFFICIENCY_BOOST_L: readonly number[] = [
   0.0595, 0.1071, 0.1548, 0.2024, 0.25, 0.2976, 0.3452, 0.3929, 0.4643,
 ];

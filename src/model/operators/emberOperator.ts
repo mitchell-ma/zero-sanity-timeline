@@ -99,4 +99,36 @@ export class EmberOperator extends Operator {
   }
   get comboDescription(): string { return 'Controlled operator is attacked'; }
   get derivedTeamColumns(): string[] { return ['team-shield']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Leap and slam dealing Heat DMG with knockdown and stagger in fan-shaped area.',
+      combo: 'Leaps at the enemy with heavy slam dealing Physical DMG, knockdown, and HP treatment.',
+      ultimate: 'Ground slam dealing Heat DMG to nearby enemies. Grants all teammates a shield based on Ember\'s Max HP.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Gains 30% Protection when casting Forward March or Frontline Support.',
+        'Gains 50% Protection when casting Forward March or Frontline Support.',
+      ],
+      2: [
+        'When Ember receives DMG from the enemy, gains ATK +6% for 7s (max 3 stacks).',
+        'When Ember receives DMG from the enemy, gains ATK +9% for 7s (max 3 stacks).',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Nomadic Fort: Talent Inflamed improved with +20% protection; hitting enemies extends duration by 1.5s.',
+      'Steel-Hardened Veteran: Strength +20, Will +20.',
+      'Indomitable Front: Combo skill restores HP to lowest-percentage teammate at 50% effectiveness.',
+      'Undying Embers: Ultimate Energy cost -15%.',
+      'The Steel Oath: Shield multiplied by 1.2; grants wielder ATK +10% while shield active.',
+    ];
+  }
 }

@@ -1,13 +1,18 @@
 import { TimelineEvent, Column, MiniTimeline, MicroColumn } from '../../consts/viewTypes';
+import { EventStatusType } from '../../consts/enums';
 
 /**
- * Controller for micro-column slot assignment and dynamic-split positioning.
- * Extracts layout computation logic from the view layer.
+ * Base controller for micro-column slot assignment and dynamic-split positioning.
+ * Domain-specific controllers (e.g. MeltingFlameController) extend this class.
+ *
+ * Consumed events are excluded from active slot counting — once consumed
+ * (by absorption, reaction, etc.), the event no longer occupies a slot.
  */
 export class MicroColumnController {
   /**
-   * Greedy bin-packing slot assignment for reuseExpiredSlots columns.
+   * Slot assignment for reuseExpiredSlots columns.
    * Maps eventId → assigned micro-column index.
+   * Consumed events are excluded from active count.
    */
   static greedySlotAssignments(
     events: TimelineEvent[],
@@ -23,22 +28,18 @@ export class MicroColumnController {
         (ev) => ev.ownerId === col.ownerId &&
           (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
       );
-
       const sorted = [...colEvents].sort((a, b) => a.startFrame - b.startFrame);
-
-      const slotEndFrames = new Array(microCount).fill(-1);
       for (const ev of sorted) {
-        const endFrame = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
-        let assigned = -1;
-        for (let s = 0; s < microCount; s++) {
-          if (slotEndFrames[s] <= ev.startFrame) {
-            assigned = s;
-            slotEndFrames[s] = endFrame;
-            break;
+        let activeCount = 0;
+        for (const other of sorted) {
+          if (other.id === ev.id) continue;
+          if (other.eventStatus === EventStatusType.CONSUMED) continue;
+          const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
+          if (other.startFrame <= ev.startFrame && otherEnd > ev.startFrame) {
+            activeCount++;
           }
         }
-        if (assigned < 0) assigned = microCount - 1;
-        assignments.set(ev.id, assigned);
+        assignments.set(ev.id, Math.min(activeCount, microCount - 1));
       }
     }
     return assignments;
@@ -55,7 +56,6 @@ export class MicroColumnController {
   ): { count: number; index: number } {
     const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
-    // Collect all overlapping events (including self)
     const overlapping: TimelineEvent[] = [ev];
     for (const other of colEvents) {
       if (other.id === ev.id) continue;
@@ -65,7 +65,6 @@ export class MicroColumnController {
       }
     }
 
-    // Sort by startFrame (earlier events on the left), break ties by id for stability
     overlapping.sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
 
     return {
@@ -110,7 +109,6 @@ export class MicroColumnController {
       let max = totalFrames - 1;
       for (let i = idx - 1; i >= 0; i--) {
         if (draggedSet.has(allInCol[i].id)) continue;
-        // Skip co-located siblings — equal values satisfy monotonic constraint
         if (allInCol[i].startFrame === orig) continue;
         min = allInCol[i].startFrame;
         break;

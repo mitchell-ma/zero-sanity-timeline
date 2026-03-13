@@ -92,4 +92,35 @@ export class PerlicaOperator extends Operator {
     return [TriggerConditionType.FINAL_STRIKE];
   }
   get comboDescription(): string { return 'Final Strike finisher'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'Multi-sequence Electric attack. Dive Attack: dive attack dealing Electric DMG. Finisher: finisher near Staggered enemy deals massive Electric DMG and recovers SP.',
+      battle: 'Electromagnetic bolt dealing Electric DMG and Electric Infliction.',
+      combo: 'Chains lightning to targets.',
+      ultimate: 'Orbital debris strike with area damage.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'DMG Dealt +20% to Staggered enemies.',
+        'DMG Dealt +30% to Staggered enemies.',
+      ],
+      2: [
+        'Combo skill chains once more against Vulnerable enemies.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Electrification duration +75%.',
+      'Ultimate energy cost -15%.',
+      'ATK +20% for 5s after applying Electrification (2 stacks).',
+      'Arts damage taken debuff duration x1.33.',
+      'Critical Rate +30%.',
+    ];
+  }
 }

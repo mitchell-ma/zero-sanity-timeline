@@ -28,8 +28,6 @@ export interface LoadoutTree {
 const TREE_KEY = 'zst-session-tree';
 const ACTIVE_KEY = 'zst-active-session';
 const SESSION_PREFIX = 'zst-session-';
-const LEGACY_SHEET_KEY = 'zst-sheet';
-
 // ─── ID generation ───────────────────────────────────────────────────────────
 
 let counter = 0;
@@ -45,10 +43,6 @@ export function loadLoadoutTree(): LoadoutTree {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed?.nodes && Array.isArray(parsed.nodes)) {
-        // Migrate legacy "session" type to "loadout"
-        for (const node of parsed.nodes) {
-          if (node.type === 'session') node.type = 'loadout';
-        }
         return parsed as LoadoutTree;
       }
     }
@@ -58,11 +52,7 @@ export function loadLoadoutTree(): LoadoutTree {
 
 export function saveLoadoutTree(tree: LoadoutTree): void {
   try {
-    // Normalize legacy "session" type to "loadout" before persisting
-    const cleaned: LoadoutTree = {
-      nodes: tree.nodes.map((n) => (n.type as string) === 'session' ? { ...n, type: 'loadout' as const } : n),
-    };
-    localStorage.setItem(TREE_KEY, JSON.stringify(cleaned));
+    localStorage.setItem(TREE_KEY, JSON.stringify(tree));
   } catch { /* ignore */ }
 }
 
@@ -129,6 +119,21 @@ export function addLoadout(tree: LoadoutTree, name: string, parentId: string | n
   const uniqueN = uniqueName(tree, name, parentId);
   const node: LoadoutNode = { id: generateId(), type: 'loadout', name: uniqueN, parentId, order };
   return { tree: { nodes: [...tree.nodes, node] }, node };
+}
+
+/** Insert a new loadout right after an existing node (same parent). */
+export function addLoadoutAfter(tree: LoadoutTree, name: string, afterNodeId: string): { tree: LoadoutTree; node: LoadoutNode } {
+  const afterNode = tree.nodes.find((n) => n.id === afterNodeId);
+  const parentId = afterNode?.parentId ?? null;
+  const siblings = getChildrenOf(tree, parentId);
+  const afterOrder = afterNode?.order ?? 0;
+  // Shift siblings that come after the target node
+  const shifted = tree.nodes.map((n) =>
+    n.parentId === parentId && n.order > afterOrder ? { ...n, order: n.order + 1 } : n,
+  );
+  const uniqueN = uniqueName({ nodes: shifted }, name, parentId);
+  const node: LoadoutNode = { id: generateId(), type: 'loadout', name: uniqueN, parentId, order: afterOrder + 1 };
+  return { tree: { nodes: [...shifted, node] }, node };
 }
 
 export function addFolder(tree: LoadoutTree, name: string, parentId: string | null): { tree: LoadoutTree; node: LoadoutNode } | { error: string } {
@@ -311,23 +316,3 @@ export function mergeBundle(
   };
 }
 
-// ─── Migration ───────────────────────────────────────────────────────────────
-
-/** Migrate legacy single-sheet storage into the loadout system. */
-export function migrateLegacySheet(): { tree: LoadoutTree; activeId: string } | null {
-  try {
-    const raw = localStorage.getItem(LEGACY_SHEET_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as SheetData;
-    const id = generateId();
-    saveLoadoutData(id, data);
-    const node: LoadoutNode = { id, type: 'loadout', name: 'Loadout 1', parentId: null, order: 0 };
-    const tree: LoadoutTree = { nodes: [node] };
-    saveLoadoutTree(tree);
-    saveActiveLoadoutId(id);
-    // Don't delete legacy key yet — keep as backup
-    return { tree, activeId: id };
-  } catch {
-    return null;
-  }
-}

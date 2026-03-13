@@ -1,4 +1,4 @@
-import { StatusType, TargetType } from "../../consts/enums";
+import { ElementType, StatusType, TargetType } from "../../consts/enums";
 import { FrameApplyStatus, FrameArtsInfliction, SkillEventFrame } from "./skillEventFrame";
 import { SkillEventSequence } from "./skillEventSequence";
 import skillsData from "../game-data/skills.json";
@@ -99,7 +99,7 @@ class AntalBattleSkillSequence extends SkillEventSequence {
           ? {
               target: TargetType.ENEMY, status: StatusType.SUSCEPTIBILITY, stacks: 1,
               durationFrames: FOCUS_DURATION_FRAMES,
-              susceptibility: { electric: FOCUS_SUSCEPTIBILITY, heat: FOCUS_SUSCEPTIBILITY },
+              susceptibility: { [ElementType.ELECTRIC]: FOCUS_SUSCEPTIBILITY, [ElementType.HEAT]: FOCUS_SUSCEPTIBILITY },
               eventName: StatusType.FOCUS,
             }
           : undefined;

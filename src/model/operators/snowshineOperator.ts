@@ -99,4 +99,37 @@ export class SnowshineOperator extends Operator {
   }
   get comboDescription(): string { return 'Controlled operator drops below 60% HP'; }
   get derivedTeamColumns(): string[] { return ['team-shield']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'A 3-hit combo dealing Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Raises a shield granting protection. Retaliates with Cryo DMG.',
+      combo: 'Leaps to aid controlled operator.',
+      ultimate: 'Leap attack creating a snow zone applying Solidification.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Strength +10.',
+        'Strength +15.',
+        'Strength +20.',
+      ],
+      2: [
+        'Treatment Effect +15% for targets of 45% HP or below.',
+        'Treatment Effect +25% for targets of 55% HP or below.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Cold Shelter: Arts inflictions cannot apply to protected allies during shield.',
+      'Storm Region: Ultimate radius +20%.',
+      'Polar Survival Guide: Solidification duration +2 seconds.',
+      'Tundra Aegis: DEF +20, Will +20.',
+      'Cold Disaster Specialist: Successful retaliations return 10 SP.',
+    ];
+  }
 }

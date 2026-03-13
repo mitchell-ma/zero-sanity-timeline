@@ -35,10 +35,9 @@ export class HotWorkExoskeleton extends Gear {
           [StatType.NATURE_DAMAGE_BONUS]: 0.149,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Hot Work Gauntlets (Gloves) ───────────────────────────────────────────────
@@ -74,10 +73,9 @@ export class HotWorkGauntlets extends Gear {
           [StatType.NATURE_DAMAGE_BONUS]: 0.249,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Hot Work Gauntlets T1 (Gloves) ────────────────────────────────────────────
@@ -113,10 +111,9 @@ export class HotWorkGauntletsT1 extends Gear {
           [StatType.NATURE_DAMAGE_BONUS]: 0.249,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Hot Work Power Bank (Kit) ─────────────────────────────────────────────────
@@ -148,10 +145,9 @@ export class HotWorkPowerBank extends Gear {
           [StatType.ARTS_INTENSITY]: 53.8,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Hot Work Power Cartridge (Kit) ────────────────────────────────────────────
@@ -183,10 +179,9 @@ export class HotWorkPowerCartridge extends Gear {
           [StatType.ARTS_INTENSITY]: 53.8,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Hot Work Pyrometer (Kit) ──────────────────────────────────────────────────
@@ -214,8 +209,7 @@ export class HotWorkPyrometer extends Gear {
           [StatType.ARTS_INTENSITY]: 53.8,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

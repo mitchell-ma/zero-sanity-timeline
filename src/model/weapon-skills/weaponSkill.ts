@@ -14,12 +14,14 @@ export interface NamedEffectGroup {
 
 export abstract class WeaponSkill {
   readonly weaponSkillType: WeaponSkillType;
+  readonly description: string;
 
   level: number;
 
-  constructor(params: { weaponSkillType: WeaponSkillType; level: number }) {
+  constructor(params: { weaponSkillType: WeaponSkillType; level: number; description?: string }) {
     this.weaponSkillType = params.weaponSkillType;
     this.level = params.level;
+    this.description = params.description ?? '';
   }
 
   abstract getValue(): number;

@@ -6,8 +6,9 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/channelLabels';
-import { CombatSkillsType, CombatSkillType, ElementType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, CombatSkillType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
+import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier } from './skillMultiplierRegistry';
 import { aggregateLoadoutStats } from './loadoutAggregator';
@@ -15,23 +16,30 @@ import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutH
 import {
   calculateDamage,
   DamageParams,
+  DamageSubComponents,
   getAmpMultiplier,
   getAttributeBonus,
   getDamageBonus,
   getDefenseMultiplier,
+  getDmgReductionMultiplier,
   getElementDamageBonusStat,
   getExpectedCritMultiplier,
+  getFinisherMultiplier,
   getFragilityMultiplier,
   getLinkMultiplier,
+  getProtectionMultiplier,
   getResistanceMultiplier,
   getSkillTypeDamageBonusStat,
   getStaggerMultiplier,
   getSusceptibilityMultiplier,
   getTotalAttack,
+  getWeakenMultiplier,
 } from '../../model/calculation/damageFormulas';
 import { StatusQueryService } from './statusQueryService';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS } from '../../model/channels';
+import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +66,8 @@ export interface DamageTableRow {
   hpRemaining: number | null;
   /** Full damage calculation parameters. Null if damage could not be computed. */
   params: DamageParams | null;
+  /** Status/reaction damage parameters. Null for normal skill hits. */
+  statusParams?: StatusDamageParams | null;
 }
 
 /** Column descriptor for the damage table header. */
@@ -150,16 +160,20 @@ function buildOperatorCalcData(
   const agg = aggregateLoadoutStats(operatorId, loadout, stats);
   if (!agg) return null;
 
+  // Lifeng T1 — Illumination: every point of INT + WIL grants additional ATK%
+  let extraAttackPct = 0;
+  if (operatorId === 'lifeng' && stats.talentOneLevel >= 1) {
+    const intWil = Math.floor(agg.stats[StatType.INTELLECT]) + Math.floor(agg.stats[StatType.WILL]);
+    extraAttackPct = intWil * (stats.talentOneLevel >= 2 ? 0.0015 : 0.0010);
+  }
+
   const totalAttack = getTotalAttack(
     agg.operatorBaseAttack,
     agg.weaponBaseAttack,
-    agg.stats[StatType.ATTACK_BONUS],
+    agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
     agg.flatAttackBonuses,
   );
-  const attributeBonus = getAttributeBonus(
-    agg.stats[agg.mainAttributeType],
-    agg.stats[agg.secondaryAttributeType],
-  );
+  const attributeBonus = agg.attributeBonus;
 
   return {
     totalAttack,
@@ -231,6 +245,10 @@ export function buildDamageTableRows(
     const skillLevel = getSkillLevel(effectiveColumnId, stats);
     const potential = (stats.potential ?? 5) as Potential;
 
+    // Look up default segments for max frame counts (users can delete frames)
+    const defaultSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
+      ?? col.defaultEvent?.segments;
+
     if (ev.segments && ev.segments.length > 0) {
       let segmentFrameOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
@@ -238,6 +256,9 @@ export function buildDamageTableRows(
         const segLabel = seg.label ?? `Seg ${si + 1}`;
 
         if (seg.frames) {
+          // Max frames from default segment (not current, which may have deletions)
+          const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames.length;
+
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
             const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
@@ -256,6 +277,11 @@ export function buildDamageTableRows(
                 potential,
               );
 
+              // Segment multiplier is for the entire segment; divide by max frame count
+              if (multiplier != null && maxFrames > 1) {
+                multiplier = multiplier / maxFrames;
+              }
+
               if (multiplier != null && multiplier > 0) {
                 // Get element from frame marker or skill column
                 const frameElement = frame.damageElement
@@ -268,20 +294,162 @@ export function buildDamageTableRows(
                 const skillType = columnIdToSkillType(effectiveColumnId);
                 const skillTypeBonusStat = getSkillTypeDamageBonusStat(skillType);
                 const isArts = element !== ElementType.PHYSICAL && element !== ElementType.NONE;
+                const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
+
+                // ── Operator talent conditional bonuses ──────────────────────
+                let talentStaggerDmgBonus = 0;
+                let talentCritDmgBonus = 0;
+                let talentSpecialMultiplier = 1;
+                let talentDmgDealBonus = 0;
+
+                // Perlica T1 — Obliteration Protocol: DMG Dealt +20/30% to Staggered
+                if (operatorId === 'perlica' && stats.talentOneLevel >= 1 && isStaggered) {
+                  talentStaggerDmgBonus += stats.talentOneLevel >= 2 ? 0.30 : 0.20;
+                }
+                // Yvonne T2 — Freezing Point: Crit DMG +10/20% vs Cryo-inflicted; doubled vs Solidified
+                if (operatorId === 'yvonne' && stats.talentTwoLevel >= 1 && statusQuery) {
+                  if (statusQuery.isSolidificationActive(absFrame)) {
+                    talentCritDmgBonus += (stats.talentTwoLevel >= 2 ? 0.20 : 0.10) * 2;
+                  } else if (statusQuery.isCryoInflictionActive(absFrame)) {
+                    talentCritDmgBonus += stats.talentTwoLevel >= 2 ? 0.20 : 0.10;
+                  }
+                }
+                // Yvonne P3 — Tink-a-Power: Crit DMG +10% vs Cryo, doubled vs Solidification
+                if (operatorId === 'yvonne' && potential >= 3 && statusQuery) {
+                  if (statusQuery.isSolidificationActive(absFrame)) {
+                    talentCritDmgBonus += 0.10 * 2;
+                  } else if (statusQuery.isCryoInflictionActive(absFrame)) {
+                    talentCritDmgBonus += 0.10;
+                  }
+                }
+                // Last Rite T2 — Cryogenic Embrittlement: Ultimate DMG x1.2/1.5 vs Cryo Susceptibility
+                if (operatorId === 'lastRite' && stats.talentTwoLevel >= 1 && skillType === CombatSkillType.ULTIMATE && statusQuery) {
+                  if (statusQuery.getSusceptibilityBonus(absFrame, ElementType.CRYO) > 0) {
+                    talentSpecialMultiplier *= stats.talentTwoLevel >= 2 ? 1.5 : 1.2;
+                  }
+                }
+                // Avywenna P5 — Carrot and Sharp Stick: 1.15x vs Electric Susceptible
+                if (operatorId === 'avywenna' && potential >= 5 && statusQuery) {
+                  if (statusQuery.getSusceptibilityBonus(absFrame, ElementType.ELECTRIC) > 0) {
+                    talentSpecialMultiplier *= 1.15;
+                  }
+                }
+                // Chen Qianyu P1 — DMG Dealt +20% to enemies below 50% HP
+                if (operatorId === 'chenQianyu' && potential >= 1) {
+                  talentDmgDealBonus += 0.20;
+                }
+                // Fluorite T1 — Love the Stab and Twist: DMG +10/20% vs Slowed
+                if (operatorId === 'fluorite' && stats.talentOneLevel >= 1) {
+                  talentDmgDealBonus += stats.talentOneLevel >= 2 ? 0.20 : 0.10;
+                }
+                // Alesh P5 — Ultimate DMG x1.5 vs enemies below 50% HP
+                if (operatorId === 'alesh' && potential >= 5 && skillType === CombatSkillType.ULTIMATE) {
+                  talentSpecialMultiplier *= 1.5;
+                }
+                // Laevatain P5 — Proof of Existence: Enhanced basic attack DMG multiplier x1.2
+                if (operatorId === 'laevatain' && potential >= 5 && ev.name === CombatSkillsType.FLAMING_CINDERS_ENHANCED) {
+                  talentSpecialMultiplier *= 1.2;
+                }
+
+                // Damage Bonus sub-components
+                const allElementDmgBonuses = {
+                  [ElementType.NONE]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
+                  [ElementType.PHYSICAL]: opData.stats[StatType.PHYSICAL_DAMAGE_BONUS],
+                  [ElementType.HEAT]: opData.stats[StatType.HEAT_DAMAGE_BONUS],
+                  [ElementType.CRYO]: opData.stats[StatType.CRYO_DAMAGE_BONUS],
+                  [ElementType.NATURE]: opData.stats[StatType.NATURE_DAMAGE_BONUS],
+                  [ElementType.ELECTRIC]: opData.stats[StatType.ELECTRIC_DAMAGE_BONUS],
+                } as Record<ElementType, number>;
+                // Wildland Trekker: adds Electric DMG% from Arclight's talent
+                const wildlandTrekkerBonus = statusQuery?.getWildlandTrekkerBonus(absFrame) ?? 0;
+                if (wildlandTrekkerBonus > 0) {
+                  allElementDmgBonuses[ElementType.ELECTRIC] = (allElementDmgBonuses[ElementType.ELECTRIC] ?? 0) + wildlandTrekkerBonus;
+                }
+
+                const subElementDmg = (element === ElementType.ELECTRIC)
+                  ? opData.stats[elementBonusStat] + wildlandTrekkerBonus
+                  : opData.stats[elementBonusStat];
+                const subSkillTypeDmg = opData.stats[skillTypeBonusStat];
+                const subSkillDmg = opData.stats[StatType.SKILL_DAMAGE_BONUS];
+                const subArtsDmg = isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] : 0;
+                const subStaggerDmg = isStaggered ? (opData.stats[StatType.STAGGER_DAMAGE_BONUS] ?? 0) + talentStaggerDmgBonus : 0;
+
                 const multiplierGroup = getDamageBonus(
-                  opData.stats[elementBonusStat],
-                  opData.stats[skillTypeBonusStat],
-                  opData.stats[StatType.SKILL_DAMAGE_BONUS],
-                  isArts ? opData.stats[StatType.ARTS_DAMAGE_BONUS] : 0,
+                  subElementDmg, subSkillTypeDmg, subSkillDmg, subArtsDmg, subStaggerDmg, talentDmgDealBonus,
                 );
 
-                // Resistance
-                const resMultiplier = modelEnemy
+                // Resistance (with corrosion reduction + ignored resistance)
+                // Formula: 1 - Resistance/100 + IgnoredResistance/100
+                // Can exceed 1.0 when corrosion + ignored resistance push past zero
+                const baseResistance = modelEnemy
                   ? getResistanceMultiplier(modelEnemy, element)
                   : 1;
+                let resMultiplier = baseResistance;
+                let subCorrosionReduction = 0;
+                let subIgnoredRes = 0;
+                if (statusQuery && element !== ElementType.PHYSICAL && element !== ElementType.NONE) {
+                  subCorrosionReduction = statusQuery.getCorrosionResistanceReduction(absFrame);
+                  if (subCorrosionReduction > 0) {
+                    resMultiplier += subCorrosionReduction / 100;
+                  }
+                  subIgnoredRes = statusQuery.getIgnoredResistance(absFrame, element, ev.ownerId);
+                  if (subIgnoredRes > 0) {
+                    resMultiplier += subIgnoredRes / 100;
+                  }
+                }
 
-                // Expected crit multiplier
-                const expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage);
+                // Crit not currently factored into calculations
+                const expectedCrit = 1;
+
+                // Finisher: applies when the event is a finisher attack during stagger break
+                const isFinisher = ev.name === CombatSkillsType.FINISHER;
+                const enemyTier = modelEnemy?.tier ?? EnemyTierType.COMMON;
+
+                // Link bonus depends on stacks and skill type (battle skill vs ultimate)
+                const linkBonus = statusQuery?.getLinkBonus(absFrame, skillType) ?? 0;
+
+                // Sub-component arrays for multiplicative multipliers
+                const subWeakenEffects = statusQuery?.getWeakenEffects(absFrame) ?? [];
+                const subDmgReductionEffects = statusQuery?.getDmgReductionEffects(absFrame) ?? [];
+                const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
+                const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
+
+                // Special multiplier sources
+                const specialSources: { label: string; value: number }[] = [];
+                if (operatorId === 'lastRite' && stats.talentTwoLevel >= 1 && skillType === CombatSkillType.ULTIMATE && statusQuery && statusQuery.getSusceptibilityBonus(absFrame, ElementType.CRYO) > 0) {
+                  specialSources.push({ label: 'Cryogenic Embrittlement', value: stats.talentTwoLevel >= 2 ? 1.5 : 1.2 });
+                }
+                if (operatorId === 'avywenna' && potential >= 5 && statusQuery && statusQuery.getSusceptibilityBonus(absFrame, ElementType.ELECTRIC) > 0) {
+                  specialSources.push({ label: 'Carrot and Sharp Stick (P5)', value: 1.15 });
+                }
+                if (operatorId === 'alesh' && potential >= 5 && skillType === CombatSkillType.ULTIMATE) {
+                  specialSources.push({ label: 'P5: x1.5 vs <50% HP', value: 1.5 });
+                }
+                if (operatorId === 'laevatain' && potential >= 5 && ev.name === CombatSkillsType.FLAMING_CINDERS_ENHANCED) {
+                  specialSources.push({ label: 'Proof of Existence (P5)', value: 1.2 });
+                }
+
+                const sub: DamageSubComponents = {
+                  element,
+                  elementDmgBonus: subElementDmg,
+                  allElementDmgBonuses,
+                  skillTypeDmgBonus: subSkillTypeDmg,
+                  skillDmgBonus: subSkillDmg,
+                  artsDmgBonus: subArtsDmg,
+                  staggerDmgBonus: subStaggerDmg,
+                  talentDmgDealBonus,
+                  critRate: opData.critRate,
+                  critDamage: opData.critDamage,
+                  talentCritDmgBonus: talentCritDmgBonus,
+                  baseResistance,
+                  corrosionReduction: subCorrosionReduction,
+                  ignoredResistance: subIgnoredRes,
+                  fragilityBonus: subFragilityBonus,
+                  weakenEffects: subWeakenEffects,
+                  dmgReductionEffects: subDmgReductionEffects,
+                  protectionEffects: subProtectionEffects,
+                  specialSources,
+                };
 
                 params = {
                   attack: opData.totalAttack,
@@ -289,17 +457,19 @@ export function buildDamageTableRows(
                   attributeBonus: opData.attributeBonus,
                   multiplierGroup,
                   critMultiplier: expectedCrit,
-                  ampMultiplier: getAmpMultiplier(statusQuery?.isArtsAmpActive(absFrame) ? 0.15 : 0), // TODO: read amp bonus from operator ult skill level instead of 0.15 placeholder
-                  staggerMultiplier: getStaggerMultiplier(statusQuery?.isStaggered(absFrame) ?? false),
-                  finisherMultiplier: 1, // TODO: wire up finisher detection (final strike + enemy tier)
-                  linkMultiplier: getLinkMultiplier(0.15, statusQuery?.isLinkActive(absFrame) ?? false), // TODO: read link bonus from operator ult skill level instead of 0.15 placeholder
-                  weakenMultiplier: 1, // TODO: wire up weaken status events
+                  ampMultiplier: getAmpMultiplier(statusQuery?.getAmpBonus(absFrame) ?? 0),
+                  staggerMultiplier: getStaggerMultiplier(isStaggered),
+                  finisherMultiplier: getFinisherMultiplier(enemyTier, isFinisher),
+                  linkMultiplier: getLinkMultiplier(linkBonus, linkBonus > 0),
+                  weakenMultiplier: getWeakenMultiplier(subWeakenEffects),
                   susceptibilityMultiplier: getSusceptibilityMultiplier(statusQuery?.getSusceptibilityBonus(absFrame, element) ?? 0),
-                  fragilityMultiplier: getFragilityMultiplier(statusQuery?.getFragilityBonus(absFrame) ?? 0),
-                  dmgReductionMultiplier: 1, // TODO: wire up damage reduction status events
-                  protectionMultiplier: 1, // TODO: wire up protection status events
+                  fragilityMultiplier: getFragilityMultiplier(subFragilityBonus),
+                  dmgReductionMultiplier: getDmgReductionMultiplier(subDmgReductionEffects),
+                  protectionMultiplier: getProtectionMultiplier(subProtectionEffects),
                   defenseMultiplier: defMultiplier,
                   resistanceMultiplier: resMultiplier,
+                  specialMultiplier: talentSpecialMultiplier !== 1 ? talentSpecialMultiplier : undefined,
+                  sub,
                 };
 
                 damage = Math.floor(calculateDamage(params));
@@ -328,6 +498,104 @@ export function buildDamageTableRows(
         segmentFrameOffset += seg.durationFrames;
       }
     }
+  }
+
+  // ── Catcher T2/P1 — Additional damage strikes ─────────────────────────────
+  for (const ev of events) {
+    const oid = opIdCache.get(ev.ownerId);
+    if (oid !== 'catcher') continue;
+    const opData = opCache.get(ev.ownerId);
+    if (!opData) continue;
+    const catcherStats = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_STATS;
+    const catcherPotential = (catcherStats.potential ?? 5) as Potential;
+
+    const isBattle = ev.name === CombatSkillsType.RIGID_INTERDICTION;
+    const isUlt = ev.name === CombatSkillsType.TEXTBOOK_ASSAULT;
+    if (!isBattle && !isUlt) continue;
+
+    const absFrame = ev.startFrame;
+    const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);
+    if (!col) continue;
+
+    // P1 — Multi-layered Readiness: Battle/ultimate gain strike at [300 + DEF×5.0] Physical DMG
+    // DEF comes from gear and is not tracked in the stat aggregation; use base 300 as minimum
+    if (catcherPotential >= 1) {
+      const p1Damage = 300;
+      rows.push({
+        key: `${ev.id}-p1-strike`,
+        absoluteFrame: absFrame,
+        label: `${getEventDisplayName(ev.name)} > P1 Strike`,
+        columnKey: col.key,
+        ownerId: ev.ownerId,
+        columnId: ev.columnId,
+        eventId: ev.id,
+        segmentIndex: 0,
+        frameIndex: 0,
+        damage: p1Damage,
+        multiplier: null,
+        segmentLabel: undefined,
+        skillName: ev.name,
+        hpRemaining: null,
+        params: null,
+      });
+    }
+
+    // T2 — Comprehensive Mindset: Ultimate creates shockwaves at 30/45% ATK Physical DMG each
+    if (isUlt && catcherStats.talentTwoLevel >= 1) {
+      const waveCount = catcherStats.talentTwoLevel >= 2 ? 3 : 2;
+      const waveMultiplier = catcherStats.talentTwoLevel >= 2 ? 0.45 : 0.30;
+      const waveDamage = Math.floor(opData.totalAttack * waveMultiplier * opData.attributeBonus);
+      for (let w = 0; w < waveCount; w++) {
+        rows.push({
+          key: `${ev.id}-t2-wave-${w}`,
+          absoluteFrame: absFrame,
+          label: `Textbook Assault > Shockwave ${w + 1}`,
+          columnKey: col.key,
+          ownerId: ev.ownerId,
+          columnId: ev.columnId,
+          eventId: ev.id,
+          segmentIndex: 0,
+          frameIndex: w,
+          damage: waveDamage,
+          multiplier: waveMultiplier,
+          segmentLabel: undefined,
+          skillName: ev.name,
+          hpRemaining: null,
+          params: null,
+        });
+      }
+    }
+  }
+
+  // ── Arts reaction damage rows ──────────────────────────────────────────────
+  // Find reaction events on the enemy timeline and compute their damage
+  // using the triggering operator's loadout.
+  for (const ev of events) {
+    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (!ev.sourceOwnerId) continue;
+
+    // Look up triggering operator's calc data
+    const sourceOpData = opCache.get(ev.sourceOwnerId);
+    const sourceStats = loadoutStats[ev.sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+    if (!sourceOpData || !modelEnemy) continue;
+
+    const sourceOperatorId = opIdCache.get(ev.sourceOwnerId) ?? undefined;
+    const opCtx: ReactionOperatorContext = {
+      totalAttack: sourceOpData.totalAttack,
+      artsIntensity: sourceOpData.stats[StatType.ARTS_INTENSITY] ?? 0,
+      operatorLevel: sourceStats.operatorLevel,
+      operatorId: sourceOperatorId,
+      potential: sourceStats.potential,
+    };
+
+    // Find a column key for this reaction — use the source operator's column
+    const sourceCol = colLookup.get(`${ev.sourceOwnerId}-basic`);
+    const columnKey = sourceCol ? sourceCol.key : `${ev.sourceOwnerId}-${ev.columnId}`;
+
+    const reactionRows = buildReactionDamageRows(
+      ev, opCtx, modelEnemy, columnKey, statusQuery,
+    );
+    rows.push(...reactionRows);
   }
 
   rows.sort((a, b) => a.absoluteFrame - b.absoluteFrame || a.label.localeCompare(b.label));

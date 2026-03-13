@@ -35,6 +35,7 @@ import {
   SkillType,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
+import { MeltingFlameController } from '../controller/timeline/meltingFlameController';
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
@@ -44,11 +45,16 @@ import {
   validateComboWindows,
   validateResources,
   validateEmpowered,
+  validateEnhanced,
+  validateRegularBasicDuringUltimate,
+  validateFinisherDuringUltimate,
+  validateFinisherStaggerBreak,
   validateTimeStops,
+  validateInflictionStacks,
   checkVariantAvailability,
   checkComboWindowAvailability,
-  computeSpInsufficientZones,
-  clampDeltaBySpZones,
+  computeResourceInsufficiencyZones,
+  clampDeltaByResourceZones,
   wouldOverlapSiblings,
   isBlockedByTimeStop,
   computeProspectiveRange,
@@ -70,7 +76,7 @@ interface DragState {
   startFrames: Map<string, number>; // original startFrame per event
   monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
   lastAppliedDelta: number; // tracks the delta already applied to events (for incremental batch moves)
-  spZonesSnapshot: Map<string, import('../controller/timeline/eventValidator').SpZone[]>; // SP zones captured at drag start
+  resourceZonesSnapshot: Map<string, import('../controller/timeline/eventValidator').ResourceZone[]>; // Resource zones captured at drag start
 }
 
 interface MarqueeState {
@@ -146,6 +152,7 @@ interface CombatPlannerProps {
   showRealTime?: boolean;
   onToggleRealTime?: () => void;
   debugMode?: boolean;
+  staggerBreaks?: readonly import('../controller/timeline/staggerTimeline').StaggerBreak[];
   /** Dynamic timeline length in frames (grows with content). */
   contentFrames?: number;
 }
@@ -207,6 +214,7 @@ export default function CombatPlanner({
   showRealTime = true,
   onToggleRealTime,
   debugMode,
+  staggerBreaks,
   contentFrames: contentFramesProp,
 }: CombatPlannerProps) {
   const scrollRef   = useRef<HTMLDivElement>(null);
@@ -253,6 +261,7 @@ export default function CombatPlanner({
     }
   }, [selectEventIds, onSelectEventIdsConsumed]);
   const [hoveredId,        setHoveredId]        = useState<string | null>(null);
+  const [hoverColKey,      setHoverColKey]      = useState<string | null>(null);
   const [marqueeRect,      setMarqueeRect]      = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
   // ─── Duplicate ghost state ──────────────────────────────────────────────────
@@ -293,6 +302,22 @@ export default function CombatPlanner({
     () => validateEmpowered(events),
     [events],
   );
+  const invalidEnhancedIds = useMemo(
+    () => validateEnhanced(events),
+    [events],
+  );
+  const invalidRegularBasicIds = useMemo(
+    () => validateRegularBasicDuringUltimate(events),
+    [events],
+  );
+  const invalidFinisherIds = useMemo(
+    () => validateFinisherDuringUltimate(events, slots),
+    [events, slots],
+  );
+  const invalidFinisherStaggerIds = useMemo(
+    () => staggerBreaks ? validateFinisherStaggerBreak(events, staggerBreaks) : new Map<string, string>(),
+    [events, staggerBreaks],
+  );
   const timeStopRegions = useMemo(
     () => computeTimeStopRegions(events),
     [events],
@@ -301,9 +326,13 @@ export default function CombatPlanner({
     () => validateTimeStops(events, timeStopRegions),
     [events, timeStopRegions],
   );
+  const invalidInflictionIds = useMemo(
+    () => validateInflictionStacks(events),
+    [events],
+  );
 
-  const spInsufficientZones = useMemo(
-    () => resourceGraphs ? computeSpInsufficientZones(resourceGraphs, slots) : new Map(),
+  const resourceInsufficiencyZones = useMemo(
+    () => resourceGraphs ? computeResourceInsufficiencyZones(resourceGraphs, slots) : new Map(),
     [resourceGraphs, slots],
   );
 
@@ -330,8 +359,8 @@ export default function CombatPlanner({
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   const eventsRef = useRef(events);
   eventsRef.current = events;
-  const spZonesRef = useRef(spInsufficientZones);
-  spZonesRef.current = spInsufficientZones;
+  const resourceZonesRef = useRef(resourceInsufficiencyZones);
+  resourceZonesRef.current = resourceInsufficiencyZones;
   const debugModeRef = useRef(debugMode);
   debugModeRef.current = debugMode;
 
@@ -607,7 +636,7 @@ export default function CombatPlanner({
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
   const greedySlotAssignments = useMemo(
-    () => MicroColumnController.greedySlotAssignments(events, columns),
+    () => MeltingFlameController.greedySlotAssignments(events, columns),
     [events, columns],
   );
 
@@ -802,6 +831,20 @@ export default function CombatPlanner({
       }
     }
 
+    // Column highlight — find which column the mouse is over
+    if (outerRect) {
+      const mouseX = e.clientX - outerRect.left;
+      let foundCol: string | null = null;
+      for (let i = 0; i < columns.length; i++) {
+        const pos = columnPositions.get(columns[i].key);
+        if (pos && mouseX >= pos.left && mouseX < pos.right) {
+          foundCol = columns[i].key;
+          break;
+        }
+      }
+      setHoverColKey(foundCol);
+    }
+
     // Duplicate ghost positioning
     if (dupMode && scrollRef.current && outerRect && bodyTopRef.current !== null) {
       const scrollTop = scrollRef.current.scrollTop;
@@ -822,7 +865,7 @@ export default function CombatPlanner({
           if (ghostFrame < 0 || ghostFrame >= TOTAL_FRAMES) { valid = false; break; }
           const ghost = { ...src, id: `__dup_ghost_${src.id}` };
           if (wouldOverlapNonOverlappable(eventsRef.current, ghost, ghostFrame)) { valid = false; break; }
-          if (!debugModeRef.current && isDuplicatePlacementInSpZone(src, ghostFrame, spZonesRef.current)) { valid = false; break; }
+          if (!debugModeRef.current && isDuplicatePlacementInSpZone(src, ghostFrame, resourceZonesRef.current)) { valid = false; break; }
         }
         setDupValid(valid);
       }
@@ -855,14 +898,13 @@ export default function CombatPlanner({
         }
       }
 
-      // SP zone clamping: prevent battle events from being dragged into
-      // SP-insufficient zones (where SP < skill cost).
-      // Uses zones snapshot from drag start so zones don't shift as the event moves.
+      // Resource zone clamping: prevent battle/ultimate events from being dragged
+      // into resource-insufficient zones. Uses snapshot from drag start.
       if (!debugModeRef.current) {
-        const spZones = dragRef.current.spZonesSnapshot;
+        const resZones = dragRef.current.resourceZonesSnapshot;
         for (const eid of eventIds) {
           const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaBySpZones(clampedDelta, eid, eventsRef.current, orig, spZones);
+          clampedDelta = clampDeltaByResourceZones(clampedDelta, eid, eventsRef.current, orig, resZones);
         }
       }
 
@@ -987,11 +1029,12 @@ export default function CombatPlanner({
       }
       onSelectedFramesChange?.(frames);
     }
-  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange, dupMode]);
+  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange, dupMode, columns, columnPositions]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverClientY(null);
     setHoverFrame(null);
+    setHoverColKey(null);
   }, []);
 
   const handleMouseUp = useCallback(() => {
@@ -1056,7 +1099,7 @@ export default function CombatPlanner({
           startFrames.set(ev.id, ev.startFrame);
         }
       }
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, spZonesSnapshot: spZonesRef.current };
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
       setDraggingIds(new Set(draggedIds));
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
@@ -1064,7 +1107,7 @@ export default function CombatPlanner({
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, spZonesSnapshot: spZonesRef.current };
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
       setDraggingIds(new Set([eventId]));
     }
   }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart]);
@@ -1214,7 +1257,7 @@ export default function CombatPlanner({
     const checkOverlap = (ownerId: string, columnId: string, range: number) =>
       wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
 
-    const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions);
+    const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions, col.defaultEvent?.animationDuration);
     const inTimeStop = timeStop.blocked;
     const timeStopReason = timeStop.reason;
 
@@ -1302,7 +1345,7 @@ export default function CombatPlanner({
       const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
       if (col.columnId === 'combo') {
         const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
-        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null));
+        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
         const disabled = !debugMode && (inTimeStop || !comboAvail.available || overlap);
         const reason = inTimeStop ? timeStopReason
           : !comboAvail.available ? comboAvail.reason
@@ -1332,9 +1375,23 @@ export default function CombatPlanner({
           items: [
             headerItem,
             ...col.eventVariants.map((v) => {
-              const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame);
-              const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v));
-              const disabled = !debugMode && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient);
+              const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame, col.columnId, slots);
+              const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
+              // Finisher: must be during stagger break, one per break across all operators
+              let finisherBlock: string | undefined;
+              if (v.name === CombatSkillsType.FINISHER && staggerBreaks) {
+                const inBreak = staggerBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
+                if (!inBreak) {
+                  finisherBlock = 'Finisher can only be used during stagger break';
+                } else {
+                  const existing = events.some((ev) =>
+                    ev.name === CombatSkillsType.FINISHER
+                    && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
+                  );
+                  if (existing) finisherBlock = 'Only one Finisher allowed per stagger break';
+                }
+              }
+              const disabled = !debugMode && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
               const displayName = v.isPerfectDodge ? 'Dodge'
                 : col.columnId === 'dash' ? 'Dash'
                 : COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
@@ -1342,6 +1399,7 @@ export default function CombatPlanner({
                 ?? (inTimeStop ? timeStopReason
                 : spInsufficient ? spReason
                 : availability.disabled ? availability.reason
+                : finisherBlock ? finisherBlock
                 : overlap ? 'Would overlap another event'
                 : undefined);
               return {
@@ -1368,7 +1426,7 @@ export default function CombatPlanner({
           ],
         });
       } else {
-        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null));
+        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
         const resAvail = resourceGraphs ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots) : { sufficient: true };
         const disabled = !debugMode && (inTimeStop || overlap || !resAvail.sufficient);
         const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resAvail.reason;
@@ -1776,7 +1834,7 @@ export default function CombatPlanner({
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
-              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'mini-timeline' && col.headerVariant === 'mf' ? ' tl-header-cell--mf' : ''}`}
+              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'mini-timeline' && col.headerVariant === 'mf' ? ' tl-header-cell--mf' : ''}${hoverColKey === col.key ? ' tl-header-cell--col-hover' : ''}`}
               style={{ '--op-color': col.color } as React.CSSProperties}
             >
               {col.type === 'mini-timeline' && col.headerVariant === 'skill' ? (
@@ -1830,7 +1888,7 @@ export default function CombatPlanner({
               return (
                 <div
                   key={`col-${col.key}`}
-                  className="tl-sub-timeline tl-sub-timeline--empty"
+                  className={`tl-sub-timeline tl-sub-timeline--empty${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
                   style={{ height: tlHeight }}
                   onMouseDown={handleTimelineMouseDown}
                 >
@@ -1904,7 +1962,7 @@ export default function CombatPlanner({
             return (
               <div
                 key={`col-${col.key}`}
-                className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}`}
+                className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
                 style={{ height: tlHeight }}
                 onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
                 onMouseDown={handleTimelineMouseDown}
@@ -2018,8 +2076,7 @@ export default function CombatPlanner({
                 {/* SP zones on battle columns: permanent stripes with
                     sufficient zones patched over to hide them */}
                 {col.columnId === 'battle' && (() => {
-                  const activeZones = spInsufficientZones;
-                  const insuffGaps = activeZones.get(col.ownerId) ?? [];
+                  const insuffGaps = resourceInsufficiencyZones.get(`${col.ownerId}:battle`) ?? [];
 
                   // Compute sufficient zones (inverse of insufficient gaps)
                   const sufficient: { start: number; end: number }[] = [];
@@ -2048,7 +2105,34 @@ export default function CombatPlanner({
                 })()}
 
                 {/* Events */}
-                {hasMicro ? (
+                {(() => {
+                  // ── Shared EventBlock props for all events in this column ──
+                  const isDerivedCol = !!col.derived && !debugMode;
+                  const buildBaseEventProps = (ev: TimelineEvent) => {
+                    const isSequenced = ev.segments && ev.segments.length > 0;
+                    return {
+                      event: ev,
+                      zoom,
+                      variant: (col.columnId === 'ultimate' ? 'ultimate' : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced',
+                      label: ev.isPerfectDodge ? 'Dodge' : (COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name),
+                      onDragStart: isDerivedCol ? noop3 : handleEventDragStart,
+                      onContextMenu: isDerivedCol ? noop2 : handleEventContextMenu,
+                      onSelect: handleEventSelect,
+                      onHover: handleEventHover,
+                      onTouchStart: isDerivedCol ? undefined : handleEventTouchStart,
+                      onFrameClick: handleFrameClickGuarded,
+                      onFrameContextMenu: handleFrameContextMenu,
+                      onFrameDragStart: handleFrameDragStart,
+                      onSegmentContextMenu: handleSegmentContextMenu,
+                      selectedFrames: selectedFrames?.filter((sf) => sf.eventId === ev.id),
+                      hoverFrame: isSequenced ? hoverFrame : undefined,
+                      notDraggable: col.source === TimelineSourceType.ENEMY || isDerivedCol,
+                      derived: isDerivedCol,
+                      comboWarning: invalidInflictionIds.get(ev.id) ?? null,
+                    };
+                  };
+
+                  return hasMicro ? (
                   // Micro-column events
                   visColEvents.map((ev, i) => {
                     const dynPos = col.microColumnAssignment === 'dynamic-split'
@@ -2100,19 +2184,10 @@ export default function CombatPlanner({
                         }}
                       >
                         <EventBlock
-                          event={ev}
+                          {...buildBaseEventProps(ev)}
                           color={microColor}
-                          zoom={zoom}
                           selected={false}
                           hovered={hoveredId === ev.id}
-                          label={ev.isPerfectDodge ? 'Dodge' : (COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name)}
-                          onDragStart={col.derived && !debugMode ? noop3 : handleEventDragStart}
-                          onContextMenu={col.derived && !debugMode ? noop2 : handleEventContextMenu}
-                          onSelect={handleEventSelect}
-                          onHover={handleEventHover}
-                          onTouchStart={col.derived && !debugMode ? undefined : handleEventTouchStart}
-                          notDraggable={col.source === TimelineSourceType.ENEMY || (!!col.derived && !debugMode)}
-                          derived={!!col.derived && !debugMode}
                           />
                       </div>
                     );
@@ -2129,39 +2204,37 @@ export default function CombatPlanner({
                     const eventColor = isSequenced
                       ? (skillElColor ?? slotElementColor[col.ownerId] ?? col.color)
                       : col.color;
+                    const base = buildBaseEventProps(ev);
                     return (
                       <EventBlock
                         key={ev.id}
-                        event={ev}
+                        {...base}
                         color={eventColor}
-                        zoom={zoom}
                         selected={isWindow ? false : selectedIds.has(ev.id)}
                         hovered={isWindow ? false : hoveredId === ev.id}
-                        label={isWindow ? 'COMBO ACTIVATION WINDOW' : ev.isPerfectDodge ? 'Dodge' : (COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name)}
-                        variant={col.columnId === 'ultimate' ? 'ultimate' : ev.segments && ev.segments.length > 0 ? 'sequenced' : 'default'}
+                        label={isWindow ? 'COMBO ACTIVATION WINDOW' : base.label}
                         passive={isWindow}
                         striped={col.columnId === 'combo' && !isWindow && !alwaysAvailableComboSlots.has(col.ownerId)}
-                        comboWarning={isWindow ? null : [invalidComboIds.get(ev.id), invalidResourceIds.get(ev.id), invalidEmpoweredIds.get(ev.id), invalidTimeStopIds.get(ev.id)].filter(Boolean).join('\n') || null}
-                        onDragStart={isWindow ? noop3 : handleEventDragStart}
-                        onContextMenu={isWindow ? noop2 : handleEventContextMenu}
-                        onSelect={handleEventSelect}
-                        onHover={isWindow ? undefined : handleEventHover}
-                        onTouchStart={isWindow ? undefined : handleEventTouchStart}
-                        onFrameClick={isWindow ? undefined : handleFrameClickGuarded}
-                        onFrameContextMenu={isWindow ? undefined : handleFrameContextMenu}
-                        onFrameDragStart={isWindow ? undefined : handleFrameDragStart}
-                        onSegmentContextMenu={isWindow ? undefined : handleSegmentContextMenu}
-                        selectedFrames={isWindow ? undefined : selectedFrames?.filter((sf) => sf.eventId === ev.id)}
-                        notDraggable={isEnemy || isWindow || (!!col.derived && !debugMode)}
-                        derived={!!col.derived && !debugMode}
-                        allSegmentLabels={isWindow ? undefined : col.defaultEvent?.segments?.map((s) => s.label!)}
-                        allDefaultSegments={isWindow ? undefined : col.defaultEvent?.segments}
-                        hoverFrame={isWindow ? undefined : isSequenced ? hoverFrame : undefined}
+                        comboWarning={isWindow ? null : [invalidComboIds.get(ev.id), invalidResourceIds.get(ev.id), invalidEmpoweredIds.get(ev.id), invalidEnhancedIds.get(ev.id), invalidRegularBasicIds.get(ev.id), invalidFinisherIds.get(ev.id), invalidFinisherStaggerIds.get(ev.id), invalidTimeStopIds.get(ev.id), invalidInflictionIds.get(ev.id)].filter(Boolean).join('\n') || null}
+                        onDragStart={isWindow ? noop3 : base.onDragStart}
+                        onContextMenu={isWindow ? noop2 : base.onContextMenu}
+                        onHover={isWindow ? undefined : base.onHover}
+                        onTouchStart={isWindow ? undefined : base.onTouchStart}
+                        onFrameClick={isWindow ? undefined : base.onFrameClick}
+                        onFrameContextMenu={isWindow ? undefined : base.onFrameContextMenu}
+                        onFrameDragStart={isWindow ? undefined : base.onFrameDragStart}
+                        onSegmentContextMenu={isWindow ? undefined : base.onSegmentContextMenu}
+                        selectedFrames={isWindow ? undefined : base.selectedFrames}
+                        notDraggable={isEnemy || isWindow || !!base.derived}
+                        allSegmentLabels={isWindow ? undefined : (col.eventVariants?.find((v) => v.name === ev.name)?.segments ?? col.defaultEvent?.segments)?.map((s) => s.label!)}
+                        allDefaultSegments={isWindow ? undefined : col.eventVariants?.find((v) => v.name === ev.name)?.segments ?? col.defaultEvent?.segments}
+                        hoverFrame={isWindow ? undefined : base.hoverFrame}
                         skillElement={isWindow ? undefined : col.type === 'mini-timeline' ? col.skillElement : undefined}
                       />
                     );
                   })
-                )}
+                );
+                })()}
 
                 {colEvents.length === 0 && col === columns[0] && (
                   <div className="timeline-empty-state">

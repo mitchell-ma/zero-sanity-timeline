@@ -15,9 +15,9 @@ export class Type50YinglungHeavyArmor extends Gear {
         3: { [StatType.STRENGTH]: 104, [StatType.WILL]: 69, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.138 },
         4: { [StatType.STRENGTH]: 113, [StatType.WILL]: 75, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.149 },
       },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Type 50 Yinglung Light Armor (Armor) ────────────────────────────────────
@@ -33,9 +33,45 @@ export class Type50YinglungLightArmor extends Gear {
         3: { [StatType.WILL]: 104, [StatType.STRENGTH]: 69, [StatType.SKILL_DAMAGE_BONUS]: 0.166 },
         4: { [StatType.WILL]: 113, [StatType.STRENGTH]: 75, [StatType.SKILL_DAMAGE_BONUS]: 0.179 },
       },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
+}
+
+// ── Type 50 Yinglung Heavy Armor T1 (Armor) ─────────────────────────────────
+export class Type50YinglungHeavyArmorT1 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.ARMOR,
+      gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 87, [StatType.STRENGTH]: 58, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.123 },
+        2: { [StatType.AGILITY]: 95, [StatType.STRENGTH]: 63, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.136 },
+        3: { [StatType.AGILITY]: 104, [StatType.STRENGTH]: 69, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.148 },
+        4: { [StatType.AGILITY]: 113, [StatType.STRENGTH]: 75, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.160 },
+      },
+      defense: 56,
+    });
+  }
+}
+
+// ── Type 50 Yinglung Heavy Armor T2 (Armor) ─────────────────────────────────
+export class Type50YinglungHeavyArmorT2 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.ARMOR,
+      gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 87, [StatType.INTELLECT]: 58, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.207 },
+        2: { [StatType.AGILITY]: 95, [StatType.INTELLECT]: 63, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.228 },
+        3: { [StatType.AGILITY]: 104, [StatType.INTELLECT]: 69, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.248 },
+        4: { [StatType.AGILITY]: 113, [StatType.INTELLECT]: 75, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.269 },
+      },
+      defense: 56,
+    });
+  }
 }
 
 // ── Type 50 Yinglung Gloves (Gloves) ────────────────────────────────────────
@@ -51,9 +87,9 @@ export class Type50YinglungGloves extends Gear {
         3: { [StatType.AGILITY]: 78, [StatType.INTELLECT]: 51, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.414 },
         4: { [StatType.AGILITY]: 84, [StatType.INTELLECT]: 55, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.449 },
       },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Type 50 Yinglung Gloves T1 (Gloves) ────────────────────────────────────
@@ -64,9 +100,9 @@ export class Type50YinglungGlovesT1 extends Gear {
       gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Type 50 Yinglung Knife (Kit) ────────────────────────────────────────────
@@ -82,9 +118,9 @@ export class Type50YinglungKnife extends Gear {
         3: { [StatType.WILL]: 38, [StatType.AGILITY]: 25, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.497 },
         4: { [StatType.WILL]: 41, [StatType.AGILITY]: 27, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.538 },
       },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Type 50 Yinglung Knife T1 (Kit) ────────────────────────────────────────
@@ -95,9 +131,27 @@ export class Type50YinglungKnifeT1 extends Gear {
       gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
+}
+
+// ── Type 50 Yinglung Radar T2 (Kit) ──────────────────────────────────────────
+export class Type50YinglungRadarT2 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.KIT,
+      gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 32, [StatType.INTELLECT]: 21, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.414 },
+        2: { [StatType.AGILITY]: 35, [StatType.INTELLECT]: 23, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.455 },
+        3: { [StatType.AGILITY]: 38, [StatType.INTELLECT]: 25, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.497 },
+        4: { [StatType.AGILITY]: 41, [StatType.INTELLECT]: 27, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.538 },
+      },
+      defense: 21,
+    });
+  }
 }
 
 // ── Type 50 Yinglung Radar (Kit) ────────────────────────────────────────────
@@ -113,7 +167,7 @@ export class Type50YinglungRadar extends Gear {
         3: { [StatType.STRENGTH]: 38, [StatType.WILL]: 25, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.276 },
         4: { [StatType.STRENGTH]: 41, [StatType.WILL]: 27, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.299 },
       },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }

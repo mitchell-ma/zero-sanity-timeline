@@ -98,4 +98,36 @@ export class ChenQianyuOperator extends Operator {
     return [TriggerConditionType.APPLY_VULNERABILITY];
   }
   get comboDescription(): string { return 'Enemy becomes Vulnerable'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Final Strike deals 16 Stagger. Finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Uppercut slash dealing Physical DMG and Lift.',
+      combo: 'Slashing dash through target dealing Physical DMG and Lift to all enemies in path.',
+      ultimate: '7-sequence slash attack with final sequence dealing increased damage.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After hitting an enemy with skills, gains ATK +4% for 10s (max 5 stacks).',
+        'After hitting an enemy with skills, gains ATK +8% for 10s (max 5 stacks).',
+      ],
+      2: [
+        'Interrupting the enemy\'s charge up deals another 5 Stagger.',
+        'Interrupting the enemy\'s charge up deals another 10 Stagger.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'DMG Dealt +20% to enemies below 50% HP.',
+      'Agility +15, Physical DMG +8%.',
+      'Skill damage multiplier increased to 1.1x.',
+      'Ultimate Energy cost -15%.',
+      'Combo skill cooldown -3s.',
+    ];
+  }
 }

@@ -91,7 +91,7 @@ export class LaevatainOperator extends Operator {
 
   get potentialStatBonuses() {
     return {
-      2: { [StatType.INTELLECT]: 20 },
+      2: { [StatType.INTELLECT]: 20, [StatType.BASIC_ATTACK_DAMAGE_BONUS]: 0.15 },
     };
   }
 
@@ -101,5 +101,39 @@ export class LaevatainOperator extends Operator {
   get comboDescription(): string { return 'Enemy has Combustion or Corrosion'; }
   get spReturnNotes(): string[] {
     return ['P1: +20 SP on Additional Attack hit'];
+  }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals 18 Stagger. Dive Attack: Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.',
+      battle: 'Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. If Laevatain already has 4 stacks of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly triggers temporary Combustion to all enemies in a large area. When the additional attack hits the enemy, restores additional Ultimate Energy. Battle skill effects are enhanced while Laevatain\'s ultimate is active.',
+      combo: 'Fire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. If the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.',
+      ultimate: 'Laevatain summons her Sviga Laevi and becomes the controlled operator. For a certain duration, her basic attacks are enhanced and the Sviga Laevi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After the controlled operator\'s Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack absorbed gives 1 stack of Melting Flame (max: 4). After reaching 4 stacks, DMG dealt ignores 10 Heat RES for 20s. Also absorbs Heat Infliction from defeated enemies.',
+        'After the controlled operator\'s Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack absorbed gives 1 stack of Melting Flame (max: 4). After reaching 4 stacks, DMG dealt ignores 15 Heat RES for 20s. Also absorbs Heat Infliction from defeated enemies.',
+        'After the controlled operator\'s Final Strike or Finisher hits the enemy, Laevatain absorbs Heat Infliction from nearby enemies. Every stack absorbed gives 1 stack of Melting Flame (max: 4). After reaching 4 stacks, DMG dealt ignores 20 Heat RES for 20s. Also absorbs Heat Infliction from defeated enemies.',
+      ],
+      2: [
+        'When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. Triggers once every 120s.',
+        'When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 4s. Triggers once every 120s.',
+        'When HP drops below 40%, gain 90% Protection and restore 5% Max HP per second for 8s. Triggers once every 120s.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Heart of Melting Flame: Additional attack multiplier increased to 1.2x, and scoring a hit returns 20 SP.',
+      'Pursuit of Memories: Intellect +20, Basic Attack DMG Dealt +15%.',
+      'Fragments from the Past: Combustion duration from battle skill increased by 50%, Combustion DMG increased to 1.5x.',
+      'Ice Cream Furnace: Ultimate Energy cost -15%.',
+      'Proof of Existence: Enhanced basic attack DMG multiplier increased to 1.2x; during ultimate, each enemy defeated extends duration by +1s (max: +7s).',
+    ];
   }
 }

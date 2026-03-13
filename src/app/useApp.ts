@@ -53,9 +53,9 @@ import {
   saveLoadoutData,
   deleteLoadoutData,
   addLoadout as addLoadoutNode,
+  addLoadoutAfter,
   renameNode,
   uniqueName,
-  migrateLegacySheet,
   mergeBundle,
 } from '../utils/loadoutStorage';
 import { useTreeHistory } from '../utils/useTreeHistory';
@@ -74,6 +74,7 @@ import {
   computeSlots,
   computeDefaultResourceConfig,
   findEventDefaults,
+  attachDefaultSegments,
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
@@ -88,10 +89,6 @@ function initLoadouts() {
   let activeId = loadActiveLoadoutId();
 
   if (tree.nodes.length === 0) {
-    const migrated = migrateLegacySheet();
-    if (migrated) {
-      return { tree: migrated.tree, activeId: migrated.activeId };
-    }
     const { tree: newTree, node } = addLoadoutNode(tree, 'Loadout 1', null);
     tree = newTree;
     activeId = node.id;
@@ -165,8 +162,10 @@ export function useApp() {
   const [editingEnemyOpen, setEditingEnemyOpen] = useState(false);
   const [editingResourceKey, setEditingResourceKey] = useState<string | null>(null);
   const [editingDamageRow, setEditingDamageRow] = useState<DamageTableRow | null>(null);
+  const [damageRows, setDamageRows] = useState<DamageTableRow[]>([]);
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
+  const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(true);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
   const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
   const [scrollSynced,     setScrollSynced]     = useState(true);
@@ -181,6 +180,7 @@ export function useApp() {
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
   const [selectEventIds,   setSelectEventIds]   = useState<Set<string> | undefined>(undefined);
   const [exportModalOpen,  setExportModalOpen]  = useState(false);
+  const [saveFlash,        setSaveFlash]        = useState(false);
   const [confirmClearLoadout, setConfirmClearLoadout] = useState(false);
   const [confirmClearAll,  setConfirmClearAll]  = useState(false);
 
@@ -220,9 +220,9 @@ export function useApp() {
   const validColumnPairsRef = useRef<Set<string>>(new Set());
   validColumnPairsRef.current = useMemo(() => buildValidColumnPairs(columns), [columns]);
 
-  // Filter events to only those matching columns the controller produces
+  // Filter events to valid columns and attach default segments (segments are not persisted)
   const validEvents = useMemo(
-    () => filterEventsToColumns(events, columns),
+    () => attachDefaultSegments(filterEventsToColumns(events, columns), columns),
     [events, columns],
   );
 
@@ -501,9 +501,13 @@ export function useApp() {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
+        saveLoadoutTree(loadoutTree);
         if (activeLoadoutId) {
           saveLoadoutData(activeLoadoutId, buildSheetData());
+          saveActiveLoadoutId(activeLoadoutId);
         }
+        setSaveFlash(true);
+        setTimeout(() => setSaveFlash(false), 600);
       }
       if (e.key === 'Escape' && (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow)) {
         e.preventDefault();
@@ -513,7 +517,7 @@ export function useApp() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow, activeLoadoutId, buildSheetData]);
+  }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow, activeLoadoutId, loadoutTree]);
 
   // ─── Persistence ─────────────────────────────────────────────────────────
   const buildSheetData = useCallback(() => {
@@ -538,7 +542,7 @@ export function useApp() {
       getNextEventId(),
       resourceConfigs,
     );
-  }, [operators, enemy, events, loadouts, loadoutStats, visibleSkills, resourceConfigs]);
+  }, [operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs]);
 
   useAutoSave(buildSheetData);
 
@@ -621,7 +625,7 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number } | null,
+    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
@@ -1033,6 +1037,52 @@ export function useApp() {
     saveActiveLoadoutId(node.id);
   }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
 
+  const handleDuplicateLoadout = useCallback((sourceId: string) => {
+    // Save current loadout before switching
+    if (activeLoadoutId) {
+      saveLoadoutData(activeLoadoutId, buildSheetData());
+    }
+    const sourceNode = loadoutTree.nodes.find((n) => n.id === sourceId);
+    const baseName = sourceNode ? sourceNode.name : 'Loadout';
+    const existingNames = new Set(loadoutTree.nodes.map((n) => n.name));
+    let copyNum = 1;
+    while (existingNames.has(`${baseName} - Copy ${copyNum}`)) copyNum++;
+    const newName = `${baseName} - Copy ${copyNum}`;
+    const { tree: newTree, node } = addLoadoutAfter(loadoutTree, newName, sourceId);
+    setLoadoutTree(newTree);
+    saveLoadoutTree(newTree);
+
+    // Copy source data (or current state if source is active)
+    const sourceData = sourceId === activeLoadoutId ? buildSheetData() : loadLoadoutData(sourceId);
+    if (sourceData) {
+      saveLoadoutData(node.id, sourceData);
+      const resolved = applySheetData(sourceData);
+      resetUndoable({
+        events: resolved.events,
+        operators: resolved.operators,
+        enemy: resolved.enemy,
+        enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
+        loadouts: resolved.loadouts,
+        loadoutStats: resolved.loadoutStats,
+        resourceConfigs: resolved.resourceConfigs,
+      });
+      setVisibleSkills(resolved.visibleSkills);
+    } else {
+      saveLoadoutData(node.id, serializeSheet(
+        INITIAL_OPERATORS.map((op) => op?.id ?? null),
+        DEFAULT_ENEMY.id,
+        getDefaultEnemyStats(DEFAULT_ENEMY.id),
+        [], INITIAL_LOADOUTS, INITIAL_LOADOUT_STATS, INITIAL_VISIBLE, 1, {},
+      ));
+    }
+    setEditingEventId(null);
+    setEditingSlotId(null);
+    setEditingResourceKey(null);
+    setContextMenu(null);
+    setActiveLoadoutId(node.id);
+    saveActiveLoadoutId(node.id);
+  }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
+
   const handleSelectLoadout = useCallback((id: string) => {
     if (id === activeLoadoutId) return;
     if (activeLoadoutId) {
@@ -1330,10 +1380,10 @@ export function useApp() {
     zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editContext,
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
-    infoPaneClosing, infoPanePinned, selectedFrames, hoverFrame,
+    infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
     scrollSynced, showRealTime, splitPct, debugMode, warningMessage,
     loadoutRowHeight, selectEventIds,
-    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll,
+    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -1353,7 +1403,7 @@ export function useApp() {
     handleResourceConfigChange,
 
     // Loadout tree handlers
-    handleLoadoutTreeChange, handleNewLoadout, handleSelectLoadout, handleDeleteLoadout,
+    handleLoadoutTreeChange, handleNewLoadout, handleDuplicateLoadout, handleSelectLoadout, handleDeleteLoadout,
     handleExport, handleImport, handleClearLoadout, handleClearAll, handleRenameActiveLoadout,
     handleToggleSidebar,
 
@@ -1361,14 +1411,14 @@ export function useApp() {
     handleZoom, handleToggleSkill,
     handleEditEvent, handleEditLoadout, handleEditEnemy, handleEditResource,
     handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane, handleCloseDamagePane,
-    handleDamageClick,
+    handleDamageClick, damageRows, setDamageRows,
     handleResizerMouseDown, handleToggleScrollSync,
     handleTimelineScroll, handleSheetScroll,
     handleDmgScrollRef, handleTlScrollRef,
 
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight,
-    setHoverFrame, setInfoPanePinned, setWarningMessage,
+    setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
     setDevlogOpen, setKeysOpen, setDebugMode, setShowRealTime,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,

@@ -1,0 +1,32 @@
+Time-stop
+- time-stop is a period of time in which time-dependent mechanics stop experiencing time
+    - regeneration stops
+    - recovery stops
+- game-time dependent mechanics are:
+    - skill point recovery
+    - enemy stagger recovery
+    - enemy stagger break
+- real-time dependent mechanics are:
+    - any cooldowns
+- mechanic with time-stops
+    - ultimate skill animation
+    - combo skill
+    - perfect dodge
+    - enemy node stagger break
+    - enemy full stagger break
+    - [ignore] enemy red bubble charging interrupt
+- interactions with other time-stop periods
+    - all time-stops can start within dodge's time-stop period
+    - combo time-stops can start within all time-stop periods except for ultimate animation time-stop
+    - ultimate time-stops can start within all time-stop periods except for other ultimate animation time-stops
+    - most time-stops can interrupt each other, meaning if two time-stops overlap in time, the older time-stop will prematurely end, and the newer time-stop will take effect
+        - ultimate animation time-stop can interrupt all other time-stops except for ultimate
+        - combo (time-stop) interrupts combo (time-stop)
+        - combo interrupts dodge
+        - combo interrupts stagger
+        - stagger interrupts dodge
+- interactions with events
+    - event overlapping with time-stop periods caused by another event will experience time-stop effects
+        - one effect is that the event duration will be extended by the duration of the time-stop experienced
+        - if the time-stop is interrupted, the event is extended by only the partial duration up until the interruption
+    - an event with a time-stop event will not extend its own duration

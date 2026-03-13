@@ -98,4 +98,36 @@ export class FluoriteOperator extends Operator {
     return [TriggerConditionType.SOLIDIFICATION, TriggerConditionType.CORROSION];
   }
   get comboDescription(): string { return '2+ Cryo or Nature Infliction stacks'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Nature DMG. Dive Attack: dive attack dealing Nature DMG. Finisher: finisher near Staggered enemy deals massive Nature DMG and recovers SP.',
+      battle: 'Kicks an explosive applying Slow. Detonates for Nature DMG and Nature Infliction.',
+      combo: 'Shoots target for special explosion.',
+      ultimate: 'Moves in arc firing 4 sequences of Nature DMG. Detonates stuck explosives with increased damage.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'DMG Dealt +10% vs Slowed targets.',
+        'DMG Dealt +20% vs Slowed targets.',
+      ],
+      2: [
+        '20% chance Arts DMG immunity; ATK +10% for 10s.',
+        '20% chance Arts DMG immunity; ATK +20% for 10s.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Agility +10, Intellect +10.',
+      'Talent "Unpredictable" chance increased by +10%.',
+      'Slow effect applied to all enemies from Tiny Surprise lasting 6s.',
+      'Ultimate Energy cost -10%.',
+      'Combo skill cooldown reduced 1s when inflictions applied (max once/1s).',
+    ];
+  }
 }

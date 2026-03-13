@@ -5,10 +5,11 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, SkillType, EventSegmentData } from '../../consts/viewTypes';
-import { CombatSkillsType } from '../../consts/enums';
+import { CombatSkillsType, TimeDependency } from '../../consts/enums';
 import { SKILL_LABELS } from '../../consts/channelLabels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { ALWAYS_AVAILABLE_TRIGGERS, COMBO_WINDOW_COLUMN_ID } from './processInteractions';
+import { ALWAYS_AVAILABLE_TRIGGERS, COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 
@@ -18,6 +19,23 @@ export type TimeStopRegion = {
   ownerId: string;
   sourceColumnId: string;
 };
+
+/** Extract the active-phase window from an ultimate event using segments. */
+export function getUltimateActiveWindow(ult: TimelineEvent): { start: number; end: number } | null {
+  if (ult.segments && ult.segments.length > 0) {
+    let cursor = ult.startFrame;
+    for (const seg of ult.segments) {
+      if (seg.label === 'Active') {
+        return { start: cursor, end: cursor + seg.durationFrames };
+      }
+      cursor += seg.durationFrames;
+    }
+    return null;
+  }
+  // Fallback for non-segmented events
+  const start = ult.startFrame + ult.activationDuration;
+  return { start, end: start + ult.activeDuration };
+}
 
 // ── Time-stop regions ─────────────────────────────────────────────────────────
 
@@ -69,87 +87,114 @@ export function preConsumptionValue(
 
 // ── SP-insufficient zones ─────────────────────────────────────────────────────
 
-export type SpZone = { start: number; end: number };
+export type ResourceZone = { start: number; end: number };
+/** @deprecated Use ResourceZone instead */
+export type SpZone = ResourceZone;
+
+// ── Resource insufficiency zone helpers ───────────────────────────────────────
 
 /**
- * Computes frame ranges where SP is below a given battle skill cost.
- * Walks the SP resource graph, finding threshold crossings via linear interpolation.
- * Returns a map from slotId → array of insufficient zones.
+ * Walks a resource graph and finds frame ranges where the value is below `threshold`.
+ * Uses linear interpolation for threshold crossings between graph points.
  */
-export function computeSpInsufficientZones(
-  resourceGraphs: Map<string, ResourceGraphData>,
-  slots: Slot[],
-): Map<string, SpZone[]> {
-  const zones = new Map<string, SpZone[]>();
-  const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
-  const graph = resourceGraphs.get(spKey);
-  if (!graph || graph.points.length < 2) return zones;
-  const pts = graph.points;
+function findInsufficientZones(
+  pts: ReadonlyArray<{ frame: number; value: number }>,
+  threshold: number,
+): ResourceZone[] {
+  if (pts.length < 2) return [];
+  const gaps: ResourceZone[] = [];
+  let insuffStart: number | null = pts[0].value < threshold ? pts[0].frame : null;
 
-  for (const slot of slots) {
-    if (!slot.operator) continue;
-    const cost = slot.operator.skills.battle.skillPointCost ?? 100;
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1];
+    const curr = pts[i];
 
-    const gaps: SpZone[] = [];
-    let insuffStart: number | null = pts[0].value < cost ? pts[0].frame : null;
-
-    for (let i = 1; i < pts.length; i++) {
-      const prev = pts[i - 1];
-      const curr = pts[i];
-
-      if (prev.frame === curr.frame) {
-        if (curr.value < cost && insuffStart === null) {
-          insuffStart = curr.frame;
-        } else if (curr.value >= cost && insuffStart !== null) {
-          gaps.push({ start: insuffStart, end: curr.frame });
-          insuffStart = null;
-        }
-        continue;
+    if (prev.frame === curr.frame) {
+      if (curr.value < threshold && insuffStart === null) {
+        insuffStart = curr.frame;
+      } else if (curr.value >= threshold && insuffStart !== null) {
+        gaps.push({ start: insuffStart, end: curr.frame });
+        insuffStart = null;
       }
-
-      const prevBelow = prev.value < cost;
-      const currBelow = curr.value < cost;
-
-      if (prevBelow && !currBelow) {
-        const t = (cost - prev.value) / (curr.value - prev.value);
-        const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
-        if (insuffStart !== null) {
-          gaps.push({ start: insuffStart, end: crossFrame });
-          insuffStart = null;
-        }
-      } else if (!prevBelow && currBelow) {
-        const t = (cost - prev.value) / (curr.value - prev.value);
-        const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
-        insuffStart = crossFrame;
-      }
+      continue;
     }
 
-    if (insuffStart !== null) {
-      gaps.push({ start: insuffStart, end: pts[pts.length - 1].frame });
-    }
+    const prevBelow = prev.value < threshold;
+    const currBelow = curr.value < threshold;
 
-    if (gaps.length > 0) {
-      zones.set(slot.slotId, gaps);
+    if (prevBelow && !currBelow) {
+      const t = (threshold - prev.value) / (curr.value - prev.value);
+      const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
+      if (insuffStart !== null) {
+        gaps.push({ start: insuffStart, end: crossFrame });
+        insuffStart = null;
+      }
+    } else if (!prevBelow && currBelow) {
+      const t = (threshold - prev.value) / (curr.value - prev.value);
+      const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
+      insuffStart = crossFrame;
     }
   }
+
+  if (insuffStart !== null) {
+    gaps.push({ start: insuffStart, end: pts[pts.length - 1].frame });
+  }
+  return gaps;
+}
+
+/**
+ * Computes resource insufficiency zones for all resource-gated column types.
+ * Returns a Map keyed by `slotId:columnId` → ResourceZone[].
+ * Currently covers:
+ * - `battle` — SP below skill cost (shared SP graph, per-slot cost)
+ * - `ultimate` — energy below max (per-slot ultimate graph)
+ */
+export function computeResourceInsufficiencyZones(
+  resourceGraphs: Map<string, ResourceGraphData>,
+  slots: Slot[],
+): Map<string, ResourceZone[]> {
+  const zones = new Map<string, ResourceZone[]>();
+
+  // SP zones for battle skills (shared graph, per-slot cost threshold)
+  const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+  const spGraph = resourceGraphs.get(spKey);
+  if (spGraph && spGraph.points.length >= 2) {
+    for (const slot of slots) {
+      if (!slot.operator) continue;
+      const cost = slot.operator.skills.battle.skillPointCost ?? 100;
+      const gaps = findInsufficientZones(spGraph.points, cost);
+      if (gaps.length > 0) zones.set(`${slot.slotId}:battle`, gaps);
+    }
+  }
+
+  // Ultimate energy zones (per-slot graph, threshold = max)
+  for (const slot of slots) {
+    if (!slot.operator) continue;
+    const ultKey = `${slot.slotId}-ultimate`;
+    const graph = resourceGraphs.get(ultKey);
+    if (!graph || graph.points.length < 2) continue;
+    const gaps = findInsufficientZones(graph.points, graph.max);
+    if (gaps.length > 0) zones.set(`${slot.slotId}:ultimate`, gaps);
+  }
+
   return zones;
 }
 
 /**
- * Clamps a drag delta to prevent battle events from landing in SP-insufficient zones.
- * Skips zones that contain the event's current position (created by the event's own SP cost).
- * Returns the clamped delta.
+ * Clamps a drag delta to prevent resource-gated events (battle, ultimate) from
+ * landing in resource-insufficient zones. Skips zones that contain the event's
+ * drag-start position (self-caused). Returns the clamped delta.
  */
-export function clampDeltaBySpZones(
+export function clampDeltaByResourceZones(
   clampedDelta: number,
   eventId: string,
   events: TimelineEvent[],
   startFrame: number,
-  spZones: Map<string, SpZone[]>,
+  resourceZones: Map<string, ResourceZone[]>,
 ): number {
   const ev = events.find((e) => e.id === eventId);
-  if (!ev || ev.columnId !== 'battle') return clampedDelta;
-  const zones = spZones.get(ev.ownerId);
+  if (!ev || (ev.columnId !== 'battle' && ev.columnId !== 'ultimate')) return clampedDelta;
+  const zones = resourceZones.get(`${ev.ownerId}:${ev.columnId}`);
   if (!zones || zones.length === 0) return clampedDelta;
 
   const target = startFrame + clampedDelta;
@@ -258,10 +303,10 @@ export function wouldSegmentAdditionOverlap(
 export function isDuplicatePlacementInSpZone(
   event: TimelineEvent,
   ghostFrame: number,
-  spZones: Map<string, SpZone[]>,
+  resourceZones: Map<string, ResourceZone[]>,
 ): boolean {
-  if (event.columnId !== 'battle') return false;
-  const zones = spZones.get(event.ownerId);
+  if (event.columnId !== 'battle' && event.columnId !== 'ultimate') return false;
+  const zones = resourceZones.get(`${event.ownerId}:${event.columnId}`);
   if (!zones) return false;
   return zones.some((z) => ghostFrame >= z.start && ghostFrame < z.end);
 }
@@ -352,14 +397,24 @@ export function isBlockedByTimeStop(
   columnId: string,
   atFrame: number,
   timeStopRegions: TimeStopRegion[],
+  prospectiveAnimDuration?: number,
 ): { blocked: boolean; reason?: string } {
-  if (columnId !== 'ultimate') {
-    const ultBlock = timeStopRegions.some(
-      (stop) => stop.sourceColumnId === 'ultimate' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
+  // Check if another ultimate animation overlaps the placement frame or the
+  // prospective animation range. Ultimates block each other's animations.
+  const ultBlock = timeStopRegions.some(
+    (stop) => stop.sourceColumnId === 'ultimate' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
+  );
+  if (ultBlock && columnId !== 'ultimate') return { blocked: true, reason: 'Ultimate animation active' };
+  if (ultBlock && columnId === 'ultimate') return { blocked: true, reason: 'Another ultimate animation active' };
+  // Also check if our animation would overlap another ultimate's start
+  if (columnId === 'ultimate' && prospectiveAnimDuration && prospectiveAnimDuration > 0) {
+    const animEnd = atFrame + prospectiveAnimDuration;
+    const wouldOverlap = timeStopRegions.some(
+      (stop) => stop.sourceColumnId === 'ultimate' && stop.startFrame >= atFrame && stop.startFrame < animEnd,
     );
-    if (ultBlock) return { blocked: true, reason: 'Ultimate animation active' };
+    if (wouldOverlap) return { blocked: true, reason: 'Would overlap another ultimate animation' };
   }
-  if (columnId === 'battle') {
+  if (columnId === 'battle' || columnId === 'basic') {
     const comboBlock = timeStopRegions.some(
       (stop) => stop.sourceColumnId === 'combo' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
     );
@@ -374,9 +429,24 @@ export function isBlockedByTimeStop(
  */
 export function computeProspectiveRange(
   defaultSkill: { defaultActivationDuration?: number; segments?: EventSegmentData[] } | null,
+  atFrame?: number,
+  timeStopRegions?: readonly TimeStopRegion[],
 ): number {
-  if (defaultSkill?.segments) return defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0);
-  return defaultSkill?.defaultActivationDuration ?? 0;
+  if (!defaultSkill?.segments) return defaultSkill?.defaultActivationDuration ?? 0;
+  if (!timeStopRegions || timeStopRegions.length === 0 || atFrame === undefined) {
+    return defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+  }
+  // Walk segments, extending game-time segments by time-stop overlap
+  let cursor = atFrame;
+  for (const s of defaultSkill.segments) {
+    if (s.timeDependency === TimeDependency.REAL_TIME) {
+      cursor += s.durationFrames;
+    } else {
+      // extendByTimeStops only reads startFrame/durationFrames; safe to cast
+      cursor += extendByTimeStops(cursor, s.durationFrames, timeStopRegions as any);
+    }
+  }
+  return cursor - atFrame;
 }
 
 // ── Combo window availability ─────────────────────────────────────────────────
@@ -505,26 +575,49 @@ export type VariantAvailability = {
  * - Non-enhanced variants are unavailable while ultimate is active
  * - Empowered variants require max Melting Flame stacks (4)
  */
+/** Column types whose variants are affected by ultimate active/enhanced logic. */
+const ENHANCED_VARIANT_COLUMNS = new Set(['basic', 'battle', 'combo']);
+
 export function checkVariantAvailability(
   variantName: string,
   ownerId: string,
   events: TimelineEvent[],
   atFrame: number,
+  columnId?: string,
+  slots?: Slot[],
 ): VariantAvailability {
   const isEnhanced = variantName.includes('ENHANCED');
   const isEmpowered = variantName.includes('EMPOWERED');
 
-  // Check if the ultimate is active at this frame
-  const ultActive = events.some((ev) =>
-    ev.ownerId === ownerId && ev.columnId === 'ultimate'
-    && atFrame >= ev.startFrame + ev.activationDuration
-    && atFrame < ev.startFrame + ev.activationDuration + ev.activeDuration,
-  );
+  // Enhanced/non-enhanced checks only apply to battle and combo skills
+  const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId) : true;
 
-  if (isEnhanced && !ultActive) {
+  // Check if the ultimate is active at this frame
+  const ultActive = events.some((ev) => {
+    if (ev.ownerId !== ownerId || ev.columnId !== 'ultimate') return false;
+    const w = getUltimateActiveWindow(ev);
+    return w != null && atFrame >= w.start && atFrame < w.end;
+  });
+
+  // Finisher blocked during ultimate active phase (operator-specific)
+  if (variantName === CombatSkillsType.FINISHER && ultActive) {
+    const slot = slots?.find((s) => s.slotId === ownerId);
+    if (slot?.operator && FINISHER_BLOCKED_DURING_ULT.has(slot.operator.id)) {
+      return { disabled: true, reason: 'Finisher cannot be used while ultimate is active' };
+    }
+  }
+
+  // Regular basic attack blocked during ultimate active phase (use enhanced variant)
+  if (columnId === 'basic' && !isEnhanced && !isEmpowered
+    && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE
+    && ultActive) {
+    return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
+  }
+
+  if (hasEnhancedVariants && isEnhanced && !ultActive) {
     return { disabled: true, reason: 'No ultimate active' };
   }
-  if (!isEnhanced && ultActive) {
+  if (hasEnhancedVariants && !isEnhanced && ultActive) {
     return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
   }
 
@@ -675,6 +768,146 @@ export function validateEmpowered(events: TimelineEvent[]): Map<string, string> 
   return map;
 }
 
+export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const ev of events) {
+    if (!ev.name?.includes('ENHANCED') || ev.name?.includes('EMPOWERED')) continue;
+    if (ev.columnId === 'ultimate') continue;
+
+    // Collect all segment start frames; fall back to event start if no segments
+    const segStarts: number[] = [];
+    if (ev.segments && ev.segments.length > 0) {
+      let offset = ev.startFrame;
+      for (const seg of ev.segments) {
+        segStarts.push(offset);
+        offset += seg.durationFrames;
+      }
+    } else {
+      segStarts.push(ev.startFrame);
+    }
+
+    // Every segment start must fall within an ultimate active phase
+    for (const frame of segStarts) {
+      const inUlt = events.some((u) => {
+        if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+        const activeWindow = getUltimateActiveWindow(u);
+        if (!activeWindow) return false;
+        return frame >= activeWindow.start && frame < activeWindow.end;
+      });
+      if (!inUlt) {
+        map.set(ev.id, 'Enhanced skill segments must start within ultimate active phase');
+        break;
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Validates that regular (non-enhanced) basic attack segments do NOT start
+ * inside the ultimate active phase. Mirrors validateEnhanced (inverse logic).
+ * Only applies to operators that have enhanced basic attack variants.
+ */
+export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const ev of events) {
+    if (ev.columnId !== 'basic') continue;
+    // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
+    if (!ev.name || ev.name.includes('ENHANCED') || ev.name.includes('EMPOWERED')) continue;
+    if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
+
+    // Collect all segment start frames
+    const segStarts: number[] = [];
+    if (ev.segments && ev.segments.length > 0) {
+      let offset = ev.startFrame;
+      for (const seg of ev.segments) {
+        segStarts.push(offset);
+        offset += seg.durationFrames;
+      }
+    } else {
+      segStarts.push(ev.startFrame);
+    }
+
+    for (const frame of segStarts) {
+      const inUlt = events.some((u) => {
+        if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+        const activeWindow = getUltimateActiveWindow(u);
+        if (!activeWindow) return false;
+        return frame >= activeWindow.start && frame < activeWindow.end;
+      });
+      if (inUlt) {
+        map.set(ev.id, 'Basic attack segments cannot start during ultimate active phase (use enhanced variant)');
+        break;
+      }
+    }
+  }
+  return map;
+}
+
+/** Operators that cannot use Finisher while their ultimate is active. */
+const FINISHER_BLOCKED_DURING_ULT = new Set(['laevatain']);
+
+export function validateFinisherDuringUltimate(
+  events: TimelineEvent[],
+  slots: Slot[],
+): Map<string, string> {
+  const map = new Map<string, string>();
+  const blockedOwners = new Set<string>();
+  for (const s of slots) {
+    if (s.operator && FINISHER_BLOCKED_DURING_ULT.has(s.operator.id)) {
+      blockedOwners.add(s.slotId);
+    }
+  }
+  if (blockedOwners.size === 0) return map;
+
+  for (const ev of events) {
+    if (ev.name !== CombatSkillsType.FINISHER) continue;
+    if (!blockedOwners.has(ev.ownerId)) continue;
+
+    const ultActive = events.some((u) => {
+      if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+      const w = getUltimateActiveWindow(u);
+      return w != null && ev.startFrame >= w.start && ev.startFrame < w.end;
+    });
+    if (ultActive) {
+      map.set(ev.id, 'Finisher cannot be used while ultimate is active');
+    }
+  }
+  return map;
+}
+
+/**
+ * Validates finisher events: only one finisher (across all operators) per stagger break,
+ * and the finisher must be placed during a stagger break.
+ */
+export function validateFinisherStaggerBreak(
+  events: TimelineEvent[],
+  staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
+): Map<string, string> {
+  const map = new Map<string, string>();
+  const finishers = events.filter((ev) => ev.name === CombatSkillsType.FINISHER);
+  if (finishers.length === 0) return map;
+
+  for (const ev of finishers) {
+    const inBreak = staggerBreaks.find(
+      (b) => ev.startFrame >= b.startFrame && ev.startFrame < b.endFrame,
+    );
+    if (!inBreak) {
+      map.set(ev.id, 'Finisher can only be used during stagger break');
+      continue;
+    }
+    // Check if another finisher (from any operator) already exists in the same break
+    const duplicate = finishers.some(
+      (other) => other.id !== ev.id
+        && other.startFrame >= inBreak.startFrame && other.startFrame < inBreak.endFrame,
+    );
+    if (duplicate) {
+      map.set(ev.id, 'Only one Finisher allowed per stagger break');
+    }
+  }
+  return map;
+}
+
 export function validateTimeStops(
   events: TimelineEvent[],
   timeStopRegions: TimeStopRegion[],
@@ -691,14 +924,66 @@ export function validateTimeStops(
         break;
       }
     }
-    if (ev.columnId === 'battle' && !map.has(ev.id)) {
+    if ((ev.columnId === 'battle' || ev.columnId === 'basic') && !map.has(ev.id)) {
       for (const stop of comboStops) {
         if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
-          map.set(ev.id, 'Battle skill input is not possible during combo animations');
+          const label = ev.columnId === 'basic' ? 'Basic attack' : 'Battle skill';
+          map.set(ev.id, `${label} input is not possible during combo animations`);
           break;
         }
       }
     }
   }
+  return map;
+}
+
+// ── Arts infliction stack validation ──────────────────────────────────────────
+
+/** Max concurrent stacks of the same arts infliction element. */
+const MAX_INFLICTION_STACKS = 4;
+
+/**
+ * Validates arts infliction events:
+ * - At most MAX_INFLICTION_STACKS (4) concurrent stacks of the same element
+ *
+ * Returns a Map of infliction event ID → warning message for violating events.
+ */
+export function validateInflictionStacks(events: TimelineEvent[]): Map<string, string> {
+  const map = new Map<string, string>();
+
+  const inflictionsByColumn = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+      const group = inflictionsByColumn.get(ev.columnId) ?? [];
+      group.push(ev);
+      inflictionsByColumn.set(ev.columnId, group);
+    }
+  }
+
+  if (inflictionsByColumn.size === 0) return map;
+
+  // Check max stacks per element
+  inflictionsByColumn.forEach((group) => {
+    if (group.length <= MAX_INFLICTION_STACKS) return;
+    const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
+
+    for (let i = 0; i < sorted.length; i++) {
+      const incoming = sorted[i];
+      // Count how many OTHER same-element stacks are active at incoming's start frame
+      let activeCount = 0;
+      for (let j = 0; j < sorted.length; j++) {
+        if (j === i) continue;
+        if (map.has(sorted[j].id)) continue; // already flagged as excess
+        const endFrame = sorted[j].startFrame + sorted[j].activationDuration;
+        if (sorted[j].startFrame <= incoming.startFrame && endFrame > incoming.startFrame) {
+          activeCount++;
+        }
+      }
+      if (activeCount >= MAX_INFLICTION_STACKS) {
+        map.set(incoming.id, `Exceeds max ${MAX_INFLICTION_STACKS} stacks of same element`);
+      }
+    }
+  });
+
   return map;
 }

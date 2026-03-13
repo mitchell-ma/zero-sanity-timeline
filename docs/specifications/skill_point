@@ -1,0 +1,24 @@
+Game Specs:
+
+Skill Point (SP)
+- resource for combat skills
+- expenditure builds ultimate skill charge
+- 
+- perfect dodge recovers SP
+- basic attack finishers refund SP
+- basic attack final strikes refund SP
+- 
+
+Timestop
+- Game-time dependent chrono-elements are:
+    - skill point recovery
+    - enemy stagger recovery
+    - enemy stagger break
+- Real-time dependent chrono-elements are:
+    - any cooldowns
+- mechanic with time-stops
+    - ultimate skill animation
+    - combo skill
+    - enemy node stagger break
+    - enemy full stagger break
+    - perfect dodge

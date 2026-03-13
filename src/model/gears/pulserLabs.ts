@@ -31,10 +31,9 @@ export class PulserLabsDisruptorSuit extends Gear {
           [StatType.ARTS_INTENSITY]: 26.9,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Pulser Labs Gloves (Gloves) ─────────────────────────────────────────────
@@ -70,10 +69,9 @@ export class PulserLabsGloves extends Gear {
           [StatType.ELECTRIC_DAMAGE_BONUS]: 0.249,
         },
       },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Pulser Labs Calibrator (Kit) ────────────────────────────────────────────
@@ -101,10 +99,9 @@ export class PulserLabsCalibrator extends Gear {
           [StatType.ARTS_INTENSITY]: 53.8,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Pulser Labs Invasion Core (Kit) ─────────────────────────────────────────
@@ -115,10 +112,9 @@ export class PulserLabsInvasionCore extends Gear {
       gearEffectType: GearEffectType.PULSER_LABS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Pulser Labs Probe (Kit) ─────────────────────────────────────────────────
@@ -129,8 +125,7 @@ export class PulserLabsProbe extends Gear {
       gearEffectType: GearEffectType.PULSER_LABS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

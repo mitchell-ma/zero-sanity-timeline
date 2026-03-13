@@ -5,6 +5,7 @@ import { CombatLoadout } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../utils/timeline';
 import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
+import { getUltimateActiveWindow } from '../controller/timeline/eventValidator';
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
@@ -63,27 +64,56 @@ export function useResourceGraphs(
     const allTacticalEvents: TimelineEvent[] = [];
 
     // Collect gauge gain events: battle/combo skills that affect ultimate charge
-    // Gauge gain is tied to the first frame of the first segment; fall back to event-level for legacy data
+    // Scan all segment frames for gaugeGain; fall back to event-level for legacy data
     type GaugeEvent = { frame: number; selfSlotId: string; gaugeGain: number; teamGaugeGain: number };
     const gaugeEvents: GaugeEvent[] = [];
     for (const ev of events) {
       if (ev.columnId !== 'battle' && ev.columnId !== 'combo') continue;
-      // Read gauge gain from first frame of first segment if available.
       // If the event has gaugeGainByEnemies, prefer the event-level gaugeGain
       // which is updated when the user changes the "enemies hit" selection.
       const firstFrame = ev.segments?.[0]?.frames?.[0];
-      const selfGain = ev.gaugeGainByEnemies
-        ? (ev.gaugeGain ?? firstFrame?.gaugeGain ?? 0)
-        : (firstFrame?.gaugeGain ?? ev.gaugeGain ?? 0);
-      const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
-      if (selfGain > 0 || teamGain > 0) {
-        const frame = firstFrame?.absoluteFrame ?? ev.startFrame;
-        gaugeEvents.push({
-          frame,
-          selfSlotId: ev.ownerId,
-          gaugeGain: selfGain,
-          teamGaugeGain: teamGain,
-        });
+      if (ev.gaugeGainByEnemies) {
+        const selfGain = ev.gaugeGain ?? firstFrame?.gaugeGain ?? 0;
+        const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
+        if (selfGain > 0 || teamGain > 0) {
+          gaugeEvents.push({
+            frame: firstFrame?.absoluteFrame ?? ev.startFrame,
+            selfSlotId: ev.ownerId,
+            gaugeGain: selfGain,
+            teamGaugeGain: teamGain,
+          });
+        }
+      } else {
+        // Scan all frames across all segments for gauge gain
+        let found = false;
+        for (const seg of ev.segments ?? []) {
+          for (const f of seg.frames ?? []) {
+            const selfGain = f.gaugeGain ?? 0;
+            const teamGain = f.teamGaugeGain ?? 0;
+            if (selfGain > 0 || teamGain > 0) {
+              found = true;
+              gaugeEvents.push({
+                frame: f.absoluteFrame ?? ev.startFrame,
+                selfSlotId: ev.ownerId,
+                gaugeGain: selfGain,
+                teamGaugeGain: teamGain,
+              });
+            }
+          }
+        }
+        // Fall back to event-level gauge gain if no frame-level data
+        if (!found) {
+          const selfGain = ev.gaugeGain ?? 0;
+          const teamGain = ev.teamGaugeGain ?? 0;
+          if (selfGain > 0 || teamGain > 0) {
+            gaugeEvents.push({
+              frame: ev.startFrame,
+              selfSlotId: ev.ownerId,
+              gaugeGain: selfGain,
+              teamGaugeGain: teamGain,
+            });
+          }
+        }
       }
     }
     gaugeEvents.sort((a, b) => a.frame - b.frame);
@@ -109,9 +139,21 @@ export function useResourceGraphs(
         }
       }
 
+      // Collect active-phase windows for this slot's ultimates
+      // During the active phase, ultimate charge cannot be gained
+      const ultActiveWindows: { start: number; end: number }[] = [];
+      for (const ev of events) {
+        if (ev.ownerId === slotId && ev.columnId === 'ultimate') {
+          const w = getUltimateActiveWindow(ev);
+          if (w) ultActiveWindows.push(w);
+        }
+      }
+
       // Gauge gains from skills (self + team), scaled by ultimate gain efficiency
       const multiplier = 1 + (gaugeGainMultipliers?.[slotId] ?? 0);
       for (const ge of gaugeEvents) {
+        // Skip gauge gains during ultimate active phase
+        if (ultActiveWindows.some(w => ge.frame >= w.start && ge.frame < w.end)) continue;
         const rawGain = (ge.selfSlotId === slotId ? ge.gaugeGain : 0) + ge.teamGaugeGain;
         if (rawGain > 0) {
           const gain = rawGain * multiplier;

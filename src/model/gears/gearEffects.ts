@@ -50,7 +50,7 @@ export class AicHeavy extends GearEffect {
     super({
       gearEffectType: GearEffectType.AIC_HEAVY,
       description: 'HP +500. After defeating an enemy, restore 100 HP. CD: 5s.',
-      passiveStats: { [StatType.ATTACK]: 500 },
+      passiveStats: { [StatType.FLAT_HP]: 500 },
       triggerCondition: TriggerConditionType.DEFEAT_ENEMY,
       durationSeconds: 0,
       isStackable: false,
@@ -68,7 +68,7 @@ export class AicLight extends GearEffect {
     super({
       gearEffectType: GearEffectType.AIC_LIGHT,
       description: 'HP +500. After defeating an enemy, ATK +20 for 5s.',
-      passiveStats: { [StatType.ATTACK]: 500 },
+      passiveStats: { [StatType.FLAT_HP]: 500 },
       triggerCondition: TriggerConditionType.DEFEAT_ENEMY,
       durationSeconds: 5,
       isStackable: false,
@@ -85,7 +85,7 @@ export class ArmoredMsgr extends GearEffect {
     super({
       gearEffectType: GearEffectType.ARMORED_MSGR,
       description: 'Strength +50. When HP below 50%, 30% DMG Reduction.',
-      passiveStats: { [StatType.STRENGTH]: 50 },
+      passiveStats: { [StatType.STRENGTH]: 50, [StatType.FINAL_DAMAGE_REDUCTION]: 0.30 },
       triggerCondition: TriggerConditionType.HP_BELOW_THRESHOLD,
       durationSeconds: 0,
       isStackable: false,
@@ -100,7 +100,7 @@ export class RovingMsgr extends GearEffect {
     super({
       gearEffectType: GearEffectType.ROVING_MSGR,
       description: 'Agility +50. When HP above 80%, Physical DMG +20%.',
-      passiveStats: { [StatType.AGILITY]: 50 },
+      passiveStats: { [StatType.AGILITY]: 50, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.20 },
       triggerCondition: TriggerConditionType.HP_ABOVE_THRESHOLD,
       durationSeconds: 0,
       isStackable: false,
@@ -115,7 +115,7 @@ export class MordvoltInsulation extends GearEffect {
     super({
       gearEffectType: GearEffectType.MORDVOLT_INSULATION,
       description: 'Intellect +50. When HP above 80%, Arts DMG +20%.',
-      passiveStats: { [StatType.INTELLECT]: 50 },
+      passiveStats: { [StatType.INTELLECT]: 50, [StatType.ARTS_DAMAGE_BONUS]: 0.20 },
       triggerCondition: TriggerConditionType.HP_ABOVE_THRESHOLD,
       durationSeconds: 0,
       isStackable: false,
@@ -130,7 +130,7 @@ export class MordvoltResistant extends GearEffect {
     super({
       gearEffectType: GearEffectType.MORDVOLT_RESISTANT,
       description: 'Will +50. When HP below 50%, Treatment Effect +30%.',
-      passiveStats: { [StatType.WILL]: 50 },
+      passiveStats: { [StatType.WILL]: 50, [StatType.TREATMENT_BONUS]: 0.30 },
       triggerCondition: TriggerConditionType.HP_BELOW_THRESHOLD,
       durationSeconds: 0,
       isStackable: false,
@@ -148,7 +148,7 @@ export class AburreyLegacy extends GearEffect {
     super({
       gearEffectType: GearEffectType.ABURREY_LEGACY,
       description: 'Skill DMG +24%. On battle/combo/ultimate cast, ATK +5% for 15s.',
-      passiveStats: {},
+      passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.24 },
       triggerCondition: TriggerConditionType.CAST_BATTLE_SKILL,
       durationSeconds: 15,
       maxStacks: 3,
@@ -376,7 +376,7 @@ export class EternalXiranite extends GearEffect {
     super({
       gearEffectType: GearEffectType.ETERNAL_XIRANITE,
       description: 'HP +1000. After applying Amp/Protected/Susceptibility/Weakened, team DMG +16% for 15s.',
-      passiveStats: {},
+      passiveStats: { [StatType.FLAT_HP]: 1000 },
       triggerCondition: TriggerConditionType.APPLY_BUFF,
       durationSeconds: 15,
       isStackable: false,

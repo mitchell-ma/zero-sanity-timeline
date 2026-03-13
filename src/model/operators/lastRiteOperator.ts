@@ -98,4 +98,36 @@ export class LastRiteOperator extends Operator {
     return [TriggerConditionType.SOLIDIFICATION];
   }
   get comboDescription(): string { return 'Enemy has 3+ Cryo Infliction stacks'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Cryo DMG.',
+      battle: 'Applies Hypothermic Perfusion and returns SP. Next Final Strike creates mirages dealing additional Cryo DMG with inflictions.',
+      combo: 'Encases and shatters enemy. Damage scales based on Cryo Infliction stacks consumed.',
+      ultimate: 'Encases herself in frost armor, creates ice scythe for 3 slashes. Gains immunity to all damage.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Applies Cryo Susceptibility with [Consumed stacks x 2%] for 15s.',
+        'Applies Cryo Susceptibility with [Consumed stacks x 4%] for 15s.',
+      ],
+      2: [
+        'Ultimate damage vs Cryo Susceptibility enemies multiplied by 1.2x.',
+        'Ultimate damage vs Cryo Susceptibility enemies multiplied by 1.5x.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Undertaker\'s Gift: Final Strikes deal additional 20% damage and 5 Stagger.',
+      'Absolute Zero Armament: STR +20, Cryo DMG +10%.',
+      'Overlord of Winter: Winter\'s Devourer and Vigil Services DMG x1.15.',
+      'Sincere Wake: Vigil Services energy cost -15%.',
+      'Winter is Returning: Battle skill SP return +5; Mirage multiplier x1.2.',
+    ];
+  }
 }

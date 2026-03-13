@@ -102,45 +102,17 @@ export function validateSheetData(raw: unknown): LoadResult {
     return { ok: false, error: 'Missing or invalid nextEventId field.' };
   }
 
-  // Migration: convert isFinalStrike boolean to hitType enum
-  for (const ev of obj.events as any[]) {
-    if (ev.segments) {
-      for (const seg of ev.segments) {
-        if (seg.frames) {
-          for (const f of seg.frames) {
-            if (f.isFinalStrike) {
-              f.hitType = 'FINAL_STRIKE';
-            }
-            delete f.isFinalStrike;
-          }
-        }
-      }
-    }
-  }
-
   return { ok: true, data: obj as unknown as SheetData };
 }
 
 // ─── Clean & normalize ───────────────────────────────────────────────────
 
-/** Stamp current version and strip legacy fields before persisting. */
+/** Stamp current version and strip derived fields before persisting. */
 export function cleanSheetData(data: SheetData): SheetData {
   const events = data.events.map((ev) => {
-    const cleaned = { ...ev };
-    // Strip legacy isFinalStrike boolean (replaced by hitType enum)
-    if (cleaned.segments) {
-      cleaned.segments = cleaned.segments.map((seg) => {
-        if (!seg.frames) return seg;
-        return {
-          ...seg,
-          frames: seg.frames.map((f) => {
-            const { isFinalStrike, ...rest } = f as any;
-            return rest;
-          }),
-        };
-      });
-    }
-    return cleaned;
+    // Strip derived segment/frame data — rebuilt from operator models on load
+    const { segments, ...rest } = ev as any;
+    return rest;
   });
   return { ...data, version: CURRENT_VERSION, events };
 }
@@ -243,9 +215,7 @@ export function exportMultiLoadoutBundle(
   }
 
   const filteredTree: LoadoutTree = {
-    nodes: tree.nodes
-      .filter((n) => includedIds.has(n.id))
-      .map((n) => (n.type as string) === 'session' ? { ...n, type: 'loadout' as const } : n),
+    nodes: tree.nodes.filter((n) => includedIds.has(n.id)),
   };
 
   const loadouts: Record<string, SheetData> = {};
@@ -292,12 +262,9 @@ export function validateMultiLoadoutBundle(raw: unknown): BundleLoadResult {
     if (!n || typeof n.id !== 'string' || typeof n.name !== 'string' || typeof n.type !== 'string') {
       return { ok: false, error: 'Invalid node in tree.' };
     }
-    // Migrate legacy "session" type to "loadout"
-    if (n.type === 'session') n.type = 'loadout';
   }
 
-  // Support both old 'sessions' and new 'loadouts' field names
-  const loadoutsObj = (obj.loadouts ?? obj.sessions) as Record<string, unknown> | undefined;
+  const loadoutsObj = obj.loadouts as Record<string, unknown> | undefined;
   if (typeof loadoutsObj !== 'object' || loadoutsObj == null) {
     return { ok: false, error: 'Missing or invalid loadouts field.' };
   }
@@ -308,10 +275,7 @@ export function validateMultiLoadoutBundle(raw: unknown): BundleLoadResult {
     }
   }
 
-  // Normalize: drop legacy 'sessions' key, keep only 'loadouts'
-  const { sessions: _legacy, ...rest } = obj as any;
-  const normalized = { ...rest, tree: obj.tree, loadouts: loadoutsObj };
-  return { ok: true, data: normalized as unknown as MultiLoadoutBundle };
+  return { ok: true, data: obj as unknown as MultiLoadoutBundle };
 }
 
 export function importMultiLoadoutFile(): Promise<BundleLoadResult> {

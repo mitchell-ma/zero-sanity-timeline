@@ -5,11 +5,12 @@
  * independently and keeps the view layer thin.
  */
 
-import { HitType } from '../../consts/enums';
+import { EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator } from '../../consts/viewTypes';
-import { REACTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { MeltingFlameController } from './meltingFlameController';
 import { ComboSkillEventController } from './comboSkillEventController';
+import { getUltimateActiveWindow } from './eventValidator';
 import type { CombatLoadout } from '../combat-loadout/combatLoadout';
 
 // ── ID generation ───────────────────────────────────────────────────────────
@@ -144,9 +145,11 @@ export function createEvent(
     timeStop?: number;
     timeDependency?: import('../../consts/enums').TimeDependency;
     skillPointCost?: number;
+    sourceOwnerId?: string;
+    sourceSkillName?: string;
   } | null,
 ): TimelineEvent {
-  const isForced = ownerId === 'enemy' && REACTION_COLUMN_IDS.has(columnId);
+  const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
   return {
     id: genEventId(),
     name: defaultSkill?.name ?? columnId,
@@ -166,7 +169,7 @@ export function createEvent(
         + (defaultSkill?.defaultActiveDuration ?? 0)
         + (defaultSkill?.defaultCooldownDuration ?? 0),
     } : {}),
-    ...(columnId === 'dash' ? {
+    ...(columnId === OPERATOR_COLUMNS.DASH ? {
       nonOverlappableRange: defaultSkill?.defaultActivationDuration ?? 120,
     } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
@@ -179,6 +182,8 @@ export function createEvent(
     ...(defaultSkill?.timeStop ? { timeStop: defaultSkill.timeStop } : {}),
     ...(defaultSkill?.timeDependency ? { timeDependency: defaultSkill.timeDependency } : {}),
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
+    ...(defaultSkill?.sourceOwnerId ? { sourceOwnerId: defaultSkill.sourceOwnerId } : {}),
+    ...(defaultSkill?.sourceSkillName ? { sourceSkillName: defaultSkill.sourceSkillName } : {}),
   };
 }
 
@@ -271,6 +276,58 @@ function clampToComboEdge(
   return result;
 }
 
+// ── Enhanced → ultimate active phase constraint ─────────────────────────────
+
+/**
+ * Clamp enhanced events so that all segment start frames remain within the
+ * owning operator's ultimate active phase.
+ */
+function clampToUltimateActivePhase(
+  allEvents: TimelineEvent[],
+  target: TimelineEvent,
+  desiredFrame: number,
+): number {
+  // Find the owning operator's ultimate event
+  const ult = allEvents.find(
+    (ev) => ev.ownerId === target.ownerId && ev.columnId === 'ultimate' && ev.id !== target.id,
+  );
+  if (!ult) return target.startFrame; // no ult → don't allow drag
+
+  const activeWindow = getUltimateActiveWindow(ult);
+  if (!activeWindow) return target.startFrame;
+
+  const phaseStart = activeWindow.start;
+  const phaseEnd = activeWindow.end;
+
+  // Compute total event duration from segments (last segment end relative to event start)
+  let totalDuration = 0;
+  if (target.segments && target.segments.length > 0) {
+    for (const seg of target.segments) {
+      totalDuration += seg.durationFrames;
+    }
+  }
+
+  // Earliest: first segment start >= phaseStart → desiredFrame >= phaseStart
+  // Latest: last segment must start before phaseEnd
+  //   last segment start = desiredFrame + totalDuration - lastSegDuration
+  //   but we need ALL segment starts inside, so the last segment start < phaseEnd
+  let lastSegStart = 0;
+  if (target.segments && target.segments.length > 0) {
+    let offset = 0;
+    for (const seg of target.segments) {
+      lastSegStart = offset;
+      offset += seg.durationFrames;
+    }
+  }
+
+  const minFrame = phaseStart;
+  const maxFrame = phaseEnd - lastSegStart - 1;
+
+  if (maxFrame < minFrame) return target.startFrame; // can't fit
+
+  return Math.max(minFrame, Math.min(maxFrame, desiredFrame));
+}
+
 // ── Event validation ────────────────────────────────────────────────────────
 
 /**
@@ -309,7 +366,7 @@ export function validateUpdate(
           .map((f) => {
             const clamped = { ...f, offsetFrame: Math.max(0, Math.min(maxOffset, f.offsetFrame)) };
             // Populate final strike values from templates, clear for normal hits
-            if (clamped.hitType === HitType.FINAL_STRIKE) {
+            if (clamped.hitType === EventFrameType.FINAL_STRIKE) {
               if (clamped.skillPointRecovery === 0 && clamped.templateFinalStrikeSP) {
                 clamped.skillPointRecovery = clamped.templateFinalStrikeSP;
               }
@@ -338,7 +395,7 @@ export function validateUpdate(
   if (merged.name?.includes('EMPOWERED')) {
     const mfSource = processedEvents ?? allEvents;
     const mfCount = mfSource.filter(
-      (e) => e.ownerId === merged.ownerId && e.columnId === 'melting-flame'
+      (e) => e.ownerId === merged.ownerId && e.columnId === OPERATOR_COLUMNS.MELTING_FLAME
         && e.startFrame <= merged.startFrame && e.startFrame + e.activationDuration > merged.startFrame,
     ).length;
     if (mfCount < 4) return null;
@@ -372,9 +429,13 @@ export function validateMove(
   if (target.columnId !== 'ultimate') {
     clamped = clampToUltimateEdge(allEvents, target, clamped);
   }
-  // Clamp battle skills to the edge of combo animation regions
-  if (target.columnId === 'battle') {
+  // Clamp battle/basic skills to the edge of combo animation regions
+  if (target.columnId === 'battle' || target.columnId === 'basic') {
     clamped = clampToComboEdge(allEvents, target, clamped);
+  }
+  // Clamp enhanced events within the ultimate active phase
+  if (target.name?.includes('ENHANCED') && !target.name?.includes('EMPOWERED')) {
+    clamped = clampToUltimateActivePhase(allEvents, target, clamped);
   }
   return clamped;
 }

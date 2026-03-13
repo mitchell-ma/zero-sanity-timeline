@@ -15,9 +15,9 @@ export class FrontiersArmor extends Gear {
         3: { [StatType.STRENGTH]: 104, [StatType.INTELLECT]: 69, [StatType.ULTIMATE_DAMAGE_BONUS]: 0.311 },
         4: { [StatType.STRENGTH]: 113, [StatType.INTELLECT]: 75, [StatType.ULTIMATE_DAMAGE_BONUS]: 0.336 },
       },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Frontiers Armor MOD (Armor) ─────────────────────────────────────────────
@@ -28,9 +28,9 @@ export class FrontiersArmorMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Frontiers Armor T1 (Armor) ──────────────────────────────────────────────
@@ -46,9 +46,9 @@ export class FrontiersArmorT1 extends Gear {
         3: { [StatType.STRENGTH]: 104, [StatType.AGILITY]: 69, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.248 },
         4: { [StatType.STRENGTH]: 113, [StatType.AGILITY]: 75, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.269 },
       },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Frontiers Armor T2 (Armor) ──────────────────────────────────────────────
@@ -64,9 +64,9 @@ export class FrontiersArmorT2 extends Gear {
         3: { [StatType.AGILITY]: 104, [StatType.INTELLECT]: 69, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.248 },
         4: { [StatType.AGILITY]: 113, [StatType.INTELLECT]: 75, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.269 },
       },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Frontiers Armor T3 (Armor) ──────────────────────────────────────────────
@@ -77,9 +77,9 @@ export class FrontiersArmorT3 extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-  static readonly DEFENSE = 56;
 }
 
 // ── Frontiers Blight RES Gloves (Gloves) ────────────────────────────────────
@@ -95,9 +95,9 @@ export class FrontiersBlightResGloves extends Gear {
         3: { [StatType.AGILITY]: 78, [StatType.INTELLECT]: 51, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.414 },
         4: { [StatType.AGILITY]: 84, [StatType.INTELLECT]: 55, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.449 },
       },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Frontiers Blight RES Gloves MOD (Gloves) ────────────────────────────────
@@ -108,9 +108,9 @@ export class FrontiersBlightResGlovesMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Frontiers Fiber Gloves (Gloves) ─────────────────────────────────────────
@@ -121,9 +121,9 @@ export class FrontiersFiberGloves extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Frontiers Fiber Gloves MOD (Gloves) ─────────────────────────────────────
@@ -134,9 +134,9 @@ export class FrontiersFiberGlovesMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-  static readonly DEFENSE = 42;
 }
 
 // ── Frontiers Analyzer (Kit) ────────────────────────────────────────────────
@@ -147,9 +147,9 @@ export class FrontiersAnalyzer extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers Analyzer MOD (Kit) ────────────────────────────────────────────
@@ -160,9 +160,9 @@ export class FrontiersAnalyzerMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers Comm (Kit) ────────────────────────────────────────────────────
@@ -178,9 +178,9 @@ export class FrontiersComm extends Gear {
         3: { [StatType.STRENGTH]: 38, [StatType.AGILITY]: 25, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.497 },
         4: { [StatType.STRENGTH]: 41, [StatType.AGILITY]: 27, [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.538 },
       },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers Comm MOD (Kit) ────────────────────────────────────────────────
@@ -191,9 +191,9 @@ export class FrontiersCommMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers Comm T1 (Kit) ─────────────────────────────────────────────────
@@ -209,9 +209,9 @@ export class FrontiersCommT1 extends Gear {
         3: { [StatType.STRENGTH]: 38, [StatType.INTELLECT]: 25, [StatType.CRYO_DAMAGE_BONUS]: 0.276, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.276 },
         4: { [StatType.STRENGTH]: 41, [StatType.INTELLECT]: 27, [StatType.CRYO_DAMAGE_BONUS]: 0.299, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.299 },
       },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers Extra O2 Tube (Kit) ───────────────────────────────────────────
@@ -227,9 +227,9 @@ export class FrontiersExtraO2Tube extends Gear {
         3: { [StatType.AGILITY]: 38, [StatType.INTELLECT]: 25 },
         4: { [StatType.AGILITY]: 41, [StatType.INTELLECT]: 27 },
       },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers O2 Tether (Kit) ───────────────────────────────────────────────
@@ -240,9 +240,9 @@ export class FrontiersO2Tether extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
 }
 
 // ── Frontiers O2 Tether MOD (Kit) ───────────────────────────────────────────
@@ -253,7 +253,25 @@ export class FrontiersO2TetherMod extends Gear {
       gearEffectType: GearEffectType.FRONTIERS,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-  static readonly DEFENSE = 21;
+}
+
+// ── Frontiers Protection Suit (Armor) ─────────────────────────────────────────
+export class FrontiersProtectionSuit extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.ARMOR,
+      gearEffectType: GearEffectType.FRONTIERS,
+      rank,
+      statsByRank: {
+        1: { [StatType.INTELLECT]: 87, [StatType.AGILITY]: 58, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.123 },
+        2: { [StatType.INTELLECT]: 95, [StatType.AGILITY]: 63, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.136 },
+        3: { [StatType.INTELLECT]: 104, [StatType.AGILITY]: 69, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.148 },
+        4: { [StatType.INTELLECT]: 113, [StatType.AGILITY]: 75, [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.160 },
+      },
+      defense: 56,
+    });
+  }
 }

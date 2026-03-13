@@ -1,5 +1,5 @@
 import { SkillEventSequence } from "../../model/event-frames/skillEventSequence";
-import { HitType } from "../../consts/enums";
+import { EventFrameType } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 
@@ -59,6 +59,8 @@ export class SkillSegmentBuilder {
         };
         const status = f.getApplyStatus();
         if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }), ...(status.eventName && { eventName: status.eventName }) };
+        const consumeReaction = f.getConsumeReaction();
+        if (consumeReaction) marker.consumeReaction = { columnId: consumeReaction.columnId, ...(consumeReaction.applyStatus && { applyStatus: { target: consumeReaction.applyStatus.target, status: consumeReaction.applyStatus.status, stacks: consumeReaction.applyStatus.stacks, durationFrames: consumeReaction.applyStatus.durationFrames, ...(consumeReaction.applyStatus.susceptibility && { susceptibility: consumeReaction.applyStatus.susceptibility }), ...(consumeReaction.applyStatus.eventName && { eventName: consumeReaction.applyStatus.eventName }) } }) };
         const consumeStatus = f.getConsumeStatus();
         if (consumeStatus) marker.consumeStatus = consumeStatus;
         const dmgEl = f.getDamageElement();
@@ -71,10 +73,18 @@ export class SkillSegmentBuilder {
       // SP recovery is granted only on the final strike
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
         const finalFrame = frames[frames.length - 1];
-        finalFrame.hitType = HitType.FINAL_STRIKE;
+        finalFrame.hitType = EventFrameType.FINAL_STRIKE;
         finalFrame.skillPointRecovery = allSequenceTotalSP;
         finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
         finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
+      }
+
+      // Mark all frames in Finisher / Dive segments with the appropriate hit type
+      const segLabel = customLabels?.[i];
+      if (segLabel === 'Finisher' && frames.length > 0) {
+        for (const f of frames) f.hitType = EventFrameType.FINISHER;
+      } else if (segLabel === 'Dive' && frames.length > 0) {
+        for (const f of frames) f.hitType = EventFrameType.DIVE;
       }
 
       // Assign gauge gain to the first frame of the first segment

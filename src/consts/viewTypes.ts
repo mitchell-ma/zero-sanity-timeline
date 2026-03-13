@@ -1,10 +1,12 @@
-import { HitType, TimeDependency } from './enums';
+import { ElementType, EventFrameType, EventStatusType, TimeDependency } from './enums';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
 
 export interface SkillDef {
   name: string;
+  /** In-game skill description text. */
+  description?: string;
   /** Element type of this skill (e.g. "PHYSICAL", "HEAT"). */
   element?: string;
   defaultActivationDuration: number; // frames
@@ -53,6 +55,10 @@ export interface Operator {
   attributeIncreaseAttribute: string;
   maxAttributeIncreaseLevel: number;
   triggerCapability?: import('./triggerCapabilities').TriggerCapability;
+  /** Per-level talent descriptions. Key = talent index (1 or 2), value = array indexed by level (0-based). */
+  talentDescriptions?: Record<number, string[]>;
+  /** Per-potential-level descriptions. Array indexed by potential (index 0 = P1). */
+  potentialDescriptions?: string[];
 }
 
 export interface EnemyStatus {
@@ -112,15 +118,19 @@ export interface EventFrameMarker {
   /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
   applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
   /** Status applied by this frame to a target (self or enemy). */
-  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Record<string, readonly number[]>; eventName?: string };
+  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string };
+  /** Consume an active reaction on the enemy; if successful, conditionally apply a status. */
+  consumeReaction?: { columnId: string; applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string } };
   /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
   consumeStatus?: string;
   /** Element of damage dealt by this frame (for coloring when no infliction). */
   damageElement?: string;
+  /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
+  statusLabel?: string;
   /** Whether this frame duplicates the source infliction that triggered it. */
   duplicatesSourceInfliction?: boolean;
   /** Hit type classification (Normal or Final Strike). */
-  hitType?: HitType;
+  hitType?: EventFrameType;
   /** Template SP recovery for this frame when it is the final strike (from model data). */
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
@@ -182,8 +192,8 @@ export interface TimelineEvent {
   gaugeGainByEnemies?: Record<number, number>;
   /** Number of enemies hit (selectable in info pane when gaugeGainByEnemies exists). */
   enemiesHit?: number;
-  /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by element → resolved percentage. */
-  susceptibility?: Record<string, number>;
+  /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by ElementType → resolved percentage. */
+  susceptibility?: Partial<Record<ElementType, number>>;
   /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'breach'). */
   comboTriggerColumnId?: string;
   /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */
@@ -199,13 +209,15 @@ export interface TimelineEvent {
   /** Skill name of the operator event that produced this derived event. */
   sourceSkillName?: string;
   /** Outcome of a derived event: how it ended. */
-  eventStatus?: 'expired' | 'consumed' | 'refreshed' | 'triggered' | 'extended';
+  eventStatus?: EventStatusType;
   /** Operator slot ID responsible for this event status change. */
   eventStatusOwnerId?: string;
   /** Skill name responsible for this event status change. */
   eventStatusSkillName?: string;
   /** True if this reaction was forced (bypassed infliction stacks). */
   forcedReaction?: boolean;
+  /** Number of infliction stacks consumed to trigger this arts reaction (determines status level). */
+  inflictionStacks?: number;
   /** Operator potential (0–5) for potential-dependent derived effects. */
   operatorPotential?: number;
   /** SP cost consumed when this battle skill event fires. */
@@ -214,6 +226,8 @@ export interface TimelineEvent {
   comboChainFreezeEnd?: number;
   /** Validation warnings (e.g. event starts inside an invalid time-stop period). */
   warnings?: string[];
+  /** Magnitude of a status effect (e.g. 0.15 for 15% amp, 0.30 for 30% link bonus, 0.10 for 10% weaken). */
+  statusValue?: number;
 }
 
 export interface ContextMenuItem {
@@ -254,6 +268,10 @@ export interface MicroColumn {
     defaultActivationDuration: number;
     defaultActiveDuration: number;
     defaultCooldownDuration: number;
+    /** Source operator ID for manually-created events (e.g. 'debugger'). */
+    sourceOwnerId?: string;
+    /** Source skill name for manually-created events (e.g. 'Debug'). */
+    sourceSkillName?: string;
   };
 }
 

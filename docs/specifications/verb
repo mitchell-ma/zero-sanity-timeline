@@ -1,0 +1,19 @@
+- apply
+    - apply status onto target (onto team, other operator, self, enemy)
+    - infliction (onto enemy)
+- inflict
+    - apply an infliction
+- react
+    - inflictions interacting with other inflictions/physical mechanics
+- consume
+    - skills can consume infliction to apply certain statuses
+    - skills can consume reaction to apply certain statuses
+- expend
+    - use a resource and decrease its meter
+- recover
+    - increases a resource meter
+- return
+    - refunds a portion of resource expended
+    - note: this is NOT equivalent to recover for game mechanic logic
+- build
+    - increases a gauge or resource

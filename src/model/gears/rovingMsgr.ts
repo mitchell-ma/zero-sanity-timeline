@@ -15,9 +15,9 @@ export class RovingMsgrJacket extends Gear {
         3: {},
         4: {},
       },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Roving MSGR Jacket MOD (Armor) ──────────────────────────────────────────
@@ -28,9 +28,9 @@ export class RovingMsgrJacketMod extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Roving MSGR Jacket T1 (Armor) ───────────────────────────────────────────
@@ -41,9 +41,9 @@ export class RovingMsgrJacketT1 extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 28.8,
     });
   }
-  static readonly DEFENSE = 28.8;
 }
 
 // ── Roving MSGR Fists (Gloves) ──────────────────────────────────────────────
@@ -59,9 +59,9 @@ export class RovingMsgrFists extends Gear {
         3: {},
         4: {},
       },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Roving MSGR Fists MOD (Gloves) ──────────────────────────────────────────
@@ -72,9 +72,9 @@ export class RovingMsgrFistsMod extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Roving MSGR Fists T1 (Gloves) ───────────────────────────────────────────
@@ -85,9 +85,9 @@ export class RovingMsgrFistsT1 extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21.6,
     });
   }
-  static readonly DEFENSE = 21.6;
 }
 
 // ── Roving MSGR Flashlight (Kit) ────────────────────────────────────────────
@@ -103,9 +103,9 @@ export class RovingMsgrFlashlight extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Flashlight T1 (Kit) ─────────────────────────────────────────
@@ -116,9 +116,9 @@ export class RovingMsgrFlashlightT1 extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Flashlight T2 (Kit) ─────────────────────────────────────────
@@ -129,9 +129,9 @@ export class RovingMsgrFlashlightT2 extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Flashspike (Kit) ────────────────────────────────────────────
@@ -142,9 +142,9 @@ export class RovingMsgrFlashspike extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Flashspike MOD (Kit) ────────────────────────────────────────
@@ -155,9 +155,9 @@ export class RovingMsgrFlashspikeMod extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Gyro (Kit) ──────────────────────────────────────────────────
@@ -173,9 +173,9 @@ export class RovingMsgrGyro extends Gear {
         3: {},
         4: {},
       },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Gyro MOD (Kit) ──────────────────────────────────────────────
@@ -186,9 +186,9 @@ export class RovingMsgrGyroMod extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }
 
 // ── Roving MSGR Gyro T1 (Kit) ───────────────────────────────────────────────
@@ -199,7 +199,7 @@ export class RovingMsgrGyroT1 extends Gear {
       gearEffectType: GearEffectType.ROVING_MSGR,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 10.8,
     });
   }
-  static readonly DEFENSE = 10.8;
 }

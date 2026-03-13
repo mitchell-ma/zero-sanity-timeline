@@ -1,4 +1,4 @@
-import { StatusType, TargetType } from "../../consts/enums";
+import { ElementType, StatusType, TargetType } from "../../consts/enums";
 
 /** Arts infliction applied by a frame tick. */
 export interface FrameArtsInfliction {
@@ -27,13 +27,19 @@ export interface FrameForcedReaction {
   durationFrames?: number; // override default reaction duration
 }
 
+/** Reaction consumed by a frame tick (e.g. Dolly Rush consuming Corrosion). */
+export interface FrameReactionConsumption {
+  columnId: string;       // reaction to consume (e.g. 'corrosion')
+  applyStatus?: FrameApplyStatus;  // conditional status to apply if consumed
+}
+
 /** Status applied by a frame tick to a target. */
 export interface FrameApplyStatus {
   target: TargetType;          // SELF (e.g. Melting Flame) or ENEMY (e.g. Focus)
   status: string;              // StatusType or columnId — determines which column the event routes to
   stacks: number;              // stack count (for self-targeted statuses)
   durationFrames: number;      // duration in frames (for enemy-targeted statuses)
-  susceptibility?: Record<string, readonly number[]>;  // element → per-level bonus array (12 levels)
+  susceptibility?: Partial<Record<ElementType, readonly number[]>>;  // ElementType → per-level bonus array (12 levels)
   /** Override event name (defaults to status). Use when the in-game name differs from the column. */
   eventName?: string;
 }
@@ -63,6 +69,9 @@ export abstract class SkillEventFrame {
 
   /** Status applied by this frame to a target, or null. */
   getApplyStatus(): FrameApplyStatus | null { return null; }
+
+  /** Reaction consumed by this frame (e.g. Corrosion consumed by Dolly Rush), or null. */
+  getConsumeReaction(): FrameReactionConsumption | null { return null; }
 
   /** Status consumed by this frame (e.g. Thunderlance consumed by ultimate), or null. */
   getConsumeStatus(): string | null { return null; }

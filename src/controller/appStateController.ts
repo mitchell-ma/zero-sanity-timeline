@@ -293,3 +293,19 @@ export function findEventDefaults(
   if (variant) return variant;
   return col.defaultEvent ?? null;
 }
+
+/**
+ * Attach default segments from column definitions to events that don't have them.
+ * Used after loading events from storage (segments are not persisted).
+ */
+export function attachDefaultSegments(
+  events: TimelineEvent[],
+  columns: (MiniTimeline | { type: 'placeholder' })[],
+): TimelineEvent[] {
+  return events.map((ev) => {
+    if (ev.segments) return ev;
+    const defaults = findEventDefaults(ev, columns);
+    if (!defaults?.segments) return ev;
+    return { ...ev, segments: defaults.segments };
+  });
+}

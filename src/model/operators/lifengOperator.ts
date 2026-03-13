@@ -99,4 +99,36 @@ export class LifengOperator extends Operator {
   }
   get comboDescription(): string { return 'Final Strike on enemy with Physical Susceptibility or Breach'; }
   get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Multiple polearm swings dealing Physical DMG. Ground slam that knocks down enemies in area.',
+      combo: 'Triggered on Final Strike on enemy with Physical Susceptibility or Breach. Moves to enemy and applies Lift with bonus damage to Breach targets.',
+      ultimate: 'Aspect slams Immovable Vajra dealing Physical DMG and knockdown to large area.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Every point of Intellect and Will further grants ATK +0.10%.',
+        'Every point of Intellect and Will further grants ATK +0.15%.',
+      ],
+      2: [
+        'Applying Knock Down also deals 50% ATK of Physical DMG.',
+        'Applying Knock Down also deals 100% ATK of Physical DMG.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Breaking the Obsession: Turbid Avatar improved with Physical Susceptibility +5%.',
+      'Self Refinement: All attributes +15.',
+      'Spiritual Cultivation: Intellect/Will grants additional ATK +0.05%.',
+      'Brief Instant: Ultimate Energy cost -15%.',
+      'Unremitting: Every 15s, next effect triggered deals additional 250% ATK Physical DMG and 5 Stagger.',
+    ];
+  }
 }

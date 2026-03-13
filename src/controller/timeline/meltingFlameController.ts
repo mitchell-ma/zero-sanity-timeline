@@ -1,22 +1,35 @@
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
+import { EventStatusType } from '../../consts/enums';
 import { TOTAL_FRAMES } from '../../utils/timeline';
+import { MicroColumnController } from './microColumnController';
 
 const MF_COLUMN_ID = 'melting-flame';
 
 /**
- * Controller for Melting Flame subtimeline validation.
+ * Melting Flame micro-column controller. Extends MicroColumnController with
+ * MF-specific monotonic ordering constraints.
  *
- * Melting Flame stacks have a monotonic ordering constraint: each stack's
- * startFrame must be >= the previous stack's and <= the next stack's.
- * This controller enforces that constraint during updates and moves.
+ * Same pattern as arts infliction subtimeline — reuseExpiredSlots + by-order
+ * micro-columns. Consumed-event slot freeing is handled by the base class.
  */
-export class MeltingFlameController {
+export class MeltingFlameController extends MicroColumnController {
   /**
    * Returns whether the given event belongs to a melting flame column.
    */
   static isMeltingFlame(event: TimelineEvent): boolean {
     return event.columnId === MF_COLUMN_ID;
   }
+
+  /**
+   * Returns whether the given column definition is a melting flame column.
+   */
+  static isMeltingFlameColumn(col: Column | MiniTimeline): boolean {
+    if (col.type !== 'mini-timeline') return false;
+    return col.columnId === MF_COLUMN_ID
+      || (!!col.matchColumnIds && col.matchColumnIds.includes(MF_COLUMN_ID));
+  }
+
+  // ── Monotonic ordering constraints ────────────────────────────────────────
 
   /**
    * Compute the valid startFrame range for a given MF event based on its
@@ -34,8 +47,6 @@ export class MeltingFlameController {
     const targetIdx = colEvents.findIndex((e) => e.id === target.id);
     if (targetIdx < 0) return { min: 0, max: TOTAL_FRAMES - 1 };
 
-    // Skip co-located siblings (same startFrame) — equal values satisfy
-    // the monotonic constraint, so they shouldn't block each other.
     let min = 0;
     for (let i = targetIdx - 1; i >= 0; i--) {
       if (colEvents[i].startFrame < target.startFrame) {
@@ -57,8 +68,6 @@ export class MeltingFlameController {
   /**
    * Validate an update to an MF event. Clamps startFrame to maintain
    * monotonic ordering and durations to non-negative.
-   *
-   * For non-MF events, passes updates through with only duration clamping.
    */
   static validateUpdate(
     allEvents: TimelineEvent[],
@@ -67,7 +76,6 @@ export class MeltingFlameController {
   ): Partial<TimelineEvent> {
     const validated = { ...updates };
 
-    // Clamp durations to non-negative (applies to all events)
     if (validated.activationDuration !== undefined)
       validated.activationDuration = Math.max(0, validated.activationDuration);
     if (validated.activeDuration !== undefined)
@@ -75,7 +83,6 @@ export class MeltingFlameController {
     if (validated.cooldownDuration !== undefined)
       validated.cooldownDuration = Math.max(0, validated.cooldownDuration);
 
-    // Monotonic ordering (MF only)
     if (validated.startFrame !== undefined && this.isMeltingFlame(target)) {
       const bounds = this.getBounds(allEvents, target);
       validated.startFrame = Math.max(bounds.min, Math.min(bounds.max, validated.startFrame));

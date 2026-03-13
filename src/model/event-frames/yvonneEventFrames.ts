@@ -62,6 +62,17 @@ export const YVONNE_BASIC_ATTACK_SEQUENCES: readonly SkillEventSequence[] = [1, 
   })
   .filter((seq) => seq.getDurationSeconds() > 0);
 
+// ── Enhanced Basic Attack (during Cryoblasting Pistolier) ────────────────
+export const YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCES: readonly SkillEventSequence[] = [1, 2, 3, 4, 5]
+  .map((n) => {
+    const key = `YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCE_${n}`;
+    return new YvonneSkillEventSequence(
+      (OP.ENHANCED_BASIC_ATTACK as Record<string, any>)[key],
+      key,
+    );
+  })
+  .filter((seq) => seq.getDurationSeconds() > 0);
+
 // ── Battle Skill ────────────────────────────────────────────────────────────
 export const YVONNE_BATTLE_SKILL_SEQUENCE: SkillEventSequence = new YvonneSkillEventSequence(
   OP.BATTLE_SKILL.YVONNE_BATTLE_SKILL,

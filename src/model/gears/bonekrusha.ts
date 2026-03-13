@@ -31,10 +31,9 @@ export class BonekrushaHeavyArmor extends Gear {
           [StatType.ULTIMATE_DAMAGE_BONUS]: 0.160,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Bonekrusha Heavy Armor T1 (Armor) ───────────────────────────────────────
@@ -66,10 +65,9 @@ export class BonekrushaHeavyArmorT1 extends Gear {
           [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.269,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Bonekrusha Poncho (Armor) ───────────────────────────────────────────────
@@ -101,10 +99,9 @@ export class BonekrushaPoncho extends Gear {
           [StatType.COMBO_SKILL_DAMAGE_BONUS]: 0.269,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Bonekrusha Poncho MOD (Armor) ───────────────────────────────────────────
@@ -115,10 +112,9 @@ export class BonekrushaPonchoMod extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Bonekrusha Poncho T1 (Armor) ────────────────────────────────────────────
@@ -129,10 +125,9 @@ export class BonekrushaPonchoT1 extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Bonekrusha Wristband (Gloves) ───────────────────────────────────────────
@@ -143,10 +138,9 @@ export class BonekrushaWristband extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Bonekrusha Wristband MOD (Gloves) ───────────────────────────────────────
@@ -157,10 +151,9 @@ export class BonekrushaWristbandMod extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 42,
     });
   }
-
-  static readonly DEFENSE = 42;
 }
 
 // ── Bonekrusha Figurine (Kit) ───────────────────────────────────────────────
@@ -192,10 +185,9 @@ export class BonekrushaFigurine extends Gear {
           [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.538,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Bonekrusha Figurine MOD (Kit) ───────────────────────────────────────────
@@ -206,10 +198,9 @@ export class BonekrushaFigurineMod extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Bonekrusha Figurine T1 (Kit) ────────────────────────────────────────────
@@ -220,10 +211,9 @@ export class BonekrushaFigurineT1 extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Bonekrusha Mask (Kit) ───────────────────────────────────────────────────
@@ -255,10 +245,9 @@ export class BonekrushaMask extends Gear {
           [StatType.STAGGER_DAMAGE_BONUS]: 0.538,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Bonekrusha Mask MOD (Kit) ───────────────────────────────────────────────
@@ -269,10 +258,9 @@ export class BonekrushaMaskMod extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Bonekrusha Mask T1 (Kit) ────────────────────────────────────────────────
@@ -283,8 +271,43 @@ export class BonekrushaMaskT1 extends Gear {
       gearEffectType: GearEffectType.BONEKRUSHA,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
+}
 
-  static readonly DEFENSE = 21;
+// ── Bonekrusha Heavy Armor T2 (Armor) ────────────────────────────────────────
+export class BonekrushaHeavyArmorT2 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.ARMOR,
+      gearEffectType: GearEffectType.BONEKRUSHA,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 87, [StatType.STRENGTH]: 58, [StatType.CRYO_DAMAGE_BONUS]: 0.115, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.115 },
+        2: { [StatType.AGILITY]: 95, [StatType.STRENGTH]: 63, [StatType.CRYO_DAMAGE_BONUS]: 0.127, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.127 },
+        3: { [StatType.AGILITY]: 104, [StatType.STRENGTH]: 69, [StatType.CRYO_DAMAGE_BONUS]: 0.138, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.138 },
+        4: { [StatType.AGILITY]: 113, [StatType.STRENGTH]: 75, [StatType.CRYO_DAMAGE_BONUS]: 0.149, [StatType.ELECTRIC_DAMAGE_BONUS]: 0.149 },
+      },
+      defense: 56,
+    });
+  }
+}
+
+// ── Bonekrusha Mask T2 (Kit) ─────────────────────────────────────────────────
+export class BonekrushaMaskT2 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.KIT,
+      gearEffectType: GearEffectType.BONEKRUSHA,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 32, [StatType.STRENGTH]: 21, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.414 },
+        2: { [StatType.AGILITY]: 35, [StatType.STRENGTH]: 23, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.455 },
+        3: { [StatType.AGILITY]: 38, [StatType.STRENGTH]: 25, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.497 },
+        4: { [StatType.AGILITY]: 41, [StatType.STRENGTH]: 27, [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 0.538 },
+      },
+      defense: 21,
+    });
+  }
 }

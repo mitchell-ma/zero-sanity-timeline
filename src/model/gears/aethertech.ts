@@ -31,10 +31,9 @@ export class AethertechPlating extends Gear {
           [StatType.STAGGER_DAMAGE_BONUS]: 0.269,
         },
       },
+      defense: 56,
     });
   }
-
-  static readonly DEFENSE = 56;
 }
 
 // ── Æthertech Gloves (Gloves) ───────────────────────────────────────────────
@@ -66,10 +65,27 @@ export class AethertechGloves extends Gear {
           [StatType.ARTS_INTENSITY]: 44.9,
         },
       },
+      defense: 42,
     });
   }
+}
 
-  static readonly DEFENSE = 42;
+// ── Æthertech Light Gloves (Gloves) ──────────────────────────────────────────
+export class AethertechLightGloves extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.GLOVES,
+      gearEffectType: GearEffectType.AETHERTECH,
+      rank,
+      statsByRank: {
+        1: { [StatType.WILL]: 65, [StatType.AGILITY]: 43, [StatType.SKILL_DAMAGE_BONUS]: 0.230 },
+        2: { [StatType.WILL]: 71, [StatType.AGILITY]: 47, [StatType.SKILL_DAMAGE_BONUS]: 0.253 },
+        3: { [StatType.WILL]: 78, [StatType.AGILITY]: 51, [StatType.SKILL_DAMAGE_BONUS]: 0.276 },
+        4: { [StatType.WILL]: 84, [StatType.AGILITY]: 55, [StatType.SKILL_DAMAGE_BONUS]: 0.299 },
+      },
+      defense: 42,
+    });
+  }
 }
 
 // ── Æthertech Analysis Band (Kit) ───────────────────────────────────────────
@@ -101,10 +117,9 @@ export class AethertechAnalysisBand extends Gear {
           [StatType.PHYSICAL_DAMAGE_BONUS]: 0.299,
         },
       },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Æthertech Stabilizer (Kit) ──────────────────────────────────────────────
@@ -136,10 +151,27 @@ export class AethertechStabilizer extends Gear {
           [StatType.ARTS_INTENSITY]: 53.8,
         },
       },
+      defense: 21,
     });
   }
+}
 
-  static readonly DEFENSE = 21;
+// ── Æthertech Stabilizer T1 (Kit) ────────────────────────────────────────────
+export class AethertechStabilizerT1 extends Gear {
+  constructor(rank: GearRank = 1) {
+    super({
+      gearType: GearType.KIT,
+      gearEffectType: GearEffectType.AETHERTECH,
+      rank,
+      statsByRank: {
+        1: { [StatType.AGILITY]: 32, [StatType.STRENGTH]: 21, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.230 },
+        2: { [StatType.AGILITY]: 35, [StatType.STRENGTH]: 23, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.253 },
+        3: { [StatType.AGILITY]: 38, [StatType.STRENGTH]: 25, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.276 },
+        4: { [StatType.AGILITY]: 41, [StatType.STRENGTH]: 27, [StatType.PHYSICAL_DAMAGE_BONUS]: 0.299 },
+      },
+      defense: 21,
+    });
+  }
 }
 
 // ── Æthertech Visor (Kit) ───────────────────────────────────────────────────
@@ -150,10 +182,9 @@ export class AethertechVisor extends Gear {
       gearEffectType: GearEffectType.AETHERTECH,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }
 
 // ── Æthertech Watch (Kit) ───────────────────────────────────────────────────
@@ -164,8 +195,7 @@ export class AethertechWatch extends Gear {
       gearEffectType: GearEffectType.AETHERTECH,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 21,
     });
   }
-
-  static readonly DEFENSE = 21;
 }

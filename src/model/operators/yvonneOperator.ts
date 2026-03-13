@@ -98,4 +98,36 @@ export class YvonneOperator extends Operator {
     return [TriggerConditionType.FINAL_STRIKE];
   }
   get comboDescription(): string { return 'Final Strike on Solidified enemy'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Cryo DMG. Dive Attack: dive attack dealing Cryo DMG. Finisher: finisher near Staggered enemy deals massive Cryo DMG and recovers SP.',
+      battle: 'Throws freezing bomb. Consumes infliction stacks to apply Solidification and grant Ultimate Energy.',
+      combo: 'Deploys Frost-e-Bytee support bot for energy attacks and explosion.',
+      ultimate: 'Enhances basic attacks with Critical Rate stacks. Final attack deals massive DMG and additional attack vs Solidified enemies.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After applying Solidification, the next basic attack becomes a Final Strike.',
+        'After applying Solidification, the next basic attack becomes a Final Strike with 50% damage boost.',
+      ],
+      2: [
+        'Gains 10% Critical DMG against Cryo-inflicted enemies; doubled vs Solidified.',
+        'Gains 20% Critical DMG against Cryo-inflicted enemies; doubled vs Solidified.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Flash Freezer: Combo skill gains +20% radius, 2 additional energy releases, +15 Ultimate Energy.',
+      'Flawless Creation: Intellect +20, Critical Rate +7%.',
+      'Tink-a-Power: Critical DMG +10% vs Cryo, doubled vs Solidification.',
+      'Rebellious Mood: Skill returns 10 SP if hitting single enemy.',
+      'Expert Mechcrafter: Ultimate grants ATK +10%, Critical DMG +30%.',
+    ];
+  }
 }

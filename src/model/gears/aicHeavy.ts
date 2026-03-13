@@ -19,10 +19,9 @@ export class AicHeavyArmor extends Gear {
         3: {},
         4: {},
       },
+      defense: 22.4,
     });
   }
-
-  static readonly DEFENSE = 22.4;
 }
 
 // ── AIC Gauntlets (Gloves) ──────────────────────────────────────────────────
@@ -42,10 +41,9 @@ export class AicGauntlets extends Gear {
         3: {},
         4: {},
       },
+      defense: 16.8,
     });
   }
-
-  static readonly DEFENSE = 16.8;
 }
 
 // ── AIC Alloy Plate (Kit) ───────────────────────────────────────────────────
@@ -64,10 +62,9 @@ export class AicAlloyPlate extends Gear {
         3: {},
         4: {},
       },
+      defense: 8.4,
     });
   }
-
-  static readonly DEFENSE = 8.4;
 }
 
 // ── AIC Heavy Plate (Kit) ───────────────────────────────────────────────────
@@ -86,8 +83,7 @@ export class AicHeavyPlate extends Gear {
         3: {},
         4: {},
       },
+      defense: 8.4,
     });
   }
-
-  static readonly DEFENSE = 8.4;
 }

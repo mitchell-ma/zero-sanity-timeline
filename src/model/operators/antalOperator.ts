@@ -102,4 +102,37 @@ export class AntalOperator extends Operator {
   get comboRequiresActiveColumns(): string[] { return [StatusType.FOCUS]; }
   get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
   get derivedTeamColumns(): string[] { return ['team-amp']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals 15 Stagger. Dive Attack: Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.',
+      battle: 'Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time.',
+      combo: 'When an enemy with active Focus suffers a Physical Status or Arts Infliction, triggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.',
+      ultimate: 'Applies temporary Electric Amp and Heat Amp to the entire team.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After an Amped teammate\'s skill deals DMG, Antal restores the said teammate\'s HP by [72 + Strength x 0.6]. Triggers 1 time every 30s for each operator.',
+        'After an Amped teammate\'s skill deals DMG, Antal restores the said teammate\'s HP by [108 + Strength x 0.9]. Triggers 1 time every 30s for each operator.',
+      ],
+      2: [
+        'Gains 30% chance of Physical DMG immunity and restores HP of self by [27 + Strength x 0.23].',
+        'Gains 30% chance of Physical DMG immunity and restores HP of self by [27 + Strength x 0.23].',
+        'Gains 30% chance of Physical DMG immunity and restores HP of self by [45 + Strength x 0.38].',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Arts Talent: Electric Amp and Heat Amp effects increased to 1.1x.',
+      'Improved Automation: Ultimate Energy cost -10%.',
+      'Applied Originium Theory: When enemy with Focus is defeated, return 15 SP.',
+      'Granny\'s Reminder: Intellect +10, Max HP +10%.',
+      'High Specs Tech Tester: Applying Focus on the same target for 20s increases Electric and Heat Susceptibility effects by 4%.',
+    ];
+  }
 }

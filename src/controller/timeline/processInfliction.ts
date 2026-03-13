@@ -1,17 +1,20 @@
-import { TimelineEvent, FrameAbsorptionMarker } from '../../consts/viewTypes';
+import { TimelineEvent, EventFrameMarker, FrameAbsorptionMarker, SkillType } from '../../consts/viewTypes';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
-import { StatusType, TargetType } from '../../consts/enums';
-import { INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { CombatSkillsType, ELEMENT_LABELS, ElementType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
+import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
+import { StatusLevel } from '../../consts/types';
+import { getCorrosionBaseReduction } from '../../model/calculation/damageFormulas';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { TOTAL_FRAMES } from '../../utils/timeline';
-import { TimeStopRegion, absoluteFrame, foreignStopsFor, extendByTimeStops } from './processTimeStop';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
 
 /** Maps forced reaction name → reaction columnId. */
 export const FORCED_REACTION_COLUMN: Record<string, string> = {
-  COMBUSTION: 'combustion',
-  SOLIDIFICATION: 'solidification',
-  CORROSION: 'corrosion',
-  ELECTRIFICATION: 'electrification',
+  [StatusType.COMBUSTION]:      REACTION_COLUMNS.COMBUSTION,
+  [StatusType.SOLIDIFICATION]:  REACTION_COLUMNS.SOLIDIFICATION,
+  [StatusType.CORROSION]:       REACTION_COLUMNS.CORROSION,
+  [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -19,10 +22,10 @@ export const REACTION_DURATION = 2400;
 
 /** Forced reaction durations by type (frames at 120fps). */
 export const FORCED_REACTION_DURATION: Record<string, number> = {
-  combustion: 600,        // 5s
-  solidification: 600,    // 5s
-  corrosion: 600,         // 5s
-  electrification: 600,   // 5s
+  [REACTION_COLUMNS.COMBUSTION]:      600,  // 5s
+  [REACTION_COLUMNS.SOLIDIFICATION]:  600,  // 5s
+  [REACTION_COLUMNS.CORROSION]:       600,  // 5s
+  [REACTION_COLUMNS.ELECTRIFICATION]: 600,  // 5s
 };
 
 /** Default active duration for derived infliction events (20s at 120fps). */
@@ -84,22 +87,25 @@ export interface StatusSource {
 
 /** Resolves per-level susceptibility array to a scalar using the source operator's skill level. */
 export function resolveSusceptibility(
-  raw: Record<string, readonly number[]>,
+  raw: Partial<Record<ElementType, readonly number[]>>,
   sourceColumnId: string,
   sourceOwnerId: string,
   loadoutStats?: Record<string, LoadoutStats>,
-): Record<string, number> {
+): Partial<Record<ElementType, number>> {
   const stats = loadoutStats?.[sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+  const skillType = sourceColumnId as SkillType;
   let skillLevel: number;
-  switch (sourceColumnId) {
+  switch (skillType) {
     case 'combo': skillLevel = stats.comboSkillLevel; break;
     case 'ultimate': skillLevel = stats.ultimateLevel; break;
     default: skillLevel = stats.battleSkillLevel; break;
   }
-  const idx = Math.max(0, Math.min(skillLevel - 1, 11)); // 1-indexed level → 0-indexed array
-  const resolved: Record<string, number> = {};
+  const idx = Math.max(0, Math.min(skillLevel - 1, MAX_SKILL_LEVEL_INDEX));
+  const resolved: Partial<Record<ElementType, number>> = {};
   for (const [element, table] of Object.entries(raw)) {
-    resolved[element] = table[Math.min(idx, table.length - 1)];
+    // Normalize key to uppercase to match ElementType enum values
+    const normalizedKey = element.toUpperCase() as ElementType;
+    resolved[normalizedKey] = table[Math.min(idx, table.length - 1)];
   }
   return resolved;
 }
@@ -112,7 +118,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === 'enemy') continue;
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -131,7 +137,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
               derived.push({
                 id: `${event.id}-inflict-${si}-${fi}`,
                 name: columnId,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId,
                 startFrame: absFrame,
                 activationDuration: INFLICTION_DURATION,
@@ -193,7 +199,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
               derived.push({
                 id: `${event.id}-status-${si}-${fi}`,
                 name: frame.applyStatus.eventName ?? frame.applyStatus.status,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId: frame.applyStatus.status,
                 startFrame: absFrame,
                 activationDuration: frame.applyStatus.durationFrames,
@@ -215,7 +221,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
               derived.push({
                 id: `${event.id}-forced-${si}-${fi}`,
                 name: reactionColumnId,
-                ownerId: 'enemy',
+                ownerId: ENEMY_OWNER_ID,
                 columnId: reactionColumnId,
                 startFrame: absFrame,
                 activationDuration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
@@ -271,7 +277,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
             derived.push({
               id: `${event.id}-combo-inflict-${si}-${fi}`,
               name: triggerCol,
-              ownerId: 'enemy',
+              ownerId: ENEMY_OWNER_ID,
               columnId: triggerCol,
               startFrame: absFrame,
               activationDuration: INFLICTION_DURATION,
@@ -285,7 +291,7 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
             derived.push({
               id: `${event.id}-combo-phys-${si}-${fi}`,
               name: triggerCol,
-              ownerId: 'enemy',
+              ownerId: ENEMY_OWNER_ID,
               columnId: triggerCol,
               startFrame: absFrame,
               activationDuration: PHYSICAL_INFLICTION_DURATION,
@@ -301,9 +307,29 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
     }
   }
 
+  // Endministrator: combo skill (Sealing Sequence) attaches Originium Crystals to enemy.
+  // Crystals persist until consumed by battle skill (Constructive Sequence) or ultimate (Bombardment Sequence).
+  for (const event of events) {
+    if (event.ownerId === ENEMY_OWNER_ID) continue;
+    if (event.name !== CombatSkillsType.SEALING_SEQUENCE) continue;
+    // Generate a crystal event at the combo skill's start frame
+    derived.push({
+      id: `${event.id}-crystal`,
+      name: StatusType.ORIGINIUM_CRYSTAL,
+      ownerId: ENEMY_OWNER_ID,
+      columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
+      startFrame: event.startFrame,
+      activationDuration: EXCHANGE_EVENT_DURATION,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      sourceOwnerId: event.ownerId,
+      sourceSkillName: event.name,
+    });
+  }
+
   // Perfect dodge dash events → SP recovery (7.5 SP)
   for (const event of events) {
-    if (event.columnId === 'dash' && event.isPerfectDodge) {
+    if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
       derived.push({
         id: `${event.id}-sp-dodge`,
         name: 'sp-recovery',
@@ -356,8 +382,15 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
   const absorptions: AbsorptionPoint[] = [];
   const consumptions: ConsumptionPoint[] = [];
 
+  // Collect consumeStatus points that target exchange statuses (e.g. Smouldering Fire
+  // consuming Melting Flame). These free up exchange slots BEFORE absorptions that fire
+  // after the consumption frame, so we must track them within this function rather than
+  // relying on the later consumeOperatorStatuses pass.
+  type ExchangeConsumePoint = { absoluteFrame: number; ownerId: string; exchangeColumnId: string; source: StatusSource };
+  const exchangeConsumePoints: ExchangeConsumePoint[] = [];
+
   for (const event of events) {
-    if (!event.segments || event.ownerId === 'enemy') continue;
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -385,6 +418,17 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
               source: { ownerId: event.ownerId, skillName: event.name },
             });
           }
+          if (frame.consumeStatus) {
+            const exchCol = EXCHANGE_STATUS_COLUMN[frame.consumeStatus];
+            if (exchCol) {
+              exchangeConsumePoints.push({
+                absoluteFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
+                ownerId: event.ownerId,
+                exchangeColumnId: exchCol,
+                source: { ownerId: event.ownerId, skillName: event.name },
+              });
+            }
+          }
         }
       }
       cumulativeOffset += seg.durationFrames;
@@ -401,6 +445,21 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
   const removedIds = new Set<string>();
   const generated: TimelineEvent[] = [];
 
+  // Pre-compute exchange status consumption: clamp exchange events at their
+  // consumption frame so that active-slot counting sees freed slots.
+  exchangeConsumePoints.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
+  const exchangeClampMap = new Map<string, number>(); // exchange event id → clamp frame
+  for (const cp of exchangeConsumePoints) {
+    for (const ev of events) {
+      if (ev.ownerId !== cp.ownerId || ev.columnId !== cp.exchangeColumnId) continue;
+      if (exchangeClampMap.has(ev.id)) continue;
+      const endFrame = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      if (ev.startFrame <= cp.absoluteFrame && endFrame > cp.absoluteFrame) {
+        exchangeClampMap.set(ev.id, cp.absoluteFrame);
+      }
+    }
+  }
+
   for (const absorption of absorptions) {
     const { absoluteFrame, ownerId, marker } = absorption;
     const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
@@ -409,10 +468,11 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
 
     if (!inflictionColumnId || !exchangeColumnId) continue;
 
-    // Find active enemy infliction events of the matching element at this frame
+    // Find active enemy infliction events of the matching element at this frame.
+    // Durations are already extended by applyTimeStopExtension at this point.
     const activeInflictions: TimelineEvent[] = [];
     for (const ev of events) {
-      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
 
       const clamp = clampMap.get(ev.id);
@@ -427,16 +487,21 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
 
     if (activeInflictions.length === 0) continue;
 
-    // Count active exchange status events for this operator at this frame
+    // Count active exchange status events for this operator at this frame.
+    // Use exchangeClampMap to account for exchange events consumed by skills
+    // (e.g. Smouldering Fire consuming Melting Flame) that fire before this frame.
     let activeExchangeCount = 0;
     for (const ev of [...events, ...generated]) {
       if (ev.ownerId !== ownerId || ev.columnId !== exchangeColumnId) continue;
       if (removedIds.has(ev.id)) continue;
 
-      const clamp = clampMap.get(ev.id);
-      const endFrame = clamp !== undefined
-        ? clamp.frame
-        : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      const exchClamp = exchangeClampMap.get(ev.id);
+      const inflClamp = clampMap.get(ev.id);
+      const endFrame = exchClamp !== undefined
+        ? exchClamp
+        : inflClamp !== undefined
+          ? inflClamp.frame
+          : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
       if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
         activeExchangeCount++;
@@ -459,10 +524,12 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
       clampMap.set(consumed.id, { frame: absoluteFrame, source: absSource });
     }
 
-    // Generate exchange status events
+    // Generate exchange status events and check if any consumeStatus point
+    // would consume them (so later absorptions see the freed slots).
     for (let i = 0; i < stacksToConsume; i++) {
-      generated.push({
-        id: `${absorption.eventId}-absorb-${absorption.segmentIndex}-${absorption.frameIndex}-${i}`,
+      const genId = `${absorption.eventId}-absorb-${absorption.segmentIndex}-${absorption.frameIndex}-${i}`;
+      const genEvent: TimelineEvent = {
+        id: genId,
         name: marker.exchangeStatus,
         ownerId,
         columnId: exchangeColumnId,
@@ -472,7 +539,18 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
         cooldownDuration: 0,
         sourceOwnerId: ownerId,
         sourceSkillName: absorption.eventName,
-      });
+      };
+      generated.push(genEvent);
+
+      // Check if a consumeStatus point clamps this generated event
+      for (const cp of exchangeConsumePoints) {
+        if (cp.ownerId !== ownerId || cp.exchangeColumnId !== exchangeColumnId) continue;
+        if (exchangeClampMap.has(genId)) continue;
+        const endFrame = absoluteFrame + EXCHANGE_EVENT_DURATION;
+        if (absoluteFrame <= cp.absoluteFrame && endFrame > cp.absoluteFrame) {
+          exchangeClampMap.set(genId, cp.absoluteFrame);
+        }
+      }
     }
   }
 
@@ -484,7 +562,7 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
 
     const activeInflictions: TimelineEvent[] = [];
     for (const ev of events) {
-      if (ev.ownerId !== 'enemy' || ev.columnId !== inflictionColumnId) continue;
+      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== inflictionColumnId) continue;
       if (removedIds.has(ev.id)) continue;
       const clamp = clampMap.get(ev.id);
       const endFrame = clamp !== undefined
@@ -523,7 +601,7 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
         activationDuration: clampedActive,
         activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
-        eventStatus: 'consumed',
+        eventStatus: EventStatusType.CONSUMED,
         eventStatusOwnerId: clamp.source.ownerId,
         eventStatusSkillName: clamp.source.skillName,
       });
@@ -546,7 +624,7 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
 export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Collect all enemy infliction events, sorted by start frame
   const inflictions = events
-    .filter((ev) => ev.ownerId === 'enemy' && INFLICTION_COLUMN_IDS.has(ev.columnId))
+    .filter((ev) => ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
     .sort((a, b) => a.startFrame - b.startFrame);
 
   if (inflictions.length === 0) return events;
@@ -562,7 +640,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
     const incoming = inflictions[i];
     if (removedIds.has(incoming.id)) continue;
     // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-    if (incoming.eventStatus === 'consumed') continue;
+    if (incoming.eventStatus === EventStatusType.CONSUMED) continue;
 
     // Find active inflictions of a DIFFERENT element at incoming's start frame
     const activeOther: TimelineEvent[] = [];
@@ -571,7 +649,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       if (removedIds.has(prev.id)) continue;
       if (prev.columnId === incoming.columnId) continue;
       // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-      if (prev.eventStatus === 'consumed') continue;
+      if (prev.eventStatus === EventStatusType.CONSUMED) continue;
 
       // Use clamped end if already clamped by a prior reaction
       const clamp = clampMap.get(prev.id);
@@ -590,7 +668,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       generatedReactions.push({
         id: `${incoming.id}-reaction`,
         name: reactionColumnId,
-        ownerId: 'enemy',
+        ownerId: ENEMY_OWNER_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
         activationDuration: REACTION_DURATION,
@@ -598,13 +676,14 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         cooldownDuration: 0,
         sourceOwnerId: incoming.sourceOwnerId,
         sourceSkillName: incoming.sourceSkillName,
+        inflictionStacks: activeOther.length,
       });
 
       // Remove the triggering infliction
       removedIds.add(incoming.id);
 
       // Clamp all active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? 'enemy', skillName: incoming.sourceSkillName };
+      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
         clampMap.set(consumed.id, { frame: incoming.startFrame, source: reactionSource });
       }
@@ -631,7 +710,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         activationDuration: clampedActive,
         activeDuration: clampedActiveDur,
         cooldownDuration: clampedCooldown,
-        eventStatus: 'consumed',
+        eventStatus: EventStatusType.CONSUMED,
         eventStatusOwnerId: clamp.source.ownerId,
         eventStatusSkillName: clamp.source.skillName,
       });
@@ -651,7 +730,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
 export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && REACTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
       const group = reactionsByType.get(ev.columnId) ?? [];
       group.push(ev);
       reactionsByType.set(ev.columnId, group);
@@ -676,7 +755,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
       if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
         clampMap.set(current.id, {
           duration: Math.max(0, next.startFrame - current.startFrame),
-          source: { ownerId: next.sourceOwnerId ?? 'enemy', skillName: next.sourceSkillName },
+          source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
         });
       }
     }
@@ -689,7 +768,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
     return clamp !== undefined ? {
       ...ev,
       activationDuration: clamp.duration,
-      eventStatus: 'refreshed' as const,
+      eventStatus: EventStatusType.REFRESHED,
       eventStatusOwnerId: clamp.source.ownerId,
       eventStatusSkillName: clamp.source.skillName,
     } : ev;
@@ -706,7 +785,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
 export function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = inflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       inflictionsByColumn.set(ev.columnId, group);
@@ -742,7 +821,7 @@ export function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[
         processedMap.set(ev.id, {
           ...ev,
           activationDuration: extendedActive[i],
-          eventStatus: 'extended' as const,
+          eventStatus: EventStatusType.EXTENDED,
           eventStatusOwnerId: next.sourceOwnerId,
           eventStatusSkillName: next.sourceSkillName,
         });
@@ -761,7 +840,7 @@ export function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[
 export function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[] {
   const physInflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === 'enemy' && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
       const group = physInflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       physInflictionsByColumn.set(ev.columnId, group);
@@ -792,7 +871,7 @@ export function applyPhysicalInflictionRefresh(events: TimelineEvent[]): Timelin
         processedMap.set(ev.id, {
           ...ev,
           activationDuration: extendedActive[i],
-          eventStatus: 'extended' as const,
+          eventStatus: EventStatusType.EXTENDED,
           eventStatusOwnerId: next.sourceOwnerId,
           eventStatusSkillName: next.sourceSkillName,
         });
@@ -802,4 +881,269 @@ export function applyPhysicalInflictionRefresh(events: TimelineEvent[]): Timelin
 
   if (processedMap.size === 0) return events;
   return events.map((ev) => processedMap.get(ev.id) ?? ev);
+}
+
+// ── Reaction frame attachment ─────────────────────────────────────────────
+
+const COMBUSTION_TICK_COUNT = 10; // 1 per second for 10 seconds
+
+/** Maps reaction columnId → damage element. */
+const REACTION_DAMAGE_ELEMENT: Record<string, ElementType> = {
+  combustion:      ElementType.HEAT,
+  solidification:  ElementType.CRYO,
+  corrosion:       ElementType.NATURE,
+  electrification: ElementType.ELECTRIC,
+};
+
+/**
+ * Attach damage frame markers to arts reaction events.
+ *
+ * - Combustion: initial hit + DoT ticks at 1-second intervals
+ * - Solidification: initial hit + shatter at end
+ * - Corrosion: initial hit only (resistance reduction is a debuff)
+ * - Electrification: initial hit only (fragility is a debuff)
+ *
+ * Forced reactions skip the initial hit frame.
+ * Call before time-stop extension so frame positions get adjusted.
+ */
+export function attachReactionFrames(events: TimelineEvent[]): TimelineEvent[] {
+  return events.map((ev) => {
+    if (ev.ownerId !== ENEMY_OWNER_ID || !REACTION_COLUMN_IDS.has(ev.columnId)) return ev;
+    if (ev.segments) return ev; // already has frames
+
+    const segment = buildReactionSegment(ev);
+    if (!segment) return ev;
+    return { ...ev, segments: [segment] };
+  });
+}
+
+/** Label lookup for reaction segments. */
+const REACTION_SEGMENT_LABEL: Record<string, string> = {
+  combustion:      'Combustion',
+  solidification:  'Solidification',
+  corrosion:       'Corrosion',
+  electrification: 'Electrification',
+};
+
+function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; label: string; frames: EventFrameMarker[] } | null {
+  const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
+  if (!element) return null;
+
+  const forced = ev.isForced || ev.forcedReaction;
+  const frames: EventFrameMarker[] = [];
+
+  // Initial reaction hit at frame 0 (skipped for forced reactions)
+  if (!forced) {
+    frames.push({ offsetFrame: 0, damageElement: element });
+  }
+
+  if (ev.columnId === REACTION_COLUMNS.COMBUSTION) {
+    // DoT ticks at 1-second intervals
+    for (let i = 1; i <= COMBUSTION_TICK_COUNT; i++) {
+      const tickOffset = i * FPS;
+      if (tickOffset > ev.activationDuration) break;
+      frames.push({ offsetFrame: tickOffset, damageElement: element });
+    }
+  } else if (ev.columnId === REACTION_COLUMNS.SOLIDIFICATION) {
+    // Shatter at the end of the duration
+    frames.push({ offsetFrame: ev.activationDuration, damageElement: element });
+  } else if (ev.columnId === REACTION_COLUMNS.CORROSION) {
+    // Status frames at 1-second intervals showing resistance reduction ramp
+    // Base reduction (without Arts Intensity scaling) for visual reference
+    const stacks = ev.inflictionStacks ?? 1;
+    const statusLevel = Math.min(stacks, 4) as StatusLevel;
+    const durationSeconds = Math.floor(ev.activationDuration / FPS);
+    for (let i = 1; i <= durationSeconds; i++) {
+      const tickOffset = i * FPS;
+      if (tickOffset > ev.activationDuration) break;
+      const baseReduction = getCorrosionBaseReduction(statusLevel, i);
+      frames.push({
+        offsetFrame: tickOffset,
+        damageElement: element,
+        statusLabel: `-${baseReduction.toFixed(1)} Res`,
+      });
+    }
+  }
+  // Electrification: initial hit only (no additional frames)
+
+  return {
+    durationFrames: ev.activationDuration,
+    label: REACTION_SEGMENT_LABEL[ev.columnId] ?? ev.columnId,
+    frames,
+  };
+}
+
+// ── Susceptibility P5 frame attachment ────────────────────────────────────
+
+/** Game-time threshold for P5 susceptibility upgrade (20s at 120fps). */
+const P5_SUSCEPTIBILITY_THRESHOLD = 2400;
+/** Susceptibility bonus added at P5 threshold. */
+const P5_SUSCEPTIBILITY_BONUS = 0.04;
+
+
+/**
+ * Attaches a P5 frame marker to susceptibility events whose source operator
+ * has potential >= 5. The marker is placed at the game-time threshold (20s)
+ * and shows the susceptibility increase.
+ *
+ * Called before time-stop extension so `offsetFrame` uses game-time;
+ * `resolveFramePositions` will convert it to real-time later.
+ */
+export function attachSusceptibilityFrames(
+  events: TimelineEvent[],
+  loadoutStats?: Record<string, LoadoutStats>,
+): TimelineEvent[] {
+  return events.map((ev) => {
+    if (ev.ownerId !== ENEMY_OWNER_ID || ev.name !== StatusType.FOCUS) return ev;
+    if (ev.columnId !== StatusType.SUSCEPTIBILITY && ev.columnId !== StatusType.FOCUS) return ev;
+    if (ev.segments) return ev; // already has frames
+
+    const potential = ev.sourceOwnerId
+      ? (loadoutStats?.[ev.sourceOwnerId]?.potential ?? 0)
+      : 0;
+    if (potential < 5) return ev;
+
+    // P5 threshold must be within the event's base duration
+    // (activationDuration may already be time-stop-extended, but the
+    //  offset is game-time and resolveFramePositions handles extension)
+    if (P5_SUSCEPTIBILITY_THRESHOLD >= ev.activationDuration) return ev;
+
+    // Build detailed label showing base → upgraded susceptibility per element
+    const elements = ev.susceptibility ? Object.entries(ev.susceptibility) : [];
+    const detailLines = elements.map(([elem, base]) => {
+      const basePct = `${(base * 100).toFixed(0)}%`;
+      const upgradedPct = `${((base + P5_SUSCEPTIBILITY_BONUS) * 100).toFixed(0)}%`;
+      return `${ELEMENT_LABELS[elem as ElementType] ?? elem}: ${basePct} → ${upgradedPct}`;
+    });
+    const statusLabel = `P5 — High Specs Tech Tester\n${detailLines.join(', ')}`;
+
+    const frames: EventFrameMarker[] = [{
+      offsetFrame: P5_SUSCEPTIBILITY_THRESHOLD,
+      statusLabel,
+    }];
+
+    return {
+      ...ev,
+      segments: [{
+        durationFrames: ev.activationDuration,
+        label: 'Focus',
+        frames,
+      }],
+    };
+  });
+}
+
+// ── Consume reaction → apply status ────────────────────────────────────────
+
+/**
+ * Scans operator events for `consumeReaction` frame markers.
+ * If a matching reaction is active on the enemy, clamps it and optionally
+ * generates a susceptibility event (e.g. Dolly Rush consuming Corrosion).
+ */
+export function consumeReactionsForStatus(
+  events: TimelineEvent[],
+  loadoutStats: Record<string, LoadoutStats> | undefined,
+  stops: readonly TimeStopRegion[],
+): TimelineEvent[] {
+  type ConsumePoint = {
+    absoluteFrame: number;
+    reactionColumnId: string;
+    applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string };
+    sourceOwnerId: string;
+    sourceSkillName: string;
+    sourceColumnId: string;
+  };
+
+  const consumePoints: ConsumePoint[] = [];
+  for (const event of events) {
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+    const fStops = foreignStopsFor(event, stops);
+    let cumOffset = 0;
+    for (const seg of event.segments) {
+      if (seg.frames) {
+        for (const frame of seg.frames) {
+          if (frame.consumeReaction) {
+            consumePoints.push({
+              absoluteFrame: absoluteFrame(event.startFrame, cumOffset, frame.offsetFrame, fStops),
+              reactionColumnId: frame.consumeReaction.columnId,
+              applyStatus: frame.consumeReaction.applyStatus,
+              sourceOwnerId: event.ownerId,
+              sourceSkillName: event.name,
+              sourceColumnId: event.columnId,
+            });
+          }
+        }
+      }
+      cumOffset += seg.durationFrames;
+    }
+  }
+  if (consumePoints.length === 0) return events;
+
+  consumePoints.sort((a, b) => a.absoluteFrame - b.absoluteFrame);
+  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
+  const generated: TimelineEvent[] = [];
+
+  for (const cp of consumePoints) {
+    let consumed: TimelineEvent | null = null;
+    for (const ev of events) {
+      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== cp.reactionColumnId) continue;
+      const clamp = clampMap.get(ev.id);
+      const end = clamp ? clamp.frame : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      if (ev.startFrame <= cp.absoluteFrame && end > cp.absoluteFrame) { consumed = ev; break; }
+    }
+    if (!consumed) continue;
+
+    clampMap.set(consumed.id, { frame: cp.absoluteFrame, source: { ownerId: cp.sourceOwnerId, skillName: cp.sourceSkillName } });
+
+    if (cp.applyStatus && cp.applyStatus.target === TargetType.ENEMY) {
+      let resolvedSusc = cp.applyStatus.susceptibility
+        ? resolveSusceptibility(cp.applyStatus.susceptibility, cp.sourceColumnId, cp.sourceOwnerId, loadoutStats)
+        : undefined;
+      // Ardelia P1 — Dolly Paradise: +8% Physical and Arts Susceptibility when consuming Corrosion
+      if (resolvedSusc && cp.sourceSkillName === CombatSkillsType.DOLLY_RUSH) {
+        const pot = loadoutStats?.[cp.sourceOwnerId]?.potential ?? 0;
+        if (pot >= 1) {
+          resolvedSusc = { ...resolvedSusc };
+          for (const el of Object.keys(resolvedSusc) as ElementType[]) {
+            resolvedSusc[el] = (resolvedSusc[el] ?? 0) + 0.08;
+          }
+        }
+      }
+      generated.push({
+        id: `${consumed.id}-consume-susc`,
+        name: cp.applyStatus.eventName ?? cp.applyStatus.status,
+        ownerId: ENEMY_OWNER_ID,
+        columnId: cp.applyStatus.status,
+        startFrame: cp.absoluteFrame,
+        activationDuration: cp.applyStatus.durationFrames,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: cp.sourceOwnerId,
+        sourceSkillName: cp.sourceSkillName,
+        ...(resolvedSusc && { susceptibility: resolvedSusc }),
+      });
+    }
+  }
+
+  if (clampMap.size === 0 && generated.length === 0) return events;
+
+  const result: TimelineEvent[] = [];
+  for (const ev of events) {
+    const clamp = clampMap.get(ev.id);
+    if (clamp) {
+      const avail = Math.max(0, clamp.frame - ev.startFrame);
+      result.push({
+        ...ev,
+        activationDuration: Math.min(ev.activationDuration, avail),
+        activeDuration: Math.min(ev.activeDuration, Math.max(0, avail - ev.activationDuration)),
+        cooldownDuration: Math.min(ev.cooldownDuration, Math.max(0, avail - ev.activationDuration - ev.activeDuration)),
+        eventStatus: EventStatusType.CONSUMED,
+        eventStatusOwnerId: clamp.source.ownerId,
+        eventStatusSkillName: clamp.source.skillName,
+      });
+    } else {
+      result.push(ev);
+    }
+  }
+  return [...result, ...generated];
 }

@@ -53,11 +53,7 @@ function resolveOperatorId(id: string | null): Operator | null {
 
 export function applySheetData(data: SheetData) {
   setNextEventId(data.nextEventId);
-  // Migrate v1 events: backfill missing `name` field with columnId
-  let events: TimelineEvent[] = data.events.map((ev) => {
-    if (!ev.name) return { ...ev, name: ev.columnId };
-    return ev;
-  });
+  let events: TimelineEvent[] = data.events;
   // Deduplicate: if saved data has duplicate IDs (data corruption), assign fresh IDs
   const seen = new Set<string>();
   let hasDupes = false;

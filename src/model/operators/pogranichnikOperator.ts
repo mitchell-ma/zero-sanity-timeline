@@ -98,4 +98,36 @@ export class PogranichnikOperator extends Operator {
     return [TriggerConditionType.APPLY_PHYSICAL_STATUS];
   }
   get comboDescription(): string { return 'Crush or Breach consumes Vulnerability'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: '2-sequence slash applying Breach. Recovers SP based on consumed Vulnerability stacks.',
+      combo: 'Up to 3 slash sequences. Enhanced damage on 4-stack Vulnerability consumption.',
+      ultimate: 'Summons 4 Shieldguards to advance and push enemies. Generates Steel Oath points triggering additional summons and Decisive Assault.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Recovering 80 SP with own skills grants Fervent Morale for 20s — ATK +4% and Arts Intensity +4 (max 3 stacks).',
+        'Recovering 80 SP with own skills grants Fervent Morale for 20s — ATK +8% and Arts Intensity +8 (max 3 stacks).',
+      ],
+      2: [
+        'Any operator triggering ultimate\'s subsequent effects also gains Fervent Morale for 5s.',
+        'Any operator triggering ultimate\'s subsequent effects also gains Fervent Morale for 10s.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Battle skill SP return improved: +15 SP when hitting 2+ enemies.',
+      'Will +20, Physical DMG +10%.',
+      'Talent threshold reduced to 60 SP; max Fervent Morale +2.',
+      'Ultimate cost -15%.',
+      'Combo skill cooldown -2s; SP recovery x1.2.',
+    ];
+  }
 }

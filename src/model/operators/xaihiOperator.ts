@@ -99,4 +99,35 @@ export class XaihiOperator extends Operator {
   }
   get comboDescription(): string { return 'Auxiliary Crystal exhausts HP treatments'; }
   get derivedTeamColumns(): string[] { return ['team-amp']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'Multi-sequence Cryo attack with up to 5 hits. Final Strike deals Stagger when controlled.',
+      battle: 'Summons Auxiliary Crystal orbiting controlled operator. Restores HP after Final Strikes (max 2 triggers). Grants Arts Amp when operator at max HP.',
+      combo: 'Launches Auxiliary Crystal at enemy dealing Cryo DMG and Cryo Infliction.',
+      ultimate: 'Applies temporary Cryo Amp and Nature Amp to the entire team.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Enemies hit with Cryo Infliction gain +7% Cryo DMG Dealt debuff for 5s.',
+        'Enemies hit with Cryo Infliction gain +10% Cryo DMG Dealt debuff for 5s.',
+      ],
+      2: [
+        'Ultimate also dispels Cryo Infliction and Solidification from the entire team.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Agile Execution: Arts Amp from Auxiliary Crystal increased by 5%.',
+      'Link Aggregation: Ultimate energy cost -10%.',
+      'Mapping Node: Stress Testing chains to 1 additional nearby target.',
+      'Grayscale Release: Intellect +15, Treatment Efficiency +10%.',
+      'Controlled Recursion: Ultimate Amp effect multiplied by 1.1x.',
+    ];
+  }
 }

@@ -99,4 +99,37 @@ export class WulfgardOperator extends Operator {
     return [TriggerConditionType.COMBUSTION];
   }
   get comboDescription(): string { return 'Enemy has Combustion'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals 18 Stagger. Dive Attack: Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.',
+      battle: 'Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG.',
+      combo: 'Triggered when an Arts Infliction is applied to an enemy. Throws a frag grenade at the target\'s location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.',
+      ultimate: 'Fires a rapid barrage of shots and unleashes the Wolven Fury to attack nearby enemies, dealing 5 hits of Heat DMG and forcibly applying Combustion.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Heat DMG Dealt +20%.',
+        'Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Heat DMG Dealt +30%.',
+        'Whenever Wulfgard applies Combustion, he gains Scorching Fangs for 10s. This effect cannot stack. Scorching Fangs: While active, Heat DMG Dealt +30%.',
+      ],
+      2: [
+        'Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 5 SP.',
+        'Whenever the battle skill Thermite Tracers successfully consumes an Arts Reaction, return 10 SP.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Lone Wolf: Strength +15, Agility +15.',
+      'Firearm Mods: Code of Restraint improved — returns 10 additional SP.',
+      'Hunting Hour: While Scorching Fangs is active, triggering additional effects resets duration and grants teammates Scorching Fangs at 50% effectiveness.',
+      'Will of the Pack: Ultimate Energy cost -15%.',
+      'Natural Predator: Casting ultimate immediately resets the cooldown of Frag Grenade B.',
+    ];
+  }
 }

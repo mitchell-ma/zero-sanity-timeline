@@ -6,6 +6,8 @@ type StatsByRank = Readonly<Record<number, Partial<Record<StatType, number>>>>;
 export abstract class Gear {
   readonly gearType: GearType;
   readonly gearEffectType: GearEffectType;
+  /** Flat defense value (constant across all ranks). */
+  readonly defense: number;
   rank: GearRank;
 
   protected readonly statsByRank: StatsByRank;
@@ -15,15 +17,19 @@ export abstract class Gear {
     gearEffectType: GearEffectType;
     rank: GearRank;
     statsByRank: StatsByRank;
+    defense?: number;
   }) {
     this.gearType = params.gearType;
     this.gearEffectType = params.gearEffectType;
     this.rank = params.rank;
+    this.defense = params.defense ?? 0;
     this.statsByRank = params.statsByRank;
   }
 
   getStats(): Partial<Record<StatType, number>> {
-    return lookupByLevel(this.statsByRank, this.rank);
+    const stats = lookupByLevel(this.statsByRank, this.rank);
+    if (this.defense > 0) return { ...stats, [StatType.DEFENSE]: this.defense };
+    return stats;
   }
 
   /** Get stats with per-stat-line ranks. Missing keys default to `this.rank`. */
@@ -38,6 +44,7 @@ export abstract class Gear {
         result[key as StatType] = rankStats[key as StatType];
       }
     }
+    if (this.defense > 0) result[StatType.DEFENSE] = this.defense;
     return result;
   }
 

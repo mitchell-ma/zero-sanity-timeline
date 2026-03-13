@@ -93,6 +93,38 @@ export class ArdeliaOperator extends Operator {
     return [TriggerConditionType.FINAL_STRIKE];
   }
   get comboDescription(): string { return 'Final Strike on enemy with no Vulnerability or Arts Infliction'; }
-  get comboForbidsActiveColumns(): string[] { return ['heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction']; }
+  get comboForbidsActiveColumns(): string[] { return ['vulnerableInfliction', 'heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction']; }
   get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals 18 Stagger. Dive Attack: Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. Finisher: Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.',
+      battle: 'Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target.',
+      combo: 'Launches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.',
+      ultimate: 'Ardelia enters a mobile channeling state and summons the aid of Mr. Dolly. Multiple copies are thrown in random directions. Each copy deals Nature DMG when hitting the enemy. Each enemy can only take 1 damaging hit every 0.3s.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'Creates 3 Shadows of Mr. Dolly after hitting enemy; 10% chance additional Shadows spawn. Restores HP by [45 + Will x 0.38] on touch; otherwise heals lowest HP teammate. Shadows last 10s, max 10 exist.',
+        'Creates 3 Shadows of Mr. Dolly after hitting enemy; 10% chance additional Shadows spawn. Restores HP by [45 + Will x 0.38] on touch; otherwise heals lowest HP teammate. Shadows last 10s, max 10 exist.',
+        'Creates 3 Shadows of Mr. Dolly after hitting enemy; 10% chance additional Shadows spawn. Restores HP by [90 + Will x 0.75] on touch; otherwise heals lowest HP teammate. Shadows last 10s, max 10 exist.',
+      ],
+      2: [
+        'Battle skill Dolly Rush improved: Triggering the additional effect while an enemy with Corrosion is nearby immediately casts the battle skill again. Only triggers once per casting.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Dolly Paradise: +8% Physical and Arts Susceptibility when consuming Corrosion.',
+      'Game Rewards: Treats another allied operator with lowest HP at half effectiveness.',
+      'Explosive Eruption: Duration +1s; Shadow creation chance x1.2.',
+      'Rock Blossom: Ultimate Energy cost -15%.',
+      'Volcanic Steam: Cooldown -2s; DMG x1.2; Corrosion duration +4s.',
+    ];
+  }
 }

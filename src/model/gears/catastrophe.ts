@@ -19,10 +19,9 @@ export class CatastropheHeavyArmor extends Gear {
         3: {},
         4: {},
       },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Catastrophe Heavy Armor T1 (Armor) ──────────────────────────────────────
@@ -33,10 +32,9 @@ export class CatastropheHeavyArmorT1 extends Gear {
       gearEffectType: GearEffectType.CATASTROPHE,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 40,
     });
   }
-
-  static readonly DEFENSE = 40;
 }
 
 // ── Catastrophe Gloves (Gloves) ─────────────────────────────────────────────
@@ -56,10 +54,9 @@ export class CatastropheGloves extends Gear {
         3: {},
         4: {},
       },
+      defense: 30,
     });
   }
-
-  static readonly DEFENSE = 30;
 }
 
 // ── Catastrophe Filter (Kit) ────────────────────────────────────────────────
@@ -79,10 +76,9 @@ export class CatastropheFilter extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Catastrophe Gauze Cartridge (Kit) ────────────────────────────────────────
@@ -102,10 +98,9 @@ export class CatastropheGauzeCartridge extends Gear {
         3: {},
         4: {},
       },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }
 
 // ── Catastrophe Gauze Cartridge T1 (Kit) ────────────────────────────────────
@@ -116,8 +111,7 @@ export class CatastropheGauzeCartridgeT1 extends Gear {
       gearEffectType: GearEffectType.CATASTROPHE,
       rank,
       statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
+      defense: 15,
     });
   }
-
-  static readonly DEFENSE = 15;
 }

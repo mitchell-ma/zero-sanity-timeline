@@ -1,0 +1,48 @@
+- element
+    - physical
+    - heat
+    - nature
+    - cryo
+    - electric
+- arts infliction
+    - heat infliction
+    - nature infliction
+    - cryo infliction
+    - electric infliction
+- physical infliction
+    - vulnerable
+- infliction refers to all arts and physical inflictions
+- arts reaction
+    - combustion = any arts infliction + heat infliction
+    - corrosion = any arts infliction + nature infliction
+    - solidification = any arts infliction + cryo infliction
+    - electrification = any arts infliction + electric infliction
+- physical reaction
+    - [ignore] lifted = vulnerable + lift
+    - [ignore] knocked down = vulnerable + knock down
+    - breached = vulnerable + breach
+    - crushed = vulnerable + crush
+- reaction refers to all arts reaction and physical interactions resulting in a physical status
+- status level
+    - inflictions have status levels (aka stacks) ranging from 0-4 (0 means a lack of infliction), the status level will transfer during a reaction
+    - reactions have status levels ranging from 1-4, with higher levels offering enhanced effects/multipliers
+- gauge
+    - enemy stagger meter
+    - ultimate energy meter
+- resource: a gauge that often has regeneration properties
+    - skill points
+    - [ignore] stamina
+- trigger condition
+    - some events can only be activated when certain interactions occur, such as:
+        - some operator attacks require certain reactions to occur
+- combat skill types
+    - basic attack
+        - basic attack: event with multiple segments each containing multiple frames
+        - final strike: last frame of last segment in basic attack event is categorized as final strike
+            - restores SP
+            - builds stagger
+        - finisher: event that can be activated with enemy stagger as trigger condition
+            - restores SP
+    - basic skill: event activated by expending SP
+    - combo skill: event activated by meeting trigger condition(s)
+    - ultimate skill: event activated by expending ultimate gauge

@@ -99,4 +99,36 @@ export class AvywennaOperator extends Operator {
   }
   get comboDescription(): string { return 'Final Strike on Electric/Electrified enemy'; }
   get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 5 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Leaps to create maelstrom, pulling back thrown lances. Deals Electric DMG.',
+      combo: 'Throws 3 Thunderlances.',
+      ultimate: 'Throws enhanced Thunderlance EX dealing massive Electric DMG.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After a thrown/returning Thunderlance/EX hits enemy, gains 3 Ultimate Energy.',
+        'After a thrown/returning Thunderlance/EX hits enemy, gains 4 Ultimate Energy.',
+      ],
+      2: [
+        'Ultimate applies 6% Electric Susceptibility for 10s.',
+        'Ultimate applies 10% Electric Susceptibility for 10s.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Doubling Down: Talent Ultimate Energy gain +2.',
+      'Pole of Menace: Thunderlance duration +20s.',
+      'Hard Negotiator: Will +15, Electric DMG Dealt +8%.',
+      'Very Experienced: Ultimate Energy cost -15%.',
+      'Carrot and Sharp Stick: 1.15x damage multiplier against Electric Susceptible enemies.',
+    ];
+  }
 }

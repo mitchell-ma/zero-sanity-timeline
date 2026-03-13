@@ -93,4 +93,37 @@ export class GilbertaOperator extends Operator {
   }
   get comboDescription(): string { return 'Any Arts Reaction applied'; }
   get derivedEnemyColumns(): string[] { return ['enemy-susceptibility']; }
+  get derivedTeamColumns(): string[] { return ['team-ultimate-gain']; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Nature DMG. Dive Attack: dive attack dealing Nature DMG. Finisher: finisher near Staggered enemy deals massive Nature DMG and recovers SP.',
+      battle: 'Creates a gravity well dealing Nature DMG. Applies Nature Infliction on implosion.',
+      combo: 'Deals Nature DMG and Lifts targets.',
+      ultimate: 'Creates anomalous gravity field applying Nature Infliction, Slow, and Arts Susceptibility. Effect scales with Vulnerability stacks.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'All allied Guards, Casters, and Supporters gain Ultimate Gain Efficiency +4%.',
+        'All allied Guards, Casters, and Supporters gain Ultimate Gain Efficiency +7%.',
+      ],
+      2: [
+        'Hitting 2+ enemies restores [72 + Intellect x0.6] HP to operator or lowest-HP teammate.',
+        'Hitting 2+ enemies restores [108 + Intellect x0.9] HP to operator or lowest-HP teammate.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Above the Clouds: Gravity Mode effect radius +20%.',
+      'Wind Walker: Arts Susceptibility per Vulnerability stack doubled; target treated as having +1 stack (max 4).',
+      'Quick, Gentle Steps: Messenger\'s Song Ultimate Gain Efficiency +5%.',
+      'Dances with Clouds: Gravity Field Ultimate Energy cost -15%.',
+      'Special Mail: Matrix Displacement cooldown -2s; DMG multiplier 1.3x.',
+    ];
+  }
 }

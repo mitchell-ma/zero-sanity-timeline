@@ -69,6 +69,8 @@ export function getDefaultLoadoutStats(op: { rarity: number; maxTalentOneLevel: 
 type InformationPaneProps = {
   pinned?: boolean;
   onTogglePin?: () => void;
+  verbose?: boolean;
+  onToggleVerbose?: () => void;
   triggerClose?: boolean;
   debugMode?: boolean;
 } & (
@@ -88,6 +90,8 @@ type InformationPaneProps = {
       editContext?: string | null;
       rawEvents?: readonly TimelineEvent[];
       allProcessedEvents?: readonly TimelineEvent[];
+      loadoutStats?: Record<string, LoadoutStats>;
+      damageRows?: DamageTableRow[];
     }
   | {
       mode: 'loadout';
@@ -125,6 +129,7 @@ type InformationPaneProps = {
 export default function InformationPane(props: InformationPaneProps) {
   const [closing, setClosing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const verbose = props.verbose ?? true;
 
   const handleClose = useCallback(() => {
     setClosing(true);
@@ -150,6 +155,17 @@ export default function InformationPane(props: InformationPaneProps) {
       className={`event-edit-panel${closing ? ' event-edit-panel--closing' : ''}`}
     >
       <div className="edit-panel-actions">
+        {props.onToggleVerbose && <button
+          className={`edit-panel-verbose${verbose ? ' edit-panel-verbose--active' : ''}`}
+          onClick={props.onToggleVerbose}
+          title={verbose ? 'Hide descriptions' : 'Show descriptions'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16"/>
+            <path d="M4 12h10"/>
+            <path d="M4 18h14"/>
+          </svg>
+        </button>}
         {props.onTogglePin && (
           <button
             className={`edit-panel-pin${props.pinned ? ' edit-panel-pin--active' : ''}`}
@@ -187,6 +203,8 @@ export default function InformationPane(props: InformationPaneProps) {
           debugMode={props.debugMode}
           rawEvents={props.rawEvents}
           allProcessedEvents={props.allProcessedEvents}
+          loadoutStats={props.loadoutStats}
+          damageRows={props.damageRows}
         />
       ) : props.mode === 'loadout' ? (
         <LoadoutPane
@@ -198,6 +216,7 @@ export default function InformationPane(props: InformationPaneProps) {
           onStatsChange={props.onStatsChange}
           onClose={handleClose}
           allProcessedEvents={props.allProcessedEvents}
+          verbose={verbose}
         />
       ) : props.mode === 'enemy' ? (
         <EnemyPane

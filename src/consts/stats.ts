@@ -2,6 +2,8 @@ import { StatType } from "./enums";
 
 /** Default baseline for all stats (attributes and combat stats). */
 export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
+  [StatType.BASE_HP]: 0,
+  [StatType.DEFENSE]: 0,
   [StatType.ATTACK]: 0,
   [StatType.ATTACK_BONUS]: 0,
   [StatType.STRENGTH]: 0,
@@ -40,4 +42,5 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.SKILL_DAMAGE_BONUS]: 0,
   [StatType.ARTS_DAMAGE_BONUS]: 0,
   [StatType.HP_BONUS]: 0,
+  [StatType.FLAT_HP]: 0,
 };

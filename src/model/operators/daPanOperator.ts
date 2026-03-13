@@ -98,4 +98,36 @@ export class DaPanOperator extends Operator {
     return [TriggerConditionType.APPLY_VULNERABILITY];
   }
   get comboDescription(): string { return 'Enemy reaches 4 Vulnerability stacks'; }
+
+  get skillDescriptions() {
+    return {
+      basic: 'An attack with up to 4 sequences that deals Physical DMG. Dive Attack: dive attack dealing Physical DMG. Finisher: finisher near Staggered enemy deals massive Physical DMG and recovers SP.',
+      battle: 'Charges a wok flip dealing Physical DMG and Lift to enemies.',
+      combo: 'Swings wok for massive damage and Crush.',
+      ultimate: 'Lifts all nearby enemies, performs 6-sequence slashes, then knocks them down with massive damage.',
+    };
+  }
+
+  get talentDescriptions() {
+    return {
+      1: [
+        'After consuming Vulnerability stack, gain +4% Physical DMG for 10s (max 4 stacks).',
+        'After consuming Vulnerability stack, gain +6% Physical DMG for 10s (max 4 stacks).',
+      ],
+      2: [
+        'Ultimate grants Prep Ingredients stacks (max 1); combo skills reduce cooldown 40% when active.',
+        'Ultimate grants Prep Ingredients stacks (max 2); combo skills reduce cooldown 40% when active.',
+      ],
+    };
+  }
+
+  get potentialDescriptions() {
+    return [
+      'Fine Cooking: Ultimate grants +30% Physical DMG for 15s after defeating enemies.',
+      'Harmonized Flavors: Talent duration +10s, max stacks +1.',
+      'Model Employee: Strength +15, Physical DMG +8%.',
+      'Special Blend: Ultimate energy cost -15%.',
+      'Fire it Up: Single-target hits apply extra Vulnerability (once per 45s).',
+    ];
+  }
 }
