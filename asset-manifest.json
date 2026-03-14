@@ -1,9 +1,9 @@
 {
   "files": {
-    "main.css": "/zero-sanity-timeline/static/css/main.0db4a4db.css",
-    "main.js": "/zero-sanity-timeline/static/js/main.26cba268.js",
-    "static/js/399.1e89a5f1.chunk.js": "/zero-sanity-timeline/static/js/399.1e89a5f1.chunk.js",
-    "static/js/838.e77331a5.chunk.js": "/zero-sanity-timeline/static/js/838.e77331a5.chunk.js",
+    "main.css": "/zero-sanity-timeline/static/css/main.bc5ac96c.css",
+    "main.js": "/zero-sanity-timeline/static/js/main.2fbb5ede.js",
+    "static/js/399.9953f69e.chunk.js": "/zero-sanity-timeline/static/js/399.9953f69e.chunk.js",
+    "static/js/838.4b8ea3de.chunk.js": "/zero-sanity-timeline/static/js/838.4b8ea3de.chunk.js",
     "static/js/826.a1f3a7c8.chunk.js": "/zero-sanity-timeline/static/js/826.a1f3a7c8.chunk.js",
     "static/js/983.b0b0cf72.chunk.js": "/zero-sanity-timeline/static/js/983.b0b0cf72.chunk.js",
     "static/js/963.7fd7a9ef.chunk.js": "/zero-sanity-timeline/static/js/963.7fd7a9ef.chunk.js",
@@ -434,16 +434,16 @@
     "static/media/Tangtang_icon.png": "/zero-sanity-timeline/static/media/Tangtang_icon.f94a4dc29291703a7e6e.png",
     "static/media/Rossi_icon.png": "/zero-sanity-timeline/static/media/Rossi_icon.14440ffb385c33812f3b.png",
     "index.html": "/zero-sanity-timeline/index.html",
-    "main.0db4a4db.css.map": "/zero-sanity-timeline/static/css/main.0db4a4db.css.map",
-    "main.26cba268.js.map": "/zero-sanity-timeline/static/js/main.26cba268.js.map",
-    "399.1e89a5f1.chunk.js.map": "/zero-sanity-timeline/static/js/399.1e89a5f1.chunk.js.map",
-    "838.e77331a5.chunk.js.map": "/zero-sanity-timeline/static/js/838.e77331a5.chunk.js.map",
+    "main.bc5ac96c.css.map": "/zero-sanity-timeline/static/css/main.bc5ac96c.css.map",
+    "main.2fbb5ede.js.map": "/zero-sanity-timeline/static/js/main.2fbb5ede.js.map",
+    "399.9953f69e.chunk.js.map": "/zero-sanity-timeline/static/js/399.9953f69e.chunk.js.map",
+    "838.4b8ea3de.chunk.js.map": "/zero-sanity-timeline/static/js/838.4b8ea3de.chunk.js.map",
     "826.a1f3a7c8.chunk.js.map": "/zero-sanity-timeline/static/js/826.a1f3a7c8.chunk.js.map",
     "983.b0b0cf72.chunk.js.map": "/zero-sanity-timeline/static/js/983.b0b0cf72.chunk.js.map",
     "963.7fd7a9ef.chunk.js.map": "/zero-sanity-timeline/static/js/963.7fd7a9ef.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0db4a4db.css",
-    "static/js/main.26cba268.js"
+    "static/css/main.bc5ac96c.css",
+    "static/js/main.2fbb5ede.js"
   ]
 }
