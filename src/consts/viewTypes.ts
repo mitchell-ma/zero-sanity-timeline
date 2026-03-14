@@ -99,6 +99,8 @@ export interface FrameAbsorptionMarker {
 
 /** A damage frame marker within a segment. */
 export interface EventFrameMarker {
+  /** Optional name for this frame. */
+  name?: string;
   /** Frame offset from the start of the parent segment (base/raw value). */
   offsetFrame: number;
   /** Derived frame offset accounting for time-stop extension within the segment (set by processInflictionEvents). */
@@ -150,6 +152,8 @@ export interface SelectedFrame {
 
 /** A sequence segment within a multi-sequence event (e.g. basic attack chain). */
 export interface EventSegmentData {
+  /** Optional name for this segment. */
+  name?: string;
   /** Duration of this segment in frames. */
   durationFrames: number;
   /** Label for this segment (e.g. "1", "2"). */

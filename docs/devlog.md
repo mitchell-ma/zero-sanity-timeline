@@ -1,5 +1,13 @@
 # Devlog
 
+## 2026-03-13
+- New ActivationCondition system for combat skill events — a unified interface for expressing skill activation prerequisites as OR-of-ANDs conditions
+- Conditions can target statuses, combat resources (SP, HP, ultimate energy), combat skill states (ultimate active), and trigger conditions — all via a single RequirementType union
+- RequirementStateType covers state checks (ACTIVE/INACTIVE), occurrence tracking (APPLIED/CONSUMED), and comparisons (EQ/GT/GEQ/LT/LEQ)
+- ActivationCounter added for multi-occurrence requirements (e.g. Arclight's Wildland Trekker needing 3 Electrification consumes) with reset-on-met support
+- Optional name field added to Event, EventSegmentData, and EventFrameMarker
+- HP added to CombatResourceType; ComparisonType enum added for counter thresholds
+
 ## 2026-03-12
 - Skill multipliers for all 20+ operators added to the codebase — every battle skill, combo skill, and ultimate now has its actual ATK% values stored and accessible to the damage calculator
 - Arts reaction damage (Combustion, Solidification, Corrosion, Electrification) now runs through the full damage formula with defense, resistance, fragility, and amplification all accounted for
