@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/zero-sanity-timeline/static/css/main.76de971e.css",
-    "main.js": "/zero-sanity-timeline/static/js/main.f872b01a.js",
+    "main.js": "/zero-sanity-timeline/static/js/main.d386c60d.js",
     "static/js/399.aad1af5b.chunk.js": "/zero-sanity-timeline/static/js/399.aad1af5b.chunk.js",
     "static/js/860.cd013964.chunk.js": "/zero-sanity-timeline/static/js/860.cd013964.chunk.js",
     "static/js/826.a1f3a7c8.chunk.js": "/zero-sanity-timeline/static/js/826.a1f3a7c8.chunk.js",
@@ -445,7 +445,7 @@
     "static/media/Rossi_icon.png": "/zero-sanity-timeline/static/media/Rossi_icon.14440ffb385c33812f3b.png",
     "index.html": "/zero-sanity-timeline/index.html",
     "main.76de971e.css.map": "/zero-sanity-timeline/static/css/main.76de971e.css.map",
-    "main.f872b01a.js.map": "/zero-sanity-timeline/static/js/main.f872b01a.js.map",
+    "main.d386c60d.js.map": "/zero-sanity-timeline/static/js/main.d386c60d.js.map",
     "399.aad1af5b.chunk.js.map": "/zero-sanity-timeline/static/js/399.aad1af5b.chunk.js.map",
     "860.cd013964.chunk.js.map": "/zero-sanity-timeline/static/js/860.cd013964.chunk.js.map",
     "826.a1f3a7c8.chunk.js.map": "/zero-sanity-timeline/static/js/826.a1f3a7c8.chunk.js.map",
@@ -462,6 +462,6 @@
   },
   "entrypoints": [
     "static/css/main.76de971e.css",
-    "static/js/main.f872b01a.js"
+    "static/js/main.d386c60d.js"
   ]
 }
