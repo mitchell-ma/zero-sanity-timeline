@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 111,
-    [EnemyStatType.ATK]: 26,
+    [StatType.BASE_HP]: 111,
+    [StatType.BASE_ATTACK]: 26,
   },
   20: {
-    [EnemyStatType.HP]: 795,
-    [EnemyStatType.ATK]: 124,
+    [StatType.BASE_HP]: 795,
+    [StatType.BASE_ATTACK]: 124,
   },
   40: {
-    [EnemyStatType.HP]: 5029,
-    [EnemyStatType.ATK]: 386,
+    [StatType.BASE_HP]: 5029,
+    [StatType.BASE_ATTACK]: 386,
   },
   60: {
-    [EnemyStatType.HP]: 19800,
-    [EnemyStatType.ATK]: 958,
+    [StatType.BASE_HP]: 19800,
+    [StatType.BASE_ATTACK]: 958,
   },
   80: {
-    [EnemyStatType.HP]: 47629,
-    [EnemyStatType.ATK]: 1442,
+    [StatType.BASE_HP]: 47629,
+    [StatType.BASE_ATTACK]: 1442,
   },
   90: {
-    [EnemyStatType.HP]: 73373,
-    [EnemyStatType.ATK]: 1652,
+    [StatType.BASE_HP]: 73373,
+    [StatType.BASE_ATTACK]: 1652,
   },
 };
 
@@ -48,10 +48,10 @@ export class WaterlampEnemy extends Enemy {
       attackElement: ElementType.NATURE,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 80,
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 80,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

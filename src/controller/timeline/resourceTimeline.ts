@@ -229,7 +229,7 @@ export abstract class ResourceTimeline {
    * falls in that interval, we insert a point at the stop start (with regened value)
    * and at the stop end (same value, flat).
    */
-  private insertTimeStopPoints(points: ResourcePoint[]): ResourcePoint[] {
+  protected insertTimeStopPoints(points: ResourcePoint[]): ResourcePoint[] {
     if (this.timeStops.length === 0 || points.length < 2) return points;
 
     const result: ResourcePoint[] = [points[0]];

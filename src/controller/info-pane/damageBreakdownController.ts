@@ -1,5 +1,5 @@
 import type { DamageParams, StatusDamageParams } from '../../model/calculation/damageFormulas';
-import { ElementType } from '../../consts/enums';
+import { ElementType, StatType } from '../../consts/enums';
 
 /** Multiplier display entry for the breakdown table. */
 export interface MultiplierEntry {
@@ -16,7 +16,10 @@ export interface MultiplierEntry {
 }
 
 function formatValue(value: number, format: MultiplierEntry['format']): string {
-  if (format === 'flat') return Math.round(value).toLocaleString();
+  if (format === 'flat') {
+    const rounded = Math.round(value);
+    return rounded >= 1_000_000 ? rounded.toLocaleString() : String(rounded);
+  }
   if (format === 'percent') return `${(value * 100).toFixed(1)}%`;
   return `x${value.toFixed(4)}`;
 }
@@ -49,6 +52,13 @@ function makeSubEntry(label: string, value: number, source: string, format: 'per
     cssClass: format === 'percent' ? classifyBonus(value) : classifyValue(value, format),
   };
 }
+
+const STAT_LABELS: Partial<Record<StatType, string>> = {
+  [StatType.STRENGTH]: 'STR',
+  [StatType.AGILITY]: 'AGI',
+  [StatType.INTELLECT]: 'INT',
+  [StatType.WILL]: 'WIL',
+};
 
 const ELEMENT_DMG_LABELS: Record<ElementType, string> = {
   [ElementType.NONE]: 'Physical DMG%',
@@ -88,18 +98,50 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       value: params.attack,
       format: 'flat',
       source: '(Operator ATK + Weapon ATK) x (1 + ATK%) + flat bonuses',
+      subEntries: sub ? [
+        makeSubEntry('Operator Base ATK', sub.operatorBaseAttack, 'From operator level', 'flat'),
+        makeSubEntry('Weapon Base ATK', sub.weaponBaseAttack, 'From weapon level', 'flat'),
+        makeSubEntry('ATK%', sub.atkBonusPct, 'Sum of all ATK% sources'),
+        ...(sub.flatAtkBonuses > 0 ? [makeSubEntry('Flat ATK Bonus', sub.flatAtkBonuses, 'Gear effects, consumables, tacticals', 'flat')] : []),
+      ] : undefined,
     },
+    ...(sub?.segmentMultiplier != null ? [{
+      label: 'Skill Segment Multiplier',
+      value: sub.segmentMultiplier,
+      format: 'percent' as const,
+      source: sub.segmentFrameCount != null
+        ? `Total segment ATK% spread across ${sub.segmentFrameCount} frames`
+        : 'Total segment ATK%',
+    }] : []),
     {
-      label: 'Skill Multiplier',
+      label: sub?.isPerTickMultiplier ? 'Skill Tick Multiplier' : 'Skill Frame Multiplier',
       value: params.baseMultiplier,
       format: 'percent',
-      source: 'Skill scaling (% of ATK)',
+      source: sub?.isPerTickMultiplier
+        ? 'Per-tick ATK% (ramping: base + increment × tick)'
+        : sub?.segmentFrameCount != null
+          ? `Per-frame ATK% (segment ÷ ${sub.segmentFrameCount} frames)`
+          : 'Skill scaling (% of ATK)',
     },
     {
       label: 'Attribute Bonus',
       value: params.attributeBonus,
       format: 'multiplier',
       source: '1 + 0.005 x Main Attr + 0.002 x Secondary Attr',
+      subEntries: sub ? [
+        makeSubEntry(
+          `${STAT_LABELS[sub.mainAttrType] ?? sub.mainAttrType} (Main)`,
+          sub.mainAttrValue,
+          `+${(sub.mainAttrValue * 0.005 * 100).toFixed(1)}% (x0.005)`,
+          'flat',
+        ),
+        makeSubEntry(
+          `${STAT_LABELS[sub.secondaryAttrType] ?? sub.secondaryAttrType} (Secondary)`,
+          sub.secondaryAttrValue,
+          `+${(sub.secondaryAttrValue * 0.002 * 100).toFixed(1)}% (x0.002)`,
+          'flat',
+        ),
+      ] : undefined,
     },
     {
       label: 'Damage Bonus',
@@ -120,6 +162,9 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       value: params.ampMultiplier,
       format: 'multiplier',
       source: params.ampMultiplier > 1.001 ? 'Arts Amp active' : 'No Arts Amp',
+      subEntries: sub && sub.ampSources.length > 0 ? sub.ampSources.map((s) =>
+        makeSubEntry(s.label, s.value, 'Amp bonus source'),
+      ) : undefined,
     },
     {
       label: 'Stagger',
@@ -153,12 +198,18 @@ export function buildMultiplierEntries(params: DamageParams): MultiplierEntry[] 
       value: params.susceptibilityMultiplier,
       format: 'multiplier',
       source: params.susceptibilityMultiplier > 1.001 ? 'Element susceptibility active' : 'No susceptibility',
+      subEntries: sub && sub.susceptibilitySources.length > 0 ? sub.susceptibilitySources.map((s) =>
+        makeSubEntry(s.label, s.value, 'Susceptibility source'),
+      ) : undefined,
     },
     {
       label: 'Fragility',
       value: params.fragilityMultiplier,
       format: 'multiplier',
       source: params.fragilityMultiplier > 1.001 ? 'Increased DMG Taken active' : 'No fragility debuff',
+      subEntries: sub && sub.fragilitySources.length > 0 ? sub.fragilitySources.map((s) =>
+        makeSubEntry(s.label, s.value, 'Fragility source'),
+      ) : undefined,
     },
     {
       label: 'DMG Reduction',

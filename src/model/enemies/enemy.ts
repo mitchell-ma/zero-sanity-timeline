@@ -1,34 +1,34 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
 } from "../../consts/enums";
 import { lookupByLevel } from "../../utils/lookupByLevel";
+import { DEFAULT_STATS } from "../../consts/stats";
 
-/** Default baseline for all enemy stats. */
-export const DEFAULT_ENEMY_STATS: Readonly<Record<EnemyStatType, number>> = {
-  [EnemyStatType.HP]: 0,
-  [EnemyStatType.ATK]: 0,
-  [EnemyStatType.DEF]: 100,
-  [EnemyStatType.PHYSICAL_RESISTANCE]: 1,
-  [EnemyStatType.HEAT_RESISTANCE]: 1,
-  [EnemyStatType.ELECTRIC_RESISTANCE]: 1,
-  [EnemyStatType.CRYO_RESISTANCE]: 1,
-  [EnemyStatType.NATURE_RESISTANCE]: 1,
-  [EnemyStatType.AETHER_RESISTANCE]: 1,
-  [EnemyStatType.STAGGER_HP]: 60,
-  [EnemyStatType.STAGGER_RECOVERY]: 6,
-  [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1,
-  [EnemyStatType.FINISHER_SP_GAIN]: 25,
-  [EnemyStatType.ATTACK_RANGE]: 2,
-  [EnemyStatType.WEIGHT]: 1,
+/** Default baseline for all enemy stats (spreads from DEFAULT_STATS, overrides enemy-specific values). */
+export const DEFAULT_ENEMY_STATS: Readonly<Record<StatType, number>> = {
+  ...DEFAULT_STATS,
+  [StatType.BASE_DEFENSE]: 100,
+  [StatType.PHYSICAL_RESISTANCE]: 1,
+  [StatType.HEAT_RESISTANCE]: 1,
+  [StatType.ELECTRIC_RESISTANCE]: 1,
+  [StatType.CRYO_RESISTANCE]: 1,
+  [StatType.NATURE_RESISTANCE]: 1,
+  [StatType.AETHER_RESISTANCE]: 1,
+  [StatType.STAGGER_HP]: 60,
+  [StatType.STAGGER_RECOVERY]: 6,
+  [StatType.FINISHER_ATK_MULTIPLIER]: 1,
+  [StatType.FINISHER_SP_GAIN]: 25,
+  [StatType.ATTACK_RANGE]: 2,
+  [StatType.WEIGHT]: 1,
 };
 
 export type EnemyStatsByLevel = Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 >;
 
 export abstract class Enemy {
@@ -40,7 +40,7 @@ export abstract class Enemy {
   readonly attackElement: ElementType | null;
 
   level: number;
-  stats: Record<EnemyStatType, number>;
+  stats: Record<StatType, number>;
 
   readonly statsByLevel: EnemyStatsByLevel;
 
@@ -53,7 +53,7 @@ export abstract class Enemy {
     location: EnemyLocationType;
     attackElement: ElementType | null;
     statsByLevel: EnemyStatsByLevel;
-    baseStats?: Partial<Record<EnemyStatType, number>>;
+    baseStats?: Partial<Record<StatType, number>>;
   }) {
     const {
       enemyType,
@@ -89,26 +89,26 @@ export abstract class Enemy {
   }
 
   getHp(): number {
-    return this.stats[EnemyStatType.HP];
+    return this.stats[StatType.BASE_HP];
   }
 
   getAtk(): number {
-    return this.stats[EnemyStatType.ATK];
+    return this.stats[StatType.BASE_ATTACK];
   }
 
   getDef(): number {
-    return this.stats[EnemyStatType.DEF];
+    return this.stats[StatType.BASE_DEFENSE];
   }
 
   getResistance(element: ElementType): number {
-    const resistanceMap: Record<ElementType, EnemyStatType> = {
-      [ElementType.NONE]: EnemyStatType.PHYSICAL_RESISTANCE,
-      [ElementType.PHYSICAL]: EnemyStatType.PHYSICAL_RESISTANCE,
-      [ElementType.HEAT]: EnemyStatType.HEAT_RESISTANCE,
-      [ElementType.ELECTRIC]: EnemyStatType.ELECTRIC_RESISTANCE,
-      [ElementType.CRYO]: EnemyStatType.CRYO_RESISTANCE,
-      [ElementType.NATURE]: EnemyStatType.NATURE_RESISTANCE,
+    const resistanceMap: Record<ElementType, StatType> = {
+      [ElementType.NONE]: StatType.PHYSICAL_RESISTANCE,
+      [ElementType.PHYSICAL]: StatType.PHYSICAL_RESISTANCE,
+      [ElementType.HEAT]: StatType.HEAT_RESISTANCE,
+      [ElementType.ELECTRIC]: StatType.ELECTRIC_RESISTANCE,
+      [ElementType.CRYO]: StatType.CRYO_RESISTANCE,
+      [ElementType.NATURE]: StatType.NATURE_RESISTANCE,
     };
-    return this.stats[resistanceMap[element]] ?? this.stats[EnemyStatType.AETHER_RESISTANCE];
+    return this.stats[resistanceMap[element]] ?? this.stats[StatType.AETHER_RESISTANCE];
   }
 }

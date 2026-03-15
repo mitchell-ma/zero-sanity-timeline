@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { BossEnemy } from "../bossEnemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 3461,
-    [EnemyStatType.ATK]: 66,
+    [StatType.BASE_HP]: 3461,
+    [StatType.BASE_ATTACK]: 66,
   },
   20: {
-    [EnemyStatType.HP]: 24839,
-    [EnemyStatType.ATK]: 310,
+    [StatType.BASE_HP]: 24839,
+    [StatType.BASE_ATTACK]: 310,
   },
   40: {
-    [EnemyStatType.HP]: 157171,
-    [EnemyStatType.ATK]: 965,
+    [StatType.BASE_HP]: 157171,
+    [StatType.BASE_ATTACK]: 965,
   },
   60: {
-    [EnemyStatType.HP]: 618759,
-    [EnemyStatType.ATK]: 2395,
+    [StatType.BASE_HP]: 618759,
+    [StatType.BASE_ATTACK]: 2395,
   },
   80: {
-    [EnemyStatType.HP]: 1488392,
-    [EnemyStatType.ATK]: 3604,
+    [StatType.BASE_HP]: 1488392,
+    [StatType.BASE_ATTACK]: 3604,
   },
   90: {
-    [EnemyStatType.HP]: 2292909,
-    [EnemyStatType.ATK]: 4130,
+    [StatType.BASE_HP]: 2292909,
+    [StatType.BASE_ATTACK]: 4130,
   },
 };
 
@@ -48,12 +48,12 @@ export class RhodagnEnemy extends BossEnemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 280,
-        [EnemyStatType.STAGGER_RECOVERY]: 10,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.75,
-        [EnemyStatType.FINISHER_SP_GAIN]: 100,
-        [EnemyStatType.ATTACK_RANGE]: 12,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.STAGGER_HP]: 280,
+        [StatType.STAGGER_RECOVERY]: 10,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.75,
+        [StatType.FINISHER_SP_GAIN]: 100,
+        [StatType.ATTACK_RANGE]: 12,
+        [StatType.WEIGHT]: 2,
       },
       staggerNodes: 1,
       staggerNodeRecoverySeconds: 3.5,

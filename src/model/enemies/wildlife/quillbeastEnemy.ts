@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 831,
-    [EnemyStatType.ATK]: 39,
+    [StatType.BASE_HP]: 831,
+    [StatType.BASE_ATTACK]: 39,
   },
   20: {
-    [EnemyStatType.HP]: 5961,
-    [EnemyStatType.ATK]: 186,
+    [StatType.BASE_HP]: 5961,
+    [StatType.BASE_ATTACK]: 186,
   },
   40: {
-    [EnemyStatType.HP]: 37721,
-    [EnemyStatType.ATK]: 579,
+    [StatType.BASE_HP]: 37721,
+    [StatType.BASE_ATTACK]: 579,
   },
   60: {
-    [EnemyStatType.HP]: 148502,
-    [EnemyStatType.ATK]: 1437,
+    [StatType.BASE_HP]: 148502,
+    [StatType.BASE_ATTACK]: 1437,
   },
   80: {
-    [EnemyStatType.HP]: 357214,
-    [EnemyStatType.ATK]: 2163,
+    [StatType.BASE_HP]: 357214,
+    [StatType.BASE_ATTACK]: 2163,
   },
   90: {
-    [EnemyStatType.HP]: 550298,
-    [EnemyStatType.ATK]: 2478,
+    [StatType.BASE_HP]: 550298,
+    [StatType.BASE_ATTACK]: 2478,
   },
 };
 
@@ -48,13 +48,13 @@ export class QuillbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 200,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 200,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

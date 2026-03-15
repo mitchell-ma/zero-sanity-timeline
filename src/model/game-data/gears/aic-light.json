@@ -1,0 +1,120 @@
+{
+  "gearSetType": "AIC_LIGHT",
+  "name": "AIC Light",
+  "suitID": "suit_wisdwill01",
+  "rarity": 2,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "AIC_LIGHT",
+    "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s."
+  },
+  "pieces": [
+    {
+      "gearType": "AIC_LIGHT_ARMOR",
+      "name": "Aic Light Armor",
+      "gearCategory": "ARMOR",
+      "defense": 22.4,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 30,
+          "WILL": 30,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.081
+        },
+        "2": {
+          "INTELLECT": 30,
+          "WILL": 30,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.081
+        },
+        "3": {
+          "INTELLECT": 30,
+          "WILL": 30,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.081
+        },
+        "4": {
+          "INTELLECT": 30,
+          "WILL": 30,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.081
+        }
+      }
+    },
+    {
+      "gearType": "AIC_TACTICAL_GLOVES",
+      "name": "Aic Tactical Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 16.8,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 23,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.135
+        },
+        "2": {
+          "INTELLECT": 23,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.135
+        },
+        "3": {
+          "INTELLECT": 23,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.135
+        },
+        "4": {
+          "INTELLECT": 23,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.135
+        }
+      }
+    },
+    {
+      "gearType": "AIC_LIGHT_PLATE",
+      "name": "Aic Light Plate",
+      "gearCategory": "KIT",
+      "defense": 8.4,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 16,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "2": {
+          "INTELLECT": 16,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "3": {
+          "INTELLECT": 16,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "4": {
+          "INTELLECT": 16,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.162
+        }
+      }
+    },
+    {
+      "gearType": "AIC_CERAMIC_PLATE",
+      "name": "Aic Ceramic Plate",
+      "gearCategory": "KIT",
+      "defense": 8.4,
+      "allLevels": {
+        "1": {
+          "WILL": 16,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "2": {
+          "WILL": 16,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "3": {
+          "WILL": 16,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.162
+        },
+        "4": {
+          "WILL": 16,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.162
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

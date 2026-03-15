@@ -1,0 +1,184 @@
+{
+  "gearSetType": "ETERNAL_XIRANITE",
+  "name": "Eternal Xiranite",
+  "suitID": "suit_usp02",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "ETERNAL_XIRANITE",
+    "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer applies Amp, Protected, Susceptibility, or Weakened, other teammates gain DMG Dealt +{dmg_up:0%} for {duration}s. This effect cannot stack."
+  },
+  "pieces": [
+    {
+      "gearType": "ETERNAL_XIRANITE_ARMOR",
+      "name": "Eternal Xiranite Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "INTELLECT": 58,
+          "ARTS_INTENSITY": 20.7
+        },
+        "2": {
+          "WILL": 95,
+          "INTELLECT": 63,
+          "ARTS_INTENSITY": 22.8
+        },
+        "3": {
+          "WILL": 104,
+          "INTELLECT": 69,
+          "ARTS_INTENSITY": 24.8
+        },
+        "4": {
+          "WILL": 113,
+          "INTELLECT": 75,
+          "ARTS_INTENSITY": 26.9
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_GLOVES",
+      "name": "Eternal Xiranite Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 65,
+          "STRENGTH": 43,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.205
+        },
+        "2": {
+          "INTELLECT": 71,
+          "STRENGTH": 47,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.226
+        },
+        "3": {
+          "INTELLECT": 78,
+          "STRENGTH": 51,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+        },
+        "4": {
+          "INTELLECT": 84,
+          "STRENGTH": 55,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.267
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_GLOVES_T1",
+      "name": "Eternal Xiranite Gloves T1",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 65,
+          "WILL": 43,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.205
+        },
+        "2": {
+          "INTELLECT": 71,
+          "WILL": 47,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.226
+        },
+        "3": {
+          "INTELLECT": 78,
+          "WILL": 51,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+        },
+        "4": {
+          "INTELLECT": 84,
+          "WILL": 55,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.267
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_POWER_CORE",
+      "name": "Eternal Xiranite Power Core",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "STRENGTH": 21,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+        },
+        "2": {
+          "INTELLECT": 35,
+          "STRENGTH": 23,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.271
+        },
+        "3": {
+          "INTELLECT": 38,
+          "STRENGTH": 25,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.296
+        },
+        "4": {
+          "INTELLECT": 41,
+          "STRENGTH": 27,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.32
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_POWER_CORE_T1",
+      "name": "Eternal Xiranite Power Core T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "WILL": 21,
+          "TREATMENT_BONUS": 0.207
+        },
+        "2": {
+          "INTELLECT": 35,
+          "WILL": 23,
+          "TREATMENT_BONUS": 0.228
+        },
+        "3": {
+          "INTELLECT": 38,
+          "WILL": 25,
+          "TREATMENT_BONUS": 0.248
+        },
+        "4": {
+          "INTELLECT": 41,
+          "WILL": 27,
+          "TREATMENT_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_AUXILIARY_ARM",
+      "name": "Eternal Xiranite Auxiliary Arm",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "INTELLECT": 21,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+        },
+        "2": {
+          "WILL": 35,
+          "INTELLECT": 23,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.271
+        },
+        "3": {
+          "WILL": 38,
+          "INTELLECT": 25,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.296
+        },
+        "4": {
+          "WILL": 41,
+          "INTELLECT": 27,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.32
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1246,
-    [EnemyStatType.ATK]: 44,
+    [StatType.BASE_HP]: 1246,
+    [StatType.BASE_ATTACK]: 44,
   },
   20: {
-    [EnemyStatType.HP]: 8942,
-    [EnemyStatType.ATK]: 209,
+    [StatType.BASE_HP]: 8942,
+    [StatType.BASE_ATTACK]: 209,
   },
   40: {
-    [EnemyStatType.HP]: 56582,
-    [EnemyStatType.ATK]: 651,
+    [StatType.BASE_HP]: 56582,
+    [StatType.BASE_ATTACK]: 651,
   },
   60: {
-    [EnemyStatType.HP]: 222753,
-    [EnemyStatType.ATK]: 1617,
+    [StatType.BASE_HP]: 222753,
+    [StatType.BASE_ATTACK]: 1617,
   },
   80: {
-    [EnemyStatType.HP]: 535821,
-    [EnemyStatType.ATK]: 2433,
+    [StatType.BASE_HP]: 535821,
+    [StatType.BASE_ATTACK]: 2433,
   },
   90: {
-    [EnemyStatType.HP]: 825447,
-    [EnemyStatType.ATK]: 2788,
+    [StatType.BASE_HP]: 825447,
+    [StatType.BASE_ATTACK]: 2788,
   },
 };
 
@@ -48,12 +48,12 @@ export class ImbuedQuillbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

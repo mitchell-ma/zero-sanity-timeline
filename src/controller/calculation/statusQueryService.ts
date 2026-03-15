@@ -12,7 +12,7 @@ import {
   REACTION_COLUMN_IDS,
   REACTION_COLUMNS,
 } from '../../model/channels';
-import { getCorrosionReduction, getScorchingHeartIgnoredResistance } from '../../model/calculation/damageFormulas';
+import { getCorrosionReduction, getScorchingHeartIgnoredResistance, MultiplierSource } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
 import { collectTimeStopRegions, type TimeStopRegion } from '../timeline/processTimeStop';
 import type { LoadoutStats } from '../../view/InformationPane';
@@ -317,7 +317,7 @@ export class StatusQueryService {
       const perIntellect = ev.statusValue ?? 0;
       if (perIntellect === 0 || !ev.sourceOwnerId) continue;
       const intellect = this.aggregatedStats?.[ev.sourceOwnerId]?.stats[StatType.INTELLECT] ?? 0;
-      return perIntellect * Math.floor(intellect);
+      return perIntellect * intellect;
     }
     return 0;
   }
@@ -437,6 +437,84 @@ export class StatusQueryService {
   /** Whether enemy has active Solidification at the given frame. */
   isSolidificationActive(frame: number): boolean {
     return this.solidificationEvents.some(ev => this.isActive(ev, frame));
+  }
+
+  /** Get individual susceptibility sources at a given frame. */
+  getSusceptibilitySources(frame: number, element: ElementType): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+    for (const ev of this.susceptibilityEvents) {
+      if (this.isActive(ev, frame) && ev.susceptibility?.[element]) {
+        let bonus = ev.susceptibility[element];
+        let label = ev.name ?? ev.columnId;
+        if (ev.name === StatusType.FOCUS && ev.sourceOwnerId) {
+          const potential = this.loadoutStats[ev.sourceOwnerId]?.potential ?? 0;
+          if (potential >= 5 && this.gameTimeElapsed(ev.startFrame, frame) >= FOCUS_P5_THRESHOLD_FRAMES) {
+            bonus += FOCUS_P5_SUSCEPTIBILITY_BONUS;
+            label += ' (P5 +4%)';
+          }
+        }
+        sources.push({ label, value: bonus });
+      }
+    }
+    return sources;
+  }
+
+  /** Get individual fragility sources at a given frame. */
+  getFragilitySources(frame: number, element: ElementType): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+
+    if (ARTS_ELEMENTS.has(element)) {
+      for (const ev of this.electrificationEvents) {
+        if (!this.isActive(ev, frame)) continue;
+        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
+        const value = ELECTRIFICATION_ARTS_FRAGILITY[statusLevel] ?? 0;
+        if (value > 0) sources.push({ label: `Electrification Lv${statusLevel}`, value });
+      }
+    }
+
+    if (element === ElementType.PHYSICAL) {
+      for (const ev of this.breachEvents) {
+        if (!this.isActive(ev, frame)) continue;
+        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
+        const value = BREACH_PHYSICAL_FRAGILITY[statusLevel] ?? 0;
+        if (value > 0) sources.push({ label: `Breach Lv${statusLevel}`, value });
+      }
+    }
+
+    for (const ev of this.weaponFragilityEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      const slotId = ev.columnId.slice(FRAGILITY_COLUMN_PREFIX.length);
+      const effects = this.weaponFragility[slotId];
+      if (!effects) continue;
+      for (const eff of effects) {
+        if (eff.elements.includes(element)) {
+          sources.push({ label: `Weapon debuff (${slotId})`, value: eff.bonus });
+        }
+      }
+    }
+
+    for (const tf of this.talentFragility) {
+      if (!tf.elements.includes(element)) continue;
+      const events = tf.requiredColumnId === INFLICTION_COLUMNS.CRYO ? this.cryoInflictionEvents
+        : tf.requiredColumnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL ? this.originiumCrystalEvents
+        : [];
+      if (events.some(ev => this.isActive(ev, frame))) {
+        sources.push({ label: 'Talent fragility', value: tf.bonus });
+      }
+    }
+
+    return sources;
+  }
+
+  /** Get individual amp sources at a given frame. */
+  getAmpSources(frame: number): MultiplierSource[] {
+    const sources: MultiplierSource[] = [];
+    for (const ev of this.artsAmpEvents) {
+      if (!this.isActive(ev, frame)) continue;
+      const value = ev.statusValue ?? DEFAULT_AMP_BONUS;
+      sources.push({ label: ev.name ?? 'Arts Amp', value });
+    }
+    return sources;
   }
 
   getIgnoredResistance(frame: number, element: ElementType, attackerOwnerId: string): number {

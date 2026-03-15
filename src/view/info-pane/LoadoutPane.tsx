@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
-import { StatType } from '../../consts/enums';
+import { StatType, StatOwnerType } from '../../consts/enums';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { LoadoutStats } from '../InformationPane';
 import { StatField, LevelSelect } from './SharedFields';
@@ -8,16 +8,18 @@ import {
   formatStatValue,
   resolveWeaponBreakdown,
   resolveGearBreakdown,
+  resolveGearBonusSummary,
   resolveTactical,
   resolveAggregatedStats,
 } from '../../controller/info-pane/loadoutPaneController';
+import type { StatSourceEntry } from '../../controller/calculation/loadoutAggregator';
 
 // ── Stat display labels ─────────────────────────────────────────────────────
 
 const STAT_LABELS: Record<StatType, string> = {
   [StatType.BASE_HP]: 'HP (Base)',
-  [StatType.DEFENSE]: 'DEF',
-  [StatType.ATTACK]: 'ATK (Base)',
+  [StatType.BASE_DEFENSE]: 'DEF',
+  [StatType.BASE_ATTACK]: 'ATK (Base)',
   [StatType.ATTACK_BONUS]: 'ATK%',
   [StatType.STRENGTH]: 'Strength',
   [StatType.STRENGTH_BONUS]: 'Strength%',
@@ -56,6 +58,13 @@ const STAT_LABELS: Record<StatType, string> = {
   [StatType.ARTS_DAMAGE_BONUS]: 'Arts DMG%',
   [StatType.HP_BONUS]: 'HP%',
   [StatType.FLAT_HP]: 'HP',
+  // ── Enemy stats ──────────────────────────────────────────────────────────────
+  [StatType.STAGGER_HP]: 'Stagger HP',
+  [StatType.STAGGER_RECOVERY]: 'Stagger Recovery',
+  [StatType.FINISHER_ATK_MULTIPLIER]: 'Finisher ATK Mult',
+  [StatType.FINISHER_SP_GAIN]: 'Finisher SP Gain',
+  [StatType.ATTACK_RANGE]: 'Attack Range',
+  [StatType.WEIGHT]: 'Weight',
 };
 
 const DESC_FONT_SIZE = 14;
@@ -91,6 +100,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
 
   const weaponData = resolveWeaponBreakdown(operatorId, loadout, stats);
   const gearData = resolveGearBreakdown(operatorId, loadout, stats);
+  const gearBonus = resolveGearBonusSummary(gearData);
   const { foodName, tactical } = resolveTactical(loadout, stats);
 
   return (
@@ -288,6 +298,24 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           </div>
         )}
 
+        {gearBonus && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Gear Bonus</span>
+            {gearBonus.totalDefense > 0 && (
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>DEF</span>
+                <span style={statValueStyle}>{gearBonus.totalDefense.toFixed(0)}</span>
+              </div>
+            )}
+            {gearBonus.stats.map((s) => (
+              <div key={s.stat} style={statRowStyle}>
+                <span style={statLabelStyle}>{STAT_LABELS[s.stat] ?? s.stat}</span>
+                <span style={statValueStyle}>{formatStatValue(s.stat, s.value)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {(foodName || tactical) && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Tactical</span>
@@ -317,10 +345,11 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
 function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
   operatorId: string; loadout: OperatorLoadoutState; stats: LoadoutStats; color: string;
 }) {
-  const data = resolveAggregatedStats(operatorId, loadout, stats);
+  const data = resolveAggregatedStats(operatorId, loadout, stats, StatOwnerType.OPERATOR);
   if (!data) return null;
 
   const { agg } = data;
+  const totalDefense = agg.stats[StatType.BASE_DEFENSE] ?? 0;
 
   return (
     <>
@@ -376,33 +405,69 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
         </div>
         <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
           <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Defense</span>
-          <span style={statValueStyle}>—</span>
+          <span style={{ ...statValueStyle, color: totalDefense === 0 ? 'var(--text-muted)' : undefined }}>{totalDefense > 0 ? totalDefense.toFixed(0) : '—'}</span>
         </div>
       </div>
 
       <div className="edit-panel-section">
         <span className="edit-section-label">Attributes</span>
         {data.attributes.map((a) => (
-          <div key={a.stat} style={statRowStyle}>
-            <span style={statLabelStyle}>{STAT_LABELS[a.stat]}</span>
-            <span style={{ ...statValueStyle, color: a.isZero ? 'var(--text-muted)' : undefined }}>
-              {a.isZero ? '—' : formatStatValue(a.stat, a.value)}
-            </span>
-          </div>
+          <StatWithSources
+            key={a.stat}
+            stat={a.stat}
+            value={a.isZero ? undefined : a.value}
+            sources={agg.statSources[a.stat]}
+          />
         ))}
       </div>
 
       <div className="edit-panel-section">
         <span className="edit-section-label">Other Stats</span>
         {data.otherStats.map((s) => (
-          <div key={s.stat} style={statRowStyle}>
-            <span style={statLabelStyle}>{STAT_LABELS[s.stat]}</span>
-            <span style={{ ...statValueStyle, color: s.isZero ? 'var(--text-muted)' : undefined }}>
-              {s.isZero ? '—' : formatStatValue(s.stat, s.value)}
-            </span>
-          </div>
+          <StatWithSources
+            key={s.stat}
+            stat={s.stat}
+            value={s.isZero ? undefined : s.value}
+            displayValue={s.isZero ? undefined : formatStatValue(s.stat, s.value)}
+            sources={agg.statSources[s.stat]}
+          />
         ))}
       </div>
+    </>
+  );
+}
+
+// ── Stat with permanent source breakdown (nested | lines like ATK) ───────────
+
+function StatWithSources({ stat, value, displayValue, sources }: {
+  stat: StatType;
+  value?: number;
+  displayValue?: string;
+  sources?: StatSourceEntry[];
+}) {
+  const isZero = value == null;
+  const hasSources = sources && sources.length > 0 && !isZero;
+
+  return (
+    <>
+      <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
+        <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+          {STAT_LABELS[stat]}
+        </span>
+        <span style={{ ...statValueStyle, color: isZero ? 'var(--text-muted)' : undefined }}>
+          {isZero ? '—' : (displayValue ?? formatStatValue(stat, value!))}
+        </span>
+      </div>
+      {hasSources && (
+        <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+          {sources!.map((s, i) => (
+            <div key={i} style={statRowStyle}>
+              <span style={statLabelStyle}>{s.source}</span>
+              <span style={statValueStyle}>{formatStatValue(stat, s.value)}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

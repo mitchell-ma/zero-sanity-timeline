@@ -1,0 +1,661 @@
+{
+  "weaponId": "MOUNTAIN_BEARER",
+  "name": "Mountain Bearer",
+  "weaponType": "POLEARM",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 51
+    },
+    {
+      "level": 2,
+      "baseAttack": 56
+    },
+    {
+      "level": 3,
+      "baseAttack": 61
+    },
+    {
+      "level": 4,
+      "baseAttack": 66
+    },
+    {
+      "level": 5,
+      "baseAttack": 71
+    },
+    {
+      "level": 6,
+      "baseAttack": 76
+    },
+    {
+      "level": 7,
+      "baseAttack": 81
+    },
+    {
+      "level": 8,
+      "baseAttack": 86
+    },
+    {
+      "level": 9,
+      "baseAttack": 91
+    },
+    {
+      "level": 10,
+      "baseAttack": 96
+    },
+    {
+      "level": 11,
+      "baseAttack": 101
+    },
+    {
+      "level": 12,
+      "baseAttack": 106
+    },
+    {
+      "level": 13,
+      "baseAttack": 111
+    },
+    {
+      "level": 14,
+      "baseAttack": 116
+    },
+    {
+      "level": 15,
+      "baseAttack": 121
+    },
+    {
+      "level": 16,
+      "baseAttack": 126
+    },
+    {
+      "level": 17,
+      "baseAttack": 131
+    },
+    {
+      "level": 18,
+      "baseAttack": 136
+    },
+    {
+      "level": 19,
+      "baseAttack": 141
+    },
+    {
+      "level": 20,
+      "baseAttack": 146
+    },
+    {
+      "level": 21,
+      "baseAttack": 152
+    },
+    {
+      "level": 22,
+      "baseAttack": 157
+    },
+    {
+      "level": 23,
+      "baseAttack": 162
+    },
+    {
+      "level": 24,
+      "baseAttack": 167
+    },
+    {
+      "level": 25,
+      "baseAttack": 172
+    },
+    {
+      "level": 26,
+      "baseAttack": 177
+    },
+    {
+      "level": 27,
+      "baseAttack": 182
+    },
+    {
+      "level": 28,
+      "baseAttack": 187
+    },
+    {
+      "level": 29,
+      "baseAttack": 192
+    },
+    {
+      "level": 30,
+      "baseAttack": 197
+    },
+    {
+      "level": 31,
+      "baseAttack": 202
+    },
+    {
+      "level": 32,
+      "baseAttack": 207
+    },
+    {
+      "level": 33,
+      "baseAttack": 212
+    },
+    {
+      "level": 34,
+      "baseAttack": 217
+    },
+    {
+      "level": 35,
+      "baseAttack": 222
+    },
+    {
+      "level": 36,
+      "baseAttack": 227
+    },
+    {
+      "level": 37,
+      "baseAttack": 232
+    },
+    {
+      "level": 38,
+      "baseAttack": 237
+    },
+    {
+      "level": 39,
+      "baseAttack": 242
+    },
+    {
+      "level": 40,
+      "baseAttack": 247
+    },
+    {
+      "level": 41,
+      "baseAttack": 253
+    },
+    {
+      "level": 42,
+      "baseAttack": 258
+    },
+    {
+      "level": 43,
+      "baseAttack": 263
+    },
+    {
+      "level": 44,
+      "baseAttack": 268
+    },
+    {
+      "level": 45,
+      "baseAttack": 273
+    },
+    {
+      "level": 46,
+      "baseAttack": 278
+    },
+    {
+      "level": 47,
+      "baseAttack": 283
+    },
+    {
+      "level": 48,
+      "baseAttack": 288
+    },
+    {
+      "level": 49,
+      "baseAttack": 293
+    },
+    {
+      "level": 50,
+      "baseAttack": 298
+    },
+    {
+      "level": 51,
+      "baseAttack": 303
+    },
+    {
+      "level": 52,
+      "baseAttack": 308
+    },
+    {
+      "level": 53,
+      "baseAttack": 313
+    },
+    {
+      "level": 54,
+      "baseAttack": 318
+    },
+    {
+      "level": 55,
+      "baseAttack": 323
+    },
+    {
+      "level": 56,
+      "baseAttack": 328
+    },
+    {
+      "level": 57,
+      "baseAttack": 333
+    },
+    {
+      "level": 58,
+      "baseAttack": 338
+    },
+    {
+      "level": 59,
+      "baseAttack": 343
+    },
+    {
+      "level": 60,
+      "baseAttack": 348
+    },
+    {
+      "level": 61,
+      "baseAttack": 354
+    },
+    {
+      "level": 62,
+      "baseAttack": 359
+    },
+    {
+      "level": 63,
+      "baseAttack": 364
+    },
+    {
+      "level": 64,
+      "baseAttack": 369
+    },
+    {
+      "level": 65,
+      "baseAttack": 374
+    },
+    {
+      "level": 66,
+      "baseAttack": 379
+    },
+    {
+      "level": 67,
+      "baseAttack": 384
+    },
+    {
+      "level": 68,
+      "baseAttack": 389
+    },
+    {
+      "level": 69,
+      "baseAttack": 394
+    },
+    {
+      "level": 70,
+      "baseAttack": 399
+    },
+    {
+      "level": 71,
+      "baseAttack": 404
+    },
+    {
+      "level": 72,
+      "baseAttack": 409
+    },
+    {
+      "level": 73,
+      "baseAttack": 414
+    },
+    {
+      "level": 74,
+      "baseAttack": 419
+    },
+    {
+      "level": 75,
+      "baseAttack": 424
+    },
+    {
+      "level": 76,
+      "baseAttack": 429
+    },
+    {
+      "level": 77,
+      "baseAttack": 434
+    },
+    {
+      "level": 78,
+      "baseAttack": 439
+    },
+    {
+      "level": 79,
+      "baseAttack": 444
+    },
+    {
+      "level": 80,
+      "baseAttack": 449
+    },
+    {
+      "level": 81,
+      "baseAttack": 455
+    },
+    {
+      "level": 82,
+      "baseAttack": 460
+    },
+    {
+      "level": 83,
+      "baseAttack": 465
+    },
+    {
+      "level": 84,
+      "baseAttack": 470
+    },
+    {
+      "level": 85,
+      "baseAttack": 475
+    },
+    {
+      "level": 86,
+      "baseAttack": 480
+    },
+    {
+      "level": 87,
+      "baseAttack": 485
+    },
+    {
+      "level": 88,
+      "baseAttack": 490
+    },
+    {
+      "level": 89,
+      "baseAttack": 495
+    },
+    {
+      "level": 90,
+      "baseAttack": 500
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "AGILITY_BOOST_L",
+      "name": "Agility Boost [L]",
+      "description": "Agility +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "AGILITY": 20
+        },
+        {
+          "level": 2,
+          "AGILITY": 36
+        },
+        {
+          "level": 3,
+          "AGILITY": 52
+        },
+        {
+          "level": 4,
+          "AGILITY": 68
+        },
+        {
+          "level": 5,
+          "AGILITY": 84
+        },
+        {
+          "level": 6,
+          "AGILITY": 100
+        },
+        {
+          "level": 7,
+          "AGILITY": 116
+        },
+        {
+          "level": 8,
+          "AGILITY": 132
+        },
+        {
+          "level": 9,
+          "AGILITY": 156
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "PHYSICAL_DAMAGE_BOOST_L",
+      "name": "Physical DMG Boost [L]",
+      "description": "Physical DMG Dealt +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "PHYSICAL_DAMAGE_BONUS": 0.055555556
+        },
+        {
+          "level": 2,
+          "PHYSICAL_DAMAGE_BONUS": 0.1
+        },
+        {
+          "level": 3,
+          "PHYSICAL_DAMAGE_BONUS": 0.14444445
+        },
+        {
+          "level": 4,
+          "PHYSICAL_DAMAGE_BONUS": 0.18888889
+        },
+        {
+          "level": 5,
+          "PHYSICAL_DAMAGE_BONUS": 0.23333333
+        },
+        {
+          "level": 6,
+          "PHYSICAL_DAMAGE_BONUS": 0.2777778
+        },
+        {
+          "level": 7,
+          "PHYSICAL_DAMAGE_BONUS": 0.32222223
+        },
+        {
+          "level": 8,
+          "PHYSICAL_DAMAGE_BONUS": 0.36666667
+        },
+        {
+          "level": 9,
+          "PHYSICAL_DAMAGE_BONUS": 0.43333334
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "MOUNTAIN_BEARER_WEIGHT_OF_MOUNTAIN",
+      "name": "Efficacy: Weight of Mountain",
+      "description": "Against Vulnerable enemies, the wielder gains DMG Dealt +{dmg_up:0.0%}. When the wielder's battle skill applies Vulnerability, the wielder gains All Attributes +{all_attr_up:0.0%} for {duration:0}s. When the wielder's battle skill applies Physical Susceptibility, the wielder gains All Attributes +{all_attr_up2:0.0%} for {duration:0}s. The two effects apply separately and do not stack with themselves.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "dmg_up": 0.2,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.08,
+              "all_attr_up2": 0.08
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "dmg_up": 0.24,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.096,
+              "all_attr_up2": 0.096
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "dmg_up": 0.28,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.112,
+              "all_attr_up2": 0.112
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "dmg_up": 0.32,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.128,
+              "all_attr_up2": 0.128
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "dmg_up": 0.36,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.144,
+              "all_attr_up2": 0.144
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "dmg_up": 0.4,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.16,
+              "all_attr_up2": 0.16
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "dmg_up": 0.44,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.176,
+              "all_attr_up2": 0.176
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "dmg_up": 0.48,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.192,
+              "all_attr_up2": 0.192
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "dmg_up": 0.56,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_VULNERABILITY"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "ALL_ATTRIBUTE_BONUS": 0.224,
+              "all_attr_up2": 0.224
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

@@ -1,5 +1,6 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { TimeDependency } from '../../consts/enums';
+import { SKILL_COLUMNS } from '../../model/channels';
 
 // ── Time-stop region types ──────────────────────────────────────────────────
 
@@ -12,7 +13,7 @@ export interface TimeStopRegion {
 export function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = ev.animationDuration ?? 0;
   if (anim <= 0) return false;
-  return ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+  return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
     (ev.columnId === 'dash' && !!ev.isPerfectDodge);
 }
 
@@ -282,20 +283,20 @@ export function validateTimeStopStarts(
       const source = evById.get(stop.eventId);
       if (!source) continue;
 
-      const sourceIsUltimate = source.columnId === 'ultimate';
-      const sourceIsCombo = source.columnId === 'combo';
+      const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
+      const sourceIsCombo = source.columnId === SKILL_COLUMNS.COMBO;
       const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop
       if (sourceIsDodge) continue;
 
       // Combo cannot start during ultimate animation time-stop
-      if (ev.columnId === 'combo' && sourceIsUltimate) {
+      if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
         warnings.push(`Combo skill cannot start during ultimate animation time-stop`);
       }
 
       // Ultimate cannot start during another ultimate's animation time-stop
-      if (ev.columnId === 'ultimate' && sourceIsUltimate) {
+      if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
         warnings.push(`Ultimate cannot start during another ultimate's animation time-stop`);
       }
 

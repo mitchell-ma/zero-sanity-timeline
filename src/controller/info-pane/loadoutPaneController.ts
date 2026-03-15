@@ -1,9 +1,10 @@
-import { StatType, WeaponSkillType } from '../../consts/enums';
+import { StatType, WeaponSkillType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../../view/InformationPane';
 import { WEAPONS, ARMORS, GLOVES, KITS, CONSUMABLES, TACTICALS } from '../../utils/loadoutRegistry';
 import { Gear } from '../../model/gears/gear';
-import { MODEL_FACTORIES } from '../operators/operatorRegistry';
+import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
+import { getOperatorConfig } from '../operators/operatorRegistry';
 import { interpolateAttack } from '../../model/weapons/weapon';
 import { aggregateLoadoutStats, weaponSkillStat, AggregatedStats } from '../calculation/loadoutAggregator';
 import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
@@ -83,8 +84,8 @@ export function resolveWeaponBreakdown(
   if (!weaponEntry) return null;
 
   const wpn = weaponEntry.create();
-  const factory = MODEL_FACTORIES[operatorId];
-  const operatorModel = factory ? factory(stats.operatorLevel) : null;
+  const opConfig = getOperatorConfig(operatorId);
+  const operatorModel = opConfig ? new DataDrivenOperator(opConfig, stats.operatorLevel) : null;
   const mainAttr = operatorModel?.mainAttributeType ?? StatType.STRENGTH;
 
   const allSkills = [wpn.weaponSkillOne, wpn.weaponSkillTwo, wpn.weaponSkillThree];
@@ -244,6 +245,50 @@ export function resolveGearBreakdown(
   };
 }
 
+// ── Gear Bonus Summary ──────────────────────────────────────────────────────
+
+export interface GearBonusStat {
+  stat: StatType;
+  value: number;
+}
+
+export interface GearBonusSummary {
+  stats: GearBonusStat[];
+  totalDefense: number;
+}
+
+/**
+ * Compute total gear stat contributions across all equipped pieces.
+ * Sums per-line-rank resolved stats from each gear piece, including defense.
+ */
+export function resolveGearBonusSummary(
+  gearBreakdown: GearBreakdown | null,
+): GearBonusSummary | null {
+  if (!gearBreakdown || gearBreakdown.pieces.length === 0) return null;
+
+  const totals = new Map<StatType, number>();
+  let totalDefense = 0;
+
+  for (const piece of gearBreakdown.pieces) {
+    for (const [key, value] of Object.entries(piece.resolvedStats)) {
+      const stat = key as StatType;
+      if (stat === StatType.BASE_DEFENSE) {
+        totalDefense += value as number;
+      } else {
+        totals.set(stat, (totals.get(stat) ?? 0) + (value as number));
+      }
+    }
+  }
+
+  const stats: GearBonusStat[] = [];
+  totals.forEach((value, stat) => {
+    if (value !== 0) stats.push({ stat, value });
+  });
+
+  if (stats.length === 0 && totalDefense === 0) return null;
+  return { stats, totalDefense };
+}
+
 // ── Tactical Breakdown ──────────────────────────────────────────────────────
 
 export interface TacticalData {
@@ -323,6 +368,11 @@ const STAT_OTHER: StatType[] = [
   StatType.CRYO_RESISTANCE, StatType.NATURE_RESISTANCE, StatType.AETHER_RESISTANCE,
 ];
 
+/** Filter a stat list to only those matching the given target (includes ALL). */
+function filterStatsByTarget(stats: StatType[], target: StatOwnerType): StatType[] {
+  return stats.filter((s) => STAT_ATTRIBUTION[s].includes(target));
+}
+
 export interface AggregatedStatsDisplay {
   agg: AggregatedStats;
   attributes: AttributeStatDisplay[];
@@ -333,11 +383,15 @@ export function resolveAggregatedStats(
   operatorId: string,
   loadout: OperatorLoadoutState,
   stats: LoadoutStats,
+  target: StatOwnerType = StatOwnerType.OPERATOR,
 ): AggregatedStatsDisplay | null {
   const agg = aggregateLoadoutStats(operatorId, loadout, stats);
   if (!agg) return null;
 
-  const attributes: AttributeStatDisplay[] = STAT_ATTRIBUTES.map((stat) => {
+  const filteredAttributes = filterStatsByTarget(STAT_ATTRIBUTES, target);
+  const filteredOther = filterStatsByTarget(STAT_OTHER, target);
+
+  const attributes: AttributeStatDisplay[] = filteredAttributes.map((stat) => {
     let value = agg.stats[stat];
     const bonusStat = FLAT_ATTR_TO_BONUS[stat];
     if (bonusStat) {
@@ -346,7 +400,7 @@ export function resolveAggregatedStats(
     return { stat, value, isZero: value === 0 };
   });
 
-  const otherStats: OtherStatDisplay[] = STAT_OTHER.map((stat) => {
+  const otherStats: OtherStatDisplay[] = filteredOther.map((stat) => {
     const raw = agg.stats[stat];
     const value = stat === StatType.ULTIMATE_GAIN_EFFICIENCY ? raw + 1 : raw;
     return { stat, raw, value, isZero: raw === 0 };

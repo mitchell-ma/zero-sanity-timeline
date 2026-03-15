@@ -12,37 +12,17 @@
  *   7. Tactical stats
  */
 
-import { GearEffectType, StatType, WeaponSkillType } from '../../consts/enums';
+import { GearSetType, StatType, WeaponSkillType } from '../../consts/enums';
 import { Weapon } from '../../model/weapons/weapon';
 import { Gear } from '../../model/gears/gear';
-import {
-  GearEffect,
-  AicHeavy,
-  AicLight,
-  ArmoredMsgr,
-  RovingMsgr,
-  MordvoltInsulation,
-  MordvoltResistant,
-  AburreyLegacy,
-  Catastrophe,
-  Swordmancer,
-  Lynx,
-  Aethertech,
-  Bonekrusha,
-  PulserLabs,
-  Frontiers,
-  HotWork,
-  MiSecurity,
-  Type50Yinglung,
-  TideSurge,
-  EternalXiranite,
-} from '../../model/gears/gearEffects';
+import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { Consumable } from '../../model/consumables/consumable';
 import { Tactical } from '../../model/consumables/tactical';
 import { WeaponSkill } from '../../model/weapon-skills/weaponSkill';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../../view/InformationPane';
-import { MODEL_FACTORIES } from '../operators/operatorRegistry';
+import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
+import { getOperatorConfig } from '../operators/operatorRegistry';
 import {
   WEAPONS,
   ARMORS,
@@ -53,6 +33,11 @@ import {
 } from '../../utils/loadoutRegistry';
 
 // ── Result type ─────────────────────────────────────────────────────────────
+
+export interface StatSourceEntry {
+  source: string;
+  value: number;
+}
 
 export interface AggregatedStats {
   /** Operator base ATK from level table. */
@@ -79,6 +64,8 @@ export interface AggregatedStats {
   secondaryAttributeBonus: number;
   /** All stats merged from all sources (excludes base ATK and flat ATK bonuses). */
   stats: Record<StatType, number>;
+  /** Per-stat breakdown of where each contribution came from. */
+  statSources: Partial<Record<StatType, StatSourceEntry[]>>;
   /** The operator's main attribute type (for attribute bonus calc). */
   mainAttributeType: StatType;
   /** The operator's secondary attribute type. */
@@ -88,7 +75,7 @@ export interface AggregatedStats {
   /** Whether a gear set effect is active (3+ pieces of same type). */
   gearSetActive: boolean;
   /** Which gear effect type is active, if any. */
-  gearSetType: GearEffectType | null;
+  gearSetType: GearSetType | null;
   /** Human-readable description of the active gear set effect, if any. */
   gearSetDescription: string | null;
 }
@@ -145,29 +132,6 @@ function applyWeaponSkill(
   }
 }
 
-// ── Gear effect factory ─────────────────────────────────────────────────────
-
-const GEAR_EFFECT_FACTORIES: Partial<Record<GearEffectType, () => GearEffect>> = {
-  [GearEffectType.AIC_HEAVY]:           () => new AicHeavy(),
-  [GearEffectType.AIC_LIGHT]:           () => new AicLight(),
-  [GearEffectType.ARMORED_MSGR]:        () => new ArmoredMsgr(),
-  [GearEffectType.ROVING_MSGR]:         () => new RovingMsgr(),
-  [GearEffectType.MORDVOLT_INSULATION]: () => new MordvoltInsulation(),
-  [GearEffectType.MORDVOLT_RESISTANT]:  () => new MordvoltResistant(),
-  [GearEffectType.ABURREY_LEGACY]:      () => new AburreyLegacy(),
-  [GearEffectType.CATASTROPHE]:         () => new Catastrophe(),
-  [GearEffectType.SWORDMANCER]:         () => new Swordmancer(),
-  [GearEffectType.LYNX]:                () => new Lynx(),
-  [GearEffectType.AETHERTECH]:          () => new Aethertech(),
-  [GearEffectType.BONEKRUSHA]:          () => new Bonekrusha(),
-  [GearEffectType.PULSER_LABS]:         () => new PulserLabs(),
-  [GearEffectType.FRONTIERS]:           () => new Frontiers(),
-  [GearEffectType.HOT_WORK]:            () => new HotWork(),
-  [GearEffectType.MI_SECURITY]:         () => new MiSecurity(),
-  [GearEffectType.TYPE_50_YINGLUNG]:    () => new Type50Yinglung(),
-  [GearEffectType.TIDE_SURGE]:          () => new TideSurge(),
-  [GearEffectType.ETERNAL_XIRANITE]:    () => new EternalXiranite(),
-};
 
 // ── Main aggregation ────────────────────────────────────────────────────────
 
@@ -182,34 +146,59 @@ export function aggregateLoadoutStats(
   loadout: OperatorLoadoutState,
   loadoutStats: LoadoutStats,
 ): AggregatedStats | null {
-  const factory = MODEL_FACTORIES[operatorId];
-  if (!factory) return null;
+  const config = getOperatorConfig(operatorId);
+  if (!config) return null;
 
-  // 1. Create operator model at the user's configured level
-  const model = factory(loadoutStats.operatorLevel);
+  // 1. Create operator model and apply user's loadout state
+  const model = new DataDrivenOperator(config, loadoutStats.operatorLevel);
+  model.potential = loadoutStats.potential as any;
+  model.talentOneLevel = loadoutStats.talentOneLevel;
+  model.talentTwoLevel = loadoutStats.talentTwoLevel;
+  model.attributeIncreaseLevel = loadoutStats.attributeIncreaseLevel ?? 4;
+  model.basicAttackLevel = loadoutStats.basicAttackLevel as any;
+  model.battleSkillLevel = loadoutStats.battleSkillLevel as any;
+  model.comboSkillLevel = loadoutStats.comboSkillLevel as any;
+  model.ultimateLevel = loadoutStats.ultimateLevel as any;
+
   const operatorBaseAttack = model.getBaseAttack();
   const stats: Record<StatType, number> = { ...model.stats };
+  const statSources: Partial<Record<StatType, StatSourceEntry[]>> = {};
   let flatAttackBonuses = 0;
 
+  // Helper: track a source contribution for a stat
+  function trackSource(stat: StatType, source: string, value: number): void {
+    if (value === 0) return;
+    if (!statSources[stat]) statSources[stat] = [];
+    statSources[stat]!.push({ source, value });
+  }
+
+  // 1. Record operator base stats
+  for (const [key, value] of Object.entries(model.stats)) {
+    if ((value as number) !== 0) trackSource(key as StatType, 'Operator', value as number);
+  }
+
   // 1b. Apply potential stat bonuses
-  const potentialStats = model.getPotentialStats(loadoutStats.potential);
+  const potentialStats = model.getPotentialStats();
   for (const [key, value] of Object.entries(potentialStats)) {
     stats[key as StatType] += value as number;
+    trackSource(key as StatType, 'Potential', value as number);
   }
 
   // 1c. Apply attribute increase
-  const attrIncreaseValue = model.getAttributeIncrease(loadoutStats.attributeIncreaseLevel ?? 4);
+  const attrIncreaseValue = model.getAttributeIncrease();
   if (attrIncreaseValue > 0) {
     stats[model.attributeIncreaseAttribute] += attrIncreaseValue;
+    trackSource(model.attributeIncreaseAttribute, 'Attr Increase', attrIncreaseValue);
   }
 
   // Helper: add a stat value, routing flat ATK to the separate counter
-  function addStat(stat: StatType, value: number): void {
-    if (stat === StatType.ATTACK) {
+  function addStat(stat: StatType, value: number, source?: string): void {
+    if (stat === StatType.BASE_ATTACK) {
       flatAttackBonuses += value;
     } else {
       stats[stat] += value;
     }
+    if (source && value !== 0) trackSource(stat, source, value);
   }
 
   // 2. Weapon
@@ -231,11 +220,17 @@ export function aggregateLoadoutStats(
       }
       for (const { skill, levelKey } of allSkills) {
         skill.level = levelKey;
-        applyWeaponSkill(skill, stats, model.mainAttributeType);
+        // Apply weapon skill stat boosts with source tracking
+        const wsStat = weaponSkillStat(skill.weaponSkillType, model.mainAttributeType);
+        if (wsStat != null) {
+          const wsValue = skill.getValue();
+          stats[wsStat] += wsValue;
+          trackSource(wsStat, `Weapon Skill`, wsValue);
+        }
         // Apply passive (always-active) stats from named skills
         const passiveStats = skill.getPassiveStats();
         for (const [key, value] of Object.entries(passiveStats)) {
-          addStat(key as StatType, value as number);
+          addStat(key as StatType, value as number, 'Weapon Passive');
         }
         // Handle secondary attribute bonus for skills that grant it (e.g. Flow: Unbridled Edge)
         if ('getElementDmgBonus' in skill) {
@@ -244,6 +239,7 @@ export function aggregateLoadoutStats(
             const secBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
             if (secBonusStat) {
               stats[secBonusStat] += secAttrBonus;
+              trackSource(secBonusStat, 'Weapon Skill', secAttrBonus);
             }
           }
         }
@@ -258,7 +254,7 @@ export function aggregateLoadoutStats(
     { name: loadout.kit1Name,   registry: KITS,   ranksKey: 'kit1Ranks' },
     { name: loadout.kit2Name,   registry: KITS,   ranksKey: 'kit2Ranks' },
   ];
-  const effectCounts = new Map<GearEffectType, number>();
+  const effectCounts = new Map<GearSetType, number>();
 
   for (const piece of gearPieces) {
     const name = piece.name;
@@ -270,29 +266,28 @@ export function aggregateLoadoutStats(
     const lineRanks = loadoutStats[piece.ranksKey] ?? {};
     const gearStats = gear.getStatsPerLine(lineRanks);
     for (const [key, value] of Object.entries(gearStats)) {
-      addStat(key as StatType, value as number);
+      addStat(key as StatType, value as number, 'Gear');
     }
     // Count gear effect type
     effectCounts.set(
-      gear.gearEffectType,
-      (effectCounts.get(gear.gearEffectType) ?? 0) + 1,
+      gear.gearSetType,
+      (effectCounts.get(gear.gearSetType) ?? 0) + 1,
     );
   }
 
   // 4. Gear set effect — activate passive stats if 3+ pieces of same effect type
   let gearSetActive = false;
-  let gearSetType: GearEffectType | null = null;
+  let gearSetType: GearSetType | null = null;
   let gearSetDescription: string | null = null;
   effectCounts.forEach((count, effectType) => {
-    if (count >= 3 && effectType !== GearEffectType.NONE) {
+    if (count >= 3 && effectType !== GearSetType.NONE) {
       gearSetActive = true;
       gearSetType = effectType;
-      const effectFactory = GEAR_EFFECT_FACTORIES[effectType];
-      if (effectFactory) {
-        const effect = effectFactory();
-        gearSetDescription = effect.description;
-        for (const [key, value] of Object.entries(effect.passiveStats)) {
-          addStat(key as StatType, value as number);
+      const entry = getGearSetEffects(effectType);
+      if (entry) {
+        gearSetDescription = entry.label;
+        for (const [key, value] of Object.entries(entry.passiveStats)) {
+          addStat(key as StatType, value as number, 'Gear Set');
         }
       }
     }
@@ -304,7 +299,7 @@ export function aggregateLoadoutStats(
     if (entry) {
       const consumable: Consumable = entry.create();
       for (const [key, value] of Object.entries(consumable.stats)) {
-        addStat(key as StatType, value as number);
+        addStat(key as StatType, value as number, 'Food');
       }
     }
   }
@@ -315,7 +310,7 @@ export function aggregateLoadoutStats(
     if (entry) {
       const tactical: Tactical = entry.create();
       for (const [key, value] of Object.entries(tactical.stats)) {
-        addStat(key as StatType, value as number);
+        addStat(key as StatType, value as number, 'Tactical');
       }
     }
   }
@@ -326,9 +321,9 @@ export function aggregateLoadoutStats(
   const totalAttack = baseAttack * (1 + atkBonus) + flatAttackBonuses;
   // Apply percentage bonuses to flat attributes before computing attribute bonus
   const mainAttrBonusStat = ATTR_TO_BONUS[model.mainAttributeType];
-  const effectiveMainAttr = Math.floor(stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0)));
+  const effectiveMainAttr = stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0));
   const secAttrBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
-  const effectiveSecAttr = Math.floor(stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0)));
+  const effectiveSecAttr = stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0));
   const mainAttributeBonus = 0.005 * effectiveMainAttr;
   const secondaryAttributeBonus = 0.002 * effectiveSecAttr;
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;
@@ -347,6 +342,7 @@ export function aggregateLoadoutStats(
     mainAttributeBonus,
     secondaryAttributeBonus,
     stats,
+    statSources,
     mainAttributeType: model.mainAttributeType,
     secondaryAttributeType: model.secondaryAttributeType,
     element: model.element,

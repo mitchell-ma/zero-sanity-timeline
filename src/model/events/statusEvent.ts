@@ -1,20 +1,17 @@
 import {
-  CombatResourceType,
   CombatSkillType,
-  ComparisonType,
   DurationUnit,
   ElementType,
   EventOriginType,
   EventType,
   OperatorType,
-  RequirementStateType,
   StackInteractionType,
-  StatusInteractionType,
   StatusType,
   TargetType,
   TriggerConditionType,
 } from "../../consts/enums";
-import type { RequirementType } from "../../consts/types";
+import { THRESHOLD_MAX, PotentialType } from "../../consts/semantics";
+import type { Clause, Effect, Interaction, Predicate } from "../../consts/semantics";
 import { StatType } from "../enums";
 import { Duration, Event } from "./event";
 
@@ -31,39 +28,11 @@ export interface TriggerCondition {
   };
 }
 
-/** Counter configuration for tracking occurrences of a condition over time. */
-export interface ActivationCounter {
-  comparison: ComparisonType;
-  threshold: number;
-  /** If true, counter resets when met (can re-trigger). If false, activates once only. */
-  resetOnMet: boolean;
-}
-
-/** A state assertion that must hold for an activation to be available. */
-export interface ActivationCondition {
-  subjectType: TargetType;
-  requirementType: RequirementType;
-  requirementStateType: RequirementStateType;
-  threshold?: number;
-  /** If present, tracks occurrences and activates when counter threshold is met. */
-  counter?: ActivationCounter;
-}
-
 /** Defines how a status can be externally modified. */
 export interface StatusInteractionEntry {
   type: 'CONSUMABLE' | 'RESETTABLE' | 'ABSORBABLE';
   condition: TriggerCondition;
   stacks?: number;
-}
-
-/** An outgoing effect produced by a status (e.g. at stack threshold). */
-export interface StatusInteraction {
-  interactionType: StatusInteractionType;
-  statusType?: StatusType;
-  stacks?: number;
-  statusLevel?: number;
-  isForced?: boolean;
-  targetType?: TargetType;
 }
 
 /** A stat modifier applied by a status. */
@@ -72,18 +41,29 @@ export interface StatModifier {
   value: number[];
 }
 
+// Re-export THRESHOLD_MAX from semantics for backward compat
+export { THRESHOLD_MAX } from "../../consts/semantics";
+
+/** Threshold key: a numeric stack count, or 'MAX' to fire at the potential-resolved max. */
+export type ThresholdKey = number | typeof THRESHOLD_MAX;
+
 /** Full stack configuration for a status. */
 export interface StackConfig {
   interactionType: StackInteractionType;
-  max: number;
+  /** Maximum stack count, keyed by PotentialType. */
+  max: Record<PotentialType, number>;
   instances: number;
-  thresholdEffects: Record<number, StatusInteraction[]>;
+  /** Effects applied when stack count reaches a threshold.
+   *  Key is the stack count (or 'MAX' for the potential-resolved max).
+   *  Values are Effect[] applied unconditionally at that threshold. */
+  thresholdEffects: Partial<Record<ThresholdKey, Effect[]>>;
 }
 
-/** Trigger configuration — what causes this status to be created. */
-export interface TriggerConfig {
-  conditions: TriggerCondition[][];
-  instancesRequired: number;
+/**
+ * Resolves the max stack count for a given potential level.
+ */
+export function resolveMaxStacks(max: Record<PotentialType, number>, potential: PotentialType): number {
+  return max[potential];
 }
 
 // ── Abstract StatusEvent ──────────────────────────────────────────────────────
@@ -104,8 +84,8 @@ export abstract class StatusEvent extends Event {
   /** Full stack configuration. */
   readonly stack: StackConfig;
 
-  /** Trigger configuration — what causes this status to be created. */
-  readonly trigger: TriggerConfig;
+  /** Trigger clause — predicates that determine when this status is created. */
+  readonly triggerClause: Clause;
 
   /** How this status can be externally modified (consumed, reset, absorbed). */
   readonly interactionTypes: StatusInteractionEntry[];
@@ -125,8 +105,13 @@ export abstract class StatusEvent extends Event {
     duration: Duration;
     isNamedEvent?: boolean;
     isForceApplied?: boolean;
-    stack?: Partial<StackConfig> & { max: number };
-    trigger?: TriggerConfig;
+    stack?: {
+      interactionType?: StackInteractionType;
+      max: number | number[] | Record<PotentialType, number>;
+      instances?: number;
+      thresholdEffects?: Partial<Record<ThresholdKey, Effect[]>>;
+    };
+    triggerClause?: Clause;
     interactionTypes?: StatusInteractionEntry[];
     stats?: StatModifier[];
     stacks?: number;
@@ -144,21 +129,39 @@ export abstract class StatusEvent extends Event {
     this.isNamedEvent = params.isNamedEvent ?? true;
     this.isForceApplied = params.isForceApplied ?? false;
 
+    const rawMax = params.stack?.max ?? 1;
+    let maxRecord: Record<PotentialType, number>;
+    if (typeof rawMax === 'number') {
+      // Single number → same for all potentials
+      maxRecord = Object.fromEntries(
+        Object.values(PotentialType).map((p) => [p, rawMax])
+      ) as Record<PotentialType, number>;
+    } else if (Array.isArray(rawMax)) {
+      // Array → map positionally to P0-P5
+      const potentials = Object.values(PotentialType);
+      maxRecord = Object.fromEntries(
+        potentials.map((p, i) => [p, rawMax[Math.min(i, rawMax.length - 1)]])
+      ) as Record<PotentialType, number>;
+    } else {
+      maxRecord = rawMax;
+    }
+
     this.stack = {
       interactionType: params.stack?.interactionType ?? StackInteractionType.NONE,
-      max: params.stack?.max ?? 1,
+      max: maxRecord,
       instances: params.stack?.instances ?? 1,
       thresholdEffects: params.stack?.thresholdEffects ?? {},
     };
 
-    this.trigger = params.trigger ?? { conditions: [], instancesRequired: 1 };
+    this.triggerClause = params.triggerClause ?? [];
     this.interactionTypes = params.interactionTypes ?? [];
     this.stats = params.stats ?? [];
     this.stacks = params.stacks ?? 0;
 
-    if (this.stacks > this.stack.max && this.stack.max > 0) {
+    const highestMax = Math.max(...Object.values(this.stack.max));
+    if (this.stacks > highestMax && highestMax > 0) {
       throw new RangeError(
-        `stacks (${this.stacks}) cannot exceed stack.max (${this.stack.max})`,
+        `stacks (${this.stacks}) cannot exceed stack.max (${highestMax})`,
       );
     }
   }

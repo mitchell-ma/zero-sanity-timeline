@@ -1,0 +1,661 @@
+{
+  "weaponId": "UMBRAL_TORCH",
+  "name": "Umbral Torch",
+  "weaponType": "SWORD",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 50
+    },
+    {
+      "level": 2,
+      "baseAttack": 54
+    },
+    {
+      "level": 3,
+      "baseAttack": 59
+    },
+    {
+      "level": 4,
+      "baseAttack": 64
+    },
+    {
+      "level": 5,
+      "baseAttack": 69
+    },
+    {
+      "level": 6,
+      "baseAttack": 74
+    },
+    {
+      "level": 7,
+      "baseAttack": 79
+    },
+    {
+      "level": 8,
+      "baseAttack": 84
+    },
+    {
+      "level": 9,
+      "baseAttack": 89
+    },
+    {
+      "level": 10,
+      "baseAttack": 94
+    },
+    {
+      "level": 11,
+      "baseAttack": 99
+    },
+    {
+      "level": 12,
+      "baseAttack": 104
+    },
+    {
+      "level": 13,
+      "baseAttack": 109
+    },
+    {
+      "level": 14,
+      "baseAttack": 114
+    },
+    {
+      "level": 15,
+      "baseAttack": 119
+    },
+    {
+      "level": 16,
+      "baseAttack": 124
+    },
+    {
+      "level": 17,
+      "baseAttack": 129
+    },
+    {
+      "level": 18,
+      "baseAttack": 134
+    },
+    {
+      "level": 19,
+      "baseAttack": 139
+    },
+    {
+      "level": 20,
+      "baseAttack": 144
+    },
+    {
+      "level": 21,
+      "baseAttack": 149
+    },
+    {
+      "level": 22,
+      "baseAttack": 153
+    },
+    {
+      "level": 23,
+      "baseAttack": 158
+    },
+    {
+      "level": 24,
+      "baseAttack": 163
+    },
+    {
+      "level": 25,
+      "baseAttack": 168
+    },
+    {
+      "level": 26,
+      "baseAttack": 173
+    },
+    {
+      "level": 27,
+      "baseAttack": 178
+    },
+    {
+      "level": 28,
+      "baseAttack": 183
+    },
+    {
+      "level": 29,
+      "baseAttack": 188
+    },
+    {
+      "level": 30,
+      "baseAttack": 193
+    },
+    {
+      "level": 31,
+      "baseAttack": 198
+    },
+    {
+      "level": 32,
+      "baseAttack": 203
+    },
+    {
+      "level": 33,
+      "baseAttack": 208
+    },
+    {
+      "level": 34,
+      "baseAttack": 213
+    },
+    {
+      "level": 35,
+      "baseAttack": 218
+    },
+    {
+      "level": 36,
+      "baseAttack": 223
+    },
+    {
+      "level": 37,
+      "baseAttack": 228
+    },
+    {
+      "level": 38,
+      "baseAttack": 233
+    },
+    {
+      "level": 39,
+      "baseAttack": 238
+    },
+    {
+      "level": 40,
+      "baseAttack": 243
+    },
+    {
+      "level": 41,
+      "baseAttack": 248
+    },
+    {
+      "level": 42,
+      "baseAttack": 252
+    },
+    {
+      "level": 43,
+      "baseAttack": 257
+    },
+    {
+      "level": 44,
+      "baseAttack": 262
+    },
+    {
+      "level": 45,
+      "baseAttack": 267
+    },
+    {
+      "level": 46,
+      "baseAttack": 272
+    },
+    {
+      "level": 47,
+      "baseAttack": 277
+    },
+    {
+      "level": 48,
+      "baseAttack": 282
+    },
+    {
+      "level": 49,
+      "baseAttack": 287
+    },
+    {
+      "level": 50,
+      "baseAttack": 292
+    },
+    {
+      "level": 51,
+      "baseAttack": 297
+    },
+    {
+      "level": 52,
+      "baseAttack": 302
+    },
+    {
+      "level": 53,
+      "baseAttack": 307
+    },
+    {
+      "level": 54,
+      "baseAttack": 312
+    },
+    {
+      "level": 55,
+      "baseAttack": 317
+    },
+    {
+      "level": 56,
+      "baseAttack": 322
+    },
+    {
+      "level": 57,
+      "baseAttack": 327
+    },
+    {
+      "level": 58,
+      "baseAttack": 332
+    },
+    {
+      "level": 59,
+      "baseAttack": 337
+    },
+    {
+      "level": 60,
+      "baseAttack": 342
+    },
+    {
+      "level": 61,
+      "baseAttack": 347
+    },
+    {
+      "level": 62,
+      "baseAttack": 351
+    },
+    {
+      "level": 63,
+      "baseAttack": 356
+    },
+    {
+      "level": 64,
+      "baseAttack": 361
+    },
+    {
+      "level": 65,
+      "baseAttack": 366
+    },
+    {
+      "level": 66,
+      "baseAttack": 371
+    },
+    {
+      "level": 67,
+      "baseAttack": 376
+    },
+    {
+      "level": 68,
+      "baseAttack": 381
+    },
+    {
+      "level": 69,
+      "baseAttack": 386
+    },
+    {
+      "level": 70,
+      "baseAttack": 391
+    },
+    {
+      "level": 71,
+      "baseAttack": 396
+    },
+    {
+      "level": 72,
+      "baseAttack": 401
+    },
+    {
+      "level": 73,
+      "baseAttack": 406
+    },
+    {
+      "level": 74,
+      "baseAttack": 411
+    },
+    {
+      "level": 75,
+      "baseAttack": 416
+    },
+    {
+      "level": 76,
+      "baseAttack": 421
+    },
+    {
+      "level": 77,
+      "baseAttack": 426
+    },
+    {
+      "level": 78,
+      "baseAttack": 431
+    },
+    {
+      "level": 79,
+      "baseAttack": 436
+    },
+    {
+      "level": 80,
+      "baseAttack": 441
+    },
+    {
+      "level": 81,
+      "baseAttack": 446
+    },
+    {
+      "level": 82,
+      "baseAttack": 450
+    },
+    {
+      "level": 83,
+      "baseAttack": 455
+    },
+    {
+      "level": 84,
+      "baseAttack": 460
+    },
+    {
+      "level": 85,
+      "baseAttack": 465
+    },
+    {
+      "level": 86,
+      "baseAttack": 470
+    },
+    {
+      "level": 87,
+      "baseAttack": 475
+    },
+    {
+      "level": 88,
+      "baseAttack": 480
+    },
+    {
+      "level": 89,
+      "baseAttack": 485
+    },
+    {
+      "level": 90,
+      "baseAttack": 490
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "INTELLECT_BOOST_L",
+      "name": "Intellect Boost [L]",
+      "description": "Intellect +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "INTELLECT": 20
+        },
+        {
+          "level": 2,
+          "INTELLECT": 36
+        },
+        {
+          "level": 3,
+          "INTELLECT": 52
+        },
+        {
+          "level": 4,
+          "INTELLECT": 68
+        },
+        {
+          "level": 5,
+          "INTELLECT": 84
+        },
+        {
+          "level": 6,
+          "INTELLECT": 100
+        },
+        {
+          "level": 7,
+          "INTELLECT": 116
+        },
+        {
+          "level": 8,
+          "INTELLECT": 132
+        },
+        {
+          "level": 9,
+          "INTELLECT": 156
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "HEAT_DAMAGE_BOOST_L",
+      "name": "Heat DMG Boost [L]",
+      "description": "Heat DMG Dealt +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "HEAT_DAMAGE_BONUS": 0.055555556
+        },
+        {
+          "level": 2,
+          "HEAT_DAMAGE_BONUS": 0.1
+        },
+        {
+          "level": 3,
+          "HEAT_DAMAGE_BONUS": 0.14444445
+        },
+        {
+          "level": 4,
+          "HEAT_DAMAGE_BONUS": 0.18888889
+        },
+        {
+          "level": 5,
+          "HEAT_DAMAGE_BONUS": 0.23333333
+        },
+        {
+          "level": 6,
+          "HEAT_DAMAGE_BONUS": 0.2777778
+        },
+        {
+          "level": 7,
+          "HEAT_DAMAGE_BONUS": 0.32222223
+        },
+        {
+          "level": 8,
+          "HEAT_DAMAGE_BONUS": 0.36666667
+        },
+        {
+          "level": 9,
+          "HEAT_DAMAGE_BONUS": 0.43333334
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "UMBRAL_TORCH_INFLICTION_COVETOUS_BUILDUP",
+      "name": "Infliction: Covetous Buildup",
+      "description": "ATK +{atk_up:0.0%}. Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat and Nature DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "ATTACK_BONUS": 0.07,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.08
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "ATTACK_BONUS": 0.084,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.096
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "ATTACK_BONUS": 0.098,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.112
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "ATTACK_BONUS": 0.112,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.128
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "ATTACK_BONUS": 0.126,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.144
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "ATTACK_BONUS": 0.14,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.16
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "ATTACK_BONUS": 0.154,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.176
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "ATTACK_BONUS": 0.168,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.192
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "ATTACK_BONUS": 0.196,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION",
+                "CORROSION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 20,
+                "unit": "SECOND"
+              },
+              "maxStacks": 2,
+              "dmg_up": 0.224
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

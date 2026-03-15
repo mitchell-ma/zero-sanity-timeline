@@ -4,6 +4,7 @@ import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, EventFrameType, STATUS_ELEMENT } from '../consts/enums';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
+import { SKILL_COLUMNS } from '../model/channels';
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
   return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
@@ -254,7 +255,7 @@ function EventBlock({
   // ── Standard 3-phase layout (default / ultimate) ────────────────────────
   // For ultimates with 4 segments, derive phase durations from segments directly
   // to avoid the activationDuration = sum(all segments) issue after time-stop extension.
-  const ultSegs = variant === 'ultimate' && segments && segments.length >= 4 ? segments : null;
+  const ultSegs = variant === SKILL_COLUMNS.ULTIMATE && segments && segments.length >= 4 ? segments : null;
 
   const hasActive   = ultSegs ? ultSegs[2].durationFrames > 0 : activeDuration > 0;
   const hasCooldown = ultSegs ? ultSegs[3].durationFrames > 0 : cooldownDuration > 0;
@@ -281,7 +282,7 @@ function EventBlock({
   // Animation sub-phase within activation (TIME_STOP portion)
   const hasAnimation = ultSegs
     ? ultSegs[0].durationFrames > 0
-    : ((variant === 'ultimate' || event.columnId === 'combo') && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration);
+    : ((variant === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO) && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration);
   const animH = ultSegs
     ? durationToPx(ultSegs[0].durationFrames, zoom)
     : (hasAnimation ? durationToPx(phases?.realAnimationDuration ?? animationDuration!, zoom) : 0);
@@ -311,7 +312,7 @@ function EventBlock({
       onContextMenu={(e) => onContextMenu(e, id)}
       onMouseDown={(e) => {
         if (e.button === 0) e.stopPropagation();
-        if (!notDraggable && variant === 'ultimate' && e.button === 0) onDragStart(e, id, startFrame);
+        if (!notDraggable && variant === SKILL_COLUMNS.ULTIMATE && e.button === 0) onDragStart(e, id, startFrame);
       }}
       onClick={(e) => onSelect?.(e, id)}
       onMouseEnter={() => onHover?.(id)}
@@ -385,11 +386,11 @@ function EventBlock({
         );
       })() : activationH > 0 ? (() => {
         // For ultimates with no active phase, render frame diamonds in the statis segment
-        const actFrames = variant === 'ultimate' && !hasActive && segments && segments.length > 1 ? segments[1].frames : undefined;
+        const actFrames = variant === SKILL_COLUMNS.ULTIMATE && !hasActive && segments && segments.length > 1 ? segments[1].frames : undefined;
         return (
         <div
           className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
-          style={variant === 'ultimate' ? {
+          style={variant === SKILL_COLUMNS.ULTIMATE ? {
             top: 0,
             height: activationH,
             background: hexAlpha(color, 0.55),
@@ -408,7 +409,7 @@ function EventBlock({
         >
           {activationH > 14 && (
             <span className="event-block-label" style={{ color: '#fff' }}>
-              {variant === 'ultimate' ? 'Statis' : (label ?? 'ACT')}
+              {variant === SKILL_COLUMNS.ULTIMATE ? 'Statis' : (label ?? 'ACT')}
             </span>
           )}
           {actFrames?.map((f, fi) => {
@@ -437,11 +438,11 @@ function EventBlock({
 
       {/* Active phase segment */}
       {hasActive && activePhaseH > 0 && (() => {
-        const ultFrames = variant === 'ultimate' && segments && segments.length > 2 ? segments[2].frames : undefined;
+        const ultFrames = variant === SKILL_COLUMNS.ULTIMATE && segments && segments.length > 2 ? segments[2].frames : undefined;
         return (
         <div
           className={`event-segment${ultFrames ? ' event-segment--sequenced' : ''}`}
-          style={variant === 'ultimate' ? {
+          style={variant === SKILL_COLUMNS.ULTIMATE ? {
             top: activationH,
             height: activePhaseH,
             background: hexAlpha(color, 0.80),
@@ -462,8 +463,8 @@ function EventBlock({
           }}
         >
           {activePhaseH > 14 && (
-            <span className="event-block-label" style={{ color: variant === 'ultimate' ? '#fff' : hexAlpha(color, 0.9) }}>
-              {variant === 'ultimate' ? 'Active' : 'LNG'}
+            <span className="event-block-label" style={{ color: variant === SKILL_COLUMNS.ULTIMATE ? '#fff' : hexAlpha(color, 0.9) }}>
+              {variant === SKILL_COLUMNS.ULTIMATE ? 'Active' : 'LNG'}
             </span>
           )}
           {ultFrames?.map((f, fi) => {

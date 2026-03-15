@@ -1,26 +1,14 @@
 import {
   CombatSkillType,
   ElementType,
-  EnemyStatType,
   EnemyTierType,
   StatType,
   StatusType,
 } from "../../consts/enums";
 import { StatusLevel, TalentLevel } from "../../consts/types";
-import { Operator } from "../operators/operator";
-import { Weapon } from "../weapons/weapon";
 import { Enemy } from "../enemies/enemy";
 
 // ── Attack ──────────────────────────────────────────────────────────────────
-
-/** Total operator base attack = operator ATK + weapon ATK. */
-export function getOperatorBaseAttack(operator: Operator): number {
-  return operator.getBaseAttack();
-}
-
-export function getWeaponBaseAttack(weapon: Weapon): number {
-  return weapon.getBaseAttack();
-}
 
 /**
  * Combined attack value.
@@ -389,8 +377,24 @@ export function getArtsHiddenMultiplier(operatorLevel: number): number {
 
 // ── Composite Damage Formula ────────────────────────────────────────────────
 
+/** A labeled source contributing to a composite multiplier. */
+export interface MultiplierSource {
+  label: string;
+  value: number;
+}
+
 /** Sub-component values for multipliers that aggregate multiple sources. */
 export interface DamageSubComponents {
+  // Attack sub-components
+  operatorBaseAttack: number;
+  weaponBaseAttack: number;
+  atkBonusPct: number;
+  flatAtkBonuses: number;
+  // Attribute sub-components
+  mainAttrType: StatType;
+  mainAttrValue: number;
+  secondaryAttrType: StatType;
+  secondaryAttrValue: number;
   // Damage Bonus sub-components (additive)
   element: ElementType;
   elementDmgBonus: number;
@@ -410,6 +414,11 @@ export interface DamageSubComponents {
   ignoredResistance: number;
   // Fragility sub-components
   fragilityBonus: number;
+  fragilitySources: MultiplierSource[];
+  // Susceptibility sub-components
+  susceptibilitySources: MultiplierSource[];
+  // Amp sub-components
+  ampSources: MultiplierSource[];
   // Weaken sub-components
   weakenEffects: number[];
   // DMG Reduction sub-components
@@ -417,7 +426,13 @@ export interface DamageSubComponents {
   // Protection sub-components
   protectionEffects: number[];
   // Special multiplier sources
-  specialSources: { label: string; value: number }[];
+  specialSources: MultiplierSource[];
+  /** Raw segment multiplier before dividing by frame count (for display). */
+  segmentMultiplier?: number;
+  /** Number of frames the segment multiplier is spread across. */
+  segmentFrameCount?: number;
+  /** True when the multiplier is a per-tick value (e.g. ramping skills), not segment ÷ frames. */
+  isPerTickMultiplier?: boolean;
 }
 
 export interface DamageParams {

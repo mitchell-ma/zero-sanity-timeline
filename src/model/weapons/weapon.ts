@@ -5,9 +5,13 @@ import { WeaponSkill } from "../weapon-skills/weaponSkill";
 export interface WeaponBaseAttack {
   lv1: number;
   lv90: number;
+  attackByLevel?: Record<number, number>;
 }
 
 export function interpolateAttack(base: WeaponBaseAttack, level: number): number {
+  if (base.attackByLevel && level in base.attackByLevel) {
+    return base.attackByLevel[level];
+  }
   const t = (level - 1) / 89;
   return Math.round(base.lv1 + (base.lv90 - base.lv1) * t);
 }

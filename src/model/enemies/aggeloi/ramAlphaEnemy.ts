@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 208,
-    [EnemyStatType.ATK]: 46,
+    [StatType.BASE_HP]: 208,
+    [StatType.BASE_ATTACK]: 46,
   },
   20: {
-    [EnemyStatType.HP]: 1490,
-    [EnemyStatType.ATK]: 217,
+    [StatType.BASE_HP]: 1490,
+    [StatType.BASE_ATTACK]: 217,
   },
   40: {
-    [EnemyStatType.HP]: 9430,
-    [EnemyStatType.ATK]: 675,
+    [StatType.BASE_HP]: 9430,
+    [StatType.BASE_ATTACK]: 675,
   },
   60: {
-    [EnemyStatType.HP]: 37126,
-    [EnemyStatType.ATK]: 1677,
+    [StatType.BASE_HP]: 37126,
+    [StatType.BASE_ATTACK]: 1677,
   },
   80: {
-    [EnemyStatType.HP]: 89303,
-    [EnemyStatType.ATK]: 2523,
+    [StatType.BASE_HP]: 89303,
+    [StatType.BASE_ATTACK]: 2523,
   },
   90: {
-    [EnemyStatType.HP]: 137575,
-    [EnemyStatType.ATK]: 2891,
+    [StatType.BASE_HP]: 137575,
+    [StatType.BASE_ATTACK]: 2891,
   },
 };
 
@@ -48,8 +48,8 @@ export class RamAlphaEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 90,
-        [EnemyStatType.ATTACK_RANGE]: 2.1,
+        [StatType.STAGGER_HP]: 90,
+        [StatType.ATTACK_RANGE]: 2.1,
       },
       ...params,
     });

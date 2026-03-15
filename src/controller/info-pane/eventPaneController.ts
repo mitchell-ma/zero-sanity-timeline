@@ -4,9 +4,9 @@ import {
   SKILL_LABELS, REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
   TRIGGER_CONDITION_LABELS,
-} from '../../consts/channelLabels';
+} from '../../consts/timelineColumnLabels';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../calculation/statusQueryService';
 
@@ -89,7 +89,7 @@ export function resolveEventIdentity(
           triggerCondition = skill.triggerCondition;
           columnLabel = event.columnId.charAt(0).toUpperCase() + event.columnId.slice(1) + ' skill';
         }
-        if (event.columnId === 'combo' && op.triggerCapability) {
+        if (event.columnId === SKILL_COLUMNS.COMBO && op.triggerCapability) {
           comboTriggerLabels = op.triggerCapability.comboRequires.map(
             (tc) => TRIGGER_CONDITION_LABELS[tc] ?? tc,
           );
@@ -156,10 +156,11 @@ export interface SpReturnDisplay {
 export function resolveSpReturn(
   event: TimelineEvent,
   slots: { slotId: string; operator: Operator | null }[],
+  consumptionRecord?: { naturalConsumed: number; returnedConsumed: number },
 ): SpReturnDisplay | null {
   if (event.skillPointCost == null) return null;
 
-  const summary = computeSpReturnSummary(event);
+  const summary = computeSpReturnSummary(event, consumptionRecord);
   const slot = slots.find((s) => s.slotId === event.ownerId);
   const spNotes = slot?.operator?.skills.battle.spReturnNotes ?? [];
 

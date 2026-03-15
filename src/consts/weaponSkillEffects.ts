@@ -69,7 +69,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Reincarnation',
         description: "After the wielder's skill recovers SP, the wielder gains Physical DMG Dealt bonus for 30s. Max 5 stacks. Duration of each stack is counted separately.",
-        skillKey: 'FLOW_REINCARNATION',
+        skillKey: 'NEVER_REST_FLOW_REINCARNATION',
         triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
         target: 'wielder',
         durationSeconds: 30,
@@ -82,7 +82,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Reincarnation (Team)',
         description: "After the wielder's skill recovers SP, other operators in the team gain ATK bonus for 30s. Max 5 stacks. Duration of each stack is counted separately.",
-        skillKey: 'FLOW_REINCARNATION',
+        skillKey: 'NEVER_REST_FLOW_REINCARNATION',
         triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
         target: 'team',
         durationSeconds: 30,
@@ -102,7 +102,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Thermal Release',
         description: "After the wielder's skill recovers SP or grants a Link state, the wielder gains ATK bonus for 20s. Max 2 stacks.",
-        skillKey: 'FLOW_THERMAL_RELEASE',
+        skillKey: 'THERMITE_CUTTER_FLOW_THERMAL_RELEASE',
         triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
         target: 'wielder',
         durationSeconds: 20,
@@ -115,7 +115,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Thermal Release (Team)',
         description: "After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK bonus for 20s. Max 2 stacks.",
-        skillKey: 'FLOW_THERMAL_RELEASE',
+        skillKey: 'THERMITE_CUTTER_FLOW_THERMAL_RELEASE',
         triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
         target: 'team',
         durationSeconds: 20,
@@ -134,7 +134,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Blazing Wail',
       description: 'When the wielder casts an ultimate, the wielder gains Basic Attack DMG Dealt and Heat DMG Dealt bonus for 20s. Effects of the same name cannot stack.',
-      skillKey: 'TWILIGHT_BLAZING_WAIL',
+      skillKey: 'FORGEBORN_SCATHE_TWILIGHT_BLAZING_WAIL',
       triggers: [TriggerConditionType.CAST_ULTIMATE],
       target: 'wielder',
       durationSeconds: 20,
@@ -153,7 +153,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Disciplinarian',
       description: 'After the wielder consumes Vulnerability stack(s), the wielder gains ATK bonus scaling with consumed stacks for 20s. Other operators in the team gain half of this buff.',
-      skillKey: 'BRUTALITY_DISCIPLINARIAN',
+      skillKey: 'EMINENT_REPUTE_BRUTALITY_DISCIPLINARIAN',
       triggers: [TriggerConditionType.CONSUME_VULNERABILITY],
       target: 'wielder',
       durationSeconds: 20,
@@ -172,7 +172,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'White Night Nova',
       description: 'After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt and Arts Intensity bonus for 15s. Effects of the same name cannot stack.',
-      skillKey: 'INFLICTION_WHITE_NIGHT_NOVA',
+      skillKey: 'WHITE_NIGHT_NOVA_INFLICTION_WHITE_NIGHT_NOVA',
       triggers: [TriggerConditionType.APPLY_ARTS_REACTION],
       target: 'wielder',
       durationSeconds: 15,
@@ -191,7 +191,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Long Time Wish',
       description: 'When the wielder applies Originium Crystals or Solidification, during the next battle skill or ultimate cast within 20s, the wielder gains Physical DMG Dealt bonus.',
-      skillKey: 'INFLICTION_LONG_TIME_WISH',
+      skillKey: 'GRAND_VISION_INFLICTION_LONG_TIME_WISH',
       triggers: [TriggerConditionType.SOLIDIFICATION],
       target: 'wielder',
       durationSeconds: 20,
@@ -211,7 +211,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Covetous Buildup',
       description: 'Whenever Combustion or Corrosion is applied to an enemy, the wielder gains Heat DMG Dealt, Nature DMG Dealt, and ATK bonus for 20s. Max 2 stacks.',
-      skillKey: 'INFLICTION_COVETOUS_BUILDUP',
+      skillKey: 'UMBRAL_TORCH_INFLICTION_COVETOUS_BUILDUP',
       triggers: [TriggerConditionType.COMBUSTION, TriggerConditionType.CORROSION],
       target: 'wielder',
       durationSeconds: 20,
@@ -231,7 +231,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Anthem of Cinder',
       description: 'When the wielder applies a Physical Status, the wielder gains ATK bonus for 20s. Max 2 stacks.',
-      skillKey: 'COMBATIVE_ANTHEM_OF_CINDER',
+      skillKey: 'SUNDERING_STEEL_COMBATIVE_ANTHEM_OF_CINDER',
       triggers: [TriggerConditionType.APPLY_PHYSICAL_STATUS],
       target: 'wielder',
       durationSeconds: 20,
@@ -249,7 +249,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Imposing Peak',
       description: 'After the wielder applies Lifted, during the next ultimate cast within 30s, the wielder gains Physical DMG Dealt bonus. Max 3 stacks. Duration of each stack is counted separately.',
-      skillKey: 'TWILIGHT_IMPOSING_PEAK',
+      skillKey: 'ASPIRANT_TWILIGHT_IMPOSING_PEAK',
       triggers: [TriggerConditionType.APPLY_LIFTED],
       target: 'wielder',
       durationSeconds: 30,
@@ -268,7 +268,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Unbridled Edge',
       description: "After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt bonus for 20s. Max 3 stacks.",
-      skillKey: 'FLOW_UNBRIDLED_EDGE',
+      skillKey: 'OBJ_EDGE_OF_LIGHTNESS_FLOW_UNBRIDLED_EDGE',
       triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
       target: 'team',
       durationSeconds: 20,
@@ -287,7 +287,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Sincere Interrogation',
       description: 'After the wielder consumes an Arts Reaction, the wielder gains ATK bonus for 20s. Max 2 stacks. Duration of each stack is counted separately.',
-      skillKey: 'INFLICTION_SINCERE_INTERROGATION',
+      skillKey: 'TWELVE_QUESTIONS_INFLICTION_SINCERE_INTERROGATION',
       triggers: [TriggerConditionType.CONSUME_ARTS_REACTION],
       target: 'wielder',
       durationSeconds: 20,
@@ -305,7 +305,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: "Fin Chaser's Intent",
       description: "When the wielder's battle skill applies Solidification, target enemy suffers Cryo DMG Taken bonus for 15s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_FIN_CHASERS_INTENT',
+      skillKey: 'FINCHASER_3_0_SUPPRESSION_FIN_CHASERS_INTENT',
       triggers: [TriggerConditionType.SOLIDIFICATION],
       target: 'enemy',
       durationSeconds: 15,
@@ -324,7 +324,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Unending Cycle',
       description: 'When the wielder casts a combo skill, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.',
-      skillKey: 'PURSUIT_UNENDING_CYCLE',
+      skillKey: 'WAVE_TIDE_PURSUIT_UNENDING_CYCLE',
       triggers: [TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -342,7 +342,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Emergency Boost',
       description: "When the wielder's battle skill hits the enemy, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_EMERGENCY_BOOST',
+      skillKey: 'CONTINGENT_MEASURE_SUPPRESSION_EMERGENCY_BOOST',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -362,7 +362,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Princely Deterrence',
       description: 'When the wielder performs a Final Strike on the enemy, the wielder gains ATK and Stagger Efficiency bonus for 8s. If the wielder is the controlled operator, the ATK increase is doubled.',
-      skillKey: 'CRUSHER_PRINCELY_DETERRENCE',
+      skillKey: 'SUNDERED_PRINCE_CRUSHER_PRINCELY_DETERRENCE',
       triggers: [TriggerConditionType.FINAL_STRIKE],
       target: 'wielder',
       durationSeconds: 8,
@@ -382,7 +382,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Stacked Hew',
       description: "When the wielder's battle skill or ultimate hits the enemy, the wielder gains Physical DMG Dealt bonus for 30s. Max 3 stacks. Duration of each stack is counted separately.",
-      skillKey: 'SUPPRESSION_STACKED_HEW',
+      skillKey: 'EXEMPLAR_SUPPRESSION_STACKED_HEW',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 30,
@@ -400,7 +400,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Bonechilling',
       description: "When the wielder's battle skill applies Cryo Infliction, the wielder gains Cryo DMG Dealt bonus for 15s. When the wielder deals combo skill DMG to an enemy with Cryo Infliction, the wielder gains double Cryo DMG Dealt bonus for 15s.",
-      skillKey: 'DETONATE_BONECHILLING',
+      skillKey: 'KHRAVENGGER_DETONATE_BONECHILLING',
       triggers: [TriggerConditionType.APPLY_CRYO_INFLICTION],
       target: 'wielder',
       durationSeconds: 15,
@@ -419,7 +419,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Tenacious Will',
       description: 'When the wielder applies Knocked Down or Weakened, the wielder gains DEF bonus for 15s. Effects of the same name cannot stack.',
-      skillKey: 'EFFICACY_TENACIOUS_WILL',
+      skillKey: 'OBJ_HEAVY_BURDEN_EFFICACY_TENACIOUS_WILL',
       triggers: [TriggerConditionType.APPLY_KNOCKED_DOWN],
       target: 'wielder',
       durationSeconds: 15,
@@ -437,7 +437,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Lands of Yore',
       description: 'After the wielder consumes Vulnerability stack(s), the wielder gains Physical DMG Dealt bonus scaling with consumed stacks for 20s.',
-      skillKey: 'BRUTALITY_LANDS_OF_YORE',
+      skillKey: 'ANCIENT_CANAL_BRUTALITY_LANDS_OF_YORE',
       triggers: [TriggerConditionType.CONSUME_VULNERABILITY],
       target: 'wielder',
       durationSeconds: 20,
@@ -456,7 +456,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Seeker of the Esoteric',
       description: 'When the wielder applies an Arts Burst, the wielder gains ATK bonus for 30s. Max 3 stacks. Duration of each stack is counted separately.',
-      skillKey: 'DETONATE_SEEKER_OF_THE_ESOTERIC',
+      skillKey: 'SEEKER_OF_DARK_LUNG_DETONATE_SEEKER_OF_THE_ESOTERIC',
       triggers: [TriggerConditionType.APPLY_ARTS_BURST],
       target: 'wielder',
       durationSeconds: 30,
@@ -474,7 +474,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Emergency Boost',
       description: "When the wielder's battle skill hits the enemy, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_EMERGENCY_BOOST',
+      skillKey: 'INDUSTRY_0_1_SUPPRESSION_EMERGENCY_BOOST',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -492,7 +492,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Honed into Legion',
       description: 'When the wielder performs a Final Strike on the enemy, the wielder gains ATK bonus for 10s. Effects of the same name cannot stack.',
-      skillKey: 'CRUSHER_HONED_INTO_LEGION',
+      skillKey: 'QUENCHER_CRUSHER_HONED_INTO_LEGION',
       triggers: [TriggerConditionType.FINAL_STRIKE],
       target: 'wielder',
       durationSeconds: 10,
@@ -510,7 +510,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Mincing Therapy',
       description: 'After a Protected operator takes DMG, the wielder restores the said operator\'s HP. Effect only triggers once every 15s.',
-      skillKey: 'MINCING_THERAPY',
+      skillKey: 'FORMER_FINERY_MINCING_THERAPY',
       triggers: [TriggerConditionType.OPERATOR_ATTACKED],
       target: 'wielder',
       durationSeconds: 15,
@@ -529,7 +529,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Eye of Talos',
       description: "After the wielder's combo skill provides HP treatment, the controlled operator gains an additional Shield based on the wielder's Max HP for 15s. Effect only triggers once every 15s.",
-      skillKey: 'MEDICANT_EYE_OF_TALOS',
+      skillKey: 'THUNDERBERGE_MEDICANT_EYE_OF_TALOS',
       triggers: [TriggerConditionType.HP_TREATMENT],
       target: 'wielder',
       durationSeconds: 15,
@@ -550,7 +550,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Astrophysics',
       description: 'When the wielder casts a battle skill or combo skill, the wielder gains Arts DMG Dealt bonus for 15s. The two effects apply separately and do not stack with themselves.',
-      skillKey: 'SUPPRESSION_ASTROPHYSICS',
+      skillKey: 'JET_SUPPRESSION_ASTROPHYSICS',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL, TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 15,
@@ -568,7 +568,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Virtuous Gain',
       description: 'After the wielder applies Physical Statuses, the wielder also deals another hit of Physical DMG and gains ATK bonus for 15s.',
-      skillKey: 'COMBATIVE_VIRTUOUS_GAIN',
+      skillKey: 'VALIANT_COMBATIVE_VIRTUOUS_GAIN',
       triggers: [TriggerConditionType.APPLY_PHYSICAL_STATUS],
       target: 'wielder',
       durationSeconds: 15,
@@ -587,7 +587,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Concentric Circles',
       description: 'When the wielder casts a combo skill, during the next battle skill cast within 30s, the wielder gains Combo Skill DMG Dealt and Electric DMG Dealt bonus. Max 3 stacks. Duration of each stack is counted separately.',
-      skillKey: 'SUPPRESSION_CONCENTRIC_CIRCLES',
+      skillKey: 'COHESIVE_TRACTION_SUPPRESSION_CONCENTRIC_CIRCLES',
       triggers: [TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 30,
@@ -607,7 +607,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Cemented Fury',
       description: 'When the wielder applies Vulnerability to an enemy with no Vulnerability stacks, the wielder gains ATK and Critical Rate bonus for 15s. Effects of the same name cannot stack.',
-      skillKey: 'BRUTALITY_CEMENTED_FURY',
+      skillKey: 'CHIMERIC_JUSTICE_BRUTALITY_CEMENTED_FURY',
       triggers: [TriggerConditionType.APPLY_VULNERABILITY],
       target: 'wielder',
       durationSeconds: 15,
@@ -627,7 +627,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Emergency Boost',
       description: "When the wielder's battle skill hits the enemy, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_EMERGENCY_BOOST',
+      skillKey: 'AGGELOSLAYER_SUPPRESSION_EMERGENCY_BOOST',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -645,7 +645,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Conquest of Icy Peaks',
       description: 'To enemies with Cryo Infliction or Solidification, the wielder gains DMG Dealt bonus. After consuming Solidification, the wielder gains ATK bonus for 15s.',
-      skillKey: 'INFLICTION_CONQUEST_OF_ICY_PEAKS',
+      skillKey: 'OBJ_RAZORHORN_INFLICTION_CONQUEST_OF_ICY_PEAKS',
       triggers: [TriggerConditionType.SOLIDIFICATION],
       target: 'wielder',
       durationSeconds: 15,
@@ -668,7 +668,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Vicious Purge',
         description: 'After the wielder consumes an Arts Reaction, the wielder gains Arts DMG Dealt bonus for 15s. Effect only triggers once every 25s.',
-        skillKey: 'INFLICTION_VICIOUS_PURGE',
+        skillKey: 'CLANNIBAL_INFLICTION_VICIOUS_PURGE',
         triggers: [TriggerConditionType.CONSUME_ARTS_REACTION],
         target: 'wielder',
         durationSeconds: 15,
@@ -681,7 +681,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Vicious Purge (Enemy)',
         description: 'After the wielder consumes an Arts Reaction, target enemy suffers Arts DMG Taken bonus for 15s. Effect only triggers once every 25s.',
-        skillKey: 'INFLICTION_VICIOUS_PURGE',
+        skillKey: 'CLANNIBAL_INFLICTION_VICIOUS_PURGE',
         triggers: [TriggerConditionType.CONSUME_ARTS_REACTION],
         target: 'enemy',
         durationSeconds: 15,
@@ -701,7 +701,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Wedge of Civilization',
       description: "When the wielder casts a battle skill, the wielder gains Arts DMG Dealt bonus for 15s. When the wielder's battle skill applies an Arts Reaction, the wielder gains double the Arts DMG Dealt bonus for 15s. These do not stack with themselves.",
-      skillKey: 'INFLICTION_WEDGE_OF_CIVILIZATION',
+      skillKey: 'WEDGE_INFLICTION_WEDGE_OF_CIVILIZATION',
       triggers: [TriggerConditionType.APPLY_ARTS_REACTION],
       target: 'wielder',
       durationSeconds: 15,
@@ -720,7 +720,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Artzy Exaggeration',
       description: 'After the wielder scores a critical hit with a battle skill or combo skill, the wielder gains Cryo DMG Dealt bonus for 30s. Max 3 stacks. Duration of each stack is counted separately.',
-      skillKey: 'FRACTURE_ARTZY_EXAGGERATION',
+      skillKey: 'ARTZY_TYRANNICAL_FRACTURE_ARTZY_EXAGGERATION',
       triggers: [TriggerConditionType.CRITICAL_HIT],
       target: 'wielder',
       durationSeconds: 30,
@@ -739,7 +739,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Aid from the Past',
       description: "When the wielder's combo skill applies Arts Burst or Combustion, the wielder gains Battle Skill DMG Dealt and ATK bonus for 15s. Effects of the same name cannot stack.",
-      skillKey: 'PURSUIT_AID_FROM_THE_PAST',
+      skillKey: 'RATIONAL_FAREWELL_PURSUIT_AID_FROM_THE_PAST',
       triggers: [TriggerConditionType.APPLY_ARTS_BURST, TriggerConditionType.COMBUSTION],
       target: 'wielder',
       durationSeconds: 15,
@@ -759,7 +759,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Road Home for All Life',
       description: 'When the wielder applies an Arts Reaction, the wielder gains ATK bonus for 20s. Max 2 stacks. Duration of each stack is counted separately.',
-      skillKey: 'INFLICTION_ROAD_HOME_FOR_ALL_LIFE',
+      skillKey: 'OPUS_THE_LIVING_INFLICTION_ROAD_HOME_FOR_ALL_LIFE',
       triggers: [TriggerConditionType.APPLY_ARTS_REACTION],
       target: 'wielder',
       durationSeconds: 20,
@@ -777,7 +777,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Emergency Boost',
       description: "When the wielder's battle skill hits the enemy, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_EMERGENCY_BOOST',
+      skillKey: 'HOWLING_GUARD_SUPPRESSION_EMERGENCY_BOOST',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -795,7 +795,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Unending Cycle',
       description: 'When the wielder casts a combo skill, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.',
-      skillKey: 'PURSUIT_UNENDING_CYCLE',
+      skillKey: 'LONG_ROAD_PURSUIT_UNENDING_CYCLE',
       triggers: [TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -815,7 +815,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Lustrous Pyre',
       description: 'When the wielder casts an ultimate, operators whose elements differ from the wielder gain ATK bonus for 20s. Effects of the same name cannot stack.',
-      skillKey: 'TWILIGHT_LUSTROUS_PYRE',
+      skillKey: 'STANZA_OF_MEMORIALS_TWILIGHT_LUSTROUS_PYRE',
       triggers: [TriggerConditionType.CAST_ULTIMATE],
       target: 'team',
       durationSeconds: 20,
@@ -835,7 +835,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Tidal Murmurs',
         description: 'After the wielder consumes Corrosion, the wielder gains secondary attribute bonus for 25s. Effects of the same name cannot stack.',
-        skillKey: 'INFLICTION_TIDAL_MURMURS',
+        skillKey: 'DREAMS_OF_THE_STARRY_BEACH_INFLICTION_TIDAL_MURMURS',
         triggers: [TriggerConditionType.CONSUME_CORROSION],
         target: 'wielder',
         durationSeconds: 25,
@@ -849,7 +849,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Tidal Murmurs (Enemy)',
         description: 'After the wielder consumes Corrosion, target enemy suffers Arts DMG Taken bonus for 25s. Effects of the same name cannot stack.',
-        skillKey: 'INFLICTION_TIDAL_MURMURS',
+        skillKey: 'DREAMS_OF_THE_STARRY_BEACH_INFLICTION_TIDAL_MURMURS',
         triggers: [TriggerConditionType.CONSUME_CORROSION],
         target: 'enemy',
         durationSeconds: 25,
@@ -869,7 +869,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Blight Fervor',
       description: "After the wielder's skill provides HP treatment, the entire team gains ATK bonus for 15s. Effects of the same name cannot stack.",
-      skillKey: 'MEDICANT_BLIGHT_FERVOR',
+      skillKey: 'CHIVALRIC_VIRTUES_MEDICANT_BLIGHT_FERVOR',
       triggers: [TriggerConditionType.HP_TREATMENT],
       target: 'team',
       durationSeconds: 15,
@@ -888,7 +888,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Imposing Champion',
         description: 'When the wielder applies an Arts Burst, the wielder gains secondary attribute bonus for 15s. Effects of the same name cannot stack.',
-        skillKey: 'DETONATE_IMPOSING_CHAMPION',
+        skillKey: 'DETONATION_UNIT_DETONATE_IMPOSING_CHAMPION',
         triggers: [TriggerConditionType.APPLY_ARTS_BURST],
         target: 'wielder',
         durationSeconds: 15,
@@ -902,7 +902,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
       {
         label: 'Imposing Champion (Enemy)',
         description: 'When the wielder applies an Arts Burst, target enemy suffers Arts DMG Taken bonus for 15s. Effects of the same name cannot stack.',
-        skillKey: 'DETONATE_IMPOSING_CHAMPION',
+        skillKey: 'DETONATION_UNIT_DETONATE_IMPOSING_CHAMPION',
         triggers: [TriggerConditionType.APPLY_ARTS_BURST],
         target: 'enemy',
         durationSeconds: 15,
@@ -922,7 +922,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Humiliation',
       description: 'When the wielder casts an ultimate or combo skill, the wielder gains Arts DMG Dealt bonus for 15s. Ultimate grants double the bonus. The two effects apply separately and do not stack with themselves.',
-      skillKey: 'TWILIGHT_HUMILIATION',
+      skillKey: 'OBLIVION_TWILIGHT_HUMILIATION',
       triggers: [TriggerConditionType.CAST_ULTIMATE, TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 15,
@@ -941,7 +941,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Duty Fulfilled',
       description: "After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt and Nature DMG Dealt bonus for 15s. For every enemy Lifted, the team gains additional Arts DMG Dealt bonus. Effects of the same name cannot stack.",
-      skillKey: 'PURSUIT_DUTY_FULFILLED',
+      skillKey: 'DELIVERY_GUARANTEED_PURSUIT_DUTY_FULFILLED',
       triggers: [TriggerConditionType.APPLY_LIFTED],
       target: 'team',
       durationSeconds: 15,
@@ -960,7 +960,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Transcendent Arts',
       description: "When the wielder's combo skill applies Arts Burst or Physical Status, the entire team gains Heat DMG Dealt and Electric DMG Dealt bonus for 15s. Effects of the same name cannot stack.",
-      skillKey: 'PURSUIT_TRANSCENDENT_ARTS',
+      skillKey: 'OBJ_ARTS_IDENTIFIER_PURSUIT_TRANSCENDENT_ARTS',
       triggers: [TriggerConditionType.APPLY_ARTS_BURST, TriggerConditionType.APPLY_PHYSICAL_STATUS],
       target: 'team',
       durationSeconds: 15,
@@ -980,7 +980,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Redemption of Faith',
       description: "When the wielder's battle skill provides HP treatment, the controlled operator is restored for additional HP. Effect only triggers once every 15s.",
-      skillKey: 'MEDICANT_REDEMPTION_OF_FAITH',
+      skillKey: 'FREEDOM_TO_PROSELYTIZE_MEDICANT_REDEMPTION_OF_FAITH',
       triggers: [TriggerConditionType.HP_TREATMENT],
       target: 'wielder',
       durationSeconds: 15,
@@ -997,7 +997,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Wilderness Cluster',
       description: 'When the wielder applies Electrification, the team gains Physical DMG Dealt and Electric DMG Dealt bonus for 15s. Effects of the same name cannot stack.',
-      skillKey: 'INFLICTION_WILDERNESS_CLUSTER',
+      skillKey: 'WILD_WANDERER_INFLICTION_WILDERNESS_CLUSTER',
       triggers: [TriggerConditionType.ELECTRIFICATION],
       target: 'team',
       durationSeconds: 15,
@@ -1016,7 +1016,7 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
     effects: [{
       label: 'Emergency Boost',
       description: "When the wielder's battle skill hits the enemy, the wielder gains ATK bonus for 20s. Effects of the same name cannot stack.",
-      skillKey: 'SUPPRESSION_EMERGENCY_BOOST',
+      skillKey: 'FLUORESCENT_ROC_SUPPRESSION_EMERGENCY_BOOST',
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 20,
@@ -1034,4 +1034,15 @@ export const WEAPON_SKILL_EFFECTS: WeaponEffectsEntry[] = [
 /** Look up weapon effects by weapon name. Returns undefined for passive-only weapons. */
 export function getWeaponEffects(weaponName: string): WeaponEffectsEntry | undefined {
   return WEAPON_SKILL_EFFECTS.find((e) => e.weaponName === weaponName);
+}
+
+/** Register custom weapon effects at runtime. */
+export function registerWeaponEffects(entry: WeaponEffectsEntry): void {
+  WEAPON_SKILL_EFFECTS.push(entry);
+}
+
+/** Remove custom weapon effects by weapon name. */
+export function deregisterWeaponEffects(weaponName: string): void {
+  const idx = WEAPON_SKILL_EFFECTS.findIndex((e) => e.weaponName === weaponName);
+  if (idx >= 0) WEAPON_SKILL_EFFECTS.splice(idx, 1);
 }

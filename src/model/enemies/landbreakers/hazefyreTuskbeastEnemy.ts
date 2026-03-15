@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 194,
-    [EnemyStatType.ATK]: 33,
+    [StatType.BASE_HP]: 194,
+    [StatType.BASE_ATTACK]: 33,
   },
   20: {
-    [EnemyStatType.HP]: 1391,
-    [EnemyStatType.ATK]: 155,
+    [StatType.BASE_HP]: 1391,
+    [StatType.BASE_ATTACK]: 155,
   },
   40: {
-    [EnemyStatType.HP]: 8802,
-    [EnemyStatType.ATK]: 482,
+    [StatType.BASE_HP]: 8802,
+    [StatType.BASE_ATTACK]: 482,
   },
   60: {
-    [EnemyStatType.HP]: 34651,
-    [EnemyStatType.ATK]: 1198,
+    [StatType.BASE_HP]: 34651,
+    [StatType.BASE_ATTACK]: 1198,
   },
   80: {
-    [EnemyStatType.HP]: 83350,
-    [EnemyStatType.ATK]: 1802,
+    [StatType.BASE_HP]: 83350,
+    [StatType.BASE_ATTACK]: 1802,
   },
   90: {
-    [EnemyStatType.HP]: 128403,
-    [EnemyStatType.ATK]: 2065,
+    [StatType.BASE_HP]: 128403,
+    [StatType.BASE_ATTACK]: 2065,
   },
 };
 
@@ -48,13 +48,13 @@ export class HazefyreTuskbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.CRYO_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 80,
-        [EnemyStatType.ATTACK_RANGE]: 2.1,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.CRYO_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 80,
+        [StatType.ATTACK_RANGE]: 2.1,
       },
       ...params,
     });

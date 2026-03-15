@@ -1,5 +1,5 @@
 import { TimelineSourceType } from '../../consts/enums';
-import { ColumnLabel } from '../../consts/channelLabels';
+import { ColumnLabel } from '../../consts/timelineColumnLabels';
 import { MiniTimeline } from '../../consts/viewTypes';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline } from '../timeline/skillPointTimeline';

@@ -5,12 +5,14 @@
  * and combines them into computed damage numbers for the dumb view.
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
-import { COMBAT_SKILL_LABELS } from '../../consts/channelLabels';
+import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType, CombatSkillType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
-import { getSkillMultiplier } from './skillMultiplierRegistry';
+import { getSkillMultiplier, getPerTickMultiplier } from './jsonMultiplierEngine';
+import { evaluateTalentBonuses, evaluateTalentAttackBonus } from './talentBonusEngine';
+import { getOperatorJson, getSkillNameMap } from '../../model/event-frames/operatorJsonLoader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
@@ -38,7 +40,7 @@ import {
 import { StatusQueryService } from './statusQueryService';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -122,10 +124,10 @@ function isUltEnhanced(name: string): boolean {
 /** Map columnId to the CombatSkillType enum for damage bonus lookup. */
 function columnIdToSkillType(columnId: string): CombatSkillType {
   switch (columnId) {
-    case 'basic': return CombatSkillType.BASIC_ATTACK;
-    case 'battle': return CombatSkillType.BATTLE_SKILL;
-    case 'combo': return CombatSkillType.COMBO_SKILL;
-    case 'ultimate': return CombatSkillType.ULTIMATE;
+    case SKILL_COLUMNS.BASIC: return CombatSkillType.BASIC_ATTACK;
+    case SKILL_COLUMNS.BATTLE: return CombatSkillType.BATTLE_SKILL;
+    case SKILL_COLUMNS.COMBO: return CombatSkillType.COMBO_SKILL;
+    case SKILL_COLUMNS.ULTIMATE: return CombatSkillType.ULTIMATE;
     default: return CombatSkillType.BASIC_ATTACK;
   }
 }
@@ -133,10 +135,10 @@ function columnIdToSkillType(columnId: string): CombatSkillType {
 /** Map columnId to the skill level field in LoadoutStats. */
 function getSkillLevel(columnId: string, stats: LoadoutStats): SkillLevel {
   switch (columnId) {
-    case 'basic': return stats.basicAttackLevel as SkillLevel;
-    case 'battle': return stats.battleSkillLevel as SkillLevel;
-    case 'combo': return stats.comboSkillLevel as SkillLevel;
-    case 'ultimate': return stats.ultimateLevel as SkillLevel;
+    case SKILL_COLUMNS.BASIC: return stats.basicAttackLevel as SkillLevel;
+    case SKILL_COLUMNS.BATTLE: return stats.battleSkillLevel as SkillLevel;
+    case SKILL_COLUMNS.COMBO: return stats.comboSkillLevel as SkillLevel;
+    case SKILL_COLUMNS.ULTIMATE: return stats.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
 }
@@ -150,6 +152,16 @@ interface OperatorCalcData {
   critDamage: number;
   stats: Record<StatType, number>;
   element: ElementType;
+  // Attack sub-components for breakdown display
+  operatorBaseAttack: number;
+  weaponBaseAttack: number;
+  atkBonusPct: number;
+  flatAtkBonuses: number;
+  // Attribute sub-components
+  mainAttrType: StatType;
+  mainAttrValue: number;
+  secondaryAttrType: StatType;
+  secondaryAttrValue: number;
 }
 
 function buildOperatorCalcData(
@@ -160,12 +172,12 @@ function buildOperatorCalcData(
   const agg = aggregateLoadoutStats(operatorId, loadout, stats);
   if (!agg) return null;
 
-  // Lifeng T1 — Illumination: every point of INT + WIL grants additional ATK%
-  let extraAttackPct = 0;
-  if (operatorId === 'lifeng' && stats.talentOneLevel >= 1) {
-    const intWil = Math.floor(agg.stats[StatType.INTELLECT]) + Math.floor(agg.stats[StatType.WILL]);
-    extraAttackPct = intWil * (stats.talentOneLevel >= 2 ? 0.0015 : 0.0010);
-  }
+  const { extraAttackPct } = evaluateTalentAttackBonus(operatorId, {
+    talentOneLevel: stats.talentOneLevel,
+    talentTwoLevel: stats.talentTwoLevel,
+    potential: (stats.potential ?? 0) as Potential,
+    stats: agg.stats,
+  });
 
   const totalAttack = getTotalAttack(
     agg.operatorBaseAttack,
@@ -182,6 +194,14 @@ function buildOperatorCalcData(
     critDamage: agg.stats[StatType.CRITICAL_DAMAGE],
     stats: agg.stats,
     element: agg.element,
+    operatorBaseAttack: agg.operatorBaseAttack,
+    weaponBaseAttack: agg.weaponBaseAttack,
+    atkBonusPct: agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
+    flatAtkBonuses: agg.flatAttackBonuses,
+    mainAttrType: agg.mainAttributeType,
+    mainAttrValue: agg.stats[agg.mainAttributeType] ?? 0,
+    secondaryAttrType: agg.secondaryAttributeType,
+    secondaryAttrValue: agg.stats[agg.secondaryAttributeType] ?? 0,
   };
 }
 
@@ -233,7 +253,7 @@ export function buildDamageTableRows(
   const bossMaxHp = modelEnemy ? modelEnemy.getHp() : null;
 
   for (const ev of events) {
-    const effectiveColumnId = isUltEnhanced(ev.name) ? 'ultimate' : ev.columnId;
+    const effectiveColumnId = isUltEnhanced(ev.name) ? SKILL_COLUMNS.ULTIMATE : ev.columnId;
     const col = colLookup.get(`${ev.ownerId}-${effectiveColumnId}`)
       ?? colLookup.get(`${ev.ownerId}-${ev.columnId}`);
     if (!col) continue;
@@ -269,17 +289,35 @@ export function buildDamageTableRows(
             let params: DamageParams | null = null;
 
             if (operatorId && opData) {
-              multiplier = getSkillMultiplier(
+              // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
+              const perTickMult = getPerTickMultiplier(
                 operatorId,
                 ev.name as CombatSkillsType,
-                seg.label,
                 skillLevel,
                 potential,
+                fi,
               );
 
-              // Segment multiplier is for the entire segment; divide by max frame count
-              if (multiplier != null && maxFrames > 1) {
-                multiplier = multiplier / maxFrames;
+              let segmentMultiplier: number | null;
+
+              if (perTickMult != null) {
+                // Per-tick multiplier: use directly, no division needed
+                multiplier = perTickMult;
+                segmentMultiplier = null;
+              } else {
+                multiplier = getSkillMultiplier(
+                  operatorId,
+                  ev.name as CombatSkillsType,
+                  seg.label,
+                  skillLevel,
+                  potential,
+                );
+
+                // Segment multiplier is for the entire segment; divide by max frame count
+                segmentMultiplier = multiplier;
+                if (multiplier != null && maxFrames > 1) {
+                  multiplier = multiplier / maxFrames;
+                }
               }
 
               if (multiplier != null && multiplier > 0) {
@@ -297,59 +335,26 @@ export function buildDamageTableRows(
                 const isStaggered = statusQuery?.isStaggered(absFrame) ?? false;
 
                 // ── Operator talent conditional bonuses ──────────────────────
-                let talentStaggerDmgBonus = 0;
-                let talentCritDmgBonus = 0;
-                let talentSpecialMultiplier = 1;
-                let talentDmgDealBonus = 0;
-
-                // Perlica T1 — Obliteration Protocol: DMG Dealt +20/30% to Staggered
-                if (operatorId === 'perlica' && stats.talentOneLevel >= 1 && isStaggered) {
-                  talentStaggerDmgBonus += stats.talentOneLevel >= 2 ? 0.30 : 0.20;
-                }
-                // Yvonne T2 — Freezing Point: Crit DMG +10/20% vs Cryo-inflicted; doubled vs Solidified
-                if (operatorId === 'yvonne' && stats.talentTwoLevel >= 1 && statusQuery) {
-                  if (statusQuery.isSolidificationActive(absFrame)) {
-                    talentCritDmgBonus += (stats.talentTwoLevel >= 2 ? 0.20 : 0.10) * 2;
-                  } else if (statusQuery.isCryoInflictionActive(absFrame)) {
-                    talentCritDmgBonus += stats.talentTwoLevel >= 2 ? 0.20 : 0.10;
-                  }
-                }
-                // Yvonne P3 — Tink-a-Power: Crit DMG +10% vs Cryo, doubled vs Solidification
-                if (operatorId === 'yvonne' && potential >= 3 && statusQuery) {
-                  if (statusQuery.isSolidificationActive(absFrame)) {
-                    talentCritDmgBonus += 0.10 * 2;
-                  } else if (statusQuery.isCryoInflictionActive(absFrame)) {
-                    talentCritDmgBonus += 0.10;
-                  }
-                }
-                // Last Rite T2 — Cryogenic Embrittlement: Ultimate DMG x1.2/1.5 vs Cryo Susceptibility
-                if (operatorId === 'lastRite' && stats.talentTwoLevel >= 1 && skillType === CombatSkillType.ULTIMATE && statusQuery) {
-                  if (statusQuery.getSusceptibilityBonus(absFrame, ElementType.CRYO) > 0) {
-                    talentSpecialMultiplier *= stats.talentTwoLevel >= 2 ? 1.5 : 1.2;
-                  }
-                }
-                // Avywenna P5 — Carrot and Sharp Stick: 1.15x vs Electric Susceptible
-                if (operatorId === 'avywenna' && potential >= 5 && statusQuery) {
-                  if (statusQuery.getSusceptibilityBonus(absFrame, ElementType.ELECTRIC) > 0) {
-                    talentSpecialMultiplier *= 1.15;
-                  }
-                }
-                // Chen Qianyu P1 — DMG Dealt +20% to enemies below 50% HP
-                if (operatorId === 'chenQianyu' && potential >= 1) {
-                  talentDmgDealBonus += 0.20;
-                }
-                // Fluorite T1 — Love the Stab and Twist: DMG +10/20% vs Slowed
-                if (operatorId === 'fluorite' && stats.talentOneLevel >= 1) {
-                  talentDmgDealBonus += stats.talentOneLevel >= 2 ? 0.20 : 0.10;
-                }
-                // Alesh P5 — Ultimate DMG x1.5 vs enemies below 50% HP
-                if (operatorId === 'alesh' && potential >= 5 && skillType === CombatSkillType.ULTIMATE) {
-                  talentSpecialMultiplier *= 1.5;
-                }
-                // Laevatain P5 — Proof of Existence: Enhanced basic attack DMG multiplier x1.2
-                if (operatorId === 'laevatain' && potential >= 5 && ev.name === CombatSkillsType.FLAMING_CINDERS_ENHANCED) {
-                  talentSpecialMultiplier *= 1.2;
-                }
+                const talentBonuses = evaluateTalentBonuses(
+                  operatorId,
+                  {
+                    talentOneLevel: stats.talentOneLevel,
+                    talentTwoLevel: stats.talentTwoLevel,
+                    potential,
+                    stats: opData.stats,
+                  },
+                  {
+                    absFrame,
+                    skillType,
+                    skillName: ev.name,
+                    isStaggered,
+                    statusQuery,
+                  },
+                );
+                const talentStaggerDmgBonus = talentBonuses.staggerDmgBonus;
+                const talentCritDmgBonus = talentBonuses.critDmgBonus;
+                const talentSpecialMultiplier = talentBonuses.specialMultiplier;
+                const talentDmgDealBonus = talentBonuses.dmgDealBonus;
 
                 // Damage Bonus sub-components
                 const allElementDmgBonuses = {
@@ -414,22 +419,17 @@ export function buildDamageTableRows(
                 const subProtectionEffects = statusQuery?.getProtectionEffects(absFrame) ?? [];
                 const subFragilityBonus = statusQuery?.getFragilityBonus(absFrame, element) ?? 0;
 
-                // Special multiplier sources
-                const specialSources: { label: string; value: number }[] = [];
-                if (operatorId === 'lastRite' && stats.talentTwoLevel >= 1 && skillType === CombatSkillType.ULTIMATE && statusQuery && statusQuery.getSusceptibilityBonus(absFrame, ElementType.CRYO) > 0) {
-                  specialSources.push({ label: 'Cryogenic Embrittlement', value: stats.talentTwoLevel >= 2 ? 1.5 : 1.2 });
-                }
-                if (operatorId === 'avywenna' && potential >= 5 && statusQuery && statusQuery.getSusceptibilityBonus(absFrame, ElementType.ELECTRIC) > 0) {
-                  specialSources.push({ label: 'Carrot and Sharp Stick (P5)', value: 1.15 });
-                }
-                if (operatorId === 'alesh' && potential >= 5 && skillType === CombatSkillType.ULTIMATE) {
-                  specialSources.push({ label: 'P5: x1.5 vs <50% HP', value: 1.5 });
-                }
-                if (operatorId === 'laevatain' && potential >= 5 && ev.name === CombatSkillsType.FLAMING_CINDERS_ENHANCED) {
-                  specialSources.push({ label: 'Proof of Existence (P5)', value: 1.2 });
-                }
+                const specialSources = talentBonuses.specialSources;
 
                 const sub: DamageSubComponents = {
+                  operatorBaseAttack: opData.operatorBaseAttack,
+                  weaponBaseAttack: opData.weaponBaseAttack,
+                  atkBonusPct: opData.atkBonusPct,
+                  flatAtkBonuses: opData.flatAtkBonuses,
+                  mainAttrType: opData.mainAttrType,
+                  mainAttrValue: opData.mainAttrValue,
+                  secondaryAttrType: opData.secondaryAttrType,
+                  secondaryAttrValue: opData.secondaryAttrValue,
                   element,
                   elementDmgBonus: subElementDmg,
                   allElementDmgBonuses,
@@ -445,10 +445,16 @@ export function buildDamageTableRows(
                   corrosionReduction: subCorrosionReduction,
                   ignoredResistance: subIgnoredRes,
                   fragilityBonus: subFragilityBonus,
+                  fragilitySources: statusQuery?.getFragilitySources(absFrame, element) ?? [],
+                  susceptibilitySources: statusQuery?.getSusceptibilitySources(absFrame, element) ?? [],
+                  ampSources: statusQuery?.getAmpSources(absFrame) ?? [],
                   weakenEffects: subWeakenEffects,
                   dmgReductionEffects: subDmgReductionEffects,
                   protectionEffects: subProtectionEffects,
                   specialSources,
+                  segmentMultiplier: segmentMultiplier ?? undefined,
+                  segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
+                  isPerTickMultiplier: perTickMult != null,
                 };
 
                 params = {
@@ -472,7 +478,7 @@ export function buildDamageTableRows(
                   sub,
                 };
 
-                damage = Math.floor(calculateDamage(params));
+                damage = calculateDamage(params);
               }
             }
 
@@ -500,69 +506,78 @@ export function buildDamageTableRows(
     }
   }
 
-  // ── Catcher T2/P1 — Additional damage strikes ─────────────────────────────
+  // ── Data-driven additional damage strikes (from talentEffects) ──────────────
   for (const ev of events) {
     const oid = opIdCache.get(ev.ownerId);
-    if (oid !== 'catcher') continue;
+    if (!oid) continue;
     const opData = opCache.get(ev.ownerId);
     if (!opData) continue;
-    const catcherStats = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_STATS;
-    const catcherPotential = (catcherStats.potential ?? 5) as Potential;
+    const evStats = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_STATS;
+    const evPotential = (evStats.potential ?? 5) as Potential;
 
-    const isBattle = ev.name === CombatSkillsType.RIGID_INTERDICTION;
-    const isUlt = ev.name === CombatSkillsType.TEXTBOOK_ASSAULT;
-    if (!isBattle && !isUlt) continue;
+    const json = getOperatorJson(oid);
+    const talentEffects = (json?.talentEffects ?? []) as any[];
+    const evCategory = getSkillNameMap(oid)[ev.name];
 
-    const absFrame = ev.startFrame;
     const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);
     if (!col) continue;
 
-    // P1 — Multi-layered Readiness: Battle/ultimate gain strike at [300 + DEF×5.0] Physical DMG
-    // DEF comes from gear and is not tracked in the stat aggregation; use base 300 as minimum
-    if (catcherPotential >= 1) {
-      const p1Damage = 300;
-      rows.push({
-        key: `${ev.id}-p1-strike`,
-        absoluteFrame: absFrame,
-        label: `${getEventDisplayName(ev.name)} > P1 Strike`,
-        columnKey: col.key,
-        ownerId: ev.ownerId,
-        columnId: ev.columnId,
-        eventId: ev.id,
-        segmentIndex: 0,
-        frameIndex: 0,
-        damage: p1Damage,
-        multiplier: null,
-        segmentLabel: undefined,
-        skillName: ev.name,
-        hpRemaining: null,
-        params: null,
-      });
-    }
+    for (const te of talentEffects) {
+      if (te.bonusType === 'ADDITIONAL_STRIKE') {
+        // Check condition
+        const allowedTypes = Array.isArray(te.condition?.skillType) ? te.condition.skillType : [te.condition?.skillType];
+        if (!allowedTypes.some((t: string) => evCategory === t)) continue;
+        // Check source level
+        if (te.source === 'POTENTIAL' && evPotential < (te.minPotential ?? 1)) continue;
+        if (te.source === 'TALENT_1' && evStats.talentOneLevel < (te.minLevel ?? 1)) continue;
+        if (te.source === 'TALENT_2' && evStats.talentTwoLevel < (te.minLevel ?? 1)) continue;
 
-    // T2 — Comprehensive Mindset: Ultimate creates shockwaves at 30/45% ATK Physical DMG each
-    if (isUlt && catcherStats.talentTwoLevel >= 1) {
-      const waveCount = catcherStats.talentTwoLevel >= 2 ? 3 : 2;
-      const waveMultiplier = catcherStats.talentTwoLevel >= 2 ? 0.45 : 0.30;
-      const waveDamage = Math.floor(opData.totalAttack * waveMultiplier * opData.attributeBonus);
-      for (let w = 0; w < waveCount; w++) {
         rows.push({
-          key: `${ev.id}-t2-wave-${w}`,
-          absoluteFrame: absFrame,
-          label: `Textbook Assault > Shockwave ${w + 1}`,
+          key: `${ev.id}-${te.name.toLowerCase().replace(/\s+/g, '-')}`,
+          absoluteFrame: ev.startFrame,
+          label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name}`,
           columnKey: col.key,
           ownerId: ev.ownerId,
           columnId: ev.columnId,
           eventId: ev.id,
           segmentIndex: 0,
-          frameIndex: w,
-          damage: waveDamage,
-          multiplier: waveMultiplier,
+          frameIndex: 0,
+          damage: te.values[0],
+          multiplier: null,
           segmentLabel: undefined,
           skillName: ev.name,
           hpRemaining: null,
           params: null,
         });
+      } else if (te.bonusType === 'SHOCKWAVE') {
+        const allowedType = te.condition?.skillType;
+        if (evCategory !== allowedType) continue;
+        const level = te.source === 'TALENT_2' ? evStats.talentTwoLevel : evStats.talentOneLevel;
+        if (level < (te.minLevel ?? 1)) continue;
+
+        const levelIdx = Math.min(level - 1, te.values.length - 1);
+        const waveMultiplier = te.values[levelIdx];
+        const waveCount = te.waveCount?.[levelIdx] ?? 2;
+        const waveDamage = opData.totalAttack * waveMultiplier * opData.attributeBonus;
+        for (let w = 0; w < waveCount; w++) {
+          rows.push({
+            key: `${ev.id}-${te.name.toLowerCase().replace(/\s+/g, '-')}-${w}`,
+            absoluteFrame: ev.startFrame,
+            label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name} ${w + 1}`,
+            columnKey: col.key,
+            ownerId: ev.ownerId,
+            columnId: ev.columnId,
+            eventId: ev.id,
+            segmentIndex: 0,
+            frameIndex: w,
+            damage: waveDamage,
+            multiplier: waveMultiplier,
+            segmentLabel: undefined,
+            skillName: ev.name,
+            hpRemaining: null,
+            params: null,
+          });
+        }
       }
     }
   }

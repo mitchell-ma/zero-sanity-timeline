@@ -4,6 +4,9 @@
  */
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { initCustomWeapons } from '../controller/custom/customWeaponController';
+import { initCustomGearSets } from '../controller/custom/customGearController';
+import { initCustomOperators } from '../controller/custom/customOperatorController';
 import { useHistory } from '../utils/useHistory';
 import { LoadoutStats, getDefaultLoadoutStats } from '../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
@@ -79,8 +82,15 @@ import {
 } from '../controller/appStateController';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
+import { SKILL_COLUMNS } from '../model/channels';
+import type { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
+
+// Register custom content before loading sheet data (sheets may reference custom items)
+initCustomWeapons();
+initCustomGearSets();
+initCustomOperators();
 
 const initialLoad = loadInitialState();
 
@@ -163,6 +173,10 @@ export function useApp() {
   const [editingResourceKey, setEditingResourceKey] = useState<string | null>(null);
   const [editingDamageRow, setEditingDamageRow] = useState<DamageTableRow | null>(null);
   const [damageRows, setDamageRows] = useState<DamageTableRow[]>([]);
+  const [spConsumptionHistory, setSpConsumptionHistory] = useState<SkillPointConsumptionHistory[]>([]);
+  const [derivedEventOverrides, setDerivedEventOverrides] = useState<Record<string, Partial<TimelineEvent>>>(
+    initialLoad.loaded?.derivedEventOverrides ?? {},
+  );
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
   const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(true);
@@ -170,7 +184,16 @@ export function useApp() {
   const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
   const [scrollSynced,     setScrollSynced]     = useState(true);
   const [showRealTime,     setShowRealTime]     = useState(true);
-  const [splitPct,         setSplitPct]         = useState(65);
+  const [splitPct,         setSplitPct]         = useState(() => {
+    try { const v = localStorage.getItem('zst-split-pct'); return v ? Number(v) : 65; } catch { return 65; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('zst-split-pct', String(splitPct)); } catch { /* ignore */ }
+  }, [splitPct]);
+  const [hiddenPane, setHiddenPane] = useState<'left' | 'right' | null>(null);
+  const [hidePreview, setHidePreview] = useState<'left' | 'right' | null>(null);
+  const [showPreview, setShowPreview] = useState<'left' | 'right' | null>(null);
+  const preDragSplitRef = useRef(65);
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
   const [debugMode,        setDebugMode]        = useState(() => {
@@ -189,6 +212,22 @@ export function useApp() {
   useEffect(() => {
     try { localStorage.setItem('zst-debug-mode', String(debugMode)); } catch { /* ignore */ }
   }, [debugMode]);
+
+  const [lightMode, setLightMode] = useState(() => {
+    try { return localStorage.getItem('zst-light-mode') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', lightMode ? 'light' : 'dark');
+    try { localStorage.setItem('zst-light-mode', String(lightMode)); } catch { /* ignore */ }
+  }, [lightMode]);
+
+  const handleToggleTheme = useCallback(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme-transitioning', '');
+    setLightMode((v) => !v);
+    const timer = setTimeout(() => root.removeAttribute('data-theme-transitioning'), 900);
+    return () => clearTimeout(timer);
+  }, []);
 
   // ─── Refs ────────────────────────────────────────────────────────────────
   const appBodyRef = useRef<HTMLDivElement | null>(null);
@@ -279,12 +318,40 @@ export function useApp() {
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
   );
 
-  const allProcessedEvents = useMemo(
+  const allProcessedEventsRaw = useMemo(
     () => tacticalEvents.length > 0 ? [...processedEvents, ...tacticalEvents] : processedEvents,
     [processedEvents, tacticalEvents],
   );
+
+  // Apply user overrides to derived events
+  const allProcessedEvents = useMemo(() => {
+    const keys = Object.keys(derivedEventOverrides);
+    if (keys.length === 0) return allProcessedEventsRaw;
+    return allProcessedEventsRaw.map((ev) => {
+      const override = derivedEventOverrides[ev.id];
+      return override ? { ...ev, ...override } : ev;
+    });
+  }, [allProcessedEventsRaw, derivedEventOverrides]);
+
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
+
+  // Prune stale overrides when derived events change
+  useEffect(() => {
+    const keys = Object.keys(derivedEventOverrides);
+    if (keys.length === 0) return;
+    const processedIds = new Set(allProcessedEventsRaw.map((ev) => ev.id));
+    const hasStale = keys.some((id) => !processedIds.has(id));
+    if (hasStale) {
+      setDerivedEventOverrides((prev) => {
+        const next: Record<string, Partial<TimelineEvent>> = {};
+        for (const [id, override] of Object.entries(prev)) {
+          if (processedIds.has(id)) next[id] = override;
+        }
+        return next;
+      });
+    }
+  }, [allProcessedEventsRaw, derivedEventOverrides]);
 
   const staggerBreaks = useMemo(
     () => combatLoadout.commonSlot.stagger.getBreaks(),
@@ -320,13 +387,11 @@ export function useApp() {
     : null;
 
   const editingEventReadOnly = editingEvent
-    ? editingEvent.columnId === COMBO_WINDOW_COLUMN_ID ||
-      columns.some((c) => {
-        if (c.type !== 'mini-timeline' || !c.derived) return false;
-        if (c.ownerId !== editingEvent.ownerId) return false;
-        if (c.columnId === editingEvent.columnId) return true;
-        return c.matchColumnIds?.includes(editingEvent.columnId) ?? false;
-      })
+    ? editingEvent.columnId === COMBO_WINDOW_COLUMN_ID
+    : false;
+
+  const editingEventIsDerived = editingEvent
+    ? !validEvents.some((e) => e.id === editingEvent.id)
     : false;
 
   const editingSlot = editingSlotId
@@ -338,12 +403,12 @@ export function useApp() {
     : null;
 
   const getDefaultResourceConfig = useCallback((colKey: string): ResourceConfig => {
-    return computeDefaultResourceConfig(operators, loadoutStats, SLOT_IDS, colKey, spKey, staggerKey, enemyStats.staggerHp);
-  }, [operators, loadoutStats, spKey, staggerKey, enemyStats.staggerHp]);
+    return computeDefaultResourceConfig(operators, loadoutStats, SLOT_IDS, colKey, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]);
+  }, [operators, loadoutStats, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]]);
 
   const editingResourceConfig = editingResourceKey
     ? editingResourceKey === staggerKey
-      ? { startValue: enemyStats.staggerStartValue ?? 0, max: enemyStats.staggerHp, regenPerSecond: 0 }
+      ? { startValue: enemyStats.staggerStartValue ?? 0, max: enemyStats[StatType.STAGGER_HP], regenPerSecond: 0 }
       : resourceConfigs[editingResourceKey] ?? getDefaultResourceConfig(editingResourceKey)
     : null;
 
@@ -419,9 +484,9 @@ export function useApp() {
   useEffect(() => {
     const stagger = combatLoadout.commonSlot.stagger;
     stagger.setNodeCount(enemyStats.staggerNodes);
-    stagger.setBreakDuration(Math.round(enemyStats.staggerBreakDurationSeconds * FPS));
+    stagger.setBreakDuration(Math.round(enemyStats[StatType.STAGGER_RECOVERY] * FPS));
     stagger.updateConfig({
-      max: enemyStats.staggerHp,
+      max: enemyStats[StatType.STAGGER_HP],
       startValue: enemyStats.staggerStartValue ?? 0,
     });
   }, [enemyStats, combatLoadout]);
@@ -432,19 +497,52 @@ export function useApp() {
     const spRecovery = processedEvents.filter(
       (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS,
     );
-    const battleCosts = processedEvents
-      .filter((ev) => ev.columnId === 'battle' && ev.skillPointCost)
-      .map((ev) => ({
+    const battleCosts: TimelineEvent[] = [];
+    const spReturns: TimelineEvent[] = [];
+    for (const ev of processedEvents) {
+      if (ev.columnId !== SKILL_COLUMNS.BATTLE || !ev.skillPointCost) continue;
+      // Cost event
+      battleCosts.push({
         id: `${ev.id}-sp`,
         name: 'sp-cost',
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
         startFrame: ev.startFrame,
-        activationDuration: ev.skillPointCost!,
+        activationDuration: ev.skillPointCost,
         activeDuration: 0,
         cooldownDuration: 0,
-      } as TimelineEvent));
-    spSubtimeline.setEvents([...spRecovery, ...battleCosts].sort((a, b) => a.startFrame - b.startFrame));
+      } as TimelineEvent);
+      // Return events from frame-level skillPointRecovery
+      if (ev.segments) {
+        const animOffset = ev.animationDuration ?? 0;
+        let segOffset = 0;
+        for (const seg of ev.segments) {
+          if (seg.frames) {
+            for (const f of seg.frames) {
+              if (f.skillPointRecovery && f.skillPointRecovery > 0) {
+                const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
+                spReturns.push({
+                  id: `${ev.id}-sp-return-${frame}`,
+                  name: 'sp-return',
+                  ownerId: COMMON_OWNER_ID,
+                  columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+                  startFrame: frame,
+                  activationDuration: f.skillPointRecovery,
+                  activeDuration: 0,
+                  cooldownDuration: 0,
+                } as TimelineEvent);
+              }
+            }
+          }
+          segOffset += seg.durationFrames;
+        }
+      }
+    }
+    const allSpEvents = [...spRecovery, ...battleCosts, ...spReturns]
+      .sort((a, b) => a.startFrame - b.startFrame || (a.name === 'sp-cost' ? -1 : 1));
+    spSubtimeline.setEvents(allSpEvents);
+    // After setEvents, recompute runs synchronously — read the updated consumption log
+    setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
   }, [processedEvents, combatLoadout]);
 
   // ─── Stagger event sync ──────────────────────────────────────────────────
@@ -455,7 +553,7 @@ export function useApp() {
     for (const ev of processedEvents) {
       if (!ev.segments) continue;
       // For combo/ultimate events, the first segment starts after the animation time-stop
-      const animOffset = (ev.columnId === 'combo' || ev.columnId === 'ultimate')
+      const animOffset = (ev.columnId === SKILL_COLUMNS.COMBO || ev.columnId === SKILL_COLUMNS.ULTIMATE)
         ? (ev.animationDuration ?? 0) : 0;
       let segOffset = 0;
       for (const seg of ev.segments) {
@@ -485,7 +583,7 @@ export function useApp() {
   useEffect(() => {
     const stops: TimeStopRange[] = [];
     for (const ev of processedEvents) {
-      const isTimeStop = (ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+      const isTimeStop = (ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
         (ev.columnId === 'dash' && ev.isPerfectDodge)) &&
         ev.animationDuration && ev.animationDuration > 0;
       if (isTimeStop) {
@@ -541,8 +639,9 @@ export function useApp() {
       visibleSkills,
       getNextEventId(),
       resourceConfigs,
+      derivedEventOverrides,
     );
-  }, [operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs]);
+  }, [operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs, derivedEventOverrides]);
 
   useAutoSave(buildSheetData);
 
@@ -578,26 +677,159 @@ export function useApp() {
   }, [scrollSynced]);
 
   // ─── Panel resize ────────────────────────────────────────────────────────
+  const HIDE_THRESHOLD = 15;
+
   const handleResizerMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.preventDefault();
-    resizerDragRef.current = { startX: e.clientX, startPct: splitPct };
+
+    const wasHidden = hiddenPane;
+    let didDrag = false;
+    let lastPct = splitPct;
+
+    // Snapshot the split area in viewport coords at drag start
+    const sidebarRight = sidebarRef.current?.getBoundingClientRect().right ?? 0;
+    const bodyRight = appBodyRef.current?.getBoundingClientRect().right ?? 1;
+    const splitW = bodyRight - sidebarRight;
+    const pctFromClientX = (cx: number) => ((cx - sidebarRight) / splitW) * 100;
+
+    if (!wasHidden) {
+      preDragSplitRef.current = splitPct;
+    }
+
     const handleMouseMove = (ev: MouseEvent) => {
-      const ref = resizerDragRef.current;
-      if (!ref || !appBodyRef.current) return;
-      const bodyW = appBodyRef.current.offsetWidth;
-      const dx = ev.clientX - ref.startX;
-      const newPct = Math.max(30, Math.min(80, ref.startPct + (dx / bodyW) * 100));
-      setSplitPct(newPct);
+      didDrag = true;
+
+      // When collapsed, unhide pane on first move
+      if (wasHidden) {
+        setHiddenPane(null);
+      }
+
+      lastPct = Math.max(0, Math.min(100, pctFromClientX(ev.clientX)));
+      setSplitPct(lastPct);
+
+      if (!wasHidden) {
+        const preview = lastPct < HIDE_THRESHOLD ? 'left' as const
+          : lastPct > 100 - HIDE_THRESHOLD ? 'right' as const
+          : null;
+        setHidePreview(preview);
+      } else {
+        const inOwnThreshold = wasHidden === 'left' ? lastPct < HIDE_THRESHOLD : lastPct > 100 - HIDE_THRESHOLD;
+        const inOppositeThreshold = wasHidden === 'left' ? lastPct > 100 - HIDE_THRESHOLD : lastPct < HIDE_THRESHOLD;
+        setShowPreview(inOwnThreshold ? wasHidden : null);
+        setHidePreview(inOppositeThreshold ? (wasHidden === 'left' ? 'right' : 'left') : null);
+      }
     };
+
     const handleMouseUp = () => {
-      resizerDragRef.current = null;
+      setHidePreview(null);
+      setShowPreview(null);
+
+      if (!didDrag) {
+        // Pure click, no drag — do nothing (click handler handles restore)
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        return;
+      }
+
+      const inHide: 'left' | 'right' | null =
+        lastPct < HIDE_THRESHOLD ? 'left'
+        : lastPct > 100 - HIDE_THRESHOLD ? 'right'
+        : null;
+
+      if (!wasHidden) {
+        if (inHide) {
+          // Animate divider to edge, then hide
+          const from = lastPct;
+          const target = inHide === 'left' ? 0 : 100;
+          const duration = 200;
+          const t0 = performance.now();
+          const savedSplit = preDragSplitRef.current;
+          const tick = (now: number) => {
+            const p = Math.min((now - t0) / duration, 1);
+            const ease = 1 - (1 - p) * (1 - p);
+            setSplitPct(from + (target - from) * ease);
+            if (p < 1) {
+              requestAnimationFrame(tick);
+            } else {
+              setHiddenPane(inHide);
+              setSplitPct(savedSplit);
+            }
+          };
+          requestAnimationFrame(tick);
+        }
+      } else {
+        // Dragging from collapsed
+        const opposite: 'left' | 'right' = wasHidden === 'left' ? 'right' : 'left';
+        const inOpposite = opposite === 'left' ? lastPct < HIDE_THRESHOLD : lastPct > 100 - HIDE_THRESHOLD;
+
+        if (inOpposite) {
+          // Dragged all the way to the opposite side — hide that side instead
+          const from = lastPct;
+          const target = opposite === 'left' ? 0 : 100;
+          const duration = 200;
+          const t0 = performance.now();
+          const tick = (now: number) => {
+            const p = Math.min((now - t0) / duration, 1);
+            const ease = 1 - (1 - p) * (1 - p);
+            setSplitPct(from + (target - from) * ease);
+            if (p < 1) {
+              requestAnimationFrame(tick);
+            } else {
+              setHiddenPane(opposite);
+              setSplitPct(50);
+            }
+          };
+          requestAnimationFrame(tick);
+        } else {
+          setHiddenPane(null);
+          const threshold = wasHidden === 'left' ? HIDE_THRESHOLD : 100 - HIDE_THRESHOLD;
+          const inOwnThreshold = wasHidden === 'left' ? lastPct < HIDE_THRESHOLD : lastPct > 100 - HIDE_THRESHOLD;
+          if (inOwnThreshold) {
+            // Still in own hide zone — animate to threshold
+            const from = lastPct;
+            const duration = 250;
+            const t0 = performance.now();
+            const tick = (now: number) => {
+              const p = Math.min((now - t0) / duration, 1);
+              const ease = 1 - (1 - p) * (1 - p);
+              setSplitPct(from + (threshold - from) * ease);
+              if (p < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          } else {
+            // Past threshold — leave as is
+            setSplitPct(lastPct);
+          }
+        }
+      }
+
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }, [splitPct]);
+  }, [splitPct, hiddenPane]);
+
+  const handleRestorePane = useCallback(() => {
+    setHiddenPane((prev) => {
+      if (!prev) return null;
+      const start = prev === 'left' ? 0 : 100;
+      const end = prev === 'left' ? HIDE_THRESHOLD : 100 - HIDE_THRESHOLD;
+      setSplitPct(start);
+      const duration = 350;
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min((now - t0) / duration, 1);
+        const ease = 1 - (1 - p) * (1 - p);
+        setSplitPct(start + (end - start) * ease);
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      return null;
+    });
+  }, []);
 
   // ─── Zoom ────────────────────────────────────────────────────────────────
   const handleZoom = useCallback((deltaY: number) => {
@@ -635,7 +867,7 @@ export function useApp() {
       if (!debugModeRef.current) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
-        if (columnId === 'battle' && !hasSufficientSP(ownerId, atFrame)) return prev;
+        if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
         // Empowered battle skills require 4 active Melting Flame stacks
         if (ev.name?.includes('EMPOWERED')) {
           const processed = processedEventsRef.current;
@@ -648,7 +880,7 @@ export function useApp() {
         // Enhanced battle skills require an active ultimate
         if (ev.name?.includes('ENHANCED') && !ev.name?.includes('EMPOWERED')) {
           const ultActive = prev.some(
-            (e) => e.ownerId === ownerId && e.columnId === 'ultimate'
+            (e) => e.ownerId === ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
               && atFrame >= e.startFrame + e.activationDuration
               && atFrame < e.startFrame + e.activationDuration + e.activeDuration,
           );
@@ -661,9 +893,19 @@ export function useApp() {
   }, []);
 
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
+    // Try raw events first; if not found, store as derived event override
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === id);
-      if (!target) return prev;
+      if (!target) {
+        // Derived event — store override outside setEvents to avoid side effects
+        queueMicrotask(() => {
+          setDerivedEventOverrides((overrides) => ({
+            ...overrides,
+            [id]: { ...overrides[id], ...updates },
+          }));
+        });
+        return prev;
+      }
       const processed = debugModeRef.current ? null : processedEventsRef.current;
       const merged = validateUpdate(prev, target, updates, processed);
       if (!merged) return prev;
@@ -966,7 +1208,7 @@ export function useApp() {
         ...prev,
         enemyStats: {
           ...prev.enemyStats,
-          staggerHp: config.max,
+          [StatType.STAGGER_HP]: config.max,
           staggerStartValue: config.startValue,
         },
       }));
@@ -1067,6 +1309,7 @@ export function useApp() {
         resourceConfigs: resolved.resourceConfigs,
       });
       setVisibleSkills(resolved.visibleSkills);
+      setDerivedEventOverrides(resolved.derivedEventOverrides);
     } else {
       saveLoadoutData(node.id, serializeSheet(
         INITIAL_OPERATORS.map((op) => op?.id ?? null),
@@ -1074,6 +1317,7 @@ export function useApp() {
         getDefaultEnemyStats(DEFAULT_ENEMY.id),
         [], INITIAL_LOADOUTS, INITIAL_LOADOUT_STATS, INITIAL_VISIBLE, 1, {},
       ));
+      setDerivedEventOverrides({});
     }
     setEditingEventId(null);
     setEditingSlotId(null);
@@ -1101,6 +1345,7 @@ export function useApp() {
         resourceConfigs: resolved.resourceConfigs,
       });
       setVisibleSkills(resolved.visibleSkills);
+      setDerivedEventOverrides(resolved.derivedEventOverrides);
     } else {
       setNextEventId(1);
       resetUndoable({
@@ -1113,6 +1358,7 @@ export function useApp() {
         resourceConfigs: {},
       });
       setVisibleSkills(INITIAL_VISIBLE);
+      setDerivedEventOverrides({});
     }
     setEditingEventId(null);
     setEditingSlotId(null);
@@ -1204,6 +1450,7 @@ export function useApp() {
       resourceConfigs: {},
     });
     setVisibleSkills(INITIAL_VISIBLE);
+    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1241,6 +1488,7 @@ export function useApp() {
     };
     resetUndoable(emptyState);
     setVisibleSkills(INITIAL_VISIBLE);
+    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1374,14 +1622,14 @@ export function useApp() {
   return {
     // Core state
     operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs,
-    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks,
+    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory,
 
     // UI state
-    zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editContext,
+    zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
-    scrollSynced, showRealTime, splitPct, debugMode, warningMessage,
+    scrollSynced, showRealTime, splitPct, debugMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview,
     loadoutRowHeight, selectEventIds,
     devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
@@ -1412,14 +1660,14 @@ export function useApp() {
     handleEditEvent, handleEditLoadout, handleEditEnemy, handleEditResource,
     handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane, handleCloseDamagePane,
     handleDamageClick, damageRows, setDamageRows,
-    handleResizerMouseDown, handleToggleScrollSync,
+    handleResizerMouseDown, handleToggleScrollSync, handleToggleTheme, handleRestorePane,
     handleTimelineScroll, handleSheetScroll,
     handleDmgScrollRef, handleTlScrollRef,
 
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setDebugMode, setShowRealTime,
+    setDevlogOpen, setKeysOpen, setDebugMode, setLightMode, setShowRealTime,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 

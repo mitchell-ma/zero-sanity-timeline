@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -21,7 +21,7 @@ export abstract class BossEnemy extends Enemy {
     location: EnemyLocationType;
     attackElement: ElementType | null;
     statsByLevel: EnemyStatsByLevel;
-    baseStats?: Partial<Record<EnemyStatType, number>>;
+    baseStats?: Partial<Record<StatType, number>>;
     staggerNodes: number;
     staggerNodeRecoverySeconds: number;
   }) {

@@ -1,0 +1,652 @@
+{
+  "weaponId": "THUNDERBERGE",
+  "name": "Thunderberge",
+  "weaponType": "GREAT_SWORD",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 50
+    },
+    {
+      "level": 2,
+      "baseAttack": 55
+    },
+    {
+      "level": 3,
+      "baseAttack": 60
+    },
+    {
+      "level": 4,
+      "baseAttack": 65
+    },
+    {
+      "level": 5,
+      "baseAttack": 70
+    },
+    {
+      "level": 6,
+      "baseAttack": 75
+    },
+    {
+      "level": 7,
+      "baseAttack": 80
+    },
+    {
+      "level": 8,
+      "baseAttack": 85
+    },
+    {
+      "level": 9,
+      "baseAttack": 90
+    },
+    {
+      "level": 10,
+      "baseAttack": 95
+    },
+    {
+      "level": 11,
+      "baseAttack": 100
+    },
+    {
+      "level": 12,
+      "baseAttack": 105
+    },
+    {
+      "level": 13,
+      "baseAttack": 110
+    },
+    {
+      "level": 14,
+      "baseAttack": 115
+    },
+    {
+      "level": 15,
+      "baseAttack": 120
+    },
+    {
+      "level": 16,
+      "baseAttack": 125
+    },
+    {
+      "level": 17,
+      "baseAttack": 130
+    },
+    {
+      "level": 18,
+      "baseAttack": 135
+    },
+    {
+      "level": 19,
+      "baseAttack": 140
+    },
+    {
+      "level": 20,
+      "baseAttack": 145
+    },
+    {
+      "level": 21,
+      "baseAttack": 150
+    },
+    {
+      "level": 22,
+      "baseAttack": 155
+    },
+    {
+      "level": 23,
+      "baseAttack": 160
+    },
+    {
+      "level": 24,
+      "baseAttack": 165
+    },
+    {
+      "level": 25,
+      "baseAttack": 170
+    },
+    {
+      "level": 26,
+      "baseAttack": 175
+    },
+    {
+      "level": 27,
+      "baseAttack": 180
+    },
+    {
+      "level": 28,
+      "baseAttack": 185
+    },
+    {
+      "level": 29,
+      "baseAttack": 190
+    },
+    {
+      "level": 30,
+      "baseAttack": 195
+    },
+    {
+      "level": 31,
+      "baseAttack": 200
+    },
+    {
+      "level": 32,
+      "baseAttack": 205
+    },
+    {
+      "level": 33,
+      "baseAttack": 210
+    },
+    {
+      "level": 34,
+      "baseAttack": 215
+    },
+    {
+      "level": 35,
+      "baseAttack": 220
+    },
+    {
+      "level": 36,
+      "baseAttack": 225
+    },
+    {
+      "level": 37,
+      "baseAttack": 230
+    },
+    {
+      "level": 38,
+      "baseAttack": 235
+    },
+    {
+      "level": 39,
+      "baseAttack": 240
+    },
+    {
+      "level": 40,
+      "baseAttack": 245
+    },
+    {
+      "level": 41,
+      "baseAttack": 250
+    },
+    {
+      "level": 42,
+      "baseAttack": 255
+    },
+    {
+      "level": 43,
+      "baseAttack": 260
+    },
+    {
+      "level": 44,
+      "baseAttack": 265
+    },
+    {
+      "level": 45,
+      "baseAttack": 270
+    },
+    {
+      "level": 46,
+      "baseAttack": 275
+    },
+    {
+      "level": 47,
+      "baseAttack": 280
+    },
+    {
+      "level": 48,
+      "baseAttack": 285
+    },
+    {
+      "level": 49,
+      "baseAttack": 290
+    },
+    {
+      "level": 50,
+      "baseAttack": 295
+    },
+    {
+      "level": 51,
+      "baseAttack": 300
+    },
+    {
+      "level": 52,
+      "baseAttack": 305
+    },
+    {
+      "level": 53,
+      "baseAttack": 310
+    },
+    {
+      "level": 54,
+      "baseAttack": 315
+    },
+    {
+      "level": 55,
+      "baseAttack": 320
+    },
+    {
+      "level": 56,
+      "baseAttack": 325
+    },
+    {
+      "level": 57,
+      "baseAttack": 330
+    },
+    {
+      "level": 58,
+      "baseAttack": 335
+    },
+    {
+      "level": 59,
+      "baseAttack": 340
+    },
+    {
+      "level": 60,
+      "baseAttack": 345
+    },
+    {
+      "level": 61,
+      "baseAttack": 350
+    },
+    {
+      "level": 62,
+      "baseAttack": 355
+    },
+    {
+      "level": 63,
+      "baseAttack": 360
+    },
+    {
+      "level": 64,
+      "baseAttack": 365
+    },
+    {
+      "level": 65,
+      "baseAttack": 370
+    },
+    {
+      "level": 66,
+      "baseAttack": 375
+    },
+    {
+      "level": 67,
+      "baseAttack": 380
+    },
+    {
+      "level": 68,
+      "baseAttack": 385
+    },
+    {
+      "level": 69,
+      "baseAttack": 390
+    },
+    {
+      "level": 70,
+      "baseAttack": 395
+    },
+    {
+      "level": 71,
+      "baseAttack": 400
+    },
+    {
+      "level": 72,
+      "baseAttack": 405
+    },
+    {
+      "level": 73,
+      "baseAttack": 410
+    },
+    {
+      "level": 74,
+      "baseAttack": 415
+    },
+    {
+      "level": 75,
+      "baseAttack": 420
+    },
+    {
+      "level": 76,
+      "baseAttack": 425
+    },
+    {
+      "level": 77,
+      "baseAttack": 430
+    },
+    {
+      "level": 78,
+      "baseAttack": 435
+    },
+    {
+      "level": 79,
+      "baseAttack": 440
+    },
+    {
+      "level": 80,
+      "baseAttack": 445
+    },
+    {
+      "level": 81,
+      "baseAttack": 450
+    },
+    {
+      "level": 82,
+      "baseAttack": 455
+    },
+    {
+      "level": 83,
+      "baseAttack": 460
+    },
+    {
+      "level": 84,
+      "baseAttack": 465
+    },
+    {
+      "level": 85,
+      "baseAttack": 470
+    },
+    {
+      "level": 86,
+      "baseAttack": 475
+    },
+    {
+      "level": 87,
+      "baseAttack": 480
+    },
+    {
+      "level": 88,
+      "baseAttack": 485
+    },
+    {
+      "level": 89,
+      "baseAttack": 490
+    },
+    {
+      "level": 90,
+      "baseAttack": 495
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "STRENGTH_BOOST_L",
+      "name": "Strength Boost [L]",
+      "description": "Strength +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "STRENGTH": 20
+        },
+        {
+          "level": 2,
+          "STRENGTH": 36
+        },
+        {
+          "level": 3,
+          "STRENGTH": 52
+        },
+        {
+          "level": 4,
+          "STRENGTH": 68
+        },
+        {
+          "level": 5,
+          "STRENGTH": 84
+        },
+        {
+          "level": 6,
+          "STRENGTH": 100
+        },
+        {
+          "level": 7,
+          "STRENGTH": 116
+        },
+        {
+          "level": 8,
+          "STRENGTH": 132
+        },
+        {
+          "level": 9,
+          "STRENGTH": 156
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "HP_BOOST_L",
+      "name": "HP Boost [L]",
+      "description": "Max HP +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "HP_BONUS": 0.1
+        },
+        {
+          "level": 2,
+          "HP_BONUS": 0.18
+        },
+        {
+          "level": 3,
+          "HP_BONUS": 0.26
+        },
+        {
+          "level": 4,
+          "HP_BONUS": 0.34
+        },
+        {
+          "level": 5,
+          "HP_BONUS": 0.42
+        },
+        {
+          "level": 6,
+          "HP_BONUS": 0.5
+        },
+        {
+          "level": 7,
+          "HP_BONUS": 0.58
+        },
+        {
+          "level": 8,
+          "HP_BONUS": 0.66
+        },
+        {
+          "level": 9,
+          "HP_BONUS": 0.78
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "THUNDERBERGE_MEDICANT_EYE_OF_TALOS",
+      "name": "Medicant: Eye of Talos",
+      "description": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}×Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "SHIELD_BONUS": 0.24,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.07
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "SHIELD_BONUS": 0.288,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.084
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "SHIELD_BONUS": 0.336,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.098
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "SHIELD_BONUS": 0.384,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.112
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "SHIELD_BONUS": 0.432,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.126
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "SHIELD_BONUS": 0.48,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.14
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "SHIELD_BONUS": 0.528,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.154
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "SHIELD_BONUS": 0.576,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.168
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "SHIELD_BONUS": 0.672,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL",
+                "HP_TREATMENT"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "hp_ratio": 0.196
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

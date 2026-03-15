@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1661,
-    [EnemyStatType.ATK]: 105,
+    [StatType.BASE_HP]: 1661,
+    [StatType.BASE_ATTACK]: 105,
   },
   20: {
-    [EnemyStatType.HP]: 11923,
-    [EnemyStatType.ATK]: 496,
+    [StatType.BASE_HP]: 11923,
+    [StatType.BASE_ATTACK]: 496,
   },
   40: {
-    [EnemyStatType.HP]: 75442,
-    [EnemyStatType.ATK]: 1543,
+    [StatType.BASE_HP]: 75442,
+    [StatType.BASE_ATTACK]: 1543,
   },
   60: {
-    [EnemyStatType.HP]: 297005,
-    [EnemyStatType.ATK]: 3832,
+    [StatType.BASE_HP]: 297005,
+    [StatType.BASE_ATTACK]: 3832,
   },
   80: {
-    [EnemyStatType.HP]: 714428,
-    [EnemyStatType.ATK]: 5767,
+    [StatType.BASE_HP]: 714428,
+    [StatType.BASE_ATTACK]: 5767,
   },
   90: {
-    [EnemyStatType.HP]: 1100596,
-    [EnemyStatType.ATK]: 6607,
+    [StatType.BASE_HP]: 1100596,
+    [StatType.BASE_ATTACK]: 6607,
   },
 };
 
@@ -48,12 +48,12 @@ export class EliteExecutionerEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 340,
-        [EnemyStatType.STAGGER_RECOVERY]: 9,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.5,
-        [EnemyStatType.FINISHER_SP_GAIN]: 50,
-        [EnemyStatType.ATTACK_RANGE]: 2.8,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.STAGGER_HP]: 340,
+        [StatType.STAGGER_RECOVERY]: 9,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.5,
+        [StatType.FINISHER_SP_GAIN]: 50,
+        [StatType.ATTACK_RANGE]: 2.8,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

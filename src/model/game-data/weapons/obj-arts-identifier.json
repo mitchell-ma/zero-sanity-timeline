@@ -1,0 +1,643 @@
+{
+  "weaponId": "OBJ_ARTS_IDENTIFIER",
+  "name": "Obj Arts Identifier",
+  "weaponType": "ARTS_UNIT",
+  "weaponRarity": 5,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 42
+    },
+    {
+      "level": 2,
+      "baseAttack": 46
+    },
+    {
+      "level": 3,
+      "baseAttack": 50
+    },
+    {
+      "level": 4,
+      "baseAttack": 54
+    },
+    {
+      "level": 5,
+      "baseAttack": 58
+    },
+    {
+      "level": 6,
+      "baseAttack": 62
+    },
+    {
+      "level": 7,
+      "baseAttack": 66
+    },
+    {
+      "level": 8,
+      "baseAttack": 71
+    },
+    {
+      "level": 9,
+      "baseAttack": 75
+    },
+    {
+      "level": 10,
+      "baseAttack": 79
+    },
+    {
+      "level": 11,
+      "baseAttack": 83
+    },
+    {
+      "level": 12,
+      "baseAttack": 87
+    },
+    {
+      "level": 13,
+      "baseAttack": 91
+    },
+    {
+      "level": 14,
+      "baseAttack": 95
+    },
+    {
+      "level": 15,
+      "baseAttack": 100
+    },
+    {
+      "level": 16,
+      "baseAttack": 104
+    },
+    {
+      "level": 17,
+      "baseAttack": 108
+    },
+    {
+      "level": 18,
+      "baseAttack": 112
+    },
+    {
+      "level": 19,
+      "baseAttack": 116
+    },
+    {
+      "level": 20,
+      "baseAttack": 120
+    },
+    {
+      "level": 21,
+      "baseAttack": 125
+    },
+    {
+      "level": 22,
+      "baseAttack": 129
+    },
+    {
+      "level": 23,
+      "baseAttack": 133
+    },
+    {
+      "level": 24,
+      "baseAttack": 137
+    },
+    {
+      "level": 25,
+      "baseAttack": 141
+    },
+    {
+      "level": 26,
+      "baseAttack": 145
+    },
+    {
+      "level": 27,
+      "baseAttack": 149
+    },
+    {
+      "level": 28,
+      "baseAttack": 154
+    },
+    {
+      "level": 29,
+      "baseAttack": 158
+    },
+    {
+      "level": 30,
+      "baseAttack": 162
+    },
+    {
+      "level": 31,
+      "baseAttack": 166
+    },
+    {
+      "level": 32,
+      "baseAttack": 170
+    },
+    {
+      "level": 33,
+      "baseAttack": 174
+    },
+    {
+      "level": 34,
+      "baseAttack": 178
+    },
+    {
+      "level": 35,
+      "baseAttack": 183
+    },
+    {
+      "level": 36,
+      "baseAttack": 187
+    },
+    {
+      "level": 37,
+      "baseAttack": 191
+    },
+    {
+      "level": 38,
+      "baseAttack": 195
+    },
+    {
+      "level": 39,
+      "baseAttack": 199
+    },
+    {
+      "level": 40,
+      "baseAttack": 203
+    },
+    {
+      "level": 41,
+      "baseAttack": 208
+    },
+    {
+      "level": 42,
+      "baseAttack": 212
+    },
+    {
+      "level": 43,
+      "baseAttack": 216
+    },
+    {
+      "level": 44,
+      "baseAttack": 220
+    },
+    {
+      "level": 45,
+      "baseAttack": 224
+    },
+    {
+      "level": 46,
+      "baseAttack": 228
+    },
+    {
+      "level": 47,
+      "baseAttack": 232
+    },
+    {
+      "level": 48,
+      "baseAttack": 237
+    },
+    {
+      "level": 49,
+      "baseAttack": 241
+    },
+    {
+      "level": 50,
+      "baseAttack": 245
+    },
+    {
+      "level": 51,
+      "baseAttack": 249
+    },
+    {
+      "level": 52,
+      "baseAttack": 253
+    },
+    {
+      "level": 53,
+      "baseAttack": 257
+    },
+    {
+      "level": 54,
+      "baseAttack": 261
+    },
+    {
+      "level": 55,
+      "baseAttack": 266
+    },
+    {
+      "level": 56,
+      "baseAttack": 270
+    },
+    {
+      "level": 57,
+      "baseAttack": 274
+    },
+    {
+      "level": 58,
+      "baseAttack": 278
+    },
+    {
+      "level": 59,
+      "baseAttack": 282
+    },
+    {
+      "level": 60,
+      "baseAttack": 286
+    },
+    {
+      "level": 61,
+      "baseAttack": 291
+    },
+    {
+      "level": 62,
+      "baseAttack": 295
+    },
+    {
+      "level": 63,
+      "baseAttack": 299
+    },
+    {
+      "level": 64,
+      "baseAttack": 303
+    },
+    {
+      "level": 65,
+      "baseAttack": 307
+    },
+    {
+      "level": 66,
+      "baseAttack": 311
+    },
+    {
+      "level": 67,
+      "baseAttack": 315
+    },
+    {
+      "level": 68,
+      "baseAttack": 320
+    },
+    {
+      "level": 69,
+      "baseAttack": 324
+    },
+    {
+      "level": 70,
+      "baseAttack": 328
+    },
+    {
+      "level": 71,
+      "baseAttack": 332
+    },
+    {
+      "level": 72,
+      "baseAttack": 336
+    },
+    {
+      "level": 73,
+      "baseAttack": 340
+    },
+    {
+      "level": 74,
+      "baseAttack": 344
+    },
+    {
+      "level": 75,
+      "baseAttack": 349
+    },
+    {
+      "level": 76,
+      "baseAttack": 353
+    },
+    {
+      "level": 77,
+      "baseAttack": 357
+    },
+    {
+      "level": 78,
+      "baseAttack": 361
+    },
+    {
+      "level": 79,
+      "baseAttack": 365
+    },
+    {
+      "level": 80,
+      "baseAttack": 369
+    },
+    {
+      "level": 81,
+      "baseAttack": 374
+    },
+    {
+      "level": 82,
+      "baseAttack": 378
+    },
+    {
+      "level": 83,
+      "baseAttack": 382
+    },
+    {
+      "level": 84,
+      "baseAttack": 386
+    },
+    {
+      "level": 85,
+      "baseAttack": 390
+    },
+    {
+      "level": 86,
+      "baseAttack": 394
+    },
+    {
+      "level": 87,
+      "baseAttack": 398
+    },
+    {
+      "level": 88,
+      "baseAttack": 403
+    },
+    {
+      "level": 89,
+      "baseAttack": 407
+    },
+    {
+      "level": 90,
+      "baseAttack": 411
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "INTELLECT_BOOST_M",
+      "name": "Intellect Boost [M]",
+      "description": "Intellect +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "INTELLECT": 16
+        },
+        {
+          "level": 2,
+          "INTELLECT": 28
+        },
+        {
+          "level": 3,
+          "INTELLECT": 41
+        },
+        {
+          "level": 4,
+          "INTELLECT": 54
+        },
+        {
+          "level": 5,
+          "INTELLECT": 67
+        },
+        {
+          "level": 6,
+          "INTELLECT": 80
+        },
+        {
+          "level": 7,
+          "INTELLECT": 92
+        },
+        {
+          "level": 8,
+          "INTELLECT": 105
+        },
+        {
+          "level": 9,
+          "INTELLECT": 124
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "ARTS_INTENSITY_BOOST_M",
+      "name": "Arts Intensity Boost [M]",
+      "description": "Arts Intensity +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "ARTS_INTENSITY": 8
+        },
+        {
+          "level": 2,
+          "ARTS_INTENSITY": 14
+        },
+        {
+          "level": 3,
+          "ARTS_INTENSITY": 20
+        },
+        {
+          "level": 4,
+          "ARTS_INTENSITY": 27
+        },
+        {
+          "level": 5,
+          "ARTS_INTENSITY": 33
+        },
+        {
+          "level": 6,
+          "ARTS_INTENSITY": 40
+        },
+        {
+          "level": 7,
+          "ARTS_INTENSITY": 46
+        },
+        {
+          "level": 8,
+          "ARTS_INTENSITY": 52
+        },
+        {
+          "level": 9,
+          "ARTS_INTENSITY": 62
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "OBJ_ARTS_IDENTIFIER_PURSUIT_TRANSCENDENT_ARTS",
+      "name": "Pursuit: Transcendent Arts",
+      "description": "Max HP +{hp_up:0.0%}. When the wielder's combo skill applies Arts Burst or Physical Status, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "HP_BONUS": 0.1,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.08
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "HP_BONUS": 0.12,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.096
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "HP_BONUS": 0.14,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.112
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "HP_BONUS": 0.16,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.128
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "HP_BONUS": 0.18,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.144
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "HP_BONUS": 0.2,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.16
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "HP_BONUS": 0.22,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.176
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "HP_BONUS": 0.24,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.192
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "HP_BONUS": 0.28,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_COMBO_SKILL"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "dmg_up": 0.224
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

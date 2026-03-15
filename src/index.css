@@ -30,8 +30,79 @@
   --text-secondary: #999999;
   --text-muted:     #666666;
 
+  --overlay-02:  rgba(255, 255, 255, 0.02);
+  --overlay-03:  rgba(255, 255, 255, 0.03);
+  --overlay-04:  rgba(255, 255, 255, 0.04);
+  --overlay-05:  rgba(255, 255, 255, 0.05);
+  --overlay-06:  rgba(255, 255, 255, 0.06);
+  --overlay-08:  rgba(255, 255, 255, 0.08);
+  --overlay-10:  rgba(255, 255, 255, 0.10);
+  --overlay-12:  rgba(255, 255, 255, 0.12);
+  --overlay-14:  rgba(255, 255, 255, 0.14);
+  --overlay-20:  rgba(255, 255, 255, 0.20);
+  --overlay-30:  rgba(255, 255, 255, 0.30);
+  --overlay-40:  rgba(255, 255, 255, 0.40);
+  --overlay-50:  rgba(255, 255, 255, 0.50);
+  --overlay-70:  rgba(255, 255, 255, 0.70);
+  --overlay-80:  rgba(255, 255, 255, 0.80);
+
+  --scrim-35:  rgba(0, 0, 0, 0.35);
+  --scrim-40:  rgba(0, 0, 0, 0.40);
+  --scrim-50:  rgba(0, 0, 0, 0.50);
+  --scrim-60:  rgba(0, 0, 0, 0.60);
+  --scrim-70:  rgba(0, 0, 0, 0.70);
+  --scrim-80:  rgba(0, 0, 0, 0.80);
+
   --font-display: 'Rajdhani', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
+}
+
+[data-theme="light"] {
+  --bg-root:      #f0f0f0;
+  --bg-panel:     #e8e8e8;
+  --bg-card:      #ffffff;
+  --bg-elevated:  #dcdcdc;
+  --bg-hover:     #d0d0d0;
+
+  --border-dim:    rgba(0, 0, 0, 0.08);
+  --border-med:    rgba(0, 0, 0, 0.16);
+  --border-bright: rgba(0, 0, 0, 0.28);
+
+  --blue:       #2266dd;
+  --blue-glow:  rgba(34, 102, 221, 0.2);
+  --cyan:       #009990;
+  --gold:       #c08020;
+  --red:        #cc3333;
+  --purple:     #7040c0;
+  --green:      #22aa44;
+
+  --text-bright:    #111111;
+  --text-primary:   #333333;
+  --text-secondary: #666666;
+  --text-muted:     #999999;
+
+  --overlay-02:  rgba(0, 0, 0, 0.02);
+  --overlay-03:  rgba(0, 0, 0, 0.03);
+  --overlay-04:  rgba(0, 0, 0, 0.04);
+  --overlay-05:  rgba(0, 0, 0, 0.05);
+  --overlay-06:  rgba(0, 0, 0, 0.06);
+  --overlay-08:  rgba(0, 0, 0, 0.08);
+  --overlay-10:  rgba(0, 0, 0, 0.10);
+  --overlay-12:  rgba(0, 0, 0, 0.12);
+  --overlay-14:  rgba(0, 0, 0, 0.14);
+  --overlay-20:  rgba(0, 0, 0, 0.20);
+  --overlay-30:  rgba(0, 0, 0, 0.30);
+  --overlay-40:  rgba(0, 0, 0, 0.40);
+  --overlay-50:  rgba(0, 0, 0, 0.50);
+  --overlay-70:  rgba(0, 0, 0, 0.70);
+  --overlay-80:  rgba(0, 0, 0, 0.80);
+
+  --scrim-35:  rgba(0, 0, 0, 0.20);
+  --scrim-40:  rgba(0, 0, 0, 0.25);
+  --scrim-50:  rgba(0, 0, 0, 0.30);
+  --scrim-60:  rgba(0, 0, 0, 0.40);
+  --scrim-70:  rgba(0, 0, 0, 0.50);
+  --scrim-80:  rgba(0, 0, 0, 0.60);
 }
 
 html, body, #root {
@@ -63,4 +134,13 @@ button {
 
 input {
   font-family: var(--font-mono);
+}
+
+/* ── Theme transition ─────────────────────────────────────────────────────── */
+
+[data-theme-transitioning] *,
+[data-theme-transitioning] *::before,
+[data-theme-transitioning] *::after {
+  transition: background-color 800ms ease, color 800ms ease, border-color 800ms ease,
+              box-shadow 800ms ease, outline-color 800ms ease, fill 800ms ease;
 }

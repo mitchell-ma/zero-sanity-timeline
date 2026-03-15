@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 277,
-    [EnemyStatType.ATK]: 30,
+    [StatType.BASE_HP]: 277,
+    [StatType.BASE_ATTACK]: 30,
   },
   20: {
-    [EnemyStatType.HP]: 1987,
-    [EnemyStatType.ATK]: 140,
+    [StatType.BASE_HP]: 1987,
+    [StatType.BASE_ATTACK]: 140,
   },
   40: {
-    [EnemyStatType.HP]: 12574,
-    [EnemyStatType.ATK]: 434,
+    [StatType.BASE_HP]: 12574,
+    [StatType.BASE_ATTACK]: 434,
   },
   60: {
-    [EnemyStatType.HP]: 49501,
-    [EnemyStatType.ATK]: 1078,
+    [StatType.BASE_HP]: 49501,
+    [StatType.BASE_ATTACK]: 1078,
   },
   80: {
-    [EnemyStatType.HP]: 119071,
-    [EnemyStatType.ATK]: 1622,
+    [StatType.BASE_HP]: 119071,
+    [StatType.BASE_ATTACK]: 1622,
   },
   90: {
-    [EnemyStatType.HP]: 183433,
-    [EnemyStatType.ATK]: 1858,
+    [StatType.BASE_HP]: 183433,
+    [StatType.BASE_ATTACK]: 1858,
   },
 };
 
@@ -48,7 +48,7 @@ export class BrutalPincerbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

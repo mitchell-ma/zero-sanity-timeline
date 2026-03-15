@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { EnemyStatType } from '../../consts/enums';
+import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { Enemy } from '../../consts/viewTypes';
 import { EnemyStats, getDefaultEnemyStats } from '../../controller/appStateController';
 import { getModelEnemy, getEnemyLevels } from '../../controller/calculation/enemyRegistry';
@@ -16,13 +16,18 @@ const statValueStyle: React.CSSProperties = {
   fontFamily: 'var(--font-mono)', textAlign: 'right',
 };
 
-const ENEMY_RESISTANCE_FIELDS: { key: keyof EnemyStats; label: string }[] = [
-  { key: 'physicalResistance', label: 'Physical RES' },
-  { key: 'heatResistance',     label: 'Heat RES' },
-  { key: 'electricResistance', label: 'Electric RES' },
-  { key: 'cryoResistance',     label: 'Cryo RES' },
-  { key: 'natureResistance',   label: 'Nature RES' },
+/** Resistance fields derived from STAT_ATTRIBUTION — only stats attributed to ALL or ENEMY. */
+const ALL_RESISTANCE_ENTRIES: { stat: StatType; label: string }[] = [
+  { stat: StatType.PHYSICAL_RESISTANCE, label: 'Physical RES' },
+  { stat: StatType.HEAT_RESISTANCE,     label: 'Heat RES' },
+  { stat: StatType.ELECTRIC_RESISTANCE, label: 'Electric RES' },
+  { stat: StatType.CRYO_RESISTANCE,     label: 'Cryo RES' },
+  { stat: StatType.NATURE_RESISTANCE,   label: 'Nature RES' },
 ];
+
+const ENEMY_RESISTANCE_FIELDS = ALL_RESISTANCE_ENTRIES.filter(
+  ({ stat }) => STAT_ATTRIBUTION[stat].includes(StatOwnerType.ENEMY),
+);
 
 function EnemyPane({ enemy, stats, onStatsChange, onClose }: {
   enemy: Enemy;
@@ -32,7 +37,9 @@ function EnemyPane({ enemy, stats, onStatsChange, onClose }: {
 }) {
   const levels = getEnemyLevels(enemy.id);
   const model = getModelEnemy(enemy.id, stats.level);
-  const set = (key: keyof EnemyStats) => (v: number) => onStatsChange({ ...stats, [key]: v });
+  const setStat = (key: StatType) => (v: number) => onStatsChange({ ...stats, [key]: v });
+  const setMeta = <K extends 'staggerStartValue' | 'staggerNodes' | 'staggerNodeRecoverySeconds'>(key: K) =>
+    (v: number) => onStatsChange({ ...stats, [key]: v });
 
   const handleReset = () => {
     onStatsChange(getDefaultEnemyStats(enemy.id, stats.level));
@@ -69,34 +76,34 @@ function EnemyPane({ enemy, stats, onStatsChange, onClose }: {
         <div className="edit-panel-section">
           <span className="edit-section-label">General</span>
           <LevelSelect label="Level" value={stats.level} options={levels} onChange={handleLevelChange} />
-          <StatField label={labelSpan('HP')} value={stats.hp} min={0} max={9999999} step={1} holdStep={1000} showMinMax onChange={set('hp')} />
+          <StatField label={labelSpan('HP')} value={stats[StatType.BASE_HP]} min={0} max={9999999} step={1} holdStep={1000} showMinMax onChange={setStat(StatType.BASE_HP)} />
           {model && (
             <div style={statRowStyle}>
               <span style={statLabelStyle}>ATK</span>
-              <span style={statValueStyle}>{model.stats[EnemyStatType.ATK].toLocaleString()}</span>
+              <span style={statValueStyle}>{model.stats[StatType.BASE_ATTACK] >= 1_000_000 ? model.stats[StatType.BASE_ATTACK].toLocaleString() : model.stats[StatType.BASE_ATTACK]}</span>
             </div>
           )}
         </div>
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Defense</span>
-          <StatField label={labelSpan('DEF')} value={stats.def} min={0} max={9999} step={1} holdStep={10} showMinMax onChange={set('def')} />
+          <StatField label={labelSpan('DEF')} value={stats[StatType.BASE_DEFENSE]} min={0} max={9999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.BASE_DEFENSE)} />
         </div>
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Resistance</span>
-          {ENEMY_RESISTANCE_FIELDS.map(({ key, label }) => (
-            <StatField key={key} label={labelSpan(label)} value={stats[key] as number} min={0} max={10} step={0.1} holdStep={1} showMinMax onChange={set(key)} />
+          {ENEMY_RESISTANCE_FIELDS.map(({ stat, label }) => (
+            <StatField key={stat} label={labelSpan(label)} value={stats[stat]} min={0} max={10} step={0.1} holdStep={1} showMinMax onChange={setStat(stat)} />
           ))}
         </div>
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Stagger</span>
-          <StatField label={labelSpan('Stagger HP')} value={stats.staggerHp} min={0} max={99999} step={1} holdStep={10} showMinMax onChange={set('staggerHp')} />
-          <StatField label={labelSpan('Initial Value')} value={stats.staggerStartValue ?? 0} min={0} max={stats.staggerHp} step={1} holdStep={10} showMinMax onChange={set('staggerStartValue')} />
-          <StatField label={labelSpan('Nodes')} value={stats.staggerNodes} min={0} max={10} showMinMax onChange={set('staggerNodes')} />
-          <StatField label={labelSpan('Break Duration (s)')} value={stats.staggerBreakDurationSeconds} min={0} max={60} step={0.5} showMinMax onChange={set('staggerBreakDurationSeconds')} />
-          <StatField label={labelSpan('Node Recovery (s)')} value={stats.staggerNodeRecoverySeconds} min={0} max={60} step={0.5} showMinMax onChange={set('staggerNodeRecoverySeconds')} />
+          <StatField label={labelSpan('Stagger HP')} value={stats[StatType.STAGGER_HP]} min={0} max={99999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.STAGGER_HP)} />
+          <StatField label={labelSpan('Initial Value')} value={stats.staggerStartValue ?? 0} min={0} max={stats[StatType.STAGGER_HP]} step={1} holdStep={10} showMinMax onChange={setMeta('staggerStartValue')} />
+          <StatField label={labelSpan('Nodes')} value={stats.staggerNodes} min={0} max={10} showMinMax onChange={setMeta('staggerNodes')} />
+          <StatField label={labelSpan('Break Duration (s)')} value={stats[StatType.STAGGER_RECOVERY]} min={0} max={60} step={0.5} showMinMax onChange={setStat(StatType.STAGGER_RECOVERY)} />
+          <StatField label={labelSpan('Node Recovery (s)')} value={stats.staggerNodeRecoverySeconds} min={0} max={60} step={0.5} showMinMax onChange={setMeta('staggerNodeRecoverySeconds')} />
         </div>
 
         <div style={{ marginTop: 'auto', padding: '0.75rem 0 0' }}>

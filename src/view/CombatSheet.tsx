@@ -23,9 +23,7 @@ const ROW_HEIGHT = 20;
 
 function formatDamage(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 10_000) return `${(n / 1_000).toFixed(1)}K`;
-  if (n >= 1_000) return n.toLocaleString();
-  return String(n);
+  return Math.round(n).toString();
 }
 
 function formatPct(n: number): string {
@@ -406,7 +404,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
           if (row.damage != null) {
             displayValue = formatDamage(row.damage);
           } else if (row.multiplier != null) {
-            displayValue = `${(row.multiplier * 100).toFixed(0)}%`;
+            displayValue = `${(row.multiplier * 100).toFixed(1)}%`;
           } else {
             displayValue = '\u2014';
           }
@@ -416,7 +414,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
             key={col.key}
             className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${isMatch && row.params ? ' dmg-cell-clickable' : ''}`}
             style={isMatch ? { color: col.color, flex } : { flex }}
-            title={isMatch && row.damage != null ? `${row.label}\n${row.damage.toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(0)}% ATK)` : ''}` : undefined}
+            title={isMatch && row.damage != null ? `${row.label}\n${row.damage >= 1_000_000 ? row.damage.toLocaleString() : Math.round(row.damage)} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
             onClick={isMatch && row.params ? () => onDamageClick?.(row) : undefined}
             onMouseEnter={() => onCellHover({ rowKey: row.key, colKey: col.key })}
             onMouseLeave={() => onCellHover(null)}
@@ -428,7 +426,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
       {hasBossHp && row.hpRemaining != null && (
         <div
           className={`dmg-cell dmg-cell-hp${row.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
-          title={`${row.hpRemaining.toLocaleString()} / ${bossMaxHp!.toLocaleString()} HP`}
+          title={`${row.hpRemaining >= 1_000_000 ? row.hpRemaining.toLocaleString() : Math.round(row.hpRemaining)} / ${bossMaxHp! >= 1_000_000 ? bossMaxHp!.toLocaleString() : Math.round(bossMaxHp!)} HP`}
         >
           {formatDamage(row.hpRemaining)}
         </div>

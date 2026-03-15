@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { BossEnemy } from "../bossEnemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 235,
-    [EnemyStatType.ATK]: 59,
+    [StatType.BASE_HP]: 235,
+    [StatType.BASE_ATTACK]: 59,
   },
   20: {
-    [EnemyStatType.HP]: 1689,
-    [EnemyStatType.ATK]: 279,
+    [StatType.BASE_HP]: 1689,
+    [StatType.BASE_ATTACK]: 279,
   },
   40: {
-    [EnemyStatType.HP]: 10688,
-    [EnemyStatType.ATK]: 868,
+    [StatType.BASE_HP]: 10688,
+    [StatType.BASE_ATTACK]: 868,
   },
   60: {
-    [EnemyStatType.HP]: 42076,
-    [EnemyStatType.ATK]: 2156,
+    [StatType.BASE_HP]: 42076,
+    [StatType.BASE_ATTACK]: 2156,
   },
   80: {
-    [EnemyStatType.HP]: 101211,
-    [EnemyStatType.ATK]: 3244,
+    [StatType.BASE_HP]: 101211,
+    [StatType.BASE_ATTACK]: 3244,
   },
   90: {
-    [EnemyStatType.HP]: 155918,
-    [EnemyStatType.ATK]: 3717,
+    [StatType.BASE_HP]: 155918,
+    [StatType.BASE_ATTACK]: 3717,
   },
 };
 
@@ -48,11 +48,11 @@ export class MarbleAppendageEnemy extends BossEnemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 0,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 100,
-        [EnemyStatType.ATTACK_RANGE]: 12,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.STAGGER_HP]: 0,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 100,
+        [StatType.ATTACK_RANGE]: 12,
+        [StatType.WEIGHT]: 2,
       },
       staggerNodes: 0,
       staggerNodeRecoverySeconds: 0,

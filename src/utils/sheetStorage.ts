@@ -18,6 +18,7 @@ export interface SheetData {
   visibleSkills: VisibleSkills;
   nextEventId: number;
   resourceConfigs?: Record<string, ResourceConfig>;
+  derivedEventOverrides?: Record<string, Partial<TimelineEvent>>;
 }
 
 export function serializeSheet(
@@ -30,6 +31,7 @@ export function serializeSheet(
   visibleSkills: VisibleSkills,
   nextEventId: number,
   resourceConfigs?: Record<string, ResourceConfig>,
+  derivedEventOverrides?: Record<string, Partial<TimelineEvent>>,
 ): SheetData {
   return {
     version: CURRENT_VERSION,
@@ -42,6 +44,7 @@ export function serializeSheet(
     visibleSkills,
     nextEventId,
     ...(resourceConfigs && Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
+    ...(derivedEventOverrides && Object.keys(derivedEventOverrides).length > 0 ? { derivedEventOverrides } : {}),
   };
 }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, forwardRef } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, forwardRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import {
   LoadoutTree,
@@ -14,6 +14,11 @@ import {
   saveLoadoutTree,
   deleteLoadoutData,
 } from '../utils/loadoutStorage';
+import type { ContentSelection } from '../consts/contentBrowserTypes';
+
+const ContentBrowserPanel = lazy(() => import('./custom/ContentBrowserPanel'));
+
+export type SidebarMode = 'loadouts' | 'custom' | null;
 
 interface LoadoutSidebarProps {
   tree: LoadoutTree;
@@ -23,9 +28,11 @@ interface LoadoutSidebarProps {
   onNewLoadout: (parentId: string | null) => void;
   onDuplicateLoadout: (sourceId: string) => void;
   onDeleteLoadout: (loadoutIds: string[], nodeId: string) => void;
-  collapsed: boolean;
-  onToggleCollapsed: () => void;
   onWarning?: (message: string) => void;
+  sidebarMode: SidebarMode;
+  onSidebarModeChange: (mode: SidebarMode) => void;
+  selectedContentItem?: ContentSelection | null;
+  onSelectContentItem?: (item: ContentSelection) => void;
 }
 
 /** Collect all node IDs in a subtree (inclusive). */
@@ -65,9 +72,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onNewLoadout,
   onDuplicateLoadout,
   onDeleteLoadout,
-  collapsed,
-  onToggleCollapsed,
   onWarning,
+  sidebarMode,
+  onSidebarModeChange,
+  selectedContentItem,
+  onSelectContentItem,
 }, ref) {
   const [filter, setFilter] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -440,17 +449,14 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
 
   const rootNodes = getChildrenOf(tree, null);
 
-  if (collapsed) {
-    return (
-      <div ref={ref} className="loadout-sidebar loadout-sidebar--collapsed" tabIndex={-1}>
-        <button className="loadout-sidebar-toggle" onClick={onToggleCollapsed} title="Expand loadouts">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-          </svg>
-        </button>
-      </div>
-    );
-  }
+  const handleIconClick = (mode: 'loadouts' | 'custom') => {
+    if (sidebarMode === mode) {
+      // Same icon clicked — collapse the panel
+      onSidebarModeChange(null);
+    } else {
+      onSidebarModeChange(mode);
+    }
+  };
 
   // Marquee rectangle in CSS coordinates
   const marqueeRect = marquee ? {
@@ -461,113 +467,140 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   } : null;
 
   return (
-    <div ref={ref} className="loadout-sidebar" tabIndex={-1}>
-      <div className="loadout-sidebar-header">
-        <span className="loadout-sidebar-title">LOADOUTS</span>
-        <div className="loadout-sidebar-header-actions">
-          <button
-            className="loadout-action-btn"
-            title="New loadout"
-            onClick={() => handleAddLoadout(null)}
-          >+</button>
-          <button
-            className="loadout-action-btn"
-            title="New folder"
-            onClick={() => handleAddFolder(null)}
+    <div ref={ref} className="sidebar-container" tabIndex={-1}>
+      {/* ── Icon strip (always visible) ────────────────────────── */}
+      <div className="sidebar-icon-strip">
+        <button
+          className={`sidebar-mode-btn${sidebarMode === 'loadouts' ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick('loadouts')}
+          title="Loadouts"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+          </svg>
+        </button>
+        <button
+          className={`sidebar-mode-btn${sidebarMode === 'custom' ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick('custom')}
+          title="Customization"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.33a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.83z"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* ── Loadouts panel ─────────────────────────────────────── */}
+      {sidebarMode === 'loadouts' && (
+        <div className="sidebar-panel">
+          <div className="loadout-sidebar-header">
+            <span className="loadout-sidebar-title">LOADOUTS</span>
+            <div className="loadout-sidebar-header-actions">
+              <button
+                className="loadout-action-btn"
+                title="New loadout"
+                onClick={() => handleAddLoadout(null)}
+              >+</button>
+              <button
+                className="loadout-action-btn"
+                title="New folder"
+                onClick={() => handleAddFolder(null)}
+              >
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                  <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="loadout-filter-row">
+            <input
+              className="loadout-filter-input"
+              placeholder="Filter..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
+
+          <div
+            ref={treeRef}
+            className="loadout-tree"
+            onDragOver={(e) => {
+              e.preventDefault();
+              const isOverChild = (e.target as HTMLElement).closest('.loadout-node');
+              if (!isOverChild) setDropTarget({ id: null, position: 'inside' });
+            }}
+            onDrop={handleDrop}
+            onContextMenu={(e) => {
+              const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
+              if (!isOverNode) {
+                e.preventDefault();
+                setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: null, parentId: null });
+              }
+            }}
+            onClick={(e) => {
+              if (marqueeJustEndedRef.current) {
+                marqueeJustEndedRef.current = false;
+                return;
+              }
+              const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
+              if (!isOverNode) setSelectedIds(new Set());
+            }}
           >
-            <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-              <path d="M1 3.5A1.5 1.5 0 012.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H13.5A1.5 1.5 0 0115 5.5v7a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 011 12.5v-9z"/>
-            </svg>
-          </button>
-          <button className="loadout-sidebar-toggle" onClick={onToggleCollapsed} title="Collapse sidebar">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-            </svg>
-          </button>
+            {rootNodes.length === 0 && !filter && (
+              <div className="loadout-empty">No loadouts yet</div>
+            )}
+            {rootNodes.map((node) => renderNode(node, 0))}
+            {filter && visibleIds?.size === 0 && (
+              <div className="loadout-empty">No matches</div>
+            )}
+          </div>
+
+          {marqueeRect && marqueeRect.width > 3 && marqueeRect.height > 3 && (
+            <div
+              className="loadout-marquee"
+              style={{
+                position: 'fixed',
+                left: marqueeRect.left,
+                top: marqueeRect.top,
+                width: marqueeRect.width,
+                height: marqueeRect.height,
+              }}
+            />
+          )}
+
+          {ctxMenu && createPortal(
+            <LoadoutContextMenu
+              x={ctxMenu.x}
+              y={ctxMenu.y}
+              nodeId={ctxMenu.nodeId}
+              node={ctxMenu.nodeId ? tree.nodes.find((n) => n.id === ctxMenu.nodeId) ?? null : null}
+              parentId={ctxMenu.parentId}
+              selectedIds={selectedIds}
+              onNewLoadout={(parentId) => { handleAddLoadout(parentId); setCtxMenu(null); }}
+              onNewFolder={(parentId) => { handleAddFolder(parentId); setCtxMenu(null); }}
+              onDuplicate={(nodeId) => { onDuplicateLoadout(nodeId); setCtxMenu(null); }}
+              onRename={(nodeId) => {
+                const node = tree.nodes.find((n) => n.id === nodeId);
+                if (node) { setRenamingId(nodeId); setRenameValue(node.name); }
+                setCtxMenu(null);
+              }}
+              onDelete={(nodeId) => { handleDelete(nodeId); setCtxMenu(null); }}
+              onBatchDelete={(ids) => { handleBatchDelete(ids); setCtxMenu(null); }}
+              onClose={() => setCtxMenu(null)}
+            />,
+            document.body,
+          )}
         </div>
-      </div>
-
-      <div className="loadout-filter-row">
-        <input
-          className="loadout-filter-input"
-          placeholder="Filter..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-      </div>
-
-      <div
-        ref={treeRef}
-        className="loadout-tree"
-        onDragOver={(e) => {
-          // Allow dropping at root level (after all nodes)
-          e.preventDefault();
-          const isOverChild = (e.target as HTMLElement).closest('.loadout-node');
-          if (!isOverChild) setDropTarget({ id: null, position: 'inside' });
-        }}
-        onDrop={handleDrop}
-        onContextMenu={(e) => {
-          // Right-click on empty space → root-level context menu
-          const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
-          if (!isOverNode) {
-            e.preventDefault();
-            setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: null, parentId: null });
-          }
-        }}
-        onClick={(e) => {
-          // After marquee ends, a click fires — suppress it so selection persists
-          if (marqueeJustEndedRef.current) {
-            marqueeJustEndedRef.current = false;
-            return;
-          }
-          // Click on empty space clears selection
-          const isOverNode = (e.target as HTMLElement).closest('.loadout-node');
-          if (!isOverNode) setSelectedIds(new Set());
-        }}
-      >
-        {rootNodes.length === 0 && !filter && (
-          <div className="loadout-empty">No loadouts yet</div>
-        )}
-        {rootNodes.map((node) => renderNode(node, 0))}
-        {filter && visibleIds?.size === 0 && (
-          <div className="loadout-empty">No matches</div>
-        )}
-      </div>
-
-      {marqueeRect && marqueeRect.width > 3 && marqueeRect.height > 3 && (
-        <div
-          className="loadout-marquee"
-          style={{
-            position: 'fixed',
-            left: marqueeRect.left,
-            top: marqueeRect.top,
-            width: marqueeRect.width,
-            height: marqueeRect.height,
-          }}
-        />
       )}
 
-      {ctxMenu && createPortal(
-        <LoadoutContextMenu
-          x={ctxMenu.x}
-          y={ctxMenu.y}
-          nodeId={ctxMenu.nodeId}
-          node={ctxMenu.nodeId ? tree.nodes.find((n) => n.id === ctxMenu.nodeId) ?? null : null}
-          parentId={ctxMenu.parentId}
-          selectedIds={selectedIds}
-          onNewLoadout={(parentId) => { handleAddLoadout(parentId); setCtxMenu(null); }}
-          onNewFolder={(parentId) => { handleAddFolder(parentId); setCtxMenu(null); }}
-          onDuplicate={(nodeId) => { onDuplicateLoadout(nodeId); setCtxMenu(null); }}
-          onRename={(nodeId) => {
-            const node = tree.nodes.find((n) => n.id === nodeId);
-            if (node) { setRenamingId(nodeId); setRenameValue(node.name); }
-            setCtxMenu(null);
-          }}
-          onDelete={(nodeId) => { handleDelete(nodeId); setCtxMenu(null); }}
-          onBatchDelete={(ids) => { handleBatchDelete(ids); setCtxMenu(null); }}
-          onClose={() => setCtxMenu(null)}
-        />,
-        document.body,
+      {sidebarMode === 'custom' && onSelectContentItem && (
+        <Suspense fallback={<div className="tl-loading" />}>
+          <ContentBrowserPanel
+            selectedItem={selectedContentItem ?? null}
+            onSelectItem={onSelectContentItem}
+          />
+        </Suspense>
       )}
     </div>
   );

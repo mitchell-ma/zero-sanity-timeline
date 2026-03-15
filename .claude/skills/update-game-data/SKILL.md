@@ -1,0 +1,831 @@
+---
+name: update-game-data
+description: Fetch and parse game data from external sources (Warfarin API, End-Axis gamedata.json, endfield.wiki.gg) into the codebase. Use when adding new operators, updating frame data, syncing gear from wiki, or looking up operator/gear reference data.
+---
+
+# Update Game Data
+
+This skill covers all external data fetching and parsing for the Arknights: Endfield timeline calculator.
+
+---
+
+# Part 1: Operator Data Parsing
+
+Parse operator data from two remote sources into per-operator files under `game-data/operators/`.
+
+## Data Sources
+
+| Source | URL | Provides |
+|---|---|---|
+| **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Operator info, stats, potentials, levels, skill descriptions, **skill multipliers** (per-level atk_scale from `skillPatchTable`) |
+| **End-Axis gamedata.json** | `https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json` | Skill frame timing data, attack segments, anomalies, variants |
+| **Endfield Wiki** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Skill descriptions, talent details, skill mechanics — useful for cross-referencing and verifying data from the other two sources |
+
+All sources are fetched live — we do not use offline copies. When investigating discrepancies or adding new operators, cross-reference all three sources to ensure accuracy.
+
+## Output
+
+- `src/model/game-data/operators/<slug>.json` — Per-operator data files (see `src/model/game-data/operatorDataSpec.md` for schema)
+
+## Parsers
+
+| Parser | Location | Source | What it produces |
+|---|---|---|---|
+| `parseWarfarinOperator.ts` | `src/model/utils/parsers/` | Warfarin API | Operator info, stats, potentials, allLevels, skill descriptions, skill multipliers |
+| `parseEndAxisGameData.ts` | `src/model/utils/parsers/` | End-Axis GitHub | Skill frame timing data (segments, frames, resource/status interactions) |
+| `parseGameData.ts` | `src/model/utils/parsers/` | Orchestrator | Runs both parsers, merges frame timing with multipliers into per-operator files |
+
+### Usage
+
+```bash
+# Parse a single operator (both sources)
+npx tsx src/model/utils/parsers/parseGameData.ts laevatain
+
+# Parse all operators
+npx tsx src/model/utils/parsers/parseGameData.ts --all
+
+# Parse only Warfarin data for an operator
+npx tsx src/model/utils/parsers/parseWarfarinOperator.ts laevatain
+
+# Parse only End-Axis game data skills for an operator
+npx tsx src/model/utils/parsers/parseEndAxisGameData.ts laevatain
+```
+
+## Pipeline
+
+```
+Warfarin API ──→ parseWarfarinOperator.ts ──→ operator info (stats, potentials, levels, skill descriptions)
+                                           ──→ skill multipliers (per-level atk_scale from skillPatchTable)
+                                                      ↓
+End-Axis GitHub ──→ parseEndAxisGameData.ts ──→ skill frame timing (segments, frames, resource/status interactions)
+                                                      ↓
+                              parseGameData.ts (orchestrator) ──→ merge multipliers into frames ──→ operators/<slug>.json
+```
+
+## Output Format (per-operator JSON)
+
+See `src/model/game-data/operatorDataSpec.md` for the full schema. Key structures:
+
+- **Duration**: `{ "value": 2.2, "unit": "SECOND" }` (`DurationUnit` enum)
+- **Resource interactions**: `{ "resourceType": "SKILL_POINT", "interactionType": "RECOVER", "value": 20, "target": "SELF" }`
+- **Status interactions**: `{ "interactionType": "APPLY", "statusType": "HEAT", "stacks": 1, "target": "ENEMY" }`
+- **Animation**: `{ "duration": { ... }, "timeInteractionType": "TIME_STOP" }`
+- **Event component type**: `SEGMENT` or `FRAME` (`EventComponentType` enum)
+- **Data sources**: `["END_AXIS"]` or `["WARFARIN"]` or `["SELF"]` (`DataSourceType` enum)
+
+## gamedata.json Structure
+
+### Top-level keys
+- `characterRoster` — Array of operator objects
+- `enemyDatabase` — Enemy data
+- `weaponDatabase` — Weapon data
+- `equipmentDatabase` — Gear/equipment data
+
+### Character keys → operator JSON mapping
+
+Each character in `characterRoster` has:
+
+| gamedata key | operator JSON mapping | Notes |
+|---|---|---|
+| `id` | Operator key (`OperatorType` enum) | e.g. `"LAEVATAIN"` |
+| `attack_segments[]` | `skills.BASIC_ATTACK.segments[]` | Array of basic attack sequences |
+| `attack_segments[].duration` | `segment.duration` | Duration struct |
+| `attack_segments[].damage_ticks[]` | `segment.frames[]` | Frame objects |
+| `attack_segments[].damage_ticks[].offset` | `frame.offset` | Duration struct |
+| `attack_segments[].damage_ticks[].sp` | `resourceInteractions[SKILL_POINT/RECOVER]` | SP recovered on hit |
+| `attack_segments[].damage_ticks[].stagger` | `resourceInteractions[STAGGER/RECOVER]` | Stagger dealt |
+| `skill_duration` | `skills.BATTLE_SKILL.duration` | Duration struct |
+| `skill_spCost` | `resourceInteractions[SKILL_POINT/EXPEND]` | SP cost to activate |
+| `skill_gaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/SELF]` | Gauge gained |
+| `skill_teamGaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/TEAM]` | Team gauge gained |
+| `skill_damage_ticks[]` | `skills.BATTLE_SKILL.frames[]` | Same frame format |
+| `link_duration` | `skills.COMBO_SKILL.duration` | Duration struct |
+| `link_cooldown` | `resourceInteractions[COOLDOWN/EXPEND]` | Cooldown |
+| `link_gaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/SELF]` | Gauge gained |
+| `link_damage_ticks[]` | `skills.COMBO_SKILL.frames[]` | Same frame format |
+| *(not in gamedata)* | `skills.COMBO_SKILL.animation` | Time-stop — must be manually measured |
+| `ultimate_duration` | `skills.ULTIMATE.duration` | Duration struct |
+| `ultimate_animationTime` | `skills.ULTIMATE.animation.duration` | Time-stop animation |
+| `ultimate_gaugeMax` | `resourceInteractions[ULTIMATE_ENERGY/EXPEND]` | Energy cost |
+| `ultimate_damage_ticks[]` | `skills.ULTIMATE.frames[]` | Same frame format |
+| `execution_duration` | Not yet parsed | Finisher animation |
+
+### Terminology mapping
+- gamedata `skill_*` = Battle Skill (`CombatSkillType.BATTLE_SKILL`)
+- gamedata `link_*` = Combo Skill (`CombatSkillType.COMBO_SKILL`)
+- gamedata `ultimate_*` = Ultimate (`CombatSkillType.ULTIMATE`)
+- gamedata `attack_segments` = Basic Attack (`CombatSkillType.BASIC_ATTACK`)
+- gamedata `execution_*` = Finisher (not yet modeled)
+
+## Anomalies / Inflictions
+
+Anomalies represent status inflictions applied by damage ticks. They appear on:
+- `attack_segments[].anomalies` or `attack_segments[].physicalAnomaly` — per-segment inflictions
+- `skill_anomalies` / `link_anomalies` / `ultimate_anomalies` — per-skill inflictions
+
+Each anomaly entry has:
+
+| gamedata key | Meaning |
+|---|---|
+| `type` | Infliction type (see mapping below) |
+| `stacks` | Number of stacks applied |
+| `duration` | Duration override (0 = default) |
+| `offset` | Time offset in seconds |
+| `_id` | Links to `boundEffects` array on damage ticks |
+
+### Anomaly type → statusInteraction mapping
+
+| gamedata `type` | `statusType` | `interactionType` | Notes |
+|---|---|---|---|
+| `blaze_attach` | `HEAT` | `APPLY` | Heat infliction |
+| `cold_attach` | `CRYO` | `APPLY` | Cryo infliction |
+| `emag_attach` | `ELECTRIC` | `APPLY` | Electric infliction |
+| `nature_attach` | `NATURE` | `APPLY` | Nature infliction |
+| `magma_0` | `COMBUSTION` | `APPLY` | Forced reaction (`isForced: true`, `statusLevel: 1`) |
+| `magma_1` – `magma_3` | `MELTING_FLAME` | `APPLY` | Intermediate Melting Flame effects |
+| `magma_4` | `HEAT` | `ABSORB` | Absorbs Heat infliction → Melting Flame stacks (with `conversion`) |
+| `blaze_burst` / `burning` | `COMBUSTION` | `APPLY` | Combustion arts reaction |
+| `corrosion` | `CORROSION` | `APPLY` | Forced corrosion (`isForced: true`) |
+
+## Variants
+
+`variants[]` contains enhanced/empowered forms of skills. Each variant has:
+- `name` — Chinese name (强化 = Empowered, 大招内 = Enhanced/during ult)
+- `type` — `"attack"` (basic attack variant) or `"skill"` (battle skill variant)
+- `attackSegments[]` — Same structure as `attack_segments` (with `physicalAnomaly` and `damageTicks`)
+- `duration`, `damageTicks[]`, `allowedTypes[]`
+
+### Variant → skill category mapping
+
+| Variant `type` | Variant `name` contains | operator JSON category |
+|---|---|---|
+| `attack` | 大招内 (during ult) | `ENHANCED_BASIC_ATTACK` |
+| `attack` | 强化 (empowered) | `EMPOWERED_BASIC_ATTACK` |
+| `skill` | 大招内 (during ult) | `ENHANCED_BATTLE_SKILL` |
+| `skill` | 强化 (empowered) | `EMPOWERED_BATTLE_SKILL` |
+| `skill` | both | `ENHANCED_EMPOWERED_BATTLE_SKILL` |
+
+Naming convention: **Enhanced** = during ultimate (大招内), **Empowered** = from status effects like Melting Flame stacks (强化).
+
+### Detecting empowered variants from skill descriptions
+
+When a skill description mentions a conditional "additional attack" (e.g., "If the enemy has active Electrification, consume the Electrification to unleash an additional attack"), this implies an **empowered variant** even if End-Axis doesn't have a variant entry for it. In Warfarin data, the additional attack's multiplier is typically bundled into the base skill's `blackboard` as a separate `atk_scale` variant key (e.g., `atk_scale2`).
+
+**How to identify:**
+1. Check the Warfarin skill description for phrases like "additional attack", "unleash an extra", "trigger an additional"
+2. Cross-reference with the Endfield Wiki (`https://endfield.wiki.gg/wiki/<Operator_Name>`) for skill mechanic details
+3. Look for `atk_scale2` or other variant keys in the Warfarin `blackboard` that don't correspond to sequential hits
+
+**How to handle:**
+- The base `BATTLE_SKILL` should only contain multipliers for the base hits (e.g., `atk_scale` for the 2 slashes)
+- The `EMPOWERED_BATTLE_SKILL` should contain multipliers for all hits including the additional attack (base hits use `atk_scale`, additional attack uses `atk_scale2` renamed to `atk_scale`)
+- Non-scale keys like `atb` (SP recovery) on the additional attack frame should be reflected in `resourceInteractions`
+- Add `statusInteractions` on the additional attack frame if the skill consumes a status (e.g., `CONSUME` + `ELECTRIFICATION`)
+
+**Known operators with description-implied empowered battle skills:**
+| Operator | Skill | Condition | Additional Attack |
+|---|---|---|---|
+| Arclight | Tempestuous Arc | Enemy has Electrification | Consume Electrification → Electric DMG + SP recovery |
+
+## Ultimates with Delayed Hits
+
+Some ultimates have damage ticks with `offset > duration`. These represent delayed effects that occur after the main animation ends.
+
+### Detection
+After parsing ultimate ticks, check if any frame has `offset.value > duration.value`. If so, split into segments.
+
+### Splitting into segments
+1. **Main segment**: Frames where `offset.value <= duration.value`. Uses original duration.
+2. **Delayed segment**: Frames where `offset.value > duration.value`. Re-offset each frame by subtracting the main duration. Duration = max re-offset + 0.1s buffer.
+
+### Known delayed segments
+| Operator | Ultimate Name | Delayed Segment Name |
+|---|---|---|
+| Lifeng | Heart of the Unmoving | Vajra Impact |
+| Arclight | Exploding Blitz | Explosion |
+
+## Combo Skill Time Stop
+
+Combo skills have a time-stop phase. This is **not sourced from gamedata.json** — it must be manually measured.
+
+Default for new operators:
+```json
+"animation": {
+  "duration": { "value": 0.5, "unit": "SECOND" },
+  "timeInteractionType": "TIME_STOP"
+}
+```
+
+With `dataSources: ["SELF"]` when measured, omitted or empty when using defaults.
+
+## Data Source Rules
+
+| `DataSourceType` value | Meaning | Trust level |
+|---|---|---|
+| `END_AXIS` | Parsed from End-Axis gamedata.json | Secondary |
+| `WARFARIN` | Parsed from Warfarin API | Secondary |
+| `SELF` | Manually measured/verified | **Authoritative** — always takes precedence |
+
+### Rules
+- When parsing from gamedata.json, set `dataSources: ["END_AXIS"]`
+- When parsing from Warfarin API, set `dataSources: ["WARFARIN"]`
+- `SELF` data lives in `skillOverrides` — the parser **never touches** this field
+- When manually correcting a value, add it to `skillOverrides` with `dataSources: ["SELF"]`
+
+## Skill Overrides
+
+Manually verified data is stored separately from parsed data using the `skillOverrides` top-level field in operator JSON files. This keeps the base data (from END_AXIS/WARFARIN) always up-to-date while preserving manual corrections.
+
+### Structure
+
+`skillOverrides` mirrors the `skills` structure but is sparse — only overridden values are present:
+
+```json
+{
+  "skills": { ... },
+  "skillOverrides": {
+    "COMBO_SKILL": {
+      "animation": {
+        "duration": { "value": 0.729, "unit": "SECOND" },
+        "timeInteractionType": "TIME_STOP",
+        "dataSources": ["SELF"]
+      }
+    },
+    "ULTIMATE": {
+      "frames": [...],
+      "dataSources": ["SELF"]
+    }
+  }
+}
+```
+
+### Override precedence
+- `skills` contains the base data from external sources (always overwritten by parsers)
+- `skillOverrides` contains SELF-verified corrections (never touched by parsers)
+- At read time, `skillOverrides` values take precedence over `skills` values via deep merge
+
+### Override categories
+Overrides can target any level of the skill structure:
+- **Category-level properties**: `animation`, `duration`, `resourceInteractions`
+- **Frame arrays**: Complete replacement of the `frames` array for a category
+- **Segment arrays**: Complete replacement of `segments` for a category
+
+### Parser behavior with overrides
+When the parser runs:
+1. Base `skills` are always updated with the latest source data
+2. `skillOverrides` are preserved as-is (never modified)
+3. New source values are compared against override values
+4. If a new source value differs from an override value, a warning is logged:
+   ```
+   ⚠ OVERRIDE CONFLICT in ARDELIA COMBO_SKILL.animation.duration.value: source=0.5, override=0.729 — new source data may be more accurate
+   ```
+5. These warnings indicate the user should re-verify the override — the external source may have corrected their data
+
+### Adding a new override
+1. Identify the value to override in the `skills` structure
+2. Add the corresponding entry to `skillOverrides` with the same path
+3. Set `dataSources: ["SELF"]` on the override entry
+4. The base `skills` value remains unchanged (it will be updated by future parser runs)
+
+## Parsing Workflow
+
+1. Fetch gamedata.json from End-Axis GitHub raw URL
+2. Find operator in `characterRoster` by `id`
+3. Extract basic attack segments from `attack_segments[]`
+4. Extract battle skill from `skill_*` fields
+5. Extract combo skill from `link_*` fields
+6. Extract ultimate from `ultimate_*` fields
+7. For each damage tick, resolve anomalies using `boundEffects` IDs → anomaly type mapping
+8. Check for out-of-bounds ultimate ticks and split into delayed segments
+9. Check `variants[]` for enhanced/empowered forms
+10. For combo skills, add time-stop animation with default values
+11. Output in the new structured format with `dataSources: ["END_AXIS"]`
+12. Merge with Warfarin operator data (stats, potentials, levels, skill multipliers)
+13. Merge Warfarin skill multipliers into End-Axis frames (see Multiplier Merging below)
+14. Compare incoming skill values against existing `skillOverrides` — log warnings for any conflicts
+15. Write base skills to `skills` (always overwritten), preserve `skillOverrides` as-is
+
+## Skill Multipliers
+
+Skill multiplier data is sourced from the Warfarin API `skillPatchTable`. Each skill has 12 levels of `blackboard` entries containing per-hit damage multipliers and other parameters.
+
+### Warfarin skillPatchTable structure
+
+Each entry in `skillPatchTable` is keyed by a Warfarin skill ID (e.g., `chr_0016_laevat_attack1`) and contains `SkillPatchDataBundle` — an array of 12 level entries:
+
+```json
+{
+  "skillId": "chr_0016_laevat_attack1",
+  "level": 1,
+  "blackboard": [
+    { "key": "atk_scale", "value": 0.16 }
+  ]
+}
+```
+
+### Warfarin skill ID → skill category mapping
+
+| Suffix | Category | Index |
+|--------|----------|-------|
+| `attack1`..`attackN` | `BASIC_ATTACK` | segment 0..N-1 |
+| `normal_skill` | `BATTLE_SKILL` | 0 |
+| `normal_skill_during_ult` | `ENHANCED_BATTLE_SKILL` | 0 |
+| `combo_skill` | `COMBO_SKILL` | 0 |
+| `ultimate_skill` | `ULTIMATE` | 0 |
+| `ult_attack1`..`ult_attackN` | `ENHANCED_BASIC_ATTACK` | segment 0..N-1 |
+| `dash_attack` | `DASH_ATTACK` | 0 |
+| `plunging_attack_end` | `DIVE_ATTACK` | 0 |
+| `power_attack` | `FINISHER` | 0 |
+
+### atk_scale vs display_atk_scale
+
+- **`atk_scale`** (and variants): The **per-hit multiplier** used in damage calculation. This is the **source of truth**.
+- **`display_atk_scale`**: The total shown in the in-game skill description. This is an **approximation** — it represents `sum(per_hit × hit_count)` but may have rounding discrepancies.
+
+`display_atk_scale` is excluded from frame multipliers. Only `atk_scale` values are stored.
+
+### Deriving hit count from multipliers
+
+The true hit count for a skill can be derived from Warfarin data:
+
+**Single multiplier** (only `atk_scale`):
+```
+hit_count = round(display_atk_scale / atk_scale)
+```
+
+**Multiple multiplier variants** (e.g., `atk_scale` + `atk_scale_2`):
+Each variant key represents one hit. The total hits = number of distinct `atk_scale` variant keys. Verification:
+```
+sum(all variant values) ≈ display_atk_scale
+```
+
+**Mixed: regular + variant keys** (e.g., `atk_scale` + `atk_scale_pre`):
+Subtract variant values from display total, then divide remainder by the regular `atk_scale`:
+```
+regular_hits = round((display_atk_scale - sum(variant_values)) / atk_scale)
+total_hits = regular_hits + number_of_variant_keys
+```
+
+### Comparing with End-Axis frame count
+
+After deriving the true hit count, compare with End-Axis frames:
+- **Match**: Each frame has a 1:1 multiplier assignment — no interpolation needed
+- **End-Axis has fewer frames**: Missing frames should be interpolated using segment timing (evenly distributed within the segment duration)
+- **End-Axis has more frames**: Extra frames may represent non-damage events (status applications, resource recoveries without damage)
+
+### Multiplier merging
+
+The orchestrator (`parseGameData.ts`) merges Warfarin multipliers into End-Axis frames:
+
+1. **Positional assignment** (exact match only): When the number of orderable atk_scale keys exactly equals the number of End-Axis frames, keys are sorted by hit order and assigned 1:1. On each frame, the original key is normalized to `atk_scale`. Example: Da Pan battle skill — 2 keys (`atk_scale_pre`, `atk_scale`) and 2 frames → positional.
+
+2. **Non-positional assignment** (mismatch): When key count ≠ frame count, the keys represent different skill phases, not sequential hits. All atk_scale keys are stored as-is on every frame. Example: Laevatain battle skill — 3 keys (`atk_scale`, `atk_scale_2`, `atk_scale_3`) but 10 frames → stored as-is on all frames.
+
+3. **Named keys** (`atk_scale_loop`, `atk_scale_end`, `atk_scale_boom`, etc.) are never positionally assigned. Always stored as-is on every frame.
+
+4. **Non-scale keys** (`poise`, `duration`, `airborne_duration`, `count`, etc.) are stored on the first frame.
+
+### All known atk_scale key variants
+
+| Key | Meaning | Operators |
+|-----|---------|-----------|
+| `atk_scale` | Standard per-hit multiplier | All |
+| `atk_scale_pre` | Pre-hit (charge-up) | Da Pan |
+| `atk_scale_2` / `atk_scale2` | Second hit | Multiple |
+| `atk_scale_3` / `atk_scale3` | Third hit | Multiple |
+| `atk_scale4` | Fourth hit | Fluorite, Pogranichnik |
+| `atk_scale_1` / `atk_scale1` | Explicit first hit | Multiple |
+| `atk_scale_1ex` / `atk_scale_2ex` | Extended variants | Alesh |
+| `atk_scale_loop` | Repeating phase hit | Snowshine, Da Pan |
+| `atk_scale_end` | Final phase hit | Da Pan |
+| `atk_scale_final` | Final hit | Pogranichnik |
+| `atk_scale_rush` | Rush phase | Pogranichnik |
+| `atk_scale_trigger` | Trigger-conditional | Endministrator, Pogranichnik |
+| `atk_scale_boom` | Explosion | Ardelia, Yvonne |
+| `atk_scale_tick` | DoT tick | Yvonne |
+| `atk_scale_extra` | Extra conditional hit | Yvonne |
+| `atk_scale_layer` | Layered/stacking | Yvonne |
+| `atk_scale_plus` | Enhanced (success) | Wulfgard |
+| `atk_scale_plus_fail` | Enhanced (fail) | Wulfgard |
+| `atk_scale_lance` | Thunderlance hit | Avywenna |
+| `atk_scale_lance_ult` | Thunderlance during ult | Avywenna |
+| `atk_scale_pull` | Pull/gravity | Gilberta |
+| `atk_scale_explosion` | Explosion | Gilberta |
+| `atk_scale_add_1`–`4` | Additional hits | Fluorite |
+| `display_atk_scale` | Display total (excluded) | Many |
+| `atk_scale_display` | Display total (excluded) | Some |
+
+## Conditional Gauge Gains
+
+Some combo skills have gauge gains that vary by enemies hit. In gamedata.json these appear as multiple `link_gaugeGain` entries or structured gauge data. Map to:
+
+```json
+{
+  "resourceType": "ULTIMATE_ENERGY",
+  "interactionType": "RECOVER",
+  "value": 25,
+  "target": "SELF",
+  "conditions": { "enemiesHitThreshold": 1 }
+}
+```
+
+> **Note:** Conditional gauge gains may not be available in gamedata.json and may need to be sourced from skills.json or manually entered.
+
+---
+
+# Part 1b: Weapon Data Parsing
+
+Parse weapon data from the Warfarin API into per-weapon files under `game-data/weapons/`.
+
+## Data Source
+
+| Source | URL | Provides |
+|---|---|---|
+| **Warfarin API (list)** | `https://api.warfarin.wiki/v1/en/weapons?version=1.1` | All weapon slugs, names, types, rarities |
+| **Warfarin API (detail)** | `https://api.warfarin.wiki/v1/en/weapons/<slug>` | Full weapon data: base attack curve, skills |
+| **Wiki (images)** | `https://endfield.wiki.gg/wiki/<Weapon_Name>` | Weapon icon/splash images |
+
+> **Note:** The `version` query parameter on the list endpoint should be updated when new game versions release (currently `1.1`).
+
+## Warfarin Weapon API Structure
+
+### List endpoint (`/weapons?version=1.1`)
+
+Returns `data[]` — array of 62 weapons with summary fields:
+
+```json
+{ "id": "wpn_sword_0016", "slug": "never-rest", "name": "Never Rest", "iconId": "wpn_sword_0016", "rarity": 6, "weaponType": 1, "weaponTags": ["attr_will", "attr_atk", "tacafter"] }
+```
+
+The `refs.weaponTypes` object maps type IDs to names.
+
+### Warfarin weaponType → WeaponType enum mapping
+
+| API `weaponType` | API name | `WeaponType` enum |
+|---|---|---|
+| `1` | Sword | `SWORD` |
+| `2` | Arts Unit | `ARTS_UNIT` |
+| `3` | Greatsword | `GREAT_SWORD` |
+| `5` | Polearm | `POLEARM` |
+| `6` | Handcannon | `HANDCANNON` |
+
+### Detail endpoint (`/weapons/<slug>`)
+
+Returns `data` with these sections:
+
+| Section | Key fields |
+|---|---|
+| `weaponBasicTable` | `weaponId`, `engName`, `rarity`, `weaponType`, `maxLv`, `weaponDesc`, `weaponSkillList[]`, `weaponPotentialSkill` |
+| `itemTable` | `name`, `iconId`, `decoDesc` (flavor text) |
+| `weaponUpgradeTemplateTable.list[]` | `weaponLv`, `baseAtk` (90 entries, lv1–lv90) |
+| `skillPatchTable` | Keyed by skill ID → `SkillPatchDataBundle[]` (9 levels each) |
+
+### Skill level data (`SkillPatchDataBundle`)
+
+Each skill level entry has:
+
+```json
+{
+  "skillId": "sk_wpn_sword_0016",
+  "skillName": "Flow: Reincarnation",
+  "description": "Physical DMG Dealt <@ba.vup>+{phy_dmg_up:0.0%}</>...",
+  "level": 1,
+  "blackboard": [
+    { "key": "phy_dmg_up", "value": 0.16, "valueStr": "" },
+    { "key": "duration", "value": 30, "valueStr": "" },
+    { "key": "max_stack", "value": 5, "valueStr": "" }
+  ],
+  "tagId": "tacafter",
+  "coolDown": 0,
+  "maxChargeTime": 1
+}
+```
+
+- `blackboard[]` contains all scaling values as key-value pairs across 9 levels
+- `description` uses rich text tags (same `stripRichText()` as operator skill descriptions)
+- `tagId` indicates skill category (e.g., `tacafter` = triggered after condition, `attr_*` = stat boost)
+
+### Weapon skill categories
+
+| `tagId` prefix | Skill type | Example |
+|---|---|---|
+| `attr_*` | Passive stat boost | `attr_will` → Will Boost, `attr_atk` → Attack Boost |
+| `tacafter` | Triggered effect (after condition) | Flow: Reincarnation |
+| `tactic` | Tactical/named passive | Infliction: Vicious Purge |
+
+Generic stat boost skills share IDs across weapons (e.g., `wpn_attr_will_high`, `wpn_sp_attr_atk_high`). Named skills have weapon-specific IDs (e.g., `sk_wpn_sword_0016`).
+
+## Weapon JSON Structure
+
+Each weapon is a standalone file under `game-data/weapons/<slug>.json`:
+
+```json
+{
+  "weaponId": "NEVER_REST",
+  "name": "Never Rest",
+  "weaponType": "SWORD",
+  "weaponRarity": 6,
+  "allLevels": [
+    { "level": 1, "baseAttack": 51 },
+    ...
+    { "level": 90, "baseAttack": 500 }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "WILL_BOOST_L",
+      "name": "Will Boost [L]",
+      "description": "Will +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        { "level": 1, "WILL": 20 },
+        ...
+        { "level": 9, "WILL": 156 }
+      ]
+    },
+    {
+      "weaponSkillType": "ATTACK_BOOST_L",
+      "name": "Attack Boost [L]",
+      "description": "Attack +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        { "level": 1, "ATTACK_BONUS": 0.05 },
+        ...
+        { "level": 9, "ATTACK_BONUS": 0.39 }
+      ]
+    },
+    {
+      "weaponSkillType": "NEVER_REST_FLOW_REINCARNATION",
+      "name": "Flow: Reincarnation",
+      "description": "Physical DMG Dealt +{phy_dmg_up:0.0%}. After the wielder's skill recovers SP, the wielder gains Physical DMG Dealt +{phy_dmg_up2:0.0%} while other operators in the team gain Physical DMG Dealt +{phy_dmg_up3:0.0%} for {duration:0}s. Max stacks: {max_stack:0}.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "PHYSICAL_DAMAGE_BONUS": 0.16,
+          "conditionalStats": [
+            {
+              "triggerConditions": ["SKILL_POINT_RECOVERY_FROM_SKILL"],
+              "triggerSources": ["SELF", "OTHER_OPERATORS"],
+              "duration": { "value": 30, "unit": "SECOND" },
+              "maxStacks": 5,
+              "phy_dmg_up2": 0.05,
+              "phy_dmg_up3": 0.025
+            }
+          ]
+        },
+        ...
+      ]
+    }
+  ],
+  "dataSources": ["WARFARIN"]
+}
+```
+
+### Key design decisions
+
+- **`allLevels`**: Full 90-level base attack curve (all entries from the API)
+- **`skills[]`**: Ordered array matching `weaponSkillList[]` from the API. Slot 1-2 always present; slot 3 only for rarity 4+
+- **`skillCategory`**: `"STAT_BOOST"` for generic `attr_*`/`wpn_attr_*`/`wpn_sp_attr_*` skills, `"NAMED"` for weapon-specific skills
+- **`weaponSkillType`**: Primary skill identifier. Maps to the `WeaponSkillType` enum. Stat boosts use generic names (`WILL_BOOST_L`). Named skills use **weapon-prefixed** names: `<WEAPON_NAME>_<SKILL_NAME>` (e.g., `NEVER_REST_FLOW_REINCARNATION`). Shared skills get one enum value per weapon
+- **Stat boost levels**: Stats flattened directly onto level entries (no `blackboard` wrapper), keys mapped to `StatType` enum values
+- **Named skill levels**: Split into permanent stats (at level root, mapped to `StatType`) and `conditionalStats[]` entries with `triggerCondition`, `duration` struct, optional `maxStacks`, and stat key-value pairs
+- **Description**: Named skills retain `{variable:format}` placeholders for runtime string interpolation (e.g., `{phy_dmg_up:0.0%}` → "16.0%")
+- **`weaponId`**: `WeaponType` enum value (e.g., `"NEVER_REST"`). `name` is the formatted display name.
+
+### Weapon blackboard key → StatType mapping
+
+Common blackboard keys used in stat boost skills:
+
+| Blackboard key | StatType | Notes |
+|---|---|---|
+| `atk` | `ATTACK_BONUS` | Percentage (0.05 = 5%) |
+| `str` | `STRENGTH` | Flat |
+| `agi` | `AGILITY` | Flat |
+| `will` | `WILL` | Flat |
+| `wisd` / `int` | `INTELLECT` | Flat |
+| `mainattr` | *(operator's main attribute)* | Flat; resolves at runtime |
+| `phy_dmg_up` | `PHYSICAL_DAMAGE_BONUS` | Percentage |
+| `art_dmg_up` | `ARTS_DAMAGE_BONUS` | Percentage |
+| `fire_dmg_up` | `HEAT_DAMAGE_BONUS` | Percentage |
+| `ice_dmg_up` | `CRYO_DAMAGE_BONUS` | Percentage |
+| `thunder_dmg_up` | `ELECTRIC_DAMAGE_BONUS` | Percentage |
+| `nature_dmg_up` | `NATURE_DAMAGE_BONUS` | Percentage |
+| `cri_rate` | `CRITICAL_RATE` | Percentage |
+| `heal_up` | `TREATMENT_BONUS` | Percentage |
+| `hp` | `HP_BONUS` | Percentage |
+| `usp_up` | `ULTIMATE_ENERGY_GAIN` | Percentage |
+| `normal_atk_up` | `BASIC_ATTACK_DAMAGE_BONUS` | Percentage |
+| `duration` | *(effect duration)* | Seconds; not a stat |
+| `max_stack` | *(max stacks)* | Count; not a stat |
+
+### conditionalStats structure
+
+Each entry in `conditionalStats[]`:
+
+| Field | Type | Description |
+|---|---|---|
+| `triggerConditions` | string[] | Array of `TriggerConditionType` enum values (e.g., `["CAST_ULTIMATE"]`) |
+| `triggerSources` | string[] | Array of `TargetType` enum values — who receives the buff (e.g., `["SELF"]`, `["SELF", "OTHER_OPERATORS"]`) |
+| `duration` | object | `{ value: number, unit: "SECOND" }` — how long the buff lasts |
+| `maxStacks` | number | Optional. Maximum stacks for the effect |
+| `<stat_key>` | number | One or more stat key-value pairs (mapped `StatType` or raw API keys) |
+
+### Existing weapon model fields → weapon JSON mapping
+
+| Current model field | weapon JSON field | Notes |
+|---|---|---|
+| `weaponType` | `weaponType` | String enum value |
+| `weaponRarity` | `weaponRarity` | Number 3-6 |
+| `baseAttack` | `allLevels[level].baseAttack` | Full 90-level curve |
+| `weaponSkillOne.getValue()` | `skills[0].allLevels[level]` | Direct stat lookup |
+| `weaponSkillTwo.getValue()` | `skills[1].allLevels[level]` | Direct stat lookup |
+| `weaponSkillThree.getValue()` | `skills[2].allLevels[level]` | Only for rarity 4+ |
+
+## Parsing Workflow
+
+1. Fetch weapon list from `https://api.warfarin.wiki/v1/en/weapons?version=1.1`
+2. For each weapon slug, fetch detail from `https://api.warfarin.wiki/v1/en/weapons/<slug>`
+3. Extract `weaponBasicTable` for identity (name, rarity, type)
+4. Extract `weaponUpgradeTemplateTable.list` for all 90 base attack levels
+5. Map `weaponType` number to `WeaponType` enum string using the mapping table
+6. For each skill in `weaponSkillList`, extract from `skillPatchTable`:
+   - Skill name and description (strip rich text tags, keep `{var:format}` placeholders for named skills)
+   - Resolve `weaponSkillType` from `SKILL_ID_TO_WEAPON_SKILL_TYPE` (stat boosts) or `NAMED_SKILL_ID_TO_WEAPON_SKILL_TYPE` (named skills)
+   - **Stat boosts**: Flatten blackboard values directly onto level entries, map keys to `StatType`
+   - **Named skills**: Analyze description to split stats into permanent (before trigger phrase) and conditional (after trigger phrase). Detect `triggerCondition` from description text patterns. Extract `duration` and `maxStacks` from blackboard.
+7. Write to `game-data/weapons/<slug>.json` with `dataSources: ["WARFARIN"]`
+8. **Before writing**, preserve any entries with `dataSources` containing `"SELF"`
+
+### Adding new weapons
+
+When a new weapon is added, update `NAMED_SKILL_ID_TO_WEAPON_SKILL_TYPE` in `parseWarfarinWeapons.ts` with the Warfarin skill ID → weapon-prefixed `WeaponSkillType` mapping. Also add the corresponding enum value in `src/consts/enums.ts`, skill class in `namedWeaponSkills.ts`, `SKILL_CONSTRUCTORS` entry in `weaponData.ts`, and `skillKey` in `weaponSkillEffects.ts`.
+
+---
+
+# Part 2: Gear Data Parsing
+
+Parse gear data from the Warfarin API into per-set files under `game-data/gears/`.
+
+## Data Source
+
+| Source | URL | Provides |
+|---|---|---|
+| **Warfarin API (list)** | `https://api.warfarin.wiki/v1/en/gear?version=1.1` | All gear pieces: stats, ranks, set membership |
+| **Warfarin API (detail)** | `https://api.warfarin.wiki/v1/en/gear/<slug>` | Set effect descriptions, skill data |
+
+> **Note:** The `version` query parameter should be updated when new game versions release (currently `1.1`).
+
+## Output
+
+- `src/model/game-data/gears/<set-slug>.json` — Per-set data files (see `src/model/game-data/gearDataSpec.md` for schema)
+
+## Parser
+
+| Parser | Location | What it produces |
+|---|---|---|
+| `parseWarfarinGear.ts` | `src/model/utils/parsers/` | Per-set JSON with all pieces, stats at 4 ranks, set effects |
+
+### Usage
+
+```bash
+# Parse all gear sets
+npx tsx src/model/utils/parsers/parseWarfarinGear.ts --all
+
+# Parse a single gear set by suitID
+npx tsx src/model/utils/parsers/parseWarfarinGear.ts suit_fire_natr01
+```
+
+## Pipeline
+
+```
+Warfarin API (list) ──→ group by suitID ──→ parse pieces (attrType → StatType)
+                                                    ↓
+Warfarin API (detail) ──→ set effect description ──→ gears/<set-slug>.json
+```
+
+## Adding New Gear Sets
+
+When a new suitID appears in the API:
+
+1. Add the `suitID → GearEffectType` mapping in `parseWarfarinGear.ts` (`SUIT_ID_TO_GEAR_EFFECT_TYPE`)
+2. Add the `GearEffectType → slug` mapping in `parseWarfarinGear.ts` (`GEAR_EFFECT_TO_SLUG`)
+3. Re-run `npx tsx src/model/utils/parsers/parseWarfarinGear.ts --all`
+
+### Implementing parsed data into codebase
+
+For each new gear set, follow this checklist:
+
+| Step | File | Action |
+|------|------|--------|
+| 1 | `src/consts/enums.ts` | Add `GearEffectType` enum value |
+| 2 | `src/model/gears/gearEffects.ts` | Add concrete GearEffect class |
+| 3 | `src/model/gears/<setName>.ts` | Create concrete gear piece classes (use parsed JSON data) |
+| 4 | `src/utils/loadoutRegistry.ts` | Register pieces in ARMORS, GLOVES, KITS |
+| 5 | `src/controller/calculation/loadoutAggregator.ts` | Add to `GEAR_EFFECT_FACTORIES` |
+| 6 | `src/consts/gearSetEffects.ts` | Add set effect entry (if triggered/timed) |
+
+### Filling in stub gear pieces
+
+For existing sets where pieces use `createGenericGear()`, use the parsed JSON data to replace stubs with concrete classes.
+
+## Verify
+
+Run `npx tsc --noEmit` to verify no type errors were introduced.
+
+## Notes
+- Icons: download from wiki if available, save as `src/assets/gears/Set_Name_Piece.webp` (snake_case)
+- GenericGear stubs are acceptable as a first pass
+- Full data specification: `src/model/game-data/gearDataSpec.md`
+
+---
+
+# Part 3: Gear Data Reference
+
+Use this reference when working with gear data — adding new gear sets, creating gear models, updating the loadout registry, or implementing gear set effects.
+
+## Gear System Architecture
+
+### File Structure
+```
+src/model/gears/
+  gear.ts              # Abstract base class
+  gearEffects.ts       # Abstract GearEffect + 18 concrete effect classes
+  hotWork.ts           # Example: Hot Work concrete gear pieces
+  [setName].ts         # One file per gear set
+src/consts/
+  enums.ts             # GearType, GearEffectType enums
+  gearSetEffects.ts    # Timed/triggered effects for timeline visualization
+src/utils/
+  loadoutRegistry.ts   # GEARS_RAW, ARMORS, GLOVES, KITS registries
+src/controller/calculation/
+  loadoutAggregator.ts # Gear stat aggregation + set bonus activation (3-piece)
+src/controller/timeline/
+  columnBuilder.ts     # Gear buff timeline columns
+```
+
+### Base Gear Class Pattern
+```typescript
+abstract class Gear {
+  abstract readonly gearType: GearType;       // ARMOR | GLOVES | KIT
+  abstract readonly gearEffectType: GearEffectType;
+  rank: number = 4;                           // 1-4
+  abstract readonly statsByRank: Record<number, Partial<Record<StatType, number>>>;
+}
+```
+
+### Set Activation
+- **3-piece threshold**: Count gear pieces with same `GearEffectType` across 4 slots (armor, gloves, kit1, kit2)
+- If count >= 3, activate set bonus (passive stats + triggered effects)
+- Handled in `loadoutAggregator.ts`
+
+## Set Effects (from wiki)
+
+| Set | 3-Piece Effect |
+|-----|----------------|
+| Hot Work | Arts Intensity +30. After Combustion: Heat DMG +50% 10s. After Corrosion: Nature DMG +50% 10s. Cannot stack |
+| Bonekrusha | ATK +15%. Combo skill → 1 stack Bonekrushing Smash (next battle skill DMG +30%, max 2) |
+| Pulser Labs | Arts Intensity +30. After Electrification: Electric DMG +50% 10s. After Solidification: Cryo DMG +50% 10s. Cannot stack |
+| Eternal Xiranite | HP +1000. After applying Amp/Protected/Susceptibility/Weakened: teammates DMG +16% 15s. Cannot stack |
+| Aethertech | ATK +8%. After Vulnerability: Physical DMG +8% 15s (max 4 stacks). At 4 stacks: +16% Physical DMG 10s. Cannot stack |
+| MI Security | Critical Rate +5%. After crit: ATK +5% 5s (max 5 stacks). At max stacks: +5% Crit Rate. Cannot stack |
+| Swordmancer | Stagger Efficiency +20%. After Physical Status: 250% ATK Physical DMG + 10 Stagger (15s CD) |
+| Frontiers | Combo Skill CD -15%. After SP recovery: team DMG +16% 15s. Cannot stack |
+| Type 50 Yinglung | ATK +15%. When team casts battle skill: +1 Yinglung's Edge (next combo DMG +20%, max 3 stacks) |
+| Tide Surge | Skill DMG +20%. After 2+ Arts Infliction stacks: Arts DMG +35% 15s. Cannot stack |
+| LYNX | HP Treatment Efficiency +20%. After treatment: target 15% DMG Reduction 10s (30% if overhealed). Cannot stack |
+
+---
+
+# Part 4: Operator Wiki Data Reference
+
+Use this reference when adding new operators, building skill definitions, or verifying operator details.
+
+## Operator Summary
+
+| # | Operator | Rarity | Class | Weapon | Element |
+|---|----------|--------|-------|--------|---------|
+| 1 | Endministrator | 6-star | Guard | Sword | Physical |
+| 2 | Lifeng | 6-star | Guard | Polearm | Physical |
+| 3 | Chen Qianyu | 5-star | Guard | Sword | Physical |
+| 4 | Estella | 4-star | Guard | Polearm | Cryo |
+| 5 | Ember | 6-star | Defender | Great Sword | Heat |
+| 6 | Snowshine | 5-star | Defender | Great Sword | Cryo |
+| 7 | Catcher | 4-star | Defender | Great Sword | Physical |
+| 8 | Gilberta | 6-star | Supporter | Arts Unit | Nature |
+| 9 | Ardelia | 6-star | Supporter | Arts Unit | Nature |
+| 10 | Xaihi | 5-star | Supporter | Arts Unit | Cryo |
+| 11 | Perlica | 5-star | Caster | Arts Unit | Electric |
+| 12 | Fluorite | 4-star | Caster | Handcannon | Nature |
+| 13 | Last Rite | 6-star | Striker | Great Sword | Cryo |
+| 14 | Yvonne | 6-star | Striker | Handcannon | Cryo |
+| 15 | Avywenna | 5-star | Striker | Polearm | Electric |
+| 16 | Da Pan | 5-star | Striker | Great Sword | Physical |
+| 17 | Pogranichnik | 6-star | Vanguard | Sword | Physical |
+| 18 | Alesh | 5-star | Vanguard | Sword | Cryo |
+| 19 | Arclight | 5-star | Vanguard | Sword | Electric |
+| 20 | Akekuri | 4-star | Vanguard | Sword | Heat |
+
+> Full per-operator details (skills, talents, potentials, combo triggers) are in the operator-details.md file in this skill directory.

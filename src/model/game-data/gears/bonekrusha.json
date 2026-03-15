@@ -1,0 +1,240 @@
+{
+  "gearSetType": "BONEKRUSHA",
+  "name": "Bonekrusha",
+  "suitID": "suit_attri01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "BONEKRUSHA",
+    "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When the wearer casts a combo skill, the wearer gains 1 stack of Bonekrushing Smash that grants the wearer's next battle skill DMG Dealt +{dmg_up:0%}. Bonekrushing Smash can stack {max_stack:0} time(s)."
+  },
+  "pieces": [
+    {
+      "gearType": "BONEKRUSHA_HEAVY_ARMOR_T1",
+      "name": "Bonekrusha Heavy Armor T1",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "STRENGTH": 58,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "AGILITY": 95,
+          "STRENGTH": 63,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "AGILITY": 104,
+          "STRENGTH": 69,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "AGILITY": 113,
+          "STRENGTH": 75,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_PONCHO_T1",
+      "name": "Bonekrusha Poncho T1",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "AGILITY": 58,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.123
+        },
+        "2": {
+          "WILL": 95,
+          "AGILITY": 63,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.136
+        },
+        "3": {
+          "WILL": 104,
+          "AGILITY": 69,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.148
+        },
+        "4": {
+          "WILL": 113,
+          "AGILITY": 75,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.16
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_HEAVY_ARMOR",
+      "name": "Bonekrusha Heavy Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "INTELLECT": 58,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.123
+        },
+        "2": {
+          "AGILITY": 95,
+          "INTELLECT": 63,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.136
+        },
+        "3": {
+          "AGILITY": 104,
+          "INTELLECT": 69,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.148
+        },
+        "4": {
+          "AGILITY": 113,
+          "INTELLECT": 75,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.16
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_PONCHO",
+      "name": "Bonekrusha Poncho",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "STRENGTH": 58,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "WILL": 95,
+          "STRENGTH": 63,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "WILL": 104,
+          "STRENGTH": 69,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "WILL": 113,
+          "STRENGTH": 75,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_MASK_T1",
+      "name": "Bonekrusha Mask T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "CRITICAL_RATE": 0.104
+        },
+        "2": {
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "CRITICAL_RATE": 0.114
+        },
+        "3": {
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "CRITICAL_RATE": 0.124
+        },
+        "4": {
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "CRITICAL_RATE": 0.135
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_FIGURINE",
+      "name": "Bonekrusha Figurine",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "AGILITY": 21,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "WILL": 35,
+          "AGILITY": 23,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "WILL": 38,
+          "AGILITY": 25,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "WILL": 41,
+          "AGILITY": 27,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_MASK",
+      "name": "Bonekrusha Mask",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "STAGGER_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "STAGGER_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "STAGGER_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "STAGGER_DAMAGE_BONUS": 0.538
+        }
+      }
+    },
+    {
+      "gearType": "BONEKRUSHA_FIGURINE_T1",
+      "name": "Bonekrusha Figurine T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "INTELLECT": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "WILL": 35,
+          "INTELLECT": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "WILL": 38,
+          "INTELLECT": 25,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "WILL": 41,
+          "INTELLECT": 27,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

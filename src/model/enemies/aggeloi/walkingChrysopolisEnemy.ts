@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1385,
-    [EnemyStatType.ATK]: 59,
+    [StatType.BASE_HP]: 1385,
+    [StatType.BASE_ATTACK]: 59,
   },
   20: {
-    [EnemyStatType.HP]: 9936,
-    [EnemyStatType.ATK]: 279,
+    [StatType.BASE_HP]: 9936,
+    [StatType.BASE_ATTACK]: 279,
   },
   40: {
-    [EnemyStatType.HP]: 62869,
-    [EnemyStatType.ATK]: 868,
+    [StatType.BASE_HP]: 62869,
+    [StatType.BASE_ATTACK]: 868,
   },
   60: {
-    [EnemyStatType.HP]: 247504,
-    [EnemyStatType.ATK]: 2156,
+    [StatType.BASE_HP]: 247504,
+    [StatType.BASE_ATTACK]: 2156,
   },
   80: {
-    [EnemyStatType.HP]: 595357,
-    [EnemyStatType.ATK]: 3244,
+    [StatType.BASE_HP]: 595357,
+    [StatType.BASE_ATTACK]: 3244,
   },
   90: {
-    [EnemyStatType.HP]: 917164,
-    [EnemyStatType.ATK]: 3717,
+    [StatType.BASE_HP]: 917164,
+    [StatType.BASE_ATTACK]: 3717,
   },
 };
 
@@ -48,16 +48,16 @@ export class WalkingChrysopolisEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.CRYO_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 320,
-        [EnemyStatType.STAGGER_RECOVERY]: 9,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.5,
-        [EnemyStatType.FINISHER_SP_GAIN]: 50,
-        [EnemyStatType.ATTACK_RANGE]: 2.8,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.CRYO_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 320,
+        [StatType.STAGGER_RECOVERY]: 9,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.5,
+        [StatType.FINISHER_SP_GAIN]: 50,
+        [StatType.ATTACK_RANGE]: 2.8,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

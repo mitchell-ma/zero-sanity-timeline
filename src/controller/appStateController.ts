@@ -9,51 +9,50 @@ import { LoadoutStats, getDefaultLoadoutStats } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
-import { EnemyStatType } from '../consts/enums';
+import { StatType } from '../consts/enums';
+import { DEFAULT_STATS } from '../consts/stats';
 import { WEAPONS, ARMORS, GLOVES, KITS } from '../utils/loadoutRegistry';
 import { CombatLoadout } from './combat-loadout';
 import { filterEventsOnOperatorChange } from './timeline/eventController';
-import { GearEffectType } from '../consts/enums';
+import { GearSetType } from '../consts/enums';
 import type { Slot } from './timeline/columnBuilder';
 
 // ── Shared state shape ───────────────────────────────────────────────────────
 
-export interface EnemyStats {
+export type EnemyStats = {
   level: number;
-  hp: number;
-  def: number;
-  physicalResistance: number;
-  heatResistance: number;
-  electricResistance: number;
-  cryoResistance: number;
-  natureResistance: number;
-  staggerHp: number;
   staggerStartValue: number;
   staggerNodes: number;
-  staggerBreakDurationSeconds: number;
   staggerNodeRecoverySeconds: number;
-}
+} & Record<StatType, number>;
 
 export const DEFAULT_ENEMY_LEVEL = 90;
 
 export function getDefaultEnemyStats(enemyId: string, level: number = DEFAULT_ENEMY_LEVEL): EnemyStats {
   const model = getModelEnemy(enemyId, level);
   if (!model) {
-    return { level, hp: 0, def: 100, physicalResistance: 1, heatResistance: 1, electricResistance: 1, cryoResistance: 1, natureResistance: 1, staggerHp: 60, staggerStartValue: 0, staggerNodes: 0, staggerBreakDurationSeconds: 6, staggerNodeRecoverySeconds: 0 };
+    return {
+      ...DEFAULT_STATS,
+      level,
+      [StatType.BASE_DEFENSE]: 100,
+      [StatType.PHYSICAL_RESISTANCE]: 1,
+      [StatType.HEAT_RESISTANCE]: 1,
+      [StatType.ELECTRIC_RESISTANCE]: 1,
+      [StatType.CRYO_RESISTANCE]: 1,
+      [StatType.NATURE_RESISTANCE]: 1,
+      [StatType.STAGGER_HP]: 60,
+      [StatType.STAGGER_RECOVERY]: 6,
+      staggerStartValue: 0,
+      staggerNodes: 0,
+      staggerNodeRecoverySeconds: 0,
+    };
   }
   return {
+    ...DEFAULT_STATS,
+    ...model.stats,
     level,
-    hp: model.stats[EnemyStatType.HP],
-    def: model.stats[EnemyStatType.DEF],
-    physicalResistance: model.stats[EnemyStatType.PHYSICAL_RESISTANCE],
-    heatResistance: model.stats[EnemyStatType.HEAT_RESISTANCE],
-    electricResistance: model.stats[EnemyStatType.ELECTRIC_RESISTANCE],
-    cryoResistance: model.stats[EnemyStatType.CRYO_RESISTANCE],
-    natureResistance: model.stats[EnemyStatType.NATURE_RESISTANCE],
-    staggerHp: model.stats[EnemyStatType.STAGGER_HP],
     staggerStartValue: 0,
     staggerNodes: model instanceof BossEnemy ? model.staggerNodes : 0,
-    staggerBreakDurationSeconds: model.stats[EnemyStatType.STAGGER_RECOVERY],
     staggerNodeRecoverySeconds: model instanceof BossEnemy ? model.staggerNodeRecoverySeconds : 0,
   };
 }
@@ -205,7 +204,7 @@ export function computeSlots(
   return slotIds.map((slotId, i) => {
     const op = operators[i] ?? null;
     const lo = loadouts[slotId];
-    let gearSetType: GearEffectType | undefined;
+    let gearSetType: GearSetType | undefined;
     if (lo) {
       const gearNames = [lo.armorName, lo.glovesName, lo.kit1Name, lo.kit2Name];
       const counts = new Map<string, number>();
@@ -213,11 +212,11 @@ export function computeSlots(
         if (!name) continue;
         const entry = allGear.find((g) => g.name === name);
         if (!entry) continue;
-        const et = entry.gearEffectType;
+        const et = entry.gearSetType;
         counts.set(et, (counts.get(et) ?? 0) + 1);
       }
       counts.forEach((count, et) => {
-        if (count >= 3) gearSetType = et as GearEffectType;
+        if (count >= 3) gearSetType = et as GearSetType;
       });
     }
     return {

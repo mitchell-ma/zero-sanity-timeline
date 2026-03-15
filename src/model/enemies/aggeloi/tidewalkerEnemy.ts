@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1246,
-    [EnemyStatType.ATK]: 66,
+    [StatType.BASE_HP]: 1246,
+    [StatType.BASE_ATTACK]: 66,
   },
   20: {
-    [EnemyStatType.HP]: 8942,
-    [EnemyStatType.ATK]: 310,
+    [StatType.BASE_HP]: 8942,
+    [StatType.BASE_ATTACK]: 310,
   },
   40: {
-    [EnemyStatType.HP]: 56582,
-    [EnemyStatType.ATK]: 965,
+    [StatType.BASE_HP]: 56582,
+    [StatType.BASE_ATTACK]: 965,
   },
   60: {
-    [EnemyStatType.HP]: 222753,
-    [EnemyStatType.ATK]: 2395,
+    [StatType.BASE_HP]: 222753,
+    [StatType.BASE_ATTACK]: 2395,
   },
   80: {
-    [EnemyStatType.HP]: 535821,
-    [EnemyStatType.ATK]: 3604,
+    [StatType.BASE_HP]: 535821,
+    [StatType.BASE_ATTACK]: 3604,
   },
   90: {
-    [EnemyStatType.HP]: 825447,
-    [EnemyStatType.ATK]: 4130,
+    [StatType.BASE_HP]: 825447,
+    [StatType.BASE_ATTACK]: 4130,
   },
 };
 
@@ -48,14 +48,14 @@ export class TidewalkerEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.CRYO_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 320,
-        [EnemyStatType.STAGGER_RECOVERY]: 9,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.5,
-        [EnemyStatType.FINISHER_SP_GAIN]: 50,
-        [EnemyStatType.ATTACK_RANGE]: 2.8,
-        [EnemyStatType.WEIGHT]: 1.2,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.CRYO_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 320,
+        [StatType.STAGGER_RECOVERY]: 9,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.5,
+        [StatType.FINISHER_SP_GAIN]: 50,
+        [StatType.ATTACK_RANGE]: 2.8,
+        [StatType.WEIGHT]: 1.2,
       },
       ...params,
     });

@@ -1,7 +1,7 @@
 import { StatType, WeaponSkillType } from "../../consts/enums";
 
 /** A single stat value within a named weapon skill effect group. */
-export interface NamedEffectStat {
+interface NamedEffectStat {
   stat: StatType | string;
   value: number;
 }

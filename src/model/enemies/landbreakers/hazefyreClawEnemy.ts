@@ -1,6 +1,6 @@
 import {
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -8,31 +8,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 249,
-    [EnemyStatType.ATK]: 36,
+    [StatType.BASE_HP]: 249,
+    [StatType.BASE_ATTACK]: 36,
   },
   20: {
-    [EnemyStatType.HP]: 1788,
-    [EnemyStatType.ATK]: 171,
+    [StatType.BASE_HP]: 1788,
+    [StatType.BASE_ATTACK]: 171,
   },
   40: {
-    [EnemyStatType.HP]: 11316,
-    [EnemyStatType.ATK]: 531,
+    [StatType.BASE_HP]: 11316,
+    [StatType.BASE_ATTACK]: 531,
   },
   60: {
-    [EnemyStatType.HP]: 44551,
-    [EnemyStatType.ATK]: 1317,
+    [StatType.BASE_HP]: 44551,
+    [StatType.BASE_ATTACK]: 1317,
   },
   80: {
-    [EnemyStatType.HP]: 107164,
-    [EnemyStatType.ATK]: 1982,
+    [StatType.BASE_HP]: 107164,
+    [StatType.BASE_ATTACK]: 1982,
   },
   90: {
-    [EnemyStatType.HP]: 165089,
-    [EnemyStatType.ATK]: 2271,
+    [StatType.BASE_HP]: 165089,
+    [StatType.BASE_ATTACK]: 2271,
   },
 };
 
@@ -47,13 +47,13 @@ export class HazefyreClawEnemy extends Enemy {
       attackElement: null,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.CRYO_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 100,
-        [EnemyStatType.ATTACK_RANGE]: 2.3,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.CRYO_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 100,
+        [StatType.ATTACK_RANGE]: 2.3,
       },
       ...params,
     });

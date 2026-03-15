@@ -15,6 +15,7 @@
 import { ElementType, StatType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent } from '../../consts/viewTypes';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import {
   StatusDamageParams,
   calculateStatusDamage,
@@ -165,7 +166,7 @@ function buildInitialTick(
   return {
     absoluteFrame: reactionEvent.startFrame,
     label: `${reactionLabel} > Initial`,
-    damage: Math.floor(calculateStatusDamage(params)),
+    damage: calculateStatusDamage(params),
     params,
   };
 }
@@ -185,13 +186,15 @@ export function computeCombustionDamage(
   const statusLevel = getStatusLevel(reactionEvent);
   const ticks: ReactionDamageTick[] = [];
 
-  // Laevatain P3 — Fragments from the Past: Combustion DMG x1.5
-  const p3Multiplier = opCtx.operatorId === 'laevatain' && (opCtx.potential ?? 0) >= 3 ? 1.5 : 1;
+  // Talent reaction multiplier (e.g. Laevatain P3 — Fragments from the Past: Combustion DMG x1.5)
+  const p3Multiplier = opCtx.operatorId
+    ? getReactionTalentMultiplier(opCtx.operatorId, opCtx.potential ?? 0, reactionEvent.columnId)
+    : 1;
 
   const initial = buildInitialTick(reactionEvent, 'Combustion', opCtx, modelEnemy, element, statusQuery);
   if (initial) {
     if (p3Multiplier !== 1) {
-      initial.damage = Math.floor(initial.damage * p3Multiplier);
+      initial.damage = initial.damage * p3Multiplier;
     }
     ticks.push(initial);
   }
@@ -207,7 +210,7 @@ export function computeCombustionDamage(
     ticks.push({
       absoluteFrame: tickFrame,
       label: `Combustion > DoT Tick ${i}`,
-      damage: Math.floor(calculateStatusDamage(dotParams) * p3Multiplier),
+      damage: calculateStatusDamage(dotParams) * p3Multiplier,
       params: dotParams,
     });
   }
@@ -242,7 +245,7 @@ export function computeSolidificationDamage(
   ticks.push({
     absoluteFrame: shatterFrame,
     label: 'Solidification > Shatter',
-    damage: Math.floor(calculateStatusDamage(shatterParams)),
+    damage: calculateStatusDamage(shatterParams),
     params: shatterParams,
   });
 
@@ -341,4 +344,39 @@ export function buildReactionDamageRows(
     params: null,
     statusParams: tick.params,
   }));
+}
+
+// ── Data-driven reaction talent multiplier ──────────────────────────────────
+
+/** Reaction column ID → reaction type name mapping. */
+const REACTION_COLUMN_TO_TYPE: Record<string, string> = {
+  combustion: 'COMBUSTION',
+  solidification: 'SOLIDIFICATION',
+  corrosion: 'CORROSION',
+  electrification: 'ELECTRIFICATION',
+};
+
+/**
+ * Get the talent-based reaction damage multiplier for an operator.
+ * Reads from talentEffects with bonusType === 'REACTION_MULTIPLIER'.
+ */
+function getReactionTalentMultiplier(operatorId: string, potential: number, reactionColumnId: string): number {
+  const json = getOperatorJson(operatorId);
+  if (!json?.talentEffects) return 1;
+
+  const reactionType = REACTION_COLUMN_TO_TYPE[reactionColumnId];
+  if (!reactionType) return 1;
+
+  let multiplier = 1;
+  for (const effect of json.talentEffects as any[]) {
+    if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
+    if (effect.condition?.reactionType !== reactionType) continue;
+
+    if (effect.source === 'POTENTIAL' && potential >= (effect.minPotential ?? 1)) {
+      multiplier *= effect.values[0];
+    }
+    // Could extend for TALENT_1/TALENT_2 sources if needed
+  }
+
+  return multiplier;
 }

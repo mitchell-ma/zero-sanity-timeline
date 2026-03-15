@@ -1,0 +1,120 @@
+{
+  "gearSetType": "AIC_HEAVY",
+  "name": "AIC Heavy",
+  "suitID": "suit_stragi01",
+  "rarity": 2,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "AIC_HEAVY",
+    "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer restores {hp_add} HP. Effect trigger cooldown: {cd}s."
+  },
+  "pieces": [
+    {
+      "gearType": "AIC_HEAVY_ARMOR",
+      "name": "Aic Heavy Armor",
+      "gearCategory": "ARMOR",
+      "defense": 22.4,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 30,
+          "AGILITY": 30,
+          "FINAL_DAMAGE_REDUCTION": 0.039
+        },
+        "2": {
+          "STRENGTH": 30,
+          "AGILITY": 30,
+          "FINAL_DAMAGE_REDUCTION": 0.039
+        },
+        "3": {
+          "STRENGTH": 30,
+          "AGILITY": 30,
+          "FINAL_DAMAGE_REDUCTION": 0.039
+        },
+        "4": {
+          "STRENGTH": 30,
+          "AGILITY": 30,
+          "FINAL_DAMAGE_REDUCTION": 0.039
+        }
+      }
+    },
+    {
+      "gearType": "AIC_GAUNTLETS",
+      "name": "Aic Gauntlets",
+      "gearCategory": "GLOVES",
+      "defense": 16.8,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 23,
+          "WILL": 23,
+          "FINAL_DAMAGE_REDUCTION": 0.063
+        },
+        "2": {
+          "STRENGTH": 23,
+          "WILL": 23,
+          "FINAL_DAMAGE_REDUCTION": 0.063
+        },
+        "3": {
+          "STRENGTH": 23,
+          "WILL": 23,
+          "FINAL_DAMAGE_REDUCTION": 0.063
+        },
+        "4": {
+          "STRENGTH": 23,
+          "WILL": 23,
+          "FINAL_DAMAGE_REDUCTION": 0.063
+        }
+      }
+    },
+    {
+      "gearType": "AIC_HEAVY_PLATE",
+      "name": "Aic Heavy Plate",
+      "gearCategory": "KIT",
+      "defense": 8.4,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "2": {
+          "STRENGTH": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "3": {
+          "STRENGTH": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "4": {
+          "STRENGTH": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        }
+      }
+    },
+    {
+      "gearType": "AIC_ALLOY_PLATE",
+      "name": "Aic Alloy Plate",
+      "gearCategory": "KIT",
+      "defense": 8.4,
+      "allLevels": {
+        "1": {
+          "AGILITY": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "2": {
+          "AGILITY": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "3": {
+          "AGILITY": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        },
+        "4": {
+          "AGILITY": 16,
+          "FINAL_DAMAGE_REDUCTION": 0.075
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

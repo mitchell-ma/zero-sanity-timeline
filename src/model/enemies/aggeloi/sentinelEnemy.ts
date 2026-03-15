@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 415,
-    [EnemyStatType.ATK]: 49,
+    [StatType.BASE_HP]: 415,
+    [StatType.BASE_ATTACK]: 49,
   },
   20: {
-    [EnemyStatType.HP]: 2981,
-    [EnemyStatType.ATK]: 233,
+    [StatType.BASE_HP]: 2981,
+    [StatType.BASE_ATTACK]: 233,
   },
   40: {
-    [EnemyStatType.HP]: 18861,
-    [EnemyStatType.ATK]: 723,
+    [StatType.BASE_HP]: 18861,
+    [StatType.BASE_ATTACK]: 723,
   },
   60: {
-    [EnemyStatType.HP]: 74251,
-    [EnemyStatType.ATK]: 1796,
+    [StatType.BASE_HP]: 74251,
+    [StatType.BASE_ATTACK]: 1796,
   },
   80: {
-    [EnemyStatType.HP]: 178607,
-    [EnemyStatType.ATK]: 2703,
+    [StatType.BASE_HP]: 178607,
+    [StatType.BASE_ATTACK]: 2703,
   },
   90: {
-    [EnemyStatType.HP]: 275149,
-    [EnemyStatType.ATK]: 3097,
+    [StatType.BASE_HP]: 275149,
+    [StatType.BASE_ATTACK]: 3097,
   },
 };
 
@@ -48,14 +48,14 @@ export class SentinelEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_RECOVERY]: 9,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.5,
-        [EnemyStatType.FINISHER_SP_GAIN]: 50,
-        [EnemyStatType.ATTACK_RANGE]: 7,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_RECOVERY]: 9,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.5,
+        [StatType.FINISHER_SP_GAIN]: 50,
+        [StatType.ATTACK_RANGE]: 7,
+        [StatType.WEIGHT]: 2,
       },
       ...params,
     });

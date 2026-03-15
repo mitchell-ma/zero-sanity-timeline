@@ -1,150 +1,93 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
 import type { Potential } from '../../consts/types';
-import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER } from '../../model/channels';
-import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/channelLabels';
+import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS } from '../../model/channels';
+import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { MODEL_FACTORIES } from '../operators/operatorRegistry';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
-import {
-  LAEVATAIN_BASIC_ATTACK_SEQUENCES,
-  LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCES,
-  LAEVATAIN_BATTLE_SKILL_SEQUENCE,
-  LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE,
-  LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES,
-  LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE,
-  LAEVATAIN_COMBO_SKILL_SEQUENCE,
-} from '../../model/event-frames/laevatainEventFrames';
-import { SmoulderingFire } from '../../model/combat-skills/laevatainSkills';
-import { AKEKURI_BASIC_ATTACK_SEQUENCES, AKEKURI_BATTLE_SKILL_SEQUENCE, AKEKURI_COMBO_SKILL_SEQUENCE, AKEKURI_ULTIMATE_SEQUENCE } from '../../model/event-frames/akekuriEventFrames';
-import { ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES, ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE, ENDMINISTRATOR_COMBO_SKILL_SEQUENCE, ENDMINISTRATOR_ULTIMATE_SEQUENCE } from '../../model/event-frames/endministratorEventFrames';
-import { LIFENG_BASIC_ATTACK_SEQUENCES, LIFENG_BATTLE_SKILL_SEQUENCE, LIFENG_COMBO_SKILL_SEQUENCE, LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE } from '../../model/event-frames/lifengEventFrames';
-import { CHENQIANYU_BASIC_ATTACK_SEQUENCES, CHENQIANYU_BATTLE_SKILL_SEQUENCE, CHENQIANYU_COMBO_SKILL_SEQUENCE, CHENQIANYU_ULTIMATE_SEQUENCE } from '../../model/event-frames/chenQianyuEventFrames';
-import { ESTELLA_BASIC_ATTACK_SEQUENCES, ESTELLA_BATTLE_SKILL_SEQUENCE, ESTELLA_COMBO_SKILL_SEQUENCE, ESTELLA_ULTIMATE_SEQUENCE } from '../../model/event-frames/estellaEventFrames';
-import { EMBER_BASIC_ATTACK_SEQUENCES, EMBER_BATTLE_SKILL_SEQUENCE, EMBER_COMBO_SKILL_SEQUENCE, EMBER_ULTIMATE_SEQUENCE } from '../../model/event-frames/emberEventFrames';
-import { SNOWSHINE_BASIC_ATTACK_SEQUENCES, SNOWSHINE_BATTLE_SKILL_SEQUENCE, SNOWSHINE_COMBO_SKILL_SEQUENCE, SNOWSHINE_ULTIMATE_SEQUENCE } from '../../model/event-frames/snowshineEventFrames';
-import { CATCHER_BASIC_ATTACK_SEQUENCES, CATCHER_BATTLE_SKILL_SEQUENCE, CATCHER_COMBO_SKILL_SEQUENCE, CATCHER_ULTIMATE_SEQUENCE } from '../../model/event-frames/catcherEventFrames';
-import { GILBERTA_BASIC_ATTACK_SEQUENCES, GILBERTA_BATTLE_SKILL_SEQUENCE, GILBERTA_COMBO_SKILL_SEQUENCE, GILBERTA_ULTIMATE_SEQUENCE } from '../../model/event-frames/gilbertaEventFrames';
-import { XAIHI_BASIC_ATTACK_SEQUENCES, XAIHI_BATTLE_SKILL_SEQUENCE, XAIHI_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/xaihiEventFrames';
-import { PERLICA_BASIC_ATTACK_SEQUENCES, PERLICA_BATTLE_SKILL_SEQUENCE, PERLICA_COMBO_SKILL_SEQUENCE, PERLICA_ULTIMATE_SEQUENCE } from '../../model/event-frames/perlicaEventFrames';
-import { FLUORITE_BASIC_ATTACK_SEQUENCES, FLUORITE_BATTLE_SKILL_SEQUENCE, FLUORITE_COMBO_SKILL_SEQUENCE, FLUORITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/fluoriteEventFrames';
-import { LASTRITE_BASIC_ATTACK_SEQUENCES, LASTRITE_BATTLE_SKILL_SEQUENCE, LASTRITE_COMBO_SKILL_SEQUENCE, LASTRITE_ULTIMATE_SEQUENCE } from '../../model/event-frames/lastRiteEventFrames';
-import { YVONNE_BASIC_ATTACK_SEQUENCES, YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCES, YVONNE_BATTLE_SKILL_SEQUENCE, YVONNE_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/yvonneEventFrames';
-import { AVYWENNA_BASIC_ATTACK_SEQUENCES, AVYWENNA_BATTLE_SKILL_SEQUENCE, AVYWENNA_COMBO_SKILL_SEQUENCE, AVYWENNA_ULTIMATE_SEQUENCE } from '../../model/event-frames/avywennaEventFrames';
-import { DAPAN_BASIC_ATTACK_SEQUENCES, DAPAN_BATTLE_SKILL_SEQUENCE, DAPAN_COMBO_SKILL_SEQUENCE, DAPAN_ULTIMATE_SEQUENCE } from '../../model/event-frames/daPanEventFrames';
-import { POGRANICHNK_BASIC_ATTACK_SEQUENCES, POGRANICHNK_BATTLE_SKILL_SEQUENCE, POGRANICHNK_COMBO_SKILL_SEQUENCE, POGRANICHNK_ULTIMATE_SEQUENCE } from '../../model/event-frames/pogranichnikEventFrames';
-import { ALESH_BASIC_ATTACK_SEQUENCES, ALESH_BATTLE_SKILL_SEQUENCE, ALESH_COMBO_SKILL_SEQUENCE, ALESH_ULTIMATE_SEQUENCE } from '../../model/event-frames/aleshEventFrames';
-import { ARCLIGHT_BASIC_ATTACK_SEQUENCES, ARCLIGHT_BATTLE_SKILL_SEQUENCE, ARCLIGHT_COMBO_SKILL_SEQUENCE, ARCLIGHT_ULTIMATE_SEQUENCE, ARCLIGHT_EXPLOSION_SEQUENCE } from '../../model/event-frames/arclightEventFrames';
-import { ARDELIA_BASIC_ATTACK_SEQUENCES, ARDELIA_BATTLE_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE, ARDELIA_ULTIMATE_SEQUENCE } from '../../model/event-frames/ardeliaEventFrames';
-import { ANTAL_BASIC_ATTACK_SEQUENCES, ANTAL_BATTLE_SKILL_SEQUENCE, ANTAL_COMBO_SKILL_SEQUENCE } from '../../model/event-frames/antalEventFrames';
-import { WULFGARD_BASIC_ATTACK_SEQUENCES, WULFGARD_BATTLE_SKILL_SEQUENCE, WULFGARD_COMBO_SKILL_SEQUENCE, WULFGARD_ULTIMATE_SEQUENCE } from '../../model/event-frames/wulfgardEventFrames';
+import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
 
-/** Map operator IDs to their basic attack frame sequences. */
-const BASIC_ATTACK_FRAME_SEQUENCES: Record<string, readonly SkillEventSequence[]> = {
-  akekuri: AKEKURI_BASIC_ATTACK_SEQUENCES,
-  endministrator: ENDMINISTRATOR_BASIC_ATTACK_SEQUENCES,
-  lifeng: LIFENG_BASIC_ATTACK_SEQUENCES,
-  chenQianyu: CHENQIANYU_BASIC_ATTACK_SEQUENCES,
-  estella: ESTELLA_BASIC_ATTACK_SEQUENCES,
-  ember: EMBER_BASIC_ATTACK_SEQUENCES,
-  snowshine: SNOWSHINE_BASIC_ATTACK_SEQUENCES,
-  catcher: CATCHER_BASIC_ATTACK_SEQUENCES,
-  gilberta: GILBERTA_BASIC_ATTACK_SEQUENCES,
-  xaihi: XAIHI_BASIC_ATTACK_SEQUENCES,
-  perlica: PERLICA_BASIC_ATTACK_SEQUENCES,
-  fluorite: FLUORITE_BASIC_ATTACK_SEQUENCES,
-  lastRite: LASTRITE_BASIC_ATTACK_SEQUENCES,
-  yvonne: YVONNE_BASIC_ATTACK_SEQUENCES,
-  avywenna: AVYWENNA_BASIC_ATTACK_SEQUENCES,
-  daPan: DAPAN_BASIC_ATTACK_SEQUENCES,
-  pogranichnik: POGRANICHNK_BASIC_ATTACK_SEQUENCES,
-  alesh: ALESH_BASIC_ATTACK_SEQUENCES,
-  arclight: ARCLIGHT_BASIC_ATTACK_SEQUENCES,
-  ardelia: ARDELIA_BASIC_ATTACK_SEQUENCES,
-  antal: ANTAL_BASIC_ATTACK_SEQUENCES,
-  wulfgard: WULFGARD_BASIC_ATTACK_SEQUENCES,
-};
+// ── Derive columns from statusEvents ────────────────────────────────────────
 
-/** Map operator IDs to their battle skill frame sequence. */
-const BATTLE_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence> = {
-  akekuri: AKEKURI_BATTLE_SKILL_SEQUENCE,
-  endministrator: ENDMINISTRATOR_BATTLE_SKILL_SEQUENCE,
-  lifeng: LIFENG_BATTLE_SKILL_SEQUENCE,
-  chenQianyu: CHENQIANYU_BATTLE_SKILL_SEQUENCE,
-  estella: ESTELLA_BATTLE_SKILL_SEQUENCE,
-  ember: EMBER_BATTLE_SKILL_SEQUENCE,
-  snowshine: SNOWSHINE_BATTLE_SKILL_SEQUENCE,
-  catcher: CATCHER_BATTLE_SKILL_SEQUENCE,
-  gilberta: GILBERTA_BATTLE_SKILL_SEQUENCE,
-  xaihi: XAIHI_BATTLE_SKILL_SEQUENCE,
-  perlica: PERLICA_BATTLE_SKILL_SEQUENCE,
-  fluorite: FLUORITE_BATTLE_SKILL_SEQUENCE,
-  lastRite: LASTRITE_BATTLE_SKILL_SEQUENCE,
-  yvonne: YVONNE_BATTLE_SKILL_SEQUENCE,
-  avywenna: AVYWENNA_BATTLE_SKILL_SEQUENCE,
-  daPan: DAPAN_BATTLE_SKILL_SEQUENCE,
-  pogranichnik: POGRANICHNK_BATTLE_SKILL_SEQUENCE,
-  alesh: ALESH_BATTLE_SKILL_SEQUENCE,
-  arclight: ARCLIGHT_BATTLE_SKILL_SEQUENCE,
-  ardelia: ARDELIA_BATTLE_SKILL_SEQUENCE,
-  antal: ANTAL_BATTLE_SKILL_SEQUENCE,
-  wulfgard: WULFGARD_BATTLE_SKILL_SEQUENCE,
-};
+interface StatusEventDef {
+  name: string;
+  target: string;
+  element?: string;
+  stack: { instances: number; interactionType?: string };
+  duration?: { value: number[]; unit: string };
+  isNamedEvent?: boolean;
+}
 
-/** Map operator IDs to their combo skill frame sequence(s). */
-const COMBO_SKILL_FRAME_SEQUENCES: Record<string, SkillEventSequence | { sequences: SkillEventSequence[]; labels: string[] }> = {
-  akekuri: AKEKURI_COMBO_SKILL_SEQUENCE,
-  endministrator: ENDMINISTRATOR_COMBO_SKILL_SEQUENCE,
-  lifeng: LIFENG_COMBO_SKILL_SEQUENCE,
-  chenQianyu: CHENQIANYU_COMBO_SKILL_SEQUENCE,
-  estella: ESTELLA_COMBO_SKILL_SEQUENCE,
-  ember: EMBER_COMBO_SKILL_SEQUENCE,
-  snowshine: SNOWSHINE_COMBO_SKILL_SEQUENCE,
-  catcher: CATCHER_COMBO_SKILL_SEQUENCE,
-  gilberta: GILBERTA_COMBO_SKILL_SEQUENCE,
-  xaihi: XAIHI_COMBO_SKILL_SEQUENCE,
-  perlica: PERLICA_COMBO_SKILL_SEQUENCE,
-  fluorite: FLUORITE_COMBO_SKILL_SEQUENCE,
-  lastRite: LASTRITE_COMBO_SKILL_SEQUENCE,
-  yvonne: YVONNE_COMBO_SKILL_SEQUENCE,
-  avywenna: AVYWENNA_COMBO_SKILL_SEQUENCE,
-  daPan: DAPAN_COMBO_SKILL_SEQUENCE,
-  pogranichnik: POGRANICHNK_COMBO_SKILL_SEQUENCE,
-  alesh: ALESH_COMBO_SKILL_SEQUENCE,
-  arclight: ARCLIGHT_COMBO_SKILL_SEQUENCE,
-  ardelia: { sequences: [ARDELIA_COMBO_SKILL_SEQUENCE, ARDELIA_COMBO_SKILL_EXPLOSION_SEQUENCE], labels: ['Eruption Column', 'Explosion'] },
-  antal: ANTAL_COMBO_SKILL_SEQUENCE,
-  wulfgard: WULFGARD_COMBO_SKILL_SEQUENCE,
-};
+/**
+ * Build micro-column configs derived from operator JSON `statusEvents`.
+ * StatusEvents with stack.instances > 1 produce micro-columns.
+ * Target determines owner: THIS_OPERATOR → slot, ENEMY → enemy timeline.
+ */
+function buildDerivedColumnsFromStatusEvents(
+  operatorId: string,
+  slotId: string,
+  operatorColor: string,
+): MiniTimeline[] {
+  const json = getOperatorJson(operatorId);
+  if (!json?.statusEvents) return [];
 
-/** Map operator IDs to their ultimate frame sequence(s). */
-const ULTIMATE_FRAME_SEQUENCES: Record<string, SkillEventSequence | { sequences: SkillEventSequence[]; labels: string[] }> = {
-  akekuri: AKEKURI_ULTIMATE_SEQUENCE,
-  ardelia: ARDELIA_ULTIMATE_SEQUENCE,
-  endministrator: ENDMINISTRATOR_ULTIMATE_SEQUENCE,
-  lifeng: { sequences: [LIFENG_ULTIMATE_SEQUENCE, LIFENG_VAJRA_IMPACT_SEQUENCE], labels: ['Heart of the Unmoving', 'Vajra Impact'] },
-  chenQianyu: CHENQIANYU_ULTIMATE_SEQUENCE,
-  estella: ESTELLA_ULTIMATE_SEQUENCE,
-  ember: EMBER_ULTIMATE_SEQUENCE,
-  snowshine: SNOWSHINE_ULTIMATE_SEQUENCE,
-  catcher: CATCHER_ULTIMATE_SEQUENCE,
-  gilberta: GILBERTA_ULTIMATE_SEQUENCE,
-  perlica: PERLICA_ULTIMATE_SEQUENCE,
-  fluorite: FLUORITE_ULTIMATE_SEQUENCE,
-  lastRite: LASTRITE_ULTIMATE_SEQUENCE,
-  avywenna: AVYWENNA_ULTIMATE_SEQUENCE,
-  daPan: DAPAN_ULTIMATE_SEQUENCE,
-  pogranichnik: POGRANICHNK_ULTIMATE_SEQUENCE,
-  alesh: ALESH_ULTIMATE_SEQUENCE,
-  arclight: { sequences: [ARCLIGHT_ULTIMATE_SEQUENCE, ARCLIGHT_EXPLOSION_SEQUENCE], labels: ['Exploding Blitz', 'Explosion'] },
-  wulfgard: WULFGARD_ULTIMATE_SEQUENCE,
-};
+  const defs = json.statusEvents as StatusEventDef[];
+  const result: MiniTimeline[] = [];
+
+  for (const def of defs) {
+    if (!def.stack || def.stack.instances <= 1) continue; // Single-instance statuses don't need columns
+
+    const isEnemy = def.target === 'ENEMY';
+    const ownerId = isEnemy ? ENEMY_OWNER_ID : slotId;
+    const columnId = def.name.toLowerCase().replace(/_/g, '-');
+    const key = isEnemy ? `enemy-${columnId}` : `${slotId}-${columnId}`;
+    const elementColor = def.element
+      ? ELEMENT_COLORS[def.element as ElementType] ?? operatorColor
+      : operatorColor;
+    const label = (STATUS_LABELS[def.name as StatusType] ?? def.name).toUpperCase();
+
+    const instances = def.stack.instances;
+    const durValue = def.duration?.value?.[0] ?? -1;
+    const durationFrames = durValue > 0 ? Math.round(durValue * 120) : TOTAL_FRAMES * 10;
+
+    const col: MiniTimeline = {
+      key,
+      type: 'mini-timeline',
+      source: isEnemy ? TimelineSourceType.ENEMY : TimelineSourceType.OPERATOR,
+      ownerId,
+      columnId,
+      label,
+      color: operatorColor,
+      headerVariant: 'mf',
+      derived: true,
+      microColumns: Array.from({ length: instances }, (_, i) => ({
+        id: `${columnId}-${i}`,
+        label: String(i + 1),
+        color: elementColor,
+      })),
+      microColumnAssignment: 'by-order' as any,
+      maxEvents: instances,
+      reuseExpiredSlots: true,
+      requiresMonotonicOrder: true,
+      defaultEvent: {
+        name: STATUS_LABELS[def.name as StatusType] ?? def.name,
+        defaultActivationDuration: durationFrames,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+      },
+    };
+
+    result.push(col);
+  }
+
+  return result;
+}
 
 export interface Slot {
   slotId: string;
@@ -155,7 +98,7 @@ export interface Slot {
   /** Equipped tactical name (for tactical subtimeline column). */
   tacticalName?: string;
   /** Active gear set effect type (3+ matching pieces). */
-  gearSetType?: import('../../consts/enums').GearEffectType;
+  gearSetType?: import('../../consts/enums').GearSetType;
   /** Combo skill level (1–12) for level-dependent cooldown computation. */
   comboSkillLevel?: number;
 }
@@ -171,9 +114,28 @@ export function buildColumns(
 ): Column[] {
   const columns: Column[] = [];
 
-  // Pre-scan: detect Wulfgard on the team (for Scorching Fangs talent columns)
-  const wulfgardSlot = slots.find((s) => s.operator?.id === 'wulfgard');
-  const SCORCHING_FANGS_DURATION = 10 * 120; // 10s at 120fps
+  // Pre-scan: detect operators with team-shared status effects (e.g. Scorching Fangs)
+  type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number; minPotentialForTeam: number };
+  const teamStatusDefs: TeamStatusDef[] = [];
+  for (const s of slots) {
+    if (!s.operator) continue;
+    const json = getOperatorJson(s.operator.id);
+    const statusEvents = json?.statusEvents as any[] | undefined;
+    if (!statusEvents) continue;
+    for (const se of statusEvents) {
+      if (se.p3TeamShare) {
+        const dur = se.duration?.value?.[0] ?? 15;
+        const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+        teamStatusDefs.push({
+          sourceSlot: s,
+          statusName: se.name,
+          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+          duration: durationFrames,
+          minPotentialForTeam: 3, // P3 required for team share
+        });
+      }
+    }
+  }
 
   // Common (global) columns — before operator slots
   columns.push({
@@ -417,8 +379,12 @@ export function buildColumns(
 
   for (const slot of slots) {
     const op = slot.operator;
-    const isLaevatain = op?.id === 'laevatain';
-    const isYvonne = op?.id === 'yvonne';
+    const opJson = op ? getOperatorJson(op.id) : null;
+    const opSkills = (opJson?.skills ?? {}) as Record<string, any>;
+    // Detect variants by presence of ENHANCED_*/EMPOWERED_* skill categories
+    const hasBasicVariants = !!opSkills.ENHANCED_BASIC_ATTACK || !!opSkills.EMPOWERED_BASIC_ATTACK;
+    const hasBattleVariants = !!opSkills.ENHANCED_BATTLE_SKILL || !!opSkills.EMPOWERED_BATTLE_SKILL;
+    const hasComboOverride = false; // Combo frame overrides now handled generically
     let slotHasCols = false;
     if (op) {
       // Dash subtimeline — before basic attack
@@ -485,54 +451,45 @@ export function buildColumns(
               teamGaugeGain: skill.teamGaugeGain,
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
               animationDuration: skill.animationDuration,
-              ...(skillType === 'ultimate' && slot.potential != null ? { operatorPotential: slot.potential } : {}),
-              ...(skillType === 'battle' && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
+              ...(skillType === SKILL_COLUMNS.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
+              ...(skillType === SKILL_COLUMNS.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
           };
           // Combo columns: use model's level-dependent cooldown + match activation windows
-          if (skillType === 'combo') {
-            col.matchColumnIds = ['combo', 'comboActivationWindow'];
-            // Override cooldown with level-dependent value from operator model
-            const comboLevel = slot.comboSkillLevel;
-            if (comboLevel && op.id) {
-              const factory = MODEL_FACTORIES[op.id];
-              if (factory) {
-                const model = factory();
-                if ('getCooldownSeconds' in model.comboSkill) {
-                  const cdSeconds = (model.comboSkill as any).getCooldownSeconds(comboLevel as import('../../consts/types').SkillLevel);
-                  skill = { ...skill, defaultCooldownDuration: Math.round(cdSeconds * FPS) };
-                }
-              }
-            }
+          if (skillType === SKILL_COLUMNS.COMBO) {
+            col.matchColumnIds = [SKILL_COLUMNS.COMBO, 'comboActivationWindow'];
             col.defaultEvent!.defaultCooldownDuration = skill.defaultCooldownDuration;
           }
-          // Laevatain basic attack: multi-sequence event with frame markers
-          if (isLaevatain && skillType === 'basic') {
-            const base = SkillSegmentBuilder.buildSegments(LAEVATAIN_BASIC_ATTACK_SEQUENCES);
-            const enhanced = SkillSegmentBuilder.buildSegments(LAEVATAIN_ENHANCED_BASIC_ATTACK_SEQUENCES);
+          // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
+          if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
+            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, 'BASIC_ATTACK'));
             col.defaultEvent = {
-              name: CombatSkillsType.FLAMING_CINDERS,
+              name: skill.name,
               defaultActivationDuration: base.totalDurationFrames,
               defaultActiveDuration: 0,
               defaultCooldownDuration: 0,
               segments: base.segments,
             };
-            col.eventVariants = [
-              {
-                name: CombatSkillsType.FLAMING_CINDERS,
-                defaultActivationDuration: base.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: base.segments,
-              },
-              {
-                name: CombatSkillsType.FLAMING_CINDERS_ENHANCED,
-                defaultActivationDuration: enhanced.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: enhanced.segments,
-                triggerCondition: 'Requires: Twilight active',
-              },
+            col.eventVariants = [{ ...col.defaultEvent }];
+            // Auto-discover variant categories
+            for (const varCat of ['ENHANCED_BASIC_ATTACK', 'EMPOWERED_BASIC_ATTACK']) {
+              const varSkill = opSkills[varCat];
+              if (!varSkill) continue;
+              const variantSeqs = getFrameSequences(op.id, varCat);
+              if (variantSeqs?.length) {
+                const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
+                col.eventVariants.push({
+                  name: varSkill.id ?? `${skill.name}_${varCat}`,
+                  defaultActivationDuration: variantSeg.totalDurationFrames,
+                  defaultActiveDuration: 0,
+                  defaultCooldownDuration: 0,
+                  segments: variantSeg.segments,
+                  ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
+                });
+              }
+            }
+            // Finisher + Dive (universal)
+            col.eventVariants.push(
               {
                 name: CombatSkillsType.FINISHER,
                 defaultActivationDuration: FINISHER_FRAMES,
@@ -547,76 +504,17 @@ export function buildColumns(
                 defaultCooldownDuration: 0,
                 segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.DIVE }] }],
               },
-            ];
+            );
           }
-          // Yvonne basic attack: multi-sequence event with enhanced variant during ultimate
-          if (isYvonne && skillType === 'basic') {
-            const base = SkillSegmentBuilder.buildSegments(YVONNE_BASIC_ATTACK_SEQUENCES);
-            const enhanced = SkillSegmentBuilder.buildSegments(YVONNE_ENHANCED_BASIC_ATTACK_SEQUENCES);
-            col.defaultEvent = {
-              name: CombatSkillsType.EXUBERANT_TRIGGER,
-              defaultActivationDuration: base.totalDurationFrames,
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
-              segments: base.segments,
-            };
-            col.eventVariants = [
-              {
-                name: CombatSkillsType.EXUBERANT_TRIGGER,
-                defaultActivationDuration: base.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: base.segments,
-              },
-              {
-                name: CombatSkillsType.EXUBERANT_TRIGGER_ENHANCED,
-                defaultActivationDuration: enhanced.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: enhanced.segments,
-                triggerCondition: 'Requires: Cryoblasting Pistolier active',
-              },
-              {
-                name: CombatSkillsType.FINISHER,
-                defaultActivationDuration: FINISHER_FRAMES,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.FINISHER }] }],
-              },
-              {
-                name: CombatSkillsType.DIVE,
-                defaultActivationDuration: DIVE_FRAMES,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
-                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.DIVE }] }],
-              },
-            ];
-          }
-          // Laevatain battle skill: 4 variants with frame data from skills.json
-          if (isLaevatain && skillType === 'battle') {
-            const baseSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_BATTLE_SKILL_SEQUENCE], { labels: ['Explosion'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-            const enhSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
-            // Enhanced battle skill: tick 2 grants 100 ult energy (additional attack hit)
-            if (enhSeg.segments[0]?.frames && enhSeg.segments[0].frames.length >= 2) {
-              enhSeg.segments[0].frames[1].gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
-            }
-            const empSeg = SkillSegmentBuilder.buildSegments(LAEVATAIN_EMPOWERED_BATTLE_SKILL_SEQUENCES, { labels: ['Explosion', 'Additional Attack'], gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-            // Empowered additional attack: stagger + ult gauge + P1 SP recovery
-            if (empSeg.segments[1]?.frames?.[0]) {
-              const addFrame = empSeg.segments[1].frames[0];
-              addFrame.stagger = SmoulderingFire.ADDITIONAL_ATK_STAGGER;
-              addFrame.gaugeGain = SmoulderingFire.ADDITIONAL_ATK_ULT_ENERGY_GAIN;
-              addFrame.consumeStatus = 'MELTING_FLAME';
-              // skills.json has CONSUME_ARTS_INFLICTION: HEAT x4 but the actual
-              // mechanic consumes Melting Flame stacks (self-status), not enemy heat
-              delete addFrame.consumeArtsInfliction;
-              const empSpReturn = new SmoulderingFire().getAdditionalAtkSpReturnOnHit((slot.potential ?? 0) as Potential);
-              if (empSpReturn > 0) addFrame.skillPointRecovery = empSpReturn;
-            }
-            const enhEmpSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_ENHANCED_EMPOWERED_BATTLE_SKILL_SEQUENCE], { gaugeGain: 0, teamGaugeGain: 0 });
+          // Battle skill variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
+          if (hasBattleVariants && skillType === SKILL_COLUMNS.BATTLE && op) {
+            const baseSeg = SkillSegmentBuilder.buildSegments(
+              getFrameSequences(op.id, 'BATTLE_SKILL'),
+              { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain },
+            );
             col.defaultEvent = {
               ...col.defaultEvent!,
-              name: CombatSkillsType.SMOULDERING_FIRE,
+              name: skill.name,
               defaultActivationDuration: baseSeg.totalDurationFrames,
               defaultActiveDuration: 0,
               defaultCooldownDuration: 0,
@@ -624,52 +522,48 @@ export function buildColumns(
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
             };
-            col.eventVariants = [
-              {
+            col.eventVariants = [{ ...col.defaultEvent! }];
+            // Auto-discover variant categories
+            for (const varCat of ['ENHANCED_BATTLE_SKILL', 'EMPOWERED_BATTLE_SKILL', 'ENHANCED_EMPOWERED_BATTLE_SKILL']) {
+              const varSkill = opSkills[varCat];
+              if (!varSkill) continue;
+              const variantSeqs = getFrameSequences(op.id, varCat);
+              if (!variantSeqs?.length) continue;
+              // Enhanced variants default to 0 gauge gain; empowered inherits base
+              const isEnhanced = varCat.startsWith('ENHANCED');
+              const gg = isEnhanced ? 0 : skill.gaugeGain;
+              const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
+              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { gaugeGain: gg, teamGaugeGain: tgg });
+              // Apply frame modifications if defined on the variant category
+              if (varSkill.frameModifications) {
+                for (const fm of varSkill.frameModifications) {
+                  const seg = variantSeg.segments[fm.segmentIndex];
+                  const frame = seg?.frames?.[fm.frameIndex];
+                  if (frame) {
+                    if (fm.stagger != null) frame.stagger = fm.stagger;
+                    if (fm.gaugeGain != null) frame.gaugeGain = fm.gaugeGain;
+                    if (fm.consumeStatus) frame.consumeStatus = fm.consumeStatus;
+                    if (fm.removeConsumeArtsInfliction) delete frame.consumeArtsInfliction;
+                    if (fm.spReturnP1 != null && (slot.potential ?? 0) >= 1) {
+                      frame.skillPointRecovery = fm.spReturnP1;
+                    }
+                  }
+                }
+              }
+              col.eventVariants!.push({
                 ...col.defaultEvent!,
-              },
-              {
-                ...col.defaultEvent!,
-                name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED,
-                defaultActivationDuration: enhSeg.totalDurationFrames,
-                segments: enhSeg.segments,
-                triggerCondition: 'Requires: Twilight active',
-                gaugeGain: 0,
-                teamGaugeGain: 0,
-              },
-              {
-                ...col.defaultEvent!,
-                name: CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
-                defaultActivationDuration: empSeg.totalDurationFrames,
-                segments: empSeg.segments,
-                triggerCondition: 'Requires: Melting Flame ×4',
-                gaugeGain: skill.gaugeGain,
-                teamGaugeGain: skill.teamGaugeGain,
-              },
-              {
-                ...col.defaultEvent!,
-                name: CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
-                defaultActivationDuration: enhEmpSeg.totalDurationFrames,
-                segments: enhEmpSeg.segments,
-                triggerCondition: 'Requires: Twilight active + Melting Flame ×4',
-                gaugeGain: 0,
-                teamGaugeGain: 0,
-              },
-            ];
+                name: varSkill.id ?? `${skill.name}_${varCat}`,
+                defaultActivationDuration: variantSeg.totalDurationFrames,
+                segments: variantSeg.segments,
+                ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
+                gaugeGain: gg,
+                teamGaugeGain: tgg,
+              });
+            }
           }
-          // Laevatain combo skill: single-sequence event with frame data
-          if (isLaevatain && skillType === 'combo') {
-            const comboSeg = SkillSegmentBuilder.buildSegments([LAEVATAIN_COMBO_SKILL_SEQUENCE], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-            const comboCd = skill.defaultCooldownDuration ?? 0;
-            col.defaultEvent = {
-              ...col.defaultEvent!,
-              defaultActivationDuration: comboSeg.totalDurationFrames,
-              segments: [...comboSeg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }],
-            };
-          }
-          // Generic basic attack: map-based lookup for operators with frame data
-          const basicSeqs = op && BASIC_ATTACK_FRAME_SEQUENCES[op.id];
-          if (basicSeqs && skillType === 'basic') {
+          // Generic basic attack: data-driven frame sequences
+          const basicSeqs = op && getFrameSequences(op.id, 'BASIC_ATTACK');
+          if (basicSeqs?.length && skillType === SKILL_COLUMNS.BASIC) {
             const base = SkillSegmentBuilder.buildSegments(basicSeqs);
             col.defaultEvent = {
               name: skill.name,
@@ -679,23 +573,44 @@ export function buildColumns(
               segments: base.segments,
             };
           }
-          // Generic battle skill: map-based lookup for operators with frame data
-          const battleSeq = op && BATTLE_SKILL_FRAME_SEQUENCES[op.id];
-          if (battleSeq && skillType === 'battle' && !isLaevatain) {
-            const seg = SkillSegmentBuilder.buildSegments([battleSeq], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+          // Generic battle skill: data-driven frame sequences
+          const battleSeqs = op && getFrameSequences(op.id, 'BATTLE_SKILL');
+          if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
               segments: seg.segments,
             };
+            // Empowered battle skill variant (e.g. Arclight's additional attack on Electrification)
+            const empoweredBattleSeqs = getFrameSequences(op!.id, 'EMPOWERED_BATTLE_SKILL');
+            if (empoweredBattleSeqs?.length) {
+              const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+              const empoweredName = `${col.defaultEvent!.name}_EMPOWERED` as CombatSkillsType;
+              col.eventVariants = [
+                {
+                  name: col.defaultEvent!.name!,
+                  defaultActivationDuration: seg.totalDurationFrames,
+                  defaultActiveDuration: 0,
+                  defaultCooldownDuration: col.defaultEvent!.defaultCooldownDuration ?? 0,
+                  segments: seg.segments,
+                },
+                {
+                  name: empoweredName,
+                  defaultActivationDuration: empowered.totalDurationFrames,
+                  defaultActiveDuration: 0,
+                  defaultCooldownDuration: col.defaultEvent!.defaultCooldownDuration ?? 0,
+                  segments: empowered.segments,
+                  triggerCondition: 'Requires: Empowered condition',
+                },
+              ];
+            }
           }
-          // Generic combo skill: map-based lookup for operators with frame data
-          const comboEntry = op && COMBO_SKILL_FRAME_SEQUENCES[op.id];
-          if (comboEntry && skillType === 'combo' && !isLaevatain) {
-            const isMulti = 'sequences' in comboEntry;
-            const seg = isMulti
-              ? SkillSegmentBuilder.buildSegments(comboEntry.sequences, { labels: comboEntry.labels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain })
-              : SkillSegmentBuilder.buildSegments([comboEntry], { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+          // Generic combo skill: data-driven frame sequences
+          const comboSeqs = op && getFrameSequences(op.id, 'COMBO_SKILL');
+          if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
+            const comboLabels = getSegmentLabels(op!.id, 'COMBO_SKILL');
+            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
@@ -704,7 +619,7 @@ export function buildColumns(
             };
           }
           // Generic ultimate: build Animation / Statis / Active / Cooldown segments
-          if (skillType === 'ultimate') {
+          if (skillType === SKILL_COLUMNS.ULTIMATE) {
             const animDur = col.defaultEvent!.animationDuration ?? 0;
             const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
             const statisDur = Math.max(0, activationDur - animDur);
@@ -712,13 +627,11 @@ export function buildColumns(
             const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
 
             // Build active-phase segment from frame data if available
-            const ultEntry = op && ULTIMATE_FRAME_SEQUENCES[op.id];
+            const ultSeqs = op && getFrameSequences(op!.id, 'ULTIMATE');
             let activeSegment: import('../../consts/viewTypes').EventSegmentData;
-            if (ultEntry) {
-              const isMultiUlt = 'sequences' in ultEntry;
-              const seg = isMultiUlt
-                ? SkillSegmentBuilder.buildSegments(ultEntry.sequences, { labels: ultEntry.labels })
-                : SkillSegmentBuilder.buildSegments([ultEntry]);
+            if (ultSeqs?.length) {
+              const ultLabels = getSegmentLabels(op!.id, 'ULTIMATE');
+              const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
               activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active' };
             } else {
               activeSegment = { durationFrames: activeDur, label: 'Active' };
@@ -741,119 +654,11 @@ export function buildColumns(
         }
       }
     }
-    // Add Thunderlance subtimeline column for Avywenna
-    const isAvywenna = op?.id === 'avywenna';
-    if (isAvywenna) {
-      columns.push({
-        key: `${slot.slotId}-thunderlance`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.THUNDERLANCE,
-        label: STATUS_LABELS[StatusType.THUNDERLANCE].toUpperCase(),
-        color: op!.color,
-        headerVariant: 'mf',
-        microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
-          id: `tl-${i}`,
-          label: String(i + 1),
-          color: ELEMENT_COLORS[ElementType.ELECTRIC],
-        })),
-        microColumnAssignment: 'by-order',
-        maxEvents: MF_MICRO_COLS,
-        requiresMonotonicOrder: true,
-        reuseExpiredSlots: true,
-        derived: true,
-        defaultEvent: {
-          name: 'Thunderlance',
-          defaultActivationDuration: 2400, // 20s at 120fps
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      });
-    }
-    // Add Crit Stacks subtimeline column for Yvonne
-    if (isYvonne) {
-      const CRIT_STACK_MICRO_COLS = 4;
-      columns.push({
-        key: `${slot.slotId}-crit-stacks`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.CRIT_STACKS,
-        label: STATUS_LABELS[StatusType.CRIT_STACKS].toUpperCase(),
-        color: op!.color,
-        headerVariant: 'mf',
-        microColumns: Array.from({ length: CRIT_STACK_MICRO_COLS }, (_, i) => ({
-          id: `cs-${i}`,
-          label: String(i + 1),
-          color: ELEMENT_COLORS[ElementType.CRYO],
-        })),
-        microColumnAssignment: 'by-order',
-        maxEvents: CRIT_STACK_MICRO_COLS,
-        requiresMonotonicOrder: true,
-        reuseExpiredSlots: true,
-        derived: true,
-        defaultEvent: {
-          name: 'Crit Stack',
-          defaultActivationDuration: 840, // 7s at 120fps (lasts duration of ultimate)
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      });
-    }
-    // Add single MeltingFlame subtimeline column for Laevatain
-    if (isLaevatain) {
-      columns.push({
-        key: `${slot.slotId}-melting-flame`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.MELTING_FLAME,
-        label: STATUS_LABELS[StatusType.MELTING_FLAME].toUpperCase(),
-        color: op!.color,
-        headerVariant: 'mf',
-        microColumns: Array.from({ length: MF_MICRO_COLS }, (_, i) => ({
-          id: `mf-${i}`,
-          label: String(i + 1),
-          color: ELEMENT_COLORS[ElementType.HEAT],
-        })),
-        microColumnAssignment: 'by-order',
-        maxEvents: MF_MICRO_COLS,
-        reuseExpiredSlots: true,
-        requiresMonotonicOrder: true,
-        derived: true,
-        defaultEvent: {
-          name: 'Melting Flame',
-          defaultActivationDuration: TOTAL_FRAMES * 10,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      });
-    }
-    // Add Wildland Trekker trigger counter for Arclight
-    const isArclight = op?.id === 'arclight';
-    if (isArclight) {
-      const WT_TRIGGER_COLS = 3;
-      columns.push({
-        key: `${slot.slotId}-wildland-trekker-trigger`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.WILDLAND_TREKKER_TRIGGER,
-        label: ColumnLabel.WILDLAND_TREKKER,
-        color: op!.color,
-        headerVariant: 'mf',
-        microColumns: Array.from({ length: WT_TRIGGER_COLS }, (_, i) => ({
-          id: `wt-${i}`,
-          label: String(i + 1),
-          color: ELEMENT_COLORS[ElementType.ELECTRIC],
-        })),
-        microColumnAssignment: 'by-order',
-        maxEvents: WT_TRIGGER_COLS,
-        reuseExpiredSlots: true,
-        requiresMonotonicOrder: true,
-        derived: true,
-      });
+    // ── JSON-driven derived columns (Melting Flame, Thunderlance, Crit Stacks, etc.) ──
+    const derivedCols = op ? buildDerivedColumnsFromStatusEvents(op.id, slot.slotId, op.color) : [];
+    const operatorDerivedCols = derivedCols.filter(c => c.source === TimelineSourceType.OPERATOR);
+    for (const col of operatorDerivedCols) {
+      columns.push(col);
     }
     // ── Weapon skill buff column (shared dynamic-split) ──────────────────────
     let weaponColCount = 0;
@@ -960,30 +765,31 @@ export function buildColumns(
       }
     }
 
-    // ── Scorching Fangs talent buff column (Wulfgard on team) ───────────────
-    let scFangsColCount = 0;
-    if (op && wulfgardSlot) {
-      // Wulfgard always gets Scorching Fangs column; others only if Wulfgard has P3+
-      const isWulfgard = slot === wulfgardSlot;
-      if (isWulfgard || (wulfgardSlot.potential ?? 0) >= 3) {
-        columns.push({
-          key: `${slot.slotId}-scorching-fangs`,
-          type: 'mini-timeline',
-          source: TimelineSourceType.OPERATOR,
-          ownerId: slot.slotId,
-          columnId: StatusType.SCORCHING_FANGS,
-          label: ColumnLabel.SCORCHING_FANGS,
-          color: op.color,
-          headerVariant: 'skill',
-          derived: true,
-          defaultEvent: {
-            name: STATUS_LABELS[StatusType.SCORCHING_FANGS],
-            defaultActivationDuration: SCORCHING_FANGS_DURATION,
-            defaultActiveDuration: 0,
-            defaultCooldownDuration: 0,
-          },
-        });
-        scFangsColCount++;
+    // ── Team-shared status columns (e.g. Scorching Fangs) ───────────────────
+    let teamStatusColCount = 0;
+    if (op) {
+      for (const tsd of teamStatusDefs) {
+        const isSource = slot === tsd.sourceSlot;
+        if (isSource || (tsd.sourceSlot.potential ?? 0) >= tsd.minPotentialForTeam) {
+          columns.push({
+            key: `${slot.slotId}-${tsd.statusName.toLowerCase().replace(/_/g, '-')}`,
+            type: 'mini-timeline',
+            source: TimelineSourceType.OPERATOR,
+            ownerId: slot.slotId,
+            columnId: tsd.statusName,
+            label: tsd.label.toUpperCase(),
+            color: op.color,
+            headerVariant: 'skill',
+            derived: true,
+            defaultEvent: {
+              name: tsd.label,
+              defaultActivationDuration: tsd.duration,
+              defaultActiveDuration: 0,
+              defaultCooldownDuration: 0,
+            },
+          });
+          teamStatusColCount++;
+        }
       }
     }
 
@@ -991,8 +797,8 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const mfColCount = isLaevatain ? 1 : isAvywenna ? 1 : isArclight ? 1 : isYvonne ? 1 : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount + weaponColCount + gearColCount + tacticalColCount + scFangsColCount);
+    const mfColCount = operatorDerivedCols.length;
+    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount + weaponColCount + gearColCount + tacticalColCount + teamStatusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -1178,39 +984,17 @@ export function buildColumns(
     });
   }
 
-  // ── Originium Crystal column (Endministrator) ──────────────────────────────
-  // When Endministrator is in the team, add a micro-column subtimeline on the enemy
-  // to track attached Originium Crystals (from Sealing Sequence).
-  const hasEndministrator = slots.some((s) => s.operator?.id === 'endministrator');
-  if (hasEndministrator) {
-    const OC_MICRO_COLS = 4;
-    const endSlot = slots.find((s) => s.operator?.id === 'endministrator')!;
-    columns.push({
-      key: 'enemy-originium-crystal',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: ENEMY_OWNER_ID,
-      columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
-      label: ColumnLabel.ORIGINIUM_CRYSTAL,
-      color: endSlot.operator!.color,
-      headerVariant: 'mf',
-      microColumns: Array.from({ length: OC_MICRO_COLS }, (_, i) => ({
-        id: `oc-${i}`,
-        label: String(i + 1),
-        color: endSlot.operator!.color,
-      })),
-      microColumnAssignment: 'by-order',
-      maxEvents: OC_MICRO_COLS,
-      reuseExpiredSlots: true,
-      requiresMonotonicOrder: true,
-      derived: true,
-      defaultEvent: {
-        name: 'Originium Crystal',
-        defaultActivationDuration: TOTAL_FRAMES * 10,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    });
+  // ── JSON-driven enemy-side derived columns (Originium Crystal, etc.) ────────
+  for (const slot of slots) {
+    if (!slot.operator) continue;
+    const enemyCols = buildDerivedColumnsFromStatusEvents(slot.operator.id, slot.slotId, slot.operator.color)
+      .filter(c => c.source === TimelineSourceType.ENEMY);
+    for (const col of enemyCols) {
+      // Avoid duplicates (enemy columns are global)
+      if (!columns.some(c => c.type === 'mini-timeline' && (c as MiniTimeline).columnId === col.columnId)) {
+        columns.push(col);
+      }
+    }
   }
 
   // ── Unified enemy status column ─────────────────────────────────────────────
@@ -1274,11 +1058,20 @@ export function buildColumns(
       },
     },
     // Scorching Heart (Laevatain talent — ignored Heat RES for 20s)
-    ...(slots.some((s) => s.operator?.id === 'laevatain') ? [{
-      id: StatusType.SCORCHING_HEART,
-      label: STATUS_LABELS[StatusType.SCORCHING_HEART],
-      color: '#f0a040',
-    }] : []),
+    // Data-driven enemy status entries from operator statusEvents
+    ...slots.flatMap(s => {
+      if (!s.operator) return [];
+      const json = getOperatorJson(s.operator.id);
+      const statusEvents = json?.statusEvents as any[] | undefined;
+      if (!statusEvents) return [];
+      return statusEvents
+        .filter((se: any) => se.target === 'ENEMY' && se.isNamedEvent)
+        .map((se: any) => ({
+          id: se.name,
+          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+          color: s.operator!.color,
+        }));
+    }),
     ...enemyWeaponDebuffs.map((ewd) => ({
       id: `fragility-${ewd.slotId}`,
       label: ewd.label,

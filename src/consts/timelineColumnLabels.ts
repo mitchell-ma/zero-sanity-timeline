@@ -63,6 +63,28 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.KNOCK_DOWN]:      'Knock Down',
   [StatusType.CRUSH]:           'Crush',
   [StatusType.BREACH]:          'Breach',
+  // Gear set effects
+  [StatusType.GEAR_BUFF]:       'Gear Buff',
+  // Potential buffs
+  [StatusType.LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE]:      'Proof of Existence',
+  [StatusType.AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK]:       'Positive Feedback',
+  [StatusType.AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS]:      'Tempo of Awareness',
+  [StatusType.ARDELIA_POTENTIAL5_VOLCANIC_STEAM]:          'Volcanic Steam',
+  [StatusType.ENDMINISTRATOR_POTENTIAL1_FINAL_AWAKENING]:         'Final Awakening',
+  [StatusType.ENDMINISTRATOR_POTENTIAL2_REFLECTION_OF_AUTHORITY]: 'Reflection of Authority',
+  [StatusType.ENDMINISTRATOR_POTENTIAL5]:       'Endministrator P5',
+  [StatusType.CHEN_QIANYU_POTENTIAL1_SHADOWLESS]:              'Shadowless',
+  [StatusType.GILBERTA_POTENTIAL5_SPECIAL_MAIL]:            'Special Mail',
+  [StatusType.LIFENG_POTENTIAL5_UNREMITTING]:             'Unremitting',
+  [StatusType.EMBER_POTENTIAL5_THE_STEEL_OATH]:          'The Steel Oath',
+  [StatusType.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES]:      'Supervisory Duties',
+  [StatusType.ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS]: 'Servant of the Wildlands',
+  [StatusType.ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN]:       'Survival is a Win',
+  [StatusType.CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS]: 'Multi-layered Readiness',
+  [StatusType.FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS]:         'Craver of Chaos',
+  [StatusType.LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING]:     'Winter is Returning',
+  [StatusType.YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER]:      'Expert Mechcrafter',
+  [StatusType.POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE]:      'Newly Forged Blade',
 };
 
 // ── Combat skill display names ──────────────────────────────────────────────
@@ -191,6 +213,7 @@ export const COMBAT_SKILL_LABELS: Record<CombatSkillsType, string> = {
   // Arclight
   [CombatSkillsType.SEEK_AND_HUNT]:                     'Seek and Hunt',
   [CombatSkillsType.TEMPESTUOUS_ARC]:                   'Tempestuous Arc',
+  [CombatSkillsType.TEMPESTUOUS_ARC_EMPOWERED]:        'Tempestuous Arc (Empowered)',
   [CombatSkillsType.PEAL_OF_THUNDER]:                   'Peal of Thunder',
   [CombatSkillsType.EXPLODING_BLITZ]:                   'Exploding Blitz',
 };

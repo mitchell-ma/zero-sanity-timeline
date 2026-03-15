@@ -1,0 +1,607 @@
+{
+  "weaponId": "HYPERNOVA_AUTO",
+  "name": "Hypernova Auto",
+  "weaponType": "ARTS_UNIT",
+  "weaponRarity": 4,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 34
+    },
+    {
+      "level": 2,
+      "baseAttack": 38
+    },
+    {
+      "level": 3,
+      "baseAttack": 41
+    },
+    {
+      "level": 4,
+      "baseAttack": 45
+    },
+    {
+      "level": 5,
+      "baseAttack": 48
+    },
+    {
+      "level": 6,
+      "baseAttack": 52
+    },
+    {
+      "level": 7,
+      "baseAttack": 55
+    },
+    {
+      "level": 8,
+      "baseAttack": 59
+    },
+    {
+      "level": 9,
+      "baseAttack": 62
+    },
+    {
+      "level": 10,
+      "baseAttack": 65
+    },
+    {
+      "level": 11,
+      "baseAttack": 69
+    },
+    {
+      "level": 12,
+      "baseAttack": 72
+    },
+    {
+      "level": 13,
+      "baseAttack": 76
+    },
+    {
+      "level": 14,
+      "baseAttack": 79
+    },
+    {
+      "level": 15,
+      "baseAttack": 83
+    },
+    {
+      "level": 16,
+      "baseAttack": 86
+    },
+    {
+      "level": 17,
+      "baseAttack": 90
+    },
+    {
+      "level": 18,
+      "baseAttack": 93
+    },
+    {
+      "level": 19,
+      "baseAttack": 96
+    },
+    {
+      "level": 20,
+      "baseAttack": 100
+    },
+    {
+      "level": 21,
+      "baseAttack": 103
+    },
+    {
+      "level": 22,
+      "baseAttack": 107
+    },
+    {
+      "level": 23,
+      "baseAttack": 110
+    },
+    {
+      "level": 24,
+      "baseAttack": 114
+    },
+    {
+      "level": 25,
+      "baseAttack": 117
+    },
+    {
+      "level": 26,
+      "baseAttack": 121
+    },
+    {
+      "level": 27,
+      "baseAttack": 124
+    },
+    {
+      "level": 28,
+      "baseAttack": 127
+    },
+    {
+      "level": 29,
+      "baseAttack": 131
+    },
+    {
+      "level": 30,
+      "baseAttack": 134
+    },
+    {
+      "level": 31,
+      "baseAttack": 138
+    },
+    {
+      "level": 32,
+      "baseAttack": 141
+    },
+    {
+      "level": 33,
+      "baseAttack": 145
+    },
+    {
+      "level": 34,
+      "baseAttack": 148
+    },
+    {
+      "level": 35,
+      "baseAttack": 152
+    },
+    {
+      "level": 36,
+      "baseAttack": 155
+    },
+    {
+      "level": 37,
+      "baseAttack": 158
+    },
+    {
+      "level": 38,
+      "baseAttack": 162
+    },
+    {
+      "level": 39,
+      "baseAttack": 165
+    },
+    {
+      "level": 40,
+      "baseAttack": 169
+    },
+    {
+      "level": 41,
+      "baseAttack": 172
+    },
+    {
+      "level": 42,
+      "baseAttack": 176
+    },
+    {
+      "level": 43,
+      "baseAttack": 179
+    },
+    {
+      "level": 44,
+      "baseAttack": 183
+    },
+    {
+      "level": 45,
+      "baseAttack": 186
+    },
+    {
+      "level": 46,
+      "baseAttack": 189
+    },
+    {
+      "level": 47,
+      "baseAttack": 193
+    },
+    {
+      "level": 48,
+      "baseAttack": 196
+    },
+    {
+      "level": 49,
+      "baseAttack": 200
+    },
+    {
+      "level": 50,
+      "baseAttack": 203
+    },
+    {
+      "level": 51,
+      "baseAttack": 207
+    },
+    {
+      "level": 52,
+      "baseAttack": 210
+    },
+    {
+      "level": 53,
+      "baseAttack": 214
+    },
+    {
+      "level": 54,
+      "baseAttack": 217
+    },
+    {
+      "level": 55,
+      "baseAttack": 220
+    },
+    {
+      "level": 56,
+      "baseAttack": 224
+    },
+    {
+      "level": 57,
+      "baseAttack": 227
+    },
+    {
+      "level": 58,
+      "baseAttack": 231
+    },
+    {
+      "level": 59,
+      "baseAttack": 234
+    },
+    {
+      "level": 60,
+      "baseAttack": 238
+    },
+    {
+      "level": 61,
+      "baseAttack": 241
+    },
+    {
+      "level": 62,
+      "baseAttack": 245
+    },
+    {
+      "level": 63,
+      "baseAttack": 248
+    },
+    {
+      "level": 64,
+      "baseAttack": 251
+    },
+    {
+      "level": 65,
+      "baseAttack": 255
+    },
+    {
+      "level": 66,
+      "baseAttack": 258
+    },
+    {
+      "level": 67,
+      "baseAttack": 262
+    },
+    {
+      "level": 68,
+      "baseAttack": 265
+    },
+    {
+      "level": 69,
+      "baseAttack": 269
+    },
+    {
+      "level": 70,
+      "baseAttack": 272
+    },
+    {
+      "level": 71,
+      "baseAttack": 276
+    },
+    {
+      "level": 72,
+      "baseAttack": 279
+    },
+    {
+      "level": 73,
+      "baseAttack": 282
+    },
+    {
+      "level": 74,
+      "baseAttack": 286
+    },
+    {
+      "level": 75,
+      "baseAttack": 289
+    },
+    {
+      "level": 76,
+      "baseAttack": 293
+    },
+    {
+      "level": 77,
+      "baseAttack": 296
+    },
+    {
+      "level": 78,
+      "baseAttack": 300
+    },
+    {
+      "level": 79,
+      "baseAttack": 303
+    },
+    {
+      "level": 80,
+      "baseAttack": 307
+    },
+    {
+      "level": 81,
+      "baseAttack": 310
+    },
+    {
+      "level": 82,
+      "baseAttack": 313
+    },
+    {
+      "level": 83,
+      "baseAttack": 317
+    },
+    {
+      "level": 84,
+      "baseAttack": 320
+    },
+    {
+      "level": 85,
+      "baseAttack": 324
+    },
+    {
+      "level": 86,
+      "baseAttack": 327
+    },
+    {
+      "level": 87,
+      "baseAttack": 331
+    },
+    {
+      "level": 88,
+      "baseAttack": 334
+    },
+    {
+      "level": 89,
+      "baseAttack": 338
+    },
+    {
+      "level": 90,
+      "baseAttack": 341
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "INTELLECT_BOOST_S",
+      "name": "Intellect Boost [S]",
+      "description": "Intellect +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "INTELLECT": 12
+        },
+        {
+          "level": 2,
+          "INTELLECT": 21
+        },
+        {
+          "level": 3,
+          "INTELLECT": 31
+        },
+        {
+          "level": 4,
+          "INTELLECT": 40
+        },
+        {
+          "level": 5,
+          "INTELLECT": 50
+        },
+        {
+          "level": 6,
+          "INTELLECT": 60
+        },
+        {
+          "level": 7,
+          "INTELLECT": 69
+        },
+        {
+          "level": 8,
+          "INTELLECT": 79
+        },
+        {
+          "level": 9,
+          "INTELLECT": 93
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "ARTS_BOOST_S",
+      "name": "Arts Boost [S]",
+      "description": "Arts DMG Dealt +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "ARTS_DAMAGE_BONUS": 0.033333335
+        },
+        {
+          "level": 2,
+          "ARTS_DAMAGE_BONUS": 0.06
+        },
+        {
+          "level": 3,
+          "ARTS_DAMAGE_BONUS": 0.086666666
+        },
+        {
+          "level": 4,
+          "ARTS_DAMAGE_BONUS": 0.11333334
+        },
+        {
+          "level": 5,
+          "ARTS_DAMAGE_BONUS": 0.14
+        },
+        {
+          "level": 6,
+          "ARTS_DAMAGE_BONUS": 0.16666667
+        },
+        {
+          "level": 7,
+          "ARTS_DAMAGE_BONUS": 0.19333333
+        },
+        {
+          "level": 8,
+          "ARTS_DAMAGE_BONUS": 0.22
+        },
+        {
+          "level": 9,
+          "ARTS_DAMAGE_BONUS": 0.26
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "HYPERNOVA_AUTO_INSPIRING_START_OF_A_SAGA",
+      "name": "Inspiring: Start of a Saga",
+      "description": "When the wielder's HP is above {hp_ratio_c:0%}, ATK +{atk_up:0.0%}.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.15,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.18,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.21,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.24,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.27,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.3,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.33,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.36,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "HP_ABOVE_THRESHOLD"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "ATTACK_BONUS": 0.42,
+              "hp_ratio_c": 0.8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

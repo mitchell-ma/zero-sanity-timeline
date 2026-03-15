@@ -1,15 +1,15 @@
 /**
  * Gear set effect data registry.
  *
- * Maps gear set effect types to their triggered buff/debuff effects.
- * Used by columnBuilder to create gear buff subtimeline columns.
+ * Single source of truth for all gear set effects — both passive (always-on)
+ * stats and triggered (conditional) buff/debuff effects.
  *
- * Mirrors the structure of weaponSkillEffects.ts.
- * Only gear sets with triggered timed effects are included — passive-only
- * or instant effects (AIC, Armored/Roving MSGR, Mordvolt, Catastrophe,
- * Swordmancer) are omitted.
+ * Used by loadoutAggregator for passive stat aggregation and by columnBuilder
+ * to create gear buff subtimeline columns.
+ *
+ * Replaces the old gearEffects.ts abstract class hierarchy.
  */
-import { GearEffectType, TriggerConditionType, StatType } from './enums';
+import { GearSetEffectType, GearSetType, TriggerConditionType, StatType } from './enums';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +30,8 @@ export interface GearEffectBuff {
 export interface GearSetEffect {
   /** Display label (e.g. "Hot Work"). */
   label: string;
+  /** GearSetEffectType enum key for this effect. */
+  gearSetEffectType: GearSetEffectType;
   /** Trigger condition(s) — any match activates. */
   triggers: TriggerConditionType[];
   /** Who receives the buff: wielder, team, or enemy. */
@@ -46,33 +48,47 @@ export interface GearSetEffect {
   note?: string;
 }
 
-/** All triggered effects for a gear set. */
+/** All effects for a gear set — passive stats and triggered effects. */
 export interface GearSetEffectsEntry {
   /** The gear set's effect type. */
-  gearEffectType: GearEffectType;
+  gearSetType: GearSetType;
   /** Display name for the gear set. */
   label: string;
-  /** All triggered effects. */
+  /** Always-on stats when 3+ pieces of this set are equipped. */
+  passiveStats: Partial<Record<StatType, number>>;
+  /** Triggered effects (empty for passive-only sets). */
   effects: GearSetEffect[];
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
-  // ── AIC Light ──────────────────────────────────────────────────────────────
-  // After defeating an enemy, ATK +20 for 5s.
+  // ── AIC Heavy ──────────────────────────────────────────────────────────────
+  // HP +500. After defeating an enemy, restore 100 HP. Cooldown: 5s.
   {
-    gearEffectType: GearEffectType.AIC_LIGHT,
+    gearSetType: GearSetType.AIC_HEAVY,
+    label: 'AIC Heavy',
+    passiveStats: { [StatType.FLAT_HP]: 500 },
+    // TODO: Implement instant HP restore on kill (100 HP, 5s CD)
+    effects: [],
+  },
+
+  // ── AIC Light ──────────────────────────────────────────────────────────────
+  // HP +500. After defeating an enemy, ATK +20 for 5s.
+  {
+    gearSetType: GearSetType.AIC_LIGHT,
     label: 'AIC Light',
+    passiveStats: { [StatType.FLAT_HP]: 500 },
     effects: [{
       label: 'AIC Light',
+      gearSetEffectType: GearSetEffectType.AIC_LIGHT,
       triggers: [TriggerConditionType.DEFEAT_ENEMY],
       target: 'wielder',
       durationSeconds: 5,
       maxStacks: 1,
       cooldownSeconds: 0,
       buffs: [
-        { stat: StatType.ATTACK, value: 20 },
+        { stat: StatType.BASE_ATTACK, value: 20 },
       ],
     }],
   },
@@ -80,10 +96,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Aburrey's Legacy ───────────────────────────────────────────────────────
   // Skill DMG +24%. On battle/combo/ultimate cast, ATK +5% for 15s (3 unique stacks).
   {
-    gearEffectType: GearEffectType.ABURREY_LEGACY,
+    gearSetType: GearSetType.ABURREY_LEGACY,
     label: "Aburrey's Legacy",
+    passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.24 },
     effects: [{
       label: "Aburrey's Legacy",
+      gearSetEffectType: GearSetEffectType.ABURREY_LEGACY,
       triggers: [
         TriggerConditionType.CAST_BATTLE_SKILL,
         TriggerConditionType.CAST_COMBO_SKILL,
@@ -103,10 +121,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Lynx ───────────────────────────────────────────────────────────────────
   // After HP treatment, target gains 15% DMG Reduction for 10s.
   {
-    gearEffectType: GearEffectType.LYNX,
+    gearSetType: GearSetType.LYNX,
     label: 'LYNX',
+    passiveStats: { [StatType.TREATMENT_BONUS]: 0.2 },
     effects: [{
       label: 'LYNX',
+      gearSetEffectType: GearSetEffectType.LYNX,
       triggers: [TriggerConditionType.HP_TREATMENT],
       target: 'team',
       durationSeconds: 10,
@@ -123,11 +143,13 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // After applying Vulnerability, Physical DMG +8% for 15s (max 4 stacks).
   // At 4 stacks, additional Physical DMG +16% for 10s.
   {
-    gearEffectType: GearEffectType.AETHERTECH,
+    gearSetType: GearSetType.AETHERTECH,
     label: 'Æthertech',
+    passiveStats: { [StatType.ATTACK_BONUS]: 0.08 },
     effects: [
       {
         label: 'Æthertech',
+        gearSetEffectType: GearSetEffectType.AETHERTECH,
         triggers: [TriggerConditionType.APPLY_VULNERABILITY],
         target: 'wielder',
         durationSeconds: 15,
@@ -139,6 +161,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       },
       {
         label: 'Æthertech (Max)',
+        gearSetEffectType: GearSetEffectType.AETHERTECH,
         triggers: [TriggerConditionType.APPLY_VULNERABILITY],
         target: 'wielder',
         durationSeconds: 10,
@@ -156,11 +179,13 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // After Electrification → Electric DMG +50% for 10s.
   // After Solidification → Cryo DMG +50% for 10s.
   {
-    gearEffectType: GearEffectType.PULSER_LABS,
+    gearSetType: GearSetType.PULSER_LABS,
     label: 'Pulser Labs',
+    passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
     effects: [
       {
         label: 'Pulser Labs (Electric)',
+        gearSetEffectType: GearSetEffectType.PULSER_LABS,
         triggers: [TriggerConditionType.ELECTRIFICATION],
         target: 'wielder',
         durationSeconds: 10,
@@ -172,6 +197,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       },
       {
         label: 'Pulser Labs (Cryo)',
+        gearSetEffectType: GearSetEffectType.PULSER_LABS,
         triggers: [TriggerConditionType.SOLIDIFICATION],
         target: 'wielder',
         durationSeconds: 10,
@@ -187,10 +213,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Frontiers ──────────────────────────────────────────────────────────────
   // After SP recovery from skill, team DMG +16% for 15s.
   {
-    gearEffectType: GearEffectType.FRONTIERS,
+    gearSetType: GearSetType.FRONTIERS,
     label: 'Frontiers',
+    passiveStats: { [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 0.15 },
     effects: [{
       label: 'Frontiers',
+      gearSetEffectType: GearSetEffectType.FRONTIERS,
       triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
       target: 'team',
       durationSeconds: 15,
@@ -207,11 +235,13 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // After Combustion → Heat DMG +50% for 10s.
   // After Corrosion → Nature DMG +50% for 10s.
   {
-    gearEffectType: GearEffectType.HOT_WORK,
+    gearSetType: GearSetType.HOT_WORK,
     label: 'Hot Work',
+    passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
     effects: [
       {
         label: 'Hot Work (Heat)',
+        gearSetEffectType: GearSetEffectType.HOT_WORK,
         triggers: [TriggerConditionType.COMBUSTION],
         target: 'wielder',
         durationSeconds: 10,
@@ -223,6 +253,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       },
       {
         label: 'Hot Work (Nature)',
+        gearSetEffectType: GearSetEffectType.HOT_WORK,
         triggers: [TriggerConditionType.CORROSION],
         target: 'wielder',
         durationSeconds: 10,
@@ -239,11 +270,13 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // After crit hit, ATK +5% for 5s (max 5 stacks).
   // At max stacks, additional Crit Rate +5%.
   {
-    gearEffectType: GearEffectType.MI_SECURITY,
+    gearSetType: GearSetType.MI_SECURITY,
     label: 'MI Security',
+    passiveStats: { [StatType.CRITICAL_RATE]: 0.05 },
     effects: [
       {
         label: 'MI Security',
+        gearSetEffectType: GearSetEffectType.MI_SECURITY,
         triggers: [TriggerConditionType.CRITICAL_HIT],
         target: 'wielder',
         durationSeconds: 5,
@@ -255,6 +288,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       },
       {
         label: 'MI Security (Max)',
+        gearSetEffectType: GearSetEffectType.MI_SECURITY,
         triggers: [TriggerConditionType.CRITICAL_HIT],
         target: 'wielder',
         durationSeconds: 5,
@@ -271,10 +305,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Tide Surge ─────────────────────────────────────────────────────────────
   // After applying 2+ stacks of Arts Infliction, Arts DMG +35% for 15s.
   {
-    gearEffectType: GearEffectType.TIDE_SURGE,
+    gearSetType: GearSetType.TIDE_SURGE,
     label: 'Tide Surge',
+    passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.20 },
     effects: [{
       label: 'Tide Surge',
+      gearSetEffectType: GearSetEffectType.TIDE_SURGE,
       triggers: [TriggerConditionType.APPLY_ARTS_INFLICTION_2_STACKS],
       target: 'wielder',
       durationSeconds: 15,
@@ -290,10 +326,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // After applying Amp/Protected/Susceptibility/Weakened, other teammates
   // gain DMG +16% for 15s.
   {
-    gearEffectType: GearEffectType.ETERNAL_XIRANITE,
+    gearSetType: GearSetType.ETERNAL_XIRANITE,
     label: 'Eternal Xiranite',
+    passiveStats: { [StatType.FLAT_HP]: 1000 },
     effects: [{
       label: 'Eternal Xiranite',
+      gearSetEffectType: GearSetEffectType.ETERNAL_XIRANITE,
       triggers: [TriggerConditionType.APPLY_BUFF],
       target: 'team',
       durationSeconds: 15,
@@ -309,10 +347,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Catastrophe ──────────────────────────────────────────────────────────
   // On battle skill cast, +50 SP. Once per battle.
   {
-    gearEffectType: GearEffectType.CATASTROPHE,
+    gearSetType: GearSetType.CATASTROPHE,
     label: 'Catastrophe',
+    passiveStats: { [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.2 },
     effects: [{
       label: 'Catastrophe',
+      gearSetEffectType: GearSetEffectType.CATASTROPHE,
       triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 1,
@@ -326,10 +366,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // ── Swordmancer ──────────────────────────────────────────────────────────
   // After applying Physical Status, deal 250% ATK Physical DMG + 10 Stagger. CD: 15s.
   {
-    gearEffectType: GearEffectType.SWORDMANCER,
+    gearSetType: GearSetType.SWORDMANCER,
     label: 'Swordmancer',
+    passiveStats: { [StatType.STAGGER_EFFICIENCY_BONUS]: 0.2 },
     effects: [{
       label: 'Swordmancer',
+      gearSetEffectType: GearSetEffectType.SWORDMANCER,
       triggers: [TriggerConditionType.APPLY_PHYSICAL_STATUS],
       target: 'enemy',
       durationSeconds: 1,
@@ -344,10 +386,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // On combo skill cast, next battle skill DMG +30%. Max 2 stacks.
   // Consumed on next battle skill cast.
   {
-    gearEffectType: GearEffectType.BONEKRUSHA,
+    gearSetType: GearSetType.BONEKRUSHA,
     label: 'Bonekrusha',
+    passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
     effects: [{
       label: 'Bonekrusha',
+      gearSetEffectType: GearSetEffectType.BONEKRUSHA,
       triggers: [TriggerConditionType.CAST_COMBO_SKILL],
       target: 'wielder',
       durationSeconds: 0,
@@ -364,10 +408,12 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
   // When any operator casts battle skill, next combo skill DMG +20%. Max 3 stacks.
   // Consumed on next combo skill cast.
   {
-    gearEffectType: GearEffectType.TYPE_50_YINGLUNG,
+    gearSetType: GearSetType.TYPE_50_YINGLUNG,
     label: 'Type 50 Yinglung',
+    passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
     effects: [{
       label: 'Type 50 Yinglung',
+      gearSetEffectType: GearSetEffectType.TYPE_50_YINGLUNG,
       triggers: [TriggerConditionType.TEAM_CAST_BATTLE_SKILL],
       target: 'wielder',
       durationSeconds: 0,
@@ -379,11 +425,51 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       note: 'Consumed on next combo skill cast',
     }],
   },
+
+  // ── Armored MSGR ──────────────────────────────────────────────────────────
+  // Strength +50. When HP below 50%, 30% DMG Reduction.
+  {
+    gearSetType: GearSetType.ARMORED_MSGR,
+    label: 'Armored MSGR',
+    passiveStats: { [StatType.STRENGTH]: 50 },
+    // TODO: Implement conditional DMG Reduction +30% when HP below 50%
+    effects: [],
+  },
+
+  // ── Roving MSGR ───────────────────────────────────────────────────────────
+  // Agility +50. When HP above 80%, Physical DMG +20%.
+  {
+    gearSetType: GearSetType.ROVING_MSGR,
+    label: 'Roving MSGR',
+    passiveStats: { [StatType.AGILITY]: 50 },
+    // TODO: Implement conditional Physical DMG +20% when HP above 80%
+    effects: [],
+  },
+
+  // ── Mordvolt Insulation ───────────────────────────────────────────────────
+  // Intellect +50. When HP above 80%, Arts DMG +20%.
+  {
+    gearSetType: GearSetType.MORDVOLT_INSULATION,
+    label: 'Mordvolt Insulation',
+    passiveStats: { [StatType.INTELLECT]: 50 },
+    // TODO: Implement conditional Arts DMG +20% when HP above 80%
+    effects: [],
+  },
+
+  // ── Mordvolt Resistant ────────────────────────────────────────────────────
+  // Will +50. When HP below 50%, Treatment Effect +30%.
+  {
+    gearSetType: GearSetType.MORDVOLT_RESISTANT,
+    label: 'Mordvolt Resistant',
+    passiveStats: { [StatType.WILL]: 50 },
+    // TODO: Implement conditional Treatment Effect +30% when HP below 50%
+    effects: [],
+  },
 ];
 
 // ── Lookup helpers ───────────────────────────────────────────────────────────
 
-/** Look up gear set effects by gear effect type. Returns undefined for sets without triggered timed effects. */
-export function getGearSetEffects(gearEffectType: GearEffectType): GearSetEffectsEntry | undefined {
-  return GEAR_SET_EFFECTS.find((e) => e.gearEffectType === gearEffectType);
+/** Look up gear set effects by gear set type. */
+export function getGearSetEffects(gearSetType: GearSetType): GearSetEffectsEntry | undefined {
+  return GEAR_SET_EFFECTS.find((e) => e.gearSetType === gearSetType);
 }

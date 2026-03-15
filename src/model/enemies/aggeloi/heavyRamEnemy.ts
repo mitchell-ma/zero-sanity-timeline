@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 831,
-    [EnemyStatType.ATK]: 66,
+    [StatType.BASE_HP]: 831,
+    [StatType.BASE_ATTACK]: 66,
   },
   20: {
-    [EnemyStatType.HP]: 5961,
-    [EnemyStatType.ATK]: 310,
+    [StatType.BASE_HP]: 5961,
+    [StatType.BASE_ATTACK]: 310,
   },
   40: {
-    [EnemyStatType.HP]: 37721,
-    [EnemyStatType.ATK]: 965,
+    [StatType.BASE_HP]: 37721,
+    [StatType.BASE_ATTACK]: 965,
   },
   60: {
-    [EnemyStatType.HP]: 148502,
-    [EnemyStatType.ATK]: 2395,
+    [StatType.BASE_HP]: 148502,
+    [StatType.BASE_ATTACK]: 2395,
   },
   80: {
-    [EnemyStatType.HP]: 357214,
-    [EnemyStatType.ATK]: 3604,
+    [StatType.BASE_HP]: 357214,
+    [StatType.BASE_ATTACK]: 3604,
   },
   90: {
-    [EnemyStatType.HP]: 550298,
-    [EnemyStatType.ATK]: 4130,
+    [StatType.BASE_HP]: 550298,
+    [StatType.BASE_ATTACK]: 4130,
   },
 };
 
@@ -48,15 +48,15 @@ export class HeavyRamEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 160,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 3.2,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 160,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 3.2,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

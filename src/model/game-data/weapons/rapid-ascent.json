@@ -1,0 +1,517 @@
+{
+  "weaponId": "RAPID_ASCENT",
+  "name": "Rapid Ascent",
+  "weaponType": "SWORD",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 50
+    },
+    {
+      "level": 2,
+      "baseAttack": 55
+    },
+    {
+      "level": 3,
+      "baseAttack": 60
+    },
+    {
+      "level": 4,
+      "baseAttack": 65
+    },
+    {
+      "level": 5,
+      "baseAttack": 70
+    },
+    {
+      "level": 6,
+      "baseAttack": 75
+    },
+    {
+      "level": 7,
+      "baseAttack": 80
+    },
+    {
+      "level": 8,
+      "baseAttack": 85
+    },
+    {
+      "level": 9,
+      "baseAttack": 90
+    },
+    {
+      "level": 10,
+      "baseAttack": 95
+    },
+    {
+      "level": 11,
+      "baseAttack": 100
+    },
+    {
+      "level": 12,
+      "baseAttack": 105
+    },
+    {
+      "level": 13,
+      "baseAttack": 110
+    },
+    {
+      "level": 14,
+      "baseAttack": 115
+    },
+    {
+      "level": 15,
+      "baseAttack": 120
+    },
+    {
+      "level": 16,
+      "baseAttack": 125
+    },
+    {
+      "level": 17,
+      "baseAttack": 130
+    },
+    {
+      "level": 18,
+      "baseAttack": 135
+    },
+    {
+      "level": 19,
+      "baseAttack": 140
+    },
+    {
+      "level": 20,
+      "baseAttack": 145
+    },
+    {
+      "level": 21,
+      "baseAttack": 150
+    },
+    {
+      "level": 22,
+      "baseAttack": 155
+    },
+    {
+      "level": 23,
+      "baseAttack": 160
+    },
+    {
+      "level": 24,
+      "baseAttack": 165
+    },
+    {
+      "level": 25,
+      "baseAttack": 170
+    },
+    {
+      "level": 26,
+      "baseAttack": 175
+    },
+    {
+      "level": 27,
+      "baseAttack": 180
+    },
+    {
+      "level": 28,
+      "baseAttack": 185
+    },
+    {
+      "level": 29,
+      "baseAttack": 190
+    },
+    {
+      "level": 30,
+      "baseAttack": 195
+    },
+    {
+      "level": 31,
+      "baseAttack": 200
+    },
+    {
+      "level": 32,
+      "baseAttack": 205
+    },
+    {
+      "level": 33,
+      "baseAttack": 210
+    },
+    {
+      "level": 34,
+      "baseAttack": 215
+    },
+    {
+      "level": 35,
+      "baseAttack": 220
+    },
+    {
+      "level": 36,
+      "baseAttack": 225
+    },
+    {
+      "level": 37,
+      "baseAttack": 230
+    },
+    {
+      "level": 38,
+      "baseAttack": 235
+    },
+    {
+      "level": 39,
+      "baseAttack": 240
+    },
+    {
+      "level": 40,
+      "baseAttack": 245
+    },
+    {
+      "level": 41,
+      "baseAttack": 250
+    },
+    {
+      "level": 42,
+      "baseAttack": 255
+    },
+    {
+      "level": 43,
+      "baseAttack": 260
+    },
+    {
+      "level": 44,
+      "baseAttack": 265
+    },
+    {
+      "level": 45,
+      "baseAttack": 270
+    },
+    {
+      "level": 46,
+      "baseAttack": 275
+    },
+    {
+      "level": 47,
+      "baseAttack": 280
+    },
+    {
+      "level": 48,
+      "baseAttack": 285
+    },
+    {
+      "level": 49,
+      "baseAttack": 290
+    },
+    {
+      "level": 50,
+      "baseAttack": 295
+    },
+    {
+      "level": 51,
+      "baseAttack": 300
+    },
+    {
+      "level": 52,
+      "baseAttack": 305
+    },
+    {
+      "level": 53,
+      "baseAttack": 310
+    },
+    {
+      "level": 54,
+      "baseAttack": 315
+    },
+    {
+      "level": 55,
+      "baseAttack": 320
+    },
+    {
+      "level": 56,
+      "baseAttack": 325
+    },
+    {
+      "level": 57,
+      "baseAttack": 330
+    },
+    {
+      "level": 58,
+      "baseAttack": 335
+    },
+    {
+      "level": 59,
+      "baseAttack": 340
+    },
+    {
+      "level": 60,
+      "baseAttack": 345
+    },
+    {
+      "level": 61,
+      "baseAttack": 350
+    },
+    {
+      "level": 62,
+      "baseAttack": 355
+    },
+    {
+      "level": 63,
+      "baseAttack": 360
+    },
+    {
+      "level": 64,
+      "baseAttack": 365
+    },
+    {
+      "level": 65,
+      "baseAttack": 370
+    },
+    {
+      "level": 66,
+      "baseAttack": 375
+    },
+    {
+      "level": 67,
+      "baseAttack": 380
+    },
+    {
+      "level": 68,
+      "baseAttack": 385
+    },
+    {
+      "level": 69,
+      "baseAttack": 390
+    },
+    {
+      "level": 70,
+      "baseAttack": 395
+    },
+    {
+      "level": 71,
+      "baseAttack": 400
+    },
+    {
+      "level": 72,
+      "baseAttack": 405
+    },
+    {
+      "level": 73,
+      "baseAttack": 410
+    },
+    {
+      "level": 74,
+      "baseAttack": 415
+    },
+    {
+      "level": 75,
+      "baseAttack": 420
+    },
+    {
+      "level": 76,
+      "baseAttack": 425
+    },
+    {
+      "level": 77,
+      "baseAttack": 430
+    },
+    {
+      "level": 78,
+      "baseAttack": 435
+    },
+    {
+      "level": 79,
+      "baseAttack": 440
+    },
+    {
+      "level": 80,
+      "baseAttack": 445
+    },
+    {
+      "level": 81,
+      "baseAttack": 450
+    },
+    {
+      "level": 82,
+      "baseAttack": 455
+    },
+    {
+      "level": 83,
+      "baseAttack": 460
+    },
+    {
+      "level": 84,
+      "baseAttack": 465
+    },
+    {
+      "level": 85,
+      "baseAttack": 470
+    },
+    {
+      "level": 86,
+      "baseAttack": 475
+    },
+    {
+      "level": 87,
+      "baseAttack": 480
+    },
+    {
+      "level": 88,
+      "baseAttack": 485
+    },
+    {
+      "level": 89,
+      "baseAttack": 490
+    },
+    {
+      "level": 90,
+      "baseAttack": 495
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "MAIN_ATTRIBUTE_BOOST_L",
+      "name": "Main Attribute Boost [L]",
+      "description": "Main attribute +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "MAIN_ATTRIBUTE": 17
+        },
+        {
+          "level": 2,
+          "MAIN_ATTRIBUTE": 30
+        },
+        {
+          "level": 3,
+          "MAIN_ATTRIBUTE": 44
+        },
+        {
+          "level": 4,
+          "MAIN_ATTRIBUTE": 57
+        },
+        {
+          "level": 5,
+          "MAIN_ATTRIBUTE": 71
+        },
+        {
+          "level": 6,
+          "MAIN_ATTRIBUTE": 85
+        },
+        {
+          "level": 7,
+          "MAIN_ATTRIBUTE": 98
+        },
+        {
+          "level": 8,
+          "MAIN_ATTRIBUTE": 112
+        },
+        {
+          "level": 9,
+          "MAIN_ATTRIBUTE": 132
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "CRITICAL_RATE_BOOST_L",
+      "name": "Critical Rate Boost [L]",
+      "description": "Critical Rate +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "CRITICAL_RATE": 0.025
+        },
+        {
+          "level": 2,
+          "CRITICAL_RATE": 0.045
+        },
+        {
+          "level": 3,
+          "CRITICAL_RATE": 0.065
+        },
+        {
+          "level": 4,
+          "CRITICAL_RATE": 0.085
+        },
+        {
+          "level": 5,
+          "CRITICAL_RATE": 0.105
+        },
+        {
+          "level": 6,
+          "CRITICAL_RATE": 0.125
+        },
+        {
+          "level": 7,
+          "CRITICAL_RATE": 0.145
+        },
+        {
+          "level": 8,
+          "CRITICAL_RATE": 0.165
+        },
+        {
+          "level": 9,
+          "CRITICAL_RATE": 0.195
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "RAPID_ASCENT_TWILIGHT_AZURE_CLOUDS",
+      "name": "Twilight: Azure Clouds",
+      "description": "Battle skills and ultimates gain Physical DMG Dealt +{phy_dmg_up:0.0%}. Against Staggered enemies, battle skills and ultimates also gain DMG Dealt +{dmg_up:0.0%}.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "PHYSICAL_DAMAGE_BONUS": 0.15,
+          "dmg_up": 0.35
+        },
+        {
+          "level": 2,
+          "PHYSICAL_DAMAGE_BONUS": 0.18,
+          "dmg_up": 0.42
+        },
+        {
+          "level": 3,
+          "PHYSICAL_DAMAGE_BONUS": 0.21,
+          "dmg_up": 0.49
+        },
+        {
+          "level": 4,
+          "PHYSICAL_DAMAGE_BONUS": 0.24,
+          "dmg_up": 0.56
+        },
+        {
+          "level": 5,
+          "PHYSICAL_DAMAGE_BONUS": 0.27,
+          "dmg_up": 0.63
+        },
+        {
+          "level": 6,
+          "PHYSICAL_DAMAGE_BONUS": 0.3,
+          "dmg_up": 0.7
+        },
+        {
+          "level": 7,
+          "PHYSICAL_DAMAGE_BONUS": 0.33,
+          "dmg_up": 0.77
+        },
+        {
+          "level": 8,
+          "PHYSICAL_DAMAGE_BONUS": 0.36,
+          "dmg_up": 0.84
+        },
+        {
+          "level": 9,
+          "PHYSICAL_DAMAGE_BONUS": 0.42,
+          "dmg_up": 0.98
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

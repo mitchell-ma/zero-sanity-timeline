@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 291,
-    [EnemyStatType.ATK]: 30,
+    [StatType.BASE_HP]: 291,
+    [StatType.BASE_ATTACK]: 30,
   },
   20: {
-    [EnemyStatType.HP]: 2086,
-    [EnemyStatType.ATK]: 140,
+    [StatType.BASE_HP]: 2086,
+    [StatType.BASE_ATTACK]: 140,
   },
   40: {
-    [EnemyStatType.HP]: 13202,
-    [EnemyStatType.ATK]: 434,
+    [StatType.BASE_HP]: 13202,
+    [StatType.BASE_ATTACK]: 434,
   },
   60: {
-    [EnemyStatType.HP]: 51976,
-    [EnemyStatType.ATK]: 1078,
+    [StatType.BASE_HP]: 51976,
+    [StatType.BASE_ATTACK]: 1078,
   },
   80: {
-    [EnemyStatType.HP]: 125025,
-    [EnemyStatType.ATK]: 1622,
+    [StatType.BASE_HP]: 125025,
+    [StatType.BASE_ATTACK]: 1622,
   },
   90: {
-    [EnemyStatType.HP]: 192604,
-    [EnemyStatType.ATK]: 1858,
+    [StatType.BASE_HP]: 192604,
+    [StatType.BASE_ATTACK]: 1858,
   },
 };
 
@@ -48,10 +48,10 @@ export class MudflowDeltaEnemy extends Enemy {
       attackElement: ElementType.CRYO,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ELECTRIC_RESISTANCE]: 0.8,
-        [EnemyStatType.CRYO_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 90,
-        [EnemyStatType.ATTACK_RANGE]: 2.1,
+        [StatType.ELECTRIC_RESISTANCE]: 0.8,
+        [StatType.CRYO_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 90,
+        [StatType.ATTACK_RANGE]: 2.1,
       },
       ...params,
     });

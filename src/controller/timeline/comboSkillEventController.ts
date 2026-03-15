@@ -1,5 +1,6 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInteractions';
+import { SKILL_COLUMNS } from '../../model/channels';
 
 /**
  * Controller for combo skill event validation.
@@ -9,7 +10,7 @@ import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInteractio
  */
 export class ComboSkillEventController {
   static isCombo(event: TimelineEvent): boolean {
-    return event.columnId === 'combo';
+    return event.columnId === SKILL_COLUMNS.COMBO;
   }
 
   /** Get combo activation window events for a given ownerId from processed events. */

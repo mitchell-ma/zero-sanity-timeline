@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../../utils/timeline';
-import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/channelLabels';
+import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, StatType, StatusType, STATUS_ELEMENT, TriggerConditionType, WeaponSkillType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, SelectedFrame, ResourceConfig, Column, MiniTimeline } from '../../consts/viewTypes';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutStats } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers } from '../../controller/info-pane/eventPaneController';
-import { ENEMY_OWNER_ID } from '../../model/channels';
-import { getSkillMultiplier } from '../../controller/calculation/skillMultiplierRegistry';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 
 // ── Event pane content ──────────────────────────────────────────────────────
@@ -25,12 +25,14 @@ interface EventPaneProps {
   onClose: () => void;
   selectedFrames?: SelectedFrame[];
   readOnly?: boolean;
+  isDerived?: boolean;
   editContext?: string | null;
   debugMode?: boolean;
   rawEvents?: readonly TimelineEvent[];
   allProcessedEvents?: readonly TimelineEvent[];
   loadoutStats?: Record<string, LoadoutStats>;
   damageRows?: DamageTableRow[];
+  spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
 }
 
 function EventPane({
@@ -45,12 +47,14 @@ function EventPane({
   selectedFrames,
   slots,
   readOnly,
+  isDerived,
   editContext,
   debugMode,
   rawEvents,
   allProcessedEvents,
   loadoutStats,
   damageRows,
+  spConsumptionHistory,
 }: EventPaneProps) {
   /** Format a real-time frame as a detail label. */
   const dualTimeLabel = (frame: number) => frameToDetailLabel(frame);
@@ -127,7 +131,7 @@ function EventPane({
         activationDuration: toFrames(activeSec),
         activeDuration: toFrames(activePhaseSec),
         cooldownDuration: toFrames(cooldownSec),
-        ...(event.columnId === 'ultimate' ? { animationDuration: toFrames(animSec) } : {}),
+        ...(event.columnId === SKILL_COLUMNS.ULTIMATE ? { animationDuration: toFrames(animSec) } : {}),
       });
     } else {
       onUpdate(event.id, {
@@ -135,7 +139,7 @@ function EventPane({
         activationDuration: toFrames(activeSec),
         activeDuration: toFrames(activePhaseSec),
         cooldownDuration: toFrames(cooldownSec),
-        ...(event.columnId === 'ultimate' ? { animationDuration: toFrames(animSec) } : {}),
+        ...(event.columnId === SKILL_COLUMNS.ULTIMATE ? { animationDuration: toFrames(animSec) } : {}),
       });
     }
   };
@@ -277,6 +281,109 @@ function EventPane({
           <div className="edit-panel-trigger">{triggerCondition}</div>
         ) : null}
 
+        {/* ── Status Properties (reaction events on enemy timeline) ────────── */}
+        {event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId) && (() => {
+          const element = STATUS_ELEMENT[event.columnId.toUpperCase()] as ElementType | undefined;
+          const elColor = element ? ELEMENT_COLORS[element] : 'var(--text-muted)';
+          const elLabel = element ? ELEMENT_LABELS[element] : event.columnId;
+          const isAutoReaction = !event.isForced;
+          return (
+            <div className="edit-panel-section">
+              <span className="edit-section-label">Status Properties</span>
+              <div className="edit-field">
+                <span className="edit-field-label">Element</span>
+                <span style={{ color: elColor, fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{elLabel}</span>
+              </div>
+              <StatField
+                label="Status Level"
+                value={event.statusLevel ?? 1}
+                min={1}
+                max={4}
+                step={1}
+                onChange={(v) => onUpdate(event.id, { statusLevel: v })}
+              />
+              {event.statusValue != null && (
+                <div className="edit-field">
+                  <span className="edit-field-label">Status Value</span>
+                  <div className="edit-field-row">
+                    <input
+                      className="edit-input"
+                      type="text"
+                      inputMode="numeric"
+                      style={{ width: 60 }}
+                      value={(event.statusValue * 100).toFixed(1)}
+                      onChange={(e) => {
+                        const pct = parseFloat(e.target.value);
+                        if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
+                      }}
+                    />
+                    <span className="edit-input-unit">%</span>
+                  </div>
+                </div>
+              )}
+              <div className="edit-field">
+                <span className="edit-field-label">Forced</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: readOnly ? 'default' : 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!event.isForced}
+                    disabled={isAutoReaction || readOnly}
+                    onChange={(e) => onUpdate(event.id, { isForced: e.target.checked, forcedReaction: e.target.checked })}
+                    style={{ accentColor: elColor }}
+                  />
+                  <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>
+                    {event.isForced ? 'Yes — no infliction stacks required' : 'No'}
+                  </span>
+                </label>
+              </div>
+              {isAutoReaction && event.inflictionStacks != null && (
+                <div className="edit-field">
+                  <span className="edit-field-label">Infliction Stacks</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{event.inflictionStacks}</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── Status Properties (non-reaction status events: buffs, debuffs) ─── */}
+        {isDerived && !(event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId)) && (
+          event.statusLevel != null || event.statusValue != null
+        ) && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Status Properties</span>
+            {event.statusLevel != null && (
+              <StatField
+                label="Status Level"
+                value={event.statusLevel}
+                min={1}
+                max={4}
+                step={1}
+                onChange={(v) => onUpdate(event.id, { statusLevel: v })}
+              />
+            )}
+            {event.statusValue != null && (
+              <div className="edit-field">
+                <span className="edit-field-label">Status Value</span>
+                <div className="edit-field-row">
+                  <input
+                    className="edit-input"
+                    type="text"
+                    inputMode="numeric"
+                    style={{ width: 60 }}
+                    value={(event.statusValue * 100).toFixed(1)}
+                    onChange={(e) => {
+                      const pct = parseFloat(e.target.value);
+                      if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
+                    }}
+                  />
+                  <span className="edit-input-unit">%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {(() => {
           // Skill info: element, SP cost, multiplier
           const col = columns.find((c) => c.type !== 'placeholder' && c.columnId === event.columnId && c.ownerId === event.ownerId);
@@ -288,16 +395,20 @@ function EventPane({
           // Resolve skill level based on column type
           let skillLevel: number | undefined;
           if (stats) {
-            if (event.columnId === 'basic') skillLevel = stats.basicAttackLevel;
-            else if (event.columnId === 'battle') skillLevel = stats.battleSkillLevel;
-            else if (event.columnId === 'combo') skillLevel = stats.comboSkillLevel;
-            else if (event.columnId === 'ultimate') skillLevel = stats.ultimateLevel;
+            if (event.columnId === SKILL_COLUMNS.BASIC) skillLevel = stats.basicAttackLevel;
+            else if (event.columnId === SKILL_COLUMNS.BATTLE) skillLevel = stats.battleSkillLevel;
+            else if (event.columnId === SKILL_COLUMNS.COMBO) skillLevel = stats.comboSkillLevel;
+            else if (event.columnId === SKILL_COLUMNS.ULTIMATE) skillLevel = stats.ultimateLevel;
           }
 
           // Per-segment multipliers for sequenced events (basic attacks)
           const segMultipliers: { label: string; value: number; maxFrames: number }[] = [];
           let overallMultiplier: number | null = null;
           let overallMaxFrames = 0;
+          // Per-tick ramping multipliers (e.g. Smouldering Fire explosion)
+          let perTickBase: number | null = null;
+          let perTickIncrement = 0;
+          let perTickFrames = 0;
 
           // Look up default segments from column definition for max frame counts
           const miniCol = col && col.type !== 'placeholder' ? col as MiniTimeline : null;
@@ -337,6 +448,26 @@ function EventPane({
               if (overallMultiplier != null && defaultSegs) {
                 overallMaxFrames = defaultSegs.reduce((sum, s) => sum + (s.frames?.length ?? 0), 0);
               }
+              // Check if this skill has per-tick ramping multipliers
+              const tick0 = getPerTickMultiplier(
+                operatorId,
+                event.name as CombatSkillsType,
+                skillLevel as any,
+                (stats?.potential ?? 0) as any,
+                0,
+              );
+              if (tick0 != null && overallMaxFrames > 1) {
+                const tick1 = getPerTickMultiplier(
+                  operatorId,
+                  event.name as CombatSkillsType,
+                  skillLevel as any,
+                  (stats?.potential ?? 0) as any,
+                  1,
+                );
+                perTickBase = tick0;
+                perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
+                perTickFrames = overallMaxFrames;
+              }
             }
           }
 
@@ -346,7 +477,7 @@ function EventPane({
           const skillDescription = skillDef?.description;
 
           const elColor = skillEl ? ELEMENT_COLORS[skillEl.toUpperCase() as ElementType] : undefined;
-          const hasMultiplier = overallMultiplier != null || segMultipliers.length > 0;
+          const hasMultiplier = overallMultiplier != null || segMultipliers.length > 0 || perTickBase != null;
           const hasInfo = skillEl || event.skillPointCost != null || hasMultiplier || skillDescription;
 
           if (!hasInfo) return null;
@@ -373,17 +504,34 @@ function EventPane({
                     <span style={{ fontFamily: 'var(--font-mono)' }}>{event.skillPointCost}</span>
                   </div>
                 )}
-                {overallMultiplier != null && (
+                {overallMultiplier != null && perTickBase == null && (
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                     <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
-                      {(overallMultiplier * 100).toFixed(0)}%
+                      {(overallMultiplier * 100).toFixed(1)}%
                     </span>
                     {overallMaxFrames > 1 && (
                       <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
                         ({((overallMultiplier / overallMaxFrames) * 100).toFixed(1)}% x{overallMaxFrames})
                       </span>
                     )}
+                    {skillLevel != null && (
+                      <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
+                        Lv.{skillLevel}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {perTickBase != null && (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
+                      {(perTickBase * 100).toFixed(1)}%
+                      {perTickIncrement > 0 && ` + ${(perTickIncrement * 100).toFixed(1)}%/tick`}
+                    </span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
+                      ({perTickFrames} ticks: {(perTickBase * 100).toFixed(1)}%–{((perTickBase + perTickIncrement * (perTickFrames - 1)) * 100).toFixed(1)}%)
+                    </span>
                     {skillLevel != null && (
                       <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
                         Lv.{skillLevel}
@@ -400,7 +548,7 @@ function EventPane({
                       <div key={sm.label} style={{ paddingLeft: 8 }}>
                         <span style={{ color: 'var(--text-muted)' }}>{sm.label}: </span>
                         <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
-                          {(sm.value * 100).toFixed(0)}%
+                          {(sm.value * 100).toFixed(1)}%
                         </span>
                         {sm.maxFrames > 1 && (
                           <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
@@ -419,7 +567,7 @@ function EventPane({
         <div className="edit-panel-section">
           <span className="edit-section-label">Timing</span>
           <div style={{ padding: '4px 6px' }}>
-            {readOnly ? (
+            {(readOnly || isDerived) ? (
               <div className="edit-info-text">
                 <div>Start: {dualTimePrecise(event.startFrame)}</div>
               </div>
@@ -470,7 +618,7 @@ function EventPane({
                 const label = ELEMENT_LABELS[element as ElementType] ?? element;
                 return (
                   <div key={element}>
-                    <span style={{ color }}>{label}</span>: {Math.round(value * 100)}%
+                    <span style={{ color }}>{label}</span>: {(value * 100).toFixed(1)}%
                   </div>
                 );
               })}
@@ -539,15 +687,16 @@ function EventPane({
         )}
 
         {(() => {
-          const spData = resolveSpReturn(event, slots);
+          const consumptionRecord = spConsumptionHistory?.find((r) => r.eventId === event.id);
+          const spData = resolveSpReturn(event, slots, consumptionRecord);
           if (!spData) return null;
           const { summary: sp, spNotes } = spData;
-          const r = (v: number) => Math.round(v * 100) / 100;
+          const r = (v: number) => v.toFixed(1);
           const spInfo = (
             <div className="edit-info-text">
-              {sp.totalSpReturn > 0 && <div>Return: {r(sp.totalSpReturn)} (net: {r(sp.netSp)})</div>}
-              {sp.rawGauge > 0 && <div>Ult Gauge: {sp.hasReduction ? `${r(sp.rawGauge)} × ${Math.round(sp.gaugeReduction * 100)}% = +${r(sp.effectiveGauge)}` : `+${r(sp.rawGauge)}`}</div>}
-              {sp.rawTeamGauge > 0 && <div>Team Gauge: {sp.hasReduction ? `${r(sp.rawTeamGauge)} × ${Math.round(sp.gaugeReduction * 100)}% = +${r(sp.effectiveTeamGauge)}` : `+${r(sp.rawTeamGauge)}`}</div>}
+              {sp.totalSpReturn > 0 && <div>Return: {r(sp.totalSpReturn)}</div>}
+              {sp.returnedConsumed > 0 && <div>Natural SP: {r(sp.naturalConsumed)} / Returned SP: {r(sp.returnedConsumed)}</div>}
+              <div>Team Ult Charge: +{r(sp.derivedUltimateCharge)}</div>
               {spNotes.map((note, i) => (
                 <div key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{note}</div>
               ))}
@@ -557,7 +706,7 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">SP</span>
               <div style={{ padding: '4px 6px' }}>
-                {readOnly ? (
+                {(readOnly || isDerived) ? (
                   <>
                     <div className="edit-info-text"><div>Cost: {event.skillPointCost}</div></div>
                     {spInfo}
@@ -583,9 +732,9 @@ function EventPane({
           );
         })()}
 
-        {isSequenced && event.columnId === 'ultimate' ? (
+        {isSequenced && event.columnId === SKILL_COLUMNS.ULTIMATE ? (
           /* ── Sequenced ultimate: Animation/Statis layout + frame data ── */
-          readOnly ? (
+          (readOnly || isDerived) ? (
           <>
             <div className="edit-panel-section">
               <span className="edit-section-label">Animation</span>
@@ -634,9 +783,9 @@ function EventPane({
                           <div className="edit-info-text">
                             <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {Math.round(f.skillPointRecovery! * 100) / 100}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{Math.round(f.gaugeGain! * 100) / 100}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{Math.round(f.teamGaugeGain! * 100) / 100}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
+                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
+                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
@@ -647,7 +796,7 @@ function EventPane({
                                 )}
                                 {hitDmgRow.damage != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
-                                    {hitDmgRow.damage.toLocaleString()}
+                                    {hitDmgRow.damage.toFixed(1)}
                                   </span>
                                 )}
                               </div>
@@ -718,9 +867,9 @@ function EventPane({
                           />
                           <div className="edit-info-text">
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {Math.round(f.skillPointRecovery! * 100) / 100}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{Math.round(f.gaugeGain! * 100) / 100}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{Math.round(f.teamGaugeGain! * 100) / 100}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
+                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
+                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
@@ -731,7 +880,7 @@ function EventPane({
                                 )}
                                 {hitDmgRow.damage != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
-                                    {hitDmgRow.damage.toLocaleString()}
+                                    {hitDmgRow.damage.toFixed(1)}
                                   </span>
                                 )}
                               </div>
@@ -793,7 +942,7 @@ function EventPane({
                 <div key={si} className="edit-panel-section">
                   <span className="edit-section-label">{segLabel}</span>
                   <div style={{ padding: '4px 6px' }}>
-                    {readOnly ? (
+                    {(readOnly || isDerived) ? (
                       <div className="edit-info-text">
                         {dualDuration(segStartFrame, seg.durationFrames, 'Duration', pSeg?.durationFrames)}
                       </div>
@@ -810,7 +959,7 @@ function EventPane({
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
                         <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                         <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
-                          {(segTotalMultiplier * 100).toFixed(0)}%
+                          {(segTotalMultiplier * 100).toFixed(1)}%
                         </span>
                         {segMaxFrames > 1 && segPerFrameMultiplier != null && (
                           <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
@@ -819,7 +968,7 @@ function EventPane({
                         )}
                         {segTotalDamage > 0 && (
                           <span style={{ color: '#6fbf73', fontSize: 10, marginLeft: 6 }}>
-                            {segTotalDamage.toLocaleString()} dmg
+                            {segTotalDamage.toFixed(1)} dmg
                           </span>
                         )}
                       </div>
@@ -839,11 +988,11 @@ function EventPane({
                             style={{
                               padding: '4px 6px',
                               borderRadius: 3,
-                              background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                              background: isSelected ? 'var(--overlay-08)' : 'transparent',
                             }}
                           >
                             <span className="edit-field-label">Hit {fi + 1}</span>
-                            {readOnly ? (
+                            {(readOnly || isDerived) ? (
                               <div className="edit-info-text">
                                 <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                               </div>
@@ -859,8 +1008,8 @@ function EventPane({
                               />
                             )}
                             <div className="edit-info-text">
-                              {event.columnId === 'basic' && (
-                                readOnly ? (
+                              {event.columnId === SKILL_COLUMNS.BASIC && (
+                                (readOnly || isDerived) ? (
                                   <div>Type: {f.hitType === EventFrameType.FINAL_STRIKE ? 'Final Strike' : f.hitType === EventFrameType.FINISHER ? 'Finisher' : f.hitType === EventFrameType.DIVE ? 'Dive' : 'Normal'}</div>
                                 ) : (
                                   <>
@@ -890,9 +1039,9 @@ function EventPane({
                                 )
                               )}
                               {f.hitType === EventFrameType.FINAL_STRIKE && (
-                                readOnly ? (
+                                (readOnly || isDerived) ? (
                                   <>
-                                    {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {Math.round(f.skillPointRecovery! * 100) / 100}</div>}
+                                    {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
                                     {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
                                   </>
                                 ) : (
@@ -937,7 +1086,7 @@ function EventPane({
                                 )
                               )}
                               {f.hitType !== EventFrameType.FINAL_STRIKE && (f.stagger ?? 0) > 0 && (
-                                readOnly || event.columnId === 'basic' ? (
+                                readOnly || isDerived || event.columnId === SKILL_COLUMNS.BASIC ? (
                                   <div>Stagger: {f.stagger}</div>
                                 ) : (
                                   <>
@@ -962,36 +1111,36 @@ function EventPane({
                                   </>
                                 )
                               )}
-                              {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{Math.round(f.gaugeGain! * 100) / 100}</div>}
-                              {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{Math.round(f.teamGaugeGain! * 100) / 100}</div>}
+                              {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
+                              {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                               {f.applyArtsInfliction && (
-                                <div style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
-                                  Apply: {f.applyArtsInfliction.element.charAt(0) + f.applyArtsInfliction.element.slice(1).toLowerCase()} Infliction ×{f.applyArtsInfliction.stacks}
+                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
+                                  APPLY {f.applyArtsInfliction.stacks} {f.applyArtsInfliction.element.toUpperCase()} INFLICTION TO ENEMY
                                 </div>
                               )}
                               {f.absorbArtsInfliction && (
-                                <div style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                  {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.charAt(0) + f.absorbArtsInfliction!.element.slice(1).toLowerCase(); const status = f.absorbArtsInfliction!.exchangeStatus.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); return `Absorb: ${a} ${el} → ${b} ${status} (max ${f.absorbArtsInfliction!.stacks})`; })()}
+                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+                                  {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `ABSORB ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
                                 </div>
                               )}
                               {f.consumeArtsInfliction && (
-                                <div style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                  Consume: {f.consumeArtsInfliction.element} Infliction (max {f.consumeArtsInfliction.stacks})
+                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+                                  CONSUME {f.consumeArtsInfliction.stacks} {f.consumeArtsInfliction.element.toUpperCase()} INFLICTION FROM ENEMY
                                 </div>
                               )}
                               {f.consumeStatus && (
-                                <div style={{ color: '#f0a040' }}>
-                                  Consume: {STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus.replace(/_/g, ' ')} (all stacks)
+                                <div className="frame-dsl-effect" style={{ color: '#f0a040' }}>
+                                  CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
                                 </div>
                               )}
                               {f.applyStatus && (
-                                <div style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
-                                  Apply: {STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status}{f.applyStatus.stacks > 0 ? ` ×${f.applyStatus.stacks}` : ''} → {f.applyStatus.target === 'ENEMY' ? 'Enemy' : f.applyStatus.target === 'SELF' ? ownerName : f.applyStatus.target}
+                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
+                                  APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target === 'ENEMY' ? 'ENEMY' : f.applyStatus.target === 'SELF' ? 'THIS OPERATOR' : f.applyStatus.target.toUpperCase()}
                                 </div>
                               )}
                               {f.applyForcedReaction && (
-                                <div style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
-                                  Apply: {STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction.replace(/_/g, ' ')} (Lv.{f.applyForcedReaction.statusLevel})
+                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
+                                  APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.statusLevel})
                                 </div>
                               )}
                               {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
@@ -1003,7 +1152,7 @@ function EventPane({
                                   )}
                                   {hitDmgRow.damage != null && (
                                     <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
-                                      {hitDmgRow.damage.toLocaleString()}
+                                      {hitDmgRow.damage.toFixed(1)}
                                     </span>
                                   )}
                                 </div>
@@ -1018,7 +1167,7 @@ function EventPane({
               );
             }); })()}
 
-            {!readOnly && (
+            {!(readOnly || isDerived) && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Cooldown</span>
                 <div style={{ padding: '4px 6px' }}>
@@ -1032,19 +1181,19 @@ function EventPane({
               <div className="edit-info-text" style={{ paddingLeft: 6 }}>
                 <div>Sequences: {event.segments!.length}</div>
                 {dualDuration(event.startFrame, totalDurationFrames, 'Time', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
-                {event.columnId === 'ultimate' && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active phase', pActive)}
+                {event.columnId === SKILL_COLUMNS.ULTIMATE && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active phase', pActive)}
                 {event.cooldownDuration > 0 && dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, 'Cooldown', pCooldown)}
               </div>
             </div>
           </>
-        ) : readOnly ? (
+        ) : (readOnly || isDerived) ? (
           <div className="edit-panel-section">
             <span className="edit-section-label">Duration</span>
             <div className="edit-info-text">
-              {event.columnId === 'ultimate' && event.animationDuration != null && event.animationDuration > 0 &&
+              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.animationDuration != null && event.animationDuration > 0 &&
                 dualDuration(event.startFrame, event.animationDuration, 'Animation', pAnimation)
               }
-              {event.columnId === 'ultimate' ? (
+              {event.columnId === SKILL_COLUMNS.ULTIMATE ? (
                 dualDuration(
                   event.startFrame + (event.animationDuration ?? 0),
                   event.activationDuration - (event.animationDuration ?? 0),
@@ -1054,7 +1203,7 @@ function EventPane({
               ) : (
                 dualDuration(event.startFrame, event.activationDuration, 'Time', pActivation)
               )}
-              {event.columnId === 'ultimate' && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active', pActive)}
+              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active', pActive)}
               {event.cooldownDuration > 0 && dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, 'Cooldown', pCooldown)}
               {(event.activeDuration > 0 || event.cooldownDuration > 0) && dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
             </div>
@@ -1069,7 +1218,7 @@ function EventPane({
           </div>
         ) : (
           <>
-            {event.columnId === 'ultimate' && (
+            {event.columnId === SKILL_COLUMNS.ULTIMATE && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Animation</span>
                 <DurationField label="Duration" value={animSec} onChange={setAnimSec} onCommit={handleBlur} />
@@ -1077,11 +1226,11 @@ function EventPane({
             )}
 
             <div className="edit-panel-section">
-              <span className="edit-section-label">{event.columnId === 'ultimate' ? 'Statis' : 'Active Phase'}</span>
+              <span className="edit-section-label">{event.columnId === SKILL_COLUMNS.ULTIMATE ? 'Statis' : 'Active Phase'}</span>
               <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
             </div>
 
-            {event.columnId === 'ultimate' && (
+            {event.columnId === SKILL_COLUMNS.ULTIMATE && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Active Phase</span>
                 <DurationField label="Duration" value={activePhaseSec} onChange={setActivePhaseSec} onCommit={handleBlur} />
@@ -1110,7 +1259,7 @@ function EventPane({
 
       </div>
 
-      {!readOnly && !editContext?.startsWith('combo-trigger') && (
+      {!(readOnly || isDerived) && !editContext?.startsWith('combo-trigger') && (
         <div className="edit-panel-footer">
           <button className="btn-delete-event" onClick={() => onRemove(event.id)}>
             REMOVE EVENT
@@ -1165,7 +1314,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
 
       {/* Time-stop region */}
       {event.animationDuration != null && event.animationDuration > 0 && (
-        event.columnId === 'ultimate' || event.columnId === 'combo' ||
+        event.columnId === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO ||
         (event.columnId === 'dash' && event.isPerfectDodge)
       ) && (() => {
         const rawStart = event.startFrame;

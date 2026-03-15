@@ -1,0 +1,100 @@
+{
+  "gearSetType": "PULSER_LABS",
+  "name": "Pulser Labs",
+  "suitID": "suit_pulse_cryst01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "PULSER_LABS",
+    "description": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Electrification, the wearer gains Electric DMG +{pulse_dmg_up:0%} for {duration}s. After the wearer applies Solidification, the wearer gains Cryo DMG +{cryst_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack."
+  },
+  "pieces": [
+    {
+      "gearType": "PULSER_LABS_DISRUPTOR_SUIT",
+      "name": "Pulser Labs Disruptor Suit",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 87,
+          "WILL": 58,
+          "ARTS_INTENSITY": 20.7
+        },
+        "2": {
+          "INTELLECT": 95,
+          "WILL": 63,
+          "ARTS_INTENSITY": 22.8
+        },
+        "3": {
+          "INTELLECT": 104,
+          "WILL": 69,
+          "ARTS_INTENSITY": 24.8
+        },
+        "4": {
+          "INTELLECT": 113,
+          "WILL": 75,
+          "ARTS_INTENSITY": 26.9
+        }
+      }
+    },
+    {
+      "gearType": "PULSER_LABS_GLOVES",
+      "name": "Pulser Labs Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "WILL": 65,
+          "INTELLECT": 43,
+          "CRYO_DAMAGE_BONUS": 0.192,
+          "ELECTRIC_DAMAGE_BONUS": 0.192
+        },
+        "2": {
+          "WILL": 71,
+          "INTELLECT": 47,
+          "CRYO_DAMAGE_BONUS": 0.211,
+          "ELECTRIC_DAMAGE_BONUS": 0.211
+        },
+        "3": {
+          "WILL": 78,
+          "INTELLECT": 51,
+          "CRYO_DAMAGE_BONUS": 0.23,
+          "ELECTRIC_DAMAGE_BONUS": 0.23
+        },
+        "4": {
+          "WILL": 84,
+          "INTELLECT": 55,
+          "CRYO_DAMAGE_BONUS": 0.249,
+          "ELECTRIC_DAMAGE_BONUS": 0.249
+        }
+      }
+    },
+    {
+      "gearType": "PULSER_LABS_CALIBRATOR",
+      "name": "Pulser Labs Calibrator",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 41,
+          "ARTS_INTENSITY": 41.4
+        },
+        "2": {
+          "INTELLECT": 45,
+          "ARTS_INTENSITY": 45.5
+        },
+        "3": {
+          "INTELLECT": 49,
+          "ARTS_INTENSITY": 49.7
+        },
+        "4": {
+          "INTELLECT": 53,
+          "ARTS_INTENSITY": 53.8
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

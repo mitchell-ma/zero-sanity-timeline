@@ -29,6 +29,6 @@ Processes:
 - **"auto screenshot and re-iterate"** — Run `python3 .claude-adhoc/desktop_screenshot.py "Endfield"` to capture the browser window, then read `.claude-adhoc/screenshot.png` to inspect the app. Identify visual issues, make fixes, and repeat until the UI looks correct.
 - **"wrap up"** — End-of-session process:
   1. Summarize all changes done today (including earlier commits) and the current file changes; this will be the git commit message body.
-  2. Summarize the above in very high-level and layman's terms and update the devlog (`docs/devlog.md`) for today's local date.
+  2. Summarize the above in very high-level and layman's terms and update the devlog (`docs/devlog.md`) for today's local date. Copy `docs/devlog.md` to `public/devlog.md` so the app serves the latest version.
   3. Build GitHub Pages (`npm run deploy`).
   4. Commit all changes.

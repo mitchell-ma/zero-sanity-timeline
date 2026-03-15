@@ -1,0 +1,128 @@
+{
+  "gearSetType": "AETHERTECH",
+  "name": "Æthertech",
+  "suitID": "suit_poise01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "AETHERTECH",
+    "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has {stack_cond:0} stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack."
+  },
+  "pieces": [
+    {
+      "gearType": "THERTECH_PLATING",
+      "name": "Thertech Plating",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 87,
+          "WILL": 58,
+          "STAGGER_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "STRENGTH": 95,
+          "WILL": 63,
+          "STAGGER_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "STRENGTH": 104,
+          "WILL": 69,
+          "STAGGER_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "STRENGTH": 113,
+          "WILL": 75,
+          "STAGGER_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "THERTECH_GLOVES",
+      "name": "Thertech Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 65,
+          "STRENGTH": 43,
+          "ARTS_INTENSITY": 34.5
+        },
+        "2": {
+          "AGILITY": 71,
+          "STRENGTH": 47,
+          "ARTS_INTENSITY": 38
+        },
+        "3": {
+          "AGILITY": 78,
+          "STRENGTH": 51,
+          "ARTS_INTENSITY": 41.4
+        },
+        "4": {
+          "AGILITY": 84,
+          "STRENGTH": 55,
+          "ARTS_INTENSITY": 44.9
+        }
+      }
+    },
+    {
+      "gearType": "THERTECH_STABILIZER",
+      "name": "Thertech Stabilizer",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "ARTS_INTENSITY": 41.4
+        },
+        "2": {
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "ARTS_INTENSITY": 45.5
+        },
+        "3": {
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "ARTS_INTENSITY": 49.7
+        },
+        "4": {
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "ARTS_INTENSITY": 53.8
+        }
+      }
+    },
+    {
+      "gearType": "THERTECH_ANALYSIS_BAND",
+      "name": "Thertech Analysis Band",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "WILL": 21,
+          "PHYSICAL_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "STRENGTH": 35,
+          "WILL": 23,
+          "PHYSICAL_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "STRENGTH": 38,
+          "WILL": 25,
+          "PHYSICAL_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "STRENGTH": 41,
+          "WILL": 27,
+          "PHYSICAL_DAMAGE_BONUS": 0.299
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

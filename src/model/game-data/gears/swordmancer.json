@@ -1,0 +1,128 @@
+{
+  "gearSetType": "SWORDMANCER",
+  "name": "Swordmancer",
+  "suitID": "suit_phy01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "SWORDMANCER",
+    "description": "3-piece set effect: Wearer's Stagger Efficiency Bonus +{poise_up:0%}. After the wearer applies a Physical Status, the wearer also performs 1 hit that deals {atk_scale:0%} ATK of Physical DMG and [{poise} Stagger]. Effect trigger cooldown: {duration}s."
+  },
+  "pieces": [
+    {
+      "gearType": "SWORDMANCER_HEAVY_ARMOR",
+      "name": "Swordmancer Heavy Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "STRENGTH": 58,
+          "ARTS_INTENSITY": 20.7
+        },
+        "2": {
+          "AGILITY": 95,
+          "STRENGTH": 63,
+          "ARTS_INTENSITY": 22.8
+        },
+        "3": {
+          "AGILITY": 104,
+          "STRENGTH": 69,
+          "ARTS_INTENSITY": 24.8
+        },
+        "4": {
+          "AGILITY": 113,
+          "STRENGTH": 75,
+          "ARTS_INTENSITY": 26.9
+        }
+      }
+    },
+    {
+      "gearType": "SWORDMANCER_TAC_FISTS",
+      "name": "Swordmancer Tac Fists",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 65,
+          "STRENGTH": 43,
+          "ULTIMATE_DAMAGE_BONUS": 0.431
+        },
+        "2": {
+          "AGILITY": 71,
+          "STRENGTH": 47,
+          "ULTIMATE_DAMAGE_BONUS": 0.474
+        },
+        "3": {
+          "AGILITY": 78,
+          "STRENGTH": 51,
+          "ULTIMATE_DAMAGE_BONUS": 0.518
+        },
+        "4": {
+          "AGILITY": 84,
+          "STRENGTH": 55,
+          "ULTIMATE_DAMAGE_BONUS": 0.561
+        }
+      }
+    },
+    {
+      "gearType": "SWORDMANCER_TAC_GAUNTLETS",
+      "name": "Swordmancer Tac Gauntlets",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 65,
+          "WILL": 43,
+          "PHYSICAL_DAMAGE_BONUS": 0.192
+        },
+        "2": {
+          "STRENGTH": 71,
+          "WILL": 47,
+          "PHYSICAL_DAMAGE_BONUS": 0.211
+        },
+        "3": {
+          "STRENGTH": 78,
+          "WILL": 51,
+          "PHYSICAL_DAMAGE_BONUS": 0.23
+        },
+        "4": {
+          "STRENGTH": 84,
+          "WILL": 55,
+          "PHYSICAL_DAMAGE_BONUS": 0.249
+        }
+      }
+    },
+    {
+      "gearType": "SWORDMANCER_FLINT",
+      "name": "Swordmancer Flint",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "PHYSICAL_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "PHYSICAL_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "PHYSICAL_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "PHYSICAL_DAMAGE_BONUS": 0.299
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

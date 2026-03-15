@@ -53,7 +53,7 @@ function DamageBreakdownPane({ row }: { row: DamageTableRow }) {
           {frameToTimeLabelPrecise(row.absoluteFrame)}
         </div>
         <div className="dmg-breakdown-total">
-          {Math.floor(finalDamage).toLocaleString()}
+          {finalDamage.toFixed(1)}
           <span className="dmg-breakdown-total-label"> damage</span>
         </div>
       </div>

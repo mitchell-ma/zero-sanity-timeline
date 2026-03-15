@@ -10,6 +10,7 @@ import { TimeDependency } from '../../consts/enums';
 import {
   TOTAL_FRAMES,
 } from '../../utils/timeline';
+import { SKILL_COLUMNS } from '../../model/channels';
 
 // ── Layout types ──────────────────────────────────────────────────────────────
 
@@ -94,8 +95,8 @@ function collectRawStops(events: TimelineEvent[]): RawTimeStop[] {
     const anim = ev.animationDuration;
     if (!anim || anim <= 0) continue;
     const isTimeStop =
-      ev.columnId === 'ultimate' ||
-      ev.columnId === 'combo' ||
+      ev.columnId === SKILL_COLUMNS.ULTIMATE ||
+      ev.columnId === SKILL_COLUMNS.COMBO ||
       (ev.columnId === 'dash' && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({
@@ -148,7 +149,7 @@ function realDurationForGameTime(realStart: number, gameDur: number, stops: read
 function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = ev.animationDuration ?? 0;
   if (anim <= 0) return false;
-  return ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+  return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
     (ev.columnId === 'dash' && !!ev.isPerfectDodge);
 }
 

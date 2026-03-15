@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1385,
-    [EnemyStatType.ATK]: 66,
+    [StatType.BASE_HP]: 1385,
+    [StatType.BASE_ATTACK]: 66,
   },
   20: {
-    [EnemyStatType.HP]: 9936,
-    [EnemyStatType.ATK]: 310,
+    [StatType.BASE_HP]: 9936,
+    [StatType.BASE_ATTACK]: 310,
   },
   40: {
-    [EnemyStatType.HP]: 62869,
-    [EnemyStatType.ATK]: 965,
+    [StatType.BASE_HP]: 62869,
+    [StatType.BASE_ATTACK]: 965,
   },
   60: {
-    [EnemyStatType.HP]: 247504,
-    [EnemyStatType.ATK]: 2395,
+    [StatType.BASE_HP]: 247504,
+    [StatType.BASE_ATTACK]: 2395,
   },
   80: {
-    [EnemyStatType.HP]: 595357,
-    [EnemyStatType.ATK]: 3604,
+    [StatType.BASE_HP]: 595357,
+    [StatType.BASE_ATTACK]: 3604,
   },
   90: {
-    [EnemyStatType.HP]: 917164,
-    [EnemyStatType.ATK]: 4130,
+    [StatType.BASE_HP]: 917164,
+    [StatType.BASE_ATTACK]: 4130,
   },
 };
 
@@ -48,12 +48,12 @@ export class AxeArmorbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 280,
-        [EnemyStatType.STAGGER_RECOVERY]: 9,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.5,
-        [EnemyStatType.FINISHER_SP_GAIN]: 50,
-        [EnemyStatType.ATTACK_RANGE]: 7,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.STAGGER_HP]: 280,
+        [StatType.STAGGER_RECOVERY]: 9,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.5,
+        [StatType.FINISHER_SP_GAIN]: 50,
+        [StatType.ATTACK_RANGE]: 7,
+        [StatType.WEIGHT]: 2,
       },
       ...params,
     });

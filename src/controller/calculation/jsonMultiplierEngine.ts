@@ -1,0 +1,311 @@
+/**
+ * Generic JSON-driven multiplier engine.
+ *
+ * Replaces skillMultiplierRegistry.ts and all combat-skills/*.ts classes.
+ * Reads multiplier data directly from operator JSON frames, applying
+ * potential-dependent modifiers from the potentials section.
+ */
+import { BasicAttackType } from '../../consts/enums';
+import { Potential, SkillLevel } from '../../consts/types';
+import { getOperatorJson, getSkillNameMap } from '../../model/event-frames/operatorJsonLoader';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+/** Flattened multiplier entry: level + all scale/param keys at top level. */
+interface JsonMultiplierEntry {
+  level: number;
+  [key: string]: number;  // atk_scale, atk_scale_2, poise, etc.
+}
+
+interface JsonFrame {
+  multipliers?: JsonMultiplierEntry[];
+}
+
+interface JsonSegment {
+  name?: string;
+  frames: JsonFrame[];
+}
+
+interface JsonSkillCategory {
+  segments?: JsonSegment[];
+  frames?: JsonFrame[];
+}
+
+interface JsonPotentialEffect {
+  potentialEffectType: string;
+  skillParameterModifier?: {
+    skillType: string;
+    parameterKey: string;
+    value: number;
+    parameterModifyType: string;
+  };
+}
+
+interface JsonPotential {
+  level: number;
+  effects: JsonPotentialEffect[];
+}
+
+// ── Segment label → BasicAttackType mapping ──────────────────────────────────
+
+const SEGMENT_LABEL_TO_ATTACK_TYPE: Record<string, BasicAttackType> = {
+  '1': BasicAttackType.SEQUENCE_1,
+  '2': BasicAttackType.SEQUENCE_2,
+  '3': BasicAttackType.SEQUENCE_3,
+  '4': BasicAttackType.SEQUENCE_4,
+  '5': BasicAttackType.SEQUENCE_5,
+  'Finisher': BasicAttackType.FINISHER,
+  'Dive': BasicAttackType.DIVE,
+  'Final': BasicAttackType.FINAL_STRIKE,
+};
+
+// ── Cache ────────────────────────────────────────────────────────────────────
+
+/**
+ * Cached per-level multiplier data for a skill category.
+ * segmentMultipliers[segmentIndex][levelIndex] = sum of atk_scale across frames in segment.
+ * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame atk_scale.
+ */
+interface CategoryMultiplierCache {
+  segmentMultipliers: number[][];
+  perFrameMultipliers: number[][][];
+  /** For ramping skills: atk_scale_2 per frame (the per-tick increment). */
+  perFrameScale2?: number[][][];
+  segmentLabels?: (string | undefined)[];
+}
+
+const cache = new Map<string, CategoryMultiplierCache>();
+
+function getCacheKey(operatorId: string, category: string): string {
+  return `${operatorId}:${category}`;
+}
+
+// ── Build multiplier data from JSON ──────────────────────────────────────────
+
+function getAtk(frame: JsonFrame, level: number, key: string = 'atk_scale'): number {
+  if (!frame.multipliers) return 0;
+  const entry = frame.multipliers.find(m => m.level === level);
+  if (!entry) return 0;
+  return entry[key] ?? 0;
+}
+
+function buildCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
+  const json = getOperatorJson(operatorId);
+  if (!json) return null;
+
+  const skills = json.skills as Record<string, JsonSkillCategory> | undefined;
+  if (!skills?.[category]) return null;
+
+  const skillCat = skills[category];
+  const segments: { frames: JsonFrame[]; label?: string }[] = [];
+
+  if (skillCat.segments) {
+    for (const seg of skillCat.segments) {
+      segments.push({ frames: seg.frames ?? [], label: seg.name });
+    }
+  } else if (skillCat.frames) {
+    segments.push({ frames: skillCat.frames });
+  }
+
+  if (segments.length === 0) return null;
+
+  const LEVELS = 12;
+  const segmentMultipliers: number[][] = [];
+  const perFrameMultipliers: number[][][] = [];
+  const perFrameScale2: number[][][] = [];
+  const segmentLabels: (string | undefined)[] = [];
+  let hasScale2 = false;
+
+  for (const seg of segments) {
+    const segMults: number[] = new Array(LEVELS).fill(0);
+    const frameMults: number[][] = [];
+    const frameScale2: number[][] = [];
+
+    for (const frame of seg.frames) {
+      const frameLevelMults: number[] = [];
+      const frameLevelScale2: number[] = [];
+      for (let lvl = 1; lvl <= LEVELS; lvl++) {
+        const atk = getAtk(frame, lvl);
+        frameLevelMults.push(atk);
+        segMults[lvl - 1] += atk;
+
+        const s2 = getAtk(frame, lvl, 'atk_scale_2');
+        frameLevelScale2.push(s2);
+        if (s2 > 0) hasScale2 = true;
+      }
+      frameMults.push(frameLevelMults);
+      frameScale2.push(frameLevelScale2);
+    }
+
+    segmentMultipliers.push(segMults);
+    perFrameMultipliers.push(frameMults);
+    perFrameScale2.push(frameScale2);
+    segmentLabels.push(seg.label);
+  }
+
+  return {
+    segmentMultipliers,
+    perFrameMultipliers,
+    segmentLabels,
+    ...(hasScale2 && { perFrameScale2 }),
+  };
+}
+
+function getCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
+  const key = getCacheKey(operatorId, category);
+  if (cache.has(key)) return cache.get(key)!;
+  const data = buildCategoryCache(operatorId, category);
+  if (data) cache.set(key, data);
+  return data;
+}
+
+// ── Potential modifier application ──────────────────────────────────────────
+
+/**
+ * Get the cumulative potential modifier for a skill.
+ * Scans potentials[0..potential-1] for SKILL_PARAMETER effects
+ * with parameterKey === 'DAMAGE_MULTIPLIER' matching the skill name.
+ */
+function getPotentialMultiplier(
+  operatorId: string,
+  skillName: string,
+  potential: Potential,
+): number {
+  if (potential === 0) return 1;
+
+  const json = getOperatorJson(operatorId);
+  if (!json?.potentials) return 1;
+
+  const potentials = json.potentials as JsonPotential[];
+  let result = 1;
+
+  for (const pot of potentials) {
+    if (pot.level > potential) break;
+    for (const eff of pot.effects) {
+      if (eff.potentialEffectType !== 'SKILL_PARAMETER') continue;
+      const mod = eff.skillParameterModifier;
+      if (!mod || mod.parameterKey !== 'DAMAGE_MULTIPLIER') continue;
+      // Match skill name: the modifier's skillType uses the operator-prefixed name
+      // e.g. "LAEVATAIN_SMOULDERING_FIRE" should match "SMOULDERING_FIRE"
+      const modSkill = mod.skillType;
+      if (modSkill === skillName || modSkill.endsWith(`_${skillName}`)) {
+        switch (mod.parameterModifyType) {
+          case 'UNIQUE_MULTIPLIER':
+            result *= mod.value;
+            break;
+          case 'MULTIPLICATIVE':
+            result *= mod.value;
+            break;
+          case 'ADDITIVE':
+            result += mod.value;
+            break;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+// ── Skill name → category resolution ────────────────────────────────────────
+
+function resolveCategory(operatorId: string, skillName: string): string | null {
+  const json = getOperatorJson(operatorId);
+  return getSkillNameMap(operatorId)[skillName] ?? null;
+}
+
+// ── Segment index resolution ────────────────────────────────────────────────
+
+function resolveSegmentIndex(
+  data: CategoryMultiplierCache,
+  segmentLabel: string | undefined,
+): number {
+  if (data.segmentMultipliers.length === 1) return 0;
+  if (!segmentLabel) return 0;
+
+  // First: try matching by segment name (handles Finisher, Dive, Final)
+  if (data.segmentLabels) {
+    const idx = data.segmentLabels.indexOf(segmentLabel);
+    if (idx >= 0) return idx;
+  }
+
+  // Second: map segment label to sequence index (1-based → 0-based)
+  const attackType = SEGMENT_LABEL_TO_ATTACK_TYPE[segmentLabel];
+  if (attackType != null) {
+    switch (attackType) {
+      case BasicAttackType.SEQUENCE_1: return 0;
+      case BasicAttackType.SEQUENCE_2: return 1;
+      case BasicAttackType.SEQUENCE_3: return 2;
+      case BasicAttackType.SEQUENCE_4: return 3;
+      case BasicAttackType.SEQUENCE_5: return 4;
+      default: return 0;
+    }
+  }
+
+  return 0;
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
+/**
+ * Get the segment-total skill multiplier.
+ * This is the sum of atk_scale across all frames in the segment.
+ * The caller (damageTableBuilder) divides by frame count for uniform distribution.
+ *
+ * Returns null if operator/skill has no multiplier data or doesn't deal damage.
+ */
+export function getSkillMultiplier(
+  operatorId: string,
+  skillName: string,
+  segmentLabel: string | undefined,
+  level: SkillLevel,
+  potential: Potential,
+): number | null {
+  const category = resolveCategory(operatorId, skillName);
+  if (!category) return null;
+
+  const data = getCategoryCache(operatorId, category);
+  if (!data) return null;
+
+  const segIdx = resolveSegmentIndex(data, segmentLabel);
+  if (segIdx >= data.segmentMultipliers.length) return null;
+
+  const baseMult = data.segmentMultipliers[segIdx][level - 1];
+  if (baseMult === 0) return null;
+
+  const potMod = getPotentialMultiplier(operatorId, skillName, potential);
+  return baseMult * potMod;
+}
+
+/**
+ * Get per-tick multiplier for skills with non-uniform per-frame damage.
+ * Used for ramping skills like Smouldering Fire where each tick does
+ * increasing damage: base + increment × tickIndex.
+ *
+ * Returns null for skills with uniform frame distribution (most skills).
+ */
+export function getPerTickMultiplier(
+  operatorId: string,
+  skillName: string,
+  level: SkillLevel,
+  potential: Potential,
+  frameIndex: number,
+): number | null {
+  const category = resolveCategory(operatorId, skillName);
+  if (!category) return null;
+
+  const data = getCategoryCache(operatorId, category);
+  if (!data?.perFrameScale2) return null;
+
+  // Only return per-tick if the skill has atk_scale_2 (ramping increment)
+  const segIdx = 0; // Per-tick is only used for single-segment skills
+  const frameScale2 = data.perFrameScale2[segIdx];
+  if (!frameScale2?.[0]?.[level - 1]) return null;
+
+  const baseAtk = data.perFrameMultipliers[segIdx][0][level - 1];
+  const increment = frameScale2[0][level - 1];
+  const tickMult = baseAtk + increment * frameIndex;
+
+  const potMod = getPotentialMultiplier(operatorId, skillName, potential);
+  return tickMult * potMod;
+}

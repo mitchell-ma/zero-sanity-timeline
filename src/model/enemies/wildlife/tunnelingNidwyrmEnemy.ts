@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 692,
-    [EnemyStatType.ATK]: 56,
+    [StatType.BASE_HP]: 692,
+    [StatType.BASE_ATTACK]: 56,
   },
   20: {
-    [EnemyStatType.HP]: 4968,
-    [EnemyStatType.ATK]: 264,
+    [StatType.BASE_HP]: 4968,
+    [StatType.BASE_ATTACK]: 264,
   },
   40: {
-    [EnemyStatType.HP]: 31434,
-    [EnemyStatType.ATK]: 820,
+    [StatType.BASE_HP]: 31434,
+    [StatType.BASE_ATTACK]: 820,
   },
   60: {
-    [EnemyStatType.HP]: 123752,
-    [EnemyStatType.ATK]: 2036,
+    [StatType.BASE_HP]: 123752,
+    [StatType.BASE_ATTACK]: 2036,
   },
   80: {
-    [EnemyStatType.HP]: 297678,
-    [EnemyStatType.ATK]: 3064,
+    [StatType.BASE_HP]: 297678,
+    [StatType.BASE_ATTACK]: 3064,
   },
   90: {
-    [EnemyStatType.HP]: 458582,
-    [EnemyStatType.ATK]: 3510,
+    [StatType.BASE_HP]: 458582,
+    [StatType.BASE_ATTACK]: 3510,
   },
 };
 
@@ -48,13 +48,13 @@ export class TunnelingNidwyrmEnemy extends Enemy {
       attackElement: ElementType.NATURE,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.NATURE_RESISTANCE]: 0.7,
-        [EnemyStatType.STAGGER_HP]: 160,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 12,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.NATURE_RESISTANCE]: 0.7,
+        [StatType.STAGGER_HP]: 160,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 12,
+        [StatType.WEIGHT]: 2,
       },
       ...params,
     });

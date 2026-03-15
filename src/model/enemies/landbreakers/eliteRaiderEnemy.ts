@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 291,
-    [EnemyStatType.ATK]: 49,
+    [StatType.BASE_HP]: 291,
+    [StatType.BASE_ATTACK]: 49,
   },
   20: {
-    [EnemyStatType.HP]: 2086,
-    [EnemyStatType.ATK]: 233,
+    [StatType.BASE_HP]: 2086,
+    [StatType.BASE_ATTACK]: 233,
   },
   40: {
-    [EnemyStatType.HP]: 13202,
-    [EnemyStatType.ATK]: 723,
+    [StatType.BASE_HP]: 13202,
+    [StatType.BASE_ATTACK]: 723,
   },
   60: {
-    [EnemyStatType.HP]: 51976,
-    [EnemyStatType.ATK]: 1796,
+    [StatType.BASE_HP]: 51976,
+    [StatType.BASE_ATTACK]: 1796,
   },
   80: {
-    [EnemyStatType.HP]: 125025,
-    [EnemyStatType.ATK]: 2703,
+    [StatType.BASE_HP]: 125025,
+    [StatType.BASE_ATTACK]: 2703,
   },
   90: {
-    [EnemyStatType.HP]: 192604,
-    [EnemyStatType.ATK]: 3097,
+    [StatType.BASE_HP]: 192604,
+    [StatType.BASE_ATTACK]: 3097,
   },
 };
 
@@ -48,8 +48,8 @@ export class EliteRaiderEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 110,
-        [EnemyStatType.ATTACK_RANGE]: 2.3,
+        [StatType.STAGGER_HP]: 110,
+        [StatType.ATTACK_RANGE]: 2.3,
       },
       ...params,
     });

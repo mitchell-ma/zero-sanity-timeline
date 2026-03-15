@@ -87,11 +87,13 @@ type InformationPaneProps = {
       onClose: () => void;
       selectedFrames?: SelectedFrame[];
       readOnly?: boolean;
+      isDerived?: boolean;
       editContext?: string | null;
       rawEvents?: readonly TimelineEvent[];
       allProcessedEvents?: readonly TimelineEvent[];
       loadoutStats?: Record<string, LoadoutStats>;
       damageRows?: DamageTableRow[];
+      spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
     }
   | {
       mode: 'loadout';
@@ -199,12 +201,14 @@ export default function InformationPane(props: InformationPaneProps) {
           onClose={handleClose}
           selectedFrames={props.selectedFrames}
           readOnly={props.readOnly}
+          isDerived={props.isDerived}
           editContext={props.editContext}
           debugMode={props.debugMode}
           rawEvents={props.rawEvents}
           allProcessedEvents={props.allProcessedEvents}
           loadoutStats={props.loadoutStats}
           damageRows={props.damageRows}
+          spConsumptionHistory={props.spConsumptionHistory}
         />
       ) : props.mode === 'loadout' ? (
         <LoadoutPane

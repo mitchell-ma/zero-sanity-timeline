@@ -21,17 +21,13 @@ export enum CombatResourceType {
   COOLDOWN = "COOLDOWN",
 }
 
-export enum ResourceInteractionType {
+export enum VerbType {
+  APPLY = "APPLY",
+  CONSUME = "CONSUME",
+  ABSORB = "ABSORB",
   EXPEND = "EXPEND",
   RECOVER = "RECOVER",
   RETURN = "RETURN",
-}
-
-export enum StatusInteractionType {
-  APPLY = "APPLY",
-  ABSORB = "ABSORB",
-  CONSUME = "CONSUME",
-  CAST = "CAST",
 }
 
 export enum EventComponentType {
@@ -206,8 +202,8 @@ export enum DamageFactorType {
   RESISTANCE = "RESISTANCE",
 }
 
-/** Maps each StatusType to the damage formula factor it contributes to. */
-export const STATUS_DAMAGE_FACTOR: Record<StatusType, DamageFactorType> = {
+/** Maps known StatusTypes to the damage formula factor they contribute to. Unknown types default to NONE. */
+export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   // Arts reactions — deal damage, don't directly map to a single multiplier factor
   [StatusType.COMBUSTION]: DamageFactorType.NONE,
   [StatusType.SOLIDIFICATION]: DamageFactorType.NONE,
@@ -583,6 +579,7 @@ export enum CombatSkillsType {
   // Arclight
   SEEK_AND_HUNT = "SEEK_AND_HUNT",
   TEMPESTUOUS_ARC = "TEMPESTUOUS_ARC",
+  TEMPESTUOUS_ARC_EMPOWERED = "TEMPESTUOUS_ARC_EMPOWERED",
   PEAL_OF_THUNDER = "PEAL_OF_THUNDER",
   EXPLODING_BLITZ = "EXPLODING_BLITZ",
 }

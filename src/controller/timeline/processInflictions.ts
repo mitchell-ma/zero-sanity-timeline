@@ -2,7 +2,8 @@ import { TimelineEvent, FrameAbsorptionMarker, SkillType } from '../../consts/vi
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
 import { CombatSkillsType, EventStatusType, StatusType, TargetType, TimeDependency, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { deriveReactions } from './deriveReactions';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
@@ -24,7 +25,7 @@ import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
 function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
   const comboStops: { id: string; startFrame: number; animDur: number }[] = [];
   for (const ev of events) {
-    if (ev.columnId !== 'combo') continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     const anim = ev.animationDuration;
     if (!anim || anim <= 0) continue;
     comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur: anim });
@@ -79,7 +80,7 @@ export interface TimeStopRegion {
 function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = ev.animationDuration ?? 0;
   if (anim <= 0) return false;
-  return ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+  return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
     (ev.columnId === OPERATOR_COLUMNS.DASH && !!ev.isPerfectDodge);
 }
 
@@ -279,7 +280,7 @@ const ULTIMATE_RESETS_COMBO: Record<string, number> = {
  */
 function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
   const ultimates = events.filter(
-    (ev) => ev.columnId === 'ultimate' && ULTIMATE_RESETS_COMBO[ev.name] != null
+    (ev) => ev.columnId === SKILL_COLUMNS.ULTIMATE && ULTIMATE_RESETS_COMBO[ev.name] != null
       && (ev.operatorPotential ?? 0) >= ULTIMATE_RESETS_COMBO[ev.name],
   );
   if (ultimates.length === 0) return events;
@@ -288,7 +289,7 @@ function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
   for (const ult of ultimates) {
     const ultFrame = ult.startFrame;
     for (const ev of events) {
-      if (ev.ownerId !== ult.ownerId || ev.columnId !== 'combo') continue;
+      if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
       const activeEnd = ev.startFrame + ev.activationDuration + ev.activeDuration;
       const cooldownEnd = activeEnd + ev.cooldownDuration;
       // If the combo is in its cooldown phase when the ultimate is cast, reset it
@@ -439,20 +440,20 @@ function validateTimeStopStarts(
       const source = evById.get(stop.eventId);
       if (!source) continue;
 
-      const sourceIsUltimate = source.columnId === 'ultimate';
-      const sourceIsCombo = source.columnId === 'combo';
+      const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
+      const sourceIsCombo = source.columnId === SKILL_COLUMNS.COMBO;
       const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.DASH && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop
       if (sourceIsDodge) continue;
 
       // Combo cannot start during ultimate animation time-stop
-      if (ev.columnId === 'combo' && sourceIsUltimate) {
+      if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
         warnings.push(`Combo skill cannot start during ultimate animation time-stop`);
       }
 
       // Ultimate cannot start during another ultimate's animation time-stop
-      if (ev.columnId === 'ultimate' && sourceIsUltimate) {
+      if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
         warnings.push(`Ultimate cannot start during another ultimate's animation time-stop`);
       }
 
@@ -544,7 +545,7 @@ function deriveComboActivationWindows(
   // time stops don't extend its combo activation window duration.
   const comboStopIdsBySlot = new Map<string, Set<string>>();
   for (const ev of events) {
-    if (ev.columnId !== 'combo' || !isTimeStopEvent(ev)) continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO || !isTimeStopEvent(ev)) continue;
     if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
     comboStopIdsBySlot.get(ev.ownerId)!.add(ev.id);
   }
@@ -552,7 +553,7 @@ function deriveComboActivationWindows(
   // Pre-index combo events per slot for cooldown checks
   const comboEventsBySlot = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.columnId !== 'combo') continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
     comboEventsBySlot.get(ev.ownerId)!.push(ev);
   }
@@ -1428,113 +1429,7 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
   return [...result, ...generated];
 }
 
-/**
- * Detects cross-element infliction overlaps and derives reaction events.
- *
- * When an infliction of element B arrives while element A is still active:
- * - A reaction event (typed by B) is generated at B's start frame
- * - The triggering B infliction is removed from output
- * - All active A inflictions are clamped at the reaction frame
- */
-function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
-  // Collect all enemy infliction events, sorted by start frame
-  const inflictions = events
-    .filter((ev) => ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId))
-    .sort((a, b) => a.startFrame - b.startFrame);
-
-  if (inflictions.length === 0) return events;
-
-  // Track which infliction IDs are consumed (triggering infliction removed,
-  // consumed inflictions clamped)
-  const removedIds = new Set<string>();
-  const clampMap = new Map<string, { frame: number; source: StatusSource }>();
-  const generatedReactions: TimelineEvent[] = [];
-
-  // Walk through inflictions in chronological order
-  for (let i = 0; i < inflictions.length; i++) {
-    const incoming = inflictions[i];
-    if (removedIds.has(incoming.id)) continue;
-    // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-    if (incoming.eventStatus === EventStatusType.CONSUMED) continue;
-
-    // Find active inflictions of a DIFFERENT element at incoming's start frame
-    const activeOther: TimelineEvent[] = [];
-    for (let j = 0; j < i; j++) {
-      const prev = inflictions[j];
-      if (removedIds.has(prev.id)) continue;
-      if (prev.columnId === incoming.columnId) continue;
-      // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
-      if (prev.eventStatus === EventStatusType.CONSUMED) continue;
-
-      // Use clamped end if already clamped by a prior reaction
-      const clamp = clampMap.get(prev.id);
-      const endFrame = clamp !== undefined
-        ? clamp.frame
-        : prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
-
-      if (endFrame > incoming.startFrame) {
-        activeOther.push(prev);
-      }
-    }
-
-    if (activeOther.length > 0) {
-      // Generate reaction event
-      const reactionColumnId = INFLICTION_TO_REACTION[incoming.columnId];
-      generatedReactions.push({
-        id: `${incoming.id}-reaction`,
-        name: reactionColumnId,
-        ownerId: ENEMY_OWNER_ID,
-        columnId: reactionColumnId,
-        startFrame: incoming.startFrame,
-        activationDuration: REACTION_DURATION,
-        activeDuration: 0,
-        cooldownDuration: 0,
-        sourceOwnerId: incoming.sourceOwnerId,
-        sourceSkillName: incoming.sourceSkillName,
-      });
-
-      // Remove the triggering infliction
-      removedIds.add(incoming.id);
-
-      // Clamp all active other-element inflictions at the reaction frame
-      const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: incoming.sourceSkillName };
-      for (const consumed of activeOther) {
-        clampMap.set(consumed.id, { frame: incoming.startFrame, source: reactionSource });
-      }
-    }
-  }
-
-  if (removedIds.size === 0 && generatedReactions.length === 0) return events;
-
-  // Build output: filter removed, clamp consumed, append generated reactions
-  const result: TimelineEvent[] = [];
-  for (const ev of events) {
-    if (removedIds.has(ev.id)) continue;
-
-    const clamp = clampMap.get(ev.id);
-    if (clamp !== undefined) {
-      const available = Math.max(0, clamp.frame - ev.startFrame);
-      const clampedActive = Math.min(ev.activationDuration, available);
-      const remAfterActive = available - clampedActive;
-      const clampedActiveDur = Math.min(ev.activeDuration, remAfterActive);
-      const remAfterActiveDur = remAfterActive - clampedActiveDur;
-      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterActiveDur);
-      result.push({
-        ...ev,
-        activationDuration: clampedActive,
-        activeDuration: clampedActiveDur,
-        cooldownDuration: clampedCooldown,
-        eventStatus: EventStatusType.CONSUMED,
-        eventStatusOwnerId: clamp.source.ownerId,
-        eventStatusSkillName: clamp.source.skillName,
-      });
-    } else {
-      result.push(ev);
-    }
-  }
-
-  return [...result, ...generatedReactions];
-}
+// deriveReactions is imported from ./deriveReactions.ts
 
 /**
  * Clamps overlapping same-type arts reaction events when the newer one
@@ -2020,7 +1915,7 @@ function applySpReturnGaugeReduction(events: TimelineEvent[]): TimelineEvent[] {
   const modified = new Map<string, TimelineEvent>();
 
   for (const ev of events) {
-    if (ev.columnId !== 'battle') continue;
+    if (ev.columnId !== SKILL_COLUMNS.BATTLE) continue;
     if (!ev.segments) continue;
 
     // Sum up all SP recovery from frame data

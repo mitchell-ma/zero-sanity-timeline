@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 831,
-    [EnemyStatType.ATK]: 49,
+    [StatType.BASE_HP]: 831,
+    [StatType.BASE_ATTACK]: 49,
   },
   20: {
-    [EnemyStatType.HP]: 5961,
-    [EnemyStatType.ATK]: 233,
+    [StatType.BASE_HP]: 5961,
+    [StatType.BASE_ATTACK]: 233,
   },
   40: {
-    [EnemyStatType.HP]: 37721,
-    [EnemyStatType.ATK]: 723,
+    [StatType.BASE_HP]: 37721,
+    [StatType.BASE_ATTACK]: 723,
   },
   60: {
-    [EnemyStatType.HP]: 148502,
-    [EnemyStatType.ATK]: 1796,
+    [StatType.BASE_HP]: 148502,
+    [StatType.BASE_ATTACK]: 1796,
   },
   80: {
-    [EnemyStatType.HP]: 357214,
-    [EnemyStatType.ATK]: 2703,
+    [StatType.BASE_HP]: 357214,
+    [StatType.BASE_ATTACK]: 2703,
   },
   90: {
-    [EnemyStatType.HP]: 550298,
-    [EnemyStatType.ATK]: 3097,
+    [StatType.BASE_HP]: 550298,
+    [StatType.BASE_ATTACK]: 3097,
   },
 };
 
@@ -48,13 +48,13 @@ export class BonekrusherArsonistEnemy extends Enemy {
       attackElement: ElementType.HEAT,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.HEAT_RESISTANCE]: 0.5,
-        [EnemyStatType.STAGGER_HP]: 170,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 7,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.HEAT_RESISTANCE]: 0.5,
+        [StatType.STAGGER_HP]: 170,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 7,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

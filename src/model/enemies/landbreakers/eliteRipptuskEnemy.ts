@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 228,
-    [EnemyStatType.ATK]: 39,
+    [StatType.BASE_HP]: 228,
+    [StatType.BASE_ATTACK]: 39,
   },
   20: {
-    [EnemyStatType.HP]: 1639,
-    [EnemyStatType.ATK]: 186,
+    [StatType.BASE_HP]: 1639,
+    [StatType.BASE_ATTACK]: 186,
   },
   40: {
-    [EnemyStatType.HP]: 10373,
-    [EnemyStatType.ATK]: 579,
+    [StatType.BASE_HP]: 10373,
+    [StatType.BASE_ATTACK]: 579,
   },
   60: {
-    [EnemyStatType.HP]: 40838,
-    [EnemyStatType.ATK]: 1437,
+    [StatType.BASE_HP]: 40838,
+    [StatType.BASE_ATTACK]: 1437,
   },
   80: {
-    [EnemyStatType.HP]: 98234,
-    [EnemyStatType.ATK]: 2163,
+    [StatType.BASE_HP]: 98234,
+    [StatType.BASE_ATTACK]: 2163,
   },
   90: {
-    [EnemyStatType.HP]: 151332,
-    [EnemyStatType.ATK]: 2478,
+    [StatType.BASE_HP]: 151332,
+    [StatType.BASE_ATTACK]: 2478,
   },
 };
 
@@ -48,8 +48,8 @@ export class EliteRipptuskEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 90,
-        [EnemyStatType.ATTACK_RANGE]: 2.1,
+        [StatType.STAGGER_HP]: 90,
+        [StatType.ATTACK_RANGE]: 2.1,
       },
       ...params,
     });

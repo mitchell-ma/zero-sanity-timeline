@@ -17,7 +17,17 @@ export const DEBUGGER_OWNER_ID = 'debugger';
 
 // ── Skill columns ──────────────────────────────────────────────────────────
 
-export const SKILL_COLUMN_ORDER: SkillType[] = ['basic', 'battle', 'combo', 'ultimate'];
+/** Skill column ID constants — use these instead of magic strings. */
+export const SKILL_COLUMNS = {
+  BASIC:    'basic' as SkillType,
+  BATTLE:   'battle' as SkillType,
+  COMBO:    'combo' as SkillType,
+  ULTIMATE: 'ultimate' as SkillType,
+} as const;
+
+export const SKILL_COLUMN_ORDER: SkillType[] = [
+  SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE,
+];
 
 // ── Infliction columns ─────────────────────────────────────────────────────
 

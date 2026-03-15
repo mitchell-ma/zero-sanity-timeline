@@ -1,17 +1,20 @@
 import { WeaponSkillType } from "../../consts/enums";
 import { WeaponSkill } from "./weaponSkill";
+import { getSkillValues } from "../game-data/weaponGameData";
+
+// ── Helper ───────────────────────────────────────────────────────────────────
+
+/** Get skill values from game data, with hardcoded fallback for tiers with no weapon source. */
+function sv(skillType: string, statKey: string, fallback: readonly number[] = []): readonly number[] {
+  const values = getSkillValues(skillType, statKey);
+  return values.length > 0 ? values : fallback;
+}
 
 // ── Attack Boost ──────────────────────────────────────────────────────────────
 
-const ATTACK_BOOST_S: readonly number[] = [
-  0.03, 0.054, 0.078, 0.102, 0.126, 0.15, 0.174, 0.198, 0.234,
-];
-const ATTACK_BOOST_M: readonly number[] = [
-  0.04, 0.072, 0.104, 0.136, 0.168, 0.2, 0.232, 0.264, 0.312,
-];
-const ATTACK_BOOST_L: readonly number[] = [
-  0.05, 0.09, 0.13, 0.17, 0.21, 0.25, 0.29, 0.33, 0.39,
-];
+const ATTACK_BOOST_S = sv("ATTACK_BOOST_S", "ATTACK_BONUS");
+const ATTACK_BOOST_M = sv("ATTACK_BOOST_M", "ATTACK_BONUS");
+const ATTACK_BOOST_L = sv("ATTACK_BOOST_L", "ATTACK_BONUS");
 
 export class AttackBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -40,15 +43,9 @@ export class AttackBoostL extends WeaponSkill {
 
 // ── Strength Boost ────────────────────────────────────────────────────────────
 
-const STRENGTH_BOOST_S: readonly number[] = [
-  12, 21, 31, 40, 50, 60, 69, 79, 93,
-];
-const STRENGTH_BOOST_M: readonly number[] = [
-  16, 28, 41, 54, 67, 80, 92, 105, 124,
-];
-const STRENGTH_BOOST_L: readonly number[] = [
-  20, 36, 52, 68, 84, 100, 116, 132, 156,
-];
+const STRENGTH_BOOST_S = sv("STRENGTH_BOOST_S", "STRENGTH");
+const STRENGTH_BOOST_M = sv("STRENGTH_BOOST_M", "STRENGTH");
+const STRENGTH_BOOST_L = sv("STRENGTH_BOOST_L", "STRENGTH");
 
 export class StrengthBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -77,15 +74,9 @@ export class StrengthBoostL extends WeaponSkill {
 
 // ── Agility Boost ─────────────────────────────────────────────────────────────
 
-const AGILITY_BOOST_S: readonly number[] = [
-  12, 21, 31, 40, 50, 60, 69, 79, 93,
-];
-const AGILITY_BOOST_M: readonly number[] = [
-  16, 28, 41, 54, 67, 80, 92, 105, 124,
-];
-const AGILITY_BOOST_L: readonly number[] = [
-  20, 36, 52, 68, 84, 100, 116, 132, 156,
-];
+const AGILITY_BOOST_S = sv("AGILITY_BOOST_S", "AGILITY");
+const AGILITY_BOOST_M = sv("AGILITY_BOOST_M", "AGILITY");
+const AGILITY_BOOST_L = sv("AGILITY_BOOST_L", "AGILITY");
 
 export class AgilityBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -114,15 +105,9 @@ export class AgilityBoostL extends WeaponSkill {
 
 // ── Intellect Boost ───────────────────────────────────────────────────────────
 
-const INTELLECT_BOOST_S: readonly number[] = [
-  12, 21, 31, 40, 50, 60, 69, 79, 93,
-];
-const INTELLECT_BOOST_M: readonly number[] = [
-  16, 28, 41, 54, 67, 80, 92, 105, 124,
-];
-const INTELLECT_BOOST_L: readonly number[] = [
-  20, 36, 52, 68, 84, 100, 116, 132, 156,
-];
+const INTELLECT_BOOST_S = sv("INTELLECT_BOOST_S", "INTELLECT");
+const INTELLECT_BOOST_M = sv("INTELLECT_BOOST_M", "INTELLECT");
+const INTELLECT_BOOST_L = sv("INTELLECT_BOOST_L", "INTELLECT");
 
 export class IntellectBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -151,15 +136,9 @@ export class IntellectBoostL extends WeaponSkill {
 
 // ── Will Boost ────────────────────────────────────────────────────────────────
 
-const WILL_BOOST_S: readonly number[] = [
-  12, 21, 31, 40, 50, 60, 69, 79, 93,
-];
-const WILL_BOOST_M: readonly number[] = [
-  16, 28, 41, 54, 67, 80, 92, 105, 124,
-];
-const WILL_BOOST_L: readonly number[] = [
-  20, 36, 52, 68, 84, 100, 116, 132, 156,
-];
+const WILL_BOOST_S = sv("WILL_BOOST_S", "WILL");
+const WILL_BOOST_M = sv("WILL_BOOST_M", "WILL");
+const WILL_BOOST_L = sv("WILL_BOOST_L", "WILL");
 
 export class WillBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -188,15 +167,10 @@ export class WillBoostL extends WeaponSkill {
 
 // ── Main Attribute Boost ──────────────────────────────────────────────────────
 
-const MAIN_ATTRIBUTE_BOOST_S: readonly number[] = [
-  10, 18, 26, 34, 42, 51, 59, 67, 79,
-];
-const MAIN_ATTRIBUTE_BOOST_M: readonly number[] = [
-  16, 28, 41, 54, 67, 80, 92, 105, 124,
-];
-const MAIN_ATTRIBUTE_BOOST_L: readonly number[] = [
-  17, 30, 44, 57, 71, 85, 98, 112, 132,
-];
+const MAIN_ATTRIBUTE_BOOST_S = sv("MAIN_ATTRIBUTE_BOOST_S", "MAIN_ATTRIBUTE");
+const MAIN_ATTRIBUTE_BOOST_M = sv("MAIN_ATTRIBUTE_BOOST_M", "MAIN_ATTRIBUTE",
+  [16, 28, 41, 54, 67, 80, 92, 105, 124]);
+const MAIN_ATTRIBUTE_BOOST_L = sv("MAIN_ATTRIBUTE_BOOST_L", "MAIN_ATTRIBUTE");
 
 export class MainAttributeBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -225,15 +199,9 @@ export class MainAttributeBoostL extends WeaponSkill {
 
 // ── Physical Damage Boost ─────────────────────────────────────────────────────
 
-const PHYSICAL_DAMAGE_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const PHYSICAL_DAMAGE_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const PHYSICAL_DAMAGE_BOOST_L: readonly number[] = [
-  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const PHYSICAL_DAMAGE_BOOST_S = sv("PHYSICAL_DAMAGE_BOOST_S", "PHYSICAL_DAMAGE_BONUS");
+const PHYSICAL_DAMAGE_BOOST_M = sv("PHYSICAL_DAMAGE_BOOST_M", "PHYSICAL_DAMAGE_BONUS");
+const PHYSICAL_DAMAGE_BOOST_L = sv("PHYSICAL_DAMAGE_BOOST_L", "PHYSICAL_DAMAGE_BONUS");
 
 export class PhysicalDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -262,15 +230,10 @@ export class PhysicalDamageBoostL extends WeaponSkill {
 
 // ── Heat Damage Boost ─────────────────────────────────────────────────────────
 
-const HEAT_DAMAGE_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const HEAT_DAMAGE_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const HEAT_DAMAGE_BOOST_L: readonly number[] = [
-  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const HEAT_DAMAGE_BOOST_S = sv("HEAT_DAMAGE_BOOST_S", "HEAT_DAMAGE_BONUS",
+  [0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26]);
+const HEAT_DAMAGE_BOOST_M = sv("HEAT_DAMAGE_BOOST_M", "HEAT_DAMAGE_BONUS");
+const HEAT_DAMAGE_BOOST_L = sv("HEAT_DAMAGE_BOOST_L", "HEAT_DAMAGE_BONUS");
 
 export class HeatDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -299,15 +262,10 @@ export class HeatDamageBoostL extends WeaponSkill {
 
 // ── Cryo Damage Boost ─────────────────────────────────────────────────────────
 
-const CRYO_DAMAGE_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const CRYO_DAMAGE_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const CRYO_DAMAGE_BOOST_L: readonly number[] = [
-  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const CRYO_DAMAGE_BOOST_S = sv("CRYO_DAMAGE_BOOST_S", "CRYO_DAMAGE_BONUS",
+  [0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26]);
+const CRYO_DAMAGE_BOOST_M = sv("CRYO_DAMAGE_BOOST_M", "CRYO_DAMAGE_BONUS");
+const CRYO_DAMAGE_BOOST_L = sv("CRYO_DAMAGE_BOOST_L", "CRYO_DAMAGE_BONUS");
 
 export class CryoDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -336,15 +294,11 @@ export class CryoDamageBoostL extends WeaponSkill {
 
 // ── Nature Damage Boost ───────────────────────────────────────────────────────
 
-const NATURE_DAMAGE_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const NATURE_DAMAGE_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const NATURE_DAMAGE_BOOST_L: readonly number[] = [
-  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const NATURE_DAMAGE_BOOST_S = sv("NATURE_DAMAGE_BOOST_S", "NATURE_DAMAGE_BONUS",
+  [0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26]);
+const NATURE_DAMAGE_BOOST_M = sv("NATURE_DAMAGE_BOOST_M", "NATURE_DAMAGE_BONUS",
+  [0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467]);
+const NATURE_DAMAGE_BOOST_L = sv("NATURE_DAMAGE_BOOST_L", "NATURE_DAMAGE_BONUS");
 
 export class NatureDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -373,15 +327,11 @@ export class NatureDamageBoostL extends WeaponSkill {
 
 // ── Electric Damage Boost ─────────────────────────────────────────────────────
 
-const ELECTRIC_DAMAGE_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const ELECTRIC_DAMAGE_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const ELECTRIC_DAMAGE_BOOST_L: readonly number[] = [
-  0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const ELECTRIC_DAMAGE_BOOST_S = sv("ELECTRIC_DAMAGE_BOOST_S", "ELECTRIC_DAMAGE_BONUS",
+  [0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26]);
+const ELECTRIC_DAMAGE_BOOST_M = sv("ELECTRIC_DAMAGE_BOOST_M", "ELECTRIC_DAMAGE_BONUS");
+const ELECTRIC_DAMAGE_BOOST_L = sv("ELECTRIC_DAMAGE_BOOST_L", "ELECTRIC_DAMAGE_BONUS",
+  [0.0556, 0.10, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333]);
 
 export class ElectricDamageBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -410,13 +360,9 @@ export class ElectricDamageBoostL extends WeaponSkill {
 
 // ── Ultimate Gain Efficiency Boost ────────────────────────────────────────────
 
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_S: readonly number[] = []; // No weapon uses this tier
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_M: readonly number[] = [
-  0.0476, 0.0857, 0.1238, 0.1619, 0.20, 0.2381, 0.2762, 0.3143, 0.3714,
-];
-const ULTIMATE_GAIN_EFFICIENCY_BOOST_L: readonly number[] = [
-  0.0595, 0.1071, 0.1548, 0.2024, 0.25, 0.2976, 0.3452, 0.3929, 0.4643,
-];
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_S: readonly number[] = [];
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_M = sv("ULTIMATE_GAIN_EFFICIENCY_BOOST_M", "ULTIMATE_GAIN_EFFICIENCY");
+const ULTIMATE_GAIN_EFFICIENCY_BOOST_L = sv("ULTIMATE_GAIN_EFFICIENCY_BOOST_L", "ULTIMATE_GAIN_EFFICIENCY");
 
 export class UltimateGainEfficiencyBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -454,13 +400,9 @@ export class UltimateGainEfficiencyBoostL extends WeaponSkill {
 
 // ── HP Boost ──────────────────────────────────────────────────────────────────
 
-const HP_BOOST_S: readonly number[] = []; // No weapon uses this tier
-const HP_BOOST_M: readonly number[] = [
-  0.08, 0.144, 0.208, 0.272, 0.336, 0.40, 0.464, 0.528, 0.624,
-];
-const HP_BOOST_L: readonly number[] = [
-  0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58, 0.66, 0.78,
-];
+const HP_BOOST_S = sv("HP_BOOST_S", "HP_BONUS");
+const HP_BOOST_M = sv("HP_BOOST_M", "HP_BONUS");
+const HP_BOOST_L = sv("HP_BOOST_L", "HP_BONUS");
 
 export class HpBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -489,15 +431,9 @@ export class HpBoostL extends WeaponSkill {
 
 // ── Arts Boost ────────────────────────────────────────────────────────────────
 
-const ARTS_BOOST_S: readonly number[] = [
-  0.0333, 0.06, 0.0867, 0.1133, 0.14, 0.1667, 0.1933, 0.22, 0.26,
-];
-const ARTS_BOOST_M: readonly number[] = [
-  0.0444, 0.08, 0.1156, 0.1511, 0.1867, 0.2222, 0.2578, 0.2933, 0.3467,
-];
-const ARTS_BOOST_L: readonly number[] = [
-  0.0556, 0.1, 0.1444, 0.1889, 0.2333, 0.2778, 0.3222, 0.3667, 0.4333,
-];
+const ARTS_BOOST_S = sv("ARTS_BOOST_S", "ARTS_DAMAGE_BONUS");
+const ARTS_BOOST_M = sv("ARTS_BOOST_M", "ARTS_DAMAGE_BONUS");
+const ARTS_BOOST_L = sv("ARTS_BOOST_L", "ARTS_DAMAGE_BONUS");
 
 export class ArtsBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -526,13 +462,9 @@ export class ArtsBoostL extends WeaponSkill {
 
 // ── Arts Intensity Boost ──────────────────────────────────────────────────────
 
-const ARTS_INTENSITY_BOOST_S: readonly number[] = []; // No weapon uses this tier
-const ARTS_INTENSITY_BOOST_M: readonly number[] = [
-  8, 14, 20, 27, 33, 40, 46, 52, 62,
-];
-const ARTS_INTENSITY_BOOST_L: readonly number[] = [
-  10, 18, 26, 34, 42, 50, 58, 66, 78,
-];
+const ARTS_INTENSITY_BOOST_S: readonly number[] = [];
+const ARTS_INTENSITY_BOOST_M = sv("ARTS_INTENSITY_BOOST_M", "ARTS_INTENSITY");
+const ARTS_INTENSITY_BOOST_L = sv("ARTS_INTENSITY_BOOST_L", "ARTS_INTENSITY");
 
 export class ArtsIntensityBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -561,11 +493,9 @@ export class ArtsIntensityBoostL extends WeaponSkill {
 
 // ── Critical Rate Boost ───────────────────────────────────────────────────────
 
-const CRITICAL_RATE_BOOST_S: readonly number[] = []; // No weapon uses this tier
-const CRITICAL_RATE_BOOST_M: readonly number[] = []; // No weapon uses this tier
-const CRITICAL_RATE_BOOST_L: readonly number[] = [
-  0.025, 0.045, 0.065, 0.085, 0.105, 0.125, 0.145, 0.165, 0.195,
-];
+const CRITICAL_RATE_BOOST_S: readonly number[] = [];
+const CRITICAL_RATE_BOOST_M: readonly number[] = [];
+const CRITICAL_RATE_BOOST_L = sv("CRITICAL_RATE_BOOST_L", "CRITICAL_RATE");
 
 export class CriticalRateBoostS extends WeaponSkill {
   constructor(level: number) {
@@ -594,13 +524,10 @@ export class CriticalRateBoostL extends WeaponSkill {
 
 // ── Treatment Efficiency Boost ────────────────────────────────────────────────
 
-const TREATMENT_EFFICIENCY_BOOST_S: readonly number[] = []; // No weapon uses this tier
-const TREATMENT_EFFICIENCY_BOOST_M: readonly number[] = [
-  0.0476, 0.0857, 0.1238, 0.1619, 0.20, 0.2381, 0.2762, 0.3143, 0.3714,
-];
-const TREATMENT_EFFICIENCY_BOOST_L: readonly number[] = [
-  0.0595, 0.1071, 0.1548, 0.2024, 0.25, 0.2976, 0.3452, 0.3929, 0.4643,
-];
+const TREATMENT_EFFICIENCY_BOOST_S: readonly number[] = [];
+const TREATMENT_EFFICIENCY_BOOST_M = sv("TREATMENT_EFFICIENCY_BOOST_M", "heal");
+const TREATMENT_EFFICIENCY_BOOST_L = sv("TREATMENT_EFFICIENCY_BOOST_L", "heal",
+  [0.0595, 0.1071, 0.1548, 0.2024, 0.25, 0.2976, 0.3452, 0.3929, 0.4643]);
 
 export class TreatmentEfficiencyBoostS extends WeaponSkill {
   constructor(level: number) {

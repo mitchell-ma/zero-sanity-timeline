@@ -1,0 +1,652 @@
+{
+  "weaponId": "WHITE_NIGHT_NOVA",
+  "name": "White Night Nova",
+  "weaponType": "SWORD",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 51
+    },
+    {
+      "level": 2,
+      "baseAttack": 56
+    },
+    {
+      "level": 3,
+      "baseAttack": 61
+    },
+    {
+      "level": 4,
+      "baseAttack": 66
+    },
+    {
+      "level": 5,
+      "baseAttack": 71
+    },
+    {
+      "level": 6,
+      "baseAttack": 77
+    },
+    {
+      "level": 7,
+      "baseAttack": 82
+    },
+    {
+      "level": 8,
+      "baseAttack": 87
+    },
+    {
+      "level": 9,
+      "baseAttack": 92
+    },
+    {
+      "level": 10,
+      "baseAttack": 97
+    },
+    {
+      "level": 11,
+      "baseAttack": 102
+    },
+    {
+      "level": 12,
+      "baseAttack": 107
+    },
+    {
+      "level": 13,
+      "baseAttack": 112
+    },
+    {
+      "level": 14,
+      "baseAttack": 117
+    },
+    {
+      "level": 15,
+      "baseAttack": 122
+    },
+    {
+      "level": 16,
+      "baseAttack": 128
+    },
+    {
+      "level": 17,
+      "baseAttack": 133
+    },
+    {
+      "level": 18,
+      "baseAttack": 138
+    },
+    {
+      "level": 19,
+      "baseAttack": 143
+    },
+    {
+      "level": 20,
+      "baseAttack": 148
+    },
+    {
+      "level": 21,
+      "baseAttack": 153
+    },
+    {
+      "level": 22,
+      "baseAttack": 158
+    },
+    {
+      "level": 23,
+      "baseAttack": 163
+    },
+    {
+      "level": 24,
+      "baseAttack": 168
+    },
+    {
+      "level": 25,
+      "baseAttack": 173
+    },
+    {
+      "level": 26,
+      "baseAttack": 179
+    },
+    {
+      "level": 27,
+      "baseAttack": 184
+    },
+    {
+      "level": 28,
+      "baseAttack": 189
+    },
+    {
+      "level": 29,
+      "baseAttack": 194
+    },
+    {
+      "level": 30,
+      "baseAttack": 199
+    },
+    {
+      "level": 31,
+      "baseAttack": 204
+    },
+    {
+      "level": 32,
+      "baseAttack": 209
+    },
+    {
+      "level": 33,
+      "baseAttack": 214
+    },
+    {
+      "level": 34,
+      "baseAttack": 219
+    },
+    {
+      "level": 35,
+      "baseAttack": 224
+    },
+    {
+      "level": 36,
+      "baseAttack": 230
+    },
+    {
+      "level": 37,
+      "baseAttack": 235
+    },
+    {
+      "level": 38,
+      "baseAttack": 240
+    },
+    {
+      "level": 39,
+      "baseAttack": 245
+    },
+    {
+      "level": 40,
+      "baseAttack": 250
+    },
+    {
+      "level": 41,
+      "baseAttack": 255
+    },
+    {
+      "level": 42,
+      "baseAttack": 260
+    },
+    {
+      "level": 43,
+      "baseAttack": 265
+    },
+    {
+      "level": 44,
+      "baseAttack": 270
+    },
+    {
+      "level": 45,
+      "baseAttack": 275
+    },
+    {
+      "level": 46,
+      "baseAttack": 281
+    },
+    {
+      "level": 47,
+      "baseAttack": 286
+    },
+    {
+      "level": 48,
+      "baseAttack": 291
+    },
+    {
+      "level": 49,
+      "baseAttack": 296
+    },
+    {
+      "level": 50,
+      "baseAttack": 301
+    },
+    {
+      "level": 51,
+      "baseAttack": 306
+    },
+    {
+      "level": 52,
+      "baseAttack": 311
+    },
+    {
+      "level": 53,
+      "baseAttack": 316
+    },
+    {
+      "level": 54,
+      "baseAttack": 321
+    },
+    {
+      "level": 55,
+      "baseAttack": 326
+    },
+    {
+      "level": 56,
+      "baseAttack": 332
+    },
+    {
+      "level": 57,
+      "baseAttack": 337
+    },
+    {
+      "level": 58,
+      "baseAttack": 342
+    },
+    {
+      "level": 59,
+      "baseAttack": 347
+    },
+    {
+      "level": 60,
+      "baseAttack": 352
+    },
+    {
+      "level": 61,
+      "baseAttack": 357
+    },
+    {
+      "level": 62,
+      "baseAttack": 362
+    },
+    {
+      "level": 63,
+      "baseAttack": 367
+    },
+    {
+      "level": 64,
+      "baseAttack": 372
+    },
+    {
+      "level": 65,
+      "baseAttack": 377
+    },
+    {
+      "level": 66,
+      "baseAttack": 383
+    },
+    {
+      "level": 67,
+      "baseAttack": 388
+    },
+    {
+      "level": 68,
+      "baseAttack": 393
+    },
+    {
+      "level": 69,
+      "baseAttack": 398
+    },
+    {
+      "level": 70,
+      "baseAttack": 403
+    },
+    {
+      "level": 71,
+      "baseAttack": 408
+    },
+    {
+      "level": 72,
+      "baseAttack": 413
+    },
+    {
+      "level": 73,
+      "baseAttack": 418
+    },
+    {
+      "level": 74,
+      "baseAttack": 423
+    },
+    {
+      "level": 75,
+      "baseAttack": 428
+    },
+    {
+      "level": 76,
+      "baseAttack": 434
+    },
+    {
+      "level": 77,
+      "baseAttack": 439
+    },
+    {
+      "level": 78,
+      "baseAttack": 444
+    },
+    {
+      "level": 79,
+      "baseAttack": 449
+    },
+    {
+      "level": 80,
+      "baseAttack": 454
+    },
+    {
+      "level": 81,
+      "baseAttack": 459
+    },
+    {
+      "level": 82,
+      "baseAttack": 464
+    },
+    {
+      "level": 83,
+      "baseAttack": 469
+    },
+    {
+      "level": 84,
+      "baseAttack": 474
+    },
+    {
+      "level": 85,
+      "baseAttack": 479
+    },
+    {
+      "level": 86,
+      "baseAttack": 485
+    },
+    {
+      "level": 87,
+      "baseAttack": 490
+    },
+    {
+      "level": 88,
+      "baseAttack": 495
+    },
+    {
+      "level": 89,
+      "baseAttack": 500
+    },
+    {
+      "level": 90,
+      "baseAttack": 505
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "MAIN_ATTRIBUTE_BOOST_L",
+      "name": "Main Attribute Boost [L]",
+      "description": "Main attribute +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "MAIN_ATTRIBUTE": 17
+        },
+        {
+          "level": 2,
+          "MAIN_ATTRIBUTE": 30
+        },
+        {
+          "level": 3,
+          "MAIN_ATTRIBUTE": 44
+        },
+        {
+          "level": 4,
+          "MAIN_ATTRIBUTE": 57
+        },
+        {
+          "level": 5,
+          "MAIN_ATTRIBUTE": 71
+        },
+        {
+          "level": 6,
+          "MAIN_ATTRIBUTE": 85
+        },
+        {
+          "level": 7,
+          "MAIN_ATTRIBUTE": 98
+        },
+        {
+          "level": 8,
+          "MAIN_ATTRIBUTE": 112
+        },
+        {
+          "level": 9,
+          "MAIN_ATTRIBUTE": 132
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "ARTS_INTENSITY_BOOST_L",
+      "name": "Arts Intensity Boost [L]",
+      "description": "Arts Intensity +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "ARTS_INTENSITY": 10
+        },
+        {
+          "level": 2,
+          "ARTS_INTENSITY": 18
+        },
+        {
+          "level": 3,
+          "ARTS_INTENSITY": 26
+        },
+        {
+          "level": 4,
+          "ARTS_INTENSITY": 34
+        },
+        {
+          "level": 5,
+          "ARTS_INTENSITY": 42
+        },
+        {
+          "level": 6,
+          "ARTS_INTENSITY": 50
+        },
+        {
+          "level": 7,
+          "ARTS_INTENSITY": 58
+        },
+        {
+          "level": 8,
+          "ARTS_INTENSITY": 66
+        },
+        {
+          "level": 9,
+          "ARTS_INTENSITY": 78
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "WHITE_NIGHT_NOVA_INFLICTION_WHITE_NIGHT_NOVA",
+      "name": "Infliction: White Night Nova",
+      "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "ARTS_DAMAGE_BONUS": 0.12,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.12,
+              "ARTS_INTENSITY": 25
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "ARTS_DAMAGE_BONUS": 0.144,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.144,
+              "ARTS_INTENSITY": 30
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "ARTS_DAMAGE_BONUS": 0.168,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.168,
+              "ARTS_INTENSITY": 35
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "ARTS_DAMAGE_BONUS": 0.192,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.192,
+              "ARTS_INTENSITY": 40
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "ARTS_DAMAGE_BONUS": 0.216,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.216,
+              "ARTS_INTENSITY": 45
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "ARTS_DAMAGE_BONUS": 0.24,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.24,
+              "ARTS_INTENSITY": 50
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "ARTS_DAMAGE_BONUS": 0.264,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.264,
+              "ARTS_INTENSITY": 55
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "ARTS_DAMAGE_BONUS": 0.288,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.288,
+              "ARTS_INTENSITY": 60
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "ARTS_DAMAGE_BONUS": 0.336,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "COMBUSTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.336,
+              "ARTS_INTENSITY": 70
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

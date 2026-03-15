@@ -1,0 +1,244 @@
+{
+  "gearSetType": "FRONTIERS",
+  "name": "Frontiers",
+  "suitID": "suit_atb01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "FRONTIERS",
+    "description": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +{1-comboskill_cooldown:0%}. After the wearer's skill recovers SP, the team gains DMG +{dmg_up:0%} for {duration}s. This effect cannot stack."
+  },
+  "pieces": [
+    {
+      "gearType": "FRONTIERS_ARMOR_T2",
+      "name": "Frontiers Armor T2",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "INTELLECT": 58,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "AGILITY": 95,
+          "INTELLECT": 63,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "AGILITY": 104,
+          "INTELLECT": 69,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "AGILITY": 113,
+          "INTELLECT": 75,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_ARMOR_T1",
+      "name": "Frontiers Armor T1",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 87,
+          "AGILITY": 58,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "STRENGTH": 95,
+          "AGILITY": 63,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "STRENGTH": 104,
+          "AGILITY": 69,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "STRENGTH": 113,
+          "AGILITY": 75,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_ARMOR",
+      "name": "Frontiers Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 87,
+          "INTELLECT": 58,
+          "ULTIMATE_DAMAGE_BONUS": 0.259
+        },
+        "2": {
+          "STRENGTH": 95,
+          "INTELLECT": 63,
+          "ULTIMATE_DAMAGE_BONUS": 0.285
+        },
+        "3": {
+          "STRENGTH": 104,
+          "INTELLECT": 69,
+          "ULTIMATE_DAMAGE_BONUS": 0.311
+        },
+        "4": {
+          "STRENGTH": 113,
+          "INTELLECT": 75,
+          "ULTIMATE_DAMAGE_BONUS": 0.336
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_ARMOR_T3",
+      "name": "Frontiers Armor T3",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "INTELLECT": 58,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.104
+        },
+        "2": {
+          "AGILITY": 95,
+          "INTELLECT": 63,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.114
+        },
+        "3": {
+          "AGILITY": 104,
+          "INTELLECT": 69,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.124
+        },
+        "4": {
+          "AGILITY": 113,
+          "INTELLECT": 75,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.135
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_BLIGHT_RES_GLOVES",
+      "name": "Frontiers Blight Res Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 65,
+          "INTELLECT": 43,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.345
+        },
+        "2": {
+          "AGILITY": 71,
+          "INTELLECT": 47,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.38
+        },
+        "3": {
+          "AGILITY": 78,
+          "INTELLECT": 51,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "4": {
+          "AGILITY": 84,
+          "INTELLECT": 55,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.449
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_COMM",
+      "name": "Frontiers Comm",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "STRENGTH": 35,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "STRENGTH": 38,
+          "AGILITY": 25,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "STRENGTH": 41,
+          "AGILITY": 27,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_COMM_T1",
+      "name": "Frontiers Comm T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "INTELLECT": 21,
+          "CRYO_DAMAGE_BONUS": 0.23,
+          "ELECTRIC_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "STRENGTH": 35,
+          "INTELLECT": 23,
+          "CRYO_DAMAGE_BONUS": 0.253,
+          "ELECTRIC_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "STRENGTH": 38,
+          "INTELLECT": 25,
+          "CRYO_DAMAGE_BONUS": 0.276,
+          "ELECTRIC_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "STRENGTH": 41,
+          "INTELLECT": 27,
+          "CRYO_DAMAGE_BONUS": 0.299,
+          "ELECTRIC_DAMAGE_BONUS": 0.299
+        }
+      }
+    },
+    {
+      "gearType": "FRONTIERS_EXTRA_O2_TUBE",
+      "name": "Frontiers Extra O2 Tube",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "INTELLECT": 21,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.207
+        },
+        "2": {
+          "AGILITY": 35,
+          "INTELLECT": 23,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.228
+        },
+        "3": {
+          "AGILITY": 38,
+          "INTELLECT": 25,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.248
+        },
+        "4": {
+          "AGILITY": 41,
+          "INTELLECT": 27,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.269
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

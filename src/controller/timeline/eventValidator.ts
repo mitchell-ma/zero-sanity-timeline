@@ -6,10 +6,11 @@
  */
 import { TimelineEvent, SkillType, EventSegmentData } from '../../consts/viewTypes';
 import { CombatSkillsType, TimeDependency } from '../../consts/enums';
-import { SKILL_LABELS } from '../../consts/channelLabels';
+import { SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { ALWAYS_AVAILABLE_TRIGGERS, COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 
@@ -44,7 +45,7 @@ export function computeTimeStopRegions(events: TimelineEvent[]): TimeStopRegion[
   for (const ev of events) {
     const anim = ev.animationDuration;
     if (!anim || anim <= 0) continue;
-    const isTimeStop = ev.columnId === 'ultimate' || ev.columnId === 'combo' ||
+    const isTimeStop = ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
       (ev.columnId === 'dash' && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({ startFrame: ev.startFrame, durationFrames: anim, ownerId: ev.ownerId, sourceColumnId: ev.columnId });
@@ -163,18 +164,18 @@ export function computeResourceInsufficiencyZones(
       if (!slot.operator) continue;
       const cost = slot.operator.skills.battle.skillPointCost ?? 100;
       const gaps = findInsufficientZones(spGraph.points, cost);
-      if (gaps.length > 0) zones.set(`${slot.slotId}:battle`, gaps);
+      if (gaps.length > 0) zones.set(`${slot.slotId}:${SKILL_COLUMNS.BATTLE}`, gaps);
     }
   }
 
   // Ultimate energy zones (per-slot graph, threshold = max)
   for (const slot of slots) {
     if (!slot.operator) continue;
-    const ultKey = `${slot.slotId}-ultimate`;
+    const ultKey = `${slot.slotId}-${SKILL_COLUMNS.ULTIMATE}`;
     const graph = resourceGraphs.get(ultKey);
     if (!graph || graph.points.length < 2) continue;
     const gaps = findInsufficientZones(graph.points, graph.max);
-    if (gaps.length > 0) zones.set(`${slot.slotId}:ultimate`, gaps);
+    if (gaps.length > 0) zones.set(`${slot.slotId}:${SKILL_COLUMNS.ULTIMATE}`, gaps);
   }
 
   return zones;
@@ -193,7 +194,7 @@ export function clampDeltaByResourceZones(
   resourceZones: Map<string, ResourceZone[]>,
 ): number {
   const ev = events.find((e) => e.id === eventId);
-  if (!ev || (ev.columnId !== 'battle' && ev.columnId !== 'ultimate')) return clampedDelta;
+  if (!ev || (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE)) return clampedDelta;
   const zones = resourceZones.get(`${ev.ownerId}:${ev.columnId}`);
   if (!zones || zones.length === 0) return clampedDelta;
 
@@ -246,8 +247,8 @@ export function checkResourceAvailability(
   resourceGraphs: Map<string, ResourceGraphData>,
   slots: Slot[],
 ): ResourceAvailability {
-  if (columnId === 'ultimate') {
-    const ultKey = `${ownerId}-ultimate`;
+  if (columnId === SKILL_COLUMNS.ULTIMATE) {
+    const ultKey = `${ownerId}-${SKILL_COLUMNS.ULTIMATE}`;
     const graph = resourceGraphs.get(ultKey);
     if (graph) {
       const val = preConsumptionValue(graph, atFrame);
@@ -255,7 +256,7 @@ export function checkResourceAvailability(
         return { sufficient: false, reason: `Not enough ultimate energy (${Math.floor(val)}/${graph.max})` };
       }
     }
-  } else if (columnId === 'battle') {
+  } else if (columnId === SKILL_COLUMNS.BATTLE) {
     const slot = slots.find((s) => s.slotId === ownerId);
     const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
     const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
@@ -305,7 +306,7 @@ export function isDuplicatePlacementInSpZone(
   ghostFrame: number,
   resourceZones: Map<string, ResourceZone[]>,
 ): boolean {
-  if (event.columnId !== 'battle' && event.columnId !== 'ultimate') return false;
+  if (event.columnId !== SKILL_COLUMNS.BATTLE && event.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
   const zones = resourceZones.get(`${event.ownerId}:${event.columnId}`);
   if (!zones) return false;
   return zones.some((z) => ghostFrame >= z.start && ghostFrame < z.end);
@@ -326,7 +327,7 @@ export function clampDeltaByComboWindow(
   processedEvents: readonly TimelineEvent[],
 ): number {
   const ev = events.find((e) => e.id === eventId);
-  if (!ev || ev.columnId !== 'combo') {
+  if (!ev || ev.columnId !== SKILL_COLUMNS.COMBO) {
     return clampedDelta;
   }
 
@@ -402,21 +403,21 @@ export function isBlockedByTimeStop(
   // Check if another ultimate animation overlaps the placement frame or the
   // prospective animation range. Ultimates block each other's animations.
   const ultBlock = timeStopRegions.some(
-    (stop) => stop.sourceColumnId === 'ultimate' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
+    (stop) => stop.sourceColumnId === SKILL_COLUMNS.ULTIMATE && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
   );
-  if (ultBlock && columnId !== 'ultimate') return { blocked: true, reason: 'Ultimate animation active' };
-  if (ultBlock && columnId === 'ultimate') return { blocked: true, reason: 'Another ultimate animation active' };
+  if (ultBlock && columnId !== SKILL_COLUMNS.ULTIMATE) return { blocked: true, reason: 'Ultimate animation active' };
+  if (ultBlock && columnId === SKILL_COLUMNS.ULTIMATE) return { blocked: true, reason: 'Another ultimate animation active' };
   // Also check if our animation would overlap another ultimate's start
-  if (columnId === 'ultimate' && prospectiveAnimDuration && prospectiveAnimDuration > 0) {
+  if (columnId === SKILL_COLUMNS.ULTIMATE && prospectiveAnimDuration && prospectiveAnimDuration > 0) {
     const animEnd = atFrame + prospectiveAnimDuration;
     const wouldOverlap = timeStopRegions.some(
-      (stop) => stop.sourceColumnId === 'ultimate' && stop.startFrame >= atFrame && stop.startFrame < animEnd,
+      (stop) => stop.sourceColumnId === SKILL_COLUMNS.ULTIMATE && stop.startFrame >= atFrame && stop.startFrame < animEnd,
     );
     if (wouldOverlap) return { blocked: true, reason: 'Would overlap another ultimate animation' };
   }
-  if (columnId === 'battle' || columnId === 'basic') {
+  if (columnId === SKILL_COLUMNS.BATTLE || columnId === SKILL_COLUMNS.BASIC) {
     const comboBlock = timeStopRegions.some(
-      (stop) => stop.sourceColumnId === 'combo' && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
+      (stop) => stop.sourceColumnId === SKILL_COLUMNS.COMBO && atFrame >= stop.startFrame && atFrame < stop.startFrame + stop.durationFrames,
     );
     if (comboBlock) return { blocked: true, reason: 'Combo animation active' };
   }
@@ -489,7 +490,7 @@ export function checkComboWindowAvailability(
   }
 
   const windowConsumed = events.some((ev) =>
-    ev.columnId === 'combo' && ev.ownerId === ownerId &&
+    ev.columnId === SKILL_COLUMNS.COMBO && ev.ownerId === ownerId &&
     ev.startFrame >= matchingWindow.startFrame &&
     ev.startFrame < matchingWindow.startFrame + matchingWindow.activationDuration,
   );
@@ -576,7 +577,7 @@ export type VariantAvailability = {
  * - Empowered variants require max Melting Flame stacks (4)
  */
 /** Column types whose variants are affected by ultimate active/enhanced logic. */
-const ENHANCED_VARIANT_COLUMNS = new Set(['basic', 'battle', 'combo']);
+const ENHANCED_VARIANT_COLUMNS = new Set([SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO]);
 
 export function checkVariantAvailability(
   variantName: string,
@@ -590,11 +591,11 @@ export function checkVariantAvailability(
   const isEmpowered = variantName.includes('EMPOWERED');
 
   // Enhanced/non-enhanced checks only apply to battle and combo skills
-  const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId) : true;
+  const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
 
   // Check if the ultimate is active at this frame
   const ultActive = events.some((ev) => {
-    if (ev.ownerId !== ownerId || ev.columnId !== 'ultimate') return false;
+    if (ev.ownerId !== ownerId || ev.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
     const w = getUltimateActiveWindow(ev);
     return w != null && atFrame >= w.start && atFrame < w.end;
   });
@@ -602,13 +603,13 @@ export function checkVariantAvailability(
   // Finisher blocked during ultimate active phase (operator-specific)
   if (variantName === CombatSkillsType.FINISHER && ultActive) {
     const slot = slots?.find((s) => s.slotId === ownerId);
-    if (slot?.operator && FINISHER_BLOCKED_DURING_ULT.has(slot.operator.id)) {
+    if (slot?.operator && isFinisherBlockedDuringUlt(slot.operator.id)) {
       return { disabled: true, reason: 'Finisher cannot be used while ultimate is active' };
     }
   }
 
   // Regular basic attack blocked during ultimate active phase (use enhanced variant)
-  if (columnId === 'basic' && !isEnhanced && !isEmpowered
+  if (columnId === SKILL_COLUMNS.BASIC && !isEnhanced && !isEmpowered
     && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE
     && ultActive) {
     return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
@@ -661,7 +662,7 @@ export function validateComboWindows(
   // First pass: non-dragged events consume windows
   for (const ev of events) {
     if (draggingIds?.has(ev.id)) continue;
-    if (ev.columnId !== 'combo') continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     if (alwaysAvailable.has(ev.ownerId)) continue;
     const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
     if (ownerWindows.length === 0) {
@@ -688,7 +689,7 @@ export function validateComboWindows(
   if (draggingIds) {
     for (const ev of events) {
       if (!draggingIds.has(ev.id)) continue;
-      if (ev.columnId !== 'combo') continue;
+      if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
       if (alwaysAvailable.has(ev.ownerId)) continue;
       const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
       if (ownerWindows.length === 0) {
@@ -724,15 +725,15 @@ export function validateResources(
 
   for (const ev of events) {
     if (skipIds?.has(ev.id)) continue;
-    if (ev.columnId === 'ultimate') {
-      const ultKey = `${ev.ownerId}-ultimate`;
+    if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
+      const ultKey = `${ev.ownerId}-${SKILL_COLUMNS.ULTIMATE}`;
       const graph = resourceGraphs.get(ultKey);
       if (!graph) continue;
       const val = preConsumptionValue(graph, ev.startFrame);
       if (val !== null && val < graph.max) {
         map.set(ev.id, `Not enough ultimate energy (${Math.floor(val)}/${graph.max})`);
       }
-    } else if (ev.columnId === 'battle') {
+    } else if (ev.columnId === SKILL_COLUMNS.BATTLE) {
       const slot = slots.find((s) => s.slotId === ev.ownerId);
       const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
       const spGraph = resourceGraphs.get(spKey);
@@ -772,7 +773,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
     if (!ev.name?.includes('ENHANCED') || ev.name?.includes('EMPOWERED')) continue;
-    if (ev.columnId === 'ultimate') continue;
+    if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
 
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
@@ -789,7 +790,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
     // Every segment start must fall within an ultimate active phase
     for (const frame of segStarts) {
       const inUlt = events.some((u) => {
-        if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+        if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
         const activeWindow = getUltimateActiveWindow(u);
         if (!activeWindow) return false;
         return frame >= activeWindow.start && frame < activeWindow.end;
@@ -811,7 +812,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
-    if (ev.columnId !== 'basic') continue;
+    if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
     // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
     if (!ev.name || ev.name.includes('ENHANCED') || ev.name.includes('EMPOWERED')) continue;
     if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
@@ -830,7 +831,7 @@ export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map
 
     for (const frame of segStarts) {
       const inUlt = events.some((u) => {
-        if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+        if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
         const activeWindow = getUltimateActiveWindow(u);
         if (!activeWindow) return false;
         return frame >= activeWindow.start && frame < activeWindow.end;
@@ -844,8 +845,11 @@ export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map
   return map;
 }
 
-/** Operators that cannot use Finisher while their ultimate is active. */
-const FINISHER_BLOCKED_DURING_ULT = new Set(['laevatain']);
+/** Check if an operator has finisher blocked during ultimate (from JSON). */
+function isFinisherBlockedDuringUlt(operatorId: string): boolean {
+  const json = getOperatorJson(operatorId);
+  return json?.finisherBlockedDuringUlt === true;
+}
 
 export function validateFinisherDuringUltimate(
   events: TimelineEvent[],
@@ -854,7 +858,7 @@ export function validateFinisherDuringUltimate(
   const map = new Map<string, string>();
   const blockedOwners = new Set<string>();
   for (const s of slots) {
-    if (s.operator && FINISHER_BLOCKED_DURING_ULT.has(s.operator.id)) {
+    if (s.operator && isFinisherBlockedDuringUlt(s.operator.id)) {
       blockedOwners.add(s.slotId);
     }
   }
@@ -865,7 +869,7 @@ export function validateFinisherDuringUltimate(
     if (!blockedOwners.has(ev.ownerId)) continue;
 
     const ultActive = events.some((u) => {
-      if (u.ownerId !== ev.ownerId || u.columnId !== 'ultimate') return false;
+      if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
       const w = getUltimateActiveWindow(u);
       return w != null && ev.startFrame >= w.start && ev.startFrame < w.end;
     });
@@ -913,10 +917,10 @@ export function validateTimeStops(
   timeStopRegions: TimeStopRegion[],
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const ultStops = timeStopRegions.filter((s) => s.sourceColumnId === 'ultimate');
-  const comboStops = timeStopRegions.filter((s) => s.sourceColumnId === 'combo');
+  const ultStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.ULTIMATE);
+  const comboStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.COMBO);
   for (const ev of events) {
-    if (ev.columnId === 'ultimate') continue;
+    if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
     for (const stop of ultStops) {
       if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
         const skillType = ev.columnId.charAt(0).toUpperCase() + ev.columnId.slice(1) + ' skill';
@@ -924,10 +928,10 @@ export function validateTimeStops(
         break;
       }
     }
-    if ((ev.columnId === 'battle' || ev.columnId === 'basic') && !map.has(ev.id)) {
+    if ((ev.columnId === SKILL_COLUMNS.BATTLE || ev.columnId === SKILL_COLUMNS.BASIC) && !map.has(ev.id)) {
       for (const stop of comboStops) {
         if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
-          const label = ev.columnId === 'basic' ? 'Basic attack' : 'Battle skill';
+          const label = ev.columnId === SKILL_COLUMNS.BASIC ? 'Basic attack' : 'Battle skill';
           map.set(ev.id, `${label} input is not possible during combo animations`);
           break;
         }

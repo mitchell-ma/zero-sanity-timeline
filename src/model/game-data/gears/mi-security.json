@@ -1,0 +1,360 @@
+{
+  "gearSetType": "MI_SECURITY",
+  "name": "MI Security",
+  "suitID": "suit_criti01",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "MI_SECURITY",
+    "description": "3-piece set effect: Wearer's Critical Rate +{crit_up:0%}. After the wearer scores a critical hit, the wearer gains ATK +{atk_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. At max stacks, grant an additional Critical Rate +{crit_up2:0%}. This effect cannot stack."
+  },
+  "pieces": [
+    {
+      "gearType": "MI_SECURITY_OVERALLS_T1",
+      "name": "Mi Security Overalls T1",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 87,
+          "WILL": 58,
+          "CRITICAL_RATE": 0.052
+        },
+        "2": {
+          "INTELLECT": 95,
+          "WILL": 63,
+          "CRITICAL_RATE": 0.057
+        },
+        "3": {
+          "INTELLECT": 104,
+          "WILL": 69,
+          "CRITICAL_RATE": 0.062
+        },
+        "4": {
+          "INTELLECT": 113,
+          "WILL": 75,
+          "CRITICAL_RATE": 0.067
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_ARMOR",
+      "name": "Mi Security Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "STRENGTH": 58,
+          "ARTS_INTENSITY": 20.7
+        },
+        "2": {
+          "AGILITY": 95,
+          "STRENGTH": 63,
+          "ARTS_INTENSITY": 22.8
+        },
+        "3": {
+          "AGILITY": 104,
+          "STRENGTH": 69,
+          "ARTS_INTENSITY": 24.8
+        },
+        "4": {
+          "AGILITY": 113,
+          "STRENGTH": 75,
+          "ARTS_INTENSITY": 26.9
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_OVERALLS",
+      "name": "Mi Security Overalls",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 87,
+          "AGILITY": 58,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.138
+        },
+        "2": {
+          "INTELLECT": 95,
+          "AGILITY": 63,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.152
+        },
+        "3": {
+          "INTELLECT": 104,
+          "AGILITY": 69,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.166
+        },
+        "4": {
+          "INTELLECT": 113,
+          "AGILITY": 75,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.179
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_OVERALLS_T2",
+      "name": "Mi Security Overalls T2",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "AGILITY": 58,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "WILL": 95,
+          "AGILITY": 63,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.228
+        },
+        "3": {
+          "WILL": 104,
+          "AGILITY": 69,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.248
+        },
+        "4": {
+          "WILL": 113,
+          "AGILITY": 75,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.269
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_HANDS_PPE_T1",
+      "name": "Mi Security Hands Ppe T1",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 65,
+          "WILL": 43,
+          "CRITICAL_RATE": 0.086
+        },
+        "2": {
+          "INTELLECT": 71,
+          "WILL": 47,
+          "CRITICAL_RATE": 0.095
+        },
+        "3": {
+          "INTELLECT": 78,
+          "WILL": 51,
+          "CRITICAL_RATE": 0.104
+        },
+        "4": {
+          "INTELLECT": 84,
+          "WILL": 55,
+          "CRITICAL_RATE": 0.112
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_HANDS_PPE",
+      "name": "Mi Security Hands Ppe",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 65,
+          "AGILITY": 43,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "INTELLECT": 71,
+          "AGILITY": 47,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "INTELLECT": 78,
+          "AGILITY": 51,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "INTELLECT": 84,
+          "AGILITY": 55,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.299
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_GLOVES",
+      "name": "Mi Security Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 65,
+          "STRENGTH": 43,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.345
+        },
+        "2": {
+          "AGILITY": 71,
+          "STRENGTH": 47,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.38
+        },
+        "3": {
+          "AGILITY": 78,
+          "STRENGTH": 51,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "4": {
+          "AGILITY": 84,
+          "STRENGTH": 55,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.449
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_PUSH_KNIFE",
+      "name": "Mi Security Push Knife",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "INTELLECT": 21,
+          "HEAT_DAMAGE_BONUS": 0.23,
+          "NATURE_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "WILL": 35,
+          "INTELLECT": 23,
+          "HEAT_DAMAGE_BONUS": 0.253,
+          "NATURE_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "WILL": 38,
+          "INTELLECT": 25,
+          "HEAT_DAMAGE_BONUS": 0.276,
+          "NATURE_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "WILL": 41,
+          "INTELLECT": 27,
+          "HEAT_DAMAGE_BONUS": 0.299,
+          "NATURE_DAMAGE_BONUS": 0.299
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_ARMBAND",
+      "name": "Mi Security Armband",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "WILL": 21,
+          "CRYO_DAMAGE_BONUS": 0.23,
+          "ELECTRIC_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "STRENGTH": 35,
+          "WILL": 23,
+          "CRYO_DAMAGE_BONUS": 0.253,
+          "ELECTRIC_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "STRENGTH": 38,
+          "WILL": 25,
+          "CRYO_DAMAGE_BONUS": 0.276,
+          "ELECTRIC_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "STRENGTH": 41,
+          "WILL": 27,
+          "CRYO_DAMAGE_BONUS": 0.299,
+          "ELECTRIC_DAMAGE_BONUS": 0.299
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_SCOPE",
+      "name": "Mi Security Scope",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_TOOLKIT",
+      "name": "Mi Security Toolkit",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "AGILITY": 21,
+          "CRITICAL_RATE": 0.104
+        },
+        "2": {
+          "INTELLECT": 35,
+          "AGILITY": 23,
+          "CRITICAL_RATE": 0.114
+        },
+        "3": {
+          "INTELLECT": 38,
+          "AGILITY": 25,
+          "CRITICAL_RATE": 0.124
+        },
+        "4": {
+          "INTELLECT": 41,
+          "AGILITY": 27,
+          "CRITICAL_RATE": 0.135
+        }
+      }
+    },
+    {
+      "gearType": "MI_SECURITY_PUSH_KNIFE_T1",
+      "name": "Mi Security Push Knife T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "AGILITY": 21,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "WILL": 35,
+          "AGILITY": 23,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "WILL": 38,
+          "AGILITY": 25,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "WILL": 41,
+          "AGILITY": 27,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

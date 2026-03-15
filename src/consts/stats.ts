@@ -1,10 +1,13 @@
 import { StatType } from "./enums";
 
+/** Fraction of natural SP consumed that converts to team-wide ultimate charge. */
+export const NATURAL_SP_TO_ULTIMATE_RATIO = 0.065;
+
 /** Default baseline for all stats (attributes and combat stats). */
 export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.BASE_HP]: 0,
-  [StatType.DEFENSE]: 0,
-  [StatType.ATTACK]: 0,
+  [StatType.BASE_DEFENSE]: 0,
+  [StatType.BASE_ATTACK]: 0,
   [StatType.ATTACK_BONUS]: 0,
   [StatType.STRENGTH]: 0,
   [StatType.STRENGTH_BONUS]: 0,
@@ -43,4 +46,11 @@ export const DEFAULT_STATS: Readonly<Record<StatType, number>> = {
   [StatType.ARTS_DAMAGE_BONUS]: 0,
   [StatType.HP_BONUS]: 0,
   [StatType.FLAT_HP]: 0,
+  // ── Enemy stats ──────────────────────────────────────────────────────────────
+  [StatType.STAGGER_HP]: 0,
+  [StatType.STAGGER_RECOVERY]: 0,
+  [StatType.FINISHER_ATK_MULTIPLIER]: 0,
+  [StatType.FINISHER_SP_GAIN]: 0,
+  [StatType.ATTACK_RANGE]: 0,
+  [StatType.WEIGHT]: 0,
 };

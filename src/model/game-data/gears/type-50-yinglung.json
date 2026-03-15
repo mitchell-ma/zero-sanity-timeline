@@ -1,0 +1,212 @@
+{
+  "gearSetType": "TYPE_50_YINGLUNG",
+  "name": "Type 50 Yinglung",
+  "suitID": "suit_atk02",
+  "rarity": 5,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "TYPE_50_YINGLUNG",
+    "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When any operator in the team casts a battle skill, the wearer gains 1 stack of Yinglung's Edge that gives DMG +{dmg_up:0%} to the wearer's next combo skill. Yinglung's Edge can stack {max_stack:0} time(s)."
+  },
+  "pieces": [
+    {
+      "gearType": "TYPE_50_YINGLUNG_LIGHT_ARMOR",
+      "name": "Type 50 Yinglung Light Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "STRENGTH": 58,
+          "SKILL_DAMAGE_BONUS": 0.138
+        },
+        "2": {
+          "WILL": 95,
+          "STRENGTH": 63,
+          "SKILL_DAMAGE_BONUS": 0.152
+        },
+        "3": {
+          "WILL": 104,
+          "STRENGTH": 69,
+          "SKILL_DAMAGE_BONUS": 0.166
+        },
+        "4": {
+          "WILL": 113,
+          "STRENGTH": 75,
+          "SKILL_DAMAGE_BONUS": 0.179
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_HEAVY_ARMOR",
+      "name": "Type 50 Yinglung Heavy Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 87,
+          "WILL": 58,
+          "PHYSICAL_DAMAGE_BONUS": 0.115
+        },
+        "2": {
+          "STRENGTH": 95,
+          "WILL": 63,
+          "PHYSICAL_DAMAGE_BONUS": 0.127
+        },
+        "3": {
+          "STRENGTH": 104,
+          "WILL": 69,
+          "PHYSICAL_DAMAGE_BONUS": 0.138
+        },
+        "4": {
+          "STRENGTH": 113,
+          "WILL": 75,
+          "PHYSICAL_DAMAGE_BONUS": 0.15
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_GLOVES_T1",
+      "name": "Type 50 Yinglung Gloves T1",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "WILL": 65,
+          "AGILITY": 43,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.345
+        },
+        "2": {
+          "WILL": 71,
+          "AGILITY": 47,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.38
+        },
+        "3": {
+          "WILL": 78,
+          "AGILITY": 51,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "4": {
+          "WILL": 84,
+          "AGILITY": 55,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.449
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_GLOVES",
+      "name": "Type 50 Yinglung Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 65,
+          "INTELLECT": 43,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.345
+        },
+        "2": {
+          "AGILITY": 71,
+          "INTELLECT": 47,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.38
+        },
+        "3": {
+          "AGILITY": 78,
+          "INTELLECT": 51,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "4": {
+          "AGILITY": 84,
+          "INTELLECT": 55,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.449
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_RADAR",
+      "name": "Type 50 Yinglung Radar",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "WILL": 21,
+          "PHYSICAL_DAMAGE_BONUS": 0.23
+        },
+        "2": {
+          "STRENGTH": 35,
+          "WILL": 23,
+          "PHYSICAL_DAMAGE_BONUS": 0.253
+        },
+        "3": {
+          "STRENGTH": 38,
+          "WILL": 25,
+          "PHYSICAL_DAMAGE_BONUS": 0.276
+        },
+        "4": {
+          "STRENGTH": 41,
+          "WILL": 27,
+          "PHYSICAL_DAMAGE_BONUS": 0.299
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_KNIFE",
+      "name": "Type 50 Yinglung Knife",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "WILL": 35,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.455
+        },
+        "3": {
+          "WILL": 38,
+          "AGILITY": 25,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.497
+        },
+        "4": {
+          "WILL": 41,
+          "AGILITY": 27,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.538
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_KNIFE_T1",
+      "name": "Type 50 Yinglung Knife T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "STRENGTH": 21,
+          "SKILL_DAMAGE_BONUS": 0.276
+        },
+        "2": {
+          "INTELLECT": 35,
+          "STRENGTH": 23,
+          "SKILL_DAMAGE_BONUS": 0.304
+        },
+        "3": {
+          "INTELLECT": 38,
+          "STRENGTH": 25,
+          "SKILL_DAMAGE_BONUS": 0.331
+        },
+        "4": {
+          "INTELLECT": 41,
+          "STRENGTH": 27,
+          "SKILL_DAMAGE_BONUS": 0.359
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

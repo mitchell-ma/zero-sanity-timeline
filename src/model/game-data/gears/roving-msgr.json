@@ -1,0 +1,260 @@
+{
+  "gearSetType": "ROVING_MSGR",
+  "name": "Roving MSGR",
+  "suitID": "suit_agi01",
+  "rarity": 4,
+  "setEffect": {
+    "piecesRequired": 3,
+    "gearSetEffectType": "ROVING_MSGR",
+    "description": "3-piece set effect: Wearer's Agility +{agi_up}. When the wearer's HP is above {hp_ratio:0%}, Physical DMG +{phy_dmg_up:0%}."
+  },
+  "pieces": [
+    {
+      "gearType": "ROVING_MSGR_JACKET",
+      "name": "Roving Msgr Jacket",
+      "gearCategory": "ARMOR",
+      "defense": 28.8,
+      "allLevels": {
+        "1": {
+          "AGILITY": 44,
+          "INTELLECT": 29,
+          "BASE_ATTACK": 16.2
+        },
+        "2": {
+          "AGILITY": 44,
+          "INTELLECT": 29,
+          "BASE_ATTACK": 16.2
+        },
+        "3": {
+          "AGILITY": 44,
+          "INTELLECT": 29,
+          "BASE_ATTACK": 16.2
+        },
+        "4": {
+          "AGILITY": 44,
+          "INTELLECT": 29,
+          "BASE_ATTACK": 16.2
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_JACKET_T1",
+      "name": "Roving Msgr Jacket T1",
+      "gearCategory": "ARMOR",
+      "defense": 40,
+      "allLevels": {
+        "1": {
+          "AGILITY": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "2": {
+          "AGILITY": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "3": {
+          "AGILITY": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "4": {
+          "AGILITY": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FISTS",
+      "name": "Roving Msgr Fists",
+      "gearCategory": "GLOVES",
+      "defense": 21.6,
+      "allLevels": {
+        "1": {
+          "AGILITY": 33,
+          "STRENGTH": 22,
+          "PHYSICAL_DAMAGE_BONUS": 0.097
+        },
+        "2": {
+          "AGILITY": 33,
+          "STRENGTH": 22,
+          "PHYSICAL_DAMAGE_BONUS": 0.097
+        },
+        "3": {
+          "AGILITY": 33,
+          "STRENGTH": 22,
+          "PHYSICAL_DAMAGE_BONUS": 0.097
+        },
+        "4": {
+          "AGILITY": 33,
+          "STRENGTH": 22,
+          "PHYSICAL_DAMAGE_BONUS": 0.097
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FISTS_T1",
+      "name": "Roving Msgr Fists T1",
+      "gearCategory": "GLOVES",
+      "defense": 30,
+      "allLevels": {
+        "1": {
+          "AGILITY": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.123
+        },
+        "2": {
+          "AGILITY": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.123
+        },
+        "3": {
+          "AGILITY": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.123
+        },
+        "4": {
+          "AGILITY": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.123
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_GYRO_T1",
+      "name": "Roving Msgr Gyro T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "2": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "3": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "4": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FLASHLIGHT",
+      "name": "Roving Msgr Flashlight",
+      "gearCategory": "KIT",
+      "defense": 10.8,
+      "allLevels": {
+        "1": {
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.21
+        },
+        "2": {
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.21
+        },
+        "3": {
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.21
+        },
+        "4": {
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.21
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FLASHLIGHT_T2",
+      "name": "Roving Msgr Flashlight T2",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.368
+        },
+        "2": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.368
+        },
+        "3": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.368
+        },
+        "4": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.368
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_GYRO",
+      "name": "Roving Msgr Gyro",
+      "gearCategory": "KIT",
+      "defense": 10.8,
+      "allLevels": {
+        "1": {
+          "AGILITY": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "2": {
+          "AGILITY": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "3": {
+          "AGILITY": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "4": {
+          "AGILITY": 21,
+          "ATTACK_BONUS": 0.105
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FLASHLIGHT_T1",
+      "name": "Roving Msgr Flashlight T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "2": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "3": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "4": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        }
+      }
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

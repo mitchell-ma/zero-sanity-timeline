@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 1094,
-    [EnemyStatType.ATK]: 59,
+    [StatType.BASE_HP]: 1094,
+    [StatType.BASE_ATTACK]: 59,
   },
   20: {
-    [EnemyStatType.HP]: 7849,
-    [EnemyStatType.ATK]: 279,
+    [StatType.BASE_HP]: 7849,
+    [StatType.BASE_ATTACK]: 279,
   },
   40: {
-    [EnemyStatType.HP]: 49666,
-    [EnemyStatType.ATK]: 868,
+    [StatType.BASE_HP]: 49666,
+    [StatType.BASE_ATTACK]: 868,
   },
   60: {
-    [EnemyStatType.HP]: 195528,
-    [EnemyStatType.ATK]: 2156,
+    [StatType.BASE_HP]: 195528,
+    [StatType.BASE_ATTACK]: 2156,
   },
   80: {
-    [EnemyStatType.HP]: 470332,
-    [EnemyStatType.ATK]: 3244,
+    [StatType.BASE_HP]: 470332,
+    [StatType.BASE_ATTACK]: 3244,
   },
   90: {
-    [EnemyStatType.HP]: 724559,
-    [EnemyStatType.ATK]: 3717,
+    [StatType.BASE_HP]: 724559,
+    [StatType.BASE_ATTACK]: 3717,
   },
 };
 
@@ -48,15 +48,15 @@ export class HeavyStingAlphaEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.STAGGER_HP]: 180,
-        [EnemyStatType.STAGGER_RECOVERY]: 7.5,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 7,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.STAGGER_HP]: 180,
+        [StatType.STAGGER_RECOVERY]: 7.5,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 7,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

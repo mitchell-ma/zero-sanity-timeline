@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
+import { SKILL_COLUMNS } from '../model/channels';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadout } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { TOTAL_FRAMES, FPS } from '../utils/timeline';
 import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
 import { getUltimateActiveWindow } from '../controller/timeline/eventValidator';
+import { NATURAL_SP_TO_ULTIMATE_RATIO } from '../consts/stats';
+import { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
@@ -26,6 +29,8 @@ export function useResourceGraphs(
 ) {
   // ── Skill point graphs (from CommonSlot resource timeline) ──────────────
   const [spGraphs, setSpGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
+  // Track consumption log version to trigger re-memo of ultimate graphs
+  const [consumptionVersion, setConsumptionLogVersion] = useState(0);
 
   useEffect(() => {
     const sp = combatLoadout.commonSlot.skillPoints;
@@ -36,6 +41,8 @@ export function useResourceGraphs(
         next.set(key, { points, min: sp.min, max: sp.max });
         return next;
       });
+      // Bump version so ultimate graphs re-derive from updated consumption log
+      setConsumptionLogVersion((v) => v + 1);
     };
     update(sp.getGraph());
     return sp.onGraphChange(update);
@@ -63,55 +70,73 @@ export function useResourceGraphs(
     const graphs = new Map<string, ResourceGraphData>();
     const allTacticalEvents: TimelineEvent[] = [];
 
-    // Collect gauge gain events: battle/combo skills that affect ultimate charge
-    // Scan all segment frames for gaugeGain; fall back to event-level for legacy data
+    // Read consumption log from SP timeline for battle skill gauge derivation
+    const consumptionHistory = combatLoadout.commonSlot.skillPoints.consumptionHistory ?? [];
+    const consumptionByEventId = new Map<string, SkillPointConsumptionHistory>();
+    for (const rec of consumptionHistory) {
+      consumptionByEventId.set(rec.eventId, rec);
+    }
+
+    // Collect gauge gain events: battle skills derive from SP, combo skills use declared values
     type GaugeEvent = { frame: number; selfSlotId: string; gaugeGain: number; teamGaugeGain: number };
     const gaugeEvents: GaugeEvent[] = [];
     for (const ev of events) {
-      if (ev.columnId !== 'battle' && ev.columnId !== 'combo') continue;
-      // If the event has gaugeGainByEnemies, prefer the event-level gaugeGain
-      // which is updated when the user changes the "enemies hit" selection.
-      const firstFrame = ev.segments?.[0]?.frames?.[0];
-      if (ev.gaugeGainByEnemies) {
-        const selfGain = ev.gaugeGain ?? firstFrame?.gaugeGain ?? 0;
-        const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
-        if (selfGain > 0 || teamGain > 0) {
-          gaugeEvents.push({
-            frame: firstFrame?.absoluteFrame ?? ev.startFrame,
-            selfSlotId: ev.ownerId,
-            gaugeGain: selfGain,
-            teamGaugeGain: teamGain,
-          });
+      if (ev.columnId === SKILL_COLUMNS.BATTLE) {
+        // Battle skills: derive gauge from natural SP consumed
+        const rec = consumptionByEventId.get(ev.id);
+        if (rec) {
+          const gain = rec.naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
+          if (gain > 0) {
+            gaugeEvents.push({
+              frame: rec.frame,
+              selfSlotId: ev.ownerId,
+              gaugeGain: gain,
+              teamGaugeGain: gain, // team-wide: all operators gain the same amount
+            });
+          }
         }
-      } else {
-        // Scan all frames across all segments for gauge gain
-        let found = false;
-        for (const seg of ev.segments ?? []) {
-          for (const f of seg.frames ?? []) {
-            const selfGain = f.gaugeGain ?? 0;
-            const teamGain = f.teamGaugeGain ?? 0;
+      } else if (ev.columnId === SKILL_COLUMNS.COMBO) {
+        // Combo skills: use declared gaugeGain values (unchanged)
+        const firstFrame = ev.segments?.[0]?.frames?.[0];
+        if (ev.gaugeGainByEnemies) {
+          const selfGain = ev.gaugeGain ?? firstFrame?.gaugeGain ?? 0;
+          const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
+          if (selfGain > 0 || teamGain > 0) {
+            gaugeEvents.push({
+              frame: firstFrame?.absoluteFrame ?? ev.startFrame,
+              selfSlotId: ev.ownerId,
+              gaugeGain: selfGain,
+              teamGaugeGain: teamGain,
+            });
+          }
+        } else {
+          let found = false;
+          for (const seg of ev.segments ?? []) {
+            for (const f of seg.frames ?? []) {
+              const selfGain = f.gaugeGain ?? 0;
+              const teamGain = f.teamGaugeGain ?? 0;
+              if (selfGain > 0 || teamGain > 0) {
+                found = true;
+                gaugeEvents.push({
+                  frame: f.absoluteFrame ?? ev.startFrame,
+                  selfSlotId: ev.ownerId,
+                  gaugeGain: selfGain,
+                  teamGaugeGain: teamGain,
+                });
+              }
+            }
+          }
+          if (!found) {
+            const selfGain = ev.gaugeGain ?? 0;
+            const teamGain = ev.teamGaugeGain ?? 0;
             if (selfGain > 0 || teamGain > 0) {
-              found = true;
               gaugeEvents.push({
-                frame: f.absoluteFrame ?? ev.startFrame,
+                frame: ev.startFrame,
                 selfSlotId: ev.ownerId,
                 gaugeGain: selfGain,
                 teamGaugeGain: teamGain,
               });
             }
-          }
-        }
-        // Fall back to event-level gauge gain if no frame-level data
-        if (!found) {
-          const selfGain = ev.gaugeGain ?? 0;
-          const teamGain = ev.teamGaugeGain ?? 0;
-          if (selfGain > 0 || teamGain > 0) {
-            gaugeEvents.push({
-              frame: ev.startFrame,
-              selfSlotId: ev.ownerId,
-              gaugeGain: selfGain,
-              teamGaugeGain: teamGain,
-            });
           }
         }
       }
@@ -134,7 +159,7 @@ export function useResourceGraphs(
 
       // Ultimate activations consume the full gauge
       for (const ev of events) {
-        if (ev.ownerId === slotId && ev.columnId === 'ultimate') {
+        if (ev.ownerId === slotId && ev.columnId === SKILL_COLUMNS.ULTIMATE) {
           timeline.push({ frame: ev.startFrame, type: 'consume', amount: max });
         }
       }
@@ -143,7 +168,7 @@ export function useResourceGraphs(
       // During the active phase, ultimate charge cannot be gained
       const ultActiveWindows: { start: number; end: number }[] = [];
       for (const ev of events) {
-        if (ev.ownerId === slotId && ev.columnId === 'ultimate') {
+        if (ev.ownerId === slotId && ev.columnId === SKILL_COLUMNS.ULTIMATE) {
           const w = getUltimateActiveWindow(ev);
           if (w) ultActiveWindows.push(w);
         }
@@ -220,7 +245,8 @@ export function useResourceGraphs(
       graphs.set(key, { points, min: 0, max });
     }
     return { ultimateGraphs: graphs, tacticalEvents: allTacticalEvents };
-  }, [operators, slotIds, events, resourceConfigs, tacticalNames, tacticalMaxUsesOverrides, gaugeGainMultipliers]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operators, slotIds, events, resourceConfigs, tacticalNames, tacticalMaxUsesOverrides, gaugeGainMultipliers, consumptionVersion]);
 
   // ── Merge SP + stagger + ultimate graphs ───────────────────────────────
   const resourceGraphs = useMemo(() => {

@@ -8,8 +8,9 @@ import { LoadoutStats } from '../../view/InformationPane';
 import { collectTimeStopRegions, applyTimeStopExtension, resolveFramePositions, validateTimeStopStarts } from './processTimeStop';
 import { applyComboChaining, applyPotentialEffects, deriveComboActivationWindows, SlotTriggerWiring } from './processComboSkill';
 import { deriveFrameInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh, attachReactionFrames, attachSusceptibilityFrames, consumeReactionsForStatus } from './processInfliction';
-import { consumeTeamStatuses, consumeOperatorStatuses, consumeOriginiumCrystals, deriveScorchingHeart, deriveScorchingFangs, deriveUnbridledEdge, deriveMessengersSong, deriveWildlandTrekker, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
-import { applySpReturnGaugeReduction } from './processSP';
+import { consumeTeamStatuses, consumeOperatorStatuses, consumeOriginiumCrystals, deriveScorchingFangs, deriveUnbridledEdge, deriveWildlandTrekker, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
+import { deriveStatusesFromEngine } from './statusDerivationEngine';
+
 
 // Re-export commonly used types and constants from sub-modules
 export type { TimeStopRegion } from './processTimeStop';
@@ -63,9 +64,9 @@ export function processInflictionEvents(
   const withAbsorptions = applyAbsorptions(withConsumedTeam, stops);
   // Consume operator statuses (e.g. Melting Flame) after absorptions derive them
   const withConsumedOperatorStatuses = consumeOperatorStatuses(withAbsorptions, stops, extendedIds);
-  // Derive Scorching Heart enemy debuff when Laevatain reaches 4 MF stacks
-  const withScorchingHeart = deriveScorchingHeart(withConsumedOperatorStatuses, loadoutStats);
-  const withConsumedCrystals = consumeOriginiumCrystals(withScorchingHeart);
+  // Generic status derivation engine (replaces deriveScorchingHeart, deriveMessengersSong)
+  const withEngineDerived = deriveStatusesFromEngine(withConsumedOperatorStatuses, loadoutStats);
+  const withConsumedCrystals = consumeOriginiumCrystals(withEngineDerived);
   const withReactions = deriveReactions(withConsumedCrystals);
   const withReactionFrames = attachReactionFrames(withReactions);
   const withSusceptibilityFrames = attachSusceptibilityFrames(withReactionFrames, loadoutStats);
@@ -77,16 +78,14 @@ export function processInflictionEvents(
   const withXaihiP5 = applyXaihiP5AmpBoost(withCryoConsumed, loadoutStats);
   const withScorchingFangs = deriveScorchingFangs(withXaihiP5, loadoutStats);
   const withUnbridledEdge = deriveUnbridledEdge(withScorchingFangs, slotWeapons, stops);
-  const withMessengersSong = deriveMessengersSong(withUnbridledEdge);
-  const withWildlandTrekker = deriveWildlandTrekker(withMessengersSong, loadoutStats);
+  const withWildlandTrekker = deriveWildlandTrekker(withUnbridledEdge, loadoutStats);
   // Final extension for Scorching Fangs, Unbridled Edge, and any other derived events
   const ext4 = applyTimeStopExtension(withWildlandTrekker, stops, extendedIds);
-  const withSpReturnGaugeReduction = applySpReturnGaugeReduction(ext4);
 
   // ── Derive combo activation windows ────────────────────────────────────
   const withComboWindows = slotWirings && slotWirings.length > 0
-    ? [...withSpReturnGaugeReduction, ...deriveComboActivationWindows(withSpReturnGaugeReduction, slotWirings, stops)]
-    : withSpReturnGaugeReduction;
+    ? [...ext4, ...deriveComboActivationWindows(ext4, slotWirings, stops)]
+    : ext4;
 
   // ── Phase 4: Resolve frame positions & validate ────────────────────────
   const withResolvedFrames = resolveFramePositions(withComboWindows, stops);

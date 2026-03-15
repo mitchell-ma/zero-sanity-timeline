@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 761,
-    [EnemyStatType.ATK]: 49,
+    [StatType.BASE_HP]: 761,
+    [StatType.BASE_ATTACK]: 49,
   },
   20: {
-    [EnemyStatType.HP]: 5465,
-    [EnemyStatType.ATK]: 233,
+    [StatType.BASE_HP]: 5465,
+    [StatType.BASE_ATTACK]: 233,
   },
   40: {
-    [EnemyStatType.HP]: 34578,
-    [EnemyStatType.ATK]: 723,
+    [StatType.BASE_HP]: 34578,
+    [StatType.BASE_ATTACK]: 723,
   },
   60: {
-    [EnemyStatType.HP]: 136127,
-    [EnemyStatType.ATK]: 1796,
+    [StatType.BASE_HP]: 136127,
+    [StatType.BASE_ATTACK]: 1796,
   },
   80: {
-    [EnemyStatType.HP]: 327446,
-    [EnemyStatType.ATK]: 2703,
+    [StatType.BASE_HP]: 327446,
+    [StatType.BASE_ATTACK]: 2703,
   },
   90: {
-    [EnemyStatType.HP]: 504440,
-    [EnemyStatType.ATK]: 3097,
+    [StatType.BASE_HP]: 504440,
+    [StatType.BASE_ATTACK]: 3097,
   },
 };
 
@@ -48,13 +48,13 @@ export class BonekrusherPyromancerEnemy extends Enemy {
       attackElement: ElementType.HEAT,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.HEAT_RESISTANCE]: 0.5,
-        [EnemyStatType.STAGGER_HP]: 160,
-        [EnemyStatType.STAGGER_RECOVERY]: 7,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.25,
-        [EnemyStatType.FINISHER_SP_GAIN]: 35,
-        [EnemyStatType.ATTACK_RANGE]: 7,
-        [EnemyStatType.WEIGHT]: 1.5,
+        [StatType.HEAT_RESISTANCE]: 0.5,
+        [StatType.STAGGER_HP]: 160,
+        [StatType.STAGGER_RECOVERY]: 7,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.25,
+        [StatType.FINISHER_SP_GAIN]: 35,
+        [StatType.ATTACK_RANGE]: 7,
+        [StatType.WEIGHT]: 1.5,
       },
       ...params,
     });

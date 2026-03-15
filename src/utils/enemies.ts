@@ -1,5 +1,5 @@
 import { Enemy } from "../consts/viewTypes";
-import { EnemyStatType } from "../consts/enums";
+import { StatType } from "../consts/enums";
 import { getModelEnemy } from "../controller/calculation/enemyRegistry";
 import { BossEnemy } from "../model/enemies/bossEnemy";
 
@@ -72,10 +72,10 @@ const DEFAULT_STATUSES = [
 
 function e(id: string, name: string, tier: string, sprite?: string): Enemy {
   const model = getModelEnemy(id);
-  const staggerHp = model?.stats[EnemyStatType.STAGGER_HP] ?? 60;
+  const staggerHp = model?.stats[StatType.STAGGER_HP] ?? 60;
   const staggerNodes = model instanceof BossEnemy ? model.staggerNodes : 0;
   const staggerNodeRecoverySeconds = model instanceof BossEnemy ? model.staggerNodeRecoverySeconds : 0;
-  const staggerBreakDurationSeconds = model?.stats[EnemyStatType.STAGGER_RECOVERY] ?? 6;
+  const staggerBreakDurationSeconds = model?.stats[StatType.STAGGER_RECOVERY] ?? 6;
   return { id, name, tier, sprite, statuses: DEFAULT_STATUSES, staggerHp, staggerNodes, staggerNodeRecoverySeconds, staggerBreakDurationSeconds };
 }
 

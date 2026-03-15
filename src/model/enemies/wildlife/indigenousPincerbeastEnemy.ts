@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 166,
-    [EnemyStatType.ATK]: 26,
+    [StatType.BASE_HP]: 166,
+    [StatType.BASE_ATTACK]: 26,
   },
   20: {
-    [EnemyStatType.HP]: 1192,
-    [EnemyStatType.ATK]: 124,
+    [StatType.BASE_HP]: 1192,
+    [StatType.BASE_ATTACK]: 124,
   },
   40: {
-    [EnemyStatType.HP]: 7544,
-    [EnemyStatType.ATK]: 386,
+    [StatType.BASE_HP]: 7544,
+    [StatType.BASE_ATTACK]: 386,
   },
   60: {
-    [EnemyStatType.HP]: 29700,
-    [EnemyStatType.ATK]: 958,
+    [StatType.BASE_HP]: 29700,
+    [StatType.BASE_ATTACK]: 958,
   },
   80: {
-    [EnemyStatType.HP]: 71443,
-    [EnemyStatType.ATK]: 1442,
+    [StatType.BASE_HP]: 71443,
+    [StatType.BASE_ATTACK]: 1442,
   },
   90: {
-    [EnemyStatType.HP]: 110060,
-    [EnemyStatType.ATK]: 1652,
+    [StatType.BASE_HP]: 110060,
+    [StatType.BASE_ATTACK]: 1652,
   },
 };
 
@@ -48,7 +48,7 @@ export class IndigenousPincerbeastEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

@@ -1,0 +1,670 @@
+{
+  "weaponId": "WEDGE",
+  "name": "Wedge",
+  "weaponType": "HANDCANNON",
+  "weaponRarity": 6,
+  "allLevels": [
+    {
+      "level": 1,
+      "baseAttack": 51
+    },
+    {
+      "level": 2,
+      "baseAttack": 56
+    },
+    {
+      "level": 3,
+      "baseAttack": 61
+    },
+    {
+      "level": 4,
+      "baseAttack": 66
+    },
+    {
+      "level": 5,
+      "baseAttack": 71
+    },
+    {
+      "level": 6,
+      "baseAttack": 76
+    },
+    {
+      "level": 7,
+      "baseAttack": 81
+    },
+    {
+      "level": 8,
+      "baseAttack": 86
+    },
+    {
+      "level": 9,
+      "baseAttack": 91
+    },
+    {
+      "level": 10,
+      "baseAttack": 96
+    },
+    {
+      "level": 11,
+      "baseAttack": 101
+    },
+    {
+      "level": 12,
+      "baseAttack": 106
+    },
+    {
+      "level": 13,
+      "baseAttack": 111
+    },
+    {
+      "level": 14,
+      "baseAttack": 116
+    },
+    {
+      "level": 15,
+      "baseAttack": 121
+    },
+    {
+      "level": 16,
+      "baseAttack": 126
+    },
+    {
+      "level": 17,
+      "baseAttack": 131
+    },
+    {
+      "level": 18,
+      "baseAttack": 136
+    },
+    {
+      "level": 19,
+      "baseAttack": 141
+    },
+    {
+      "level": 20,
+      "baseAttack": 146
+    },
+    {
+      "level": 21,
+      "baseAttack": 152
+    },
+    {
+      "level": 22,
+      "baseAttack": 157
+    },
+    {
+      "level": 23,
+      "baseAttack": 162
+    },
+    {
+      "level": 24,
+      "baseAttack": 167
+    },
+    {
+      "level": 25,
+      "baseAttack": 172
+    },
+    {
+      "level": 26,
+      "baseAttack": 177
+    },
+    {
+      "level": 27,
+      "baseAttack": 182
+    },
+    {
+      "level": 28,
+      "baseAttack": 187
+    },
+    {
+      "level": 29,
+      "baseAttack": 192
+    },
+    {
+      "level": 30,
+      "baseAttack": 197
+    },
+    {
+      "level": 31,
+      "baseAttack": 202
+    },
+    {
+      "level": 32,
+      "baseAttack": 207
+    },
+    {
+      "level": 33,
+      "baseAttack": 212
+    },
+    {
+      "level": 34,
+      "baseAttack": 217
+    },
+    {
+      "level": 35,
+      "baseAttack": 222
+    },
+    {
+      "level": 36,
+      "baseAttack": 227
+    },
+    {
+      "level": 37,
+      "baseAttack": 232
+    },
+    {
+      "level": 38,
+      "baseAttack": 237
+    },
+    {
+      "level": 39,
+      "baseAttack": 242
+    },
+    {
+      "level": 40,
+      "baseAttack": 247
+    },
+    {
+      "level": 41,
+      "baseAttack": 253
+    },
+    {
+      "level": 42,
+      "baseAttack": 258
+    },
+    {
+      "level": 43,
+      "baseAttack": 263
+    },
+    {
+      "level": 44,
+      "baseAttack": 268
+    },
+    {
+      "level": 45,
+      "baseAttack": 273
+    },
+    {
+      "level": 46,
+      "baseAttack": 278
+    },
+    {
+      "level": 47,
+      "baseAttack": 283
+    },
+    {
+      "level": 48,
+      "baseAttack": 288
+    },
+    {
+      "level": 49,
+      "baseAttack": 293
+    },
+    {
+      "level": 50,
+      "baseAttack": 298
+    },
+    {
+      "level": 51,
+      "baseAttack": 303
+    },
+    {
+      "level": 52,
+      "baseAttack": 308
+    },
+    {
+      "level": 53,
+      "baseAttack": 313
+    },
+    {
+      "level": 54,
+      "baseAttack": 318
+    },
+    {
+      "level": 55,
+      "baseAttack": 323
+    },
+    {
+      "level": 56,
+      "baseAttack": 328
+    },
+    {
+      "level": 57,
+      "baseAttack": 333
+    },
+    {
+      "level": 58,
+      "baseAttack": 338
+    },
+    {
+      "level": 59,
+      "baseAttack": 343
+    },
+    {
+      "level": 60,
+      "baseAttack": 348
+    },
+    {
+      "level": 61,
+      "baseAttack": 354
+    },
+    {
+      "level": 62,
+      "baseAttack": 359
+    },
+    {
+      "level": 63,
+      "baseAttack": 364
+    },
+    {
+      "level": 64,
+      "baseAttack": 369
+    },
+    {
+      "level": 65,
+      "baseAttack": 374
+    },
+    {
+      "level": 66,
+      "baseAttack": 379
+    },
+    {
+      "level": 67,
+      "baseAttack": 384
+    },
+    {
+      "level": 68,
+      "baseAttack": 389
+    },
+    {
+      "level": 69,
+      "baseAttack": 394
+    },
+    {
+      "level": 70,
+      "baseAttack": 399
+    },
+    {
+      "level": 71,
+      "baseAttack": 404
+    },
+    {
+      "level": 72,
+      "baseAttack": 409
+    },
+    {
+      "level": 73,
+      "baseAttack": 414
+    },
+    {
+      "level": 74,
+      "baseAttack": 419
+    },
+    {
+      "level": 75,
+      "baseAttack": 424
+    },
+    {
+      "level": 76,
+      "baseAttack": 429
+    },
+    {
+      "level": 77,
+      "baseAttack": 434
+    },
+    {
+      "level": 78,
+      "baseAttack": 439
+    },
+    {
+      "level": 79,
+      "baseAttack": 444
+    },
+    {
+      "level": 80,
+      "baseAttack": 449
+    },
+    {
+      "level": 81,
+      "baseAttack": 455
+    },
+    {
+      "level": 82,
+      "baseAttack": 460
+    },
+    {
+      "level": 83,
+      "baseAttack": 465
+    },
+    {
+      "level": 84,
+      "baseAttack": 470
+    },
+    {
+      "level": 85,
+      "baseAttack": 475
+    },
+    {
+      "level": 86,
+      "baseAttack": 480
+    },
+    {
+      "level": 87,
+      "baseAttack": 485
+    },
+    {
+      "level": 88,
+      "baseAttack": 490
+    },
+    {
+      "level": 89,
+      "baseAttack": 495
+    },
+    {
+      "level": 90,
+      "baseAttack": 500
+    }
+  ],
+  "skills": [
+    {
+      "weaponSkillType": "MAIN_ATTRIBUTE_BOOST_L",
+      "name": "Main Attribute Boost [L]",
+      "description": "Main attribute +",
+      "skillSlot": 1,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "MAIN_ATTRIBUTE": 17
+        },
+        {
+          "level": 2,
+          "MAIN_ATTRIBUTE": 30
+        },
+        {
+          "level": 3,
+          "MAIN_ATTRIBUTE": 44
+        },
+        {
+          "level": 4,
+          "MAIN_ATTRIBUTE": 57
+        },
+        {
+          "level": 5,
+          "MAIN_ATTRIBUTE": 71
+        },
+        {
+          "level": 6,
+          "MAIN_ATTRIBUTE": 85
+        },
+        {
+          "level": 7,
+          "MAIN_ATTRIBUTE": 98
+        },
+        {
+          "level": 8,
+          "MAIN_ATTRIBUTE": 112
+        },
+        {
+          "level": 9,
+          "MAIN_ATTRIBUTE": 132
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "CRITICAL_RATE_BOOST_L",
+      "name": "Critical Rate Boost [L]",
+      "description": "Critical Rate +",
+      "skillSlot": 2,
+      "skillCategory": "STAT_BOOST",
+      "allLevels": [
+        {
+          "level": 1,
+          "CRITICAL_RATE": 0.025
+        },
+        {
+          "level": 2,
+          "CRITICAL_RATE": 0.045
+        },
+        {
+          "level": 3,
+          "CRITICAL_RATE": 0.065
+        },
+        {
+          "level": 4,
+          "CRITICAL_RATE": 0.085
+        },
+        {
+          "level": 5,
+          "CRITICAL_RATE": 0.105
+        },
+        {
+          "level": 6,
+          "CRITICAL_RATE": 0.125
+        },
+        {
+          "level": 7,
+          "CRITICAL_RATE": 0.145
+        },
+        {
+          "level": 8,
+          "CRITICAL_RATE": 0.165
+        },
+        {
+          "level": 9,
+          "CRITICAL_RATE": 0.195
+        }
+      ]
+    },
+    {
+      "weaponSkillType": "WEDGE_INFLICTION_WEDGE_OF_CIVILIZATION",
+      "name": "Infliction: Wedge of Civilization",
+      "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder's battle skill applies an Arts Reaction, the wielder gains Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+      "skillSlot": 3,
+      "skillCategory": "NAMED",
+      "allLevels": [
+        {
+          "level": 1,
+          "ARTS_DAMAGE_BONUS": 0.12,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.08,
+              "spell_dmg_up3": 0.16,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "ARTS_DAMAGE_BONUS": 0.144,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.096,
+              "spell_dmg_up3": 0.192,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "ARTS_DAMAGE_BONUS": 0.168,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.112,
+              "spell_dmg_up3": 0.224,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "ARTS_DAMAGE_BONUS": 0.192,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.128,
+              "spell_dmg_up3": 0.256,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "ARTS_DAMAGE_BONUS": 0.216,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.144,
+              "spell_dmg_up3": 0.288,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "ARTS_DAMAGE_BONUS": 0.24,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.16,
+              "spell_dmg_up3": 0.32,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "ARTS_DAMAGE_BONUS": 0.264,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.176,
+              "spell_dmg_up3": 0.352,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "ARTS_DAMAGE_BONUS": 0.288,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.192,
+              "spell_dmg_up3": 0.384,
+              "duration2": 15
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "ARTS_DAMAGE_BONUS": 0.336,
+          "conditionalStats": [
+            {
+              "triggerConditions": [
+                "CAST_BATTLE_SKILL",
+                "APPLY_ARTS_REACTION"
+              ],
+              "triggerSources": [
+                "SELF"
+              ],
+              "duration": {
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "spell_dmg_up2": 0.224,
+              "spell_dmg_up3": 0.448,
+              "duration2": 15
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

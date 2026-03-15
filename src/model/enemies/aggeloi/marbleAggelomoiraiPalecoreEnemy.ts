@@ -1,6 +1,6 @@
 import {
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -8,31 +8,31 @@ import {
 import { BossEnemy } from "../bossEnemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 2077,
-    [EnemyStatType.ATK]: 33,
+    [StatType.BASE_HP]: 2077,
+    [StatType.BASE_ATTACK]: 33,
   },
   20: {
-    [EnemyStatType.HP]: 14903,
-    [EnemyStatType.ATK]: 155,
+    [StatType.BASE_HP]: 14903,
+    [StatType.BASE_ATTACK]: 155,
   },
   40: {
-    [EnemyStatType.HP]: 94303,
-    [EnemyStatType.ATK]: 482,
+    [StatType.BASE_HP]: 94303,
+    [StatType.BASE_ATTACK]: 482,
   },
   60: {
-    [EnemyStatType.HP]: 371256,
-    [EnemyStatType.ATK]: 1198,
+    [StatType.BASE_HP]: 371256,
+    [StatType.BASE_ATTACK]: 1198,
   },
   80: {
-    [EnemyStatType.HP]: 893035,
-    [EnemyStatType.ATK]: 1802,
+    [StatType.BASE_HP]: 893035,
+    [StatType.BASE_ATTACK]: 1802,
   },
   90: {
-    [EnemyStatType.HP]: 1375745,
-    [EnemyStatType.ATK]: 2065,
+    [StatType.BASE_HP]: 1375745,
+    [StatType.BASE_ATTACK]: 2065,
   },
 };
 
@@ -47,12 +47,12 @@ export class MarbleAggelomoiraiPalecoreEnemy extends BossEnemy {
       attackElement: null,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.STAGGER_HP]: 200,
-        [EnemyStatType.STAGGER_RECOVERY]: 24,
-        [EnemyStatType.FINISHER_ATK_MULTIPLIER]: 1.75,
-        [EnemyStatType.FINISHER_SP_GAIN]: 100,
-        [EnemyStatType.ATTACK_RANGE]: 12,
-        [EnemyStatType.WEIGHT]: 2,
+        [StatType.STAGGER_HP]: 200,
+        [StatType.STAGGER_RECOVERY]: 24,
+        [StatType.FINISHER_ATK_MULTIPLIER]: 1.75,
+        [StatType.FINISHER_SP_GAIN]: 100,
+        [StatType.ATTACK_RANGE]: 12,
+        [StatType.WEIGHT]: 2,
       },
       staggerNodes: 4,
       staggerNodeRecoverySeconds: 24,

@@ -2,7 +2,7 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { CombatSkillsType, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { TOTAL_FRAMES } from '../../utils/timeline';
-import { ENEMY_OWNER_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, SKILL_COLUMNS } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 
 // ── Combo time-stop chaining ─────────────────────────────────────────────────
@@ -22,7 +22,7 @@ import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } f
 export function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
   const comboStops: { id: string; startFrame: number; animDur: number }[] = [];
   for (const ev of events) {
-    if (ev.columnId !== 'combo') continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     const anim = ev.animationDuration;
     if (!anim || anim <= 0) continue;
     comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur: anim });
@@ -73,7 +73,7 @@ const ULTIMATE_RESETS_COMBO: Record<string, number> = {
  */
 export function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
   const ultimates = events.filter(
-    (ev) => ev.columnId === 'ultimate' && ULTIMATE_RESETS_COMBO[ev.name] != null
+    (ev) => ev.columnId === SKILL_COLUMNS.ULTIMATE && ULTIMATE_RESETS_COMBO[ev.name] != null
       && (ev.operatorPotential ?? 0) >= ULTIMATE_RESETS_COMBO[ev.name],
   );
   if (ultimates.length === 0) return events;
@@ -82,7 +82,7 @@ export function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] 
   for (const ult of ultimates) {
     const ultFrame = ult.startFrame;
     for (const ev of events) {
-      if (ev.ownerId !== ult.ownerId || ev.columnId !== 'combo') continue;
+      if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
       const activeEnd = ev.startFrame + ev.activationDuration + ev.activeDuration;
       const cooldownEnd = activeEnd + ev.cooldownDuration;
       // If the combo is in its cooldown phase when the ultimate is cast, reset it
@@ -171,7 +171,7 @@ export function deriveComboActivationWindows(
   // time stops don't extend its combo activation window duration.
   const comboStopIdsBySlot = new Map<string, Set<string>>();
   for (const ev of events) {
-    if (ev.columnId !== 'combo' || !isTimeStopEvent(ev)) continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO || !isTimeStopEvent(ev)) continue;
     if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
     comboStopIdsBySlot.get(ev.ownerId)!.add(ev.id);
   }
@@ -179,7 +179,7 @@ export function deriveComboActivationWindows(
   // Pre-index combo events per slot for cooldown checks
   const comboEventsBySlot = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.columnId !== 'combo') continue;
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
     comboEventsBySlot.get(ev.ownerId)!.push(ev);
   }

@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 270,
-    [EnemyStatType.ATK]: 30,
+    [StatType.BASE_HP]: 270,
+    [StatType.BASE_ATTACK]: 30,
   },
   20: {
-    [EnemyStatType.HP]: 1937,
-    [EnemyStatType.ATK]: 140,
+    [StatType.BASE_HP]: 1937,
+    [StatType.BASE_ATTACK]: 140,
   },
   40: {
-    [EnemyStatType.HP]: 12259,
-    [EnemyStatType.ATK]: 434,
+    [StatType.BASE_HP]: 12259,
+    [StatType.BASE_ATTACK]: 434,
   },
   60: {
-    [EnemyStatType.HP]: 48263,
-    [EnemyStatType.ATK]: 1078,
+    [StatType.BASE_HP]: 48263,
+    [StatType.BASE_ATTACK]: 1078,
   },
   80: {
-    [EnemyStatType.HP]: 116095,
-    [EnemyStatType.ATK]: 1622,
+    [StatType.BASE_HP]: 116095,
+    [StatType.BASE_ATTACK]: 1622,
   },
   90: {
-    [EnemyStatType.HP]: 178847,
-    [EnemyStatType.ATK]: 1858,
+    [StatType.BASE_HP]: 178847,
+    [StatType.BASE_ATTACK]: 1858,
   },
 };
 
@@ -48,10 +48,10 @@ export class BlazemistOriginiumSlugEnemy extends Enemy {
       attackElement: ElementType.NATURE,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.PHYSICAL_RESISTANCE]: 0.8,
-        [EnemyStatType.HEAT_RESISTANCE]: 0.8,
-        [EnemyStatType.NATURE_RESISTANCE]: 0.8,
-        [EnemyStatType.ATTACK_RANGE]: 6,
+        [StatType.PHYSICAL_RESISTANCE]: 0.8,
+        [StatType.HEAT_RESISTANCE]: 0.8,
+        [StatType.NATURE_RESISTANCE]: 0.8,
+        [StatType.ATTACK_RANGE]: 6,
       },
       ...params,
     });

@@ -20,8 +20,8 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { SKILL_COLUMN_ORDER as SKILL_ORDER } from '../model/channels';
-import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../consts/channelLabels';
+import { SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS } from '../model/channels';
+import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../consts/timelineColumnLabels';
 import { CombatSkillsType, TimelineSourceType, ELEMENT_COLORS, ElementType } from '../consts/enums';
 import {
   Operator,
@@ -744,7 +744,7 @@ export default function CombatPlanner({
       if (!colPos) continue;
       // Column X must overlap
       if (colPos.right <= rect.left || colPos.left >= rect.right) continue;
-      const isUltimate = ev.columnId === 'ultimate';
+      const isUltimate = ev.columnId === SKILL_COLUMNS.ULTIMATE;
       // Ultimate frames render in the Active phase only when activeDuration > 0;
       // otherwise they render in the Activation phase with no offset.
       const baseOffset = isUltimate && ev.activeDuration > 0 ? ev.activationDuration : 0;
@@ -1343,7 +1343,7 @@ export default function CombatPlanner({
       // Simple single-column mini-timeline (skill columns)
       const rawName = col.defaultEvent?.name ?? col.label;
       const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
-      if (col.columnId === 'combo') {
+      if (col.columnId === SKILL_COLUMNS.COMBO) {
         const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
         const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
         const disabled = !debugMode && (inTimeStop || !comboAvail.available || overlap);
@@ -1563,7 +1563,7 @@ export default function CombatPlanner({
     } else {
       const hasSegments = ev?.segments && ev.segments.length > 0;
       const multiSegment = (ev?.segments?.length ?? 0) > 1;
-      const isCombo = ev?.columnId === 'combo';
+      const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
       const segAddItems = multiSegment && !isCombo ? buildSegmentAddItems(eventId) : [];
       onContextMenu({
         x: e.clientX, y: e.clientY,
@@ -1660,7 +1660,7 @@ export default function CombatPlanner({
     const ev = events.find((ev) => ev.id === eventId);
     const segLabel = ev?.segments?.[segmentIndex]?.label;
     const multiSegment = (ev?.segments?.length ?? 0) > 1;
-    const isCombo = ev?.columnId === 'combo';
+    const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
     const addSegItems = multiSegment && !isCombo ? buildSegmentAddItems(eventId) : [];
     const addFrameItems = buildFrameAddItems(eventId, segmentIndex);
     onContextMenu({
@@ -1672,7 +1672,7 @@ export default function CombatPlanner({
         { separator: true },
         ...(addFrameItems.length > 0 ? [...addFrameItems, { separator: true } as const] : []),
         ...(addSegItems.length > 0 ? [...addSegItems, { separator: true } as const] : []),
-        ...(multiSegment && !isCombo && ev?.columnId === 'basic' ? [{
+        ...(multiSegment && !isCombo && ev?.columnId === SKILL_COLUMNS.BASIC ? [{
           label: `Remove Sequence${segLabel ? ` ${segLabel}` : ` ${segmentIndex + 1}`}`,
           action: () => { onRemoveSegment?.(eventId, segmentIndex); onContextMenu(null); },
           danger: true,
@@ -2046,7 +2046,7 @@ export default function CombatPlanner({
                 })()}
 
                 {/* Combo disabled background + "No trigger condition" labels */}
-                {col.columnId === 'combo' && !alwaysAvailableComboSlots.has(col.ownerId) && (() => {
+                {col.columnId === SKILL_COLUMNS.COMBO && !alwaysAvailableComboSlots.has(col.ownerId) && (() => {
                   const windowEvts = events.filter(
                     (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === col.ownerId,
                   );
@@ -2075,7 +2075,7 @@ export default function CombatPlanner({
 
                 {/* SP zones on battle columns: permanent stripes with
                     sufficient zones patched over to hide them */}
-                {col.columnId === 'battle' && (() => {
+                {col.columnId === SKILL_COLUMNS.BATTLE && (() => {
                   const insuffGaps = resourceInsufficiencyZones.get(`${col.ownerId}:battle`) ?? [];
 
                   // Compute sufficient zones (inverse of insufficient gaps)
@@ -2113,7 +2113,7 @@ export default function CombatPlanner({
                     return {
                       event: ev,
                       zoom,
-                      variant: (col.columnId === 'ultimate' ? 'ultimate' : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced',
+                      variant: (col.columnId === SKILL_COLUMNS.ULTIMATE ? 'ultimate' : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced',
                       label: ev.isPerfectDodge ? 'Dodge' : (COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name),
                       onDragStart: isDerivedCol ? noop3 : handleEventDragStart,
                       onContextMenu: isDerivedCol ? noop2 : handleEventContextMenu,
@@ -2214,7 +2214,7 @@ export default function CombatPlanner({
                         hovered={isWindow ? false : hoveredId === ev.id}
                         label={isWindow ? 'COMBO ACTIVATION WINDOW' : base.label}
                         passive={isWindow}
-                        striped={col.columnId === 'combo' && !isWindow && !alwaysAvailableComboSlots.has(col.ownerId)}
+                        striped={col.columnId === SKILL_COLUMNS.COMBO && !isWindow && !alwaysAvailableComboSlots.has(col.ownerId)}
                         comboWarning={isWindow ? null : [invalidComboIds.get(ev.id), invalidResourceIds.get(ev.id), invalidEmpoweredIds.get(ev.id), invalidEnhancedIds.get(ev.id), invalidRegularBasicIds.get(ev.id), invalidFinisherIds.get(ev.id), invalidFinisherStaggerIds.get(ev.id), invalidTimeStopIds.get(ev.id), invalidInflictionIds.get(ev.id)].filter(Boolean).join('\n') || null}
                         onDragStart={isWindow ? noop3 : base.onDragStart}
                         onContextMenu={isWindow ? noop2 : base.onContextMenu}

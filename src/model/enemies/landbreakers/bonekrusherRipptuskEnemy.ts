@@ -1,7 +1,7 @@
 import {
   ElementType,
   EnemyLocationType,
-  EnemyStatType,
+  StatType,
   EnemyTierType,
   EnemyType,
   RaceType,
@@ -9,31 +9,31 @@ import {
 import { Enemy } from "../enemy";
 
 const STATS_BY_LEVEL: Readonly<
-  Record<number, Partial<Record<EnemyStatType, number>>>
+  Record<number, Partial<Record<StatType, number>>>
 > = {
   1: {
-    [EnemyStatType.HP]: 152,
-    [EnemyStatType.ATK]: 30,
+    [StatType.BASE_HP]: 152,
+    [StatType.BASE_ATTACK]: 30,
   },
   20: {
-    [EnemyStatType.HP]: 1093,
-    [EnemyStatType.ATK]: 140,
+    [StatType.BASE_HP]: 1093,
+    [StatType.BASE_ATTACK]: 140,
   },
   40: {
-    [EnemyStatType.HP]: 6916,
-    [EnemyStatType.ATK]: 434,
+    [StatType.BASE_HP]: 6916,
+    [StatType.BASE_ATTACK]: 434,
   },
   60: {
-    [EnemyStatType.HP]: 27225,
-    [EnemyStatType.ATK]: 1078,
+    [StatType.BASE_HP]: 27225,
+    [StatType.BASE_ATTACK]: 1078,
   },
   80: {
-    [EnemyStatType.HP]: 65489,
-    [EnemyStatType.ATK]: 1622,
+    [StatType.BASE_HP]: 65489,
+    [StatType.BASE_ATTACK]: 1622,
   },
   90: {
-    [EnemyStatType.HP]: 100888,
-    [EnemyStatType.ATK]: 1858,
+    [StatType.BASE_HP]: 100888,
+    [StatType.BASE_ATTACK]: 1858,
   },
 };
 
@@ -48,7 +48,7 @@ export class BonekrusherRipptuskEnemy extends Enemy {
       attackElement: ElementType.PHYSICAL,
       statsByLevel: STATS_BY_LEVEL,
       baseStats: {
-        [EnemyStatType.ATTACK_RANGE]: 2.1,
+        [StatType.ATTACK_RANGE]: 2.1,
       },
       ...params,
     });
