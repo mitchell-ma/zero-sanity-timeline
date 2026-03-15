@@ -1,6 +1,6 @@
 # Devlog
 
-## 2026-03-15
+## 2026-03-14
 - All operator, weapon, and gear data now loads from JSON files instead of being hardcoded — makes it much easier to add new content and keep up with game updates
 - Custom content system — users can create and share their own operators, weapons, and gear sets
 - New content browser UI for managing custom items
