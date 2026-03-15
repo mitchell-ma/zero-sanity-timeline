@@ -6,7 +6,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, CombatSkillType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, CombatSkillType, CritMode, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -20,7 +20,7 @@ import {
   DamageParams,
   DamageSubComponents,
   getAmpMultiplier,
-  getAttributeBonus,
+  getCritMultiplier,
   getDamageBonus,
   getDefenseMultiplier,
   getDmgReductionMultiplier,
@@ -109,6 +109,14 @@ export interface DamageStatistics {
   columnTotals: Map<string, number>;
   /** Boss max HP (null if enemy has no HP data). */
   bossMaxHp: number | null;
+  /** Highest single-tick damage across all rows. */
+  highestTick: { damage: number; label: string; ownerId: string } | null;
+  /** Team DPS (total damage / last tick time in seconds). */
+  teamDps: number | null;
+  /** Frame at which boss HP reaches 0 (null if no boss or never killed). */
+  timeToKill: number | null;
+  /** Highest 5-second burst window damage. */
+  highestBurst: { damage: number; startFrame: number; endFrame: number } | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -219,6 +227,7 @@ export function buildDamageTableRows(
   loadoutStats: Record<string, LoadoutStats>,
   loadouts?: Record<string, OperatorLoadoutState>,
   statusQuery?: StatusQueryService,
+  critMode?: CritMode,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
 
@@ -403,8 +412,12 @@ export function buildDamageTableRows(
                   }
                 }
 
-                // Crit not currently factored into calculations
-                const expectedCrit = 1;
+                // Crit multiplier based on crit mode
+                const expectedCrit = critMode === CritMode.ALWAYS
+                  ? getCritMultiplier(true, opData.critDamage + talentCritDmgBonus)
+                  : critMode === CritMode.NONE
+                    ? 1
+                    : getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
 
                 // Finisher: applies when the event is a finisher attack during stagger break
                 const isFinisher = ev.name === CombatSkillsType.FINISHER;
@@ -655,13 +668,26 @@ export function computeDamageStatistics(
   rows: DamageTableRow[],
   tableColumns: DamageTableColumn[],
   bossMaxHp?: number | null,
+  /** Optional frame range to restrict DPS and total calculations. */
+  rangeStartFrame?: number,
+  rangeEndFrame?: number,
 ): DamageStatistics {
+  // Filter rows to the requested range (if any)
+  const hasRange = rangeStartFrame != null || rangeEndFrame != null;
+  const filteredRows = hasRange
+    ? rows.filter((r) => {
+        if (rangeStartFrame != null && r.absoluteFrame < rangeStartFrame) return false;
+        if (rangeEndFrame != null && r.absoluteFrame > rangeEndFrame) return false;
+        return true;
+      })
+    : rows;
+
   // Aggregate per-column totals
   const columnTotals = new Map<string, number>();
   for (const col of tableColumns) {
     columnTotals.set(col.key, 0);
   }
-  for (const row of rows) {
+  for (const row of filteredRows) {
     if (row.damage != null) {
       columnTotals.set(row.columnKey, (columnTotals.get(row.columnKey) ?? 0) + row.damage);
     }
@@ -702,5 +728,59 @@ export function computeDamageStatistics(
     });
   });
 
-  return { teamTotalDamage, operators, columnTotals, bossMaxHp: bossMaxHp ?? null };
+  // ── Extended statistics ──────────────────────────────────────────────────
+  // Highest single tick
+  let highestTick: DamageStatistics['highestTick'] = null;
+  for (const row of filteredRows) {
+    if (row.damage != null && (highestTick === null || row.damage > highestTick.damage)) {
+      highestTick = { damage: row.damage, label: row.label, ownerId: row.ownerId };
+    }
+  }
+
+  // Team DPS — use range bounds if set, otherwise first→last tick
+  let teamDps: number | null = null;
+  if (filteredRows.length > 0 && teamTotalDamage > 0) {
+    const FPS = 120;
+    const dpsStart = rangeStartFrame ?? filteredRows[0].absoluteFrame;
+    const dpsEnd = rangeEndFrame ?? filteredRows[filteredRows.length - 1].absoluteFrame;
+    const durationSec = (dpsEnd - dpsStart) / FPS;
+    if (durationSec > 0) {
+      teamDps = teamTotalDamage / durationSec;
+    }
+  }
+
+  // Time to kill (uses unfiltered rows — TTK is absolute)
+  let timeToKill: number | null = null;
+  if (bossMaxHp != null) {
+    for (const row of rows) {
+      if (row.hpRemaining != null && row.hpRemaining <= 0) {
+        timeToKill = row.absoluteFrame;
+        break;
+      }
+    }
+  }
+
+  // Highest 5-second burst window (600 frames at 120 FPS)
+  const BURST_WINDOW = 600;
+  let highestBurst: DamageStatistics['highestBurst'] = null;
+  if (filteredRows.length > 0) {
+    let windowStart = 0;
+    let windowSum = 0;
+    for (let end = 0; end < filteredRows.length; end++) {
+      windowSum += filteredRows[end].damage ?? 0;
+      while (filteredRows[end].absoluteFrame - filteredRows[windowStart].absoluteFrame > BURST_WINDOW) {
+        windowSum -= filteredRows[windowStart].damage ?? 0;
+        windowStart++;
+      }
+      if (highestBurst === null || windowSum > highestBurst.damage) {
+        highestBurst = {
+          damage: windowSum,
+          startFrame: filteredRows[windowStart].absoluteFrame,
+          endFrame: filteredRows[end].absoluteFrame,
+        };
+      }
+    }
+  }
+
+  return { teamTotalDamage, operators, columnTotals, bossMaxHp: bossMaxHp ?? null, highestTick, teamDps, timeToKill, highestBurst };
 }

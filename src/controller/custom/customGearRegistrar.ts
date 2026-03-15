@@ -1,14 +1,14 @@
 /**
  * Registers/deregisters custom gear sets into the runtime registries.
  */
-import { GearCategory, GearSetType, TriggerConditionType } from '../../consts/enums';
+import { GearSetType } from '../../consts/enums';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import type { GearSetEffectsEntry, GearSetEffect, GearEffectBuff } from '../../consts/gearSetEffects';
 import { GEARS } from '../../utils/loadoutRegistry';
 import type { GearRegistryEntry } from '../../utils/loadoutRegistry';
 import { DataDrivenGear } from '../../model/gears/dataDrivenGear';
-import type { CustomGearSet, CustomGearPiece } from '../../model/custom/customGearTypes';
-import { interactionToTriggerCondition, mapTargetToLegacy } from './bridgeUtils';
+import type { CustomGearSet } from '../../model/custom/customGearTypes';
+import { mapTargetToLegacy } from './bridgeUtils';
 
 // ── Registration ────────────────────────────────────────────────────────────
 
@@ -37,9 +37,7 @@ export function registerCustomGearSet(gearSet: CustomGearSet): void {
     if (gearSet.setEffect.effects) {
       for (let i = 0; i < gearSet.setEffect.effects.length; i++) {
         const effect = gearSet.setEffect.effects[i];
-        const triggers = effect.triggers
-          .map(interactionToTriggerCondition)
-          .filter((t): t is TriggerConditionType => t !== null);
+        const triggers = effect.triggers;
         if (triggers.length === 0) continue;
 
         effects.push({

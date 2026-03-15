@@ -9,6 +9,7 @@ import {
   TACTICALS,
   RegistryEntry,
 } from '../utils/loadoutRegistry';
+import { getStarredOperators, toggleStarredOperator } from '../utils/starredOperators';
 
 export interface OperatorLoadoutState {
   weaponName:     string | null;
@@ -308,6 +309,7 @@ export default function OperatorLoadoutHeader({
   const [opMenuPos, setOpMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [opSearch, setOpSearch] = useState('');
   const [opActiveRarities, setOpActiveRarities] = useState<Set<number>>(new Set());
+  const [starred, setStarred] = useState<Set<string>>(() => getStarredOperators());
   const splashRef = useRef<HTMLDivElement>(null);
   const opMenuRef = useRef<HTMLDivElement>(null);
 
@@ -327,8 +329,13 @@ export default function OperatorLoadoutHeader({
         if (!opActiveRarities.has(op.rarity)) return false;
         return true;
       })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allOperators, opSearch, opActiveRarities]);
+      .sort((a, b) => {
+        const aStarred = starred.has(a.id);
+        const bStarred = starred.has(b.id);
+        if (aStarred !== bStarred) return aStarred ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+  }, [allOperators, opSearch, opActiveRarities, starred]);
 
   const toggleOpRarity = useCallback((r: number) => {
     setOpActiveRarities((prev) => {
@@ -372,6 +379,12 @@ export default function OperatorLoadoutHeader({
     onSelectOperator?.(id);
     setOpMenuOpen(false);
   }, [onSelectOperator]);
+
+  const handleToggleStar = useCallback((e: React.MouseEvent, opId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setStarred(toggleStarredOperator(opId));
+  }, []);
   /** Create a handler that maps IconDropdown index ↔ registry name for a given slot. */
   const nameSet = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]) => (idx: number | null) =>
     onChange({ ...state, [key]: idx !== null ? entries[idx]?.name ?? null : null });
@@ -441,6 +454,12 @@ export default function OperatorLoadoutHeader({
                 className={`lo-dropdown-option${op.name === operatorName ? ' selected' : ''}`}
                 onClick={() => pickOperator(op.id)}
               >
+                <span
+                  className={`lo-star${starred.has(op.id) ? ' lo-star--active' : ''}`}
+                  onMouseDown={(e) => handleToggleStar(e, op.id)}
+                >
+                  {starred.has(op.id) ? '\u2605' : '\u2606'}
+                </span>
                 {op.splash ? (
                   <img className="lo-op-menu-splash" src={op.splash} alt={op.name} />
                 ) : (

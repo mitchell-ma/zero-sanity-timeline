@@ -3,7 +3,6 @@
  * so they appear alongside built-in weapons in loadout dropdowns
  * and the timeline pipeline.
  */
-import { TriggerConditionType } from '../../consts/enums';
 import { registerWeaponEffects, deregisterWeaponEffects } from '../../consts/weaponSkillEffects';
 import type { WeaponSkillEffect, WeaponEffectBuff } from '../../consts/weaponSkillEffects';
 import { WEAPON_DATA, registerCustomSkillFactory, deregisterCustomSkillFactory, createWeaponFromData as createWeaponFromDataFn } from '../../model/weapons/weaponData';
@@ -12,7 +11,7 @@ import { WEAPONS } from '../../utils/loadoutRegistry';
 import type { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { CustomStatBoostSkill, CustomNamedWeaponSkill } from '../../model/weapon-skills/customWeaponSkill';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
-import { interactionToTriggerCondition, mapTargetToLegacy } from './bridgeUtils';
+import { mapTargetToLegacy } from './bridgeUtils';
 
 function customSkillKey(weaponId: string, index: number): string {
   return `CUSTOM_${weaponId}_SKILL_${index}`;
@@ -59,9 +58,7 @@ export function registerCustomWeapon(weapon: CustomWeapon): void {
     const skill = weapon.skills[i];
     if (skill.type !== 'NAMED' || !skill.namedEffect) continue;
     const ne = skill.namedEffect;
-    const triggers = ne.triggers
-      .map(interactionToTriggerCondition)
-      .filter((t): t is TriggerConditionType => t !== null);
+    const triggers = ne.triggers;
     if (triggers.length === 0) continue;
 
     effects.push({

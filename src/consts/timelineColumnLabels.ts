@@ -1,4 +1,4 @@
-import { CombatSkillsType, StatusType, TriggerConditionType } from './enums';
+import { CombatSkillsType, StatusType } from './enums';
 import { SkillType } from './viewTypes';
 
 // ── Column header labels ────────────────────────────────────────────────────
@@ -289,44 +289,6 @@ export const PHYSICAL_STATUS_LABELS: Record<string, { label: string; color: stri
   breach: { label: 'Breach', color: '#c0c8d0' },
 };
 
-export const TRIGGER_CONDITION_LABELS: Record<string, string> = {
-  [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL]: 'SP Recovery from Skill',
-  [TriggerConditionType.FINAL_STRIKE]:                    'Final Strike',
-  [TriggerConditionType.COMBUSTION]:                      'Combustion',
-  [TriggerConditionType.SOLIDIFICATION]:                  'Solidification',
-  [TriggerConditionType.CORROSION]:                       'Corrosion',
-  [TriggerConditionType.ELECTRIFICATION]:                 'Electrification',
-  [TriggerConditionType.DEFEAT_ENEMY]:                    'Defeat Enemy',
-  [TriggerConditionType.CAST_BATTLE_SKILL]:               'Cast Battle Skill',
-  [TriggerConditionType.CAST_COMBO_SKILL]:                'Cast Combo Skill',
-  [TriggerConditionType.CAST_ULTIMATE]:                   'Cast Ultimate',
-  [TriggerConditionType.APPLY_PHYSICAL_STATUS]:           'Apply Physical Status',
-  [TriggerConditionType.APPLY_VULNERABILITY]:             'Apply Vulnerability',
-  [TriggerConditionType.CRITICAL_HIT]:                    'Critical Hit',
-  [TriggerConditionType.HP_TREATMENT]:                    'HP Treatment',
-  [TriggerConditionType.HP_TREATMENT_EXCEEDS_MAX]:        'HP Treatment Exceeds Max',
-  [TriggerConditionType.TEAM_CAST_BATTLE_SKILL]:          'Team Cast Battle Skill',
-  [TriggerConditionType.APPLY_ARTS_INFLICTION]:           'Apply Arts Infliction',
-  [TriggerConditionType.APPLY_HEAT_INFLICTION]:           'Apply Heat Infliction',
-  [TriggerConditionType.APPLY_CRYO_INFLICTION]:           'Apply Cryo Infliction',
-  [TriggerConditionType.APPLY_NATURE_INFLICTION]:         'Apply Nature Infliction',
-  [TriggerConditionType.APPLY_ELECTRIC_INFLICTION]:       'Apply Electric Infliction',
-  [TriggerConditionType.APPLY_ARTS_INFLICTION_2_STACKS]:  'Apply Arts Infliction (2+ stacks)',
-  [TriggerConditionType.APPLY_BUFF]:                      'Apply Buff',
-  [TriggerConditionType.HP_ABOVE_THRESHOLD]:              'HP Above Threshold',
-  [TriggerConditionType.HP_BELOW_THRESHOLD]:              'HP Below Threshold',
-  [TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD]: 'Ultimate Energy Below Threshold',
-  [TriggerConditionType.OPERATOR_ATTACKED]:               'Operator Attacked',
-  [TriggerConditionType.STAGGER]:                        'Stagger',
-  [TriggerConditionType.STAGGER_NODE]:                   'Stagger Node',
-  [TriggerConditionType.CONSUME_VULNERABILITY]:          'Consume Vulnerability',
-  [TriggerConditionType.APPLY_ARTS_REACTION]:            'Apply Arts Reaction',
-  [TriggerConditionType.CONSUME_ARTS_REACTION]:          'Consume Arts Reaction',
-  [TriggerConditionType.APPLY_LIFTED]:                   'Apply Lifted',
-  [TriggerConditionType.APPLY_KNOCKED_DOWN]:             'Apply Knock Down',
-  [TriggerConditionType.APPLY_ARTS_BURST]:               'Apply Arts Burst',
-  [TriggerConditionType.CONSUME_CORROSION]:              'Consume Corrosion',
-};
 
 export const PHYSICAL_STATUS_MICRO_COLUMNS = [
   { id: 'breach', label: 'BREACH', color: '#c0c8d0' },

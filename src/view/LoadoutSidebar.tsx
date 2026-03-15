@@ -4,15 +4,12 @@ import {
   LoadoutTree,
   LoadoutNode,
   getChildrenOf,
-  addLoadout,
   addFolder,
   removeNode,
   renameNode,
   toggleFolder,
   moveNode,
   uniqueName,
-  saveLoadoutTree,
-  deleteLoadoutData,
 } from '../utils/loadoutStorage';
 import type { ContentSelection } from '../consts/contentBrowserTypes';
 
@@ -33,17 +30,12 @@ interface LoadoutSidebarProps {
   onSidebarModeChange: (mode: SidebarMode) => void;
   selectedContentItem?: ContentSelection | null;
   onSelectContentItem?: (item: ContentSelection) => void;
+  onCloneContentAsCustom?: (item: ContentSelection) => void;
+  onEditCustomContent?: (item: ContentSelection) => void;
+  onContentChanged?: () => void;
+  contentRefreshKey?: number;
 }
 
-/** Collect all node IDs in a subtree (inclusive). */
-function collectSubtreeIds(tree: LoadoutTree, nodeId: string): string[] {
-  const ids: string[] = [nodeId];
-  const children = tree.nodes.filter((n) => n.parentId === nodeId);
-  for (const child of children) {
-    ids.push(...collectSubtreeIds(tree, child.id));
-  }
-  return ids;
-}
 
 /** Get a flattened list of visible node IDs in render order. */
 function flattenVisibleNodes(
@@ -77,6 +69,10 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onSidebarModeChange,
   selectedContentItem,
   onSelectContentItem,
+  onCloneContentAsCustom,
+  onEditCustomContent,
+  onContentChanged,
+  contentRefreshKey,
 }, ref) {
   const [filter, setFilter] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -117,7 +113,8 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         let current = node;
         while (current.parentId) {
           matching.add(current.parentId);
-          const parent = tree.nodes.find((n) => n.id === current.parentId);
+          const currentNode = current;
+          const parent = tree.nodes.find((n) => n.id === currentNode.parentId);
           if (!parent) break;
           current = parent;
         }
@@ -599,6 +596,10 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           <ContentBrowserPanel
             selectedItem={selectedContentItem ?? null}
             onSelectItem={onSelectContentItem}
+            onCloneAsCustom={onCloneContentAsCustom}
+            onEditCustom={onEditCustomContent}
+            onContentChanged={onContentChanged}
+            refreshKey={contentRefreshKey}
           />
         </Suspense>
       )}

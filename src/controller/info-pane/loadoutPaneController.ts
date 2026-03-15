@@ -7,7 +7,7 @@ import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
 import { interpolateAttack } from '../../model/weapons/weapon';
 import { aggregateLoadoutStats, weaponSkillStat, AggregatedStats } from '../calculation/loadoutAggregator';
-import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
+import { getWeaponEffects } from '../../consts/weaponSkillEffects';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -395,7 +395,7 @@ export function resolveAggregatedStats(
     let value = agg.stats[stat];
     const bonusStat = FLAT_ATTR_TO_BONUS[stat];
     if (bonusStat) {
-      value = Math.floor(value * (1 + agg.stats[bonusStat]));
+      value = value * (1 + agg.stats[bonusStat]);
     }
     return { stat, value, isZero: value === 0 };
   });

@@ -23,7 +23,7 @@ Who is performing the action or being checked.
 | `OTHER_OPERATORS` | All teammates except this operator |
 | `ALL_OPERATORS` | Entire team including this operator |
 | `ENEMY` | The enemy target |
-| `ANY` | Any entity (used for reactions triggered by anyone) |
+| `ANY_OPERATOR` | Any operator on the team (wildcard — matches any operator subject in interaction matching) |
 | `SYSTEM` | System-initiated (threshold effects, passive triggers) |
 
 ### VerbType
@@ -167,13 +167,19 @@ By default, a segment experiences `TIME_STOP` (game time paused). Cooldown segme
 
 ```ts
 {
-  "name"?: string,                          // e.g. "EXPLOSION", "MAGMA_FRAGMENT", "COOLDOWN"
-  "duration": {
-    "value": number[],                      // array length matches parent event's level count
-    "unit": DurationUnit
+  "metadata": {
+    "eventComponentType": "SEGMENT",
+    "dataSources"?: string[]
+  },
+  "properties": {
+    "duration": {
+      "value": number[],                    // array length matches parent event's level count
+      "unit": DurationUnit
+    },
+    "name"?: string                         // e.g. "EXPLOSION", "MAGMA_FRAGMENT", "COOLDOWN"
   },
   "experience"?: TimeDependencyType,        // default: GAME_TIME. Cooldown segments: REAL_TIME
-  "effects"?: Effect[],                     // segment-level effects (e.g. APPLY COMBO TIME_STOP FOR 0.566s)
+  "effects"?: Effect[],                     // segment-level effects (e.g. APPLY COMBO TIME_STOP WITH DURATION 0.566)
   "stats"?: StatModifier[],                 // passive modifiers active during this segment
   "frames"?: Frame[]                        // ordered damage/effect ticks within this segment
 }
@@ -187,13 +193,89 @@ All damage, resource recovery, stagger, inflictions, and status applications are
 
 ```ts
 {
-  "offset": {
-    "value": number,                        // when this frame fires relative to segment start
-    "unit": DurationUnit
+  "metadata": {
+    "eventComponentType": "FRAME",
+    "dataSources"?: string[]
   },
-  "effects"?: Effect[]                      // e.g. PERFORM HEAT_DAMAGE WITH × [...] AS NORMAL_ATTACK TO ENEMY
+  "properties": {
+    "offset": {
+      "value": number,                      // when this frame fires relative to segment start
+      "unit": DurationUnit
+    }
+  },
+  "effects"?: Effect[],                     // e.g. PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER ...
+  "multipliers"?: MultiplierEntry[]         // per-level numeric data (structural, absorbed into effects later)
 }
 ```
+
+### Effect
+
+A Verb-Object sentence with optional adjective and prepositional phrases.
+
+```ts
+{
+  "verbType": VerbType,
+  "objectType"?: ObjectType,
+  "objectId"?: string,                      // specific identifier (StatusType, skill name)
+  "adjective"?: string | string[],          // e.g. "HEAT", ["FORCED", "COMBUSTION"]
+  "toObjectType"?: string,                  // TO preposition — target/recipient
+  "fromObjectType"?: string,                // FROM preposition — source
+  "onObjectType"?: string,                  // ON preposition — stat target entity
+  "withPreposition"?: {                     // WITH preposition — properties/cardinalities
+    [key: string]: {
+      "verb": "IS" | "DEPENDS_ON",
+      "object"?: string,                    // dependency target for DEPENDS_ON (e.g. "SKILL_LEVEL")
+      "value": number | number[]            // single for IS, array for DEPENDS_ON
+    }
+  }
+}
+```
+
+#### WITH preposition keys (cardinalities)
+
+| Key | Meaning | Applies to |
+|-----|---------|------------|
+| `cardinality` | Generic count | Resources (SP, energy, cooldown) |
+| `duration` | Seconds | TIME_STOP, REACTION, STATUS |
+| `multiplier` | Damage multiplier | DAMAGE |
+| `staggerValue` | Stagger amount | STAGGER |
+| `skillPoint` | SP value | SKILL_POINT |
+| `stacks` | Stack count (implies stacking mechanism) | STATUS, INFLICTION |
+| `statusLevel` | Reaction/status tier (1-4), specialization of stacks | ARTS_REACTION, PHYSICAL_STATUS, INFLICTION |
+
+`statusLevel` is-a `stacks` is-a quantity. Each carries different semantic weight.
+
+#### WITH value verbs
+
+| Verb | Value shape | Example |
+|------|-------------|---------|
+| `IS` | Single number | `{ "verb": "IS", "value": 10 }` |
+| `DEPENDS_ON` | Array indexed by dependency | `{ "verb": "DEPENDS_ON", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
+
+#### Noun adjuncts
+
+Noun adjuncts are `NounType` values used in adjective position to modify an object. They appear in the `adjective` field of an Effect but are nouns, not adjectives — they act as compound noun modifiers.
+
+| Noun adjunct | Valid objects | Meaning | Example |
+|-------------|-------------|---------|---------|
+| `SOURCE` | `INFLICTION`, `STATUS` | Duplicate the triggering effect — apply another stack of whatever infliction/status triggered this skill | `APPLY SOURCE INFLICTION TO ENEMY` |
+
+**Example — Antal combo skill (EMP Test Site):**
+
+Antal's combo triggers when an enemy with Focus suffers a Physical Status or Arts Infliction. On hit, the combo applies another stack of the same effect:
+
+```json
+{
+  "effects": [
+    { "verbType": "APPLY", "adjective": "SOURCE", "objectType": "INFLICTION", "toObjectType": "ENEMY" },
+    { "verbType": "APPLY", "adjective": "SOURCE", "objectType": "STATUS", "toObjectType": "ENEMY" }
+  ]
+}
+```
+
+Two effects are needed because the combo has two trigger clauses (one for arts infliction, one for physical status). At runtime, only the effect matching the actual trigger fires.
+
+See `NOUN_ADJUNCTS` in `src/consts/semantics.ts` for the valid noun adjunct map.
 
 ### Composition
 
@@ -201,9 +283,20 @@ All damage, resource recovery, stagger, inflictions, and status applications are
 Event
 └── Segment[]
     └── Frame[]
+        └── Effect[]
+            └── withPreposition{}
 ```
 
-An Event owns Segments. A Segment owns Frames. Frames do not exist directly on an Event.
+An Event owns Segments. A Segment owns Frames. Frames contain Effects. Effects carry their properties via the WITH preposition.
+
+### Implied Delay Segments
+
+Some skills have frames whose offset exceeds the segment's stated duration — these represent delayed hits (projectile travel, delayed explosions, etc.). These are marked with `properties.hasDelayedHit: true`. During segment building, any out-of-bound frames are automatically split into an implied trailing segment labeled "Delay". The delayed frames' offsets are rebased relative to the new segment's start, and the segment's duration covers the latest frame.
+
+Examples:
+- **Ardelia COMBO_SKILL**: duration 0.77s, frame at 2.40s (delayed explosion applies Corrosion)
+- **Da Pan COMBO_SKILL**: duration 0.80s, frame at 1.76s (delayed wok flip hit)
+- **Fluorite BATTLE_SKILL**: duration 1.13s, frame at 2.97s (delayed explosive detonation)
 
 ---
 
@@ -372,7 +465,6 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
           "verbType": "APPLY",
           "objectType": "STATUS",
           "objectId": "SCORCHING_HEART",
-          "prepositionType": "TO",
           "toObjectType": "THIS_OPERATOR"
         }
       ]
@@ -462,7 +554,7 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
 ```json
 {
   "name": "ELECTRIFICATION",
-  "source": "ANY",
+  "source": "ANY_OPERATOR",
   "target": "ENEMY",
   "isNamedEvent": true,
   "element": "ELECTRIC",
@@ -522,7 +614,7 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
 ```json
 {
   "name": "CORROSION",
-  "source": "ANY",
+  "source": "ANY_OPERATOR",
   "target": "ENEMY",
   "isNamedEvent": true,
   "element": "NATURE",
@@ -620,7 +712,7 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
 ```json
 {
   "name": "COMBUSTION",
-  "source": "ANY",
+  "source": "ANY_OPERATOR",
   "target": "ENEMY",
   "isNamedEvent": true,
   "element": "HEAT",
@@ -906,7 +998,6 @@ Melting Flame → Scorching Heart.
           "verbType": "APPLY",
           "objectType": "STATUS",
           "objectId": "WILDLAND_TREKKER_BUFF",
-          "prepositionType": "TO",
           "toObjectType": "THIS_OPERATOR"
         }
       ]
@@ -1021,7 +1112,6 @@ Melting Flame → Scorching Heart.
           "verbType": "APPLY",
           "objectType": "STATUS",
           "objectId": "MI_SECURITY_CRIT_BONUS",
-          "prepositionType": "TO",
           "toObjectType": "THIS_OPERATOR"
         },
         {
@@ -1380,31 +1470,34 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
 
 ## Combo Skill Trigger Conditions
 
-All combo skill triggers expressed as SVO Interactions:
+All combo skill triggers expressed as SVO Interactions.
 
-| Operator | Combo | Trigger |
-|----------|-------|---------|
-| Laevatain | Seethe | `[Enemy] [Is] [Combusted]` |
-| Akekuri | Flash and Dash | `[Enemy] [Is] [Combusted]` |
-| Arclight | Peal of Thunder | `[Enemy] [Is] [Electrified]` |
-| Ardelia | Eruption Column | `[Enemy] [Is] [Corroded]` |
-| Estella | Distortion | `[Enemy] [Is] [Solidified]` |
-| Alesh | Auger Angling | `[Enemy] [Have] [Infliction] arts, at least 2` |
-| Fluorite | Free Giveaway | `[Enemy] [Have] [Infliction] arts, at least 2` |
-| Gilberta | Matrix Displacement | `[Enemy] [Have] [Infliction] arts, at least 2` |
-| Last Rite | Winter's Devourer | `[Enemy] [Have] [Infliction] arts, at least 2` |
-| Chen Qianyu | Soar to the Stars | `[Enemy] [Is] [Lifted]` |
-| Da Pan | More Spice | `[Enemy] [Is] [Lifted]` |
-| Pogranichnik | Full Moon Slash | `[Enemy] [Is] [Breached]` |
-| Avywenna | Thunderlance Strike | `[Other Operator] [Perform] [Final Strike]` |
-| Lifeng | Aspect of Wrath | `[Other Operator] [Perform] [Final Strike]` |
-| Perlica | Instant Protocol Chain | `[Other Operator] [Perform] [Final Strike]` |
-| Yvonne | Flashfreezer | `[Other Operator] [Perform] [Final Strike]` |
-| Catcher | Timely Suppression | `[Other Operator's HP] [Have], at most <threshold>` |
-| Ember | Frontline Support | `[Other Operator's HP] [Have], at most <threshold>` |
-| Snowshine | Polar Rescue | `[Other Operator's HP] [Have], at most <threshold>` |
-| Xaihi | Stress Testing | `[Other Operator's HP] [Overheal]` |
-| Endministrator | Sealing Sequence | `[Other Operator] [Perform] [Combo Skill]` |
+> **"Suffer" mapping:** In-game text like "enemy suffers X" means the moment an operator applies the status — expressed as `[Any Operator] [Apply] [Status/Infliction]` in the DSL, not from the enemy's perspective.
+
+| Operator | Combo | Trigger | Active Column Required |
+|----------|-------|---------|----------------------|
+| Antal | EMP Test Site | `[Any Operator] [Apply] [Status] PHYSICAL` OR `[Any Operator] [Apply] [Infliction]` + `APPLY SOURCE INFLICTION/STATUS TO ENEMY` | `enemy-focus` |
+| Laevatain | Seethe | `[Enemy] [Is] [Combusted]` | |
+| Akekuri | Flash and Dash | `[Enemy] [Is] [Combusted]` | |
+| Arclight | Peal of Thunder | `[Enemy] [Is] [Electrified]` | |
+| Ardelia | Eruption Column | `[Enemy] [Is] [Corroded]` | |
+| Estella | Distortion | `[Enemy] [Is] [Solidified]` | |
+| Alesh | Auger Angling | `[Enemy] [Have] [Infliction] arts, at least 2` | |
+| Fluorite | Free Giveaway | `[Enemy] [Have] [Infliction] arts, at least 2` | |
+| Gilberta | Matrix Displacement | `[Enemy] [Have] [Infliction] arts, at least 2` | |
+| Last Rite | Winter's Devourer | `[Enemy] [Have] [Infliction] arts, at least 2` | |
+| Chen Qianyu | Soar to the Stars | `[Enemy] [Is] [Lifted]` | |
+| Da Pan | More Spice | `[Enemy] [Is] [Lifted]` | |
+| Pogranichnik | Full Moon Slash | `[Enemy] [Is] [Breached]` | |
+| Avywenna | Thunderlance Strike | `[Other Operator] [Perform] [Final Strike]` | |
+| Lifeng | Aspect of Wrath | `[Other Operator] [Perform] [Final Strike]` | |
+| Perlica | Instant Protocol Chain | `[Other Operator] [Perform] [Final Strike]` | |
+| Yvonne | Flashfreezer | `[Other Operator] [Perform] [Final Strike]` | |
+| Catcher | Timely Suppression | `[Other Operator's HP] [Have], at most <threshold>` | |
+| Ember | Frontline Support | `[Other Operator's HP] [Have], at most <threshold>` | |
+| Snowshine | Polar Rescue | `[Other Operator's HP] [Have], at most <threshold>` | |
+| Xaihi | Stress Testing | `[Other Operator's HP] [Overheal]` | |
+| Endministrator | Sealing Sequence | `[Other Operator] [Perform] [Combo Skill]` | |
 
 ---
 

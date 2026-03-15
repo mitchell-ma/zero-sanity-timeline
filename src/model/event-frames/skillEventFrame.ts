@@ -42,6 +42,8 @@ export interface FrameApplyStatus {
   susceptibility?: Partial<Record<ElementType, readonly number[]>>;  // ElementType → per-level bonus array (12 levels)
   /** Override event name (defaults to status). Use when the in-game name differs from the column. */
   eventName?: string;
+  /** Specific operator ID when targeting a named operator (e.g. 'LAEVATAIN'). Resolved to slot ID at runtime. */
+  targetOperatorId?: string;
 }
 
 /** A single damage tick within a skill sequence. */

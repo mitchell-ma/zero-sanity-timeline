@@ -28,6 +28,8 @@ export class SkillPointTimeline extends ResourceTimeline {
 
   /** Log of natural vs returned SP consumption per battle skill cost event. */
   consumptionHistory: SkillPointConsumptionHistory[] = [];
+  /** Total SP wasted due to regen or return overflow (would exceed max). */
+  wastedSP = 0;
 
   constructor(subtimeline: Subtimeline) {
     super(subtimeline);
@@ -44,6 +46,7 @@ export class SkillPointTimeline extends ResourceTimeline {
     let naturalPool = this.startValue;
     let returnedPool = 0;
     let lastFrame = 0;
+    let wasted = 0;
 
     points.push({ frame: 0, value: naturalPool + returnedPool });
 
@@ -53,7 +56,9 @@ export class SkillPointTimeline extends ResourceTimeline {
       const regenAmount = regenFrames * this.regenPerFrame;
       // Natural regens, capped so total ≤ max
       const headroomForRegen = Math.max(0, this.max - naturalPool - returnedPool);
-      naturalPool += Math.min(regenAmount, headroomForRegen);
+      const actualRegen = Math.min(regenAmount, headroomForRegen);
+      wasted += regenAmount - actualRegen;
+      naturalPool += actualRegen;
 
       const preTotal = naturalPool + returnedPool;
       if (preTotal !== points[points.length - 1].value || ev.startFrame !== points[points.length - 1].frame) {
@@ -64,7 +69,9 @@ export class SkillPointTimeline extends ResourceTimeline {
         // Return event: add to returned pool, capped so total ≤ max
         const returnAmount = ev.activationDuration;
         const headroom = Math.max(0, this.max - naturalPool - returnedPool);
-        returnedPool += Math.min(returnAmount, headroom);
+        const actualReturn = Math.min(returnAmount, headroom);
+        wasted += returnAmount - actualReturn;
+        returnedPool += actualReturn;
       } else {
         // Cost event: consume returned first, then natural
         const cost = this.getCost(ev);
@@ -94,7 +101,9 @@ export class SkillPointTimeline extends ResourceTimeline {
     const endRegenFrames = this.effectiveRegenFrames(lastFrame, TOTAL_FRAMES);
     const endRegen = endRegenFrames * this.regenPerFrame;
     const endHeadroom = Math.max(0, this.max - preEndTotal);
-    naturalPool += Math.min(endRegen, endHeadroom);
+    const actualEndRegen = Math.min(endRegen, endHeadroom);
+    wasted += endRegen - actualEndRegen;
+    naturalPool += actualEndRegen;
     const endValue = naturalPool + returnedPool;
 
     if (endValue !== preEndTotal) {
@@ -113,6 +122,7 @@ export class SkillPointTimeline extends ResourceTimeline {
 
     this.cachedGraph = finalPoints;
     this.consumptionHistory = log;
+    this.wastedSP = wasted;
     this.graphListeners.forEach((cb) => cb(finalPoints));
   }
 }

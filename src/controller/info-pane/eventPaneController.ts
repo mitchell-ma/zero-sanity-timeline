@@ -1,12 +1,12 @@
 import { CombatSkillsType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType } from '../../consts/viewTypes';
 import {
-  SKILL_LABELS, REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
+  REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
-  TRIGGER_CONDITION_LABELS,
 } from '../../consts/timelineColumnLabels';
+import { interactionToLabel } from '../../consts/semantics';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../calculation/statusQueryService';
 
@@ -91,7 +91,7 @@ export function resolveEventIdentity(
         }
         if (event.columnId === SKILL_COLUMNS.COMBO && op.triggerCapability) {
           comboTriggerLabels = op.triggerCapability.comboRequires.map(
-            (tc) => TRIGGER_CONDITION_LABELS[tc] ?? tc,
+            (i) => interactionToLabel(i),
           );
           if (op.triggerCapability.comboRequiresActiveColumns) {
             comboRequiresLabels = op.triggerCapability.comboRequiresActiveColumns.map(
@@ -146,6 +146,112 @@ export function resolveEventIdentity(
   };
 }
 
+// ── Combo Chain ─────────────────────────────────────────────────────────────
+
+export interface ComboChainLink {
+  label: string;
+  color: string;
+  sublabel?: string;
+}
+
+/** Map infliction/physical column IDs to element colors. */
+const INFLICTION_COLUMN_COLORS: Record<string, string> = {
+  heatInfliction:       ELEMENT_COLORS[ElementType.HEAT],
+  cryoInfliction:       ELEMENT_COLORS[ElementType.CRYO],
+  natureInfliction:     ELEMENT_COLORS[ElementType.NATURE],
+  electricInfliction:   ELEMENT_COLORS[ElementType.ELECTRIC],
+  vulnerableInfliction: '#c0c8d0',
+  breach:               '#c0c8d0',
+};
+
+/**
+ * For a combo skill event, trace the full trigger chain back to the original
+ * operator action. Returns a list of chain links from source to combo, or
+ * null if no chain can be resolved.
+ */
+export function resolveComboChain(
+  event: TimelineEvent,
+  allProcessedEvents: readonly TimelineEvent[],
+  slots: { slotId: string; operator: Operator | null }[],
+): ComboChainLink[] | null {
+  if (event.columnId !== SKILL_COLUMNS.COMBO) return null;
+
+  // Find the combo activation window that contains this combo event
+  const window = allProcessedEvents.find((e) =>
+    e.columnId === COMBO_WINDOW_COLUMN_ID &&
+    e.ownerId === event.ownerId &&
+    event.startFrame >= e.startFrame &&
+    event.startFrame < e.startFrame + e.activationDuration,
+  );
+  if (!window?.sourceOwnerId) return null;
+
+  const chain: ComboChainLink[] = [];
+  const triggerCol = event.comboTriggerColumnId ?? window.comboTriggerColumnId;
+  const sourceSlot = slots.find((s) => s.slotId === window.sourceOwnerId);
+  const sourceOp = sourceSlot?.operator;
+  if (!sourceOp) return null;
+
+  // Is the trigger an enemy column (infliction/status)? If so, trace back to
+  // the specific enemy event to find the original operator skill.
+  const isEnemyTrigger = triggerCol && (
+    INFLICTION_COLUMN_IDS.has(triggerCol) ||
+    PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol) ||
+    triggerCol === 'breach'
+  );
+
+  if (isEnemyTrigger) {
+    // Find the enemy infliction/status event closest before the combo that
+    // came from the same source operator — it has the original skill name.
+    let bestMatch: TimelineEvent | undefined;
+    for (const e of allProcessedEvents) {
+      if (e.ownerId !== ENEMY_OWNER_ID) continue;
+      if (e.columnId !== triggerCol) continue;
+      if (e.sourceOwnerId !== window.sourceOwnerId) continue;
+      if (e.startFrame > event.startFrame) continue;
+      if (!bestMatch || e.startFrame > bestMatch.startFrame) bestMatch = e;
+    }
+
+    const originalSkillLabel = bestMatch?.sourceSkillName
+      ? (COMBAT_SKILL_LABELS[bestMatch.sourceSkillName as CombatSkillsType]
+        ?? STATUS_LABELS[bestMatch.sourceSkillName as StatusType]
+        ?? bestMatch.sourceSkillName)
+      : undefined;
+
+    // Link 1: Source operator + original skill
+    chain.push({
+      label: sourceOp.name,
+      color: sourceOp.color,
+      sublabel: originalSkillLabel,
+    });
+
+    // Link 2: Intermediary infliction/status on enemy
+    const inflLabel = INFLICTION_EVENT_LABELS[triggerCol]
+      ?? PHYSICAL_INFLICTION_LABELS[triggerCol]?.label
+      ?? PHYSICAL_STATUS_LABELS[triggerCol]?.label
+      ?? triggerCol;
+    chain.push({
+      label: inflLabel,
+      color: INFLICTION_COLUMN_COLORS[triggerCol] ?? 'var(--text-muted)',
+      sublabel: 'on enemy',
+    });
+  } else {
+    // Direct operator trigger (e.g. FINAL_STRIKE from basic attack)
+    const skillLabel = window.sourceSkillName
+      ? (COMBAT_SKILL_LABELS[window.sourceSkillName as CombatSkillsType]
+        ?? STATUS_LABELS[window.sourceSkillName as StatusType]
+        ?? window.sourceSkillName)
+      : undefined;
+
+    chain.push({
+      label: sourceOp.name,
+      color: sourceOp.color,
+      sublabel: skillLabel,
+    });
+  }
+
+  return chain.length > 0 ? chain : null;
+}
+
 // ── SP Return Display ───────────────────────────────────────────────────────
 
 export interface SpReturnDisplay {
@@ -179,8 +285,6 @@ export interface ActiveModifier {
 
 /** Column IDs for status effects that are damage modifiers on the enemy. */
 const SUSCEPTIBILITY_COLUMNS = new Set<string>([StatusType.SUSCEPTIBILITY, StatusType.FOCUS]);
-const REACTION_FRAGILITY_COLUMNS = new Set<string>([REACTION_COLUMNS.ELECTRIFICATION, PHYSICAL_STATUS_COLUMNS.BREACH]);
-
 function isActiveAt(ev: TimelineEvent, frame: number): boolean {
   return ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration;
 }

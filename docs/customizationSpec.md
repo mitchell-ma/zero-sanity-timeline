@@ -21,7 +21,6 @@ CustomOperator = {
   "operatorRarity": OperatorRarity,          // 4, 5, 6
 
   // ── Display ──
-  "displayColor": string,                    // hex color (e.g. "#f0a040")
   "splashArt"?: string,                      // data URL or empty (falls back to class icon)
 
   // ── Stats ──

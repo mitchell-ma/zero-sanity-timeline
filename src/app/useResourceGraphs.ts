@@ -4,16 +4,19 @@ import { SKILL_COLUMNS } from '../model/channels';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadout } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TOTAL_FRAMES, FPS } from '../utils/timeline';
+import { FPS } from '../utils/timeline';
 import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
 import { getUltimateActiveWindow } from '../controller/timeline/eventValidator';
 import { NATURAL_SP_TO_ULTIMATE_RATIO } from '../consts/stats';
 import { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
+import { computeUltimateEnergyGraph, UltEnergyEvent } from '../controller/timeline/ultimateEnergyTimeline';
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
   min: number;
   max: number;
+  /** Total resource wasted due to overflow (gains/regen exceeding max). */
+  wasted?: number;
 };
 
 /** Computes and merges SP + ultimate energy resource graphs. */
@@ -38,7 +41,7 @@ export function useResourceGraphs(
     const update = (points: ReadonlyArray<ResourcePoint>) => {
       setSpGraphs((prev) => {
         const next = new Map(prev);
-        next.set(key, { points, min: sp.min, max: sp.max });
+        next.set(key, { points, min: sp.min, max: sp.max, wasted: sp.wastedSP });
         return next;
       });
       // Bump version so ultimate graphs re-derive from updated consumption log
@@ -154,8 +157,7 @@ export function useResourceGraphs(
       const chargePerFrame = (cfg?.regenPerSecond ?? 0) / FPS;
 
       // Merge ultimate consumption events and gauge gain events for this slot
-      type UltEvent = { frame: number; type: 'consume' | 'gain'; amount: number };
-      const timeline: UltEvent[] = [];
+      const timeline: UltEnergyEvent[] = [];
 
       // Ultimate activations consume the full gauge
       for (const ev of events) {
@@ -206,43 +208,8 @@ export function useResourceGraphs(
       }
 
       // Compute the ult energy graph (now including tactical gains)
-      const points: ResourcePoint[] = [];
-      let value = startValue;
-      let lastFrame = 0;
-      points.push({ frame: 0, value });
-
-      for (const te of timeline) {
-        const regenFrames = te.frame - lastFrame;
-        const preAction = Math.min(max, value + regenFrames * chargePerFrame);
-
-        if (preAction !== value || te.frame !== lastFrame) {
-          if (preAction !== points[points.length - 1].value || te.frame !== points[points.length - 1].frame) {
-            points.push({ frame: te.frame, value: preAction });
-          }
-        }
-
-        let postAction: number;
-        if (te.type === 'consume') {
-          postAction = Math.max(0, preAction - te.amount);
-        } else {
-          postAction = Math.min(max, preAction + te.amount);
-        }
-        points.push({ frame: te.frame, value: postAction });
-        value = postAction;
-        lastFrame = te.frame;
-      }
-
-      const endValue = Math.min(max, value + (TOTAL_FRAMES - lastFrame) * chargePerFrame);
-      if (endValue !== value && chargePerFrame > 0 && value < max) {
-        const framesToMax = Math.ceil((max - value) / chargePerFrame);
-        const maxFrame = Math.min(lastFrame + framesToMax, TOTAL_FRAMES);
-        if (maxFrame < TOTAL_FRAMES) {
-          points.push({ frame: maxFrame, value: max });
-        }
-      }
-      points.push({ frame: TOTAL_FRAMES, value: endValue });
-
-      graphs.set(key, { points, min: 0, max });
+      const result = computeUltimateEnergyGraph(timeline, max, startValue, chargePerFrame);
+      graphs.set(key, { points: result.points, min: 0, max, wasted: result.wastedCharge });
     }
     return { ultimateGraphs: graphs, tacticalEvents: allTacticalEvents };
   // eslint-disable-next-line react-hooks/exhaustive-deps

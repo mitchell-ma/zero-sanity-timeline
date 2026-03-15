@@ -16,7 +16,7 @@ import { deriveStatusesFromEngine } from './statusDerivationEngine';
 export type { TimeStopRegion } from './processTimeStop';
 export { collectTimeStopRegions, extendByTimeStops } from './processTimeStop';
 export type { SlotTriggerWiring } from './processComboSkill';
-export { COMBO_WINDOW_COLUMN_ID, ALWAYS_AVAILABLE_TRIGGERS, DERIVED_TRIGGER_TYPES, ENEMY_COLUMN_TO_TRIGGERS, comboWindowEndFrame, getFinalStrikeTriggerFrame, hasActiveEventInColumns } from './processComboSkill';
+export { COMBO_WINDOW_COLUMN_ID, ENEMY_COLUMN_TO_INTERACTIONS, comboWindowEndFrame, getFinalStrikeTriggerFrame, hasActiveEventInColumns } from './processComboSkill';
 
 /**
  * Processes raw timeline events into renderable events.

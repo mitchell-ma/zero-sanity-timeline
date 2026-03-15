@@ -3,6 +3,7 @@
  */
 import type { CustomSkill } from '../../model/custom/customSkillTypes';
 import { checkIdConflict } from '../../utils/customContentStorage';
+import { removeAllLinksForSkill } from './customSkillLinkController';
 
 const STORAGE_KEY = 'zst_custom_skills';
 
@@ -76,12 +77,27 @@ export function deleteCustomSkill(id: string): void {
   const all = getAll().filter((s) => s.id !== id);
   saveAll(all);
   cache = all;
+  removeAllLinksForSkill(id);
 }
 
 export function duplicateCustomSkill(id: string): CustomSkill | null {
   const src = getAll().find((s) => s.id === id);
   if (!src) return null;
-  return { ...JSON.parse(JSON.stringify(src)), id: `${src.id}_copy_${Date.now()}`, name: `${src.name} (Copy)` };
+  // Duplicate starts with no associations (it's a fresh skill)
+  return { ...JSON.parse(JSON.stringify(src)), id: `${src.id}_copy_${Date.now()}`, name: `${src.name} (Copy)`, associationIds: [] };
+}
+
+/**
+ * Update a skill's associationIds using a transform function.
+ * Called by the link controller to keep skill-side associations in sync.
+ */
+export function updateSkillAssociations(skillId: string, transform: (ids: string[]) => string[]): void {
+  const all = getAll();
+  const idx = all.findIndex((s) => s.id === skillId);
+  if (idx < 0) return;
+  all[idx] = { ...all[idx], associationIds: transform(all[idx].associationIds ?? []) };
+  saveAll(all);
+  cache = all;
 }
 
 export function getDefaultCustomSkill(): CustomSkill {

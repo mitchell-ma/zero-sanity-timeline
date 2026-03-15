@@ -13,7 +13,7 @@ export function interpolateAttack(base: WeaponBaseAttack, level: number): number
     return base.attackByLevel[level];
   }
   const t = (level - 1) / 89;
-  return Math.round(base.lv1 + (base.lv90 - base.lv1) * t);
+  return base.lv1 + (base.lv90 - base.lv1) * t;
 }
 
 export abstract class Weapon {

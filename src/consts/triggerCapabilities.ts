@@ -1,10 +1,10 @@
-import { TriggerConditionType } from './enums';
+import type { Interaction } from './semantics';
 
 export interface TriggerCapability {
   /** What this operator's skills publish (keyed by columnId: 'basic'|'battle'|'ultimate') */
-  publishesTriggers: Partial<Record<string, TriggerConditionType[]>>;
+  publishesTriggers: Partial<Record<string, Interaction[]>>;
   /** Trigger conditions the combo skill can activate on (any match = activates) */
-  comboRequires: TriggerConditionType[];
+  comboRequires: Interaction[];
   /** Human-readable trigger description */
   comboDescription: string;
   /** Activation window in frames (default 720 = 6s at 120 FPS) */

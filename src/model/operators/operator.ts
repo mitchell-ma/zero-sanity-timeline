@@ -15,7 +15,7 @@ export function interpolateStats(baseStats: BaseStats, level: number): Partial<R
   for (const key of allKeys) {
     const v1 = (baseStats.lv1 as any)[key] ?? 0;
     const v90 = (baseStats.lv90 as any)[key] ?? 0;
-    result[key as StatType] = Math.round(v1 + (v90 - v1) * t);
+    result[key as StatType] = v1 + (v90 - v1) * t;
   }
   return result;
 }

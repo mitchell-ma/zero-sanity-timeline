@@ -1,5 +1,4 @@
 import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
-import { EventStatusType } from '../../consts/enums';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { MicroColumnController } from './microColumnController';
 

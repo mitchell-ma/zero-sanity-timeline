@@ -6,11 +6,12 @@ import {
   TOTAL_FRAMES,
 } from './timeline';
 import { ContextMenuState } from '../consts/viewTypes';
+import { VERTICAL_AXIS, type AxisMap } from './axisMap';
 
 interface TouchDragState {
   touchId: number;
   eventId: string;
-  startClientY: number;
+  startClientFrame: number; // touch coordinate along the frame axis at drag start
   startFrame: number;
 }
 
@@ -25,6 +26,7 @@ export function useTouchHandlers(opts: {
   setHoverClientY: (y: number | null) => void;
   outerRect: DOMRect | null;
   combinedHeaderHeight: number;
+  axis?: AxisMap;
 }): {
   handleEventTouchStart: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
 } {
@@ -39,6 +41,7 @@ export function useTouchHandlers(opts: {
     setHoverClientY,
     outerRect,
     combinedHeaderHeight,
+    axis = VERTICAL_AXIS,
   } = opts;
 
   const dragRef = useRef<TouchDragState | null>(null);
@@ -81,10 +84,10 @@ export function useTouchHandlers(opts: {
     dragRef.current = {
       touchId: touch.identifier,
       eventId,
-      startClientY: touch.clientY,
+      startClientFrame: touch[axis.clientFrame],
       startFrame,
     };
-  }, []);
+  }, [axis]);
 
   // ─── Attach touchmove / touchend / touchstart listeners via useEffect ─────
   useEffect(() => {
@@ -145,9 +148,10 @@ export function useTouchHandlers(opts: {
             const scrollEl = scrollRef.current;
             if (!scrollEl || bodyTopRef.current === null) return;
             const scrollRect = scrollEl.getBoundingClientRect();
-            const scrollTop = scrollEl.scrollTop;
-            const relY = origin.y - scrollRect.top + scrollTop - bodyTopRef.current;
-            const atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
+            const scrollFrame = scrollEl[axis.scrollPos];
+            const originFrame = axis.clientFrame === 'clientY' ? origin.y : origin.x;
+            const relFrame = originFrame - scrollRect[axis.rectFrameStart] + scrollFrame - bodyTopRef.current;
+            const atFrame = pxToFrame(Math.max(0, relFrame), zoomRef.current);
 
             onContextMenuRef.current({
               x: origin.x,
@@ -192,9 +196,9 @@ export function useTouchHandlers(opts: {
         if (!touch) return;
         e.preventDefault();
 
-        const { eventId, startClientY, startFrame } = dragRef.current;
+        const { eventId, startClientFrame, startFrame } = dragRef.current;
         const deltaFrames = Math.round(
-          (touch.clientY - startClientY) / getPxPerFrame(zoomRef.current),
+          (touch[axis.clientFrame] - startClientFrame) / getPxPerFrame(zoomRef.current),
         );
         const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, startFrame + deltaFrames));
         onMoveEventRef.current(eventId, newFrame);
@@ -204,10 +208,10 @@ export function useTouchHandlers(opts: {
         const rect = outerRectRef.current;
         const bodyTop = bodyTopRef.current;
         if (scrollEl && rect && bodyTop !== null) {
-          const scrollTop = scrollEl.scrollTop;
-          const snappedRelY = frameToPx(newFrame, zoomRef.current);
+          const scrollFrame = scrollEl[axis.scrollPos];
+          const snappedRel = frameToPx(newFrame, zoomRef.current);
           setHoverFrameRef.current(newFrame);
-          setHoverClientYRef.current(snappedRelY - scrollTop + rect.top + bodyTop);
+          setHoverClientYRef.current(snappedRel - scrollFrame + rect[axis.rectFrameStart] + bodyTop);
         }
       }
     }
@@ -246,6 +250,7 @@ export function useTouchHandlers(opts: {
       el.removeEventListener('touchcancel', handleTouchEnd);
       clearLongPress();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollRef, bodyTopRef, zoomRef, clearLongPress]);
 
   return { handleEventTouchStart };

@@ -28,11 +28,6 @@ const PART_TYPE_MAP: Record<number, string> = {
   2: 'KIT',
 };
 
-const GEAR_CATEGORY_LABELS: Record<string, string> = {
-  ARMOR: 'Armor',
-  GLOVES: 'Gloves',
-  KIT: 'Kit',
-};
 
 // ── suitID → GearSetType mapping ──────────────────────────────────────────
 

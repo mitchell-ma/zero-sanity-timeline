@@ -3,20 +3,29 @@ import {
   DataDrivenSkillEventSequence,
 } from "./dataDrivenEventFrames";
 
-// ── Auto-discover operator JSON files ───────────────────────────────────────
+// ── Auto-discover operator + skill JSON files ────────────────────────────────
 
 /** Convert kebab-case filename to camelCase operator ID. */
 function filenameToCamelCase(filename: string): string {
   return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
-// Use require.context to auto-discover all JSON files in game-data/operators/
-const operatorContext = (require as any).context('../game-data/operators', false, /\.json$/);
+// Operator base configs: game-data/operators/*-operator.json
+const operatorContext = (require as any).context('../game-data/operators', false, /-operator\.json$/);
 const OPERATOR_JSON: Record<string, Record<string, any>> = {};
 for (const key of operatorContext.keys()) {
-  const filename = key.replace('./', '').replace('.json', '');
+  const filename = key.replace('./', '').replace('-operator.json', '');
   const operatorId = filenameToCamelCase(filename);
   OPERATOR_JSON[operatorId] = operatorContext(key);
+}
+
+// Skill configs: game-data/operator-skills/*-skills.json
+const skillContext = (require as any).context('../game-data/operator-skills', false, /-skills\.json$/);
+const SKILL_JSON: Record<string, Record<string, any>> = {};
+for (const key of skillContext.keys()) {
+  const filename = key.replace('./', '').replace('-skills.json', '');
+  const operatorId = filenameToCamelCase(filename);
+  SKILL_JSON[operatorId] = skillContext(key);
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -24,9 +33,18 @@ for (const key of operatorContext.keys()) {
 /** Sequence cache keyed by `operatorId:skillCategory`. */
 const sequenceCache = new Map<string, readonly DataDrivenSkillEventSequence[]>();
 
-/** Get the raw operator JSON for a given operator ID. */
+/** Get the raw operator JSON for a given operator ID (includes skills merged in). */
 export function getOperatorJson(operatorId: string): Record<string, any> | undefined {
-  return OPERATOR_JSON[operatorId];
+  const base = OPERATOR_JSON[operatorId];
+  if (!base) return undefined;
+  const skills = SKILL_JSON[operatorId];
+  if (!skills) return base;
+  return { ...base, skills };
+}
+
+/** Get the skill JSON for a given operator ID. */
+export function getSkillJson(operatorId: string): Record<string, any> | undefined {
+  return SKILL_JSON[operatorId];
 }
 
 /** Get all registered operator IDs. */
@@ -34,22 +52,21 @@ export function getAllOperatorIds(): string[] {
   return Object.keys(OPERATOR_JSON);
 }
 
-/** Skill name map cache: operatorId → { enumKey → categoryKey }. */
+/** Skill name map cache: operatorId → { skillId → categoryKey }. */
 const skillNameMapCache = new Map<string, Record<string, string>>();
 
 /**
- * Build skill name map from operator JSON skills.
- * Derives { CombatSkillsType → category } from skills[category].id.
+ * Build skill name map from operator skill data.
+ * Derives { skillId → category } from skills[category].id.
  * Includes universal FINISHER/DIVE → BASIC_ATTACK mappings.
  */
 export function getSkillNameMap(operatorId: string): Record<string, string> {
   if (skillNameMapCache.has(operatorId)) return skillNameMapCache.get(operatorId)!;
-  const json = OPERATOR_JSON[operatorId];
-  if (!json?.skills) return {};
+  const skills = SKILL_JSON[operatorId];
+  if (!skills) return {};
   const map: Record<string, string> = { FINISHER: 'BASIC_ATTACK', DIVE: 'BASIC_ATTACK' };
-  const skills = json.skills as Record<string, { id?: string }>;
   for (const [category, skill] of Object.entries(skills)) {
-    if (skill.id) map[skill.id] = category;
+    if ((skill as any).id) map[(skill as any).id] = category;
   }
   skillNameMapCache.set(operatorId, map);
   return map;
@@ -64,7 +81,7 @@ export function getFrameSequences(
   const cached = sequenceCache.get(cacheKey);
   if (cached) return cached;
 
-  const json = OPERATOR_JSON[operatorId];
+  const json = getOperatorJson(operatorId);
   if (!json) return [];
 
   const sequences = buildSequencesFromOperatorJson(json, skillCategory);

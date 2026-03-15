@@ -1,4 +1,4 @@
-import { TriggerConditionType } from "../../consts/enums";
+import { SubjectType, VerbType, ObjectType, CardinalityConstraintType } from "../../consts/semantics";
 import { Tactical } from "./tactical";
 
 export class StewMeeting extends Tactical {
@@ -11,7 +11,12 @@ export class StewMeeting extends Tactical {
       rarity: 2,
       stats: {},
       durationSeconds: 0,
-      triggerCondition: TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD,
+      triggerCondition: {
+        subjectType: SubjectType.THIS_OPERATOR,
+        verbType: VerbType.HAVE,
+        objectType: ObjectType.ULTIMATE_ENERGY,
+        cardinalityConstraint: CardinalityConstraintType.AT_MOST,
+      },
       maxUses: 3,
     });
   }

@@ -2,7 +2,7 @@ import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { StewMeeting } from '../../model/consumables/stewMeeting';
-import { TriggerConditionType } from '../../consts/enums';
+import type { Interaction } from '../../consts/semantics';
 import { FPS } from '../../utils/timeline';
 
 /**
@@ -15,7 +15,7 @@ interface TacticalEventConfig {
   /** Max uses per battle. */
   maxUses: number;
   /** Trigger condition type. */
-  trigger: TriggerConditionType;
+  trigger: Interaction;
   /** Ultimate energy restore as a fraction of max (e.g. 0.2 = 20%). */
   ultEnergyRestore: number;
   /** Threshold fraction below which the tactical triggers (e.g. 0.5 = 50%). */

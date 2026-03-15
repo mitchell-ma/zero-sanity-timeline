@@ -16,7 +16,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
-const WARFARIN_API_BASE = 'https://api.warfarin.wiki/v1/en/operators';
+
 const OPERATORS_DIR = path.resolve(__dirname, '../../game-data/operators');
 
 function operatorFilePath(operatorType: string): string {
@@ -68,6 +68,7 @@ const WARFARIN_SLUG_TO_GAMEDATA_ID: Record<string, string> = {
   pogranichnik: 'POGRANICHNK',
   alesh: 'ALESH',
   arclight: 'ARCLIGHT',
+  tangtang: 'TANGTANG',
 };
 
 /** All known Warfarin slugs in order. */
@@ -92,7 +93,7 @@ function extractComparableValues(obj: unknown, prefix = ''): Map<string, number>
   }
   const record = obj as Record<string, unknown>;
   for (const [key, val] of Object.entries(record)) {
-    if (key === 'dataSources' || key === 'eventComponentType') continue;
+    if (key === 'dataSources' || key === 'eventComponentType' || key === 'metadata') continue;
     const path = prefix ? `${prefix}.${key}` : key;
     if (typeof val === 'number') {
       values.set(path, val);
@@ -164,30 +165,57 @@ interface FlatMultiplierEntry {
 }
 
 interface FrameData {
-  eventComponentType: string;
-  offset: { value: number; unit: string };
-  resourceInteractions: unknown[];
-  statusInteractions?: unknown[];
-  dataSources?: string[];
+  metadata: {
+    eventComponentType: string;
+    dataSources?: string[];
+  };
+  properties: {
+    offset: { value: number; unit: string };
+  };
+  effects: unknown[];
   multipliers?: FlatMultiplierEntry[];
 }
 
 interface SegmentData {
-  eventComponentType: string;
-  duration: { value: number; unit: string };
+  metadata: {
+    eventComponentType: string;
+    dataSources?: string[];
+  };
+  properties: {
+    duration: { value: number; unit: string };
+    name?: string;
+  };
   frames: FrameData[];
-  dataSources?: string[];
 }
 
 interface SkillCategoryData {
-  duration?: { value: number; unit: string };
+  properties?: {
+    duration?: { value: number; unit: string };
+    animation?: unknown;
+  };
   frames?: FrameData[];
   segments?: SegmentData[];
-  resourceInteractions?: unknown[];
-  animation?: unknown;
+  effects?: unknown[];
   name?: string;
   description?: string;
   multipliers?: MultiplierLevelEntry[];
+}
+
+/** Maps raw blackboard keys to codebase-standard names. */
+const MULTIPLIER_KEY_MAP: Record<string, string> = {
+  'atk_scale': 'DAMAGE_MULTIPLIER',
+  'atk_scale1': 'DAMAGE_MULTIPLIER',
+  'atk_scale_1': 'DAMAGE_MULTIPLIER',
+  'atk_scale_2': 'DAMAGE_MULTIPLIER_INCREMENT',
+  'atk_scale2': 'DAMAGE_MULTIPLIER_INCREMENT',
+  'poise': 'STAGGER',
+  'attack_poise': 'STAGGER',
+  'duration': 'DURATION',
+  'atb': 'SKILL_POINT',
+};
+
+function mapMultiplierKey(rawKey: string): string {
+  return MULTIPLIER_KEY_MAP[rawKey] ?? rawKey;
 }
 
 /**
@@ -244,6 +272,76 @@ function extractAtkScaleKeys(blackboard: Record<string, number>): string[] {
 }
 
 /**
+ * Derives the number of hits (frames) for a skill from Warfarin multiplier data.
+ *
+ * Procedure:
+ * 1. Find display_atk_scale (the total shown in-game)
+ * 2. Identify the base key (atk_scale) and variant keys (atk_scale_2, _3, etc.)
+ * 3. Subtract all variant values from display_atk_scale
+ * 4. Divide remainder by atk_scale → number of regular (base) frames
+ * 5. Add the number of variant keys → total frame count
+ *
+ * If display_atk_scale is unavailable, fall back to one frame per atk_scale key (base + variants).
+ */
+function deriveHitCount(levelEntries: MultiplierLevelEntry[]): number {
+  if (!levelEntries.length) return 1;
+  const bb = levelEntries[0].blackboard;
+
+  // Find display total — may be display_atk_scale, atk_scale_display, or display_atk_scale1
+  const displayKey = Object.keys(bb).find(k =>
+    k === 'display_atk_scale' || k === 'atk_scale_display' || k === 'display_atk_scale1'
+  );
+  const displayTotal = displayKey ? bb[displayKey] : 0;
+
+  // Separate base key from variant keys
+  // Base key: atk_scale (the repeated per-hit multiplier), or atk_scale_1/atk_scale1 if no bare atk_scale
+  // Variant keys: atk_scale_2, atk_scale_3, atk_scale_pre, etc. (unique hits with distinct multipliers)
+  const baseKey = bb['atk_scale'] !== undefined ? 'atk_scale'
+    : bb['atk_scale_1'] !== undefined ? 'atk_scale_1'
+    : bb['atk_scale1'] !== undefined ? 'atk_scale1'
+    : null;
+  const variantKeys = Object.keys(bb).filter(k =>
+    k.startsWith('atk_scale') &&
+    k !== baseKey &&
+    !k.startsWith('display_') &&
+    !k.startsWith('atk_scale_display')
+  );
+
+  if (displayTotal > 0 && baseKey) {
+    const baseValue = bb[baseKey];
+    if (baseValue > 0) {
+      // Subtract variant values from display total
+      const variantSum = variantKeys.reduce((sum, k) => sum + (bb[k] || 0), 0);
+      const remainder = displayTotal - variantSum;
+      if (remainder >= baseValue * 0.5) {
+        // Positive remainder: base key represents repeated hits
+        const regularFrames = Math.round(remainder / baseValue);
+        return regularFrames + variantKeys.length;
+      }
+      // Negative/tiny remainder: all keys are distinct hits (base isn't repeating)
+      // Fall through to orderable key count
+    }
+  }
+
+  // No display total, no base key, or all-distinct keys — one frame per atk_scale key
+  const allScaleKeys = Object.keys(bb).filter(k =>
+    k.startsWith('atk_scale') && !k.startsWith('display_') && !k.startsWith('atk_scale_display')
+  );
+  if (allScaleKeys.length > 0) return allScaleKeys.length;
+
+  // No atk_scale data at all — 1 frame
+  return 1;
+}
+
+/** Fallback category names when Warfarin and End-Axis disagree on variant classification. */
+const CATEGORY_FALLBACKS: Record<string, string> = {
+  'ENHANCED_BASIC_ATTACK': 'EMPOWERED_BASIC_ATTACK',
+  'EMPOWERED_BASIC_ATTACK': 'ENHANCED_BASIC_ATTACK',
+  'ENHANCED_BATTLE_SKILL': 'EMPOWERED_BATTLE_SKILL',
+  'EMPOWERED_BATTLE_SKILL': 'ENHANCED_BATTLE_SKILL',
+};
+
+/**
  * Merges Warfarin multiplier data into End-Axis skill frames.
  *
  * For basic attacks: each segment index corresponds to a Warfarin attack sequence.
@@ -258,7 +356,12 @@ function mergeMultipliersIntoSkills(
   multiplierData: SkillMultiplierData,
 ): void {
   for (const [category, subIndexMap] of Object.entries(multiplierData)) {
-    const skill = skills[category] as SkillCategoryData | undefined;
+    let skill = skills[category] as SkillCategoryData | undefined;
+    // Fallback: ENHANCED ↔ EMPOWERED variants may differ between Warfarin and End-Axis
+    if (!skill) {
+      const fallback = CATEGORY_FALLBACKS[category];
+      if (fallback) skill = skills[fallback] as SkillCategoryData | undefined;
+    }
     if (!skill) continue;
 
     if (skill.segments) {
@@ -268,13 +371,58 @@ function mergeMultipliersIntoSkills(
         const segment = skill.segments[segIndex];
         if (!segment) continue;
 
-        assignMultipliersToFrames(segment.frames, levelEntries);
+        if (segment.frames.length > 0) {
+          assignMultipliersToFrames(segment.frames, levelEntries);
+        } else {
+          // Empty segment (e.g. final strike with no End-Axis frames) —
+          // redistribute non-scale keys (stagger, SP) to the last segment with frames
+          const lastNonEmpty = [...skill.segments].slice(0, segIndex).reverse()
+            .find(s => s.frames.length > 0);
+          if (lastNonEmpty) {
+            assignNonScaleKeysToFrames(lastNonEmpty.frames, levelEntries);
+          }
+        }
       }
     } else if (skill.frames) {
       // Flat skill (battle, combo, ultimate)
       const levelEntries = subIndexMap[0];
       if (levelEntries) {
         assignMultipliersToFrames(skill.frames, levelEntries);
+      }
+    }
+  }
+}
+
+/**
+ * Assigns only non-scale keys (stagger, SP, duration, etc.) from multiplier data
+ * onto the first frame of an existing segment. Used when a Warfarin segment has
+ * no corresponding End-Axis frames — the non-scale values represent the entire
+ * attack chain's resource generation and belong on the last active segment.
+ */
+function assignNonScaleKeysToFrames(
+  frames: FrameData[],
+  levelEntries: MultiplierLevelEntry[],
+): void {
+  if (!frames.length || !levelEntries.length) return;
+
+  const sampleBb = levelEntries[0].blackboard;
+  const nonScaleKeys = Object.keys(sampleBb).filter(k =>
+    !k.startsWith('atk_scale') && !k.startsWith('display_')
+  );
+  if (nonScaleKeys.length === 0) return;
+
+  // Ensure the first frame has multipliers array (it should from prior assignment)
+  const firstFrame = frames[0];
+  if (!firstFrame.multipliers) {
+    firstFrame.multipliers = levelEntries.map(entry => ({ level: entry.level }));
+  }
+
+  for (let i = 0; i < levelEntries.length; i++) {
+    const mult = firstFrame.multipliers[i] as Record<string, number> | undefined;
+    if (!mult) continue;
+    for (const key of nonScaleKeys) {
+      if (levelEntries[i].blackboard[key] !== undefined) {
+        mult[mapMultiplierKey(key)] = levelEntries[i].blackboard[key];
       }
     }
   }
@@ -328,14 +476,14 @@ function assignMultipliersToFrames(
 
       frame.multipliers = levelEntries.map(entry => {
         const mult: FlatMultiplierEntry = { level: entry.level };
-        // Positional atk_scale for this frame (normalized to "atk_scale")
+        // Positional scale key for this frame (normalized to DAMAGE_MULTIPLIER)
         if (entry.blackboard[scaleKey] !== undefined) {
-          mult.atk_scale = entry.blackboard[scaleKey];
+          mult.DAMAGE_MULTIPLIER = entry.blackboard[scaleKey];
         }
-        // Named atk_scale variants on every frame
+        // Named scale variants on every frame (mapped to codebase names)
         for (const key of namedScaleKeys) {
           if (entry.blackboard[key] !== undefined) {
-            mult[key] = entry.blackboard[key];
+            mult[mapMultiplierKey(key)] = entry.blackboard[key];
           }
         }
         return mult;
@@ -348,7 +496,7 @@ function assignMultipliersToFrames(
         const mult: FlatMultiplierEntry = { level: entry.level };
         for (const key of allRelevantScaleKeys) {
           if (entry.blackboard[key] !== undefined) {
-            mult[key] = entry.blackboard[key];
+            mult[mapMultiplierKey(key)] = entry.blackboard[key];
           }
         }
         return mult;
@@ -356,12 +504,12 @@ function assignMultipliersToFrames(
     }
   }
 
-  // Store non-scale keys (poise, duration, etc.) on the first frame
+  // Store non-scale keys (STAGGER, DURATION, etc.) on the first frame
   if (nonScaleKeys.length > 0 && frames[0]?.multipliers) {
     for (let i = 0; i < levelEntries.length; i++) {
       for (const key of nonScaleKeys) {
         if (levelEntries[i].blackboard[key] !== undefined) {
-          (frames[0].multipliers[i] as Record<string, number>)[key] = levelEntries[i].blackboard[key];
+          (frames[0].multipliers[i] as Record<string, number>)[mapMultiplierKey(key)] = levelEntries[i].blackboard[key];
         }
       }
     }
@@ -436,6 +584,7 @@ async function parseOne(slug: string, roster: unknown[]) {
   // Merge Warfarin data (operator info, stats, potentials, levels)
   let skillDescriptions: Record<string, { name: string; description: string }> | undefined;
   let skillMultipliers: SkillMultiplierData | undefined;
+  let skillIds: Record<string, string> | undefined;
   if (warfarinData) {
     for (const [key, value] of Object.entries(warfarinData)) {
       if (key === 'skills') continue; // Warfarin doesn't produce skills
@@ -446,6 +595,10 @@ async function parseOne(slug: string, roster: unknown[]) {
       if (key === 'skillMultipliers') {
         skillMultipliers = value as SkillMultiplierData;
         continue; // Merged into skill frames below
+      }
+      if (key === 'skillIds') {
+        skillIds = value as Record<string, string>;
+        continue; // Merged into skills below
       }
       merged[key] = value;
     }
@@ -472,6 +625,73 @@ async function parseOne(slug: string, roster: unknown[]) {
     }
   }
 
+  // Warfarin-only fallback: create skeleton skills from multiplier data when End-Axis has none
+  if (!merged.skills && (skillMultipliers || skillDescriptions)) {
+    const skeleton: Record<string, Record<string, unknown>> = {};
+    // Create categories from multiplier data (has segment structure info)
+    if (skillMultipliers) {
+      for (const [category, subIndexMap] of Object.entries(skillMultipliers)) {
+        const indices = Object.keys(subIndexMap).map(Number);
+        if (category === 'BASIC_ATTACK' || category === 'ENHANCED_BASIC_ATTACK' || category === 'EMPOWERED_BASIC_ATTACK') {
+          // Segmented: create segments with frames derived from hit count
+          skeleton[category] = {
+            segments: indices.map(idx => {
+              const levelEntries = subIndexMap[idx];
+              const hitCount = deriveHitCount(levelEntries);
+              return {
+                metadata: {
+                  eventComponentType: 'SEGMENT',
+                  dataSources: ['WARFARIN'],
+                },
+                properties: {
+                  duration: { value: 0, unit: 'SECOND' },
+                },
+                frames: Array.from({ length: hitCount }, () => ({
+                  metadata: {
+                    eventComponentType: 'FRAME',
+                    dataSources: ['WARFARIN'],
+                  },
+                  properties: {
+                    offset: { value: 0, unit: 'SECOND' },
+                  },
+                  effects: [],
+                })),
+              };
+            }),
+          };
+        } else {
+          // Flat: create frames from hit count
+          const levelEntries = subIndexMap[0];
+          if (levelEntries) {
+            const hitCount = deriveHitCount(levelEntries);
+            skeleton[category] = {
+              frames: Array.from({ length: hitCount }, () => ({
+                metadata: {
+                  eventComponentType: 'FRAME',
+                  dataSources: ['WARFARIN'],
+                },
+                properties: {
+                  offset: { value: 0, unit: 'SECOND' },
+                },
+                effects: [],
+              })),
+            };
+          }
+        }
+      }
+    }
+    // Also create entries for described skills that aren't in multipliers
+    if (skillDescriptions) {
+      for (const categoryKey of Object.keys(skillDescriptions)) {
+        if (!skeleton[categoryKey]) {
+          skeleton[categoryKey] = {};
+        }
+      }
+    }
+    merged.skills = skeleton;
+    console.log(`  Warfarin fallback: created skeleton skills for ${Object.keys(skeleton).length} categories`);
+  }
+
   // Merge skill descriptions from Warfarin into skill categories
   if (skillDescriptions && merged.skills) {
     const skills = merged.skills as Record<string, Record<string, unknown>>;
@@ -482,6 +702,16 @@ async function parseOne(slug: string, roster: unknown[]) {
       }
     }
     console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
+  }
+
+  // Merge skill IDs (CombatSkillsType enum values) from Warfarin into skill categories
+  if (skillIds && merged.skills) {
+    const skills = merged.skills as Record<string, Record<string, unknown>>;
+    for (const [categoryKey, id] of Object.entries(skillIds)) {
+      if (skills[categoryKey]) {
+        skills[categoryKey].id = id;
+      }
+    }
   }
 
   // Merge Warfarin multipliers into End-Axis frames
@@ -521,6 +751,7 @@ async function parseAll(roster: unknown[]) {
 
     let skillDescriptions: Record<string, { name: string; description: string }> | undefined;
     let skillMultipliers: SkillMultiplierData | undefined;
+    let skillIds: Record<string, string> | undefined;
     if (warfarinData) {
       for (const [key, value] of Object.entries(warfarinData)) {
         if (key === 'skills') continue;
@@ -530,6 +761,10 @@ async function parseAll(roster: unknown[]) {
         }
         if (key === 'skillMultipliers') {
           skillMultipliers = value as SkillMultiplierData;
+          continue;
+        }
+        if (key === 'skillIds') {
+          skillIds = value as Record<string, string>;
           continue;
         }
         merged[key] = value;
@@ -565,6 +800,13 @@ async function parseAll(roster: unknown[]) {
         }
       }
       console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
+    }
+
+    if (skillIds && merged.skills) {
+      const skills = merged.skills as Record<string, Record<string, unknown>>;
+      for (const [categoryKey, id] of Object.entries(skillIds)) {
+        if (skills[categoryKey]) skills[categoryKey].id = id;
+      }
     }
 
     // Merge Warfarin multipliers into End-Axis frames

@@ -4,12 +4,11 @@
  */
 import { useState } from 'react';
 import { CombatSkillType, ElementType, TimeInteractionType } from '../../consts/enums';
-import type { Clause, Interaction, Predicate } from '../../consts/semantics';
+import type { Clause, Interaction } from '../../consts/semantics';
 import type { CustomSkill } from '../../model/custom/customSkillTypes';
 import ClauseBuilder from './ClauseBuilder';
 import SegmentFrameEditor from './SegmentFrameEditor';
 import IdField from './IdField';
-import type { CustomSegmentDef } from '../../model/custom/customOperatorTypes';
 
 const SKILL_TYPE_LABELS: Record<CombatSkillType, string> = {
   [CombatSkillType.BASIC_ATTACK]: 'Basic Attack',

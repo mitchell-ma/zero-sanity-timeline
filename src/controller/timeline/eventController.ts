@@ -6,7 +6,7 @@
  */
 
 import { EventFrameType } from '../../consts/enums';
-import { TimelineEvent, EventSegmentData, Operator } from '../../consts/viewTypes';
+import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { MeltingFlameController } from './meltingFlameController';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -45,7 +45,7 @@ export function getNextEventId(): number {
 
 function getRange(ev: TimelineEvent): number {
   // Prefer segments (may be time-stop-extended) over static nonOverlappableRange
-  if (ev.segments) return ev.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+  if (ev.segments) return computeSegmentsSpan(ev.segments);
   return ev.nonOverlappableRange ?? 0;
 }
 
@@ -162,7 +162,7 @@ export function createEvent(
     ...(isForced ? { isForced: true } : {}),
     ...(defaultSkill?.segments ? {
       segments: defaultSkill.segments,
-      nonOverlappableRange: defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0),
+      nonOverlappableRange: computeSegmentsSpan(defaultSkill.segments),
     } : {}),
     ...(columnId === SKILL_COLUMNS.ULTIMATE && !defaultSkill?.segments ? {
       nonOverlappableRange: (defaultSkill?.defaultActivationDuration ?? 120)
@@ -299,17 +299,8 @@ function clampToUltimateActivePhase(
   const phaseStart = activeWindow.start;
   const phaseEnd = activeWindow.end;
 
-  // Compute total event duration from segments (last segment end relative to event start)
-  let totalDuration = 0;
-  if (target.segments && target.segments.length > 0) {
-    for (const seg of target.segments) {
-      totalDuration += seg.durationFrames;
-    }
-  }
-
   // Earliest: first segment start >= phaseStart → desiredFrame >= phaseStart
   // Latest: last segment must start before phaseEnd
-  //   last segment start = desiredFrame + totalDuration - lastSegDuration
   //   but we need ALL segment starts inside, so the last segment start < phaseEnd
   let lastSegStart = 0;
   if (target.segments && target.segments.length > 0) {

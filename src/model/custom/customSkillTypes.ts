@@ -3,13 +3,17 @@
  * Skills are standalone entities that can be assigned to operators.
  */
 import { CombatSkillType, ElementType, TimeInteractionType } from '../../consts/enums';
-import type { Interaction, StatusReaction } from '../../consts/semantics';
+import type { Interaction } from '../../consts/semantics';
 import type { StatType } from '../enums';
 
 /** A user-created custom skill. */
 export interface CustomSkill {
   id: string;
   name: string;
+  /** The operator this skill was originally created from. */
+  originId?: string;
+  /** Operator IDs associated with this skill. Kept in sync with the link table. */
+  associationIds?: string[];
   combatSkillType: CombatSkillType;
   element?: ElementType;
   durationSeconds: number;

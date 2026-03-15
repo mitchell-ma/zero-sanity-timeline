@@ -1,0 +1,1920 @@
+{
+  "operatorType": "YVONNE",
+  "name": "Yvonne",
+  "operatorRarity": 6,
+  "operatorClassType": "STRIKER",
+  "elementType": "CRYO",
+  "weaponType": "HANDCANNON",
+  "mainAttributeType": "INTELLECT",
+  "secondaryAttributeType": "AGILITY",
+  "potentials": [
+    {
+      "level": 1,
+      "name": "Flash Freezer",
+      "effects": [
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "FLASHFREEZER",
+            "parameterKey": "has_potential1",
+            "value": 1,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "FLASHFREEZER",
+            "parameterKey": "radius",
+            "value": 5,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "FLASHFREEZER",
+            "parameterKey": "interval",
+            "value": 0.5,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "FLASHFREEZER",
+            "parameterKey": "maxcnt",
+            "value": 6,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "FLASHFREEZER",
+            "parameterKey": "usp_extra",
+            "value": 25,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "name": "Flawless Creation",
+      "effects": [
+        {
+          "potentialEffectType": "STAT_MODIFIER",
+          "statModifier": {
+            "statType": "INTELLECT",
+            "value": 20
+          }
+        },
+        {
+          "potentialEffectType": "STAT_MODIFIER",
+          "statModifier": {
+            "statType": "CRITICAL_RATE",
+            "value": 0.07
+          }
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "name": "Tink-a-Power",
+      "effects": [
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "chr_0017_yvonne_talent_0",
+            "parameterKey": "inflict_up",
+            "value": 0.1,
+            "parameterModifyType": "ADDITIVE"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "chr_0017_yvonne_talent_0",
+            "parameterKey": "status_up",
+            "value": 0.2,
+            "parameterModifyType": "ADDITIVE"
+          }
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "name": "Rebellious Mood",
+      "effects": [
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "BRR_BRR_BOMB",
+            "parameterKey": "atb_return",
+            "value": 10,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "BRR_BRR_BOMB",
+            "parameterKey": "has_potential2",
+            "value": 1,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "name": "Expert Mechcrafter",
+      "effects": [
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "CRYOBLASTING_PISTOLIER",
+            "parameterKey": "has_potential5",
+            "value": 1,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "CRYOBLASTING_PISTOLIER",
+            "parameterKey": "atk_up",
+            "value": 0.1,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "CRYOBLASTING_PISTOLIER",
+            "parameterKey": "crit_dmg_up",
+            "value": 0.3,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "BUFF_ATTACHMENT",
+          "buffAttachment": {
+            "parameters": [],
+            "objectId": "YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "chr_0017_yvonne_ult_attack_end",
+            "parameterKey": "crit_dmg_up",
+            "value": 0.3,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        },
+        {
+          "potentialEffectType": "SKILL_PARAMETER",
+          "skillParameterModifier": {
+            "skillType": "chr_0017_yvonne_ult_attack_end",
+            "parameterKey": "atk_up",
+            "value": 0.1,
+            "parameterModifyType": "UNIQUE_MULTIPLIER"
+          }
+        }
+      ]
+    }
+  ],
+  "allLevels": [
+    {
+      "level": 1,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 8.35051546391753,
+        "AGILITY": 14.7422680412371,
+        "INTELLECT": 24.5876288659794,
+        "WILL": 10.6185567010309,
+        "BASE_HP": 500,
+        "BASE_ATTACK": 30,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 2,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 9.185567010309283,
+        "AGILITY": 16.016536924047955,
+        "INTELLECT": 26.29654954765413,
+        "WILL": 11.680412371133993,
+        "BASE_HP": 556,
+        "BASE_ATTACK": 33,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 3,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 10.020618556701034,
+        "AGILITY": 17.290805806858813,
+        "INTELLECT": 28.00547022932886,
+        "WILL": 12.742268041237086,
+        "BASE_HP": 612,
+        "BASE_ATTACK": 37,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 4,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 10.855670103092788,
+        "AGILITY": 18.565074689669668,
+        "INTELLECT": 29.71439091100359,
+        "WILL": 13.804123711340178,
+        "BASE_HP": 668,
+        "BASE_ATTACK": 40,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 5,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 11.69072164948454,
+        "AGILITY": 19.839343572480523,
+        "INTELLECT": 31.423311592678324,
+        "WILL": 14.865979381443271,
+        "BASE_HP": 724,
+        "BASE_ATTACK": 43,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 6,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 12.525773195876294,
+        "AGILITY": 21.11361245529138,
+        "INTELLECT": 33.13223227435305,
+        "WILL": 15.927835051546364,
+        "BASE_HP": 781,
+        "BASE_ATTACK": 46,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 7,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 13.360824742268047,
+        "AGILITY": 22.387881338102236,
+        "INTELLECT": 34.841152956027784,
+        "WILL": 16.98969072164946,
+        "BASE_HP": 837,
+        "BASE_ATTACK": 50,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 8,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 14.195876288659798,
+        "AGILITY": 23.66215022091309,
+        "INTELLECT": 36.55007363770251,
+        "WILL": 18.051546391752552,
+        "BASE_HP": 893,
+        "BASE_ATTACK": 53,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 9,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 15.030927835051552,
+        "AGILITY": 24.93641910372395,
+        "INTELLECT": 38.258994319377244,
+        "WILL": 19.113402061855645,
+        "BASE_HP": 949,
+        "BASE_ATTACK": 56,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 10,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 15.865979381443305,
+        "AGILITY": 26.210687986534808,
+        "INTELLECT": 39.96791500105198,
+        "WILL": 20.175257731958737,
+        "BASE_HP": 1005,
+        "BASE_ATTACK": 59,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 11,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 16.701030927835056,
+        "AGILITY": 27.484956869345663,
+        "INTELLECT": 41.676835682726704,
+        "WILL": 21.23711340206183,
+        "BASE_HP": 1061,
+        "BASE_ATTACK": 63,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 12,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 17.53608247422681,
+        "AGILITY": 28.759225752156517,
+        "INTELLECT": 43.38575636440143,
+        "WILL": 22.298969072164923,
+        "BASE_HP": 1117,
+        "BASE_ATTACK": 66,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 13,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 18.371134020618562,
+        "AGILITY": 30.033494634967376,
+        "INTELLECT": 45.09467704607617,
+        "WILL": 23.360824742268015,
+        "BASE_HP": 1173,
+        "BASE_ATTACK": 69,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 14,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 19.206185567010316,
+        "AGILITY": 31.30776351777823,
+        "INTELLECT": 46.8035977277509,
+        "WILL": 24.422680412371108,
+        "BASE_HP": 1230,
+        "BASE_ATTACK": 72,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 15,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 20.04123711340207,
+        "AGILITY": 32.582032400589085,
+        "INTELLECT": 48.512518409425624,
+        "WILL": 25.4845360824742,
+        "BASE_HP": 1286,
+        "BASE_ATTACK": 76,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 16,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 20.876288659793822,
+        "AGILITY": 33.856301283399944,
+        "INTELLECT": 50.22143909110036,
+        "WILL": 26.546391752577293,
+        "BASE_HP": 1342,
+        "BASE_ATTACK": 79,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 17,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 21.711340206185575,
+        "AGILITY": 35.1305701662108,
+        "INTELLECT": 51.93035977277509,
+        "WILL": 27.608247422680385,
+        "BASE_HP": 1398,
+        "BASE_ATTACK": 82,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 18,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 22.54639175257733,
+        "AGILITY": 36.40483904902165,
+        "INTELLECT": 53.63928045444982,
+        "WILL": 28.670103092783478,
+        "BASE_HP": 1454,
+        "BASE_ATTACK": 85,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 19,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 23.38144329896908,
+        "AGILITY": 37.67910793183251,
+        "INTELLECT": 55.348201136124544,
+        "WILL": 29.73195876288657,
+        "BASE_HP": 1510,
+        "BASE_ATTACK": 89,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 20,
+      "operatorPromotionStage": 0,
+      "attributes": {
+        "STRENGTH": 24.21649484536083,
+        "AGILITY": 38.95337681464336,
+        "INTELLECT": 57.057121817799285,
+        "WILL": 30.793814432989663,
+        "BASE_HP": 1566,
+        "BASE_ATTACK": 92,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 20,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 24.21649484536083,
+        "AGILITY": 38.95337681464336,
+        "INTELLECT": 57.057121817799285,
+        "WILL": 30.793814432989663,
+        "BASE_HP": 1566,
+        "BASE_ATTACK": 92,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 21,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 25.051546391752588,
+        "AGILITY": 40.22764569745422,
+        "INTELLECT": 58.76604249947401,
+        "WILL": 31.855670103092756,
+        "BASE_HP": 1622,
+        "BASE_ATTACK": 95,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 22,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 25.886597938144334,
+        "AGILITY": 41.50191458026508,
+        "INTELLECT": 60.47496318114874,
+        "WILL": 32.91752577319585,
+        "BASE_HP": 1679,
+        "BASE_ATTACK": 99,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 23,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 26.721649484536087,
+        "AGILITY": 42.77618346307594,
+        "INTELLECT": 62.183883862823464,
+        "WILL": 33.97938144329894,
+        "BASE_HP": 1735,
+        "BASE_ATTACK": 102,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 24,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 27.55670103092784,
+        "AGILITY": 44.0504523458868,
+        "INTELLECT": 63.892804544498205,
+        "WILL": 35.04123711340203,
+        "BASE_HP": 1791,
+        "BASE_ATTACK": 105,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 25,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 28.391752577319593,
+        "AGILITY": 45.32472122869765,
+        "INTELLECT": 65.60172522617293,
+        "WILL": 36.10309278350513,
+        "BASE_HP": 1847,
+        "BASE_ATTACK": 108,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 26,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 29.226804123711347,
+        "AGILITY": 46.5989901115085,
+        "INTELLECT": 67.31064590784766,
+        "WILL": 37.16494845360822,
+        "BASE_HP": 1903,
+        "BASE_ATTACK": 112,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 27,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 30.0618556701031,
+        "AGILITY": 47.87325899431936,
+        "INTELLECT": 69.0195665895224,
+        "WILL": 38.22680412371132,
+        "BASE_HP": 1959,
+        "BASE_ATTACK": 115,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 28,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 30.896907216494853,
+        "AGILITY": 49.147527877130216,
+        "INTELLECT": 70.72848727119712,
+        "WILL": 39.2886597938144,
+        "BASE_HP": 2015,
+        "BASE_ATTACK": 118,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 29,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 31.731958762886606,
+        "AGILITY": 50.421796759941074,
+        "INTELLECT": 72.43740795287185,
+        "WILL": 40.3505154639175,
+        "BASE_HP": 2071,
+        "BASE_ATTACK": 121,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 30,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 32.56701030927836,
+        "AGILITY": 51.69606564275193,
+        "INTELLECT": 74.14632863454658,
+        "WILL": 41.41237113402059,
+        "BASE_HP": 2128,
+        "BASE_ATTACK": 125,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 31,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 33.40206185567011,
+        "AGILITY": 52.97033452556279,
+        "INTELLECT": 75.85524931622132,
+        "WILL": 42.47422680412369,
+        "BASE_HP": 2184,
+        "BASE_ATTACK": 128,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 32,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 34.237113402061865,
+        "AGILITY": 54.244603408373635,
+        "INTELLECT": 77.56416999789604,
+        "WILL": 43.536082474226774,
+        "BASE_HP": 2240,
+        "BASE_ATTACK": 131,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 33,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 35.07216494845362,
+        "AGILITY": 55.51887229118449,
+        "INTELLECT": 79.27309067957077,
+        "WILL": 44.59793814432987,
+        "BASE_HP": 2296,
+        "BASE_ATTACK": 134,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 34,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 35.90721649484537,
+        "AGILITY": 56.79314117399535,
+        "INTELLECT": 80.98201136124551,
+        "WILL": 45.65979381443296,
+        "BASE_HP": 2352,
+        "BASE_ATTACK": 138,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 35,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 36.742268041237125,
+        "AGILITY": 58.06741005680621,
+        "INTELLECT": 82.69093204292024,
+        "WILL": 46.72164948453606,
+        "BASE_HP": 2408,
+        "BASE_ATTACK": 141,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 36,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 37.57731958762888,
+        "AGILITY": 59.34167893961707,
+        "INTELLECT": 84.39985272459496,
+        "WILL": 47.783505154639144,
+        "BASE_HP": 2464,
+        "BASE_ATTACK": 144,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 37,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 38.41237113402063,
+        "AGILITY": 60.61594782242793,
+        "INTELLECT": 86.10877340626969,
+        "WILL": 48.845360824742244,
+        "BASE_HP": 2520,
+        "BASE_ATTACK": 148,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 38,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 39.24742268041238,
+        "AGILITY": 61.89021670523877,
+        "INTELLECT": 87.81769408794443,
+        "WILL": 49.90721649484533,
+        "BASE_HP": 2577,
+        "BASE_ATTACK": 151,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 39,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 40.08247422680413,
+        "AGILITY": 63.16448558804963,
+        "INTELLECT": 89.52661476961916,
+        "WILL": 50.96907216494843,
+        "BASE_HP": 2633,
+        "BASE_ATTACK": 154,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 40,
+      "operatorPromotionStage": 1,
+      "attributes": {
+        "STRENGTH": 40.91752577319589,
+        "AGILITY": 64.43875447086049,
+        "INTELLECT": 91.23553545129388,
+        "WILL": 52.030927835051514,
+        "BASE_HP": 2689,
+        "BASE_ATTACK": 157,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 40,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 40.91752577319589,
+        "AGILITY": 64.43875447086049,
+        "INTELLECT": 91.23553545129388,
+        "WILL": 52.030927835051514,
+        "BASE_HP": 2689,
+        "BASE_ATTACK": 157,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 41,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 41.752577319587644,
+        "AGILITY": 65.71302335367135,
+        "INTELLECT": 92.94445613296861,
+        "WILL": 53.092783505154614,
+        "BASE_HP": 2745,
+        "BASE_ATTACK": 161,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 42,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 42.58762886597939,
+        "AGILITY": 66.9872922364822,
+        "INTELLECT": 94.65337681464335,
+        "WILL": 54.1546391752577,
+        "BASE_HP": 2801,
+        "BASE_ATTACK": 164,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 43,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 43.42268041237114,
+        "AGILITY": 68.26156111929306,
+        "INTELLECT": 96.36229749631808,
+        "WILL": 55.2164948453608,
+        "BASE_HP": 2857,
+        "BASE_ATTACK": 167,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 44,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 44.257731958762896,
+        "AGILITY": 69.53583000210392,
+        "INTELLECT": 98.0712181779928,
+        "WILL": 56.278350515463885,
+        "BASE_HP": 2913,
+        "BASE_ATTACK": 170,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 45,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 45.09278350515465,
+        "AGILITY": 70.81009888491477,
+        "INTELLECT": 99.78013885966753,
+        "WILL": 57.340206185566984,
+        "BASE_HP": 2969,
+        "BASE_ATTACK": 174,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 46,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 45.9278350515464,
+        "AGILITY": 72.08436776772562,
+        "INTELLECT": 101.48905954134227,
+        "WILL": 58.40206185567007,
+        "BASE_HP": 3026,
+        "BASE_ATTACK": 177,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 47,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 46.762886597938156,
+        "AGILITY": 73.35863665053648,
+        "INTELLECT": 103.197980223017,
+        "WILL": 59.46391752577317,
+        "BASE_HP": 3082,
+        "BASE_ATTACK": 180,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 48,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 47.59793814432991,
+        "AGILITY": 74.63290553334734,
+        "INTELLECT": 104.90690090469172,
+        "WILL": 60.525773195876255,
+        "BASE_HP": 3138,
+        "BASE_ATTACK": 183,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 49,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 48.43298969072166,
+        "AGILITY": 75.9071744161582,
+        "INTELLECT": 106.61582158636647,
+        "WILL": 61.587628865979354,
+        "BASE_HP": 3194,
+        "BASE_ATTACK": 187,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 50,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 49.268041237113415,
+        "AGILITY": 77.18144329896906,
+        "INTELLECT": 108.32474226804119,
+        "WILL": 62.649484536082454,
+        "BASE_HP": 3250,
+        "BASE_ATTACK": 190,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 51,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 50.10309278350517,
+        "AGILITY": 78.4557121817799,
+        "INTELLECT": 110.03366294971592,
+        "WILL": 63.71134020618554,
+        "BASE_HP": 3306,
+        "BASE_ATTACK": 193,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 52,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 50.93814432989692,
+        "AGILITY": 79.72998106459076,
+        "INTELLECT": 111.74258363139064,
+        "WILL": 64.77319587628864,
+        "BASE_HP": 3362,
+        "BASE_ATTACK": 196,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 53,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 51.773195876288675,
+        "AGILITY": 81.00424994740162,
+        "INTELLECT": 113.45150431306539,
+        "WILL": 65.83505154639172,
+        "BASE_HP": 3418,
+        "BASE_ATTACK": 200,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 54,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 52.60824742268043,
+        "AGILITY": 82.27851883021248,
+        "INTELLECT": 115.16042499474011,
+        "WILL": 66.89690721649482,
+        "BASE_HP": 3474,
+        "BASE_ATTACK": 203,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 55,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 53.44329896907218,
+        "AGILITY": 83.55278771302333,
+        "INTELLECT": 116.86934567641484,
+        "WILL": 67.95876288659791,
+        "BASE_HP": 3531,
+        "BASE_ATTACK": 206,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 56,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 54.278350515463934,
+        "AGILITY": 84.82705659583418,
+        "INTELLECT": 118.57826635808956,
+        "WILL": 69.02061855670101,
+        "BASE_HP": 3587,
+        "BASE_ATTACK": 210,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 57,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 55.11340206185568,
+        "AGILITY": 86.10132547864504,
+        "INTELLECT": 120.2871870397643,
+        "WILL": 70.0824742268041,
+        "BASE_HP": 3643,
+        "BASE_ATTACK": 213,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 58,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 55.94845360824743,
+        "AGILITY": 87.3755943614559,
+        "INTELLECT": 121.99610772143903,
+        "WILL": 71.1443298969072,
+        "BASE_HP": 3699,
+        "BASE_ATTACK": 216,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 59,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 56.78350515463919,
+        "AGILITY": 88.64986324426675,
+        "INTELLECT": 123.70502840311376,
+        "WILL": 72.20618556701028,
+        "BASE_HP": 3755,
+        "BASE_ATTACK": 219,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 60,
+      "operatorPromotionStage": 2,
+      "attributes": {
+        "STRENGTH": 57.61855670103094,
+        "AGILITY": 89.92413212707761,
+        "INTELLECT": 125.4139490847885,
+        "WILL": 73.26804123711338,
+        "BASE_HP": 3811,
+        "BASE_ATTACK": 223,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 60,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 57.61855670103094,
+        "AGILITY": 89.92413212707761,
+        "INTELLECT": 125.4139490847885,
+        "WILL": 73.26804123711338,
+        "BASE_HP": 3811,
+        "BASE_ATTACK": 223,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 61,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 58.45360824742269,
+        "AGILITY": 91.19840100988847,
+        "INTELLECT": 127.12286976646323,
+        "WILL": 74.32989690721647,
+        "BASE_HP": 3867,
+        "BASE_ATTACK": 226,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 62,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 59.288659793814446,
+        "AGILITY": 92.47266989269932,
+        "INTELLECT": 128.83179044813795,
+        "WILL": 75.39175257731955,
+        "BASE_HP": 3923,
+        "BASE_ATTACK": 229,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 63,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 60.1237113402062,
+        "AGILITY": 93.74693877551017,
+        "INTELLECT": 130.54071112981268,
+        "WILL": 76.45360824742265,
+        "BASE_HP": 3980,
+        "BASE_ATTACK": 232,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 64,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 60.95876288659795,
+        "AGILITY": 95.02120765832103,
+        "INTELLECT": 132.24963181148743,
+        "WILL": 77.51546391752574,
+        "BASE_HP": 4036,
+        "BASE_ATTACK": 236,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 65,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 61.793814432989706,
+        "AGILITY": 96.29547654113189,
+        "INTELLECT": 133.95855249316216,
+        "WILL": 78.57731958762884,
+        "BASE_HP": 4092,
+        "BASE_ATTACK": 239,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 66,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 62.62886597938146,
+        "AGILITY": 97.56974542394275,
+        "INTELLECT": 135.66747317483689,
+        "WILL": 79.63917525773194,
+        "BASE_HP": 4148,
+        "BASE_ATTACK": 242,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 67,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 63.46391752577321,
+        "AGILITY": 98.8440143067536,
+        "INTELLECT": 137.3763938565116,
+        "WILL": 80.70103092783502,
+        "BASE_HP": 4204,
+        "BASE_ATTACK": 245,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 68,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 64.29896907216497,
+        "AGILITY": 100.11828318956447,
+        "INTELLECT": 139.08531453818634,
+        "WILL": 81.76288659793812,
+        "BASE_HP": 4260,
+        "BASE_ATTACK": 249,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 69,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 65.13402061855672,
+        "AGILITY": 101.39255207237531,
+        "INTELLECT": 140.79423521986106,
+        "WILL": 82.8247422680412,
+        "BASE_HP": 4316,
+        "BASE_ATTACK": 252,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 70,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 65.96907216494847,
+        "AGILITY": 102.66682095518617,
+        "INTELLECT": 142.5031559015358,
+        "WILL": 83.8865979381443,
+        "BASE_HP": 4372,
+        "BASE_ATTACK": 255,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 71,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 66.80412371134022,
+        "AGILITY": 103.94108983799703,
+        "INTELLECT": 144.21207658321055,
+        "WILL": 84.94845360824739,
+        "BASE_HP": 4429,
+        "BASE_ATTACK": 259,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 72,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 67.63917525773198,
+        "AGILITY": 105.21535872080788,
+        "INTELLECT": 145.92099726488527,
+        "WILL": 86.01030927835049,
+        "BASE_HP": 4485,
+        "BASE_ATTACK": 262,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 73,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 68.47422680412373,
+        "AGILITY": 106.48962760361874,
+        "INTELLECT": 147.62991794656,
+        "WILL": 87.07216494845358,
+        "BASE_HP": 4541,
+        "BASE_ATTACK": 265,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 74,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 69.30927835051547,
+        "AGILITY": 107.7638964864296,
+        "INTELLECT": 149.33883862823473,
+        "WILL": 88.13402061855668,
+        "BASE_HP": 4597,
+        "BASE_ATTACK": 268,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 75,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 70.14432989690722,
+        "AGILITY": 109.03816536924045,
+        "INTELLECT": 151.04775930990945,
+        "WILL": 89.19587628865976,
+        "BASE_HP": 4653,
+        "BASE_ATTACK": 272,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 76,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 70.97938144329898,
+        "AGILITY": 110.3124342520513,
+        "INTELLECT": 152.7566799915842,
+        "WILL": 90.25773195876286,
+        "BASE_HP": 4709,
+        "BASE_ATTACK": 275,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 77,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 71.81443298969073,
+        "AGILITY": 111.58670313486216,
+        "INTELLECT": 154.46560067325893,
+        "WILL": 91.31958762886595,
+        "BASE_HP": 4765,
+        "BASE_ATTACK": 278,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 78,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 72.6494845360825,
+        "AGILITY": 112.86097201767302,
+        "INTELLECT": 156.17452135493366,
+        "WILL": 92.38144329896905,
+        "BASE_HP": 4821,
+        "BASE_ATTACK": 281,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 79,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 73.48453608247425,
+        "AGILITY": 114.13524090048388,
+        "INTELLECT": 157.8834420366084,
+        "WILL": 93.44329896907213,
+        "BASE_HP": 4878,
+        "BASE_ATTACK": 285,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 80,
+      "operatorPromotionStage": 3,
+      "attributes": {
+        "STRENGTH": 74.319587628866,
+        "AGILITY": 115.40950978329474,
+        "INTELLECT": 159.5923627182831,
+        "WILL": 94.50515463917523,
+        "BASE_HP": 4934,
+        "BASE_ATTACK": 288,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 80,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 74.319587628866,
+        "AGILITY": 115.40950978329474,
+        "INTELLECT": 159.5923627182831,
+        "WILL": 94.50515463917523,
+        "BASE_HP": 4934,
+        "BASE_ATTACK": 288,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 81,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 75.15463917525776,
+        "AGILITY": 116.6837786661056,
+        "INTELLECT": 161.30128339995784,
+        "WILL": 95.56701030927832,
+        "BASE_HP": 4990,
+        "BASE_ATTACK": 291,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 82,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 75.9896907216495,
+        "AGILITY": 117.95804754891644,
+        "INTELLECT": 163.01020408163257,
+        "WILL": 96.62886597938142,
+        "BASE_HP": 5046,
+        "BASE_ATTACK": 294,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 83,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 76.82474226804125,
+        "AGILITY": 119.2323164317273,
+        "INTELLECT": 164.71912476330732,
+        "WILL": 97.6907216494845,
+        "BASE_HP": 5102,
+        "BASE_ATTACK": 298,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 84,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 77.659793814433,
+        "AGILITY": 120.50658531453816,
+        "INTELLECT": 166.42804544498205,
+        "WILL": 98.7525773195876,
+        "BASE_HP": 5158,
+        "BASE_ATTACK": 301,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 85,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 78.49484536082475,
+        "AGILITY": 121.78085419734902,
+        "INTELLECT": 168.13696612665677,
+        "WILL": 99.81443298969069,
+        "BASE_HP": 5214,
+        "BASE_ATTACK": 304,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 86,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 79.32989690721651,
+        "AGILITY": 123.05512308015987,
+        "INTELLECT": 169.8458868083315,
+        "WILL": 100.87628865979379,
+        "BASE_HP": 5270,
+        "BASE_ATTACK": 307,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 87,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 80.16494845360826,
+        "AGILITY": 124.32939196297073,
+        "INTELLECT": 171.55480749000623,
+        "WILL": 101.93814432989687,
+        "BASE_HP": 5327,
+        "BASE_ATTACK": 311,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 88,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 81.00000000000001,
+        "AGILITY": 125.60366084578158,
+        "INTELLECT": 173.26372817168095,
+        "WILL": 102.99999999999997,
+        "BASE_HP": 5383,
+        "BASE_ATTACK": 314,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 89,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 81.83505154639177,
+        "AGILITY": 126.87792972859243,
+        "INTELLECT": 174.97264885335568,
+        "WILL": 104.06185567010306,
+        "BASE_HP": 5439,
+        "BASE_ATTACK": 317,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 90,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 82.67010309278352,
+        "AGILITY": 128.1521986114033,
+        "INTELLECT": 176.68156953503043,
+        "WILL": 105.12371134020616,
+        "BASE_HP": 5495,
+        "BASE_ATTACK": 321,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 91,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 83.50515463917527,
+        "AGILITY": 129.42646749421417,
+        "INTELLECT": 178.39049021670516,
+        "WILL": 106.18556701030924,
+        "BASE_HP": 5551,
+        "BASE_ATTACK": 324,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 92,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 84.34020618556703,
+        "AGILITY": 130.700736377025,
+        "INTELLECT": 180.0994108983799,
+        "WILL": 107.24742268041234,
+        "BASE_HP": 5607,
+        "BASE_ATTACK": 327,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 93,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 85.17525773195878,
+        "AGILITY": 131.97500525983588,
+        "INTELLECT": 181.8083315800546,
+        "WILL": 108.30927835051543,
+        "BASE_HP": 5663,
+        "BASE_ATTACK": 330,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 94,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 86.01030927835053,
+        "AGILITY": 133.24927414264673,
+        "INTELLECT": 183.51725226172934,
+        "WILL": 109.37113402061853,
+        "BASE_HP": 5719,
+        "BASE_ATTACK": 334,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 95,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 86.84536082474229,
+        "AGILITY": 134.52354302545757,
+        "INTELLECT": 185.22617294340407,
+        "WILL": 110.43298969072161,
+        "BASE_HP": 5776,
+        "BASE_ATTACK": 337,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 96,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 87.68041237113404,
+        "AGILITY": 135.79781190826844,
+        "INTELLECT": 186.9350936250788,
+        "WILL": 111.49484536082471,
+        "BASE_HP": 5832,
+        "BASE_ATTACK": 340,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 97,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 88.51546391752579,
+        "AGILITY": 137.0720807910793,
+        "INTELLECT": 188.64401430675355,
+        "WILL": 112.55670103092781,
+        "BASE_HP": 5888,
+        "BASE_ATTACK": 343,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 98,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 89.35051546391755,
+        "AGILITY": 138.34634967389016,
+        "INTELLECT": 190.35293498842827,
+        "WILL": 113.6185567010309,
+        "BASE_HP": 5944,
+        "BASE_ATTACK": 347,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    },
+    {
+      "level": 99,
+      "operatorPromotionStage": 4,
+      "attributes": {
+        "STRENGTH": 90.1855670103093,
+        "AGILITY": 139.620618556701,
+        "INTELLECT": 192.061855670103,
+        "WILL": 114.680412371134,
+        "BASE_HP": 6000,
+        "BASE_ATTACK": 350,
+        "BASE_DEFENSE": 0,
+        "WEIGHT": 1,
+        "CRITICAL_RATE": 0.05,
+        "ATTACK_RANGE": 10
+      }
+    }
+  ],
+  "talentEffects": [
+    {
+      "name": "Freezing Point",
+      "source": "TALENT_2",
+      "minLevel": 1,
+      "bonusType": "CRITICAL_DAMAGE",
+      "values": [
+        0.1,
+        0.2
+      ],
+      "condition": {
+        "enemyStatus": "CRYO",
+        "doubledBy": "SOLIDIFICATION"
+      }
+    },
+    {
+      "name": "Tink-a-Power",
+      "source": "POTENTIAL",
+      "minPotential": 3,
+      "bonusType": "CRITICAL_DAMAGE",
+      "values": [
+        0.1
+      ],
+      "condition": {
+        "enemyStatus": "CRYO",
+        "doubledBy": "SOLIDIFICATION"
+      }
+    }
+  ],
+  "statusEvents": [
+    {
+      "name": "CRIT_STACKS",
+      "target": "THIS_OPERATOR",
+      "element": "CRYO",
+      "isNamedEvent": true,
+      "isForceApplied": false,
+      "stack": {
+        "max": {
+          "P0": 4,
+          "P1": 4,
+          "P2": 4,
+          "P3": 4,
+          "P4": 4,
+          "P5": 4
+        },
+        "instances": 4,
+        "verbType": "NONE"
+      },
+      "triggerClause": [],
+      "stats": [],
+      "properties": {
+        "duration": {
+          "value": [
+            7
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ],
+  "talents": {
+    "one": {
+      "name": "Barrage of Technology",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Freezing Point",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Keen Mind",
+      "attribute": "INTELLECT",
+      "maxLevel": 4
+    }
+  },
+  "basicAttackDefaultDuration": 0.1667,
+  "ultimateActiveDuration": 7,
+  "ultimateCooldownDuration": 0,
+  "dataSources": [
+    "WARFARIN"
+  ]
+}

@@ -8,13 +8,13 @@ import { initCustomWeapons } from '../controller/custom/customWeaponController';
 import { initCustomGearSets } from '../controller/custom/customGearController';
 import { initCustomOperators } from '../controller/custom/customOperatorController';
 import { useHistory } from '../utils/useHistory';
+import type { Orientation } from '../utils/axisMap';
 import { LoadoutStats, getDefaultLoadoutStats } from '../view/InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
-import { Operator, TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, Enemy, Column } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
-import { CombatLoadout } from '../controller/combat-loadout';
 import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
@@ -36,8 +36,8 @@ import {
   clearLocalStorage,
   importMultiLoadoutFile,
 } from '../utils/sheetStorage';
+import { decodeEmbed, getEmbedParams } from '../utils/embedCodec';
 import {
-  NUM_SLOTS,
   SLOT_IDS,
   INITIAL_OPERATORS,
   INITIAL_VISIBLE,
@@ -82,7 +82,7 @@ import {
 } from '../controller/appStateController';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
-import { SKILL_COLUMNS } from '../model/channels';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../model/channels';
 import type { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -154,14 +154,19 @@ export function useApp() {
     });
   }, [setUndoable]);
 
-  const setEnemy = useCallback((newEnemy: Enemy) => {
-    setUndoable((prev) => prev.enemy === newEnemy ? prev : { ...prev, enemy: newEnemy });
-  }, [setUndoable]);
 
   // ─── UI state ────────────────────────────────────────────────────────────
-  const [zoom,             setZoom]             = useState<number>(() => {
+  const [orientation, setOrientation] = useState<Orientation>(() => {
+    try { const v = localStorage.getItem('zst-orientation'); return v === 'horizontal' ? 'horizontal' : 'vertical'; } catch { return 'vertical'; }
+  });
+  const [zoomVertical,     setZoomVertical]     = useState<number>(() => {
     try { const v = localStorage.getItem('zst-zoom'); return v ? Number(v) : 0.5; } catch { return 0.5; }
   });
+  const [zoomHorizontal,   setZoomHorizontal]   = useState<number>(() => {
+    try { const v = localStorage.getItem('zst-zoom-h'); return v ? Number(v) : 0.5; } catch { return 0.5; }
+  });
+  const zoom = orientation === 'horizontal' ? zoomHorizontal : zoomVertical;
+  const setZoom = orientation === 'horizontal' ? setZoomHorizontal : setZoomVertical;
   const [visibleSkills,    setVisibleSkills]    = useState<VisibleSkills>(
     initialLoad.loaded?.visibleSkills ?? INITIAL_VISIBLE,
   );
@@ -190,7 +195,12 @@ export function useApp() {
   useEffect(() => {
     try { localStorage.setItem('zst-split-pct', String(splitPct)); } catch { /* ignore */ }
   }, [splitPct]);
-  const [hiddenPane, setHiddenPane] = useState<'left' | 'right' | null>(null);
+  const [hiddenPane, setHiddenPane] = useState<'left' | 'right' | null>(() => {
+    try { const v = localStorage.getItem('zst-hidden-pane'); return v === 'left' || v === 'right' ? v : null; } catch { return null; }
+  });
+  useEffect(() => {
+    try { if (hiddenPane) localStorage.setItem('zst-hidden-pane', hiddenPane); else localStorage.removeItem('zst-hidden-pane'); } catch { /* ignore */ }
+  }, [hiddenPane]);
   const [hidePreview, setHidePreview] = useState<'left' | 'right' | null>(null);
   const [showPreview, setShowPreview] = useState<'left' | 'right' | null>(null);
   const preDragSplitRef = useRef(65);
@@ -206,6 +216,12 @@ export function useApp() {
   const [saveFlash,        setSaveFlash]        = useState(false);
   const [confirmClearLoadout, setConfirmClearLoadout] = useState(false);
   const [confirmClearAll,  setConfirmClearAll]  = useState(false);
+  useEffect(() => {
+    try { localStorage.setItem('zst-orientation', orientation); } catch { /* ignore */ }
+  }, [orientation]);
+  const handleToggleOrientation = useCallback(() => {
+    setOrientation((prev) => prev === 'vertical' ? 'horizontal' : 'vertical');
+  }, []);
 
   const debugModeRef = useRef(false);
   debugModeRef.current = debugMode;
@@ -229,9 +245,20 @@ export function useApp() {
     return () => clearTimeout(timer);
   }, []);
 
+  const [critMode, setCritMode] = useState<import('../consts/enums').CritMode>(() => {
+    try {
+      const v = localStorage.getItem('zst-crit-mode');
+      if (v === 'NONE' || v === 'ALWAYS') return v as import('../consts/enums').CritMode;
+    } catch { /* ignore */ }
+    return 'EXPECTED' as import('../consts/enums').CritMode;
+  });
+  useEffect(() => {
+    try { localStorage.setItem('zst-crit-mode', critMode); } catch { /* ignore */ }
+  }, [critMode]);
+
   // ─── Refs ────────────────────────────────────────────────────────────────
   const appBodyRef = useRef<HTMLDivElement | null>(null);
-  const resizerDragRef = useRef<{ startX: number; startPct: number } | null>(null);
+
   const dmgScrollRef = useRef<HTMLDivElement | null>(null);
   const tlScrollRef = useRef<HTMLDivElement | null>(null);
   const scrollSourceRef = useRef<'tl' | 'dmg' | null>(null);
@@ -250,9 +277,13 @@ export function useApp() {
     [operators, loadouts, loadoutStats],
   );
 
+  // Bump to force column rebuild when custom skill links change
+  const [customSkillVersion, setCustomSkillVersion] = useState(0);
+  const bumpCustomSkillVersion = useCallback(() => setCustomSkillVersion((v) => v + 1), []);
+
   const columns = useMemo(
     () => buildColumns(slots, enemy, visibleSkills),
-    [slots, enemy, visibleSkills],
+    [slots, enemy, visibleSkills, customSkillVersion], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Keep a ref of valid column pairs for use in event handlers
@@ -264,6 +295,56 @@ export function useApp() {
     () => attachDefaultSegments(filterEventsToColumns(events, columns), columns),
     [events, columns],
   );
+
+  // ─── Embed URL loading (one-time on mount) ─────────────────────────────
+  const embedLoadedRef = useRef(false);
+  useEffect(() => {
+    if (embedLoadedRef.current) return;
+    const embedParams = getEmbedParams();
+    if (!embedParams) return;
+    embedLoadedRef.current = true;
+    // Async decode — columns may not match yet but attachDefaultSegments
+    // will rebuild segments once operators are set and columns recompute.
+    decodeEmbed(embedParams.data, []).then((sheetData) => {
+      const resolved = applySheetData(sheetData);
+
+      // Save current loadout before creating the imported one
+      if (activeLoadoutId) {
+        saveLoadoutData(activeLoadoutId, buildSheetData());
+      }
+
+      // Create a new loadout with the shared name (deduplicated)
+      const dedupedName = uniqueName(loadoutTree, embedParams.name, null);
+      const { tree: newTree, node } = addLoadoutNode(loadoutTree, dedupedName, null);
+      setLoadoutTree(newTree);
+      saveLoadoutTree(newTree);
+
+      setNextEventId(sheetData.nextEventId);
+      resetUndoable({
+        events: resolved.events,
+        operators: resolved.operators,
+        enemy: resolved.enemy,
+        enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
+        loadouts: resolved.loadouts,
+        loadoutStats: resolved.loadoutStats,
+        resourceConfigs: resolved.resourceConfigs,
+      });
+      setVisibleSkills(resolved.visibleSkills);
+      setDerivedEventOverrides(resolved.derivedEventOverrides);
+
+      // Persist imported data under the new loadout
+      saveLoadoutData(node.id, sheetData);
+      setActiveLoadoutId(node.id);
+      saveActiveLoadoutId(node.id);
+
+      // Clean up URL — remove ?d= param without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }).catch((err) => {
+      console.error('[zst] Failed to decode embed URL:', err);
+      setWarningMessage(`Failed to load shared URL: ${err instanceof Error ? err.message : String(err)}`);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Build slot trigger wirings from operators for the pipeline
   const slotWirings = useMemo<SlotTriggerWiring[]>(() => {
@@ -318,9 +399,30 @@ export function useApp() {
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
   );
 
+  // Generate stagger frailty events from node crossings and full stagger breaks
+  const staggerFrailtyEvents = useMemo(() => {
+    const nodeRecoveryFrames = Math.round((enemyStats.staggerNodeRecoverySeconds ?? 0) * FPS);
+    return combatLoadout.commonSlot.stagger.generateFrailtyEvents(
+      nodeRecoveryFrames,
+      ENEMY_GROUP_COLUMNS.STAGGER_FRAILTY,
+      ENEMY_OWNER_ID,
+      'stagger-frailty',
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [combatLoadout, processedEvents, enemyStats.staggerNodeRecoverySeconds]);
+
+  const staggerBreaks = useMemo(
+    () => combatLoadout.commonSlot.stagger.getBreaks(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [combatLoadout, processedEvents],
+  );
+
   const allProcessedEventsRaw = useMemo(
-    () => tacticalEvents.length > 0 ? [...processedEvents, ...tacticalEvents] : processedEvents,
-    [processedEvents, tacticalEvents],
+    () => {
+      const extra = [...tacticalEvents, ...staggerFrailtyEvents];
+      return extra.length > 0 ? [...processedEvents, ...extra] : processedEvents;
+    },
+    [processedEvents, tacticalEvents, staggerFrailtyEvents],
   );
 
   // Apply user overrides to derived events
@@ -353,12 +455,6 @@ export function useApp() {
     }
   }, [allProcessedEventsRaw, derivedEventOverrides]);
 
-  const staggerBreaks = useMemo(
-    () => combatLoadout.commonSlot.stagger.getBreaks(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [combatLoadout, allProcessedEvents],
-  );
-
   // Dynamic timeline length: grow to furthest event + buffer, minimum 2 minutes
   const contentFrames = useMemo(() => {
     const MIN_FRAMES = FPS * 120;
@@ -366,7 +462,7 @@ export function useApp() {
     let maxEnd = 0;
     for (const ev of allProcessedEvents) {
       const dur = ev.segments
-        ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+        ? computeSegmentsSpan(ev.segments)
         : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
       maxEnd = Math.max(maxEnd, ev.startFrame + dur);
     }
@@ -404,6 +500,7 @@ export function useApp() {
 
   const getDefaultResourceConfig = useCallback((colKey: string): ResourceConfig => {
     return computeDefaultResourceConfig(operators, loadoutStats, SLOT_IDS, colKey, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [operators, loadoutStats, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]]);
 
   const editingResourceConfig = editingResourceKey
@@ -545,8 +642,8 @@ export function useApp() {
     setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
   }, [processedEvents, combatLoadout]);
 
-  // ─── Stagger event sync ──────────────────────────────────────────────────
-  useEffect(() => {
+  // ─── Stagger event sync (must run synchronously before staggerFrailtyEvents) ─
+  useMemo(() => {
     const staggerSub = combatLoadout.commonSlot.getSubtimeline(COMMON_COLUMN_IDS.STAGGER);
     if (!staggerSub) return;
     const staggerEvents: TimelineEvent[] = [];
@@ -615,6 +712,7 @@ export function useApp() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingEventId, editingSlotId, editingEnemyOpen, editingResourceKey, editingDamageRow, activeLoadoutId, loadoutTree]);
 
   // ─── Persistence ─────────────────────────────────────────────────────────
@@ -663,18 +761,18 @@ export function useApp() {
   }, []);
 
   const handleTimelineScroll = useCallback((st: number) => {
-    if (!scrollSynced) return;
+    if (!scrollSynced || orientation === 'horizontal') return;
     if (scrollSourceRef.current === 'dmg') { scrollSourceRef.current = null; return; }
     scrollSourceRef.current = 'tl';
     if (dmgScrollRef.current) dmgScrollRef.current.scrollTop = st;
-  }, [scrollSynced]);
+  }, [scrollSynced, orientation]);
 
   const handleSheetScroll = useCallback((st: number) => {
-    if (!scrollSynced) return;
+    if (!scrollSynced || orientation === 'horizontal') return;
     if (scrollSourceRef.current === 'tl') { scrollSourceRef.current = null; return; }
     scrollSourceRef.current = 'dmg';
     if (tlScrollRef.current) tlScrollRef.current.scrollTop = st;
-  }, [scrollSynced]);
+  }, [scrollSynced, orientation]);
 
   // ─── Panel resize ────────────────────────────────────────────────────────
   const HIDE_THRESHOLD = 15;
@@ -836,10 +934,11 @@ export function useApp() {
     setZoom((z) => {
       const factor = deltaY > 0 ? 1 / 1.2 : 1.2;
       const next = Math.max(0.15, Math.min(20, z * factor));
-      try { localStorage.setItem('zst-zoom', String(next)); } catch { /* ignore */ }
+      const key = orientation === 'horizontal' ? 'zst-zoom-h' : 'zst-zoom';
+      try { localStorage.setItem(key, String(next)); } catch { /* ignore */ }
       return next;
     });
-  }, []);
+  }, [orientation, setZoom]);
 
   // ─── Skill visibility ────────────────────────────────────────────────────
   const handleToggleSkill = useCallback((slotId: string, skillType: string) => {
@@ -890,6 +989,7 @@ export function useApp() {
       return [...prev, ev];
     });
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
@@ -911,6 +1011,7 @@ export function useApp() {
       if (!merged) return prev;
       return prev.map((ev) => (ev.id === id ? merged : ev));
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -923,6 +1024,7 @@ export function useApp() {
       if (clamped === target.startFrame) return prev;
       return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped } : ev));
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMoveEvents = useCallback((ids: string[], delta: number) => {
@@ -933,12 +1035,14 @@ export function useApp() {
       const idSet = new Set(ids);
       return prev.map((ev) => idSet.has(ev.id) ? { ...ev, startFrame: ev.startFrame + clampedDelta } : ev);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRemoveEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRemoveEvents = useCallback((ids: string[]) => {
@@ -946,6 +1050,7 @@ export function useApp() {
     setEvents((prev) => prev.filter((ev) => !idSet.has(ev.id)));
     setEditingEventId((cur) => (cur && idSet.has(cur) ? null : cur));
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDuplicateEvents = useCallback((sourceEvents: TimelineEvent[], frameOffset: number): string[] => {
@@ -964,6 +1069,7 @@ export function useApp() {
       return combined;
     });
     return newIds;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const findDefaults = useCallback((ev: TimelineEvent) => {
@@ -987,6 +1093,7 @@ export function useApp() {
       } : ev));
     });
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findDefaults]);
 
   const handleResetSegments = useCallback((id: string) => {
@@ -1001,10 +1108,11 @@ export function useApp() {
           ...defSeg,
           durationFrames: ev.segments?.[i]?.durationFrames ?? defSeg.durationFrames,
         })),
-        activationDuration: defaults.segments!.reduce((sum, s) => sum + s.durationFrames, 0),
+        activationDuration: computeSegmentsSpan(defaults.segments!),
       } : ev));
     });
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findDefaults]);
 
   const handleResetFrames = useCallback((id: string) => {
@@ -1022,6 +1130,7 @@ export function useApp() {
       } : ev));
     });
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findDefaults]);
 
   const handleResetEvents = useCallback((ids: string[]) => {
@@ -1045,6 +1154,7 @@ export function useApp() {
       return changed ? result : prev;
     });
     setContextMenu(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findDefaults]);
 
   const handleRemoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
@@ -1058,6 +1168,7 @@ export function useApp() {
       return prev.map((ev) => (ev.id === eventId ? { ...ev, segments: newSegments } : ev));
     });
     setSelectedFrames((prev) => prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRemoveFrames = useCallback((frames: SelectedFrame[]) => {
@@ -1079,6 +1190,7 @@ export function useApp() {
       return { ...ev, segments: newSegments };
     }));
     setSelectedFrames([]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddSegment = useCallback((eventId: string, segmentLabel: string) => {
@@ -1098,7 +1210,7 @@ export function useApp() {
         const bi = allLabels.indexOf(b.label);
         return ai - bi;
       });
-      const totalDuration = newSegments.reduce((sum, s) => sum + s.durationFrames, 0);
+      const totalDuration = computeSegmentsSpan(newSegments);
       return prev.map((ev) => (ev.id === eventId ? {
         ...ev,
         segments: newSegments,
@@ -1106,6 +1218,7 @@ export function useApp() {
         nonOverlappableRange: totalDuration,
       } : ev));
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
   const handleRemoveSegment = useCallback((eventId: string, segmentIndex: number) => {
@@ -1113,7 +1226,7 @@ export function useApp() {
       const target = prev.find((ev) => ev.id === eventId);
       if (!target?.segments || target.segments.length <= 1) return prev;
       const newSegments = target.segments.filter((_, si) => si !== segmentIndex);
-      const totalDuration = newSegments.reduce((sum, s) => sum + s.durationFrames, 0);
+      const totalDuration = computeSegmentsSpan(newSegments);
       return prev.map((ev) => (ev.id === eventId ? {
         ...ev,
         segments: newSegments,
@@ -1122,6 +1235,7 @@ export function useApp() {
       } : ev));
     });
     setSelectedFrames((prev) => prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddFrame = useCallback((eventId: string, segmentIndex: number, frameOffsetFrame: number) => {
@@ -1145,6 +1259,7 @@ export function useApp() {
       );
       return prev.map((ev) => (ev.id === eventId ? { ...ev, segments: newSegments } : ev));
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
   const handleFrameClick = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
@@ -1158,6 +1273,7 @@ export function useApp() {
       return [{ eventId, segmentIndex, frameIndex }];
     });
     setEditingEventId(eventId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
@@ -1172,6 +1288,7 @@ export function useApp() {
       });
       return { ...ev, segments: newSegments };
     }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Loadout & operator handlers ─────────────────────────────────────────
@@ -1258,6 +1375,7 @@ export function useApp() {
     };
     resetUndoable(emptyState);
     setVisibleSkills(INITIAL_VISIBLE);
+    setDerivedEventOverrides({});
     setEditingEventId(null);
     setEditingSlotId(null);
     setEditingResourceKey(null);
@@ -1277,6 +1395,7 @@ export function useApp() {
     saveLoadoutData(node.id, sheetData);
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
 
   const handleDuplicateLoadout = useCallback((sourceId: string) => {
@@ -1325,6 +1444,7 @@ export function useApp() {
     setContextMenu(null);
     setActiveLoadoutId(node.id);
     saveActiveLoadoutId(node.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadoutTree, activeLoadoutId, buildSheetData, resetUndoable]);
 
   const handleSelectLoadout = useCallback((id: string) => {
@@ -1532,6 +1652,7 @@ export function useApp() {
       if (editingEventId || editingSlotId || editingEnemyOpen || editingResourceKey || editingDamageRow) setInfoPaneClosing(true);
       else { setEditingEventId(null); setEditContext(null); setSelectedFrames([]); }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [infoPanePinned, editingEventId, editingSlotId, editingResourceKey, editingDamageRow]);
 
   const handleEditLoadout = useCallback((slotId: string) => {
@@ -1621,7 +1742,7 @@ export function useApp() {
   // ─── Return ──────────────────────────────────────────────────────────────
   return {
     // Core state
-    operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs,
+    operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs, buildSheetData,
     columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory,
 
     // UI state
@@ -1629,7 +1750,7 @@ export function useApp() {
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
-    scrollSynced, showRealTime, splitPct, debugMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview,
+    scrollSynced, showRealTime, splitPct, debugMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, selectEventIds,
     devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
@@ -1660,19 +1781,22 @@ export function useApp() {
     handleEditEvent, handleEditLoadout, handleEditEnemy, handleEditResource,
     handleCloseInfoPane, handleCloseLoadoutPane, handleCloseEnemyPane, handleCloseResourcePane, handleCloseDamagePane,
     handleDamageClick, damageRows, setDamageRows,
-    handleResizerMouseDown, handleToggleScrollSync, handleToggleTheme, handleRestorePane,
+    handleResizerMouseDown, handleToggleScrollSync, handleToggleTheme, handleRestorePane, handleToggleOrientation,
     handleTimelineScroll, handleSheetScroll,
     handleDmgScrollRef, handleTlScrollRef,
 
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setDebugMode, setLightMode, setShowRealTime,
+    setDevlogOpen, setKeysOpen, setDebugMode, setLightMode, setShowRealTime, setCritMode,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 
     // Undo/redo
     beginBatch, endBatch,
+
+    // Custom skill links
+    bumpCustomSkillVersion,
 
     // Constants
     allOperators: ALL_OPERATORS,

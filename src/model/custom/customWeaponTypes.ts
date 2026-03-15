@@ -3,7 +3,7 @@
  * See docs/customizationSpec.md § 2.
  */
 import { WeaponType, ElementType } from '../../consts/enums';
-import type { Interaction, StatusReaction } from '../../consts/semantics';
+import type { Interaction } from '../../consts/semantics';
 import type { StatType } from '../enums';
 
 /** A user-created custom weapon. */
@@ -40,7 +40,6 @@ export interface CustomWeaponNamedEffect {
   cooldownSeconds?: number;
   buffs: CustomWeaponBuff[];
   passiveStats?: { stat: StatType | string; values: number[] }[];
-  reactions?: StatusReaction[];
   note?: string;
 }
 

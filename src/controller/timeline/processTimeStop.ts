@@ -1,4 +1,4 @@
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
 
@@ -163,7 +163,7 @@ export function applyTimeStopExtension(
       extended.add(ev.id);
       return {
         ...ev,
-        activationDuration: newSegments.reduce((sum, s) => sum + s.durationFrames, 0),
+        activationDuration: computeSegmentsSpan(newSegments),
         segments: newSegments,
       };
     }
@@ -284,7 +284,6 @@ export function validateTimeStopStarts(
       if (!source) continue;
 
       const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
-      const sourceIsCombo = source.columnId === SKILL_COLUMNS.COMBO;
       const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop

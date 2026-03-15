@@ -24,10 +24,11 @@ export enum PotentialType {
   P5 = "P5",
 }
 
-// ── Subject ─────────────────────────────────────────────────────────────────
+// ── Noun ────────────────────────────────────────────────────────────────────
 
-/** Who is performing the action or being checked. */
-export enum SubjectType {
+/** Core nouns — entities, skills, resources, statuses, and states. */
+enum CoreNounType {
+  // Entities
   /** The operator who owns this event/status. */
   THIS_OPERATOR = "THIS_OPERATOR",
   /** Any single teammate (excludes this operator). */
@@ -38,13 +39,68 @@ export enum SubjectType {
   ALL_OPERATORS = "ALL_OPERATORS",
   /** The enemy target. */
   ENEMY = "ENEMY",
-  /** Any entity (used for reactions triggered by anyone). */
-  ANY = "ANY",
+  /** Any operator (used for triggers that can come from any team member). */
+  ANY_OPERATOR = "ANY_OPERATOR",
   /** The event/status that owns this clause — self-referential (e.g. "this event has MAX stacks"). */
   THIS_EVENT = "THIS_EVENT",
   /** System-initiated (threshold effects, passive triggers). */
   SYSTEM = "SYSTEM",
+
+  // Skills / actions
+  BASIC_ATTACK = "BASIC_ATTACK",
+  BATTLE_SKILL = "BATTLE_SKILL",
+  COMBO_SKILL = "COMBO_SKILL",
+  ULTIMATE = "ULTIMATE",
+  FINAL_STRIKE = "FINAL_STRIKE",
+  CRITICAL_HIT = "CRITICAL_HIT",
+
+  // Damage
+  NORMAL_ATTACK = "NORMAL_ATTACK",
+  DAMAGE = "DAMAGE",
+
+  // Statuses
+  STATUS = "STATUS",
+  INFLICTION = "INFLICTION",
+  REACTION = "REACTION",
+  ARTS_REACTION = "ARTS_REACTION",
+  /** Self-referential stack count within a stack reaction. */
+  STACKS = "STACKS",
+
+  // Time
+  TIME_STOP = "TIME_STOP",
+  GAME_TIME = "GAME_TIME",
+  REAL_TIME = "REAL_TIME",
+
+  // Resources
+  SKILL_POINT = "SKILL_POINT",
+  ULTIMATE_ENERGY = "ULTIMATE_ENERGY",
+  STAGGER = "STAGGER",
+  COOLDOWN = "COOLDOWN",
+  HP = "HP",
+
+  // States (for IS/BECOME verbs)
+  ACTIVE = "ACTIVE",
 }
+
+// ── Noun Adjunct ──────────────────────────────────────────────────────────
+
+/** Noun adjuncts — nouns used in adjective position to modify other nouns. */
+export enum NounAdjunctType {
+  /** The triggering effect — "APPLY SOURCE INFLICTION TO ENEMY" (duplicate what triggered this). */
+  SOURCE = "SOURCE",
+}
+
+/** All nouns = core nouns + noun adjuncts. */
+export type NounType = CoreNounType | NounAdjunctType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const NounType = { ...CoreNounType, ...NounAdjunctType } as typeof CoreNounType & typeof NounAdjunctType;
+
+// ── Subject ─────────────────────────────────────────────────────────────────
+
+/** Subject position — any noun can be a subject. */
+export type SubjectType = NounType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubjectType = NounType;
 
 // ── Verb ────────────────────────────────────────────────────────────────────
 
@@ -108,68 +164,11 @@ export enum VerbType {
   BECOME = "BECOME",
 }
 
-// ── Object ──────────────────────────────────────────────────────────────────
-
-export enum ObjectType {
-  // Skills / actions
-  BASIC_ATTACK = "BASIC_ATTACK",
-  BATTLE_SKILL = "BATTLE_SKILL",
-  COMBO_SKILL = "COMBO_SKILL",
-  ULTIMATE = "ULTIMATE",
-  FINAL_STRIKE = "FINAL_STRIKE",
-  CRITICAL_HIT = "CRITICAL_HIT",
-
-  // Damage
-  DAMAGE = "DAMAGE",
-
-  // Statuses
-  STATUS = "STATUS",
-  INFLICTION = "INFLICTION",
-  REACTION = "REACTION",
-  ARTS_REACTION = "ARTS_REACTION",
-  /** Self-referential stack count within a stack reaction. */
-  STACKS = "STACKS",
-
-  // Time
-  TIME_STOP = "TIME_STOP",
-  GAME_TIME = "GAME_TIME",
-  REAL_TIME = "REAL_TIME",
-
-  // Resources
-  SKILL_POINT = "SKILL_POINT",
-  ULTIMATE_ENERGY = "ULTIMATE_ENERGY",
-  STAGGER = "STAGGER",
-  COOLDOWN = "COOLDOWN",
-  HP = "HP",
-
-  // Entities (merged from TargetType)
-  THIS_OPERATOR = "THIS_OPERATOR",
-  OTHER_OPERATOR = "OTHER_OPERATOR",
-  OTHER_OPERATORS = "OTHER_OPERATORS",
-  ALL_OPERATORS = "ALL_OPERATORS",
-  ENEMY = "ENEMY",
-
-  // States (for IS/BECOME verbs, with optional negated: true for NOT)
-  ACTIVE = "ACTIVE",
-  LIFTED = "LIFTED",
-  KNOCKED_DOWN = "KNOCKED_DOWN",
-  BREACHED = "BREACHED",
-  CRUSHED = "CRUSHED",
-  COMBUSTED = "COMBUSTED",
-  CORRODED = "CORRODED",
-  ELECTRIFIED = "ELECTRIFIED",
-  SOLIDIFIED = "SOLIDIFIED",
-}
-
 // ── Adjective ──────────────────────────────────────────────────────────────
 
 /** Adjective type — modifies an object to specify its variant/category. */
 export enum AdjectiveType {
   NONE = "NONE",
-
-  // Damage adjectives (PERFORM <adj> DAMAGE TO ENEMY)
-  NORMAL_ATTACK = "NORMAL_ATTACK",
-  FINAL_STRIKE = "FINAL_STRIKE",
 
   // Element adjectives (APPLY 1 <adj> INFLICTION TO ENEMY, PERFORM <adj> DAMAGE)
   HEAT = "HEAT",
@@ -184,6 +183,16 @@ export enum AdjectiveType {
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
 
+  // State adjectives (ENEMY IS <adj>, ENEMY BECOME <adj>)
+  LIFTED = "LIFTED",
+  KNOCKED_DOWN = "KNOCKED_DOWN",
+  CRUSHED = "CRUSHED",
+  COMBUSTED = "COMBUSTED",
+  CORRODED = "CORRODED",
+  ELECTRIFIED = "ELECTRIFIED",
+  SOLIDIFIED = "SOLIDIFIED",
+  BREACHED = "BREACHED",
+
   // Physical reaction adjectives (APPLY 1 <adj> REACTION TO ENEMY)
   LIFT = "LIFT",
   KNOCK_DOWN = "KNOCK_DOWN",
@@ -193,11 +202,22 @@ export enum AdjectiveType {
   // Reaction modifier adjectives (APPLY 1 FORCED <reaction> REACTION TO ENEMY)
   FORCED = "FORCED",
 
+  // Stagger adjectives (ENEMY BECOME NODE_STAGGERED STAGGER, ENEMY IS FULL_STAGGERED STAGGER)
+  NODE_STAGGERED = "NODE_STAGGERED",
+  FULL_STAGGERED = "FULL_STAGGERED",
+
   // Time stop adjectives (APPLY <adj> TIME_STOP FOR <duration>)
   COMBO = "COMBO",
   DODGE = "DODGE",
   ANIMATION = "ANIMATION",
 }
+
+// ── Object ──────────────────────────────────────────────────────────────────
+
+/** Object position — nouns or adjectives (e.g. ENEMY IS BREACHED, APPLY COMBUSTION REACTION). */
+export type ObjectType = NounType | AdjectiveType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ObjectType = { ...NounType, ...AdjectiveType } as typeof NounType & typeof AdjectiveType;
 
 /** Valid objects for the EXPERIENCE verb (segment time dependency). */
 export const EXPERIENCE_OBJECTS: ObjectType[] = [
@@ -205,10 +225,9 @@ export const EXPERIENCE_OBJECTS: ObjectType[] = [
   ObjectType.REAL_TIME,
 ];
 
-/** Valid adjectives per object type. */
+/** Valid adjectives per object type (noun adjuncts like NORMAL_ATTACK, FINAL_STRIKE handled separately). */
 export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   [ObjectType.DAMAGE]: [
-    AdjectiveType.NORMAL_ATTACK, AdjectiveType.FINAL_STRIKE,
     // Element prefix: PERFORM HEAT DAMAGE, PERFORM PHYSICAL DAMAGE
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
@@ -228,6 +247,22 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   ],
 };
 
+/**
+ * Valid noun adjuncts per object noun.
+ * Noun adjuncts are NounType values used in adjective position to modify another noun.
+ * e.g. APPLY SOURCE INFLICTION TO ENEMY — SOURCE modifies INFLICTION.
+ */
+export const NOUN_ADJUNCTS: Partial<Record<NounType, NounAdjunctType[]>> = {
+  [NounType.INFLICTION]: [
+    // SOURCE: duplicate the triggering infliction (e.g. Antal combo copies the infliction that triggered it)
+    NounAdjunctType.SOURCE,
+  ],
+  [NounType.STATUS]: [
+    // SOURCE: duplicate the triggering status (e.g. Antal combo copies the physical status that triggered it)
+    NounAdjunctType.SOURCE,
+  ],
+};
+
 // ── Cardinality Constraint ───────────────────────────────────────────────────
 
 export enum CardinalityConstraintType {
@@ -238,11 +273,6 @@ export enum CardinalityConstraintType {
   /** <= N */
   AT_MOST = "AT_MOST",
 }
-
-/** @deprecated Use CardinalityConstraintType instead. */
-export const CardinalityType = CardinalityConstraintType;
-/** @deprecated Use CardinalityConstraintType instead. */
-export type CardinalityType = CardinalityConstraintType;
 
 // ── Interaction (condition) ──────────────────────────────────────────────────
 
@@ -275,17 +305,53 @@ export interface Interaction {
 
 /** Preposition type — clarifies the relationship of the prepositional object. */
 export enum PrepositionType {
-  /** Target/recipient: "APPLY 1 STATUS SCORCHING_HEART *TO* THIS_OPERATOR". */
+  /** Target/recipient: "APPLY MELTING_FLAME STATUS *TO* THIS_OPERATOR". */
   TO = "TO",
-  /** Source: "ABSORB 1 HEAT INFLICTION *FROM* ENEMY". */
+  /** Source: "ABSORB HEAT INFLICTION *FROM* ENEMY". */
   FROM = "FROM",
-  /** Duration: "APPLY COMBUSTION *FOR* 5 SECONDS". */
-  FOR = "FOR",
   /** Stat target: "IGNORE HEAT_RESISTANCE *ON* ENEMY" — refers to the stat on the target entity. */
   ON = "ON",
-  /** Properties/qualifiers: "PERFORM HEAT_DAMAGE *WITH* × [0.5 ... 1.0]". */
+  /** Properties/qualifiers: "PERFORM HEAT DAMAGE TO ENEMY *WITH* MULTIPLIER ..., STAGGER_VALUE ...". */
   WITH = "WITH",
 }
+
+// ── WITH preposition value verbs ─────────────────────────────────────────────
+
+/**
+ * Verb that determines the shape of a WITH preposition value.
+ * - IS: single value (number)
+ * - DEPENDS_ON: multi-dimensional array indexed by the dependency (SKILL_LEVEL, RANK, etc.)
+ */
+export enum WithValueVerb {
+  IS = "IS",
+  DEPENDS_ON = "DEPENDS_ON",
+}
+
+/** A single WITH preposition entry: a cardinality with its own verb determining value shape. */
+export interface WithValue {
+  verb: WithValueVerb;
+  /** Dependency target when verb is DEPENDS_ON (e.g. "SKILL_LEVEL", "RANK"). */
+  object?: string;
+  /** The value — single number for IS, array for DEPENDS_ON. */
+  value: number | number[];
+}
+
+/**
+ * WITH preposition map — all properties/cardinalities of an effect.
+ *
+ * Each key is a named cardinality whose value shape is determined by its verb (IS or DEPENDS_ON).
+ *
+ * Key hierarchy:
+ *   cardinality      — generic count (e.g. RECOVER 100 SKILL_POINT, EXPEND 300 ULTIMATE_ENERGY)
+ *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
+ *   multiplier       — damage multiplier (DEPENDS_ON SKILL_LEVEL → per-level array)
+ *   staggerValue     — stagger amount
+ *   skillPoint       — SP value
+ *   stacks           — stack count, implies stacking mechanism (STATUS, INFLICTION)
+ *     └─ statusLevel — specialization of stacks for reaction/status tier (1-4);
+ *                      applies to: ARTS_REACTION, PHYSICAL_STATUS, INFLICTION
+ */
+export type WithPreposition = Record<string, WithValue>;
 
 // ── Effect ──────────────────────────────────────────────────────────────────
 
@@ -295,46 +361,40 @@ export enum PrepositionType {
  * Used for effects within predicates and on frames.
  * No subject — the actor is implicit (the system/event owner).
  *
- * Grammar: VERB [cardinality] [adjective] OBJECT [prepositions...]
+ * Grammar: VERB [adjective] OBJECT [prepositions...]
  *
  * Examples:
- *   PERFORM NORMAL_ATTACK DAMAGE WITH × [0.5] TO ENEMY
- *   PERFORM FINAL_STRIKE DAMAGE WITH × [1.2] TO ENEMY
- *   APPLY 1 FORCED COMBUSTION REACTION TO ENEMY
- *   APPLY COMBO TIME_STOP FOR 0.566s
- *   APPLY ANIMATION TIME_STOP FOR 2.07s
- *   RECOVER 20 SKILL_POINT TO TEAM
- *   APPLY 12 STAGGER TO ENEMY
- *   ABSORB 1 HEAT INFLICTION FROM ENEMY
+ *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER DEPENDS_ON SKILL_LEVEL [0.5, ...]
+ *   APPLY FORCED COMBUSTION REACTION TO ENEMY WITH STATUS_LEVEL IS 1
+ *   APPLY COMBO TIME_STOP WITH DURATION IS 0.566
+ *   RECOVER SKILL_POINT WITH CARDINALITY IS 20
+ *   APPLY HEAT INFLICTION TO ENEMY WITH STACKS IS 1
+ *   ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *
  * Compound effects use PERFORM_ALL as a grouping verb:
  *   PERFORM_ALL AT_MOST MAX:
- *     ABSORB 1 HEAT INFLICTION FROM ENEMY
- *     APPLY 1 MELTING_FLAME STATUS TO THIS_OPERATOR
+ *     ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
+ *     APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
  */
 export interface Effect {
   verbType: VerbType;
   objectType?: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
-  /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT, FINAL_STRIKE] DAMAGE. */
+  /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
   adjective?: AdjectiveType | AdjectiveType[];
-  /** Element filter. */
-  element?: string; // ElementType from enums.ts
-  /** The count N (e.g. RECOVER *20* SKILL_POINT, ABSORB *1* INFLICTION). */
-  cardinality?: number | typeof THRESHOLD_MAX;
-  /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY). */
+  /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound PERFORM_ALL grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
+  /** Cardinality for compound constraints (e.g. PERFORM_ALL AT_MOST MAX). */
+  cardinality?: number | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
   toObjectType?: SubjectType | string;
   /** FROM — source. */
   fromObjectType?: SubjectType | string;
   /** ON — stat target entity (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   onObjectType?: SubjectType | string;
-  /** WITH — multiplier array (level-indexed damage multipliers). */
-  withMultiplier?: number[];
-  /** FOR — duration in seconds (e.g. APPLY COMBO TIME_STOP FOR 0.566). */
-  forDuration?: number;
+  /** WITH — properties/cardinalities of this effect (duration, stacks, multiplier, etc.). */
+  withPreposition?: WithPreposition;
 
   /**
    * Child effects for compound PERFORM_ALL grouping.
@@ -367,15 +427,54 @@ export interface Predicate {
  */
 export type Clause = Predicate[];
 
-// ── StatusReaction (deprecated) ─────────────────────────────────────────────
+// ── Interaction matching ────────────────────────────────────────────────────
 
 /**
- * @deprecated Use Predicate instead. A StatusReaction is equivalent to a
- * Predicate with a single condition (trigger) and a single effect (reaction).
+ * Check if a published interaction satisfies a required interaction.
+ *
+ * Matching rules:
+ * - Subject: must match, unless required is ANY_OPERATOR (wildcard).
+ * - Verb: must match exactly.
+ * - Object: must match exactly.
+ * - ObjectId: if required specifies objectId, published must match.
+ *   If required omits objectId, any published objectId matches (parent/wildcard).
+ *   e.g. required {APPLY INFLICTION} matches published {APPLY INFLICTION objectId:HEAT}.
+ * - Element: same wildcard logic as objectId.
+ * - Adjective: if required specifies adjective, published must include it.
+ * - Negated: must match.
+ * - Cardinality: ignored for matching (cardinality is an assertion, not a filter).
  */
-export interface StatusReaction {
-  /** When this fires. */
-  trigger: Interaction;
-  /** What happens in response. */
-  reaction: Interaction;
+export function matchInteraction(published: Interaction, required: Interaction): boolean {
+  // Subject: ANY_OPERATOR in required matches any operator subject
+  if (required.subjectType !== NounType.ANY_OPERATOR && published.subjectType !== required.subjectType) return false;
+  // Verb
+  if (published.verbType !== required.verbType) return false;
+  // Object
+  if (published.objectType !== required.objectType) return false;
+  // ObjectId: required specifies → must match; required omits → wildcard
+  if (required.objectId != null && published.objectId !== required.objectId) return false;
+  // Element: same wildcard logic
+  if (required.element != null && published.element !== required.element) return false;
+  // Negated
+  if (!!required.negated !== !!published.negated) return false;
+  return true;
 }
+
+/**
+ * Human-readable label for an Interaction.
+ * e.g. {THIS_OPERATOR, PERFORM, BATTLE_SKILL} → "Cast Battle Skill"
+ *      {ENEMY, IS, COMBUSTED} → "Enemy is Combusted"
+ */
+export function interactionToLabel(i: Interaction): string {
+  const fmt = (s: string) => s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const subject = i.subjectType === NounType.THIS_OPERATOR ? '' : fmt(i.subjectType) + ' ';
+  const verb = fmt(i.verbType);
+  const obj = fmt(i.objectType);
+  const id = i.objectId ? ` (${fmt(i.objectId)})` : '';
+  const el = i.element ? ` [${fmt(i.element)}]` : '';
+  const neg = i.negated ? 'Not ' : '';
+
+  return `${subject}${neg}${verb} ${obj}${id}${el}`.trim();
+}
+

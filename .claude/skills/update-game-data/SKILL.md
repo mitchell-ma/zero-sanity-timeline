@@ -11,7 +11,7 @@ This skill covers all external data fetching and parsing for the Arknights: Endf
 
 # Part 1: Operator Data Parsing
 
-Parse operator data from two remote sources into per-operator files under `game-data/operators/`.
+Parse operator data from two remote sources into per-operator files under `game-data/operators/` (base config) and `game-data/operator-skills/` (skill data).
 
 ## Data Sources
 
@@ -19,13 +19,29 @@ Parse operator data from two remote sources into per-operator files under `game-
 |---|---|---|
 | **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Operator info, stats, potentials, levels, skill descriptions, **skill multipliers** (per-level atk_scale from `skillPatchTable`) |
 | **End-Axis gamedata.json** | `https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json` | Skill frame timing data, attack segments, anomalies, variants |
-| **Endfield Wiki** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Skill descriptions, talent details, skill mechanics — useful for cross-referencing and verifying data from the other two sources |
+| **Endfield Wiki** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Skill descriptions, talent details, skill mechanics, **operator images** (banner/splash art, icon) — useful for cross-referencing and verifying data from the other two sources |
 
 All sources are fetched live — we do not use offline copies. When investigating discrepancies or adding new operators, cross-reference all three sources to ensure accuracy.
 
+## Operator Images
+
+Operator banner (splash art) and icon images can be retrieved from the Endfield Wiki:
+
+| Image | URL pattern | Output path | Format |
+|---|---|---|---|
+| **Banner** | `https://endfield.wiki.gg/images/<Operator_Name>_Banner.png` | `src/assets/operators/<Name>_Banner.webp` | Convert PNG → WebP |
+| **Icon** | `https://endfield.wiki.gg/images/<Operator_Name>_icon.png` | `src/assets/operators/<Name>_icon.png` | PNG (keep as-is) |
+
+### Workflow
+1. Download the splash art PNG from the wiki
+2. Convert to WebP (use `sharp` or similar): `sharp(input).webp({ quality: 80 }).toFile(output)`
+3. Download the icon PNG and copy directly to assets
+4. Naming convention: `<Name>_Banner.webp` and `<Name>_icon.png` (PascalCase operator name)
+
 ## Output
 
-- `src/model/game-data/operators/<slug>.json` — Per-operator data files (see `src/model/game-data/operatorDataSpec.md` for schema)
+- `src/model/game-data/operators/<slug>-operator.json` — Per-operator base config (stats, potentials, talents — no skills)
+- `src/model/game-data/operator-skills/<slug>-skills.json` — Per-operator skill data (frame timing, multipliers, segments)
 
 ## Parsers
 
@@ -59,8 +75,23 @@ Warfarin API ──→ parseWarfarinOperator.ts ──→ operator info (stats, 
                                                       ↓
 End-Axis GitHub ──→ parseEndAxisGameData.ts ──→ skill frame timing (segments, frames, resource/status interactions)
                                                       ↓
-                              parseGameData.ts (orchestrator) ──→ merge multipliers into frames ──→ operators/<slug>.json
+                              parseGameData.ts (orchestrator) ──→ merge multipliers into frames
+                                                              ──→ operators/<slug>-operator.json (base config)
+                                                              ──→ operator-skills/<slug>-skills.json (skill data)
 ```
+
+## Skill ID Convention
+
+Skill IDs are **unprefixed** — they match the `CombatSkillsType` enum values directly:
+- `"id": "FLAMING_CINDERS"` (not `"LAEVATAIN_FLAMING_CINDERS"`)
+- `"id": "SMOULDERING_FIRE_ENHANCED"` (not `"LAEVATAIN_SMOULDERING_FIRE_ENHANCED"`)
+
+Each skill category with an `id` also has an `originId` pointing to the operator's camelCase ID:
+```json
+"BASIC_ATTACK": { "id": "FLAMING_CINDERS", "originId": "laevatain", ... }
+```
+
+Potential `skillParameterModifier.skillType` values also use unprefixed IDs.
 
 ## Output Format (per-operator JSON)
 
@@ -287,10 +318,30 @@ When the parser runs:
 3. Set `dataSources: ["SELF"]` on the override entry
 4. The base `skills` value remains unchanged (it will be updated by future parser runs)
 
+## Finding New Operators in External Sources
+
+Operator names, IDs, and slugs vary across sources. Don't assume any source uses the same identifier. When adding a new operator, search all three sources and cross-reference:
+
+| Source | Identifier | Gotchas |
+|---|---|---|
+| **Warfarin API** | URL slug (e.g., `tangtang`, `chen-qianyu`) | Usually lowercase hyphenated English name, but may differ from our enum |
+| **End-Axis** | `characterRoster[].id` (e.g., `TANGTANG`, `CHENQIANYU`) | No separators, may abbreviate or transliterate differently (e.g., `POGRANICHNK` → `POGRANICHNIK`) |
+| **Endfield Wiki** | Page name (e.g., `Tangtang`, `Chen_Qianyu`) | PascalCase with underscores for spaces |
+
+### Search strategies when the operator isn't found by name
+
+1. **Warfarin**: Try alternate slugs (hyphenated, no spaces, abbreviated). If unsure, there is no list endpoint for operators — try common transliterations.
+2. **End-Axis**: Fetch `gamedata.json` and list all `characterRoster` entries (`id`, `name`, `element`, `weapon`, `rarity`). Match by known attributes like element, weapon type, rarity, or skill frame offsets.
+3. **Wiki**: Search `https://endfield.wiki.gg/wiki/<Name>` with different capitalizations or check the operator list page.
+
+### End-Axis ID mapping
+
+The parser falls back to using the End-Axis ID as-is for unmapped operators (with a warning). Add an explicit mapping to `GAMEDATA_ID_TO_OPERATOR` in `parseEndAxisGameData.ts` if the End-Axis ID differs from our `OperatorType` enum.
+
 ## Parsing Workflow
 
 1. Fetch gamedata.json from End-Axis GitHub raw URL
-2. Find operator in `characterRoster` by `id`
+2. Find operator in `characterRoster` by `id` (falls back to using ID as-is if not in `GAMEDATA_ID_TO_OPERATOR`)
 3. Extract basic attack segments from `attack_segments[]`
 4. Extract battle skill from `skill_*` fields
 5. Extract combo skill from `link_*` fields
@@ -342,29 +393,30 @@ Each entry in `skillPatchTable` is keyed by a Warfarin skill ID (e.g., `chr_0016
 - **`atk_scale`** (and variants): The **per-hit multiplier** used in damage calculation. This is the **source of truth**.
 - **`display_atk_scale`**: The total shown in the in-game skill description. This is an **approximation** — it represents `sum(per_hit × hit_count)` but may have rounding discrepancies.
 
-`display_atk_scale` is excluded from frame multipliers. Only `atk_scale` values are stored.
+`display_atk_scale` is kept in the blackboard for frame count derivation but excluded from frame multiplier output. Only `atk_scale` values are stored on frames.
 
 ### Deriving hit count from multipliers
 
-The true hit count for a skill can be derived from Warfarin data:
+The true hit count for a skill is derived from Warfarin data using this unified procedure (implemented in `deriveHitCount()`):
 
-**Single multiplier** (only `atk_scale`):
+1. Find `display_atk_scale` (the in-game total)
+2. Identify the **base key** (`atk_scale`, or `atk_scale_1`/`atk_scale1` if no bare `atk_scale`)
+3. Identify **variant keys** (all other `atk_scale_*` numbered keys)
+4. Subtract variant values from display total → remainder
+5. `regular_frames = round(remainder / base_value)`
+6. `total_frames = regular_frames + variant_count`
+
 ```
-hit_count = round(display_atk_scale / atk_scale)
+variant_sum = sum(atk_scale_2, atk_scale_3, ...)
+remainder = display_atk_scale - variant_sum
+regular_frames = round(remainder / atk_scale)
+total_frames = regular_frames + len(variant_keys)
 ```
 
-**Multiple multiplier variants** (e.g., `atk_scale` + `atk_scale_2`):
-Each variant key represents one hit. The total hits = number of distinct `atk_scale` variant keys. Verification:
-```
-sum(all variant values) ≈ display_atk_scale
-```
-
-**Mixed: regular + variant keys** (e.g., `atk_scale` + `atk_scale_pre`):
-Subtract variant values from display total, then divide remainder by the regular `atk_scale`:
-```
-regular_hits = round((display_atk_scale - sum(variant_values)) / atk_scale)
-total_hits = regular_hits + number_of_variant_keys
-```
+**Edge cases:**
+- Remainder < 0.5× base value → all keys are distinct hits, one frame per key
+- No `display_atk_scale` → one frame per `atk_scale` key (base + all variants)
+- No `atk_scale` keys at all → 1 frame
 
 ### Comparing with End-Axis frame count
 
@@ -372,6 +424,47 @@ After deriving the true hit count, compare with End-Axis frames:
 - **Match**: Each frame has a 1:1 multiplier assignment — no interpolation needed
 - **End-Axis has fewer frames**: Missing frames should be interpolated using segment timing (evenly distributed within the segment duration)
 - **End-Axis has more frames**: Extra frames may represent non-damage events (status applications, resource recoveries without damage)
+
+### Multiplier merge fallbacks
+
+The orchestrator handles two common situations where Warfarin multiplier data can't be directly assigned:
+
+**Fallback 1 — Category name mismatch (ENHANCED ↔ EMPOWERED):**
+Warfarin and End-Axis may classify the same variant differently (e.g., Warfarin `ult_attack` → `ENHANCED_BASIC_ATTACK`, End-Axis "强化重击" → `EMPOWERED_BASIC_ATTACK`). The merger tries `CATEGORY_FALLBACKS` when the primary category isn't found:
+- `ENHANCED_BASIC_ATTACK` ↔ `EMPOWERED_BASIC_ATTACK`
+- `ENHANCED_BATTLE_SKILL` ↔ `EMPOWERED_BATTLE_SKILL`
+
+**Fallback 2 — Empty segments (final strike with no End-Axis frames):**
+When a Warfarin segment (e.g., `attack5` carrying poise/atb) maps to an End-Axis segment with 0 frames, non-scale keys (stagger, SP) are redistributed to the last non-empty segment's first frame.
+
+**Fallback 3 — No End-Axis data (Warfarin-only operators):**
+When an operator has no End-Axis frame timing data, the parser creates a skeleton `skills` structure from Warfarin multiplier data. Frame count per skill/segment is derived using `deriveHitCount()`:
+
+**Procedure:**
+1. Find `display_atk_scale` (or `atk_scale_display`, `display_atk_scale1`) — the total shown in-game
+2. Identify the **base key** (`atk_scale`, or `atk_scale_1`/`atk_scale1` if no bare `atk_scale`)
+3. Identify **variant keys** (all other `atk_scale_*` keys, e.g., `atk_scale_2`, `atk_scale_3`)
+4. Subtract all variant values from `display_atk_scale` → remainder
+5. Divide remainder by base key value → number of **regular** (repeated) frames
+6. Add the number of variant keys → **total frame count**
+
+```
+variant_sum = sum(atk_scale_2, atk_scale_3, ...)
+remainder = display_atk_scale - variant_sum
+regular_frames = round(remainder / atk_scale)
+total_frames = regular_frames + len(variant_keys)
+```
+
+**Edge cases:**
+- If remainder < 0.5× base value, all keys are distinct hits (not a repeating base) → one frame per `atk_scale` key
+- If no `display_atk_scale` exists → one frame per `atk_scale` key (base + all variants)
+- If no `atk_scale` keys at all → 1 frame
+
+**Skeleton structure:**
+- Segmented skills (basic attacks): each `attackN` in Warfarin → one segment with derived frame count
+- Flat skills (battle/combo/ultimate): derived frame count from sub-index 0
+- Frame offsets default to 0 (no timing data without End-Axis)
+- `dataSources: ["WARFARIN"]` on all skeleton entries
 
 ### Multiplier merging
 
@@ -827,5 +920,6 @@ Use this reference when adding new operators, building skill definitions, or ver
 | 18 | Alesh | 5-star | Vanguard | Sword | Cryo |
 | 19 | Arclight | 5-star | Vanguard | Sword | Electric |
 | 20 | Akekuri | 4-star | Vanguard | Sword | Heat |
+| 21 | Tangtang | 6-star | Caster | Handcannon | Cryo |
 
 > Full per-operator details (skills, talents, potentials, combo triggers) are in the operator-details.md file in this skill directory.

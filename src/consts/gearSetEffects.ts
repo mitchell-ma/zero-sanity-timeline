@@ -9,7 +9,18 @@
  *
  * Replaces the old gearEffects.ts abstract class hierarchy.
  */
-import { GearSetEffectType, GearSetType, TriggerConditionType, StatType } from './enums';
+import { GearSetEffectType, GearSetType, StatType } from './enums';
+import { SubjectType, VerbType, ObjectType } from './semantics';
+import type { Interaction } from './semantics';
+
+const _I = (s: any, v: any, o: any, x?: Partial<Interaction>): Interaction => ({ subjectType: s, verbType: v, objectType: o, ...x } as Interaction);
+const THIS = SubjectType.THIS_OPERATOR;
+const ENEMY = SubjectType.ENEMY;
+const ANY = SubjectType.ANY_OPERATOR;
+const PERFORM = VerbType.PERFORM;
+const APPLY = VerbType.APPLY;
+const RECOVER = VerbType.RECOVER;
+const IS = VerbType.IS;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +44,7 @@ export interface GearSetEffect {
   /** GearSetEffectType enum key for this effect. */
   gearSetEffectType: GearSetEffectType;
   /** Trigger condition(s) — any match activates. */
-  triggers: TriggerConditionType[];
+  triggers: Interaction[];
   /** Who receives the buff: wielder, team, or enemy. */
   target: GearEffectTarget;
   /** Duration in seconds. */
@@ -82,7 +93,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'AIC Light',
       gearSetEffectType: GearSetEffectType.AIC_LIGHT,
-      triggers: [TriggerConditionType.DEFEAT_ENEMY],
+      triggers: [_I(THIS, VerbType.DEFEAT, ObjectType.ENEMY)],
       target: 'wielder',
       durationSeconds: 5,
       maxStacks: 1,
@@ -103,9 +114,9 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       label: "Aburrey's Legacy",
       gearSetEffectType: GearSetEffectType.ABURREY_LEGACY,
       triggers: [
-        TriggerConditionType.CAST_BATTLE_SKILL,
-        TriggerConditionType.CAST_COMBO_SKILL,
-        TriggerConditionType.CAST_ULTIMATE,
+        _I(THIS, PERFORM, ObjectType.BATTLE_SKILL),
+        _I(THIS, PERFORM, ObjectType.COMBO_SKILL),
+        _I(THIS, PERFORM, ObjectType.ULTIMATE),
       ],
       target: 'wielder',
       durationSeconds: 15,
@@ -127,7 +138,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'LYNX',
       gearSetEffectType: GearSetEffectType.LYNX,
-      triggers: [TriggerConditionType.HP_TREATMENT],
+      triggers: [_I(THIS, RECOVER, ObjectType.HP)],
       target: 'team',
       durationSeconds: 10,
       maxStacks: 1,
@@ -150,7 +161,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Æthertech',
         gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [TriggerConditionType.APPLY_VULNERABILITY],
+        triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
         target: 'wielder',
         durationSeconds: 15,
         maxStacks: 4,
@@ -162,7 +173,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Æthertech (Max)',
         gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [TriggerConditionType.APPLY_VULNERABILITY],
+        triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -186,7 +197,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Pulser Labs (Electric)',
         gearSetEffectType: GearSetEffectType.PULSER_LABS,
-        triggers: [TriggerConditionType.ELECTRIFICATION],
+        triggers: [_I(ENEMY, IS, ObjectType.ELECTRIFIED)],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -198,7 +209,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Pulser Labs (Cryo)',
         gearSetEffectType: GearSetEffectType.PULSER_LABS,
-        triggers: [TriggerConditionType.SOLIDIFICATION],
+        triggers: [_I(ENEMY, IS, ObjectType.SOLIDIFIED)],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -219,7 +230,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Frontiers',
       gearSetEffectType: GearSetEffectType.FRONTIERS,
-      triggers: [TriggerConditionType.SKILL_POINT_RECOVERY_FROM_SKILL],
+      triggers: [_I(THIS, RECOVER, ObjectType.SKILL_POINT)],
       target: 'team',
       durationSeconds: 15,
       maxStacks: 1,
@@ -242,7 +253,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Hot Work (Heat)',
         gearSetEffectType: GearSetEffectType.HOT_WORK,
-        triggers: [TriggerConditionType.COMBUSTION],
+        triggers: [_I(ENEMY, IS, ObjectType.COMBUSTED)],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -254,7 +265,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Hot Work (Nature)',
         gearSetEffectType: GearSetEffectType.HOT_WORK,
-        triggers: [TriggerConditionType.CORROSION],
+        triggers: [_I(ENEMY, IS, ObjectType.CORRODED)],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -277,7 +288,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'MI Security',
         gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [TriggerConditionType.CRITICAL_HIT],
+        triggers: [_I(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
         target: 'wielder',
         durationSeconds: 5,
         maxStacks: 5,
@@ -289,7 +300,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'MI Security (Max)',
         gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [TriggerConditionType.CRITICAL_HIT],
+        triggers: [_I(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
         target: 'wielder',
         durationSeconds: 5,
         maxStacks: 1,
@@ -311,7 +322,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Tide Surge',
       gearSetEffectType: GearSetEffectType.TIDE_SURGE,
-      triggers: [TriggerConditionType.APPLY_ARTS_INFLICTION_2_STACKS],
+      triggers: [_I(THIS, APPLY, ObjectType.INFLICTION, { stacks: 2 })],
       target: 'wielder',
       durationSeconds: 15,
       maxStacks: 1,
@@ -332,7 +343,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Eternal Xiranite',
       gearSetEffectType: GearSetEffectType.ETERNAL_XIRANITE,
-      triggers: [TriggerConditionType.APPLY_BUFF],
+      triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "BUFF" })],
       target: 'team',
       durationSeconds: 15,
       maxStacks: 1,
@@ -353,7 +364,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Catastrophe',
       gearSetEffectType: GearSetEffectType.CATASTROPHE,
-      triggers: [TriggerConditionType.CAST_BATTLE_SKILL],
+      triggers: [_I(THIS, PERFORM, ObjectType.BATTLE_SKILL)],
       target: 'wielder',
       durationSeconds: 1,
       maxStacks: 1,
@@ -372,7 +383,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Swordmancer',
       gearSetEffectType: GearSetEffectType.SWORDMANCER,
-      triggers: [TriggerConditionType.APPLY_PHYSICAL_STATUS],
+      triggers: [_I(THIS, APPLY, ObjectType.STATUS)],
       target: 'enemy',
       durationSeconds: 1,
       maxStacks: 1,
@@ -392,7 +403,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Bonekrusha',
       gearSetEffectType: GearSetEffectType.BONEKRUSHA,
-      triggers: [TriggerConditionType.CAST_COMBO_SKILL],
+      triggers: [_I(THIS, PERFORM, ObjectType.COMBO_SKILL)],
       target: 'wielder',
       durationSeconds: 0,
       maxStacks: 2,
@@ -414,7 +425,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Type 50 Yinglung',
       gearSetEffectType: GearSetEffectType.TYPE_50_YINGLUNG,
-      triggers: [TriggerConditionType.TEAM_CAST_BATTLE_SKILL],
+      triggers: [_I(ANY, PERFORM, ObjectType.BATTLE_SKILL)],
       target: 'wielder',
       durationSeconds: 0,
       maxStacks: 3,

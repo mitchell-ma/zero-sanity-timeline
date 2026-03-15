@@ -23,49 +23,52 @@ interface Duration {
   unit: string;
 }
 
-interface ResourceInteraction {
-  resourceType: string;
-  interactionType: string;
-  value: number;
-  target?: string;
-  conditions?: { enemiesHitThreshold: number };
-}
-
-interface StatusInteraction {
-  interactionType: string;
-  statusType: string;
-  stacks?: number;
-  statusLevel?: number;
-  isForced?: boolean;
-  durationSeconds?: number;
-  target?: string;
+interface Effect {
+  verbType: string;
+  objectType: string;
+  adjective?: string | string[];
+  toObjectType?: string;
+  withPreposition?: {
+    cardinality?: { verb: string; value: number };
+    stacks?: { verb: string; value: number };
+    statusLevel?: { verb: string; value: number };
+    duration?: { verb: string; value: number };
+  };
   conversion?: { statusType: string; ratio: string };
 }
 
 interface Frame {
-  eventComponentType: string;
-  offset: Duration;
-  resourceInteractions: ResourceInteraction[];
-  statusInteractions?: StatusInteraction[];
-  dataSources: string[];
+  metadata: {
+    eventComponentType: string;
+    dataSources: string[];
+  };
+  properties: {
+    offset: Duration;
+  };
+  effects: Effect[];
+  multipliers?: unknown[];
 }
 
 interface Segment {
-  eventComponentType: string;
-  name?: string;
-  duration: Duration;
+  metadata: {
+    eventComponentType: string;
+    dataSources: string[];
+  };
+  properties: {
+    duration: Duration;
+    name?: string;
+  };
   frames: Frame[];
-  animation?: { duration: Duration; timeInteractionType: string };
-  dataSources?: string[];
 }
 
 interface SkillCategory {
-  duration?: Duration;
-  resourceInteractions?: ResourceInteraction[];
-  animation?: { duration: Duration; timeInteractionType: string };
+  properties?: {
+    duration?: Duration;
+    animation?: { duration: Duration; timeInteractionType: string };
+  };
+  effects?: Effect[];
   frames?: Frame[];
   segments?: Segment[];
-  dataSources?: string[];
 }
 
 // ── Gamedata types ───────────────────────────────────────────────────────────
@@ -171,31 +174,33 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
   POGRANICHNK: 'POGRANICHNIK',
   ALESH: 'ALESH',
   ARCLIGHT: 'ARCLIGHT',
+  TANGTANG: 'TANGTANG',
 };
 
 // ── Anomaly type mapping ─────────────────────────────────────────────────────
 
 interface AnomalyMapping {
-  interactionType: string;
-  statusType: string;
+  verbType: string;
+  objectType: string;
+  adjective?: string | string[];
   isForced?: boolean;
   statusLevel?: number;
   conversion?: { statusType: string; ratio: string };
 }
 
 const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
-  blaze_attach:   { interactionType: 'APPLY', statusType: 'HEAT' },
-  cold_attach:    { interactionType: 'APPLY', statusType: 'CRYO' },
-  emag_attach:    { interactionType: 'APPLY', statusType: 'ELECTRIC' },
-  nature_attach:  { interactionType: 'APPLY', statusType: 'NATURE' },
-  magma_0:        { interactionType: 'APPLY', statusType: 'COMBUSTION', isForced: true, statusLevel: 1 },
-  magma_1:        { interactionType: 'APPLY', statusType: 'MELTING_FLAME' },
-  magma_2:        { interactionType: 'APPLY', statusType: 'MELTING_FLAME' },
-  magma_3:        { interactionType: 'APPLY', statusType: 'MELTING_FLAME' },
-  magma_4:        { interactionType: 'ABSORB', statusType: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
-  blaze_burst:    { interactionType: 'APPLY', statusType: 'COMBUSTION' },
-  burning:        { interactionType: 'APPLY', statusType: 'COMBUSTION' },
-  corrosion:      { interactionType: 'APPLY', statusType: 'CORROSION', isForced: true },
+  blaze_attach:   { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'HEAT' },
+  cold_attach:    { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'CRYO' },
+  emag_attach:    { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'ELECTRIC' },
+  nature_attach:  { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'NATURE' },
+  magma_0:        { verbType: 'APPLY', objectType: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, statusLevel: 1 },
+  magma_1:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_2:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_3:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_4:        { verbType: 'ABSORB', objectType: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  blaze_burst:    { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
+  burning:        { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
+  corrosion:      { verbType: 'APPLY', objectType: 'REACTION', adjective: 'CORROSION', isForced: true },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -223,62 +228,93 @@ function buildAnomalyIndex(anomalyGroups: GameDataAnomaly[][]): Map<string, { ma
 }
 
 /**
- * Converts a gamedata damage tick into a Frame, resolving boundEffects to status interactions.
+ * Converts a gamedata damage tick into a Frame with the new format.
  */
 function convertTick(
   tick: GameDataTick,
   anomalyIndex: Map<string, { mapping: AnomalyMapping; anomaly: GameDataAnomaly }>,
 ): Frame {
-  const resourceInteractions: ResourceInteraction[] = [];
-  const statusInteractions: StatusInteraction[] = [];
+  const effects: Effect[] = [];
 
   // SP recovery
-  resourceInteractions.push({
-    resourceType: 'SKILL_POINT',
-    interactionType: 'RECOVER',
-    value: tick.sp,
+  effects.push({
+    verbType: 'RECOVER',
+    objectType: 'SKILL_POINT',
+    withPreposition: {
+      cardinality: { verb: 'IS', value: tick.sp },
+    },
   });
 
   // Stagger
-  resourceInteractions.push({
-    resourceType: 'STAGGER',
-    interactionType: 'RECOVER',
-    value: tick.stagger,
+  effects.push({
+    verbType: 'RECOVER',
+    objectType: 'STAGGER',
+    withPreposition: {
+      cardinality: { verb: 'IS', value: tick.stagger },
+    },
   });
 
-  // Resolve bound effects → status interactions
+  // Resolve bound effects → status effects
   for (const effectId of tick.boundEffects) {
     const entry = anomalyIndex.get(effectId);
     if (!entry) continue;
 
     const { mapping, anomaly } = entry;
-    const si: StatusInteraction = {
-      interactionType: mapping.interactionType,
-      statusType: mapping.statusType,
-      target: 'ENEMY',
+    const effect: Effect = {
+      verbType: mapping.verbType,
+      objectType: mapping.objectType,
+      adjective: mapping.adjective,
+      toObjectType: 'ENEMY',
     };
 
-    if (anomaly.stacks > 0) si.stacks = anomaly.stacks;
-    if (mapping.isForced) si.isForced = true;
-    if (mapping.statusLevel !== undefined) si.statusLevel = mapping.statusLevel;
-    if (anomaly.duration > 0) si.durationSeconds = anomaly.duration;
-    if (mapping.conversion) si.conversion = mapping.conversion;
+    const withPrep: Effect['withPreposition'] = {};
+    if (anomaly.stacks > 0) withPrep.stacks = { verb: 'IS', value: anomaly.stacks };
+    if (mapping.statusLevel !== undefined) withPrep.statusLevel = { verb: 'IS', value: mapping.statusLevel };
+    if (anomaly.duration > 0) withPrep.duration = { verb: 'IS', value: anomaly.duration };
 
-    statusInteractions.push(si);
+    if (Object.keys(withPrep).length > 0) effect.withPreposition = withPrep;
+    if (mapping.conversion) effect.conversion = mapping.conversion;
+
+    effects.push(effect);
   }
 
-  const frame: Frame = {
-    eventComponentType: 'FRAME',
-    offset: dur(tick.offset),
-    resourceInteractions,
-    dataSources: DATA_SOURCES,
+  return {
+    metadata: {
+      eventComponentType: 'FRAME',
+      dataSources: DATA_SOURCES,
+    },
+    properties: {
+      offset: dur(tick.offset),
+    },
+    effects,
+  };
+}
+
+// ── Effect builders for skill-level resource interactions ─────────────────────
+
+function buildResourceEffect(
+  resourceType: string,
+  interactionType: string,
+  value: number,
+  target?: string,
+): Effect {
+  const effect: Effect = {
+    verbType: interactionType,
+    objectType: resourceType,
+    withPreposition: {
+      cardinality: { verb: 'IS', value },
+    },
   };
 
-  if (statusInteractions.length > 0) {
-    frame.statusInteractions = statusInteractions;
+  if (resourceType === 'ULTIMATE_ENERGY' && interactionType === 'RECOVER') {
+    if (target === 'SELF') {
+      effect.toObjectType = 'THIS_OPERATOR';
+    } else if (target === 'TEAM') {
+      effect.toObjectType = 'ALL_OPERATORS';
+    }
   }
 
-  return frame;
+  return effect;
 }
 
 // ── Skill parsers ────────────────────────────────────────────────────────────
@@ -291,10 +327,14 @@ function parseBasicAttack(char: GameDataCharacter): SkillCategory {
     const frames = seg.damage_ticks.map(t => convertTick(t, anomalyIndex));
 
     segments.push({
-      eventComponentType: 'SEGMENT',
-      duration: dur(seg.duration),
+      metadata: {
+        eventComponentType: 'SEGMENT',
+        dataSources: DATA_SOURCES,
+      },
+      properties: {
+        duration: dur(seg.duration),
+      },
       frames,
-      dataSources: DATA_SOURCES,
     });
   }
 
@@ -305,43 +345,31 @@ function parseBattleSkill(char: GameDataCharacter): SkillCategory {
   const anomalyIndex = buildAnomalyIndex(char.skill_anomalies ?? []);
   const frames = char.skill_damage_ticks.map(t => convertTick(t, anomalyIndex));
 
-  const resourceInteractions: ResourceInteraction[] = [];
+  const effects: Effect[] = [];
 
   // SP cost
   if (char.skill_spCost) {
-    resourceInteractions.push({
-      resourceType: 'SKILL_POINT',
-      interactionType: 'EXPEND',
-      value: char.skill_spCost,
-    });
+    effects.push(buildResourceEffect('SKILL_POINT', 'EXPEND', char.skill_spCost));
   }
 
   // Gauge gain (self)
   if (char.skill_gaugeGain) {
-    resourceInteractions.push({
-      resourceType: 'ULTIMATE_ENERGY',
-      interactionType: 'RECOVER',
-      value: char.skill_gaugeGain,
-      target: 'SELF',
-    });
+    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.skill_gaugeGain, 'SELF'));
   }
 
   // Gauge gain (team)
   if (char.skill_teamGaugeGain) {
-    resourceInteractions.push({
-      resourceType: 'ULTIMATE_ENERGY',
-      interactionType: 'RECOVER',
-      value: char.skill_teamGaugeGain,
-      target: 'TEAM',
-    });
+    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.skill_teamGaugeGain, 'TEAM'));
   }
 
   const result: SkillCategory = {
-    duration: dur(char.skill_duration),
+    properties: {
+      duration: dur(char.skill_duration),
+    },
     frames,
   };
 
-  if (resourceInteractions.length > 0) result.resourceInteractions = resourceInteractions;
+  if (effects.length > 0) result.effects = effects;
 
   return result;
 }
@@ -350,39 +378,30 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
   const anomalyIndex = buildAnomalyIndex(char.link_anomalies ?? []);
   const frames = char.link_damage_ticks.map(t => convertTick(t, anomalyIndex));
 
-  const resourceInteractions: ResourceInteraction[] = [];
+  const effects: Effect[] = [];
 
   // Cooldown
   if (char.link_cooldown) {
-    resourceInteractions.push({
-      resourceType: 'COOLDOWN',
-      interactionType: 'EXPEND',
-      value: char.link_cooldown,
-    });
+    effects.push(buildResourceEffect('COOLDOWN', 'EXPEND', char.link_cooldown));
   }
 
   // Gauge gain
   if (char.link_gaugeGain) {
-    resourceInteractions.push({
-      resourceType: 'ULTIMATE_ENERGY',
-      interactionType: 'RECOVER',
-      value: char.link_gaugeGain,
-      target: 'SELF',
-    });
+    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'RECOVER', char.link_gaugeGain, 'SELF'));
   }
 
   const result: SkillCategory = {
-    duration: dur(char.link_duration),
+    properties: {
+      duration: dur(char.link_duration),
+      animation: {
+        duration: dur(0.5),
+        timeInteractionType: 'TIME_STOP',
+      },
+    },
     frames,
   };
 
-  if (resourceInteractions.length > 0) result.resourceInteractions = resourceInteractions;
-
-  // Default time-stop animation (not from gamedata — must be manually measured)
-  result.animation = {
-    duration: dur(0.5),
-    timeInteractionType: 'TIME_STOP',
-  };
+  if (effects.length > 0) result.effects = effects;
 
   return result;
 }
@@ -391,55 +410,63 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
   const anomalyIndex = buildAnomalyIndex(char.ultimate_anomalies ?? []);
   const allFrames = char.ultimate_damage_ticks.map(t => convertTick(t, anomalyIndex));
 
-  const resourceInteractions: ResourceInteraction[] = [];
+  const effects: Effect[] = [];
 
   // Energy cost
   if (char.ultimate_gaugeMax) {
-    resourceInteractions.push({
-      resourceType: 'ULTIMATE_ENERGY',
-      interactionType: 'EXPEND',
-      value: char.ultimate_gaugeMax,
-    });
+    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'EXPEND', char.ultimate_gaugeMax));
   }
 
   const ultimateDuration = char.ultimate_duration;
 
   // Check for delayed hits (offset > duration)
-  const mainFrames = allFrames.filter(f => f.offset.value <= ultimateDuration);
-  const delayedFrames = allFrames.filter(f => f.offset.value > ultimateDuration);
+  const mainFrames = allFrames.filter(f => f.properties.offset.value <= ultimateDuration);
+  const delayedFrames = allFrames.filter(f => f.properties.offset.value > ultimateDuration);
 
   if (delayedFrames.length > 0) {
     // Split into segments
     const reoffsetedDelayed = delayedFrames.map(f => ({
       ...f,
-      offset: dur(f.offset.value - ultimateDuration),
+      properties: {
+        ...f.properties,
+        offset: dur(f.properties.offset.value - ultimateDuration),
+      },
     }));
 
-    const maxDelayedOffset = Math.max(...reoffsetedDelayed.map(f => f.offset.value));
+    const maxDelayedOffset = Math.max(...reoffsetedDelayed.map(f => f.properties.offset.value));
     const delayedDuration = maxDelayedOffset + 0.1;
 
     const segments: Segment[] = [
       {
-        eventComponentType: 'SEGMENT',
-        duration: dur(ultimateDuration),
+        metadata: {
+          eventComponentType: 'SEGMENT',
+          dataSources: DATA_SOURCES,
+        },
+        properties: {
+          duration: dur(ultimateDuration),
+        },
         frames: mainFrames,
-        dataSources: DATA_SOURCES,
       },
       {
-        eventComponentType: 'SEGMENT',
-        name: 'DELAYED',
-        duration: dur(delayedDuration),
+        metadata: {
+          eventComponentType: 'SEGMENT',
+          dataSources: DATA_SOURCES,
+        },
+        properties: {
+          duration: dur(delayedDuration),
+          name: 'DELAYED',
+        },
         frames: reoffsetedDelayed,
-        dataSources: DATA_SOURCES,
       },
     ];
 
     const result: SkillCategory = { segments };
-    if (resourceInteractions.length > 0) result.resourceInteractions = resourceInteractions;
+    if (effects.length > 0) result.effects = effects;
 
     // Animation time-stop
     if (char.ultimate_animationTime) {
-      result.animation = {
+      if (!result.properties) result.properties = {};
+      result.properties.animation = {
         duration: dur(char.ultimate_animationTime),
         timeInteractionType: 'TIME_STOP',
       };
@@ -450,14 +477,17 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
 
   // Single-part ultimate
   const result: SkillCategory = {
-    duration: dur(ultimateDuration),
+    properties: {
+      duration: dur(ultimateDuration),
+    },
     frames: mainFrames,
   };
 
-  if (resourceInteractions.length > 0) result.resourceInteractions = resourceInteractions;
+  if (effects.length > 0) result.effects = effects;
 
   if (char.ultimate_animationTime) {
-    result.animation = {
+    if (!result.properties) result.properties = {};
+    result.properties.animation = {
       duration: dur(char.ultimate_animationTime),
       timeInteractionType: 'TIME_STOP',
     };
@@ -503,10 +533,14 @@ function parseVariantAttack(variant: GameDataVariant): SkillCategory {
       const frames = seg.damageTicks.map(t => convertTick(t, anomalyIndex));
 
       segments.push({
-        eventComponentType: 'SEGMENT',
-        duration: dur(seg.duration),
+        metadata: {
+          eventComponentType: 'SEGMENT',
+          dataSources: DATA_SOURCES,
+        },
+        properties: {
+          duration: dur(seg.duration),
+        },
         frames,
-        dataSources: DATA_SOURCES,
       });
     }
   }
@@ -519,7 +553,9 @@ function parseVariantSkill(variant: GameDataVariant): SkillCategory {
   const frames = variant.damageTicks.map(t => convertTick(t, anomalyIndex));
 
   return {
-    duration: dur(variant.duration),
+    properties: {
+      duration: dur(variant.duration),
+    },
     frames,
   };
 }
@@ -527,10 +563,11 @@ function parseVariantSkill(variant: GameDataVariant): SkillCategory {
 // ── Main parser ──────────────────────────────────────────────────────────────
 
 function parseCharacter(char: GameDataCharacter): { operatorType: string; skills: Record<string, SkillCategory> } | null {
-  const operatorType = GAMEDATA_ID_TO_OPERATOR[char.id];
+  let operatorType = GAMEDATA_ID_TO_OPERATOR[char.id];
   if (!operatorType) {
-    console.warn(`  Skipping unknown operator: ${char.id}`);
-    return null;
+    // Fall back to using the End-Axis ID directly for new/unmapped operators
+    operatorType = char.id;
+    console.warn(`  ⚠ Unmapped operator ID: ${char.id} — using as-is. Add to GAMEDATA_ID_TO_OPERATOR if name differs.`);
   }
 
   const skills: Record<string, SkillCategory> = {};

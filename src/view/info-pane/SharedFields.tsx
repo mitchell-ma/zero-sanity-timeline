@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { framesToSeconds, secondsToFrames } from '../../utils/timeline';
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 
 export const LEVEL_BREAKPOINTS = [1, 20, 40, 60, 80, 90];
 
@@ -140,10 +140,12 @@ export function StatField({ label, value, min, max, step = 1, holdStep, holdSnap
   );
 }
 
-export function LevelSelect({ label, value, options, onChange }: {
-  label: string;
+export function LevelSelect({ label, value, options, optionLabels, onChange }: {
+  label: React.ReactNode;
   value: number;
   options: number[];
+  /** Optional display labels for each option (same length as options). */
+  optionLabels?: string[];
   onChange: (v: number) => void;
 }) {
   return (
@@ -154,8 +156,8 @@ export function LevelSelect({ label, value, options, onChange }: {
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       >
-        {options.map((lv) => (
-          <option key={lv} value={lv}>{lv}</option>
+        {options.map((lv, i) => (
+          <option key={lv} value={lv}>{optionLabels?.[i] ?? lv}</option>
         ))}
       </select>
     </div>
@@ -183,7 +185,7 @@ export function SegmentDurationField({ eventId, segmentIndex, durationFrames, on
     const newSegments = segments.map((s, i) =>
       i === segmentIndex ? { ...s, durationFrames: newDuration } : s,
     );
-    const totalDuration = newSegments.reduce((sum, s) => sum + s.durationFrames, 0);
+    const totalDuration = computeSegmentsSpan(newSegments);
     onUpdate(eventId, {
       segments: newSegments,
       activationDuration: totalDuration,

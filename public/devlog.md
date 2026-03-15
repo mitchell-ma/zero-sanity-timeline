@@ -1,5 +1,15 @@
 # Devlog
 
+## 2026-03-15
+- Rebranded to **Endfield: Zero Sanity Simulations** — new name, new logo, new domain (endfieldsimulations.dev)
+- App now deploys to Cloudflare Pages in addition to GitHub Pages
+- Tangtang added as a new playable operator
+- Custom content system expanded — users can now link custom skills to operators and browse/edit shared content more easily
+- Stagger timeline tracks enemy stagger buildup across the fight
+- Horizontal timeline mode with improved layout and touch controls
+- Major data pipeline improvements — operator skill data split into separate files, parsers updated for better accuracy
+- Lots of UI polish: light/dark theme toggle, starred operators, improved info pane, better mobile support
+
 ## 2026-03-14
 - All operator, weapon, and gear data now loads from JSON files instead of being hardcoded — makes it much easier to add new content and keep up with game updates
 - Custom content system — users can create and share their own operators, weapons, and gear sets

@@ -1,8 +1,9 @@
-import { StatType, TriggerConditionType } from "../../consts/enums";
+import { StatType } from "../../consts/enums";
+import type { Interaction } from "../../consts/semantics";
 import { Consumable } from "./consumable";
 
 export abstract class Tactical extends Consumable {
-  readonly triggerCondition: TriggerConditionType;
+  readonly triggerCondition: Interaction;
   usesRemaining: number;
   readonly maxUses: number;
 
@@ -11,7 +12,7 @@ export abstract class Tactical extends Consumable {
     rarity: number;
     stats: Partial<Record<StatType, number>>;
     durationSeconds: number;
-    triggerCondition: TriggerConditionType;
+    triggerCondition: Interaction;
     maxUses: number;
   }) {
     super(params);

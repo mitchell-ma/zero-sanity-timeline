@@ -10,9 +10,8 @@ import { WEAPON_DATA } from '../../model/weapons/weaponData';
 import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { triggerConditionToInteraction } from '../../controller/custom/bridgeUtils';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
-import type { CombatSkillsType, TriggerConditionType } from '../../consts/enums';
+import type { CombatSkillsType } from '../../consts/enums';
 import type { SkillType } from '../../consts/viewTypes';
 import type { Interaction, Effect } from '../../consts/semantics';
 
@@ -49,18 +48,24 @@ function effectToText(e: Effect): string {
   }
   if (e.objectType) parts.push(e.objectType.replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);
-  if (e.element) parts.push(`[${e.element}]`);
   if (e.toObjectType) parts.push(`TO ${String(e.toObjectType).replace(/_/g, ' ')}`);
   if (e.fromObjectType) parts.push(`FROM ${String(e.fromObjectType).replace(/_/g, ' ')}`);
-  if (e.forDuration != null) parts.push(`FOR ${e.forDuration}s`);
   if (e.onObjectType) parts.push(`ON ${String(e.onObjectType).replace(/_/g, ' ')}`);
   if (e.cardinalityConstraint) parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
-  if (e.withMultiplier) parts.push(`WITH × [${e.withMultiplier.slice(0, 3).join(', ')}${e.withMultiplier.length > 3 ? '...' : ''}]`);
+  if (e.withPreposition) {
+    const wp = e.withPreposition;
+    const wpParts: string[] = [];
+    for (const [k, v] of Object.entries(wp)) {
+      const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}${(v.value as number[]).length > 3 ? '...' : ''}]`;
+      wpParts.push(`${k.replace(/_/g, ' ').toUpperCase()} ${val}`);
+    }
+    if (wpParts.length) parts.push(`WITH ${wpParts.join(', ')}`);
+  }
   return parts.join(' ');
 }
 
-function triggerText(tc: TriggerConditionType): string {
-  return interactionToText(triggerConditionToInteraction(tc));
+function triggerText(t: Interaction): string {
+  return interactionToText(t);
 }
 
 function starStr(n: number): string { return `${n}\u2605`; }
@@ -553,6 +558,9 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
   // Find related status events
   const statusEvents: Record<string, any>[] = opJson?.statusEvents ?? [];
 
+  const hasSegments = skillJson?.segments && Array.isArray(skillJson.segments) && skillJson.segments.length > 0;
+  const hasFrames = skillJson?.frames && Array.isArray(skillJson.frames) && skillJson.frames.length > 0;
+
   return (
     <>
       <h2 className="cv-title" style={{ color: op.color }}>{label}</h2>
@@ -631,21 +639,27 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         </Section>
       )}
 
-      {/* Segments from JSON */}
-      {skillJson?.segments && Array.isArray(skillJson.segments) && (
-        <Section title={`Segments (${skillJson.segments.length})`}>
-          {(skillJson.segments as any[]).map((seg, si) => (
-            <SegmentView key={si} index={si} segment={seg} />
-          ))}
+      {/* ── Event Hierarchy ──────────────────────────────────── */}
+
+      {/* Segmented skills (basic attacks): combo chain hierarchy */}
+      {hasSegments && (
+        <Section title="Combo Chain">
+          <div className="cv-chain">
+            {(skillJson!.segments as any[]).map((seg, si) => (
+              <SegmentView key={si} index={si} segment={seg} isComboChain />
+            ))}
+          </div>
         </Section>
       )}
 
-      {/* Frames from JSON (non-segmented skills) */}
-      {skillJson?.frames && Array.isArray(skillJson.frames) && !skillJson.segments && (
-        <Section title={`Frames (${skillJson.frames.length})`}>
-          {(skillJson.frames as any[]).map((frame, fi) => (
-            <FrameView key={fi} index={fi} frame={frame} />
-          ))}
+      {/* Non-segmented skills: frame timeline */}
+      {hasFrames && !hasSegments && (
+        <Section title="Frame Data">
+          <div className="cv-frame-timeline">
+            {(skillJson!.frames as any[]).map((frame, fi) => (
+              <FrameView key={fi} index={fi} frame={frame} total={skillJson!.frames.length} />
+            ))}
+          </div>
         </Section>
       )}
 
@@ -673,7 +687,7 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         </Section>
       )}
 
-      {/* Skill Variants */}
+      {/* Skill Variants — each rendered as its own skill category */}
       {variants.length > 0 && (
         <Section title="Variants">
           {variants.map((v) => (
@@ -696,44 +710,69 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
 
 // ── Skill sub-views ──────────────────────────────────────────────────────────
 
-function SegmentView({ index, segment }: { index: number; segment: Record<string, any> }) {
+/** Default hit names for basic attack combo chain segments. */
+const HIT_NAMES = ['Hit 1', 'Hit 2', 'Hit 3', 'Hit 4', 'Hit 5', 'Hit 6', 'Hit 7', 'Hit 8'];
+
+function SegmentView({ index, segment, isComboChain }: { index: number; segment: Record<string, any>; isComboChain?: boolean }) {
   const dur = segment.duration;
-  const durStr = dur ? `${dur.value}${dur.unit === 'FRAME' ? 'f' : 's'}` : '?';
+  const durVal = dur?.value ?? 0;
+  const durStr = dur ? `${durVal}${dur.unit === 'FRAME' ? 'f' : 's'}` : '—';
   const frames: any[] = segment.frames ?? [];
   const effects: Effect[] = segment.effects ?? [];
   const stats: any[] = segment.stats ?? [];
 
+  // Derive a meaningful name
+  const segName = segment.name
+    ? segment.name
+    : isComboChain
+      ? (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`)
+      : `Segment ${index + 1}`;
+
+  // Count total hits (frames) in this segment
+  const hitCount = frames.length;
+
   return (
-    <div className="cv-effect-card">
-      <div className="cv-effect-name">
-        {segment.name ? `${index + 1}. ${segment.name}` : `Segment ${index + 1}`}
-        <span className="cv-inline-meta"> — {durStr}</span>
+    <div className="cv-chain-segment">
+      <div className="cv-chain-segment-header">
+        <span className="cv-chain-segment-name">{segName}</span>
+        <span className="cv-chain-segment-meta">
+          {durVal > 0 && <span className="cv-chain-dur">{durStr}</span>}
+          {hitCount > 0 && <span className="cv-chain-hits">{hitCount} hit{hitCount > 1 ? 's' : ''}</span>}
+        </span>
       </div>
-      {segment.experience && <Field label="Time Dependency" value={segment.experience} />}
+
+      {segment.experience && (
+        <div className="cv-chain-segment-detail">
+          <span className="cv-label">Time:</span> {segment.experience}
+        </div>
+      )}
+
       {effects.length > 0 && (
-        <div className="cv-triggers">
-          <span className="cv-label">Effects:</span>
+        <div className="cv-chain-segment-effects">
           {effects.map((e, i) => <code key={i} className="cv-trigger-tag">{effectToText(e)}</code>)}
         </div>
       )}
+
       {stats.length > 0 && (
-        <div className="cv-field-grid">
+        <div className="cv-field-grid cv-chain-stats">
           {stats.map((s: any, i: number) => (
             <Field key={i} label={s.statType} value={Array.isArray(s.value) ? s.value.join(', ') : String(s.value)} />
           ))}
         </div>
       )}
+
       {frames.length > 0 && (
-        <div className="cv-frames-list">
-          <span className="cv-label">Frames ({frames.length}):</span>
-          {frames.map((f: any, fi: number) => <FrameView key={fi} index={fi} frame={f} />)}
+        <div className="cv-chain-frames">
+          {frames.map((f: any, fi: number) => (
+            <FrameView key={fi} index={fi} frame={f} total={frames.length} />
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-function FrameView({ index, frame }: { index: number; frame: Record<string, any> }) {
+function FrameView({ index, frame, total }: { index: number; frame: Record<string, any>; total: number }) {
   const offset = frame.offset;
   const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
 
@@ -745,56 +784,107 @@ function FrameView({ index, frame }: { index: number; frame: Record<string, any>
   const effects: Effect[] = frame.effects ?? [];
   const statusInteractions: Interaction[] = frame.statusInteractions ?? [];
 
+  const hasContent = effects.length > 0 || statusInteractions.length > 0 || multKeys.length > 0;
+  const dataSources: string[] = frame.dataSources ?? [];
+
   return (
     <div className="cv-frame-card">
       <div className="cv-frame-header">
-        <span className="cv-label">@{offsetStr}</span>
+        <span className="cv-frame-offset">@{offsetStr}</span>
+        {total > 1 && <span className="cv-frame-index">#{index + 1}</span>}
+        {dataSources.length > 0 && (
+          <span className="cv-frame-source">{dataSources.join(', ')}</span>
+        )}
       </div>
+
+      {!hasContent && (
+        <span className="cv-frame-empty">damage frame</span>
+      )}
+
       {effects.length > 0 && (
-        <div className="cv-triggers">
+        <div className="cv-frame-effects">
           {effects.map((e, i) => <code key={i} className="cv-trigger-tag">{effectToText(e)}</code>)}
         </div>
       )}
+
       {statusInteractions.length > 0 && (
-        <div className="cv-triggers">
+        <div className="cv-frame-effects">
           <span className="cv-label">Status:</span>
           {statusInteractions.map((si, i) => <code key={i} className="cv-trigger-tag">{interactionToText(si)}</code>)}
         </div>
       )}
+
       {multKeys.length > 0 && (
-        <div className="cv-multiplier-table">
-          <table className="cv-mult-table">
-            <thead>
-              <tr>
-                <th>Lv</th>
-                {multKeys.map((k) => <th key={k}>{k}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {multipliers.map((m: any, mi: number) => (
-                <tr key={mi}>
-                  <td>{m.level}</td>
-                  {multKeys.map((k) => <td key={k}>{m[k]}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MultiplierTable multipliers={multipliers} keys={multKeys} />
       )}
     </div>
   );
+}
+
+/** Compact multiplier table with level rows and stat columns. */
+function MultiplierTable({ multipliers, keys }: { multipliers: any[]; keys: string[] }) {
+  // Show only a few representative levels for compactness
+  const displayLevels = multipliers.length <= 6
+    ? multipliers
+    : [multipliers[0], multipliers[Math.floor(multipliers.length / 2)], multipliers[multipliers.length - 1]];
+
+  return (
+    <div className="cv-multiplier-table">
+      <table className="cv-mult-table">
+        <thead>
+          <tr>
+            <th>Lv</th>
+            {keys.map((k) => <th key={k}>{formatMultKey(k)}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {displayLevels.map((m: any, mi: number) => (
+            <tr key={mi}>
+              <td className="cv-mult-lv">{m.level}</td>
+              {keys.map((k) => <td key={k}>{formatMultValue(m[k])}</td>)}
+            </tr>
+          ))}
+          {multipliers.length > 6 && (
+            <tr className="cv-mult-more">
+              <td colSpan={keys.length + 1}>{multipliers.length} levels total</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function formatMultKey(key: string): string {
+  return key
+    .replace(/^atk_scale$/, 'ATK%')
+    .replace(/^atk_scale_(\d)$/, 'ATK%$1')
+    .replace(/^poise$/, 'Poise')
+    .replace(/^poise_extra$/, 'Poise+')
+    .replace(/^count$/, 'Count')
+    .replace(/^duration$/, 'Dur')
+    .replace(/^extra_usp$/, 'USP+')
+    .replace(/^atb$/, 'ATB')
+    .replace(/_/g, ' ');
+}
+
+function formatMultValue(v: any): string {
+  if (v == null) return '—';
+  if (typeof v === 'number') return v % 1 === 0 ? String(v) : v.toFixed(3);
+  return String(v);
 }
 
 function VariantView({ variantKey, data }: { variantKey: string; data: Record<string, any> }) {
   const dur = data.duration;
   const durStr = dur ? (typeof dur === 'number' ? `${dur}s` : `${dur.value}${dur.unit === 'FRAME' ? 'f' : 's'}`) : '';
   const frames: any[] = data.frames ?? [];
+  const segments: any[] = data.segments ?? [];
   const effects: Effect[] = data.effects ?? [];
   const clause: any[] = data.clause ?? [];
 
   return (
-    <div className="cv-effect-card">
-      <div className="cv-effect-name">{variantKey.replace(/_/g, ' ')}</div>
+    <div className="cv-variant-card">
+      <div className="cv-variant-header">{variantKey.replace(/_/g, ' ')}</div>
       {durStr && <Field label="Duration" value={durStr} />}
       {clause.length > 0 && (
         <div className="cv-clause-conditions">
@@ -814,7 +904,24 @@ function VariantView({ variantKey, data }: { variantKey: string; data: Record<st
           {effects.map((e, i) => <code key={i} className="cv-trigger-tag">{effectToText(e)}</code>)}
         </div>
       )}
-      {frames.length > 0 && <Field label="Frames" value={`${frames.length} frame(s)`} />}
+
+      {/* Variant segments (e.g. ENHANCED_BASIC_ATTACK has its own chain) */}
+      {segments.length > 0 && (
+        <div className="cv-chain" style={{ marginTop: '0.375rem' }}>
+          {segments.map((seg: any, si: number) => (
+            <SegmentView key={si} index={si} segment={seg} isComboChain />
+          ))}
+        </div>
+      )}
+
+      {/* Variant frames */}
+      {frames.length > 0 && !segments.length && (
+        <div className="cv-frame-timeline" style={{ marginTop: '0.375rem' }}>
+          {frames.map((f: any, fi: number) => (
+            <FrameView key={fi} index={fi} frame={f} total={frames.length} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

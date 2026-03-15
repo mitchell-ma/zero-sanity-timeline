@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column, MiniTimeline } from '../consts/viewTypes';
+import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column } from '../consts/viewTypes';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -94,6 +94,7 @@ type InformationPaneProps = {
       loadoutStats?: Record<string, LoadoutStats>;
       damageRows?: DamageTableRow[];
       spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
+      onSaveAsCustomSkill?: (event: TimelineEvent) => void;
     }
   | {
       mode: 'loadout';
@@ -120,6 +121,8 @@ type InformationPaneProps = {
       config: ResourceConfig;
       onChange: (config: ResourceConfig) => void;
       onClose: () => void;
+      /** Total resource wasted due to overflow. */
+      wasted?: number;
     }
   | {
       mode: 'damage';
@@ -149,6 +152,7 @@ export default function InformationPane(props: InformationPaneProps) {
     const onEnd = () => props.onClose();
     el.addEventListener('animationend', onEnd, { once: true });
     return () => el.removeEventListener('animationend', onEnd);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [closing, props.onClose]);
 
   return (
@@ -209,6 +213,7 @@ export default function InformationPane(props: InformationPaneProps) {
           loadoutStats={props.loadoutStats}
           damageRows={props.damageRows}
           spConsumptionHistory={props.spConsumptionHistory}
+          onSaveAsCustomSkill={props.onSaveAsCustomSkill}
         />
       ) : props.mode === 'loadout' ? (
         <LoadoutPane
@@ -236,6 +241,7 @@ export default function InformationPane(props: InformationPaneProps) {
           config={props.config}
           onChange={props.onChange}
           onClose={handleClose}
+          wasted={props.wasted}
         />
       ) : (
         <DamageBreakdownPane row={props.damageRow} />

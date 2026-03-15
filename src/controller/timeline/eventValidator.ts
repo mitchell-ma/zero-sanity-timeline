@@ -4,15 +4,28 @@
  * Validates combo windows, resource availability (SP / ultimate energy),
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
-import { TimelineEvent, SkillType, EventSegmentData } from '../../consts/viewTypes';
+import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillsType, TimeDependency } from '../../consts/enums';
-import { SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
-import { ALWAYS_AVAILABLE_TRIGGERS, COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
+import { COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
+import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import type { Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
+
+const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+];
+function isAlwaysAvailable(i: Interaction): boolean {
+  return ALWAYS_AVAILABLE_INTERACTIONS.some((aa) => matchInteraction(i, aa));
+}
 
 export type TimeStopRegion = {
   startFrame: number;
@@ -89,8 +102,6 @@ export function preConsumptionValue(
 // ── SP-insufficient zones ─────────────────────────────────────────────────────
 
 export type ResourceZone = { start: number; end: number };
-/** @deprecated Use ResourceZone instead */
-export type SpZone = ResourceZone;
 
 // ── Resource insufficiency zone helpers ───────────────────────────────────────
 
@@ -222,7 +233,7 @@ export function getAlwaysAvailableComboSlots(slots: Slot[]): Set<string> {
   const set = new Set<string>();
   for (const s of slots) {
     const cap = s.operator?.triggerCapability;
-    if (cap && cap.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t))) {
+    if (cap && cap.comboRequires.some((req) => isAlwaysAvailable(req))) {
       set.add(s.slotId);
     }
   }
@@ -282,13 +293,13 @@ export function wouldSegmentAdditionOverlap(
   events: TimelineEvent[],
 ): boolean {
   const currentRange = event.nonOverlappableRange
-    ?? (event.segments ? event.segments.reduce((sum, s) => sum + s.durationFrames, 0) : 0);
+    ?? (event.segments ? computeSegmentsSpan(event.segments) : 0);
   const newRange = currentRange + addedDurationFrames;
 
   return events.some((sib) => {
     if (sib.id === event.id || sib.ownerId !== event.ownerId || sib.columnId !== event.columnId) return false;
     const sibRange = sib.nonOverlappableRange
-      ?? (sib.segments ? sib.segments.reduce((sum, seg) => sum + seg.durationFrames, 0) : 0);
+      ?? (sib.segments ? computeSegmentsSpan(sib.segments) : 0);
     if (sibRange > 0 && event.startFrame >= sib.startFrame && event.startFrame < sib.startFrame + sibRange) return true;
     if (newRange > 0 && sib.startFrame >= event.startFrame && sib.startFrame < event.startFrame + newRange) return true;
     return false;
@@ -301,7 +312,7 @@ export function wouldSegmentAdditionOverlap(
  * Checks if a duplicated event can be placed at a given frame.
  * Validates SP zone violations for battle skills.
  */
-export function isDuplicatePlacementInSpZone(
+export function isDuplicatePlacementInResourceZone(
   event: TimelineEvent,
   ghostFrame: number,
   resourceZones: Map<string, ResourceZone[]>,
@@ -339,7 +350,7 @@ export function clampDeltaByComboWindow(
   // Compute window end frame using segments if available (same as comboWindowEndFrame)
   const windowEndFrame = (w: TimelineEvent) => {
     const duration = w.segments
-      ? w.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+      ? computeSegmentsSpan(w.segments)
       : w.activationDuration;
     return w.startFrame + duration;
   };
@@ -380,7 +391,7 @@ export function wouldOverlapSiblings(
   return events.some((sib) => {
     if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
     const sibRange = sib.segments
-      ? sib.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+      ? computeSegmentsSpan(sib.segments)
       : (sib.nonOverlappableRange ?? 0);
     if (sibRange > 0 && atFrame >= sib.startFrame && atFrame < sib.startFrame + sibRange) return true;
     if (sib.startFrame >= atFrame && sib.startFrame < atFrame + range) return true;
@@ -435,7 +446,7 @@ export function computeProspectiveRange(
 ): number {
   if (!defaultSkill?.segments) return defaultSkill?.defaultActivationDuration ?? 0;
   if (!timeStopRegions || timeStopRegions.length === 0 || atFrame === undefined) {
-    return defaultSkill.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+    return computeSegmentsSpan(defaultSkill.segments);
   }
   // Walk segments, extending game-time segments by time-stop overlap
   let cursor = atFrame;
@@ -600,11 +611,15 @@ export function checkVariantAvailability(
     return w != null && atFrame >= w.start && atFrame < w.end;
   });
 
-  // Finisher blocked during ultimate active phase (operator-specific)
-  if (variantName === CombatSkillsType.FINISHER && ultActive) {
+  // Evaluate segment clause (e.g. Finisher blocked during ultimate)
+  {
     const slot = slots?.find((s) => s.slotId === ownerId);
-    if (slot?.operator && isFinisherBlockedDuringUlt(slot.operator.id)) {
-      return { disabled: true, reason: 'Finisher cannot be used while ultimate is active' };
+    if (slot?.operator) {
+      const clause = getVariantClause(slot.operator.id, variantName);
+      if (clause) {
+        const result = evaluateClause(clause, { ultActive });
+        if (!result.pass) return { disabled: true, reason: result.reason };
+      }
     }
   }
 
@@ -651,7 +666,7 @@ export function validateComboWindows(
   const alwaysAvailable = new Set<string>();
   for (const s of slots) {
     const cap = s.operator?.triggerCapability;
-    if (cap && cap.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t))) {
+    if (cap && cap.comboRequires.some((req) => isAlwaysAvailable(req))) {
       alwaysAvailable.add(s.slotId);
     }
   }
@@ -845,39 +860,133 @@ export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map
   return map;
 }
 
-/** Check if an operator has finisher blocked during ultimate (from JSON). */
-function isFinisherBlockedDuringUlt(operatorId: string): boolean {
+/**
+ * Get the clause for a variant from its segment or skill category in the operator JSON.
+ * Searches all skill categories for segments with a matching name and a clause,
+ * or for a skill category with a matching id and a clause.
+ */
+function getVariantClause(operatorId: string, variantName: string): any[] | null {
   const json = getOperatorJson(operatorId);
-  return json?.finisherBlockedDuringUlt === true;
+  if (!json?.skills) return null;
+  for (const cat of Object.values(json.skills) as any[]) {
+    // Check skill category-level clause (matched by id)
+    if (cat.id === variantName && cat.clause) return cat.clause;
+    // Check segment-level clauses (matched by name, case-insensitive)
+    if (cat.segments) {
+      for (const seg of cat.segments) {
+        if (seg.clause && seg.name?.toUpperCase() === variantName) return seg.clause;
+      }
+    }
+  }
+  return null;
 }
 
-export function validateFinisherDuringUltimate(
+interface ClauseContext {
+  ultActive: boolean;
+}
+
+/** Evaluate a single interaction condition against the current state. */
+function evaluateCondition(cond: any, ctx: ClauseContext): boolean {
+  let result = true;
+  if (cond.verbType === 'IS' && cond.objectType === 'ACTIVE') {
+    if (cond.subjectProperty === 'ULTIMATE') {
+      result = ctx.ultActive;
+    }
+  }
+  return cond.negated ? !result : result;
+}
+
+/**
+ * Evaluate a clause (OR of predicates, each AND of conditions).
+ * Returns { pass: true } if any predicate's conditions all hold,
+ * or { pass: false, reason } if none pass.
+ */
+function evaluateClause(clause: any[], ctx: ClauseContext): { pass: boolean; reason?: string } {
+  for (const pred of clause) {
+    if (!pred.conditions?.length) continue;
+    const allMet = pred.conditions.every((c: any) => evaluateCondition(c, ctx));
+    if (allMet) return { pass: true };
+  }
+  // Build reason from first predicate's failed conditions
+  const firstCond = clause[0]?.conditions?.[0];
+  if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.objectType === 'ACTIVE' && firstCond?.negated) {
+    return { pass: false, reason: 'Cannot be used while ultimate is active' };
+  }
+  return { pass: false, reason: 'Activation condition not met' };
+}
+
+export function validateVariantClauses(
   events: TimelineEvent[],
   slots: Slot[],
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const blockedOwners = new Set<string>();
+
+  // Build operator ID lookup per slot
+  const slotOperatorId = new Map<string, string>();
   for (const s of slots) {
-    if (s.operator && isFinisherBlockedDuringUlt(s.operator.id)) {
-      blockedOwners.add(s.slotId);
-    }
+    if (s.operator) slotOperatorId.set(s.slotId, s.operator.id);
   }
-  if (blockedOwners.size === 0) return map;
 
   for (const ev of events) {
-    if (ev.name !== CombatSkillsType.FINISHER) continue;
-    if (!blockedOwners.has(ev.ownerId)) continue;
+    if (!ev.name) continue;
+    const operatorId = slotOperatorId.get(ev.ownerId);
+    if (!operatorId) continue;
+
+    const clause = getVariantClause(operatorId, ev.name);
+    if (!clause) continue;
 
     const ultActive = events.some((u) => {
       if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
       const w = getUltimateActiveWindow(u);
       return w != null && ev.startFrame >= w.start && ev.startFrame < w.end;
     });
-    if (ultActive) {
-      map.set(ev.id, 'Finisher cannot be used while ultimate is active');
+
+    const result = evaluateClause(clause, { ultActive });
+    if (!result.pass) {
+      map.set(ev.id, result.reason ?? 'Activation condition not met');
     }
   }
   return map;
+}
+
+/**
+ * Mark the first basic attack during each stagger break as a finisher.
+ *
+ * Returns a map of event ID → true for events that should be treated as finishers.
+ * Only one basic attack per break qualifies; subsequent basics in the same break
+ * are normal attacks. Manually placed FINISHER events count and block auto-promotion.
+ */
+export function getAutoFinisherIds(
+  events: TimelineEvent[],
+  staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
+): Set<string> {
+  const autoFinishers = new Set<string>();
+  if (staggerBreaks.length === 0) return autoFinishers;
+
+  for (const brk of staggerBreaks) {
+    // Check if a manually placed finisher already exists in this break
+    const hasManualFinisher = events.some(
+      (ev) => ev.name === CombatSkillsType.FINISHER
+        && ev.startFrame >= brk.startFrame && ev.startFrame < brk.endFrame,
+    );
+    if (hasManualFinisher) continue;
+
+    // Find the first basic attack event (any operator) during this break
+    const firstBasic = events
+      .filter((ev) =>
+        ev.columnId === SKILL_COLUMNS.BASIC
+        && ev.name !== CombatSkillsType.FINISHER
+        && ev.name !== CombatSkillsType.DIVE
+        && ev.startFrame >= brk.startFrame
+        && ev.startFrame < brk.endFrame,
+      )
+      .sort((a, b) => a.startFrame - b.startFrame)[0];
+
+    if (firstBasic) {
+      autoFinishers.add(firstBasic.id);
+    }
+  }
+  return autoFinishers;
 }
 
 /**

@@ -125,7 +125,6 @@ export function addLoadout(tree: LoadoutTree, name: string, parentId: string | n
 export function addLoadoutAfter(tree: LoadoutTree, name: string, afterNodeId: string): { tree: LoadoutTree; node: LoadoutNode } {
   const afterNode = tree.nodes.find((n) => n.id === afterNodeId);
   const parentId = afterNode?.parentId ?? null;
-  const siblings = getChildrenOf(tree, parentId);
   const afterOrder = afterNode?.order ?? 0;
   // Shift siblings that come after the target node
   const shifted = tree.nodes.map((n) =>
@@ -156,7 +155,8 @@ export function getNodeDepth(tree: LoadoutTree, parentId: string | null): number
   let current = parentId;
   while (current !== null) {
     depth++;
-    const node = tree.nodes.find((n) => n.id === current);
+    const currentId = current;
+    const node = tree.nodes.find((n) => n.id === currentId);
     current = node?.parentId ?? null;
   }
   return depth;

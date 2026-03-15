@@ -2,18 +2,19 @@
  * Converts built-in game data to CustomWeapon / CustomGearSet format
  * for the "Clone as Custom" feature.
  */
-import { WeaponType, GearSetType, GearCategory, CombatSkillType, ElementType } from '../../consts/enums';
+import { WeaponType, GearSetType, ElementType } from '../../consts/enums';
 import { WEAPON_DATA } from '../../model/weapons/weaponData';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
 import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { triggerConditionToInteraction, legacyTargetToObjectType } from './bridgeUtils';
+import { legacyTargetToObjectType } from './bridgeUtils';
+import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
+import type { Predicate, Interaction } from '../../consts/semantics';
 import { OperatorClassType } from '../../model/enums/operators';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
 import type { CustomGearSet, CustomGearPiece, CustomGearSetEffect } from '../../model/custom/customGearTypes';
-import type { CustomOperator, CustomCombatSkillDef } from '../../model/custom/customOperatorTypes';
-import type { SkillType, SkillDef } from '../../consts/viewTypes';
+import type { CustomOperator } from '../../model/custom/customOperatorTypes';
 
 /** Convert a built-in weapon to CustomWeapon format. */
 export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
@@ -41,7 +42,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
         namedEffect: {
           name: matchedEffect.label,
           description: matchedEffect.description,
-          triggers: matchedEffect.triggers.map(triggerConditionToInteraction),
+          triggers: matchedEffect.triggers,
           target: legacyTargetToObjectType(matchedEffect.target === 'wielder' ? 'wielder' : matchedEffect.target === 'team' ? 'team' : 'enemy').toString(),
           durationSeconds: matchedEffect.durationSeconds,
           maxStacks: matchedEffect.maxStacks,
@@ -95,7 +96,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
       passiveStats: effectsEntry.passiveStats as Record<string, number>,
       effects: effectsEntry.effects.map((e) => ({
         label: e.label,
-        triggers: e.triggers.map(triggerConditionToInteraction),
+        triggers: e.triggers,
         target: legacyTargetToObjectType(e.target === 'wielder' ? 'wielder' : e.target === 'team' ? 'team' : 'enemy').toString(),
         durationSeconds: e.durationSeconds,
         maxStacks: e.maxStacks,
@@ -119,48 +120,34 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   };
 }
 
-const SKILL_TYPE_MAP: Record<SkillType, CombatSkillType> = {
-  basic: CombatSkillType.BASIC_ATTACK,
-  battle: CombatSkillType.BATTLE_SKILL,
-  combo: CombatSkillType.COMBO_SKILL,
-  ultimate: CombatSkillType.ULTIMATE,
-};
-
-function skillDefToCustomSkill(skillType: SkillType, skill: SkillDef): CustomCombatSkillDef {
-  // Use total duration (activation + active) and ensure positive for validation
-  const totalFrames = skill.defaultActivationDuration + skill.defaultActiveDuration;
-  const def: CustomCombatSkillDef = {
-    name: skill.name,
-    combatSkillType: SKILL_TYPE_MAP[skillType],
-    durationSeconds: Math.max(totalFrames / 120, 0.1),
-    cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
-    animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
-    resourceInteractions: [],
-  };
-  if (skill.element) def.element = skill.element as ElementType;
-  if (skill.skillPointCost) {
-    def.resourceInteractions = [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: skill.skillPointCost }];
-  }
-  if (skill.publishesTriggers && skill.publishesTriggers.length > 0) {
-    def.publishesTriggers = skill.publishesTriggers.map(triggerConditionToInteraction);
-  }
-  return def;
-}
-
 /** Convert a built-in operator to CustomOperator format. */
 export function operatorToCustomOperator(operatorId: string): CustomOperator | null {
   const op = ALL_OPERATORS.find((o) => o.id === operatorId);
   if (!op) return null;
 
   const comboRequires = op.triggerCapability?.comboRequires ?? [];
+  const comboForbids = op.triggerCapability?.comboForbidsActiveColumns ?? [];
+  const comboRequiresActive = op.triggerCapability?.comboRequiresActiveColumns ?? [];
 
   // Provide placeholder BASE_ATTACK so validation passes
   const placeholderStats: Partial<Record<string, number>> = { BASE_ATTACK: 100 };
 
-  // Ensure at least one combo requires condition
-  const comboInteractions = comboRequires.length > 0
-    ? comboRequires.map(triggerConditionToInteraction)
-    : [{ subjectType: 'THIS_OPERATOR' as any, verbType: 'PERFORM' as any, objectType: 'BATTLE_SKILL' as any }];
+  // Build triggerClause: each trigger condition → single-condition predicate
+  const triggerClause: Predicate[] = comboRequires.length > 0
+    ? comboRequires.map(tc => {
+        const conditions: Interaction[] = [tc];
+        // Fold column constraints into each predicate
+        for (const col of comboRequiresActive) {
+          const statusId = col.replace('enemy-', '').toUpperCase();
+          conditions.push({ subjectType: SubjectType.ENEMY, verbType: VerbType.HAVE, objectType: ObjectType.STATUS, objectId: statusId });
+        }
+        for (const col of comboForbids) {
+          const statusId = col.replace('enemy-', '').toUpperCase();
+          conditions.push({ subjectType: SubjectType.ENEMY, verbType: VerbType.HAVE, objectType: ObjectType.STATUS, objectId: statusId, negated: true });
+        }
+        return { conditions, effects: [] };
+      })
+    : [{ conditions: [{ subjectType: SubjectType.THIS_OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL }], effects: [] }];
 
   return {
     id: `clone_${operatorId}_${Date.now()}`,
@@ -169,18 +156,11 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
     elementType: op.element as ElementType,
     weaponType: op.weaponTypes[0] as WeaponType,
     operatorRarity: (op.rarity as 4 | 5 | 6) || 6,
-    displayColor: op.color,
     mainAttributeType: '',
     baseStats: { lv1: { ...placeholderStats }, lv90: { ...placeholderStats } },
     potentials: [],
-    skills: {
-      basicAttack: skillDefToCustomSkill('basic', op.skills.basic),
-      battleSkill: skillDefToCustomSkill('battle', op.skills.battle),
-      comboSkill: skillDefToCustomSkill('combo', op.skills.combo),
-      ultimate: skillDefToCustomSkill('ultimate', op.skills.ultimate),
-    },
     combo: {
-      requires: comboInteractions,
+      triggerClause,
       description: op.triggerCapability?.comboDescription ?? '',
       windowFrames: op.triggerCapability?.comboWindowFrames ?? 720,
     },

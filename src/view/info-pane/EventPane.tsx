@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, StatType, StatusType, STATUS_ELEMENT, TriggerConditionType, WeaponSkillType } from '../../consts/enums';
-import { TimelineEvent, Operator, Enemy, SkillType, SelectedFrame, ResourceConfig, Column, MiniTimeline } from '../../consts/viewTypes';
-import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
+import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
+import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutStats } from '../InformationPane';
-import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers } from '../../controller/info-pane/eventPaneController';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain } from '../../controller/info-pane/eventPaneController';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
+
+const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
 
 // ── Event pane content ──────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ interface EventPaneProps {
   loadoutStats?: Record<string, LoadoutStats>;
   damageRows?: DamageTableRow[];
   spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
+  onSaveAsCustomSkill?: (event: TimelineEvent) => void;
 }
 
 function EventPane({
@@ -55,6 +57,7 @@ function EventPane({
   loadoutStats,
   damageRows,
   spConsumptionHistory,
+  onSaveAsCustomSkill,
 }: EventPaneProps) {
   /** Format a real-time frame as a detail label. */
   const dualTimeLabel = (frame: number) => frameToDetailLabel(frame);
@@ -151,12 +154,12 @@ function EventPane({
   };
 
   const totalDurationFrames = isSequenced
-    ? event.segments!.reduce((sum, s) => sum + s.durationFrames, 0)
+    ? computeSegmentsSpan(event.segments!)
     : event.activationDuration + event.activeDuration + event.cooldownDuration;
 
   const processedTotalDurationFrames = processedEvent
     ? (processedEvent.segments && processedEvent.segments.length > 0
-        ? processedEvent.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+        ? computeSegmentsSpan(processedEvent.segments)
         : processedEvent.activationDuration + processedEvent.activeDuration + processedEvent.cooldownDuration)
     : totalDurationFrames;
 
@@ -215,7 +218,7 @@ function EventPane({
                 : 'var(--text-muted)',
             }}>
               {event.forcedReaction && (
-                <span style={{ color: '#ff5522' }}>FORCED{event.eventStatus ? ' · ' : ''}</span>
+                <span style={{ color: 'var(--red)' }}>FORCED{event.eventStatus ? ' · ' : ''}</span>
               )}
               {event.eventStatus && (
                 <>
@@ -270,14 +273,78 @@ function EventPane({
           );
         })() : (
         <>
-        {comboTriggerLabels.length > 0 ? (
-          <div className="edit-panel-trigger">
-            <div>Trigger: {comboTriggerLabels.join(' / ')}</div>
-            {comboRequiresLabels.length > 0 && (
-              <div>Requires: {comboRequiresLabels.join(', ')}</div>
-            )}
-          </div>
-        ) : triggerCondition ? (
+        {comboTriggerLabels.length > 0 ? (() => {
+          const chain = resolveComboChain(event, allProcessedEvents ?? [], slots);
+          return (
+            <div className="edit-panel-trigger">
+              <div>Trigger: {comboTriggerLabels.join(' / ')}</div>
+              {comboRequiresLabels.length > 0 && (
+                <div>Requires: {comboRequiresLabels.join(', ')}</div>
+              )}
+              {chain && chain.length > 0 && (
+                <div style={{ marginTop: 6, paddingLeft: 2 }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, marginBottom: 3 }}>Source chain:</div>
+                  {chain.map((link, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingLeft: i * 10,
+                        fontSize: 11,
+                      }}
+                    >
+                      <span style={{
+                        color: 'var(--text-muted)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 10,
+                      }}>
+                        {i === 0 ? '┌' : i < chain.length - 1 ? '├' : '└'}
+                      </span>
+                      <span style={{
+                        width: 3,
+                        height: 3,
+                        borderRadius: '50%',
+                        background: link.color,
+                        boxShadow: `0 0 4px ${link.color}80`,
+                        flexShrink: 0,
+                      }} />
+                      <span style={{ color: link.color, fontWeight: 600 }}>{link.label}</span>
+                      {link.sublabel && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>· {link.sublabel}</span>
+                      )}
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      paddingLeft: chain.length * 10,
+                      fontSize: 11,
+                    }}
+                  >
+                    <span style={{
+                      color: 'var(--text-muted)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                    }}>└</span>
+                    <span style={{
+                      width: 3,
+                      height: 3,
+                      borderRadius: '50%',
+                      background: ownerColor,
+                      boxShadow: `0 0 4px ${ownerColor}80`,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{ color: ownerColor, fontWeight: 600 }}>{skillName}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })() : triggerCondition ? (
           <div className="edit-panel-trigger">{triggerCondition}</div>
         ) : null}
 
@@ -507,7 +574,7 @@ function EventPane({
                 {overallMultiplier != null && perTickBase == null && (
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
                       {(overallMultiplier * 100).toFixed(1)}%
                     </span>
                     {overallMaxFrames > 1 && (
@@ -525,7 +592,7 @@ function EventPane({
                 {perTickBase != null && (
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
                       {(perTickBase * 100).toFixed(1)}%
                       {perTickIncrement > 0 && ` + ${(perTickIncrement * 100).toFixed(1)}%/tick`}
                     </span>
@@ -547,7 +614,7 @@ function EventPane({
                     {segMultipliers.map((sm) => (
                       <div key={sm.label} style={{ paddingLeft: 8 }}>
                         <span style={{ color: 'var(--text-muted)' }}>{sm.label}: </span>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
                           {(sm.value * 100).toFixed(1)}%
                         </span>
                         {sm.maxFrames > 1 && (
@@ -629,7 +696,7 @@ function EventPane({
         {(() => {
           if (!allProcessedEvents || event.ownerId === ENEMY_OWNER_ID) return null;
           const totalDuration = event.segments
-            ? event.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+            ? computeSegmentsSpan(event.segments)
             : event.activationDuration;
           const mods = resolveActiveModifiers(event.startFrame, event.startFrame + totalDuration, allProcessedEvents);
           if (mods.length === 0) return null;
@@ -640,7 +707,7 @@ function EventPane({
                 {mods.map((mod, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                     <span style={{ color: mod.color }}>{mod.label}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#6fbf73' }}>{mod.formattedValue}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--green)' }}>{mod.formattedValue}</span>
                   </div>
                 ))}
               </div>
@@ -790,12 +857,12 @@ function EventPane({
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44', fontSize: 11 }}>
+                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
                                     {(hitDmgRow.multiplier * 100).toFixed(1)}%
                                   </span>
                                 )}
                                 {hitDmgRow.damage != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
+                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
                                     {hitDmgRow.damage.toFixed(1)}
                                   </span>
                                 )}
@@ -874,12 +941,12 @@ function EventPane({
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44', fontSize: 11 }}>
+                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
                                     {(hitDmgRow.multiplier * 100).toFixed(1)}%
                                   </span>
                                 )}
                                 {hitDmgRow.damage != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
+                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
                                     {hitDmgRow.damage.toFixed(1)}
                                   </span>
                                 )}
@@ -958,7 +1025,7 @@ function EventPane({
                     {segTotalMultiplier != null && (
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
                         <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
                           {(segTotalMultiplier * 100).toFixed(1)}%
                         </span>
                         {segMaxFrames > 1 && segPerFrameMultiplier != null && (
@@ -967,7 +1034,7 @@ function EventPane({
                           </span>
                         )}
                         {segTotalDamage > 0 && (
-                          <span style={{ color: '#6fbf73', fontSize: 10, marginLeft: 6 }}>
+                          <span style={{ color: 'var(--green)', fontSize: 10, marginLeft: 6 }}>
                             {segTotalDamage.toFixed(1)} dmg
                           </span>
                         )}
@@ -1129,7 +1196,7 @@ function EventPane({
                                 </div>
                               )}
                               {f.consumeStatus && (
-                                <div className="frame-dsl-effect" style={{ color: '#f0a040' }}>
+                                <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
                                   CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
                                 </div>
                               )}
@@ -1146,12 +1213,12 @@ function EventPane({
                               {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                   {hitDmgRow.multiplier != null && (
-                                    <span style={{ fontFamily: 'var(--font-mono)', color: '#ffdd44', fontSize: 11 }}>
+                                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
                                       {(hitDmgRow.multiplier * 100).toFixed(1)}%
                                     </span>
                                   )}
                                   {hitDmgRow.damage != null && (
-                                    <span style={{ fontFamily: 'var(--font-mono)', color: '#6fbf73', fontSize: 11 }}>
+                                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
                                       {hitDmgRow.damage.toFixed(1)}
                                     </span>
                                   )}
@@ -1261,6 +1328,11 @@ function EventPane({
 
       {!(readOnly || isDerived) && !editContext?.startsWith('combo-trigger') && (
         <div className="edit-panel-footer">
+          {onSaveAsCustomSkill && SKILL_COLUMN_SET.has(event.columnId) && (
+            <button className="btn-save-custom" onClick={() => onSaveAsCustomSkill(event)}>
+              SAVE AS CUSTOM
+            </button>
+          )}
           <button className="btn-delete-event" onClick={() => onRemove(event.id)}>
             REMOVE EVENT
           </button>
@@ -1287,7 +1359,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
   return (
     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, lineHeight: 1.6, padding: '4px 6px', color: 'var(--text-muted)' }}>
       {(hasSegDiff || hasDurationDiff) && (
-        <div style={{ color: '#ffdd44', fontSize: 9, fontWeight: 600, marginBottom: 4 }}>(time-stop diff)</div>
+        <div style={{ color: 'var(--gold)', fontSize: 9, fontWeight: 600, marginBottom: 4 }}>(time-stop diff)</div>
       )}
       {/* Event-level */}
       <div style={{ marginBottom: 6 }}>
@@ -1306,7 +1378,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         {event.nonOverlappableRange != null && <div>nonOverlappableRange: {fmt(event.nonOverlappableRange)}</div>}
         {event.sourceOwnerId != null && <div>sourceOwnerId: {event.sourceOwnerId}</div>}
         {processedEvent.warnings && processedEvent.warnings.length > 0 && (
-          <div style={{ color: '#ff5522', marginTop: 2 }}>
+          <div style={{ color: 'var(--red)', marginTop: 2 }}>
             {processedEvent.warnings.map((w, i) => <div key={i}>WARNING: {w}</div>)}
           </div>
         )}
@@ -1327,7 +1399,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
             <div>duration: {fmt(event.animationDuration!)}</div>
             <div>raw: {fmtAbs(rawStart)} → {fmtAbs(rawEnd)}</div>
             {hasAbsDiff && (
-              <div style={{ color: '#ffdd44' }}>abs: {fmtAbs(rawStart)} → {fmtAbs(procEnd)}</div>
+              <div style={{ color: 'var(--gold)' }}>abs: {fmtAbs(rawStart)} → {fmtAbs(procEnd)}</div>
             )}
           </div>
         );
@@ -1365,20 +1437,20 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                             <span style={{ color: 'var(--text-primary)' }}>Frame {fi}</span>
                             {' '}offset: {fmt(dFrame.offsetFrame)}
                             {dFrame.derivedOffsetFrame != null && dFrame.derivedOffsetFrame !== dFrame.offsetFrame && (
-                              <span style={{ color: '#ffdd44' }}>
+                              <span style={{ color: 'var(--gold)' }}>
                                 {' '}→ {fmt(dFrame.derivedOffsetFrame)} (+{fmt(dFrame.derivedOffsetFrame - dFrame.offsetFrame)})
                               </span>
                             )}
                           </div>
                           {dFrame.absoluteFrame != null && (
                             <div>
-                              <span style={{ color: '#88cc44' }}>
+                              <span style={{ color: 'var(--green)' }}>
                                 abs: {fmtAbs(dFrame.absoluteFrame)}
                               </span>
                               {rFrame && (() => {
                                 const rawAbs = event.startFrame + (rawSegs.slice(0, si).reduce((s, seg) => s + seg.durationFrames, 0)) + rFrame.offsetFrame;
                                 return rawAbs !== dFrame.absoluteFrame ? (
-                                  <span style={{ color: '#ffdd44' }}>
+                                  <span style={{ color: 'var(--gold)' }}>
                                     {' '}(raw: {fmtAbs(rawAbs)}, +{fmt(dFrame.absoluteFrame - rawAbs)})
                                   </span>
                                 ) : null;
@@ -1460,7 +1532,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                 {' '}<span style={{ color: 'var(--text-muted)' }}>({label})</span>
                 {' '}@ {ev.startFrame}f
                 {' '}<span style={{ color: 'var(--text-muted)' }}>[{fmt(ev.activationDuration)}]</span>
-                {ev.eventStatus && <span style={{ color: '#ffdd44' }}> ({ev.eventStatus})</span>}
+                {ev.eventStatus && <span style={{ color: 'var(--gold)' }}> ({ev.eventStatus})</span>}
               </div>
               {children.sort((a, b) => a.startFrame - b.startFrame).map((child) => renderRow(child, depth + 1))}
             </div>
@@ -1494,7 +1566,7 @@ function DebugDiffRow({ label, raw, derived }: { label: string; raw?: number; de
     <div>
       {label}: {derived != null ? fmt(derived) : '—'}
       {differs && (
-        <span style={{ color: '#ffdd44' }}>
+        <span style={{ color: 'var(--gold)' }}>
           {' '}(raw: {fmt(raw!)}, +{fmt(derived! - raw!)})
         </span>
       )}

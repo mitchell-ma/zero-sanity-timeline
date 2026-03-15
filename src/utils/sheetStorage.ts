@@ -2,7 +2,7 @@ import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewType
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { LoadoutStats } from '../view/InformationPane';
 import { EnemyStats } from '../controller/appStateController';
-import { LoadoutTree, LoadoutNode } from './loadoutStorage';
+import { LoadoutTree } from './loadoutStorage';
 
 const STORAGE_KEY = 'zst-sheet';
 const CURRENT_VERSION = 2;
@@ -213,7 +213,8 @@ export function exportMultiLoadoutBundle(
     let node = tree.nodes.find((n) => n.id === sid);
     while (node?.parentId) {
       includedIds.add(node.parentId);
-      node = tree.nodes.find((n) => n.id === node!.parentId);
+      const parentId = node.parentId;
+      node = tree.nodes.find((n) => n.id === parentId);
     }
   }
 

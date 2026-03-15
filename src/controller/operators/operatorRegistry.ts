@@ -7,7 +7,9 @@
  * No hardcoded DISPLAY_CONFIGS — all display/timing data comes from JSON fields.
  */
 import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
-import { ElementType, OperatorClassType, TriggerConditionType, ELEMENT_COLORS } from '../../consts/enums';
+import { ElementType, OperatorClassType, ELEMENT_COLORS } from '../../consts/enums';
+import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
+import type { Predicate, Interaction } from '../../consts/semantics';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { Potential } from '../../consts/types';
@@ -66,19 +68,56 @@ const PLACEHOLDER_EQUIPMENT = {
   tactical: 'Stew Meeting',
 };
 
-// ── Element → trigger condition mapping ─────────────────────────────────────
+// ── Element → published interactions mapping ────────────────────────────────
 
-const ELEMENT_TRIGGERS: Partial<Record<string, TriggerConditionType[]>> = {
-  HEAT:     [TriggerConditionType.COMBUSTION, TriggerConditionType.APPLY_HEAT_INFLICTION],
-  CRYO:     [TriggerConditionType.SOLIDIFICATION, TriggerConditionType.APPLY_CRYO_INFLICTION],
-  NATURE:   [TriggerConditionType.CORROSION, TriggerConditionType.APPLY_NATURE_INFLICTION],
-  ELECTRIC: [TriggerConditionType.ELECTRIFICATION, TriggerConditionType.APPLY_ELECTRIC_INFLICTION],
-  PHYSICAL: [TriggerConditionType.APPLY_PHYSICAL_STATUS, TriggerConditionType.APPLY_VULNERABILITY],
+const I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+
+const ELEMENT_INTERACTIONS: Partial<Record<string, Interaction[]>> = {
+  HEAT:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED),  I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
+  CRYO:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED), I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
+  NATURE:   [I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED),   I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
+  ELECTRIC: [I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED),I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
+  PHYSICAL: [I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' }), I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
 };
 
 // ── Helper: seconds → frames ────────────────────────────────────────────────
 
 function dur(seconds: number): number { return Math.round(seconds * 120); }
+
+// ── Helper: parse trigger clause ────────────────────────────────────────────
+
+function parseTriggerClause(trigger: Record<string, any>): {
+  comboRequires: Interaction[];
+  forbids: string[];
+  requiresActive: string[];
+} {
+  if (trigger.triggerClause?.length) {
+    const comboRequires: Interaction[] = [];
+    const forbids: string[] = [];
+    const requiresActive: string[] = [];
+
+    for (const predicate of trigger.triggerClause as Predicate[]) {
+      for (const cond of predicate.conditions) {
+        // Column constraint: ENEMY HAVE STATUS with objectId
+        if (cond.subjectType === SubjectType.ENEMY && cond.verbType === VerbType.HAVE
+            && cond.objectType === ObjectType.STATUS && cond.objectId) {
+          const columnId = `enemy-${cond.objectId.toLowerCase()}`;
+          if (cond.negated) {
+            if (!forbids.includes(columnId)) forbids.push(columnId);
+          } else {
+            if (!requiresActive.includes(columnId)) requiresActive.push(columnId);
+          }
+          continue;
+        }
+        comboRequires.push(cond as Interaction);
+      }
+    }
+    return { comboRequires, forbids, requiresActive };
+  }
+
+  return { comboRequires: [], forbids: [], requiresActive: [] };
+}
 
 // ── Unified view operator builder ────────────────────────────────────────────
 
@@ -99,8 +138,8 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   } | undefined;
   const opSkills = opJson.skills as Record<string, any>;
 
-  // Display color: explicit field → element color fallback
-  const color = opJson.displayColor ?? ELEMENT_COLORS[elementType as ElementType] ?? '#888888';
+  // Display color: always derived from element
+  const color = ELEMENT_COLORS[elementType as ElementType] ?? '#888888';
 
   // Splash art: explicit field → asset auto-discovery
   const splash = opJson.splashArt ?? getSplashArt(opJson.name);
@@ -164,7 +203,14 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     },
   };
 
-  const battleTriggers = ELEMENT_TRIGGERS[elementType] ?? [];
+  const battleInteractions = ELEMENT_INTERACTIONS[elementType] ?? [];
+
+  const SKILL_PUBLISH_MAP: Record<string, Interaction> = {
+    [SKILL_COLUMNS.BASIC]:    I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.FINAL_STRIKE),
+    [SKILL_COLUMNS.BATTLE]:   I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.BATTLE_SKILL),
+    [SKILL_COLUMNS.COMBO]:    I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.COMBO_SKILL),
+    [SKILL_COLUMNS.ULTIMATE]: I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.ULTIMATE),
+  };
 
   const skills: Record<string, SkillDef> = {};
   for (const [key, timing] of Object.entries(skillTimingConfigs)) {
@@ -173,12 +219,10 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
       : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';
     const catData = opSkills?.[categoryKey];
 
-    const defaultTriggers: TriggerConditionType[] = [];
-    if (key === SKILL_COLUMNS.BASIC) defaultTriggers.push(TriggerConditionType.FINAL_STRIKE);
-    if (key === SKILL_COLUMNS.BATTLE) defaultTriggers.push(TriggerConditionType.CAST_BATTLE_SKILL);
-    if (key === SKILL_COLUMNS.COMBO) defaultTriggers.push(TriggerConditionType.CAST_COMBO_SKILL);
-    if (key === SKILL_COLUMNS.ULTIMATE) defaultTriggers.push(TriggerConditionType.CAST_ULTIMATE);
-    const skillTriggers = key === 'battle' ? battleTriggers : [];
+    const defaultTriggers: Interaction[] = [];
+    const skillPublish = SKILL_PUBLISH_MAP[key];
+    if (skillPublish) defaultTriggers.push(skillPublish);
+    const skillTriggers = key === 'battle' ? battleInteractions : [];
     const merged = [...defaultTriggers, ...skillTriggers];
     const publishesTriggers = merged.length > 0 ? merged : undefined;
     const desc = catData?.description;
@@ -210,9 +254,9 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   // Combo trigger from JSON
   const comboTrigger = opSkills?.COMBO_SKILL?.trigger;
   let triggerCapability: TriggerCapability | undefined;
-  if (comboTrigger?.requires?.length) {
-    const comboRequires = comboTrigger.requires.map((r: string) => r as TriggerConditionType);
-    const publishesTriggers: Partial<Record<string, TriggerConditionType[]>> = {};
+  const parsedTrigger = comboTrigger ? parseTriggerClause(comboTrigger) : null;
+  if (parsedTrigger && parsedTrigger.comboRequires.length > 0) {
+    const publishesTriggers: Partial<Record<string, Interaction[]>> = {};
     for (const [key, skillDef] of Object.entries(skills)) {
       if ((skillDef as SkillDef).publishesTriggers?.length) {
         publishesTriggers[key] = (skillDef as SkillDef).publishesTriggers!;
@@ -220,11 +264,11 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     }
     triggerCapability = {
       publishesTriggers,
-      comboRequires,
+      comboRequires: parsedTrigger.comboRequires,
       comboDescription: comboTrigger.description ?? '',
       comboWindowFrames: comboTrigger.windowFrames ?? 720,
-      ...(comboTrigger.forbidsActiveColumns ? { comboForbidsActiveColumns: comboTrigger.forbidsActiveColumns } : {}),
-      ...(comboTrigger.requiresActiveColumns ? { comboRequiresActiveColumns: comboTrigger.requiresActiveColumns } : {}),
+      ...(parsedTrigger.forbids?.length ? { comboForbidsActiveColumns: parsedTrigger.forbids } : {}),
+      ...(parsedTrigger.requiresActive?.length ? { comboRequiresActiveColumns: parsedTrigger.requiresActive } : {}),
     };
   }
 
@@ -252,13 +296,63 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   };
 }
 
+// ── Config validation ────────────────────────────────────────────────────────
+
+const FIELD_HINTS: Record<string, string> = {
+  name: 'operator name',
+  elementType: 'element (Heat, Cryo, etc.)',
+  operatorClassType: 'class (Striker, Caster, etc.)',
+  weaponType: 'weapon type (Sword, Arts Unit, etc.)',
+};
+
+function validateOperatorJson(json: Record<string, any>, isBuiltIn: boolean): string[] {
+  const issues: string[] = [];
+  for (const [field, hint] of Object.entries(FIELD_HINTS)) {
+    if (!json[field]) issues.push(hint);
+  }
+  if (!json.skills && !json.basicAttackDefaultDuration) {
+    issues.push('skill data (basic attack, battle skill, combo, ultimate)');
+  }
+  return issues;
+}
+
+function formatWarning(name: string, issues: string[], isBuiltIn: boolean): string {
+  const missing = issues.join(', ');
+  if (isBuiltIn) {
+    // Developer-facing: this is our game data, be technical
+    return `[game-data] ${name}: incomplete operator JSON — missing ${missing}. Check src/model/game-data/operators/.`;
+  }
+  // User-facing: imported/shared config
+  return `"${name}" is missing: ${missing}. This can happen when importing a sheet from someone else. Try editing the operator to fill in the missing info, or delete and re-create it.`;
+}
+
+export const operatorWarnings: { id: string; name: string; message: string; isBuiltIn: boolean }[] = [];
+
 // ── Build all operators ─────────────────────────────────────────────────────
 
-export const ALL_OPERATORS: ViewOperator[] = getAllOperatorIds().map(id => {
+export const ALL_OPERATORS: ViewOperator[] = [];
+for (const id of getAllOperatorIds()) {
   const json = getOperatorJson(id);
-  if (!json) throw new Error(`No JSON data for operator: ${id}`);
-  return buildViewOperatorFromJson(id, json);
-});
+  if (!json) {
+    operatorWarnings.push({ id, name: id, isBuiltIn: true, message: `[game-data] ${id}: no JSON file found. Operator was registered but has no data.` });
+    continue;
+  }
+  const issues = validateOperatorJson(json, true);
+  if (issues.length > 0) {
+    const name = json.name ?? id;
+    const msg = formatWarning(name, issues, true);
+    console.warn(msg);
+    operatorWarnings.push({ id, name, isBuiltIn: true, message: msg });
+    continue;
+  }
+  try {
+    ALL_OPERATORS.push(buildViewOperatorFromJson(id, json));
+  } catch (e) {
+    const name = json.name ?? id;
+    console.warn(`[game-data] ${name}: failed to build operator —`, e);
+    operatorWarnings.push({ id, name, isBuiltIn: true, message: `[game-data] ${name}: unexpected build error. See console for details.` });
+  }
+}
 
 // ── Public registration for custom operators ─────────────────────────────────
 
@@ -269,10 +363,25 @@ export const ALL_OPERATORS: ViewOperator[] = getAllOperatorIds().map(id => {
 export function registerCustomOperatorFromConfig(
   customId: string,
   opJson: Record<string, any>,
-): ViewOperator {
-  const viewOp = buildViewOperatorFromJson(customId, opJson);
-  ALL_OPERATORS.push(viewOp);
-  return viewOp;
+): ViewOperator | null {
+  const name = opJson.name ?? customId;
+  const issues = validateOperatorJson(opJson, false);
+  if (issues.length > 0) {
+    const msg = formatWarning(name, issues, false);
+    console.warn(msg);
+    operatorWarnings.push({ id: customId, name, isBuiltIn: false, message: msg });
+    return null;
+  }
+  try {
+    const viewOp = buildViewOperatorFromJson(customId, opJson);
+    ALL_OPERATORS.push(viewOp);
+    return viewOp;
+  } catch (e) {
+    const msg = `"${name}" failed to load. Try opening it in the editor and re-saving, or delete and re-create it.`;
+    console.warn(msg, e);
+    operatorWarnings.push({ id: customId, name, isBuiltIn: false, message: msg });
+    return null;
+  }
 }
 
 /** Deregister a custom operator by ID. */

@@ -1,17 +1,19 @@
 import { lazy, Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from './app/useApp';
 import AppBar from './view/AppBar';
+import { buildShareUrl } from './utils/embedCodec';
 import LoadoutSidebar from './view/LoadoutSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
 import type { ContentSelection } from './consts/contentBrowserTypes';
 import { weaponToCustomWeapon, gearSetToCustomGearSet, operatorToCustomOperator } from './controller/custom/builtinToCustomConverter';
-import { ALL_OPERATORS } from './controller/operators/operatorRegistry';
+import { ALL_OPERATORS, operatorWarnings } from './controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from './consts/timelineColumnLabels';
-import { createCustomWeapon } from './controller/custom/customWeaponController';
-import { createCustomGearSet } from './controller/custom/customGearController';
-import { createCustomOperator } from './controller/custom/customOperatorController';
-import { createCustomSkill } from './controller/custom/customSkillController';
+import { createCustomWeapon, getDefaultCustomWeapon, updateCustomWeapon, getCustomWeapons } from './controller/custom/customWeaponController';
+import { createCustomGearSet, getDefaultCustomGearSet, updateCustomGearSet, getCustomGearSets } from './controller/custom/customGearController';
+import { createCustomOperator, getDefaultCustomOperator, updateCustomOperator, getCustomOperators } from './controller/custom/customOperatorController';
+import { createCustomSkill, getDefaultCustomSkill, updateCustomSkill, getCustomSkills } from './controller/custom/customSkillController';
+import { addSkillLink } from './controller/custom/customSkillLinkController';
 import { clearAllCustomContent } from './utils/customContentStorage';
 import type { GearSetType } from './consts/enums';
 import ContextMenu from './view/ContextMenu';
@@ -69,7 +71,22 @@ export default function App() {
   const [editingContent, setEditingContent] = useState<ContentSelection | null>(null);
   const [pendingClone, setPendingClone] = useState<{ category: ContentCategory; data: any } | null>(null);
   const [confirmClearCustom, setConfirmClearCustom] = useState(false);
+  const [contentRefreshKey, setContentRefreshKey] = useState(0);
+  const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
   const draggedRef = useRef(false);
+
+  // Show warnings for operators that failed to load
+  useEffect(() => {
+    if (operatorWarnings.length === 0) return;
+    const userWarnings = operatorWarnings.filter((w) => !w.isBuiltIn);
+    const devWarnings = operatorWarnings.filter((w) => w.isBuiltIn);
+    // Dev warnings go to console only
+    for (const w of devWarnings) console.warn(w.message);
+    // User warnings show in the UI
+    if (userWarnings.length > 0) {
+      app.setWarningMessage(userWarnings.map((w) => w.message).join('\n\n'));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist UI selection state on change
   useEffect(() => {
@@ -81,9 +98,97 @@ export default function App() {
     setExpandAnim(true);
     app.handleRestorePane();
     setTimeout(() => setExpandAnim(false), 350);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.handleRestorePane]);
 
   const isCustomPage = customPageActive;
+
+  const handleCloneContentAsCustom = useCallback((item: ContentSelection) => {
+    let cloned: any = null;
+    let targetCategory = item.category;
+    if (item.category === ContentCategory.WEAPONS) {
+      cloned = weaponToCustomWeapon(item.id);
+    } else if (item.category === ContentCategory.GEAR_SETS) {
+      cloned = gearSetToCustomGearSet(item.id as GearSetType);
+    } else if (item.category === ContentCategory.OPERATORS) {
+      cloned = operatorToCustomOperator(item.id);
+    } else if (item.category === ContentCategory.SKILLS) {
+      const parts = item.id.split(':');
+      const opId = parts[1];
+      const skillType = parts[2] as 'basic' | 'battle' | 'combo' | 'ultimate';
+      const op = ALL_OPERATORS.find((o: any) => o.id === opId);
+      if (op) {
+        const skill = op.skills[skillType];
+        const totalFrames = skill.defaultActivationDuration + skill.defaultActiveDuration;
+        cloned = {
+          id: `skill_clone_${Date.now()}`,
+          name: `${(COMBAT_SKILL_LABELS as any)[skill.name] || skill.name} (Clone)`,
+          combatSkillType: skillType === 'basic' ? 'BASIC_ATTACK' : skillType === 'battle' ? 'BATTLE_SKILL' : skillType === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE',
+          element: skill.element || undefined,
+          durationSeconds: Math.max(totalFrames / 120, 0.1),
+          cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
+          animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
+          description: skill.description,
+          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: skill.skillPointCost }] : undefined,
+        };
+        targetCategory = ContentCategory.SKILLS;
+      }
+    }
+    if (cloned) {
+      setPendingClone({ category: targetCategory, data: cloned });
+      setEditingContent(null);
+    }
+  }, []);
+
+  const handleEditCustomContent = useCallback((item: ContentSelection) => {
+    if (item.id === '__new__') {
+      // Create new custom item
+      let newItem: any = null;
+      if (item.category === ContentCategory.OPERATORS) {
+        newItem = getDefaultCustomOperator();
+      } else if (item.category === ContentCategory.WEAPONS) {
+        newItem = getDefaultCustomWeapon();
+      } else if (item.category === ContentCategory.GEAR_SETS) {
+        newItem = getDefaultCustomGearSet();
+      } else if (item.category === ContentCategory.SKILLS) {
+        newItem = getDefaultCustomSkill();
+      }
+      if (newItem) {
+        setPendingClone({ category: item.category, data: newItem });
+        setEditingContent(null);
+      }
+    } else {
+      // Edit existing custom item — select it so the CustomContentPanel shows it
+      setEditingContent(item);
+    }
+  }, []);
+
+  const COLUMN_TO_SKILL_TYPE: Record<string, string> = {
+    basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE',
+  };
+
+  const handleSaveAsCustomSkill = useCallback((event: import('./consts/viewTypes').TimelineEvent) => {
+    const skillType = COLUMN_TO_SKILL_TYPE[event.columnId];
+    if (!skillType) return;
+
+    const id = `skill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const label = (COMBAT_SKILL_LABELS as any)[event.name] || event.name;
+    const skill: import('./model/custom/customSkillTypes').CustomSkill = {
+      id,
+      name: `${label} (Custom)`,
+      combatSkillType: skillType as any,
+      durationSeconds: (event.activationDuration ?? 0) / 120,
+      cooldownSeconds: (event.cooldownDuration ?? 0) / 120 || undefined,
+      animationSeconds: (event.animationDuration ?? 0) / 120 || undefined,
+    };
+
+    const errors = createCustomSkill(skill);
+    if (errors.length > 0) return;
+
+    addSkillLink(event.ownerId, event.columnId as any, id);
+    bumpContentRefresh();
+    app.bumpCustomSkillVersion();
+  }, [bumpContentRefresh, app.bumpCustomSkillVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="app">
@@ -94,6 +199,7 @@ export default function App() {
         onClearAll={() => app.setConfirmClearAll(true)}
         onExport={app.handleExport}
         onImport={app.handleImport}
+        onShare={async () => buildShareUrl(app.buildSheetData(), app.columns, app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? 'Shared Loadout')}
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
         onCustomContent={() => {
@@ -130,6 +236,10 @@ export default function App() {
           }}
           selectedContentItem={editingContent}
           onSelectContentItem={setEditingContent}
+          onCloneContentAsCustom={handleCloneContentAsCustom}
+          onEditCustomContent={handleEditCustomContent}
+          onContentChanged={bumpContentRefresh}
+          contentRefreshKey={contentRefreshKey}
         />
 
         {isCustomPage ? (
@@ -142,6 +252,7 @@ export default function App() {
                     const errors = createCustomWeapon(weapon);
                     if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
                     setPendingClone(null);
+                    bumpContentRefresh();
                     return [];
                   }}
                   onCancel={() => setPendingClone(null)}
@@ -153,6 +264,7 @@ export default function App() {
                     const errors = createCustomGearSet(gearSet);
                     if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
                     setPendingClone(null);
+                    bumpContentRefresh();
                     return [];
                   }}
                   onCancel={() => setPendingClone(null)}
@@ -164,6 +276,7 @@ export default function App() {
                     const errors = createCustomOperator(operator);
                     if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
                     setPendingClone(null);
+                    bumpContentRefresh();
                     return [];
                   }}
                   onCancel={() => setPendingClone(null)}
@@ -175,11 +288,77 @@ export default function App() {
                     const errors = createCustomSkill(skill);
                     if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
                     setPendingClone(null);
+                    bumpContentRefresh();
                     return [];
                   }}
                   onCancel={() => setPendingClone(null)}
                 />
               ) : null
+            ) : editingContent && editingContent.source === 'custom' ? (
+              (() => {
+                if (editingContent.category === ContentCategory.WEAPONS) {
+                  const cw = getCustomWeapons().find((w) => w.id === editingContent.id);
+                  if (!cw) return null;
+                  return (
+                    <CustomWeaponWizard
+                      initial={JSON.parse(JSON.stringify(cw))}
+                      onSave={(weapon) => {
+                        const errors = updateCustomWeapon(editingContent.id, weapon);
+                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
+                        bumpContentRefresh();
+                        return [];
+                      }}
+                      onCancel={() => setEditingContent(null)}
+                    />
+                  );
+                } else if (editingContent.category === ContentCategory.GEAR_SETS) {
+                  const cg = getCustomGearSets().find((g) => g.id === editingContent.id);
+                  if (!cg) return null;
+                  return (
+                    <CustomGearWizard
+                      initial={JSON.parse(JSON.stringify(cg))}
+                      onSave={(gearSet) => {
+                        const errors = updateCustomGearSet(editingContent.id, gearSet);
+                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
+                        bumpContentRefresh();
+                        return [];
+                      }}
+                      onCancel={() => setEditingContent(null)}
+                    />
+                  );
+                } else if (editingContent.category === ContentCategory.OPERATORS) {
+                  const co = getCustomOperators().find((o) => o.id === editingContent.id);
+                  if (!co) return null;
+                  return (
+                    <CustomOperatorWizard
+                      initial={JSON.parse(JSON.stringify(co))}
+                      onSave={(operator) => {
+                        const errors = updateCustomOperator(editingContent.id, operator);
+                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
+                        bumpContentRefresh();
+                        return [];
+                      }}
+                      onCancel={() => setEditingContent(null)}
+                    />
+                  );
+                } else if (editingContent.category === ContentCategory.SKILLS) {
+                  const cs = getCustomSkills().find((s) => s.id === editingContent.id);
+                  if (!cs) return null;
+                  return (
+                    <CustomSkillWizard
+                      initial={JSON.parse(JSON.stringify(cs))}
+                      onSave={(skill) => {
+                        const errors = updateCustomSkill(editingContent.id, skill);
+                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
+                        bumpContentRefresh();
+                        return [];
+                      }}
+                      onCancel={() => setEditingContent(null)}
+                    />
+                  );
+                }
+                return null;
+              })()
             ) : editingContent && editingContent.source === 'builtin' ? (
               <ContentViewer
                 selection={editingContent}
@@ -225,7 +404,7 @@ export default function App() {
                 }}
               />
             ) : (
-              <CustomContentPanel embedded />
+              <CustomContentPanel embedded onContentChanged={bumpContentRefresh} />
             )}
           </Suspense>
         ) : (
@@ -242,6 +421,8 @@ export default function App() {
                     loadouts={app.loadouts}
                     zoom={app.zoom}
                     onZoom={app.handleZoom}
+                    orientation={app.orientation}
+                    onToggleOrientation={app.handleToggleOrientation}
                     onToggleSkill={app.handleToggleSkill}
                     onAddEvent={app.handleAddEvent}
                     onMoveEvent={app.handleMoveEvent}
@@ -376,6 +557,9 @@ export default function App() {
                     contentFrames={app.contentFrames}
                     onDamageClick={app.handleDamageClick}
                     onDamageRows={app.setDamageRows}
+                    critMode={app.critMode}
+                    onCritModeChange={app.setCritMode}
+                    plannerHidden={app.hiddenPane === 'left'}
                   />
                   {(app.hidePreview === 'right' || app.showPreview === 'right') && (
                     <div className="pane-hide-overlay">
@@ -432,6 +616,7 @@ export default function App() {
             loadoutStats={app.loadoutStats}
             damageRows={app.damageRows}
             spConsumptionHistory={app.spConsumptionHistory}
+            onSaveAsCustomSkill={handleSaveAsCustomSkill}
           />
         ) : app.editingSlot && app.editingSlot.operator ? (
           <InformationPane
@@ -476,6 +661,7 @@ export default function App() {
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
             onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            wasted={app.editingResourceKey ? app.resourceGraphs?.get(app.editingResourceKey)?.wasted : undefined}
           />
         ) : app.editingDamageRow ? (
           <InformationPane

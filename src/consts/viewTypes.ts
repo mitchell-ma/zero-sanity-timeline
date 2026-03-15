@@ -1,4 +1,4 @@
-import { ElementType, EventFrameType, EventStatusType, TimeDependency } from './enums';
+import { ElementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
@@ -14,7 +14,7 @@ export interface SkillDef {
   defaultCooldownDuration: number; // frames
   triggerCondition: string | null;
   /** Trigger conditions this skill publishes when used. */
-  publishesTriggers?: import('./enums').TriggerConditionType[];
+  publishesTriggers?: import('./semantics').Interaction[];
   /** Ultimate gauge gained by this operator when skill is used. */
   gaugeGain?: number;
   /** Ultimate gauge gained by all team operators when skill is used. */
@@ -156,12 +156,19 @@ export interface EventSegmentData {
   name?: string;
   /** Duration of this segment in frames. */
   durationFrames: number;
+  /**
+   * Offset from event start in frames. If absent, this segment starts at the
+   * end of the previous segment (ordered chronologically by offset + duration).
+   */
+  offset?: number;
   /** Label for this segment (e.g. "1", "2"). */
   label?: string;
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Whether this segment's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
   timeDependency?: TimeDependency;
+  /** The phase type of this segment. Defaults to NORMAL. */
+  segmentType?: SegmentType;
 }
 
 export interface TimelineEvent {
@@ -244,6 +251,10 @@ export interface ContextMenuItem {
   separator?: boolean;
   /** Non-interactive section header label. */
   header?: boolean;
+  /** Action identifier for controller-built menus (view maps to callback). */
+  actionId?: string;
+  /** Payload for the action (e.g. event creation params). */
+  actionPayload?: any;
 }
 
 export interface ContextMenuState {
@@ -329,6 +340,8 @@ export type MiniTimeline = {
   /** Multiple event variants selectable from the context menu (e.g. Laevatain battle skill). */
   eventVariants?: {
     name: string;
+    /** Display label in the context menu (falls back to COMBAT_SKILL_LABELS or name). */
+    displayName?: string;
     defaultActivationDuration: number;
     defaultActiveDuration: number;
     defaultCooldownDuration: number;
@@ -381,3 +394,20 @@ export type PlaceholderColumn = {
 };
 
 export type Column = MiniTimeline | PlaceholderColumn;
+
+/**
+ * Compute the total span of segments, accounting for explicit offsets.
+ * When a segment has an explicit `offset`, it starts at that position
+ * instead of after the previous segment.
+ */
+export function computeSegmentsSpan(segments: readonly EventSegmentData[]): number {
+  let running = 0;
+  let maxEnd = 0;
+  for (const s of segments) {
+    const off = s.offset != null ? s.offset : running;
+    const end = off + s.durationFrames;
+    if (end > maxEnd) maxEnd = end;
+    running = s.offset == null ? running + s.durationFrames : end;
+  }
+  return maxEnd;
+}

@@ -1,29 +1,38 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
-import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame } from '../utils/timeline';
+import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, secondsToFrames } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
   computeDamageStatistics,
   DamageTableRow,
   DamageTableColumn,
-  DamageStatistics,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { StatusQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/calculation/statusQueryService';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
-import { ElementType, StatType } from '../consts/enums';
+import { CritMode, ElementType, StatType } from '../consts/enums';
 import { getWeaponEffects } from '../consts/weaponSkillEffects';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
+import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
 
 const ROW_HEIGHT = 20;
 
+const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NONE, CritMode.ALWAYS];
+const CRIT_MODE_LABELS: Record<CritMode, string> = {
+  [CritMode.EXPECTED]: 'E[CRIT]',
+  [CritMode.NONE]: 'NO CRIT',
+  [CritMode.ALWAYS]: 'MAX CRIT',
+};
+
 function formatDamage(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  return Math.round(n).toString();
+  const rounded = Math.round(n);
+  if (rounded >= 10_000) return rounded.toLocaleString();
+  return rounded.toString();
 }
 
 function formatPct(n: number): string {
@@ -50,12 +59,16 @@ interface CombatSheetProps {
   contentFrames?: number;
   onDamageClick?: (row: DamageTableRow) => void;
   onDamageRows?: (rows: DamageTableRow[]) => void;
+  critMode?: CritMode;
+  onCritModeChange?: (mode: CritMode) => void;
+  plannerHidden?: boolean;
 }
 
 export default function CombatSheet({
   slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
+  critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -131,17 +144,24 @@ export default function CombatSheet({
     [events, staggerBreaks, loadoutStats, aggregatedStats, weaponFragility, talentFragility],
   );
   const rows = useMemo(
-    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts, statusQuery),
-    [events, columns, slots, enemy, loadoutStats, loadouts, statusQuery],
+    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts, statusQuery, critMode),
+    [events, columns, slots, enemy, loadoutStats, loadouts, statusQuery, critMode],
   );
   const bossMaxHp = useMemo(() => {
     const model = getModelEnemy(enemy.id);
     return model ? model.getHp() : null;
   }, [enemy.id]);
   const hasBossHp = bossMaxHp != null;
+
+  // DPS range filter — user can set start/end time to scope the statistics window
+  const [dpsRangeStart, setDpsRangeStart] = useState('');
+  const [dpsRangeEnd, setDpsRangeEnd] = useState('');
+  const rangeStartFrame = dpsRangeStart ? secondsToFrames(dpsRangeStart) : undefined;
+  const rangeEndFrame = dpsRangeEnd ? secondsToFrames(dpsRangeEnd) : undefined;
+
   const statistics = useMemo(
-    () => computeDamageStatistics(rows, tableColumns, bossMaxHp),
-    [rows, tableColumns, bossMaxHp],
+    () => computeDamageStatistics(rows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame),
+    [rows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame],
   );
 
   // Lift damage rows to parent
@@ -287,6 +307,17 @@ export default function CombatSheet({
           <div className="dmg-team-total">
             <span className="dmg-team-total-label">Team Total</span>
             <span className="dmg-team-total-value">{formatDamage(statistics.teamTotalDamage)}</span>
+            <button
+              className={`dmg-crit-toggle dmg-crit-toggle--${critMode.toLowerCase()}`}
+              onClick={() => {
+                const idx = CRIT_MODE_CYCLE.indexOf(critMode);
+                const next = CRIT_MODE_CYCLE[(idx + 1) % CRIT_MODE_CYCLE.length];
+                onCritModeChange?.(next);
+              }}
+              title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
+            >
+              {CRIT_MODE_LABELS[critMode]}
+            </button>
             <div className="dmg-team-total-bars">
               {statistics.operators.map((op) => {
                 const slot = slots.find((s) => s.slotId === op.ownerId);
@@ -304,6 +335,97 @@ export default function CombatSheet({
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Extended statistics row */}
+        {statistics.teamTotalDamage > 0 && (
+          <div className="dmg-stats-row">
+            {statistics.teamDps != null && (
+              <span className="dmg-stats-item" title="Team damage per second (set range to filter)">
+                <span className="dmg-stats-label">DPS</span>
+                <span className="dmg-stats-value">{formatDamage(statistics.teamDps)}</span>
+              </span>
+            )}
+            <span className="dmg-stats-item dmg-stats-item--range" title="DPS time range (seconds). Leave empty for full timeline.">
+              <input
+                className="dmg-range-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={dpsRangeStart}
+                onChange={(e) => setDpsRangeStart(e.target.value)}
+              />
+              <span className="dmg-range-sep">&ndash;</span>
+              <input
+                className="dmg-range-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="end"
+                value={dpsRangeEnd}
+                onChange={(e) => setDpsRangeEnd(e.target.value)}
+              />
+            </span>
+            {statistics.highestTick && (
+              <span className="dmg-stats-item" title={`Highest tick: ${statistics.highestTick.label}`}>
+                <span className="dmg-stats-label">Peak</span>
+                <span className="dmg-stats-value">{formatDamage(statistics.highestTick.damage)}</span>
+              </span>
+            )}
+            {statistics.highestBurst && (
+              <span className="dmg-stats-item" title={`Best 5s burst window: ${formatTime(statistics.highestBurst.startFrame)} – ${formatTime(statistics.highestBurst.endFrame)}`}>
+                <span className="dmg-stats-label">5s Burst</span>
+                <span className="dmg-stats-value">{formatDamage(statistics.highestBurst.damage)}</span>
+              </span>
+            )}
+            {statistics.timeToKill != null && (
+              <span className="dmg-stats-item dmg-stats-item--ttk" title="Time to kill">
+                <span className="dmg-stats-label">TTK</span>
+                <span className="dmg-stats-value">{formatTime(statistics.timeToKill)}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Minimized loadout icons when planner is hidden */}
+        {plannerHidden && (
+          <div className="dmg-mini-loadout">
+            {slots.map((slot) => {
+              if (!slot.operator) return null;
+              const opEntry = OPERATORS.find((o) => o.name === slot.operator!.name);
+              const loadout = loadouts?.[slot.slotId];
+              const weaponEntry = loadout?.weaponName ? WEAPONS.find((w) => w.name === loadout.weaponName) : null;
+              const armorEntry = loadout?.armorName ? GEARS.find((g) => g.name === loadout.armorName) : null;
+              const glovesEntry = loadout?.glovesName ? GEARS.find((g) => g.name === loadout.glovesName) : null;
+              const kit1Entry = loadout?.kit1Name ? GEARS.find((g) => g.name === loadout.kit1Name) : null;
+              const kit2Entry = loadout?.kit2Name ? GEARS.find((g) => g.name === loadout.kit2Name) : null;
+              const consumableEntry = loadout?.consumableName ? CONSUMABLES.find((c) => c.name === loadout.consumableName) : null;
+              const tacticalEntry = loadout?.tacticalName ? TACTICALS.find((t) => t.name === loadout.tacticalName) : null;
+
+              // Always show weapon + gear slots; only show CSM/TAC if selected
+              const coreItems = [weaponEntry, armorEntry, glovesEntry, kit1Entry, kit2Entry];
+              const items = [
+                ...coreItems,
+                ...(consumableEntry ? [consumableEntry] : []),
+                ...(tacticalEntry ? [tacticalEntry] : []),
+              ];
+
+              return (
+                <div key={slot.slotId} className="dmg-mini-loadout-slot" style={{ '--op-color': slot.operator.color } as React.CSSProperties}>
+                  <div className="dmg-mini-loadout-op">
+                    {opEntry?.icon && <img className="dmg-mini-loadout-icon dmg-mini-loadout-icon--op" src={opEntry.icon} alt={slot.operator.name} />}
+                    <span className="dmg-mini-loadout-name">{slot.operator.name}</span>
+                  </div>
+                  <div className="dmg-mini-loadout-items">
+                    {items.map((entry, i) => entry?.icon ? (
+                      <img key={i} className="dmg-mini-loadout-icon" src={entry.icon} alt={entry.name} title={entry.name} />
+                    ) : i < coreItems.length ? (
+                      <span key={i} className="dmg-mini-loadout-icon dmg-mini-loadout-icon--empty" />
+                    ) : null)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -414,7 +536,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
             key={col.key}
             className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${isMatch && row.params ? ' dmg-cell-clickable' : ''}`}
             style={isMatch ? { color: col.color, flex } : { flex }}
-            title={isMatch && row.damage != null ? `${row.label}\n${row.damage >= 1_000_000 ? row.damage.toLocaleString() : Math.round(row.damage)} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
+            title={isMatch && row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
             onClick={isMatch && row.params ? () => onDamageClick?.(row) : undefined}
             onMouseEnter={() => onCellHover({ rowKey: row.key, colKey: col.key })}
             onMouseLeave={() => onCellHover(null)}
@@ -426,7 +548,7 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
       {hasBossHp && row.hpRemaining != null && (
         <div
           className={`dmg-cell dmg-cell-hp${row.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
-          title={`${row.hpRemaining >= 1_000_000 ? row.hpRemaining.toLocaleString() : Math.round(row.hpRemaining)} / ${bossMaxHp! >= 1_000_000 ? bossMaxHp!.toLocaleString() : Math.round(bossMaxHp!)} HP`}
+          title={`${Math.round(row.hpRemaining).toLocaleString()} / ${Math.round(bossMaxHp!).toLocaleString()} HP`}
         >
           {formatDamage(row.hpRemaining)}
         </div>

@@ -3,7 +3,7 @@
  * See docs/customizationSpec.md § 1.
  */
 import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '../../consts/enums';
-import type { Clause, Interaction, Predicate, StatusReaction } from '../../consts/semantics';
+import type { Clause, Interaction, Predicate } from '../../consts/semantics';
 import type { StatType } from '../enums';
 import type { OperatorClassType } from '../enums/operators';
 
@@ -15,7 +15,6 @@ export interface CustomOperator {
   elementType: ElementType;
   weaponType: WeaponType;
   operatorRarity: 4 | 5 | 6;
-  displayColor: string;
   splashArt?: string;
   mainAttributeType: StatType | string;
   secondaryAttributeType?: StatType | string;
@@ -24,18 +23,16 @@ export interface CustomOperator {
     lv90: Partial<Record<StatType | string, number>>;
   };
   potentials: CustomPotentialEntry[];
-  skills: {
+  skills?: {
     basicAttack: CustomCombatSkillDef;
     battleSkill: CustomCombatSkillDef;
     comboSkill: CustomCombatSkillDef;
     ultimate: CustomCombatSkillDef;
   };
   combo: {
-    requires: Interaction[];
+    triggerClause: Predicate[];
     description: string;
     windowFrames?: number;
-    forbidsActiveColumns?: string[];
-    requiresActiveColumns?: string[];
   };
   statusEvents?: CustomStatusEventDef[];
 }
@@ -90,7 +87,6 @@ export interface CustomPotentialEntry {
   type: string;
   description: string;
   statModifiers?: Partial<Record<StatType | string, number>>;
-  reactions?: StatusReaction[];
 }
 
 /** A custom status event definition (full StatusEvent DSL). */
@@ -105,11 +101,7 @@ export interface CustomStatusEventDef {
     interactionType: string;
     max: number | number[];
     instances: number;
-    /** @deprecated Use clause predicates instead. */
-    reactions: StatusReaction[];
   };
-  /** @deprecated Use clause predicates instead. */
-  reactions: StatusReaction[];
   clause?: Clause;
   triggerClause: Clause;
   stats: { statType: StatType | string; value: number[] }[];

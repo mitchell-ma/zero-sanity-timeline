@@ -3,7 +3,7 @@
  * Each segment has a name, duration, optional stats, and frames with DSL effects.
  */
 import { useState } from 'react';
-import { ElementType, DurationUnit } from '../../consts/enums';
+import { ElementType } from '../../consts/enums';
 import type { CustomSegmentDef, CustomFrameDef } from '../../model/custom/customOperatorTypes';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 

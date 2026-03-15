@@ -8,6 +8,7 @@ import type { CustomOperator } from '../../model/custom/customOperatorTypes';
 import { loadCustomOperators, saveCustomOperators, validateCustomOperator } from '../../utils/customContentStorage';
 import type { ValidationError } from '../../utils/customContentStorage';
 import { registerCustomOperator, deregisterCustomOperator } from './customOperatorRegistrar';
+import { removeAllLinksForOperator } from './customSkillLinkController';
 
 let _cache: CustomOperator[] | null = null;
 
@@ -57,6 +58,7 @@ export function deleteCustomOperator(id: string): void {
   if (!existing) return;
   deregisterCustomOperator(existing);
   persist(all.filter((o) => o.id !== id));
+  removeAllLinksForOperator(id);
 }
 
 export function duplicateCustomOperator(id: string): CustomOperator | null {
@@ -77,7 +79,6 @@ export function getDefaultCustomOperator(): CustomOperator {
     elementType: ElementType.HEAT,
     weaponType: WeaponType.SWORD,
     operatorRarity: 6,
-    displayColor: '#888888',
     mainAttributeType: 'STRENGTH',
     baseStats: {
       lv1: { BASE_ATTACK: 50, BASE_HP: 800 } as any,
@@ -115,10 +116,13 @@ export function getDefaultCustomOperator(): CustomOperator {
       },
     },
     combo: {
-      requires: [{
-        subjectType: SubjectType.ENEMY,
-        verbType: VerbType.IS,
-        objectType: ObjectType.COMBUSTED,
+      triggerClause: [{
+        conditions: [{
+          subjectType: SubjectType.ENEMY,
+          verbType: VerbType.IS,
+          objectType: ObjectType.COMBUSTED,
+        }],
+        effects: [],
       }],
       description: 'Available when enemy is Combusted',
     },

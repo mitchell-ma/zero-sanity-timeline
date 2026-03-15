@@ -121,17 +121,6 @@ export function weaponSkillStat(
   }
 }
 
-function applyWeaponSkill(
-  skill: WeaponSkill,
-  stats: Record<StatType, number>,
-  mainAttr: StatType,
-): void {
-  const stat = weaponSkillStat(skill.weaponSkillType, mainAttr);
-  if (stat != null) {
-    stats[stat] += skill.getValue();
-  }
-}
-
 
 // ── Main aggregation ────────────────────────────────────────────────────────
 
@@ -319,11 +308,12 @@ export function aggregateLoadoutStats(
   const atkBonus = stats[StatType.ATTACK_BONUS];
   const atkPercentageBonus = baseAttack * atkBonus;
   const totalAttack = baseAttack * (1 + atkBonus) + flatAttackBonuses;
-  // Apply percentage bonuses to flat attributes before computing attribute bonus
+  // Apply percentage bonuses to flat attributes before computing attribute bonus.
+  // The game floors the effective attribute value before applying the ATK multiplier.
   const mainAttrBonusStat = ATTR_TO_BONUS[model.mainAttributeType];
-  const effectiveMainAttr = stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0));
+  const effectiveMainAttr = Math.floor(stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0)));
   const secAttrBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
-  const effectiveSecAttr = stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0));
+  const effectiveSecAttr = Math.floor(stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0)));
   const mainAttributeBonus = 0.005 * effectiveMainAttr;
   const secondaryAttributeBonus = 0.002 * effectiveSecAttr;
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;

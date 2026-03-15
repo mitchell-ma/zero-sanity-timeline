@@ -4,18 +4,85 @@
 import { useState, useMemo } from 'react';
 import { WeaponType, ElementType, CombatSkillType } from '../../consts/enums';
 import { OperatorClassType } from '../../model/enums/operators';
-import { ObjectType } from '../../consts/semantics';
-import type { CustomOperator, CustomCombatSkillDef, CustomStatusEventDef } from '../../model/custom/customOperatorTypes';
-import type { CustomSkill } from '../../model/custom/customSkillTypes';
+import { ObjectType, SubjectType, VerbType } from '../../consts/semantics';
+import type { Interaction, Predicate } from '../../consts/semantics';
+import type { CustomOperator, CustomCombatSkillDef } from '../../model/custom/customOperatorTypes';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { getCustomSkills } from '../../controller/custom/customSkillController';
 import type { SkillType, SkillDef } from '../../consts/viewTypes';
-import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
+import InteractionBuilder from './InteractionBuilder';
 import ClauseBuilder from './ClauseBuilder';
 import IdField from './IdField';
 import SegmentFrameEditor from './SegmentFrameEditor';
 import StatusEventEditor, { defaultStatusEventDef } from './StatusEventEditor';
+
+// ── Auto-generate combo description from trigger conditions ─────────────────
+
+const SUBJECT_DESC: Partial<Record<string, string>> = {
+  [SubjectType.THIS_OPERATOR]: 'this operator',
+  [SubjectType.ENEMY]: 'enemy',
+  [SubjectType.ANY_OPERATOR]: 'any operator',
+};
+
+const VERB_DESC: Partial<Record<string, string>> = {
+  [VerbType.PERFORM]: 'performs',
+  [VerbType.APPLY]: 'applies',
+  [VerbType.IS]: 'is',
+  [VerbType.HAVE]: 'have',
+  [VerbType.HIT]: 'hits',
+  [VerbType.CONSUME]: 'consumes',
+  [VerbType.DEFEAT]: 'defeats',
+};
+
+const OBJECT_DESC: Partial<Record<string, string>> = {
+  [ObjectType.BASIC_ATTACK]: 'Basic Attack',
+  [ObjectType.BATTLE_SKILL]: 'Battle Skill',
+  [ObjectType.COMBO_SKILL]: 'Combo Skill',
+  [ObjectType.ULTIMATE]: 'Ultimate',
+  [ObjectType.FINAL_STRIKE]: 'Final Strike',
+  [ObjectType.COMBUSTED]: 'Combusted',
+  [ObjectType.CORRODED]: 'Corroded',
+  [ObjectType.ELECTRIFIED]: 'Electrified',
+  [ObjectType.SOLIDIFIED]: 'Solidified',
+  [ObjectType.BREACHED]: 'Breached',
+  [ObjectType.CRUSHED]: 'Crushed',
+  [ObjectType.LIFTED]: 'Lifted',
+  [ObjectType.KNOCKED_DOWN]: 'Knocked Down',
+  [ObjectType.ACTIVE]: 'Active',
+  [ObjectType.INFLICTION]: 'Infliction',
+  [ObjectType.REACTION]: 'Reaction',
+  [ObjectType.STATUS]: 'Status',
+  [ObjectType.STAGGER]: 'Stagger',
+};
+
+function describeCondition(c: Interaction): string {
+  const subject = SUBJECT_DESC[c.subjectType] ?? c.subjectType.toLowerCase().replace(/_/g, ' ');
+  const verb = c.negated
+    ? `is not`
+    : (VERB_DESC[c.verbType] ?? c.verbType.toLowerCase().replace(/_/g, ' '));
+  const object = OBJECT_DESC[c.objectType] ?? c.objectType.replace(/_/g, ' ');
+  const id = c.objectId ? ` (${c.objectId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase())})` : '';
+  return `${subject} ${verb} ${object}${id}`;
+}
+
+function generateComboDescription(triggerClause: Predicate[]): string {
+  if (triggerClause.length === 0) return '';
+  const parts = triggerClause
+    .map((pred) => pred.conditions.map(describeCondition).join(' and '))
+    .filter(Boolean);
+  if (parts.length === 0) return '';
+  return 'Available when ' + parts.join(', or ');
+}
+
+/** Default interaction for combo triggers — "Enemy IS [state]" rather than generic "This Operator PERFORM Battle Skill". */
+function defaultComboTrigger(): Interaction {
+  return {
+    subjectType: SubjectType.ENEMY as any,
+    verbType: VerbType.IS,
+    objectType: ObjectType.COMBUSTED as any,
+  };
+}
 
 const WEAPON_LABELS: Record<WeaponType, string> = {
   [WeaponType.SWORD]: 'Sword', [WeaponType.GREAT_SWORD]: 'Great Sword',
@@ -117,9 +184,19 @@ function buildSkillOptions(): SkillOption[] {
   return options;
 }
 
+const DEFAULT_SKILLS: CustomOperator['skills'] = {
+  basicAttack: { name: 'Basic Attack', combatSkillType: CombatSkillType.BASIC_ATTACK, durationSeconds: 1 },
+  battleSkill: { name: 'Battle Skill', combatSkillType: CombatSkillType.BATTLE_SKILL, durationSeconds: 1 },
+  comboSkill: { name: 'Combo Skill', combatSkillType: CombatSkillType.COMBO_SKILL, durationSeconds: 1 },
+  ultimate: { name: 'Ultimate', combatSkillType: CombatSkillType.ULTIMATE, durationSeconds: 3 },
+};
+
 export default function CustomOperatorWizard({ initial, onSave, onCancel }: Props) {
-  const [operator, setOperator] = useState<CustomOperator>(() => JSON.parse(JSON.stringify(initial)));
-  const [step, setStep] = useState(0);
+  const [operator, setOperator] = useState<CustomOperator>(() => {
+    const parsed = JSON.parse(JSON.stringify(initial));
+    if (!parsed.skills) parsed.skills = JSON.parse(JSON.stringify(DEFAULT_SKILLS));
+    return parsed;
+  });
   const [errors, setErrors] = useState<string[]>([]);
   const skillOptions = useMemo(() => buildSkillOptions(), []);
 
@@ -130,174 +207,157 @@ export default function CustomOperatorWizard({ initial, onSave, onCancel }: Prop
     if (errs.length > 0) setErrors(errs);
   };
 
-  const totalSteps = 5;
-
   return (
     <div className="custom-wizard">
       <div className="wizard-header">
         <h3>{initial.name ? `Edit: ${initial.name}` : 'New Custom Operator'}</h3>
-        <div className="wizard-steps">
-          <button className={`wizard-step${step === 0 ? ' active' : ''}`} onClick={() => setStep(0)}>Identity</button>
-          <button className={`wizard-step${step === 1 ? ' active' : ''}`} onClick={() => setStep(1)}>Stats</button>
-          <button className={`wizard-step${step === 2 ? ' active' : ''}`} onClick={() => setStep(2)}>Skills</button>
-          <button className={`wizard-step${step === 3 ? ' active' : ''}`} onClick={() => setStep(3)}>Combo</button>
-          <button className={`wizard-step${step === 4 ? ' active' : ''}`} onClick={() => setStep(4)}>
-            Statuses{operator.statusEvents?.length ? ` (${operator.statusEvents.length})` : ''}
-          </button>
-        </div>
       </div>
 
       <div className="wizard-body">
-        {step === 0 && (
-          <div className="wizard-section">
-            <IdField
-              value={operator.id}
-              onChange={(id) => update({ id })}
-              originalId={initial.id}
-            />
-            <label className="wz-field">
-              <span>Name</span>
-              <input type="text" value={operator.name} onChange={(e) => update({ name: e.target.value })} placeholder="Operator name" />
-            </label>
-            <label className="wz-field">
-              <span>Class</span>
-              <select value={operator.operatorClassType} onChange={(e) => update({ operatorClassType: e.target.value as OperatorClassType })}>
-                {Object.values(OperatorClassType).map((c) => <option key={c} value={c}>{CLASS_LABELS[c]}</option>)}
-              </select>
-            </label>
-            <label className="wz-field">
-              <span>Element</span>
-              <select value={operator.elementType} onChange={(e) => update({ elementType: e.target.value as ElementType })}>
-                {Object.values(ElementType).map((el) => <option key={el} value={el}>{ELEMENT_LABELS[el]}</option>)}
-              </select>
-            </label>
-            <label className="wz-field">
-              <span>Weapon Type</span>
-              <select value={operator.weaponType} onChange={(e) => update({ weaponType: e.target.value as WeaponType })}>
-                {Object.values(WeaponType).map((w) => <option key={w} value={w}>{WEAPON_LABELS[w]}</option>)}
-              </select>
-            </label>
-            <label className="wz-field">
-              <span>Rarity</span>
-              <div className="wz-radio-group">
-                {([4, 5, 6] as const).map((r) => (
-                  <label key={r} className={`wz-radio${operator.operatorRarity === r ? ' active' : ''}`}>
-                    <input type="radio" checked={operator.operatorRarity === r} onChange={() => update({ operatorRarity: r })} />
-                    {r}★
-                  </label>
-                ))}
-              </div>
-            </label>
-            <label className="wz-field">
-              <span>Display Color</span>
-              <input type="color" value={operator.displayColor} onChange={(e) => update({ displayColor: e.target.value })} />
-            </label>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="wizard-section">
-            <div className="wz-subsection">
-              <div className="wz-subsection-header"><span>Lv1 Stats</span></div>
-              <StatsEditor
-                stats={operator.baseStats.lv1 as Record<string, number>}
-                onChange={(lv1) => update({ baseStats: { ...operator.baseStats, lv1 } })}
-              />
-            </div>
-            <div className="wz-subsection">
-              <div className="wz-subsection-header"><span>Lv90 Stats</span></div>
-              <StatsEditor
-                stats={operator.baseStats.lv90 as Record<string, number>}
-                onChange={(lv90) => update({ baseStats: { ...operator.baseStats, lv90 } })}
-              />
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="wizard-section">
-            {(Object.keys(SKILL_SLOT_LABELS) as (keyof typeof SKILL_SLOT_LABELS)[]).map((key) => (
-              <SkillSlotEditor
-                key={key}
-                label={SKILL_SLOT_LABELS[key]}
-                slotKey={key}
-                skill={operator.skills[key]}
-                skillOptions={skillOptions}
-                onChange={(s) => update({ skills: { ...operator.skills, [key]: s } })}
-              />
-            ))}
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="wizard-section">
-            <div className="wz-subsection">
-              <div className="wz-subsection-header">
-                <span>Combo Trigger Conditions (any match)</span>
-                <button className="btn-add-sm" onClick={() => update({
-                  combo: { ...operator.combo, requires: [...operator.combo.requires, defaultInteraction()] },
-                })}>+</button>
-              </div>
-              {operator.combo.requires.map((trigger, i) => (
-                <InteractionBuilder
-                  key={i}
-                  value={trigger}
-                  onChange={(t) => {
-                    const requires = [...operator.combo.requires];
-                    requires[i] = t;
-                    update({ combo: { ...operator.combo, requires } });
-                  }}
-                  onRemove={operator.combo.requires.length > 1 ? () => update({
-                    combo: { ...operator.combo, requires: operator.combo.requires.filter((_, j) => j !== i) },
-                  }) : undefined}
-                  compact
-                />
+        <div className="wizard-section">
+          <div className="wizard-section-title">Identity</div>
+          <IdField
+            value={operator.id}
+            onChange={(id) => update({ id })}
+            originalId={initial.id}
+          />
+          <label className="wz-field">
+            <span>Name</span>
+            <input type="text" value={operator.name} onChange={(e) => update({ name: e.target.value })} placeholder="Operator name" />
+          </label>
+          <label className="wz-field">
+            <span>Class</span>
+            <select value={operator.operatorClassType} onChange={(e) => update({ operatorClassType: e.target.value as OperatorClassType })}>
+              {Object.values(OperatorClassType).map((c) => <option key={c} value={c}>{CLASS_LABELS[c]}</option>)}
+            </select>
+          </label>
+          <label className="wz-field">
+            <span>Element</span>
+            <select value={operator.elementType} onChange={(e) => update({ elementType: e.target.value as ElementType })}>
+              {Object.values(ElementType).map((el) => <option key={el} value={el}>{ELEMENT_LABELS[el]}</option>)}
+            </select>
+          </label>
+          <label className="wz-field">
+            <span>Weapon Type</span>
+            <select value={operator.weaponType} onChange={(e) => update({ weaponType: e.target.value as WeaponType })}>
+              {Object.values(WeaponType).map((w) => <option key={w} value={w}>{WEAPON_LABELS[w]}</option>)}
+            </select>
+          </label>
+          <label className="wz-field">
+            <span>Rarity</span>
+            <div className="wz-radio-group">
+              {([4, 5, 6] as const).map((r) => (
+                <label key={r} className={`wz-radio${operator.operatorRarity === r ? ' active' : ''}`}>
+                  <input type="radio" checked={operator.operatorRarity === r} onChange={() => update({ operatorRarity: r })} />
+                  {r}★
+                </label>
               ))}
             </div>
-            <label className="wz-field">
-              <span>Combo Description</span>
-              <input type="text" value={operator.combo.description} onChange={(e) => update({
-                combo: { ...operator.combo, description: e.target.value },
-              })} placeholder="e.g. Available when enemy is Combusted" />
-            </label>
-            <label className="wz-field">
-              <span>Window (frames)</span>
-              <input type="number" min={1} value={operator.combo.windowFrames ?? 720} onChange={(e) => update({
-                combo: { ...operator.combo, windowFrames: Number(e.target.value) },
-              })} />
-            </label>
+          </label>
+        </div>
+
+        <div className="wizard-section">
+          <div className="wizard-section-title">Stats</div>
+          <div className="wz-subsection">
+            <div className="wz-subsection-header"><span>Lv1 Stats</span></div>
+            <StatsEditor
+              stats={operator.baseStats.lv1 as Record<string, number>}
+              onChange={(lv1) => update({ baseStats: { ...operator.baseStats, lv1 } })}
+            />
           </div>
-        )}
+          <div className="wz-subsection">
+            <div className="wz-subsection-header"><span>Lv90 Stats</span></div>
+            <StatsEditor
+              stats={operator.baseStats.lv90 as Record<string, number>}
+              onChange={(lv90) => update({ baseStats: { ...operator.baseStats, lv90 } })}
+            />
+          </div>
+        </div>
 
-        {step === 4 && (
-          <div className="wizard-section">
-            <div className="wizard-section-intro">
-              Define operator-specific statuses — self-buffs, debuffs, reactions, and threshold effects.
-              Each status uses the SVO grammar for triggers and effects.
+        <div className="wizard-section">
+          <div className="wizard-section-title">Skills</div>
+          {(Object.keys(SKILL_SLOT_LABELS) as (keyof typeof SKILL_SLOT_LABELS)[]).map((key) => (
+            <SkillSlotEditor
+              key={key}
+              label={SKILL_SLOT_LABELS[key]}
+              slotKey={key}
+              skill={operator.skills![key]}
+              skillOptions={skillOptions}
+              onChange={(s) => update({ skills: { ...operator.skills!, [key]: s } })}
+            />
+          ))}
+        </div>
+
+        <div className="wizard-section">
+          <div className="wizard-section-title">Combo</div>
+          <div className="wz-subsection">
+            <div className="wz-subsection-header">
+              <span>Trigger Conditions (any match)</span>
+              <button className="btn-add-sm" onClick={() => {
+                const triggerClause = [...operator.combo.triggerClause, { conditions: [defaultComboTrigger()], effects: [] }];
+                update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
+              }}>+</button>
             </div>
-
-            {(operator.statusEvents ?? []).map((se, i) => (
-              <StatusEventEditor
+            {operator.combo.triggerClause.map((predicate, i) => (
+              <InteractionBuilder
                 key={i}
-                value={se}
-                onChange={(updated) => {
-                  const statusEvents = [...(operator.statusEvents ?? [])];
-                  statusEvents[i] = updated;
-                  update({ statusEvents });
+                value={predicate.conditions[0]}
+                onChange={(t) => {
+                  const triggerClause = [...operator.combo.triggerClause];
+                  triggerClause[i] = { ...triggerClause[i], conditions: [t] };
+                  update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
                 }}
-                onRemove={() => update({
-                  statusEvents: (operator.statusEvents ?? []).filter((_, j) => j !== i),
-                })}
+                onRemove={operator.combo.triggerClause.length > 1 ? () => {
+                  const triggerClause = operator.combo.triggerClause.filter((_, j) => j !== i);
+                  update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
+                } : undefined}
+                compact
               />
             ))}
-
-            <button className="btn-create" onClick={() => update({
-              statusEvents: [...(operator.statusEvents ?? []), defaultStatusEventDef()],
-            })}>
-              + New Status Event
-            </button>
           </div>
-        )}
+          <label className="wz-field">
+            <span>Description</span>
+            <input type="text" value={operator.combo.description} onChange={(e) => update({
+              combo: { ...operator.combo, description: e.target.value },
+            })} placeholder="e.g. Available when enemy is Combusted" />
+          </label>
+          <label className="wz-field">
+            <span>Window (frames)</span>
+            <input type="number" min={1} value={operator.combo.windowFrames ?? 720} onChange={(e) => update({
+              combo: { ...operator.combo, windowFrames: Number(e.target.value) },
+            })} />
+          </label>
+        </div>
+
+        <div className="wizard-section">
+          <div className="wizard-section-title">
+            Statuses{operator.statusEvents?.length ? ` (${operator.statusEvents.length})` : ''}
+          </div>
+          <div className="wizard-section-intro">
+            Define operator-specific statuses — self-buffs, debuffs, reactions, and threshold effects.
+          </div>
+
+          {(operator.statusEvents ?? []).map((se, i) => (
+            <StatusEventEditor
+              key={i}
+              value={se}
+              onChange={(updated) => {
+                const statusEvents = [...(operator.statusEvents ?? [])];
+                statusEvents[i] = updated;
+                update({ statusEvents });
+              }}
+              onRemove={() => update({
+                statusEvents: (operator.statusEvents ?? []).filter((_, j) => j !== i),
+              })}
+            />
+          ))}
+
+          <button className="btn-create" onClick={() => update({
+            statusEvents: [...(operator.statusEvents ?? []), defaultStatusEventDef()],
+          })}>
+            + New Status Event
+          </button>
+        </div>
       </div>
 
       {errors.length > 0 && (
@@ -308,14 +368,7 @@ export default function CustomOperatorWizard({ initial, onSave, onCancel }: Prop
 
       <div className="wizard-footer">
         <button className="btn-cancel" onClick={onCancel}>Cancel</button>
-        <div className="wizard-footer-right">
-          {step > 0 && <button className="btn-back" onClick={() => setStep(step - 1)}>Back</button>}
-          {step < totalSteps - 1 ? (
-            <button className="btn-next" onClick={() => setStep(step + 1)}>Next</button>
-          ) : (
-            <button className="btn-save" onClick={handleSave}>Save</button>
-          )}
-        </div>
+        <button className="btn-save" onClick={handleSave}>Save</button>
       </div>
     </div>
   );

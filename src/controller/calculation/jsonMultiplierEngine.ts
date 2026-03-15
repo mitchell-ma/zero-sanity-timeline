@@ -14,7 +14,7 @@ import { getOperatorJson, getSkillNameMap } from '../../model/event-frames/opera
 /** Flattened multiplier entry: level + all scale/param keys at top level. */
 interface JsonMultiplierEntry {
   level: number;
-  [key: string]: number;  // atk_scale, atk_scale_2, poise, etc.
+  [key: string]: number;  // DAMAGE_MULTIPLIER, DAMAGE_MULTIPLIER_INCREMENT, STAGGER, etc.
 }
 
 interface JsonFrame {
@@ -63,13 +63,13 @@ const SEGMENT_LABEL_TO_ATTACK_TYPE: Record<string, BasicAttackType> = {
 
 /**
  * Cached per-level multiplier data for a skill category.
- * segmentMultipliers[segmentIndex][levelIndex] = sum of atk_scale across frames in segment.
- * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame atk_scale.
+ * segmentMultipliers[segmentIndex][levelIndex] = sum of DAMAGE_MULTIPLIER across frames in segment.
+ * perFrameMultipliers[segmentIndex][frameIndex][levelIndex] = individual frame DAMAGE_MULTIPLIER.
  */
 interface CategoryMultiplierCache {
   segmentMultipliers: number[][];
   perFrameMultipliers: number[][][];
-  /** For ramping skills: atk_scale_2 per frame (the per-tick increment). */
+  /** For ramping skills: DAMAGE_MULTIPLIER_INCREMENT per frame (the per-tick increment). */
   perFrameScale2?: number[][][];
   segmentLabels?: (string | undefined)[];
 }
@@ -82,7 +82,7 @@ function getCacheKey(operatorId: string, category: string): string {
 
 // ── Build multiplier data from JSON ──────────────────────────────────────────
 
-function getAtk(frame: JsonFrame, level: number, key: string = 'atk_scale'): number {
+function getAtk(frame: JsonFrame, level: number, key: string = 'DAMAGE_MULTIPLIER'): number {
   if (!frame.multipliers) return 0;
   const entry = frame.multipliers.find(m => m.level === level);
   if (!entry) return 0;
@@ -129,7 +129,7 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
         frameLevelMults.push(atk);
         segMults[lvl - 1] += atk;
 
-        const s2 = getAtk(frame, lvl, 'atk_scale_2');
+        const s2 = getAtk(frame, lvl, 'DAMAGE_MULTIPLIER_INCREMENT');
         frameLevelScale2.push(s2);
         if (s2 > 0) hasScale2 = true;
       }
@@ -185,10 +185,8 @@ function getPotentialMultiplier(
       if (eff.potentialEffectType !== 'SKILL_PARAMETER') continue;
       const mod = eff.skillParameterModifier;
       if (!mod || mod.parameterKey !== 'DAMAGE_MULTIPLIER') continue;
-      // Match skill name: the modifier's skillType uses the operator-prefixed name
-      // e.g. "LAEVATAIN_SMOULDERING_FIRE" should match "SMOULDERING_FIRE"
       const modSkill = mod.skillType;
-      if (modSkill === skillName || modSkill.endsWith(`_${skillName}`)) {
+      if (modSkill === skillName) {
         switch (mod.parameterModifyType) {
           case 'UNIQUE_MULTIPLIER':
             result *= mod.value;
@@ -210,7 +208,6 @@ function getPotentialMultiplier(
 // ── Skill name → category resolution ────────────────────────────────────────
 
 function resolveCategory(operatorId: string, skillName: string): string | null {
-  const json = getOperatorJson(operatorId);
   return getSkillNameMap(operatorId)[skillName] ?? null;
 }
 
@@ -249,7 +246,7 @@ function resolveSegmentIndex(
 
 /**
  * Get the segment-total skill multiplier.
- * This is the sum of atk_scale across all frames in the segment.
+ * This is the sum of DAMAGE_MULTIPLIER across all frames in the segment.
  * The caller (damageTableBuilder) divides by frame count for uniform distribution.
  *
  * Returns null if operator/skill has no multiplier data or doesn't deal damage.
@@ -297,7 +294,7 @@ export function getPerTickMultiplier(
   const data = getCategoryCache(operatorId, category);
   if (!data?.perFrameScale2) return null;
 
-  // Only return per-tick if the skill has atk_scale_2 (ramping increment)
+  // Only return per-tick if the skill has DAMAGE_MULTIPLIER_INCREMENT (ramping increment)
   const segIdx = 0; // Per-tick is only used for single-segment skills
   const frameScale2 = data.perFrameScale2[segIdx];
   if (!frameScale2?.[0]?.[level - 1]) return null;

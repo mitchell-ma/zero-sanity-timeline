@@ -2,21 +2,18 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { StatusLevel, TalentLevel } from '../../consts/types';
 import { CombatSkillType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { StaggerBreak } from '../timeline/staggerTimeline';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
   ENEMY_OWNER_ID,
   FRAGILITY_COLUMN_PREFIX,
   INFLICTION_COLUMNS,
   OPERATOR_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
-  REACTION_COLUMN_IDS,
   REACTION_COLUMNS,
 } from '../../model/channels';
 import { getCorrosionReduction, getScorchingHeartIgnoredResistance, MultiplierSource } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
 import { collectTimeStopRegions, type TimeStopRegion } from '../timeline/processTimeStop';
 import type { LoadoutStats } from '../../view/InformationPane';
-import type { AggregatedStats } from './loadoutAggregator';
 
 // ── Fragility tables (from combat-status models) ─────────────────────────────
 
@@ -73,12 +70,6 @@ export interface OperatorTalentFragility {
   /** Enemy columnId that must be active for this fragility to apply. */
   requiredColumnId: string;
 }
-
-/** Xaihi Execute Process: Cryo DMG Taken bonus while Cryo Infliction is active. */
-const XAIHI_EXECUTE_PROCESS_BONUS: Record<number, number> = {
-  1: 0.07,
-  2: 0.10,
-};
 
 /** Antal P5: after Focus is active for 20s, susceptibility increases by 4%. */
 const FOCUS_P5_THRESHOLD_FRAMES = 2400; // 20s at 120fps

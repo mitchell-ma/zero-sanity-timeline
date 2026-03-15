@@ -1,6 +1,5 @@
 import {
   CombatSkillType,
-  DurationUnit,
   ElementType,
   EventOriginType,
   EventType,
@@ -8,10 +7,9 @@ import {
   StackInteractionType,
   StatusType,
   TargetType,
-  TriggerConditionType,
 } from "../../consts/enums";
 import { THRESHOLD_MAX, PotentialType } from "../../consts/semantics";
-import type { Clause, Effect, Interaction, Predicate } from "../../consts/semantics";
+import type { Clause, Effect, Interaction } from "../../consts/semantics";
 import { StatType } from "../enums";
 import { Duration, Event } from "./event";
 
@@ -21,7 +19,7 @@ import { Duration, Event } from "./event";
 export interface TriggerCondition {
   source: { targetType: TargetType };
   action: {
-    interactionType: TriggerConditionType;
+    interactionType: Interaction;
     combatSkillType?: CombatSkillType;
     statusType?: StatusType;
     threshold?: number;

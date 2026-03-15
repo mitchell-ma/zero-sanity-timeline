@@ -12,7 +12,7 @@
  *               × FragilityMultiplier × DMGReductionMultiplier
  */
 
-import { ElementType, StatType } from '../../consts/enums';
+import { ElementType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
@@ -47,14 +47,6 @@ const REACTION_ELEMENT: Record<string, ElementType> = {
   solidification:  ElementType.CRYO,
   corrosion:       ElementType.NATURE,
   electrification: ElementType.ELECTRIC,
-};
-
-/** Display labels for each reaction type. */
-const REACTION_LABEL: Record<string, string> = {
-  combustion:      'Combustion',
-  solidification:  'Solidification',
-  corrosion:       'Corrosion',
-  electrification: 'Electrification',
 };
 
 // ── Operator context for reaction damage ─────────────────────────────────────

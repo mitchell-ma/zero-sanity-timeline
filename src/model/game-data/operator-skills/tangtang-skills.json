@@ -1,0 +1,771 @@
+{
+  "BASIC_ATTACK": {
+    "name": "I'LL BLOW YOUR MIND!",
+    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+    "id": "BASIC_ATTACK",
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.67,
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.25,
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.8,
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 18
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 18
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.5,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.55,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.6,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.65,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.7,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.75,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.8,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.85,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.9,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.96,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 1.04,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 1.13,
+                "STAGGER": 18,
+                "SKILL_POINT": 18
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "originId": "tangtang"
+  },
+  "BATTLE_SKILL": {
+    "name": "IMA WAVERIDAAH!",
+    "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
+    "id": "BATTLE_SKILL",
+    "properties": {
+      "duration": {
+        "value": 1.867,
+        "unit": "SECOND"
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 10
+              }
+            }
+          },
+          {
+            "verbType": "APPLY",
+            "objectType": "INFLICTION",
+            "adjective": "CRYO",
+            "toObjectType": "ENEMY",
+            "withPreposition": {
+              "stacks": {
+                "verb": "IS",
+                "value": 1
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 0.16,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.03,
+            "rate_spellvulnerable_02": 0.06,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 0.176,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.03,
+            "rate_spellvulnerable_02": 0.06,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 0.192,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.03,
+            "rate_spellvulnerable_02": 0.06,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 0.208,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.035,
+            "rate_spellvulnerable_02": 0.07,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 0.224,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.035,
+            "rate_spellvulnerable_02": 0.07,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 0.24,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.035,
+            "rate_spellvulnerable_02": 0.07,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 0.256,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.04,
+            "rate_spellvulnerable_02": 0.08,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 0.272,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.04,
+            "rate_spellvulnerable_02": 0.08,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 0.288,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.04,
+            "rate_spellvulnerable_02": 0.08,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 0.308,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.045,
+            "rate_spellvulnerable_02": 0.09,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 0.332,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.045,
+            "rate_spellvulnerable_02": 0.09,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 0.36,
+            "poise1": 2,
+            "poise_tornado": 0,
+            "atb_return": 20,
+            "atb_return_02": 40,
+            "rate_spellvulnerable": 0.05,
+            "rate_spellvulnerable_02": 0.1,
+            "duration_spellvulnerable": 15,
+            "duration_tornado": 3
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "SKILL_POINT",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 100
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "THIS_OPERATOR",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 6.5
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "ALL_OPERATORS",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 6.5
+          }
+        }
+      }
+    ],
+    "originId": "tangtang"
+  },
+  "COMBO_SKILL": {
+    "name": "RIVER, TO ME!",
+    "description": "COMBO TRIGGER: When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
+    "id": "COMBO_SKILL",
+    "properties": {
+      "duration": {
+        "value": 1.65,
+        "unit": "SECOND"
+      },
+      "animation": {
+        "duration": {
+          "value": 0.5,
+          "unit": "SECOND"
+        },
+        "timeInteractionType": "TIME_STOP"
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.95,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 10
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 1.067,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 1.173,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 1.28,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 1.387,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 1.494,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 1.6,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 1.707,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 1.814,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 1.92,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 2.054,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 2.214,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 2.4,
+            "usp": 10,
+            "duration_water": 30,
+            "STAGGER": 10
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "COOLDOWN",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 13
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "THIS_OPERATOR",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 10
+          }
+        }
+      }
+    ],
+    "originId": "tangtang"
+  },
+  "ULTIMATE": {
+    "name": "DA CHIEF SEES YOU!",
+    "description": "Tangtang opens her eyepatch and unleashes an OLDEN STARE from her eye that temporarily locks down, immobilizes, and deals Cryo DMG over time to enemies within its area of effect.\nWhen the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG to enemies in its area of effect.\nIf the controlled operator performs a dive attack in the OLDEN STARE pattern, its evolution ends and the rogue wave is summoned immediately to deal even more Cryo DMG.",
+    "id": "ULTIMATE",
+    "properties": {
+      "duration": {
+        "value": 2.9,
+        "unit": "SECOND"
+      },
+      "animation": {
+        "duration": {
+          "value": 2.73,
+          "unit": "SECOND"
+        },
+        "timeInteractionType": "TIME_STOP"
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 2.8,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 0.178,
+            "DAMAGE_MULTIPLIER_INCREMENT": 1.778,
+            "atk_scale_3": 3.111,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 0.196,
+            "DAMAGE_MULTIPLIER_INCREMENT": 1.956,
+            "atk_scale_3": 3.422,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 0.213,
+            "DAMAGE_MULTIPLIER_INCREMENT": 2.134,
+            "atk_scale_3": 3.734,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 0.231,
+            "DAMAGE_MULTIPLIER_INCREMENT": 2.311,
+            "atk_scale_3": 4.045,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 0.249,
+            "DAMAGE_MULTIPLIER_INCREMENT": 2.489,
+            "atk_scale_3": 4.356,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 0.267,
+            "DAMAGE_MULTIPLIER_INCREMENT": 2.667,
+            "atk_scale_3": 4.667,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 0.284,
+            "DAMAGE_MULTIPLIER_INCREMENT": 2.845,
+            "atk_scale_3": 4.978,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 0.302,
+            "DAMAGE_MULTIPLIER_INCREMENT": 3.023,
+            "atk_scale_3": 5.289,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 0.32,
+            "DAMAGE_MULTIPLIER_INCREMENT": 3.2,
+            "atk_scale_3": 5.6,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 0.342,
+            "DAMAGE_MULTIPLIER_INCREMENT": 3.423,
+            "atk_scale_3": 5.989,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 0.369,
+            "DAMAGE_MULTIPLIER_INCREMENT": 3.689,
+            "atk_scale_3": 6.456,
+            "poise2": 15,
+            "poise3": 20
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 0.4,
+            "DAMAGE_MULTIPLIER_INCREMENT": 4,
+            "atk_scale_3": 7,
+            "poise2": 15,
+            "poise3": 20
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "ULTIMATE_ENERGY",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 100
+          }
+        }
+      }
+    ],
+    "originId": "tangtang"
+  }
+}

@@ -1,0 +1,1430 @@
+{
+  "BASIC_ATTACK": {
+    "name": "Destructive Sequence",
+    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
+    "id": "DESTRUCTIVE_SEQUENCE",
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.33,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.23,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.25,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.27,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.29,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.32,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.34,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.36,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.39,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.41,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.44,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.47,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.51,
+                "SKILL_POINT": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.43,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.17,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.27,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.3,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.32,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.35,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.38,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.41,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.43,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.46,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.49,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.52,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.56,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.61,
+                "SKILL_POINT": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.6,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.17,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.15,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.17,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.18,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.2,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.21,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.23,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.24,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.26,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.27,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.29,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.31,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.34,
+                "SKILL_POINT": 0
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.4,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.15
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.17
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.18
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.2
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.21
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.23
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.24
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.26
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.27
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.29
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.31
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.34
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 1.1,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.23,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.09,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.1,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.1,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.11,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.12,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.13,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.14,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.15,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.16,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.17,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.18,
+                "SKILL_POINT": 0
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.19,
+                "SKILL_POINT": 0
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.3,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.09
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.11
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.12
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.13
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.14
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.15
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.16
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.17
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.18
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.19
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.6,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.09
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.11
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.12
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.13
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.14
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.15
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.16
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.17
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.18
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.19
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.63,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.09
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.1
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.11
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.12
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.13
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.14
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.15
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.16
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.17
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.18
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.19
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "duration": {
+            "value": 0.867,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.6,
+                "unit": "SECOND"
+              }
+            },
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 20
+                  }
+                }
+              },
+              {
+                "verbType": "RECOVER",
+                "objectType": "STAGGER",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 18
+                  }
+                }
+              }
+            ],
+            "multipliers": [
+              {
+                "level": 1,
+                "DAMAGE_MULTIPLIER": 0.4,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 2,
+                "DAMAGE_MULTIPLIER": 0.44,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 3,
+                "DAMAGE_MULTIPLIER": 0.48,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 4,
+                "DAMAGE_MULTIPLIER": 0.52,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 5,
+                "DAMAGE_MULTIPLIER": 0.56,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 6,
+                "DAMAGE_MULTIPLIER": 0.6,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 7,
+                "DAMAGE_MULTIPLIER": 0.64,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 8,
+                "DAMAGE_MULTIPLIER": 0.68,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 9,
+                "DAMAGE_MULTIPLIER": 0.72,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 10,
+                "DAMAGE_MULTIPLIER": 0.77,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 11,
+                "DAMAGE_MULTIPLIER": 0.83,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              },
+              {
+                "level": 12,
+                "DAMAGE_MULTIPLIER": 0.9,
+                "STAGGER": 18,
+                "SKILL_POINT": 20
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "originId": "endministrator"
+  },
+  "BATTLE_SKILL": {
+    "name": "Constructive Sequence",
+    "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
+    "id": "CONSTRUCTIVE_SEQUENCE",
+    "properties": {
+      "duration": {
+        "value": 0.8,
+        "unit": "SECOND"
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.37,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 10
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 1.56,
+            "STAGGER": 10
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 1.71,
+            "STAGGER": 10
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 1.87,
+            "STAGGER": 10
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 2.02,
+            "STAGGER": 10
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 2.18,
+            "STAGGER": 10
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 2.34,
+            "STAGGER": 10
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 2.49,
+            "STAGGER": 10
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 2.65,
+            "STAGGER": 10
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 2.8,
+            "STAGGER": 10
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 3,
+            "STAGGER": 10
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 3.23,
+            "STAGGER": 10
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 3.5,
+            "STAGGER": 10
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "SKILL_POINT",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 100
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "THIS_OPERATOR",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 6.5
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "ALL_OPERATORS",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 6.5
+          }
+        }
+      }
+    ],
+    "originId": "endministrator"
+  },
+  "COMBO_SKILL": {
+    "name": "Sealing Sequence",
+    "description": "COMBO TRIGGER: When another operator in the team deals DMG with combo skills. \nRushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
+    "id": "SEALING_SEQUENCE",
+    "properties": {
+      "duration": {
+        "value": 0.77,
+        "unit": "SECOND"
+      },
+      "animation": {
+        "duration": {
+          "value": 0.5,
+          "unit": "SECOND"
+        },
+        "timeInteractionType": "TIME_STOP"
+      },
+      "trigger": {
+        "triggerClause": [
+          {
+            "conditions": [
+              {
+                "subjectType": "THIS_OPERATOR",
+                "verbType": "PERFORM",
+                "objectType": "COMBO_SKILL"
+              }
+            ]
+          }
+        ],
+        "description": "Another operator casts combo skill",
+        "windowFrames": 720
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.77,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 10
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 0.45,
+            "atk_scale_trigger": 1.78,
+            "originum_ult_break_scale": 2.67,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 0.49,
+            "atk_scale_trigger": 1.96,
+            "originum_ult_break_scale": 2.94,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 0.54,
+            "atk_scale_trigger": 2.13,
+            "originum_ult_break_scale": 3.2,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 0.58,
+            "atk_scale_trigger": 2.31,
+            "originum_ult_break_scale": 3.47,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 0.62,
+            "atk_scale_trigger": 2.49,
+            "originum_ult_break_scale": 3.74,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 0.67,
+            "atk_scale_trigger": 2.67,
+            "originum_ult_break_scale": 4,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 0.71,
+            "atk_scale_trigger": 2.84,
+            "originum_ult_break_scale": 4.27,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 0.76,
+            "atk_scale_trigger": 3.02,
+            "originum_ult_break_scale": 4.54,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 0.8,
+            "atk_scale_trigger": 3.2,
+            "originum_ult_break_scale": 4.8,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 0.86,
+            "atk_scale_trigger": 3.42,
+            "originum_ult_break_scale": 5.14,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4.5
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 0.93,
+            "atk_scale_trigger": 3.69,
+            "originum_ult_break_scale": 5.54,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 4.5
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 1,
+            "atk_scale_trigger": 4,
+            "originum_ult_break_scale": 6,
+            "STAGGER": 10,
+            "usp": 10,
+            "DURATION": 5
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "COOLDOWN",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 16
+          }
+        }
+      },
+      {
+        "verbType": "RECOVER",
+        "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "THIS_OPERATOR",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 10
+          }
+        }
+      }
+    ],
+    "originId": "endministrator"
+  },
+  "ULTIMATE": {
+    "name": "Bombardment Sequence",
+    "description": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG.",
+    "id": "BOMBARDMENT_SEQUENCE",
+    "properties": {
+      "duration": {
+        "value": 1.83,
+        "unit": "SECOND"
+      },
+      "animation": {
+        "duration": {
+          "value": 1.467,
+          "unit": "SECOND"
+        },
+        "timeInteractionType": "TIME_STOP"
+      }
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 1.67,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "SKILL_POINT",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 0
+              }
+            }
+          },
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 25
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 3.56,
+            "originum_ult_break_scale": 2.67,
+            "STAGGER": 25
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 3.91,
+            "originum_ult_break_scale": 2.94,
+            "STAGGER": 25
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 4.27,
+            "originum_ult_break_scale": 3.2,
+            "STAGGER": 25
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 4.62,
+            "originum_ult_break_scale": 3.47,
+            "STAGGER": 25
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 4.98,
+            "originum_ult_break_scale": 3.74,
+            "STAGGER": 25
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 5.33,
+            "originum_ult_break_scale": 4,
+            "STAGGER": 25
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 5.69,
+            "originum_ult_break_scale": 4.27,
+            "STAGGER": 25
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 6.04,
+            "originum_ult_break_scale": 4.54,
+            "STAGGER": 25
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 6.4,
+            "originum_ult_break_scale": 4.8,
+            "STAGGER": 25
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 6.84,
+            "originum_ult_break_scale": 5.14,
+            "STAGGER": 25
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 7.38,
+            "originum_ult_break_scale": 5.54,
+            "STAGGER": 25
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 8,
+            "originum_ult_break_scale": 6,
+            "STAGGER": 25
+          }
+        ]
+      }
+    ],
+    "effects": [
+      {
+        "verbType": "EXPEND",
+        "objectType": "ULTIMATE_ENERGY",
+        "withPreposition": {
+          "cardinality": {
+            "verb": "IS",
+            "value": 80
+          }
+        }
+      }
+    ],
+    "originId": "endministrator"
+  }
+}

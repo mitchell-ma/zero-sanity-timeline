@@ -20,9 +20,8 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS } from '../model/channels';
-import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../consts/timelineColumnLabels';
-import { CombatSkillsType, TimelineSourceType, ELEMENT_COLORS, ElementType } from '../consts/enums';
+import { SKILL_COLUMNS } from '../model/channels';
+import { TimelineSourceType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -32,7 +31,7 @@ import {
   Column,
   MiniTimeline,
   SelectedFrame,
-  SkillType,
+  computeSegmentsSpan,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
 import { MeltingFlameController } from '../controller/timeline/meltingFlameController';
@@ -40,31 +39,23 @@ import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractio
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
-  computeTimeStopRegions,
   getAlwaysAvailableComboSlots,
-  validateComboWindows,
-  validateResources,
-  validateEmpowered,
-  validateEnhanced,
-  validateRegularBasicDuringUltimate,
-  validateFinisherDuringUltimate,
-  validateFinisherStaggerBreak,
-  validateTimeStops,
-  validateInflictionStacks,
-  checkVariantAvailability,
-  checkComboWindowAvailability,
   computeResourceInsufficiencyZones,
   clampDeltaByResourceZones,
-  wouldOverlapSiblings,
-  isBlockedByTimeStop,
-  computeProspectiveRange,
-  checkResourceAvailability,
-  wouldSegmentAdditionOverlap,
-  isDuplicatePlacementInSpZone,
+  isDuplicatePlacementInResourceZone,
   clampDeltaByComboWindow,
 } from '../controller/timeline/eventValidator';
+import { computeAllValidations } from '../controller/timeline/eventValidationController';
+import { computeSlotElementColors, computeEventPresentation } from '../controller/timeline/eventPresentationController';
+import {
+  buildColumnContextMenu,
+  buildEventAddItems,
+  buildSegmentAddItems as buildSegmentAddItemsCtrl,
+  buildFrameAddItems as buildFrameAddItemsCtrl,
+} from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
+import { getAxisMap, type Orientation } from '../utils/axisMap';
 
 
 const MIN_SLOT_COLS = 4;
@@ -72,7 +63,7 @@ const MIN_SLOT_COLS = 4;
 interface DragState {
   primaryId: string; // the event the user grabbed
   eventIds: string[];
-  startMouseY: number;
+  startMouseFrame: number; // mouse coordinate along the frame axis at drag start
   startFrames: Map<string, number>; // original startFrame per event
   monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
   lastAppliedDelta: number; // tracks the delta already applied to events (for incremental batch moves)
@@ -101,6 +92,8 @@ interface CombatPlannerProps {
   loadouts: Record<string, OperatorLoadoutState>;
   zoom: number;
   onZoom: (deltaY: number) => void;
+  orientation?: Orientation;
+  onToggleOrientation?: () => void;
   onToggleSkill: (slotId: string, skillType: string) => void;
   onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
   onMoveEvent: (id: string, newStartFrame: number) => void;
@@ -121,7 +114,7 @@ interface CombatPlannerProps {
   onSwapEnemy?: (enemyId: string) => void;
   onEditEnemy?: () => void;
   /** Resource graph data keyed by column key (e.g. 'common-skill-points'). */
-  resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
+  resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number; wasted?: number }>;
   onEditResource?: (columnKey: string) => void;
   onBatchStart?: () => void;
   onBatchEnd?: () => void;
@@ -216,7 +209,11 @@ export default function CombatPlanner({
   debugMode,
   staggerBreaks,
   contentFrames: contentFramesProp,
+  orientation = 'vertical',
+  onToggleOrientation,
 }: CombatPlannerProps) {
+  const axis = getAxisMap(orientation);
+  const isHorizontal = orientation === 'horizontal';
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
   const loadoutRef  = useRef<HTMLDivElement>(null);
@@ -230,7 +227,7 @@ export default function CombatPlanner({
     eventId: string;
     segmentIndex: number;
     frameIndex: number;
-    startMouseY: number;
+    startMouseFrame: number; // mouse coordinate along frame axis at drag start
     startOffsetFrame: number;
     /** Minimum allowed offsetFrame (0 or prev frame's offset + 1). */
     minOffset: number;
@@ -276,13 +273,7 @@ export default function CombatPlanner({
   const enemyMenuRef = useRef<HTMLDivElement>(null);
 
   // Map slotId → element color for sequenced event coloring
-  const slotElementColor = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const s of slots) {
-      if (s.operator) map[s.slotId] = ELEMENT_COLORS[s.operator.element as ElementType] ?? s.operator.color;
-    }
-    return map;
-  }, [slots]);
+  const slotElementColors = useMemo(() => computeSlotElementColors(slots), [slots]);
 
   const alwaysAvailableComboSlots = useMemo(
     () => getAlwaysAvailableComboSlots(slots),
@@ -290,45 +281,9 @@ export default function CombatPlanner({
   );
 
   // ── Event validation (controller) ─────────────────────────────────────────
-  const invalidComboIds = useMemo(
-    () => validateComboWindows(events, slots, draggingIds),
-    [events, slots, draggingIds],
-  );
-  const invalidResourceIds = useMemo(
-    () => resourceGraphs ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined) : new Map<string, string>(),
-    [events, resourceGraphs, slots, draggingIds],
-  );
-  const invalidEmpoweredIds = useMemo(
-    () => validateEmpowered(events),
-    [events],
-  );
-  const invalidEnhancedIds = useMemo(
-    () => validateEnhanced(events),
-    [events],
-  );
-  const invalidRegularBasicIds = useMemo(
-    () => validateRegularBasicDuringUltimate(events),
-    [events],
-  );
-  const invalidFinisherIds = useMemo(
-    () => validateFinisherDuringUltimate(events, slots),
-    [events, slots],
-  );
-  const invalidFinisherStaggerIds = useMemo(
-    () => staggerBreaks ? validateFinisherStaggerBreak(events, staggerBreaks) : new Map<string, string>(),
-    [events, staggerBreaks],
-  );
-  const timeStopRegions = useMemo(
-    () => computeTimeStopRegions(events),
-    [events],
-  );
-  const invalidTimeStopIds = useMemo(
-    () => validateTimeStops(events, timeStopRegions),
-    [events, timeStopRegions],
-  );
-  const invalidInflictionIds = useMemo(
-    () => validateInflictionStacks(events),
-    [events],
+  const { maps: validationMaps, timeStopRegions, autoFinisherIds } = useMemo(
+    () => computeAllValidations(events, slots, resourceGraphs, staggerBreaks, draggingIds, debugMode),
+    [events, slots, resourceGraphs, staggerBreaks, draggingIds, debugMode],
   );
 
   const resourceInsufficiencyZones = useMemo(
@@ -440,14 +395,18 @@ export default function CombatPlanner({
     colFrStrings.push(`minmax(0, ${GROUP_FR / enemyColCount}fr)`);
   }
   const gridCols = `${TIME_AXIS_WIDTH}px ${colFrStrings.join(' ')}`;
+  // In horizontal mode, lanes become rows — use fixed min height so rows don't collapse
+  const rowFrStrings = colFrStrings.map((s) => s.replace('minmax(0,', 'minmax(28px,'));
+  const gridRows = `${TIME_AXIS_WIDTH}px ${rowFrStrings.join(' ')}`;
 
-  // Compute column pixel positions from available container width
+  // Compute column pixel positions from available container width (lanes are always columns)
   const containerWidth = outerRect?.width ?? 800;
   const totalFr = commonColCount * (COMMON_FR / Math.max(1, commonColCount))
     + slotGroups.reduce((sum, g) => sum + g.columnCount * (GROUP_FR / g.columnCount), 0)
     + (enemyColCount > 0 ? enemyColCount * (GROUP_FR / enemyColCount) : 0);
   const pxPerFr = totalFr > 0 ? (containerWidth - TIME_AXIS_WIDTH) / totalFr : 0;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const columnPositions = useMemo(() => {
     const map = new Map<string, { left: number; right: number }>();
     let x = TIME_AXIS_WIDTH;
@@ -465,14 +424,16 @@ export default function CombatPlanner({
       x += w;
     }
     return map;
-  }, [columns, slotGroups, commonColCount, enemyColCount, pxPerFr]);
-
-  const numCols  = columns.length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns, commonColCount, enemyColCount, pxPerFr]);
 
   const contentFrames = contentFramesProp ?? TOTAL_FRAMES;
   const totalRealFrames = contentFrames + timeStopRegions.reduce((sum, s) => sum + s.durationFrames, 0);
   const tlHeight = timelineHeight(zoom, totalRealFrames);
-  const combinedHeaderHeight = loadoutRowHeight + HEADER_HEIGHT;
+  // In vertical mode, headers are above → offset Y mouse coords by header height.
+  // In horizontal mode, headers are to the left → no frame-axis (X) offset needed.
+  // (We use scrollRect directly for hover calculations, so this only matters for touch handlers.)
+  const combinedHeaderHeight = isHorizontal ? 0 : loadoutRowHeight + HEADER_HEIGHT;
 
   // ─── Viewport-aware rendering (lazy timeline) ─────────────────────────────
   const [scrollTop, setScrollTop] = useState(0);
@@ -498,6 +459,7 @@ export default function CombatPlanner({
     setHoverClientY,
     outerRect,
     combinedHeaderHeight,
+    axis,
   });
 
   // ─── Outer rect (updated on resize of the element itself, not just window) ─
@@ -518,13 +480,14 @@ export default function CombatPlanner({
     const update = () => {
       const h = el.offsetHeight;
       setLoadoutRowHeight(h);
-      onLoadoutRowHeight?.(h);
+      // Only report to parent in vertical mode so the sheet header isn't affected
+      if (!isHorizontal) onLoadoutRowHeight?.(h);
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [onLoadoutRowHeight]);
+  }, [onLoadoutRowHeight, isHorizontal]);
 
   // ─── Expose scroll ref & scroll events for sync ────────────────────────
   useEffect(() => {
@@ -535,30 +498,34 @@ export default function CombatPlanner({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    setViewportH(el.clientHeight);
-    const ro = new ResizeObserver(() => setViewportH(el.clientHeight));
+    setViewportH(el[axis.viewportFrame]);
+    const ro = new ResizeObserver(() => setViewportH(el[axis.viewportFrame]));
     ro.observe(el);
     const handler = () => {
-      setScrollTop(el.scrollTop);
-      onScrollProp?.(el.scrollTop);
+      setScrollTop(el[axis.scrollPos]);
+      onScrollProp?.(el[axis.scrollPos]);
       onContextMenu(null);
     };
     el.addEventListener('scroll', handler, { passive: true });
     return () => { el.removeEventListener('scroll', handler); ro.disconnect(); };
-  }, [onScrollProp, onContextMenu]);
+  }, [onScrollProp, onContextMenu, axis]);
 
   // Headers are now outside the scroll container, so body starts at top of scroll
   useEffect(() => {
     bodyTopRef.current = 0;
   }, []);
 
-  // ─── Wheel: shift = zoom, else native ────────────────────────────────────────
+  // ─── Wheel: shift = zoom; in horizontal mode, vertical scroll → horizontal scroll
   const handleWheel = useCallback((e: WheelEvent) => {
     if (e.shiftKey) {
       e.preventDefault();
       onZoom(e.deltaY);
+    } else if (isHorizontal && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      // Translate vertical scroll wheel into horizontal scroll
+      e.preventDefault();
+      scrollRef.current?.scrollBy({ left: e.deltaY, behavior: 'instant' as ScrollBehavior });
     }
-  }, [onZoom]);
+  }, [onZoom, isHorizontal]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -632,6 +599,7 @@ export default function CombatPlanner({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds, selectedFrames, events, columns, dupMode, onRemoveEvent, onRemoveEvents, onRemoveFrame, onRemoveFrames, onSelectedFramesChange, onDuplicateEvents]);
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
@@ -641,114 +609,61 @@ export default function CombatPlanner({
   );
 
   // ─── Precompute micro-column positions per event ────────────────────────────
-  const microColumnEventPositions = useMemo(() => {
-    const positions = new Map<string, { left: number; right: number; color: string }>();
-    for (const col of columns) {
-      if (col.type !== 'mini-timeline' || !col.microColumns) continue;
-      const colPos = columnPositions.get(col.key);
-      if (!colPos) continue;
-      const colWidth = colPos.right - colPos.left;
-      const microCount = col.microColumns.length;
-      const microW = colWidth / microCount;
-
-      if (col.microColumnAssignment === 'by-order') {
-        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        const colEvents = events.filter(
-          (ev) => ev.ownerId === col.ownerId &&
-            (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-        ).sort((a, b) => a.startFrame - b.startFrame);
-        colEvents.forEach((ev, i) => {
-          // Use greedy assignment if available, else sequential
-          const microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
-          const mcMatch = matchSet
-            ? col.microColumns!.find((mc) => mc.id === ev.columnId)
-            : undefined;
-          positions.set(ev.id, {
-            left: colPos.left + microIdx * microW,
-            right: colPos.left + (microIdx + 1) * microW,
-            color: mcMatch?.color ?? col.microColumns![microIdx].color,
-          });
-        });
-      } else if (col.microColumnAssignment === 'dynamic-split') {
-        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        const colEvents = events.filter(
-          (ev) => ev.ownerId === col.ownerId &&
-            (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-        );
-
-        const typeOrder = new Map<string, number>();
-        col.microColumns!.forEach((mc, idx) => typeOrder.set(mc.id, idx));
-        const mcById = new Map(col.microColumns!.map((mc) => [mc.id, mc]));
-
-        for (const ev of colEvents) {
-          const { count, index } = MicroColumnController.dynamicSplitPosition(ev, colEvents, typeOrder);
-          const dynW = colWidth / count;
-          positions.set(ev.id, {
-            left: colPos.left + index * dynW,
-            right: colPos.left + (index + 1) * dynW,
-            color: mcById.get(ev.columnId)?.color ?? col.color,
-          });
-        }
-      } else {
-        // by-column-id: match event columnId to micro-column id
-        col.microColumns.forEach((mc, mcIdx) => {
-          const mcEvents = events.filter(
-            (ev) => ev.ownerId === col.ownerId && ev.columnId === mc.id,
-          );
-          mcEvents.forEach((ev) => {
-            positions.set(ev.id, {
-              left: colPos.left + mcIdx * microW,
-              right: colPos.left + (mcIdx + 1) * microW,
-              color: mc.color,
-            });
-          });
-        });
-      }
-    }
-    return positions;
-  }, [events, columns, columnPositions, greedySlotAssignments]);
+  const microColumnEventPositions = useMemo(
+    () => MicroColumnController.computeMicroColumnPixelPositions(events, columns, columnPositions, greedySlotAssignments),
+    [events, columns, columnPositions, greedySlotAssignments],
+  );
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
+  // Rect coords: in vertical mode {left=lane, top=frame}, in horizontal mode {left=frame, top=lane}
   const getEventsInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }) => {
     const bodyTop = bodyTopRef.current ?? 0;
     const ids = new Set<string>();
     for (const ev of events) {
-      // Try micro-column positions first, then regular column positions
       let colPos: { left: number; right: number } | undefined =
         microColumnEventPositions.get(ev.id) ??
         columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
       if (!colPos) continue;
       const totalDur = ev.segments && ev.segments.length > 0
-        ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+        ? computeSegmentsSpan(ev.segments)
         : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
-      const evTop = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
-      const evHeight = durationToPx(totalDur, zoomRef.current);
-      const evBot = evTop + evHeight;
-      // Check rect intersection
-      if (colPos.right > rect.left && colPos.left < rect.right &&
-          evBot > rect.top && evTop < rect.bottom) {
-        ids.add(ev.id);
+      const evFrameStart = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
+      const evFrameEnd = evFrameStart + durationToPx(totalDur, zoomRef.current);
+      // In vertical: frame axis=Y, lane axis=X. In horizontal: frame axis=X, lane axis=Y
+      if (isHorizontal) {
+        if (colPos.right > rect.top && colPos.left < rect.bottom &&
+            evFrameEnd > rect.left && evFrameStart < rect.right) {
+          ids.add(ev.id);
+        }
+      } else {
+        if (colPos.right > rect.left && colPos.left < rect.right &&
+            evFrameEnd > rect.top && evFrameStart < rect.bottom) {
+          ids.add(ev.id);
+        }
       }
     }
     return ids;
-  }, [events, columnPositions, microColumnEventPositions]);
+  }, [events, columnPositions, microColumnEventPositions, isHorizontal]);
 
   /** Find all frame diamonds within a content-space rect. */
   const getFramesInRect = useCallback((rect: { left: number; top: number; right: number; bottom: number }): SelectedFrame[] => {
     const bodyTop = bodyTopRef.current ?? 0;
     const z = zoomRef.current;
     const result: SelectedFrame[] = [];
+    // In horizontal mode, frame axis is X (left/right), lane axis is Y (top/bottom)
+    const rectFrameStart = isHorizontal ? rect.left : rect.top;
+    const rectFrameEnd = isHorizontal ? rect.right : rect.bottom;
+    const rectLaneStart = isHorizontal ? rect.top : rect.left;
+    const rectLaneEnd = isHorizontal ? rect.bottom : rect.right;
     for (const ev of events) {
       if (!ev.segments || ev.segments.length === 0) continue;
       const colPos = columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
       if (!colPos) continue;
-      // Column X must overlap
-      if (colPos.right <= rect.left || colPos.left >= rect.right) continue;
+      // Column (lane axis) must overlap
+      if (colPos.right <= rectLaneStart || colPos.left >= rectLaneEnd) continue;
       const isUltimate = ev.columnId === SKILL_COLUMNS.ULTIMATE;
-      // Ultimate frames render in the Active phase only when activeDuration > 0;
-      // otherwise they render in the Activation phase with no offset.
       const baseOffset = isUltimate && ev.activeDuration > 0 ? ev.activationDuration : 0;
-      const evTopPx = bodyTop + frameToPx(ev.startFrame, z);
+      const evFramePx = bodyTop + frameToPx(ev.startFrame, z);
       let segOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];
@@ -756,8 +671,8 @@ export default function CombatPlanner({
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const f = seg.frames[fi];
             const innerOffset = baseOffset + segOffset + f.offsetFrame;
-            const y = evTopPx + durationToPx(innerOffset, z);
-            if (y >= rect.top && y <= rect.bottom) {
+            const framePx = evFramePx + durationToPx(innerOffset, z);
+            if (framePx >= rectFrameStart && framePx <= rectFrameEnd) {
               result.push({ eventId: ev.id, segmentIndex: si, frameIndex: fi });
             }
           }
@@ -766,7 +681,7 @@ export default function CombatPlanner({
       }
     }
     return result;
-  }, [events, columnPositions]);
+  }, [events, columnPositions, isHorizontal]);
 
   // ─── Event hover ──────────────────────────────────────────────────────────────
   const handleEventHover = useCallback((id: string | null) => {
@@ -815,29 +730,31 @@ export default function CombatPlanner({
     } else
     // Hover line — snaps to the nearest frame-interval grid line
     if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
-      const scrollTop = scrollRef.current.scrollTop;
+      const scrollEl = scrollRef.current;
+      const scrollRect = scrollEl.getBoundingClientRect();
+      const scrollFrame = scrollEl[axis.scrollPos];
       const bodyTop = bodyTopRef.current;
-      const relY = e.clientY - outerRect.top - combinedHeaderHeight + scrollTop - bodyTop;
-      if (relY > 0) {
+      const relFrame = e[axis.clientFrame] - scrollRect[axis.rectFrameStart] + scrollFrame - bodyTop;
+      if (relFrame > 0) {
         // Snap to nearest frame-interval grid line (works inside time-stop zones too)
         const ppf = getPxPerFrame(zoomRef.current);
-        const snappedRelY = Math.max(TIMELINE_TOP_PAD, TIMELINE_TOP_PAD + Math.round((relY - TIMELINE_TOP_PAD) / ppf) * ppf);
-        const frame = pxToFrame(snappedRelY, zoomRef.current);
+        const snappedRel = Math.max(TIMELINE_TOP_PAD, TIMELINE_TOP_PAD + Math.round((relFrame - TIMELINE_TOP_PAD) / ppf) * ppf);
+        const frame = pxToFrame(snappedRel, zoomRef.current);
         setHoverFrame(frame);
-        setHoverClientY(snappedRelY - scrollTop + outerRect.top + combinedHeaderHeight + bodyTop);
+        setHoverClientY(snappedRel - scrollFrame + scrollRect[axis.rectFrameStart] + bodyTop);
       } else {
         setHoverFrame(null);
         setHoverClientY(null);
       }
     }
 
-    // Column highlight — find which column the mouse is over
+    // Column highlight — find which column the mouse is over (lanes are always columns on X axis)
     if (outerRect) {
-      const mouseX = e.clientX - outerRect.left;
+      const mouseLane = e.clientX - outerRect.left;
       let foundCol: string | null = null;
       for (let i = 0; i < columns.length; i++) {
         const pos = columnPositions.get(columns[i].key);
-        if (pos && mouseX >= pos.left && mouseX < pos.right) {
+        if (pos && mouseLane >= pos.left && mouseLane < pos.right) {
           foundCol = columns[i].key;
           break;
         }
@@ -847,10 +764,12 @@ export default function CombatPlanner({
 
     // Duplicate ghost positioning
     if (dupMode && scrollRef.current && outerRect && bodyTopRef.current !== null) {
-      const scrollTop = scrollRef.current.scrollTop;
+      const scrollEl2 = scrollRef.current;
+      const scrollRect2 = scrollEl2.getBoundingClientRect();
+      const scrollFrame = scrollEl2[axis.scrollPos];
       const bodyTop = bodyTopRef.current;
-      const relY = e.clientY - outerRect.top - combinedHeaderHeight + scrollTop - bodyTop;
-      const mouseFrame = pxToFrame(relY, zoomRef.current);
+      const relFrame = e[axis.clientFrame] - scrollRect2[axis.rectFrameStart] + scrollFrame - bodyTop;
+      const mouseFrame = pxToFrame(relFrame, zoomRef.current);
       const sources = dupSourceRef.current;
       if (sources.length > 0) {
         // Offset relative to the earliest source event
@@ -865,7 +784,7 @@ export default function CombatPlanner({
           if (ghostFrame < 0 || ghostFrame >= TOTAL_FRAMES) { valid = false; break; }
           const ghost = { ...src, id: `__dup_ghost_${src.id}` };
           if (wouldOverlapNonOverlappable(eventsRef.current, ghost, ghostFrame)) { valid = false; break; }
-          if (!debugModeRef.current && isDuplicatePlacementInSpZone(src, ghostFrame, resourceZonesRef.current)) { valid = false; break; }
+          if (!debugModeRef.current && isDuplicatePlacementInResourceZone(src, ghostFrame, resourceZonesRef.current)) { valid = false; break; }
         }
         setDupValid(valid);
       }
@@ -874,10 +793,10 @@ export default function CombatPlanner({
     // Event drag (single or batch)
     if (dragRef.current) {
       dragMovedRef.current = true;
-      const { primaryId, eventIds, startMouseY, startFrames } = dragRef.current;
+      const { primaryId, eventIds, startMouseFrame: startMouseF, startFrames } = dragRef.current;
 
       const deltaFrames = Math.round(
-        (e.clientY - startMouseY) / getPxPerFrame(zoomRef.current)
+        (e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current)
       );
 
       let primaryNewFrame = 0;
@@ -933,12 +852,14 @@ export default function CombatPlanner({
       }
       primaryNewFrame = (startFrames.get(primaryId) ?? 0) + clampedDelta;
 
-      if (scrollRef.current && outerRect && bodyTopRef.current !== null) {
-        const scrollTop = scrollRef.current.scrollTop;
+      if (scrollRef.current && bodyTopRef.current !== null) {
+        const sEl = scrollRef.current;
+        const sRect = sEl.getBoundingClientRect();
+        const scrollFrame = sEl[axis.scrollPos];
         const bodyTop = bodyTopRef.current;
-        const snappedRelY = frameToPx(primaryNewFrame, zoomRef.current);
+        const snappedRel = frameToPx(primaryNewFrame, zoomRef.current);
         setHoverFrame(primaryNewFrame);
-        setHoverClientY(snappedRelY - scrollTop + outerRect.top + combinedHeaderHeight + bodyTop);
+        setHoverClientY(snappedRel - scrollFrame + sRect[axis.rectFrameStart] + bodyTop);
       }
       return;
     }
@@ -946,8 +867,8 @@ export default function CombatPlanner({
     // Frame diamond drag
     if (frameDragRef.current) {
       dragMovedRef.current = true;
-      const { eventId, segmentIndex, frameIndex, startMouseY, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
-      const deltaFrames = Math.round((e.clientY - startMouseY) / getPxPerFrame(zoomRef.current));
+      const { eventId, segmentIndex, frameIndex, startMouseFrame: startMouseF, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
+      const deltaFrames = Math.round((e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current));
       const newOffset = Math.max(minOffset, Math.min(maxOffset, startOffsetFrame + deltaFrames));
       onMoveFrame?.(eventId, segmentIndex, frameIndex, newOffset);
       return;
@@ -1029,12 +950,14 @@ export default function CombatPlanner({
       }
       onSelectedFramesChange?.(frames);
     }
-  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange, dupMode, columns, columnPositions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outerRect, onMoveEvent, combinedHeaderHeight, getEventsInRect, getFramesInRect, onSelectedFramesChange, dupMode, columns, columnPositions, axis]);
 
   const handleMouseLeave = useCallback(() => {
     setHoverClientY(null);
     setHoverFrame(null);
     setHoverColKey(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMouseUp = useCallback(() => {
@@ -1099,7 +1022,7 @@ export default function CombatPlanner({
           startFrames.set(ev.id, ev.startFrame);
         }
       }
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
       setDraggingIds(new Set(draggedIds));
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
@@ -1107,10 +1030,11 @@ export default function CombatPlanner({
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseY: e.clientY, startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
       setDraggingIds(new Set([eventId]));
     }
-  }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart, axis]);
 
   // ─── Frame diamond drag start ────────────────────────────────────────────────
   const handleFrameDragStart = useCallback((e: React.MouseEvent, eventId: string, segmentIndex: number, frameIndex: number) => {
@@ -1131,13 +1055,13 @@ export default function CombatPlanner({
       eventId,
       segmentIndex,
       frameIndex,
-      startMouseY: e.clientY,
+      startMouseFrame: e[axis.clientFrame],
       startOffsetFrame: frame.offsetFrame,
       minOffset: prevOffset,
       maxOffset: nextOffset,
     };
     dragMovedRef.current = false;
-  }, [events, onBatchStart]);
+  }, [events, onBatchStart, axis]);
 
   const handleFrameClickGuarded = useCallback((eid: string, si: number, fi: number) => {
     if (!dragMovedRef.current) onFrameClick?.(eid, si, fi);
@@ -1211,6 +1135,30 @@ export default function CombatPlanner({
     }
   }, [selectedIds, selectedFrames, onSelectedFramesChange, dupMode, dupValid, dupOffset, onDuplicateEvents]);
 
+  // ─── Map controller menu items (actionId) to view callbacks ─────────────────
+  const resolveMenuItemAction = useCallback((item: import('../consts/viewTypes').ContextMenuItem): import('../consts/viewTypes').ContextMenuItem => {
+    if (item.separator || item.header || item.action) return item;
+    const { actionId, actionPayload, ...rest } = item;
+    switch (actionId) {
+      case 'addEvent': {
+        const { ownerId, columnId, atFrame, defaultSkill } = actionPayload;
+        return { ...rest, action: () => onAddEvent(ownerId, columnId, atFrame, defaultSkill) };
+      }
+      case 'editResource':
+        return { ...rest, action: () => { onEditResource?.(actionPayload); onContextMenu(null); } };
+      case 'addSegment': {
+        const { eventId, segmentLabel } = actionPayload;
+        return { ...rest, action: () => { onAddSegment?.(eventId, segmentLabel); onContextMenu(null); } };
+      }
+      case 'addFrame': {
+        const { eventId, segmentIndex, frameOffsetFrame } = actionPayload;
+        return { ...rest, action: () => { onAddFrame?.(eventId, segmentIndex, frameOffsetFrame); onContextMenu(null); } };
+      }
+      default:
+        return item;
+    }
+  }, [onAddEvent, onEditResource, onContextMenu, onAddSegment, onAddFrame]);
+
   // ─── Right-click on empty column ────────────────────────────────────────────
   const handleSubTimelineContextMenu = useCallback((
     e: React.MouseEvent,
@@ -1218,258 +1166,33 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    // Cancel dup mode on right-click
-    if (dupMode) {
-      setDupMode(false);
-      dupSourceRef.current = [];
-      return;
-    }
-    // Suppress context menu if right-click marquee was dragged
+    if (dupMode) { setDupMode(false); dupSourceRef.current = []; return; }
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
-    if (col.type !== 'mini-timeline') return;
-    if (col.derived && !debugMode) return;
 
-    // Resource columns: show "Edit Resource" context menu
-    if (col.noAdd && resourceGraphs?.has(col.key) && onEditResource) {
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          { label: col.label, header: true },
-          { label: 'Edit Resource', action: () => { onEditResource(col.key); onContextMenu(null); } },
-        ],
-      });
-      return;
-    }
-    if (col.noAdd && !debugMode) return;
-
-    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    const scrollFrame = scrollRef.current?.[axis.scrollPos] ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
     if (!rect || bodyTopRef.current === null) return;
 
-    const relY    = e.clientY - rect.top + scrollTop - bodyTopRef.current;
-    const atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
-    const headerItem = { label: `Add @ ${frameToDetailLabel(atFrame)}`, header: true };
+    const relFrame = e[axis.clientFrame] - rect[axis.rectFrameStart] + scrollFrame - bodyTopRef.current;
+    const atFrame = pxToFrame(Math.max(0, relFrame), zoomRef.current);
 
-    // Helper: get resource value at a frame from a resource graph
+    // Compute relative click along lane axis (always X) for by-column-id micro-columns
+    const colPos = columnPositions.get(col.key);
+    const relClickX = colPos ? e.clientX - (rect.left - (scrollRef.current?.scrollLeft ?? 0)) - colPos.left : undefined;
 
-    // Helper: check if placing a new event with the given non-overlappable range would overlap siblings
-    const checkOverlap = (ownerId: string, columnId: string, range: number) =>
-      wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
-
-    const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions, col.defaultEvent?.animationDuration);
-    const inTimeStop = timeStop.blocked;
-    const timeStopReason = timeStop.reason;
-
-    if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
-      // Dynamic-split: all micro-column types as options
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          headerItem,
-          ...col.microColumns.map((mc) => ({
-            label: REACTION_LABELS[mc.id]?.label ?? mc.label,
-            action: () => onAddEvent(col.ownerId, mc.id, atFrame, mc.defaultEvent ?? col.defaultEvent ?? null),
-            disabled: inTimeStop,
-            disabledReason: inTimeStop ? timeStopReason : undefined,
-          })),
-        ],
-      });
-    } else if (col.microColumns && col.microColumnAssignment === 'by-column-id') {
-      // Micro-column by column ID: determine which micro-column was clicked
-      const colPos = columnPositions.get(col.key);
-      if (!colPos) return;
-      const relX = e.clientX - (rect.left - (scrollRef.current?.scrollLeft ?? 0)) - colPos.left;
-      const microW = (colPos.right - colPos.left) / col.microColumns.length;
-      const mcIdx = Math.max(0, Math.min(col.microColumns.length - 1, Math.floor(relX / microW)));
-      const mc = col.microColumns[mcIdx];
-      onContextMenu({
-        x: e.clientX, y: e.clientY,
-        items: [
-          headerItem,
-          { label: mc.label, action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ?? null), disabled: inTimeStop, disabledReason: inTimeStop ? timeStopReason : undefined },
-        ],
-      });
-    } else if (col.microColumns && col.microColumnAssignment === 'by-order') {
-      // Monotonic stacking micro-columns (e.g. MF stacks, inflictions)
-      const full = MicroColumnController.isColumnFull(col, events, atFrame);
-      const beforePrev = MicroColumnController.isBeforeLastEvent(col, events, atFrame);
-      const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-      const existing = events.filter(
-        (ev) => ev.ownerId === col.ownerId &&
-          (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-      );
-
-      if (col.matchColumnIds && col.microColumns) {
-        // Multi-column stacking (inflictions)
-        onContextMenu({
-          x: e.clientX, y: e.clientY,
-          items: [
-            headerItem,
-            ...col.microColumns.map((mc) => ({
-              label: INFLICTION_EVENT_LABELS[mc.id] ?? mc.label,
-              action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ? { ...col.defaultEvent, name: INFLICTION_EVENT_LABELS[mc.id] ?? mc.id } : null),
-              disabled: inTimeStop,
-              disabledReason: inTimeStop ? timeStopReason : undefined,
-            })),
-          ],
-        });
-      } else {
-        // Single-column stacking (MF)
-        const disabled = !debugMode && (inTimeStop || full || beforePrev);
-        const rawName = col.defaultEvent?.name ?? col.label;
-        const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
-        const disabledReason = inTimeStop
-          ? 'Ultimate animation active'
-          : full
-            ? `(${col.maxEvents ?? '?'}/${col.maxEvents ?? '?'} stacks)`
-            : beforePrev
-              ? `(must be after stack ${existing.length})`
-              : '';
-        onContextMenu({
-          x: e.clientX, y: e.clientY,
-          items: [
-            headerItem,
-            {
-              label: eventName,
-              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
-              disabled,
-              disabledReason: disabled ? disabledReason : undefined,
-            },
-          ],
-        });
-      }
-    } else {
-      // Simple single-column mini-timeline (skill columns)
-      const rawName = col.defaultEvent?.name ?? col.label;
-      const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
-      if (col.columnId === SKILL_COLUMNS.COMBO) {
-        const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
-        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
-        const disabled = !debugMode && (inTimeStop || !comboAvail.available || overlap);
-        const reason = inTimeStop ? timeStopReason
-          : !comboAvail.available ? comboAvail.reason
-          : overlap ? 'Would overlap another event' : undefined;
-
-        onContextMenu({
-          x: e.clientX, y: e.clientY,
-          items: [
-            headerItem,
-            {
-              label: eventName,
-              action: () => onAddEvent(col.ownerId, col.columnId, atFrame,
-                { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId }),
-              disabled,
-              disabledReason: disabled ? reason : undefined,
-            },
-          ],
-        });
-      } else if (col.eventVariants && col.eventVariants.length > 0) {
-        // Multiple event variants (e.g. Laevatain battle skill)
-        const spAvail = resourceGraphs ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots) : { sufficient: true };
-        const spInsufficient = !spAvail.sufficient;
-        const spReason = spAvail.reason;
-
-        onContextMenu({
-          x: e.clientX, y: e.clientY,
-          items: [
-            headerItem,
-            ...col.eventVariants.map((v) => {
-              const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame, col.columnId, slots);
-              const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
-              // Finisher: must be during stagger break, one per break across all operators
-              let finisherBlock: string | undefined;
-              if (v.name === CombatSkillsType.FINISHER && staggerBreaks) {
-                const inBreak = staggerBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
-                if (!inBreak) {
-                  finisherBlock = 'Finisher can only be used during stagger break';
-                } else {
-                  const existing = events.some((ev) =>
-                    ev.name === CombatSkillsType.FINISHER
-                    && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
-                  );
-                  if (existing) finisherBlock = 'Only one Finisher allowed per stagger break';
-                }
-              }
-              const disabled = !debugMode && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
-              const displayName = v.isPerfectDodge ? 'Dodge'
-                : col.columnId === 'dash' ? 'Dash'
-                : COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
-              const reason = v.disabledReason
-                ?? (inTimeStop ? timeStopReason
-                : spInsufficient ? spReason
-                : availability.disabled ? availability.reason
-                : finisherBlock ? finisherBlock
-                : overlap ? 'Would overlap another event'
-                : undefined);
-              return {
-                label: displayName,
-                disabledReason: disabled ? reason : undefined,
-                action: () => onAddEvent(col.ownerId, col.columnId, atFrame, {
-                  name: v.name,
-                  defaultActivationDuration: v.defaultActivationDuration,
-                  defaultActiveDuration: v.defaultActiveDuration,
-                  defaultCooldownDuration: v.defaultCooldownDuration,
-                  ...(v.segments ? { segments: v.segments } : {}),
-                  ...(v.gaugeGain != null ? { gaugeGain: v.gaugeGain } : {}),
-                  ...(v.teamGaugeGain != null ? { teamGaugeGain: v.teamGaugeGain } : {}),
-                  ...(v.gaugeGainByEnemies ? { gaugeGainByEnemies: v.gaugeGainByEnemies } : {}),
-                  ...(v.animationDuration != null ? { animationDuration: v.animationDuration } : {}),
-                  ...(v.timeInteraction ? { timeInteraction: v.timeInteraction } : {}),
-                  ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
-                  ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
-                  ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
-                }),
-                disabled,
-              };
-            }),
-          ],
-        });
-      } else {
-        const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
-        const resAvail = resourceGraphs ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots) : { sufficient: true };
-        const disabled = !debugMode && (inTimeStop || overlap || !resAvail.sufficient);
-        const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resAvail.reason;
-        onContextMenu({
-          x: e.clientX, y: e.clientY,
-          items: [
-            headerItem,
-            ...(resourceGraphs?.has(col.key) && onEditResource ? [
-              { label: 'Edit Resource', action: () => { onEditResource(col.key); onContextMenu(null); } },
-              { separator: true } as const,
-            ] : []),
-            {
-              label: eventName,
-              action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
-              disabled,
-              disabledReason: disabled ? reason : undefined,
-            },
-          ],
-        });
-      }
-    }
-  }, [onAddEvent, onContextMenu, events, columnPositions, resourceGraphs, onEditResource, onSelectedFramesChange, dupMode, slots, debugMode, timeStopRegions]);
-
-  // ─── Build "Add Segment" items for a sequenced event ────────────────────────
-  const buildSegmentAddItems = useCallback((eventId: string): import('../consts/viewTypes').ContextMenuItem[] => {
-    const ev = events.find((e) => e.id === eventId);
-    if (!ev?.segments) return [];
-    const col = columns.find((c): c is MiniTimeline =>
-      c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
-    const allSegments = col?.defaultEvent?.segments;
-    if (!allSegments || allSegments.length <= 1) return [];
-    const addable = allSegments.filter((s) => s.label);
-    if (addable.length === 0) return [];
-    return addable.map((s) => {
-      const wouldOverlap = wouldSegmentAdditionOverlap(ev, s.durationFrames, events);
-      return {
-        label: `Add Sequence ${s.label}`,
-        action: () => { onAddSegment?.(eventId, s.label!); onContextMenu(null); },
-        disabled: !debugMode && wouldOverlap,
-        disabledReason: !debugMode && wouldOverlap ? 'Would overlap another event' : undefined,
-      };
+    const items = buildColumnContextMenu(col, atFrame, relClickX, {
+      events, slots, resourceGraphs, alwaysAvailableComboSlots,
+      timeStopRegions, staggerBreaks, columnPositions, debugMode,
     });
-  }, [events, columns, onAddSegment, onContextMenu, debugMode]);
+    if (!items) return;
+
+    onContextMenu({
+      x: e.clientX, y: e.clientY,
+      items: items.map(resolveMenuItemAction),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onContextMenu, events, columnPositions, resourceGraphs, onSelectedFramesChange, dupMode, slots, debugMode, timeStopRegions, staggerBreaks, alwaysAvailableComboSlots, resolveMenuItemAction, axis, isHorizontal]);
 
   // ─── Right-click on event ────────────────────────────────────────────────────
   const handleEventContextMenu = useCallback((
@@ -1478,70 +1201,29 @@ export default function CombatPlanner({
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    // Suppress context menu if right-click marquee was dragged
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
-    // Block context menu for derived columns (e.g. melting flame) unless debug mode
     const target = events.find((ev) => ev.id === eventId);
     if (target && !debugMode) {
       const col = columns.find((c): c is MiniTimeline => c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId);
       if (col?.derived) return;
     }
 
-    // Compute frame from click position (for "Add" items)
-    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    const scrollFrame = scrollRef.current?.[axis.scrollPos] ?? 0;
     const rect = scrollRef.current?.getBoundingClientRect();
     let atFrame = 0;
     let label = '';
     if (rect && bodyTopRef.current !== null) {
-      const relY = e.clientY - rect.top + scrollTop - bodyTopRef.current;
-      atFrame = pxToFrame(Math.max(0, relY), zoomRef.current);
+      const relFrame = e[axis.clientFrame] - rect[axis.rectFrameStart] + scrollFrame - bodyTopRef.current;
+      atFrame = pxToFrame(Math.max(0, relFrame), zoomRef.current);
       label = frameToDetailLabel(atFrame);
     }
 
-    // Build "Add" items for stackable columns (by-order with matchColumnIds)
     const ev = events.find((ev) => ev.id === eventId);
-    let addItems: import('../consts/viewTypes').ContextMenuItem[] = [];
-    if (ev) {
-      const col = columns.find((c) => {
-        if (c.type !== 'mini-timeline' || !c.microColumns || c.microColumnAssignment !== 'by-order') return false;
-        if (c.matchColumnIds) return c.ownerId === ev.ownerId && c.matchColumnIds.includes(ev.columnId);
-        return c.ownerId === ev.ownerId && c.columnId === ev.columnId;
-      }) as MiniTimeline | undefined;
+    const addItems = ev
+      ? buildEventAddItems(ev, columns, events, atFrame, label, 'addEvent', debugMode).map(resolveMenuItemAction)
+      : [];
 
-      if (col?.matchColumnIds && col.microColumns) {
-        addItems = col.microColumns.map((mc) => ({
-          label: `Add ${mc.label} at ${label}`,
-          action: () => onAddEvent(col.ownerId, mc.id, atFrame, col.defaultEvent ?? null),
-        }));
-      } else if (col) {
-        // Single-column stacking (MF)
-        const full = MicroColumnController.isColumnFull(col, events, atFrame);
-        const beforePrev = MicroColumnController.isBeforeLastEvent(col, events, atFrame);
-        const disabled = full || beforePrev;
-        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
-        const existing = events.filter(
-          (ev) => ev.ownerId === col.ownerId &&
-            (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
-        );
-        const maxLabel = col.maxEvents ?? '?';
-        const rawName = col.defaultEvent?.name ?? col.label;
-        const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
-        const disabledReason2 = full
-          ? `${maxLabel}/${maxLabel} stacks`
-          : beforePrev
-            ? `Must be after stack ${existing.length}`
-            : undefined;
-        addItems = [{
-          label: `Add ${eventName} at ${label}`,
-          action: () => onAddEvent(col.ownerId, col.columnId, atFrame, col.defaultEvent ?? null),
-          disabled,
-          disabledReason: disabled ? disabledReason2 : undefined,
-        }];
-      }
-    }
-
-    // Batch context menu when right-clicking a selected event in a multi-selection
     if (selectedIds.has(eventId) && selectedIds.size > 1) {
       const count = selectedIds.size;
       const ids = Array.from(selectedIds);
@@ -1564,7 +1246,9 @@ export default function CombatPlanner({
       const hasSegments = ev?.segments && ev.segments.length > 0;
       const multiSegment = (ev?.segments?.length ?? 0) > 1;
       const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
-      const segAddItems = multiSegment && !isCombo ? buildSegmentAddItems(eventId) : [];
+      const segAddItems = multiSegment && !isCombo
+        ? buildSegmentAddItemsCtrl(eventId, events, columns, debugMode).map(resolveMenuItemAction)
+        : [];
       onContextMenu({
         x: e.clientX, y: e.clientY,
         items: [
@@ -1578,7 +1262,8 @@ export default function CombatPlanner({
         ],
       });
     }
-  }, [onEditEvent, onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onResetFrames, onContextMenu, selectedIds, events, columns, onAddEvent, onSelectedFramesChange, buildSegmentAddItems]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRemoveEvent, onRemoveEvents, onResetEvent, onResetEvents, onResetSegments, onResetFrames, onContextMenu, selectedIds, events, columns, onSelectedFramesChange, debugMode, resolveMenuItemAction]);
 
   // ─── Right-click on frame diamond ──────────────────────────────────────────
   const handleFrameContextMenu = useCallback((
@@ -1623,30 +1308,6 @@ export default function CombatPlanner({
     }
   }, [onContextMenu, onRemoveFrame, onRemoveFrames, selectedFrames, onSelectedFramesChange]);
 
-  // ─── Build "Add Frame" items for a segment ─────────────────────────────────
-  const buildFrameAddItems = useCallback((eventId: string, segmentIndex: number): import('../consts/viewTypes').ContextMenuItem[] => {
-    const ev = events.find((e) => e.id === eventId);
-    if (!ev?.segments?.[segmentIndex]) return [];
-    const col = columns.find((c): c is MiniTimeline =>
-      c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
-    // Find the matching default segment by label
-    const seg = ev.segments[segmentIndex];
-    const allDefaultSegs = col?.defaultEvent?.segments;
-    const defaultSeg = allDefaultSegs?.find((s) => s.label === seg.label) ?? allDefaultSegs?.[segmentIndex];
-    const allFrames = defaultSeg?.frames;
-    if (!allFrames || allFrames.length <= 0) return [];
-    const presentOffsets = new Set((seg.frames ?? []).map((f) => f.offsetFrame));
-    const missing = allFrames.filter((f) => !presentOffsets.has(f.offsetFrame));
-    if (missing.length === 0) return [];
-    return missing.map((f, i) => {
-      const allIdx = allFrames.indexOf(f);
-      return {
-        label: `Add Frame ${allIdx + 1}`,
-        action: () => { onAddFrame?.(eventId, segmentIndex, f.offsetFrame); onContextMenu(null); },
-      };
-    });
-  }, [events, columns, onAddFrame, onContextMenu]);
-
   // ─── Right-click on segment (multi-segment events only) ────────────────────
   const handleSegmentContextMenu = useCallback((
     e: React.MouseEvent,
@@ -1661,8 +1322,10 @@ export default function CombatPlanner({
     const segLabel = ev?.segments?.[segmentIndex]?.label;
     const multiSegment = (ev?.segments?.length ?? 0) > 1;
     const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
-    const addSegItems = multiSegment && !isCombo ? buildSegmentAddItems(eventId) : [];
-    const addFrameItems = buildFrameAddItems(eventId, segmentIndex);
+    const addSegItems = multiSegment && !isCombo
+      ? buildSegmentAddItemsCtrl(eventId, events, columns, debugMode).map(resolveMenuItemAction)
+      : [];
+    const addFrameItems = buildFrameAddItemsCtrl(eventId, segmentIndex, events, columns).map(resolveMenuItemAction);
     onContextMenu({
       x: e.clientX, y: e.clientY,
       items: [
@@ -1680,16 +1343,14 @@ export default function CombatPlanner({
         { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
       ],
     });
-  }, [onContextMenu, onEditEvent, onRemoveEvent, onRemoveSegment, onResetEvent, onResetSegments, onResetFrames, onSelectedFramesChange, events, buildSegmentAddItems, buildFrameAddItems]);
+  }, [onContextMenu, onRemoveEvent, onRemoveSegment, onResetEvent, onResetSegments, onResetFrames, onSelectedFramesChange, events, columns, debugMode, resolveMenuItemAction]);
 
-  const showHoverLine = hoverClientY !== null && outerRect
-    && hoverClientY > outerRect.top + combinedHeaderHeight
-    && hoverClientY < outerRect.bottom;
+  const showHoverLine = hoverClientY !== null && outerRect;
 
   return (
     <div
       ref={outerRef}
-      className={`timeline-outer${dupMode ? ' timeline-outer--dup' : ''}`}
+      className={`timeline-outer${isHorizontal ? ' timeline-outer--horizontal' : ''}${dupMode ? ' timeline-outer--dup' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
@@ -1709,19 +1370,28 @@ export default function CombatPlanner({
     >
       {/* ── Fixed headers (outside scroll) ─────────────────────── */}
       <div className="timeline-header-area">
-        {/* Row 1: Loadout row */}
+        {/* Row 1: Loadout — in horizontal mode, stacks vertically as rows */}
         <div
           ref={loadoutRef}
           className="timeline-header-grid"
-          style={{ gridTemplateColumns: gridCols }}
+          style={isHorizontal ? { gridTemplateRows: gridRows } : { gridTemplateColumns: gridCols }}
         >
           <div className="tl-loadout-corner">
             <span className="corner-label">LOADOUT</span>
+            {onToggleOrientation && (
+              <button
+                className="btn-orientation-toggle"
+                onClick={onToggleOrientation}
+                title={isHorizontal ? 'Switch to vertical timeline' : 'Switch to horizontal timeline'}
+              >
+                {isHorizontal ? 'Horizontal' : 'Vertical'}
+              </button>
+            )}
           </div>
 
           <div
             className="tl-loadout-cell tl-loadout-cell--common"
-            style={{ gridColumn: `${commonStartCol} / span ${commonColCount}` }}
+            style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${commonStartCol} / span ${commonColCount}` } as React.CSSProperties}
           >
             <div className="lo-cell lo-cell--common">
               <span className="lo-common-label">TEAM</span>
@@ -1736,7 +1406,7 @@ export default function CombatPlanner({
                 key={`lo-${slot.slotId}`}
                 className="tl-loadout-cell"
                 style={{
-                  gridColumn: `${group.startCol} / span ${group.columnCount}`,
+                  [isHorizontal ? 'gridRow' : 'gridColumn']: `${group.startCol} / span ${group.columnCount}`,
                   '--op-color': op?.color ?? '#666',
                 } as React.CSSProperties}
               >
@@ -1758,7 +1428,7 @@ export default function CombatPlanner({
           {enemyColCount > 0 && (
             <div
               className="tl-loadout-cell tl-loadout-cell--enemy"
-              style={{ gridColumn: `${colIdx} / span ${enemyColCount}` }}
+              style={{ [isHorizontal ? 'gridRow' : 'gridColumn']: `${colIdx} / span ${enemyColCount}` } as React.CSSProperties}
             >
               <div className="lo-cell lo-cell--enemy">
                 <div
@@ -1822,13 +1492,15 @@ export default function CombatPlanner({
           )}
         </div>
 
-        {/* Row 2: Skill column headers */}
+        {/* Row 2: Skill column headers — becomes row labels in horizontal mode */}
         <div
           className="timeline-header-grid"
-          style={{ gridTemplateColumns: gridCols, height: HEADER_HEIGHT }}
+          style={isHorizontal
+            ? { gridTemplateRows: gridRows, width: HEADER_HEIGHT }
+            : { gridTemplateColumns: gridCols, height: HEADER_HEIGHT }
+          }
         >
           <div className="tl-corner">
-            <span className="corner-time-label">REAL<br/>TIME</span>
           </div>
 
           {columns.map((col) => (
@@ -1862,18 +1534,21 @@ export default function CombatPlanner({
       </div>
 
       {/* ── Scrollable body ──────────────────────────────────── */}
-      <div ref={scrollRef} className={`timeline-scroll${hideScrollbar ? ' timeline-scroll--no-bar' : ''}${draggingIds ? ' timeline-scroll--dragging' : ''}`}>
+      <div ref={scrollRef} className={`timeline-scroll${isHorizontal ? ' timeline-scroll--horizontal' : ''}${hideScrollbar ? ' timeline-scroll--no-bar' : ''}${draggingIds ? ' timeline-scroll--dragging' : ''}`}>
         <div
-          className="timeline-body-grid"
-          style={{ gridTemplateColumns: gridCols }}
+          className={`timeline-body-grid${isHorizontal ? ' timeline-body-grid--horizontal' : ''}`}
+          style={isHorizontal
+            ? { gridTemplateRows: gridRows }
+            : { gridTemplateColumns: gridCols }
+          }
         >
           {/* Time axis */}
-          <div ref={timeAxisRef} className="tl-time-axis" style={{ height: tlHeight }}>
+          <div ref={timeAxisRef} className="tl-time-axis" style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}>
             {ticks.map((tick) => (
               <div
                 key={tick.frame}
                 className={`tl-tick${tick.major ? ' tl-tick--major' : ' tl-tick--minor'}`}
-                style={{ top: frameToPx(tick.frame, zoom) }}
+                style={{ [axis.framePos]: frameToPx(tick.frame, zoom) } as React.CSSProperties}
               >
                 {tick.major && (
                   <span className="tl-tick-label">{frameToTimeLabel(tick.frame)}</span>
@@ -1889,14 +1564,14 @@ export default function CombatPlanner({
                 <div
                   key={`col-${col.key}`}
                   className={`tl-sub-timeline tl-sub-timeline--empty${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
-                  style={{ height: tlHeight }}
+                  style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}
                   onMouseDown={handleTimelineMouseDown}
                 >
                   {ticks.filter((t) => t.major).map((tick) => (
                     <div
                       key={tick.frame}
                       className="tl-gridline"
-                      style={{ top: frameToPx(tick.frame, zoom) }}
+                      style={{ [axis.framePos]: frameToPx(tick.frame, zoom) } as React.CSSProperties}
                     />
                   ))}
                 </div>
@@ -1963,7 +1638,7 @@ export default function CombatPlanner({
               <div
                 key={`col-${col.key}`}
                 className={`tl-sub-timeline${hasMicro ? ' tl-sub-timeline--mf' : ''}${hoverColKey === col.key ? ' tl-sub-timeline--col-hover' : ''}`}
-                style={{ height: tlHeight }}
+                style={{ [axis.frameSize]: tlHeight } as React.CSSProperties}
                 onContextMenu={(e) => handleSubTimelineContextMenu(e, col)}
                 onMouseDown={handleTimelineMouseDown}
               >
@@ -1971,7 +1646,7 @@ export default function CombatPlanner({
                   <div
                     key={tick.frame}
                     className="tl-gridline"
-                    style={{ top: frameToPx(tick.frame, zoom) }}
+                    style={{ [axis.framePos]: frameToPx(tick.frame, zoom) } as React.CSSProperties}
                   />
                 ))}
 
@@ -1990,22 +1665,28 @@ export default function CombatPlanner({
                   const { points, min: rMin, max: rMax } = graph;
                   if (points.length < 2 || rMax === rMin) return null;
                   const range = rMax - rMin;
+                  // In vertical: X=value(0-100), Y=frame(px). In horizontal: X=frame(px), Y=value(0-100) flipped
                   const svgPoints = points.map((pt) => {
-                    const x = ((pt.value - rMin) / range) * 100;
-                    const y = frameToPx(pt.frame, zoom);
-                    return { x, y };
+                    const val = ((pt.value - rMin) / range) * 100;
+                    const framePx = frameToPx(pt.frame, zoom);
+                    return isHorizontal
+                      ? { x: framePx, y: 100 - val }
+                      : { x: val, y: framePx };
                   });
                   const lineStr = svgPoints.map((p) => `${p.x},${p.y}`).join(' ');
-                  // Close to left edge for fill: down left edge, then back up along the line
                   const lastPt = svgPoints[svgPoints.length - 1];
                   const firstPt = svgPoints[0];
-                  const fillStr = `${lineStr} 0,${lastPt.y} 0,${firstPt.y}`;
+                  const viewBox = isHorizontal ? `0 0 ${tlHeight} 100` : `0 0 100 ${tlHeight}`;
+                  // Close polygon to bottom edge (horizontal) or left edge (vertical)
+                  const fillStr = isHorizontal
+                    ? `${lineStr} ${lastPt.x},100 ${firstPt.x},100`
+                    : `${lineStr} 0,${lastPt.y} 0,${firstPt.y}`;
                   return (
                     <svg
                       className="resource-graph"
-                      viewBox={`0 0 100 ${tlHeight}`}
+                      viewBox={viewBox}
                       preserveAspectRatio="none"
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: tlHeight, pointerEvents: 'none' }}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
                     >
                       <polygon
                         points={fillStr}
@@ -2026,18 +1707,13 @@ export default function CombatPlanner({
                         const lines: React.ReactElement[] = [];
                         for (let i = 1; i <= nodeCount; i++) {
                           const nodeValue = rMax * i / (nodeCount + 1);
-                          const x = ((nodeValue - rMin) / range) * 100;
-                          lines.push(
-                            <line
-                              key={`node-${i}`}
-                              x1={x} y1={0} x2={x} y2={tlHeight}
-                              stroke={col.color}
-                              strokeWidth="0.5"
-                              strokeDasharray="4 3"
-                              strokeOpacity="0.5"
-                              vectorEffect="non-scaling-stroke"
-                            />,
-                          );
+                          const val = ((nodeValue - rMin) / range) * 100;
+                          if (isHorizontal) {
+                            const y = 100 - val;
+                            lines.push(<line key={`node-${i}`} x1={0} y1={y} x2={tlHeight} y2={y} stroke={col.color} strokeWidth="0.5" strokeDasharray="4 3" strokeOpacity="0.5" vectorEffect="non-scaling-stroke" />);
+                          } else {
+                            lines.push(<line key={`node-${i}`} x1={val} y1={0} x2={val} y2={tlHeight} stroke={col.color} strokeWidth="0.5" strokeDasharray="4 3" strokeOpacity="0.5" vectorEffect="non-scaling-stroke" />);
+                          }
                         }
                         return lines;
                       })()}
@@ -2064,9 +1740,9 @@ export default function CombatPlanner({
                           key={`combo-ok-${i}`}
                           className="sp-sufficient-bg"
                           style={{
-                            top: frameToPx(zone.start, zoom),
-                            height: durationToPx(zone.end - zone.start, zoom),
-                          }}
+                            [axis.framePos]: frameToPx(zone.start, zoom),
+                            [axis.frameSize]: durationToPx(zone.end - zone.start, zoom),
+                          } as React.CSSProperties}
                         />
                       ))}
                     </>
@@ -2095,9 +1771,9 @@ export default function CombatPlanner({
                           key={`sp-ok-${i}`}
                           className="sp-sufficient-bg"
                           style={{
-                            top: frameToPx(zone.start, zoom),
-                            height: durationToPx(zone.end - zone.start, zoom),
-                          }}
+                            [axis.framePos]: frameToPx(zone.start, zoom),
+                            [axis.frameSize]: durationToPx(zone.end - zone.start, zoom),
+                          } as React.CSSProperties}
                         />
                       ))}
                     </>
@@ -2106,31 +1782,41 @@ export default function CombatPlanner({
 
                 {/* Events */}
                 {(() => {
-                  // ── Shared EventBlock props for all events in this column ──
+                  // ── Shared EventBlock props via presentation controller ──
                   const isDerivedCol = !!col.derived && !debugMode;
-                  const buildBaseEventProps = (ev: TimelineEvent) => {
-                    const isSequenced = ev.segments && ev.segments.length > 0;
-                    return {
-                      event: ev,
-                      zoom,
-                      variant: (col.columnId === SKILL_COLUMNS.ULTIMATE ? 'ultimate' : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced',
-                      label: ev.isPerfectDodge ? 'Dodge' : (COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[ev.name] ?? ev.name),
-                      onDragStart: isDerivedCol ? noop3 : handleEventDragStart,
-                      onContextMenu: isDerivedCol ? noop2 : handleEventContextMenu,
-                      onSelect: handleEventSelect,
-                      onHover: handleEventHover,
-                      onTouchStart: isDerivedCol ? undefined : handleEventTouchStart,
-                      onFrameClick: handleFrameClickGuarded,
-                      onFrameContextMenu: handleFrameContextMenu,
-                      onFrameDragStart: handleFrameDragStart,
-                      onSegmentContextMenu: handleSegmentContextMenu,
-                      selectedFrames: selectedFrames?.filter((sf) => sf.eventId === ev.id),
-                      hoverFrame: isSequenced ? hoverFrame : undefined,
-                      notDraggable: col.source === TimelineSourceType.ENEMY || isDerivedCol,
-                      derived: isDerivedCol,
-                      comboWarning: invalidInflictionIds.get(ev.id) ?? null,
-                    };
+                  const presentationOpts = {
+                    slotElementColors, alwaysAvailableComboSlots, autoFinisherIds,
+                    validationMaps, debugMode,
                   };
+
+                  const buildEventBlockProps = (ev: TimelineEvent, pres: import('../controller/timeline/eventPresentationController').EventPresentation) => ({
+                    event: ev,
+                    zoom,
+                    axis,
+                    variant: pres.variant,
+                    label: pres.label,
+                    color: pres.color,
+                    comboWarning: pres.comboWarning,
+                    striped: pres.striped,
+                    passive: pres.passive,
+                    notDraggable: pres.notDraggable,
+                    derived: pres.derived,
+                    isAutoFinisher: pres.isAutoFinisher,
+                    skillElement: pres.skillElement,
+                    allSegmentLabels: pres.allSegmentLabels,
+                    allDefaultSegments: pres.allDefaultSegments,
+                    onDragStart: isDerivedCol || pres.passive ? noop3 : handleEventDragStart,
+                    onContextMenu: isDerivedCol || pres.passive ? noop2 : handleEventContextMenu,
+                    onSelect: handleEventSelect,
+                    onHover: pres.passive ? undefined : handleEventHover,
+                    onTouchStart: isDerivedCol || pres.passive ? undefined : handleEventTouchStart,
+                    onFrameClick: pres.passive ? undefined : handleFrameClickGuarded,
+                    onFrameContextMenu: pres.passive ? undefined : handleFrameContextMenu,
+                    onFrameDragStart: pres.passive ? undefined : handleFrameDragStart,
+                    onSegmentContextMenu: pres.passive ? undefined : handleSegmentContextMenu,
+                    selectedFrames: pres.passive ? undefined : selectedFrames?.filter((sf) => sf.eventId === ev.id),
+                    hoverFrame: pres.passive ? undefined : (pres.variant === 'sequenced' ? hoverFrame : undefined),
+                  });
 
                   return hasMicro ? (
                   // Micro-column events
@@ -2139,13 +1825,11 @@ export default function CombatPlanner({
                       ? microColumnEventPositions.get(ev.id)
                       : undefined;
 
-                    let microIdx: number;
                     let microColor: string;
                     let leftPct: string;
                     let widthPct: string;
 
                     if (dynPos && colPos) {
-                      // Dynamic-split: use precomputed pixel positions
                       const colWidth = colPos.right - colPos.left;
                       const relLeft = dynPos.left - colPos.left;
                       const relWidth = dynPos.right - dynPos.left;
@@ -2153,24 +1837,24 @@ export default function CombatPlanner({
                       widthPct = `${(relWidth / colWidth) * 100}%`;
                       microColor = dynPos.color;
                     } else if (col.microColumnAssignment === 'by-order') {
-                      // Use greedy slot if available, else sequential
-                      microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
-                      // Color by columnId match if multi-column, else by position
+                      const microIdx = greedySlotAssignments.get(ev.id) ?? Math.min(i, microCount - 1);
                       const mcMatch = col.matchColumnIds
                         ? col.microColumns!.find((mc) => mc.id === ev.columnId)
                         : undefined;
-                      microColor = mcMatch?.color ?? col.microColumns![microIdx!].color;
+                      microColor = mcMatch?.color ?? col.microColumns![microIdx].color;
                       const microW = 100 / microCount;
-                      leftPct = `${microIdx! * microW}%`;
+                      leftPct = `${microIdx * microW}%`;
                       widthPct = `${microW}%`;
                     } else {
-                      microIdx = col.microColumns!.findIndex((mc) => mc.id === ev.columnId);
+                      let microIdx = col.microColumns!.findIndex((mc) => mc.id === ev.columnId);
                       if (microIdx < 0) microIdx = 0;
                       microColor = col.microColumns![microIdx].color;
                       const microW = 100 / microCount;
                       leftPct = `${microIdx * microW}%`;
                       widthPct = `${microW}%`;
                     }
+                    // Micro-column events use infliction warning only
+                    const microPres = computeEventPresentation(ev, col, presentationOpts);
                     return (
                       <div
                         key={ev.id}
@@ -2184,8 +1868,7 @@ export default function CombatPlanner({
                         }}
                       >
                         <EventBlock
-                          {...buildBaseEventProps(ev)}
-                          color={microColor}
+                          {...buildEventBlockProps(ev, { ...microPres, color: microColor })}
                           selected={false}
                           hovered={hoveredId === ev.id}
                           />
@@ -2195,41 +1878,14 @@ export default function CombatPlanner({
                 ) : (
                   // Single-column events
                   visColEvents.map((ev) => {
-                    const isEnemy = col.source === TimelineSourceType.ENEMY;
+                    const pres = computeEventPresentation(ev, col, presentationOpts);
                     const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
-                    const isSequenced = ev.segments && ev.segments.length > 0;
-                    const skillElColor = col.type === 'mini-timeline' && col.skillElement
-                      ? ELEMENT_COLORS[col.skillElement as ElementType]
-                      : undefined;
-                    const eventColor = isSequenced
-                      ? (skillElColor ?? slotElementColor[col.ownerId] ?? col.color)
-                      : col.color;
-                    const base = buildBaseEventProps(ev);
                     return (
                       <EventBlock
                         key={ev.id}
-                        {...base}
-                        color={eventColor}
+                        {...buildEventBlockProps(ev, pres)}
                         selected={isWindow ? false : selectedIds.has(ev.id)}
                         hovered={isWindow ? false : hoveredId === ev.id}
-                        label={isWindow ? 'COMBO ACTIVATION WINDOW' : base.label}
-                        passive={isWindow}
-                        striped={col.columnId === SKILL_COLUMNS.COMBO && !isWindow && !alwaysAvailableComboSlots.has(col.ownerId)}
-                        comboWarning={isWindow ? null : [invalidComboIds.get(ev.id), invalidResourceIds.get(ev.id), invalidEmpoweredIds.get(ev.id), invalidEnhancedIds.get(ev.id), invalidRegularBasicIds.get(ev.id), invalidFinisherIds.get(ev.id), invalidFinisherStaggerIds.get(ev.id), invalidTimeStopIds.get(ev.id), invalidInflictionIds.get(ev.id)].filter(Boolean).join('\n') || null}
-                        onDragStart={isWindow ? noop3 : base.onDragStart}
-                        onContextMenu={isWindow ? noop2 : base.onContextMenu}
-                        onHover={isWindow ? undefined : base.onHover}
-                        onTouchStart={isWindow ? undefined : base.onTouchStart}
-                        onFrameClick={isWindow ? undefined : base.onFrameClick}
-                        onFrameContextMenu={isWindow ? undefined : base.onFrameContextMenu}
-                        onFrameDragStart={isWindow ? undefined : base.onFrameDragStart}
-                        onSegmentContextMenu={isWindow ? undefined : base.onSegmentContextMenu}
-                        selectedFrames={isWindow ? undefined : base.selectedFrames}
-                        notDraggable={isEnemy || isWindow || !!base.derived}
-                        allSegmentLabels={isWindow ? undefined : (col.eventVariants?.find((v) => v.name === ev.name)?.segments ?? col.defaultEvent?.segments)?.map((s) => s.label!)}
-                        allDefaultSegments={isWindow ? undefined : col.eventVariants?.find((v) => v.name === ev.name)?.segments ?? col.defaultEvent?.segments}
-                        hoverFrame={isWindow ? undefined : base.hoverFrame}
-                        skillElement={isWindow ? undefined : col.type === 'mini-timeline' ? col.skillElement : undefined}
                       />
                     );
                   })
@@ -2253,7 +1909,7 @@ export default function CombatPlanner({
           <div
             key={`ts-${i}`}
             className="time-stop-overlay"
-            style={{ top: frameToPx(stop.startFrame, zoom), height: durationToPx(stop.durationFrames, zoom) }}
+            style={{ [axis.framePos]: frameToPx(stop.startFrame, zoom), [axis.frameSize]: durationToPx(stop.durationFrames, zoom) } as React.CSSProperties}
           />
         ))}
 
@@ -2283,7 +1939,7 @@ export default function CombatPlanner({
           if (!colPos) return null;
           const topPx = frameToPx(ghostFrame, zoom);
           const totalDuration = src.segments
-            ? src.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+            ? computeSegmentsSpan(src.segments)
             : src.activationDuration + src.activeDuration + src.cooldownDuration;
           const heightPx = durationToPx(totalDuration, zoom);
           return (
@@ -2292,12 +1948,12 @@ export default function CombatPlanner({
               className={`dup-ghost ${dupValid ? 'dup-ghost--valid' : 'dup-ghost--invalid'}`}
               style={{
                 position: 'absolute',
-                top: topPx,
+                [axis.framePos]: topPx,
                 left: colPos.left,
                 width: colPos.right - colPos.left,
-                height: heightPx,
+                [axis.frameSize]: heightPx,
                 pointerEvents: 'none',
-              }}
+              } as React.CSSProperties}
             />
           );
         })}
@@ -2306,8 +1962,11 @@ export default function CombatPlanner({
       {/* Hover line */}
       {showHoverLine && outerRect && (
         <div
-          className="hover-line"
-          style={{ top: hoverClientY!, left: outerRect.left, width: outerRect.width }}
+          className={`hover-line${isHorizontal ? ' hover-line--horizontal' : ''}`}
+          style={isHorizontal
+            ? { left: hoverClientY!, top: outerRect.top, width: 1, height: outerRect.height }
+            : { top: hoverClientY!, left: outerRect.left, width: outerRect.width, height: 1 }
+          }
         >
           {hoverFrame !== null && (() => {
             const totalSec = hoverFrame / FPS;
@@ -2337,20 +1996,41 @@ export default function CombatPlanner({
                   value = pts[i + 1].value;
                 }
 
-                const colWidth = colPos.right - colPos.left;
-                const xInLine = colPos.left - scrollLeft + colWidth / 2;
                 const col = columns.find((c) => c.key === colKey);
                 const dotColor = col?.color ?? 'rgba(100, 200, 255, 1)';
 
-                resourceIndicators.push(
-                  <div
-                    key={colKey}
-                    className="hover-line-resource-dot"
-                    style={{ left: xInLine, borderColor: dotColor, color: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
-                  >
-                    {Math.round(value)}
-                  </div>
-                );
+                if (isHorizontal) {
+                  // In horizontal mode: position dot along Y axis of the vertical hover line.
+                  // Find the row element for this column in the body grid.
+                  const colIdx = columns.findIndex((c) => c.key === colKey);
+                  const rowEl = scrollRef.current?.querySelector(`.tl-sub-timeline:nth-child(${colIdx + 2})`) as HTMLElement | null; // +2 for 1-indexed + time axis
+                  if (rowEl) {
+                    const rowRect = rowEl.getBoundingClientRect();
+                    const yInLine = rowRect.top + rowRect.height / 2 - outerRect.top;
+                    resourceIndicators.push(
+                      <div
+                        key={colKey}
+                        className="hover-line-resource-dot hover-line-resource-dot--horizontal"
+                        style={{ top: yInLine, borderColor: dotColor, color: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
+                      >
+                        {Math.round(value)}
+                      </div>
+                    );
+                  }
+                } else {
+                  // In vertical mode: position dot along X axis of the horizontal hover line.
+                  const colWidth = colPos.right - colPos.left;
+                  const xInLine = colPos.left - scrollLeft + colWidth / 2;
+                  resourceIndicators.push(
+                    <div
+                      key={colKey}
+                      className="hover-line-resource-dot"
+                      style={{ left: xInLine, borderColor: dotColor, color: dotColor, boxShadow: `0 0 6px ${dotColor}55` }}
+                    >
+                      {Math.round(value)}
+                    </div>
+                  );
+                }
               }
             }
 

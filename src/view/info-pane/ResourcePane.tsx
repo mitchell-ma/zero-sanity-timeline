@@ -8,9 +8,11 @@ interface ResourcePaneProps {
   config: ResourceConfig;
   onChange: (config: ResourceConfig) => void;
   onClose: () => void;
+  /** Total resource wasted due to overflow. */
+  wasted?: number;
 }
 
-function ResourcePane({ label, color, config, onChange, onClose }: ResourcePaneProps) {
+function ResourcePane({ label, color, config, onChange, onClose, wasted }: ResourcePaneProps) {
   return (
     <>
       <div className="edit-panel-header">
@@ -59,6 +61,21 @@ function ResourcePane({ label, color, config, onChange, onClose }: ResourcePaneP
             onChange={(v) => onChange({ ...config, regenPerSecond: v })}
           />
         </div>
+
+        {wasted != null && wasted > 0 && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Summary</span>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+              padding: '2px 6px', fontSize: 13,
+            }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Wasted (overflow)</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: '#cc6644' }}>
+                {wasted.toFixed(1)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

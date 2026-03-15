@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { Enemy } from '../../consts/viewTypes';
 import { EnemyStats, getDefaultEnemyStats } from '../../controller/appStateController';

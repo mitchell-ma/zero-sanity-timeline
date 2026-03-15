@@ -5,7 +5,7 @@
  * All event startFrame values are real-time. Time-stops are status regions
  * where game-time-dependent processes pause (durations stretch).
  */
-import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
+import { TimelineEvent } from '../../consts/viewTypes';
 import { TimeDependency } from '../../consts/enums';
 import {
   TOTAL_FRAMES,
@@ -237,9 +237,12 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
     if (ev.segments && ev.segments.length > 0) {
       // ── Sequenced event (basic attacks, combos with segments) ─────────
       const segments: SegmentLayout[] = [];
-      let eventLocalOffset = 0;
+      let runningOffset = 0; // tracks end of previous segment for implicit offsets
+      let maxEndFrame = 0;
 
       for (const seg of ev.segments) {
+        // Use explicit offset if provided, otherwise start after previous segment
+        const eventLocalOffset = seg.offset != null ? seg.offset : runningOffset;
         const segRealOffset = computeRealOffset(
           ev.startFrame, eventLocalOffset, animDur, isOwn, foreignStops,
         );
@@ -257,11 +260,15 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
         });
 
         segments.push({ realOffset: segRealOffset, realDuration: segRealDur, frames });
-        eventLocalOffset += seg.durationFrames;
+        const segEnd = eventLocalOffset + seg.durationFrames;
+        if (segEnd > maxEndFrame) maxEndFrame = segEnd;
+        // Only advance running offset when no explicit offset (contiguous chain)
+        if (seg.offset == null) runningOffset += seg.durationFrames;
+        else runningOffset = segEnd;
       }
 
       const totalRealDur = computeRealOffset(
-        ev.startFrame, eventLocalOffset, animDur, isOwn, foreignStops,
+        ev.startFrame, maxEndFrame, animDur, isOwn, foreignStops,
       );
 
       layoutMap.set(ev.id, {
@@ -273,8 +280,6 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
     } else {
       // ── 3-phase event (ultimates, statuses, battle skills) ────────────
       const activationEnd = ev.activationDuration;
-      const activeEnd = activationEnd + ev.activeDuration;
-
       const realActivation = computeRealDuration(
         ev.startFrame, 0, ev.activationDuration,
         animDur, isOwn, ev.timeDependency, foreignStops,
@@ -287,7 +292,7 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
           )
         : 0;
 
-      const realCooldown = ev.cooldownDuration; // always real-time
+      const realCooldown = ev.cooldownDuration; // always real-time (already visual tail if offset was set)
       const realAnimation = animDur; // always real-time, 1:1
 
       // Frame diamonds for ultimates (stored in segments[2].frames for 3-segment ultimates, segments[0] for legacy)
@@ -312,7 +317,6 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
           } else if (hasAnimation) {
             // Frames are in activation post-animation portion
             // offsetFrame is from ultimate start; subtract animation to get post-anim offset
-            const postAnimOffset = f.offsetFrame - animDur;
             const eventLocalFrame = f.offsetFrame;
             const frameRealFromEvent = computeRealOffset(
               ev.startFrame, eventLocalFrame, animDur, isOwn, foreignStops,

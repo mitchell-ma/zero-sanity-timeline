@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { ElementType, StackInteractionType, DurationUnit } from '../../consts/enums';
 import { ObjectType } from '../../consts/semantics';
-import type { CustomStatusEventDef, CustomSegmentDef } from '../../model/custom/customOperatorTypes';
+import type { CustomStatusEventDef } from '../../model/custom/customOperatorTypes';
 import ClauseBuilder from './ClauseBuilder';
 import SegmentFrameEditor from './SegmentFrameEditor';
 
@@ -266,9 +266,7 @@ export function defaultStatusEventDef(): CustomStatusEventDef {
       interactionType: StackInteractionType.NONE,
       max: 1,
       instances: 1,
-      reactions: [],
     },
-    reactions: [],
     triggerClause: [],
     clause: [],
     stats: [],

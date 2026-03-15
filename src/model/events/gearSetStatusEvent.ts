@@ -1,6 +1,6 @@
-import { DurationUnit, ElementType, EventOriginType, GearSetEffectType, OperatorType, StackInteractionType, StatusType, TargetType, TriggerConditionType } from "../../consts/enums";
+import { DurationUnit, ElementType, EventOriginType, GearSetEffectType, OperatorType, StackInteractionType, StatusType, TargetType } from "../../consts/enums";
 import { GearEffectBuff, GearEffectTarget, GearSetEffect } from "../../consts/gearSetEffects";
-import { StatusEvent, TriggerCondition } from "./statusEvent";
+import { StatusEvent } from "./statusEvent";
 
 const TARGET_MAP: Record<GearEffectTarget, TargetType> = {
   wielder: TargetType.SELF,
@@ -28,12 +28,6 @@ export class GearSetStatusEvent extends StatusEvent {
   }) {
     const { gearSetEffectType, effect, sourceOperator, stacks } = params;
     const target = TARGET_MAP[effect.target];
-
-    // Build trigger conditions from the config's TriggerConditionType[] (implicit OR).
-    const triggerConditions: TriggerCondition[][] = effect.triggers.map((t) => [{
-      source: { targetType: target === TargetType.ENEMY ? TargetType.SELF : target },
-      action: { interactionType: t },
-    }]);
 
     super({
       statusType: StatusType.GEAR_BUFF,

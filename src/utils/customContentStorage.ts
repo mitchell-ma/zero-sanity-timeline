@@ -6,7 +6,6 @@ import type { CustomWeapon } from '../model/custom/customWeaponTypes';
 import { maxSkillsForRarity } from '../model/custom/customWeaponTypes';
 import type { CustomGearSet } from '../model/custom/customGearTypes';
 import type { CustomOperator } from '../model/custom/customOperatorTypes';
-import type { CustomSkill } from '../model/custom/customSkillTypes';
 import { WEAPON_DATA } from '../model/weapons/weaponData';
 import { GearCategory } from '../consts/enums';
 
@@ -288,19 +287,20 @@ export function validateCustomOperator(
     errors.push({ field: 'baseStats.lv90', message: 'BASE_ATTACK is required at Lv90' });
   }
 
-  const skills = operator.skills;
-  for (const key of ['basicAttack', 'battleSkill', 'comboSkill', 'ultimate'] as const) {
-    const skill = skills[key];
-    if (!skill.name.trim()) {
-      errors.push({ field: `skills.${key}.name`, message: `${key} name is required` });
-    }
-    if (skill.durationSeconds <= 0) {
-      errors.push({ field: `skills.${key}.durationSeconds`, message: `${key} duration must be positive` });
+  if (operator.skills) {
+    for (const key of ['basicAttack', 'battleSkill', 'comboSkill', 'ultimate'] as const) {
+      const skill = operator.skills[key];
+      if (!skill.name.trim()) {
+        errors.push({ field: `skills.${key}.name`, message: `${key} name is required` });
+      }
+      if (skill.durationSeconds <= 0) {
+        errors.push({ field: `skills.${key}.durationSeconds`, message: `${key} duration must be positive` });
+      }
     }
   }
 
-  if (operator.combo.requires.length === 0) {
-    errors.push({ field: 'combo.requires', message: 'At least one combo trigger condition is required' });
+  if (operator.combo.triggerClause.length === 0) {
+    errors.push({ field: 'combo.triggerClause', message: 'At least one combo trigger condition is required' });
   }
 
   return errors;

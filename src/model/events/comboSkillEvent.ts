@@ -2,12 +2,12 @@ import {
   CombatSkillType,
   OperatorType,
   TargetType,
-  TriggerConditionType,
 } from "../../consts/enums";
+import type { Interaction } from "../../consts/semantics";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
 export class ComboSkillEvent extends CombatSkillEvent {
-  readonly triggerConditions: Set<TriggerConditionType>;
+  readonly triggerConditions: Set<Interaction>;
 
   constructor(params: {
     name: string;
@@ -15,7 +15,7 @@ export class ComboSkillEvent extends CombatSkillEvent {
     sourceOperator: OperatorType;
     duration: number;
     cooldownSeconds: number;
-    triggerConditions: Set<TriggerConditionType>;
+    triggerConditions: Set<Interaction>;
   }) {
     super({
       combatSkillType: CombatSkillType.COMBO_SKILL,

@@ -1,4 +1,4 @@
-import { TimelineEvent, Column, MiniTimeline, MicroColumn } from '../../consts/viewTypes';
+import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 
 /**
@@ -167,5 +167,80 @@ export class MicroColumnController {
     );
     if (existing.length === 0) return false;
     return atFrame < existing[existing.length - 1].startFrame;
+  }
+
+  /**
+   * Compute pixel positions for all events in micro-column layouts.
+   * Returns a map of eventId → { left, right, color } in absolute pixels.
+   */
+  static computeMicroColumnPixelPositions(
+    events: TimelineEvent[],
+    columns: Column[],
+    columnPositions: Map<string, { left: number; right: number }>,
+    greedySlots: Map<string, number>,
+  ): Map<string, { left: number; right: number; color: string }> {
+    const positions = new Map<string, { left: number; right: number; color: string }>();
+    for (const col of columns) {
+      if (col.type !== 'mini-timeline' || !col.microColumns) continue;
+      const colPos = columnPositions.get(col.key);
+      if (!colPos) continue;
+      const colWidth = colPos.right - colPos.left;
+      const microCount = col.microColumns.length;
+      const microW = colWidth / microCount;
+
+      if (col.microColumnAssignment === 'by-order') {
+        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+        const colEvents = events.filter(
+          (ev) => ev.ownerId === col.ownerId &&
+            (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
+        ).sort((a, b) => a.startFrame - b.startFrame);
+        colEvents.forEach((ev, i) => {
+          const microIdx = greedySlots.get(ev.id) ?? Math.min(i, microCount - 1);
+          const mcMatch = matchSet
+            ? col.microColumns!.find((mc) => mc.id === ev.columnId)
+            : undefined;
+          positions.set(ev.id, {
+            left: colPos.left + microIdx * microW,
+            right: colPos.left + (microIdx + 1) * microW,
+            color: mcMatch?.color ?? col.microColumns![microIdx].color,
+          });
+        });
+      } else if (col.microColumnAssignment === 'dynamic-split') {
+        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+        const colEvents = events.filter(
+          (ev) => ev.ownerId === col.ownerId &&
+            (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
+        );
+
+        const typeOrder = new Map<string, number>();
+        col.microColumns!.forEach((mc, idx) => typeOrder.set(mc.id, idx));
+        const mcById = new Map(col.microColumns!.map((mc) => [mc.id, mc]));
+
+        for (const ev of colEvents) {
+          const { count, index } = MicroColumnController.dynamicSplitPosition(ev, colEvents, typeOrder);
+          const dynW = colWidth / count;
+          positions.set(ev.id, {
+            left: colPos.left + index * dynW,
+            right: colPos.left + (index + 1) * dynW,
+            color: mcById.get(ev.columnId)?.color ?? col.color,
+          });
+        }
+      } else {
+        // by-column-id
+        col.microColumns.forEach((mc, mcIdx) => {
+          const mcEvents = events.filter(
+            (ev) => ev.ownerId === col.ownerId && ev.columnId === mc.id,
+          );
+          mcEvents.forEach((ev) => {
+            positions.set(ev.id, {
+              left: colPos.left + mcIdx * microW,
+              right: colPos.left + (mcIdx + 1) * microW,
+              color: mc.color,
+            });
+          });
+        });
+      }
+    }
+    return positions;
   }
 }

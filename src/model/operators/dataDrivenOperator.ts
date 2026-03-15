@@ -145,13 +145,13 @@ export class DataDrivenOperator {
         ?? this.config.allLevels[this.config.allLevels.length - 1];
       const levelStats: Partial<Record<StatType, number>> = {};
       for (const [key, value] of Object.entries(levelEntry.attributes)) {
-        levelStats[key as StatType] = Math.round(value);
+        levelStats[key as StatType] = value;
       }
       return { ...DEFAULT_STATS, ...levelStats };
     } else if (this.config.baseStats) {
       return {
         ...DEFAULT_STATS,
-        [StatType.BASE_HP]: Math.round(500 + (5495 - 500) * ((level - 1) / 89)),
+        [StatType.BASE_HP]: 500 + (5495 - 500) * ((level - 1) / 89),
         [StatType.CRITICAL_RATE]: 0.05,
         [StatType.CRITICAL_DAMAGE]: 0.5,
         ...interpolateStats(this.config.baseStats, level),

@@ -4,18 +4,19 @@
  * Delegates to the unified registrar in operatorRegistry.ts, which handles
  * both built-in and custom operators through the same path.
  */
-import type { Operator as ViewOperator } from '../../consts/viewTypes';
-import { TriggerConditionType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
 import {
-  ALL_OPERATORS,
   registerCustomOperatorFromConfig,
   deregisterCustomOperatorById,
 } from '../operators/operatorRegistry';
 import { OPERATORS } from '../../utils/loadoutRegistry';
-import type { CustomOperator } from '../../model/custom/customOperatorTypes';
-import { interactionToTriggerCondition } from './bridgeUtils';
+import type { CustomOperator, CustomCombatSkillDef } from '../../model/custom/customOperatorTypes';
+import { CombatSkillType } from '../../consts/enums';
 
-const FPS = 120;
+const DEFAULT_SKILL: CustomCombatSkillDef = {
+  name: 'Unnamed Skill',
+  combatSkillType: CombatSkillType.BASIC_ATTACK,
+  durationSeconds: 1,
+};
 
 /**
  * Convert a CustomOperator into the JSON shape expected by the unified registrar.
@@ -23,6 +24,12 @@ const FPS = 120;
  * used by built-in operators.
  */
 function customOperatorToJson(operator: CustomOperator): Record<string, any> {
+  const skills = operator.skills ?? {
+    basicAttack: { ...DEFAULT_SKILL, name: 'Basic Attack', combatSkillType: CombatSkillType.BASIC_ATTACK },
+    battleSkill: { ...DEFAULT_SKILL, name: 'Battle Skill', combatSkillType: CombatSkillType.BATTLE_SKILL },
+    comboSkill: { ...DEFAULT_SKILL, name: 'Combo Skill', combatSkillType: CombatSkillType.COMBO_SKILL },
+    ultimate: { ...DEFAULT_SKILL, name: 'Ultimate', combatSkillType: CombatSkillType.ULTIMATE, durationSeconds: 3 },
+  };
   const json: Record<string, any> = {
     operatorType: operator.id.toUpperCase(),
     name: operator.name,
@@ -32,7 +39,6 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
     weaponType: operator.weaponType,
     mainAttributeType: operator.mainAttributeType,
     secondaryAttributeType: operator.secondaryAttributeType ?? operator.mainAttributeType,
-    displayColor: operator.displayColor,
     splashArt: operator.splashArt,
     baseStats: operator.baseStats,
     potentials: operator.potentials?.map(p => ({
@@ -49,54 +55,50 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
     })) ?? [],
     talents: {},
     // Timing overrides from custom skill defs
-    basicAttackDefaultDuration: operator.skills.basicAttack.durationSeconds,
+    basicAttackDefaultDuration: skills.basicAttack.durationSeconds,
     skills: {
       BASIC_ATTACK: {
-        id: operator.skills.basicAttack.name,
+        id: skills.basicAttack.name,
         segments: [{
-          duration: { value: operator.skills.basicAttack.durationSeconds, unit: 'SECOND' },
+          duration: { value: skills.basicAttack.durationSeconds, unit: 'SECOND' },
         }],
       },
       BATTLE_SKILL: {
-        id: operator.skills.battleSkill.name,
-        duration: { value: operator.skills.battleSkill.durationSeconds, unit: 'SECOND' },
-        ...(operator.skills.battleSkill.animationSeconds
-          ? { animation: { duration: { value: operator.skills.battleSkill.animationSeconds, unit: 'SECOND' } } }
+        id: skills.battleSkill.name,
+        duration: { value: skills.battleSkill.durationSeconds, unit: 'SECOND' },
+        ...(skills.battleSkill.animationSeconds
+          ? { animation: { duration: { value: skills.battleSkill.animationSeconds, unit: 'SECOND' } } }
           : {}),
-        ...(operator.skills.battleSkill.resourceInteractions?.length
-          ? { effects: operator.skills.battleSkill.resourceInteractions.map(r => ({
+        ...(skills.battleSkill.resourceInteractions?.length
+          ? { effects: skills.battleSkill.resourceInteractions.map(r => ({
             prepositionType: 'TO', toObjectType: 'THIS_OPERATOR',
             verbType: r.verbType, objectType: r.resourceType, cardinality: r.value,
           })) }
           : {}),
       },
       COMBO_SKILL: {
-        id: operator.skills.comboSkill.name,
-        duration: { value: operator.skills.comboSkill.durationSeconds, unit: 'SECOND' },
-        ...(operator.skills.comboSkill.cooldownSeconds
-          ? { effects: [{ prepositionType: 'TO', toObjectType: 'THIS_OPERATOR', verbType: 'EXPEND', objectType: 'COOLDOWN', cardinality: operator.skills.comboSkill.cooldownSeconds }] }
+        id: skills.comboSkill.name,
+        duration: { value: skills.comboSkill.durationSeconds, unit: 'SECOND' },
+        ...(skills.comboSkill.cooldownSeconds
+          ? { effects: [{ prepositionType: 'TO', toObjectType: 'THIS_OPERATOR', verbType: 'EXPEND', objectType: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
           : {}),
-        ...(operator.skills.comboSkill.animationSeconds
-          ? { animation: { duration: { value: operator.skills.comboSkill.animationSeconds, unit: 'SECOND' } } }
+        ...(skills.comboSkill.animationSeconds
+          ? { animation: { duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' } } }
           : {}),
         // Combo trigger
-        ...(operator.combo.requires.length > 0 ? {
+        ...(operator.combo.triggerClause.length > 0 ? {
           trigger: {
-            requires: operator.combo.requires
-              .map(interactionToTriggerCondition)
-              .filter((t): t is TriggerConditionType => t !== null),
+            triggerClause: operator.combo.triggerClause,
             description: operator.combo.description,
             windowFrames: operator.combo.windowFrames ?? 720,
-            ...(operator.combo.forbidsActiveColumns ? { forbidsActiveColumns: operator.combo.forbidsActiveColumns } : {}),
-            ...(operator.combo.requiresActiveColumns ? { requiresActiveColumns: operator.combo.requiresActiveColumns } : {}),
           },
         } : {}),
       },
       ULTIMATE: {
-        id: operator.skills.ultimate.name,
-        duration: { value: operator.skills.ultimate.durationSeconds, unit: 'SECOND' },
-        ...(operator.skills.ultimate.animationSeconds
-          ? { animation: { duration: { value: operator.skills.ultimate.animationSeconds, unit: 'SECOND' } } }
+        id: skills.ultimate.name,
+        duration: { value: skills.ultimate.durationSeconds, unit: 'SECOND' },
+        ...(skills.ultimate.animationSeconds
+          ? { animation: { duration: { value: skills.ultimate.animationSeconds, unit: 'SECOND' } } }
           : {}),
         effects: [
           { prepositionType: 'TO', toObjectType: 'THIS_OPERATOR', verbType: 'EXPEND', objectType: 'ULTIMATE_ENERGY', cardinality: 300 },
@@ -113,6 +115,7 @@ export function registerCustomOperator(operator: CustomOperator): void {
   const opJson = customOperatorToJson(operator);
 
   const viewOp = registerCustomOperatorFromConfig(customId, opJson);
+  if (!viewOp) return;
 
   OPERATORS.push({
     name: operator.name,

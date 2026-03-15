@@ -37,16 +37,6 @@ function getSkillNamesForCategory(operatorId: string, category: string): string[
   return Object.entries(map).filter(([_, cat]) => cat === category).map(([name]) => name);
 }
 
-/** Find which operatorId owns a slot, by scanning all operators' skillNameMaps. */
-function identifyOperator(events: TimelineEvent[], slotId: string): string | null {
-  for (const opId of getAllOperatorIds()) {
-    const names = getSkillNames(opId);
-    for (const ev of events) {
-      if (ev.ownerId === slotId && names.has(ev.name)) return opId;
-    }
-  }
-  return null;
-}
 
 // ── Consume team statuses ────────────────────────────────────────────────────
 
@@ -533,7 +523,6 @@ export function consumeVulnerabilityForSusceptibility(
   // This is Gilberta's Gravity Field — find by checking for ultimate skill names
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
     // Gilberta is identified by having GRAVITY_FIELD in her skillNameMap
     const map = getSkillNameMap(opId);
     if (Object.keys(map).some(name => name === 'GRAVITY_FIELD')) {
@@ -636,7 +625,6 @@ export function consumeCryoForSusceptibility(
   // Find operator with WINTERS_DEVOURER combo skill
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
     const map = getSkillNameMap(opId);
     if (Object.keys(map).some(name => name === 'WINTERS_DEVOURER')) {
       sourceOpId = opId;
@@ -726,7 +714,6 @@ export function applyXaihiP5AmpBoost(
   // Find operator with STACK_OVERFLOW (Xaihi's ultimate)
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
     const map = getSkillNameMap(opId);
     if (Object.keys(map).some(name => name === 'STACK_OVERFLOW')) {
       sourceOpId = opId;
@@ -846,12 +833,13 @@ export function deriveWildlandTrekker(
         }
         pendingTriggers.length = 0;
 
-        if (activeBuff && cast.startFrame < activeBuff.endFrame) {
-          const existing = derived.find((ev) => ev.id === activeBuff!.id);
+        const currentBuff = activeBuff;
+        if (currentBuff && cast.startFrame < currentBuff.endFrame) {
+          const existing = derived.find((ev) => ev.id === currentBuff.id);
           if (existing) {
-            clamped.set(activeBuff.id, {
+            clamped.set(currentBuff.id, {
               ...existing,
-              activationDuration: cast.startFrame - activeBuff.startFrame,
+              activationDuration: cast.startFrame - currentBuff.startFrame,
               eventStatus: EventStatusType.REFRESHED,
               eventStatusOwnerId: ownerSlotId,
               eventStatusSkillName: battleSkillName,

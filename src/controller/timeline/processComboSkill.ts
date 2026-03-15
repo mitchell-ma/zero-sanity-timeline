@@ -1,5 +1,7 @@
-import { TimelineEvent } from '../../consts/viewTypes';
-import { CombatSkillsType, TriggerConditionType, TRIGGER_CONDITION_PARENTS } from '../../consts/enums';
+import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { CombatSkillsType } from '../../consts/enums';
+import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import type { Interaction } from '../../consts/semantics';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ENEMY_OWNER_ID, SKILL_COLUMNS } from '../../model/channels';
@@ -108,39 +110,44 @@ export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
  * Maps derived enemy event columnIds to the trigger conditions they represent.
  * Used to generate combo windows from derived events at their actual frame timing.
  */
-export const ENEMY_COLUMN_TO_TRIGGERS: Record<string, TriggerConditionType[]> = {
-  heatInfliction:     [TriggerConditionType.APPLY_HEAT_INFLICTION],
-  cryoInfliction:     [TriggerConditionType.APPLY_CRYO_INFLICTION],
-  natureInfliction:   [TriggerConditionType.APPLY_NATURE_INFLICTION],
-  electricInfliction: [TriggerConditionType.APPLY_ELECTRIC_INFLICTION],
-  combustion:         [TriggerConditionType.COMBUSTION],
-  solidification:     [TriggerConditionType.SOLIDIFICATION],
-  corrosion:          [TriggerConditionType.CORROSION],
-  electrification:    [TriggerConditionType.ELECTRIFICATION],
-  vulnerableInfliction: [TriggerConditionType.APPLY_VULNERABILITY],
-  breach:             [TriggerConditionType.APPLY_PHYSICAL_STATUS],
+const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+
+export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
+  heatInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
+  cryoInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
+  natureInfliction:     [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
+  electricInfliction:   [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
+  combustion:           [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED)],
+  solidification:       [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED)],
+  corrosion:            [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED)],
+  electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
+  vulnerableInfliction: [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
+  breach:               [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
 };
 
-/**
- * Trigger conditions that are always satisfiable (not dependent on team skill
- * publications).  Operators whose combo requires one of these get a full-timeline
- * activation window regardless of team composition.
- */
-export const ALWAYS_AVAILABLE_TRIGGERS = new Set<TriggerConditionType>([
-  TriggerConditionType.OPERATOR_ATTACKED,
-  TriggerConditionType.HP_BELOW_THRESHOLD,
-  TriggerConditionType.HP_ABOVE_THRESHOLD,
-  TriggerConditionType.ULTIMATE_ENERGY_BELOW_THRESHOLD,
-]);
+const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
+  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+];
 
-/** Set of trigger condition types that are produced by derived enemy events. */
-export const DERIVED_TRIGGER_TYPES = new Set<TriggerConditionType>();
-for (const triggers of Object.values(ENEMY_COLUMN_TO_TRIGGERS)) {
-  for (const t of triggers) {
-    DERIVED_TRIGGER_TYPES.add(t);
-    const parent = TRIGGER_CONDITION_PARENTS[t];
-    if (parent) DERIVED_TRIGGER_TYPES.add(parent);
-  }
+function isAlwaysAvailable(i: Interaction): boolean {
+  return ALWAYS_AVAILABLE_INTERACTIONS.some((aa) => matchInteraction(i, aa));
+}
+
+const DERIVED_INTERACTIONS: Interaction[] = [];
+for (const interactions of Object.values(ENEMY_COLUMN_TO_INTERACTIONS)) {
+  for (const i of interactions) DERIVED_INTERACTIONS.push(i);
+}
+
+function isDerivedInteraction(i: Interaction): boolean {
+  return DERIVED_INTERACTIONS.some((d) => matchInteraction(i, d));
+}
+
+function isFinalStrike(i: Interaction): boolean {
+  return i.verbType === VerbType.PERFORM && i.objectType === ObjectType.FINAL_STRIKE;
 }
 
 /** Slot-level trigger wiring for the pipeline. */
@@ -159,7 +166,7 @@ export function deriveComboActivationWindows(
   stops: readonly TimeStopRegion[],
 ): TimelineEvent[] {
   // Intermediate accumulator: slotId → unsorted windows
-  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerType?: TriggerConditionType }[]>();
+  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerInteraction?: Interaction }[]>();
 
   // Build slotId → index for event ownership lookup
   const slotIdToIndex = new Map<string, number>();
@@ -185,25 +192,19 @@ export function deriveComboActivationWindows(
   }
 
   const addWindow = (
-    trigger: TriggerConditionType,
+    published: Interaction,
     event: TimelineEvent,
     triggerFrame: number,
   ) => {
     for (const wiring of slotWirings) {
       const cap = wiring.capability;
-      const matchesTrigger = cap.comboRequires.includes(trigger) ||
-        (TRIGGER_CONDITION_PARENTS[trigger] !== undefined &&
-          cap.comboRequires.includes(TRIGGER_CONDITION_PARENTS[trigger]!));
+      const matchesTrigger = cap.comboRequires.some((req) => matchInteraction(published, req));
       if (!matchesTrigger) continue;
 
       // Skip self-trigger
       if (event.sourceOwnerId === wiring.slotId) continue;
 
       // Skip if combo skill is on cooldown at trigger time.
-      // Only the cooldown phase blocks — the activation/active phases occur during
-      // a time-stop where no triggers fire, and checking the full range causes a
-      // circular dependency when combo events are dragged outside their window.
-      // Segments are already extended by foreign time-stops (not the combo's own).
       const slotCombos = comboEventsBySlot.get(wiring.slotId);
       if (slotCombos) {
         const onCooldown = slotCombos.some((ce) => {
@@ -234,7 +235,6 @@ export function deriveComboActivationWindows(
       if (requires && requires.length > 0 && !hasActiveEventInColumns(events, requires, triggerFrame)) continue;
 
       const baseDuration = cap.comboWindowFrames;
-      // Exclude this slot's own combo time stops from window extension
       const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
       const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventId)) : stops;
       const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
@@ -247,47 +247,46 @@ export function deriveComboActivationWindows(
         sourceOwnerId: event.ownerId !== ENEMY_OWNER_ID ? event.ownerId : event.sourceOwnerId,
         sourceSkillName: event.name,
         sourceColumnId: event.columnId,
-        triggerType: trigger,
+        triggerInteraction: published,
       });
     }
   };
 
-  // Phase 1: operator-published triggers (skip derived trigger types)
+  // Phase 1: operator-published interactions (skip derived)
   for (const event of events) {
     const slotIndex = slotIdToIndex.get(event.ownerId);
     if (slotIndex === undefined) continue;
     const cap = slotWirings[slotIndex].capability;
-    const publishedTriggers = cap.publishesTriggers[event.columnId];
-    if (!publishedTriggers || publishedTriggers.length === 0) continue;
+    const published = cap.publishesTriggers[event.columnId];
+    if (!published || published.length === 0) continue;
 
-    // Finisher/Dive events don't publish FINAL_STRIKE — only normal basic attack sequences do
     const isNonSequenceBasic = event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE;
 
     const defaultTriggerFrame = event.startFrame + event.activationDuration;
     const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
 
-    for (const trigger of publishedTriggers) {
-      if (DERIVED_TRIGGER_TYPES.has(trigger)) continue;
-      if (isNonSequenceBasic && trigger === TriggerConditionType.FINAL_STRIKE) continue;
-      const frame = trigger === TriggerConditionType.FINAL_STRIKE ? finalStrikeTriggerFrame : defaultTriggerFrame;
-      addWindow(trigger, event, frame);
+    for (const interaction of published) {
+      if (isDerivedInteraction(interaction)) continue;
+      if (isNonSequenceBasic && isFinalStrike(interaction)) continue;
+      const frame = isFinalStrike(interaction) ? finalStrikeTriggerFrame : defaultTriggerFrame;
+      addWindow(interaction, event, frame);
     }
   }
 
-  // Phase 2: derived enemy event triggers
+  // Phase 2: derived enemy event interactions
   for (const event of events) {
     if (event.ownerId !== ENEMY_OWNER_ID) continue;
-    const triggers = ENEMY_COLUMN_TO_TRIGGERS[event.columnId];
-    if (!triggers) continue;
-    for (const trigger of triggers) {
-      addWindow(trigger, event, event.startFrame);
+    const interactions = ENEMY_COLUMN_TO_INTERACTIONS[event.columnId];
+    if (!interactions) continue;
+    for (const interaction of interactions) {
+      addWindow(interaction, event, event.startFrame);
     }
   }
 
-  // Phase 3: always-available triggers → full-timeline windows
+  // Phase 3: always-available interactions → full-timeline windows
   for (const wiring of slotWirings) {
-    const hasAlwaysAvailable = wiring.capability.comboRequires.some((t) => ALWAYS_AVAILABLE_TRIGGERS.has(t));
-    if (!hasAlwaysAvailable) continue;
+    const hasAlways = wiring.capability.comboRequires.some((req) => isAlwaysAvailable(req));
+    if (!hasAlways) continue;
     if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
     windowsBySlot.get(wiring.slotId)!.push({
       startFrame: 0,
@@ -341,7 +340,7 @@ export function hasActiveEventInColumns(events: TimelineEvent[], columnIds: stri
   for (const ev of events) {
     if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.name)) continue;
     const totalDuration = ev.segments
-      ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+      ? computeSegmentsSpan(ev.segments)
       : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
     if (frame >= ev.startFrame && frame < ev.startFrame + totalDuration) {
       return true;
@@ -391,7 +390,7 @@ export function getFinalStrikeTriggerFrame(
 /** Get the end frame of a combo activation window event. */
 export function comboWindowEndFrame(ev: TimelineEvent): number {
   const duration = ev.segments
-    ? ev.segments.reduce((sum, s) => sum + s.durationFrames, 0)
+    ? computeSegmentsSpan(ev.segments)
     : ev.activationDuration;
   return ev.startFrame + duration;
 }

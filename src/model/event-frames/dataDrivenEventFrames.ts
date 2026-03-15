@@ -17,23 +17,34 @@ interface JsonDuration {
   unit: string;
 }
 
-/** DSL Effect: Verb-Object with optional Preposition-PrepositionalObject. */
+/** WITH preposition value: a cardinality with verb determining value shape. */
+interface JsonWithValue {
+  verb: string; // "IS" | "DEPENDS_ON"
+  object?: string;
+  value: number | number[];
+}
+
+/** DSL Effect: Verb-Object with optional adjective and prepositional phrases. */
 interface JsonEffect {
   verbType: string;
-  objectType: string;
+  objectType?: string;
   objectId?: string;
-  prepositionType?: string;
+  adjective?: string | string[];
   toObjectType?: string;
-  cardinality?: number;
+  fromObjectType?: string;
+  onObjectType?: string;
+  /** WITH preposition — properties/cardinalities (duration, stacks, multiplier, etc.). */
+  withPreposition?: Record<string, JsonWithValue>;
+  /** Constraint on cardinality (for compound PERFORM_ALL grouping). */
   cardinalityConstraint?: string;
-  stacks?: number;
-  isForced?: boolean;
-  element?: string;
-  durationSeconds?: number;
+  /** Cardinality for compound constraints. */
+  cardinality?: number;
   eventName?: string;
   susceptibility?: Record<string, number[]>;
   conversion?: { objectType: string; objectId?: string };
   conditions?: { enemiesHitThreshold: number };
+  /** Nested effects for compound verbs like PERFORM_ALL. */
+  effects?: JsonEffect[];
   /** For CONSUME REACTION: status to apply if the reaction is successfully consumed. */
   applyOnConsume?: {
     status: string;
@@ -45,19 +56,24 @@ interface JsonEffect {
 }
 
 interface JsonFrame {
-  eventComponentType: string;
-  offset: JsonDuration;
+  metadata?: { eventComponentType?: string; dataSources?: string[] };
+  properties?: { offset?: JsonDuration };
   effects?: JsonEffect[];
   damageElement?: string;
   duplicatesSourceInfliction?: boolean;
+  // Legacy compat (pre-migration)
+  offset?: JsonDuration;
   dataSources?: string[];
 }
 
 interface JsonSegment {
-  eventComponentType: string;
-  name?: string;
-  duration: JsonDuration;
+  metadata?: { eventComponentType?: string; dataSources?: string[] };
+  properties?: { duration?: JsonDuration; name?: string };
   frames: JsonFrame[];
+  // Legacy compat (pre-migration)
+  eventComponentType?: string;
+  name?: string;
+  duration?: JsonDuration;
   animation?: { duration: JsonDuration; timeInteractionType: string };
   dataSources?: string[];
 }
@@ -65,12 +81,19 @@ interface JsonSegment {
 interface JsonSkillCategory {
   name?: string;
   description?: string;
-  duration?: JsonDuration;
+  properties?: {
+    duration?: JsonDuration;
+    animation?: { duration: JsonDuration; timeInteractionType: string; dataSources?: string[] };
+    trigger?: unknown;
+    hasDelayedHit?: boolean;
+  };
   effects?: JsonEffect[];
-  animation?: { duration: JsonDuration; timeInteractionType: string };
   frames?: JsonFrame[];
   segments?: JsonSegment[];
   dataSources?: string[];
+  // Legacy compat (pre-migration)
+  duration?: JsonDuration;
+  animation?: { duration: JsonDuration; timeInteractionType: string };
 }
 
 // ── Element detection ───────────────────────────────────────────────────────
@@ -98,9 +121,16 @@ function dslTargetToTargetType(toObjectType?: string): TargetType {
 
 // ── DSL effects → legacy resource interaction bridging ──────────────────────
 
+/** Extract a numeric value from a WITH preposition entry. Returns the IS value or first DEPENDS_ON value. */
+function withValue(wv?: JsonWithValue): number {
+  if (!wv) return 0;
+  return typeof wv.value === 'number' ? wv.value : (wv.value[0] ?? 0);
+}
+
 /**
  * Find a value from a DSL effects array.
  * Maps: objectType→resourceType, verbType→interactionType, toObjectType→target.
+ * Reads cardinality from withPreposition.cardinality.
  */
 function findEffectValue(
   effects: JsonEffect[] | undefined,
@@ -113,7 +143,7 @@ function findEffectValue(
     if (ef.objectType === objectType && ef.verbType === verbType) {
       const efTarget = dslTargetToLegacy(ef.toObjectType);
       if (target && efTarget !== target) continue;
-      return ef.cardinality;
+      return withValue(ef.withPreposition?.cardinality);
     }
   }
   return undefined;
@@ -135,11 +165,26 @@ function findConditionalGaugeGains(category: JsonSkillCategory | undefined): Rec
   if (category?.effects) {
     for (const ef of category.effects) {
       if (ef.objectType === 'ULTIMATE_ENERGY' && ef.verbType === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
-        byEnemies[ef.conditions.enemiesHitThreshold] = ef.cardinality ?? 0;
+        byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.withPreposition?.cardinality);
       }
     }
   }
   return byEnemies;
+}
+
+// ── Compound effect flattening ───────────────────────────────────────────────
+
+/** Recursively flatten compound effects (PERFORM_ALL, etc.) into a flat list of leaf effects. */
+function flattenEffects(effects: JsonEffect[]): JsonEffect[] {
+  const result: JsonEffect[] = [];
+  for (const ef of effects) {
+    if (ef.effects && (ef.verbType === 'PERFORM_ALL' || ef.verbType === 'PERFORM_ANY')) {
+      result.push(...flattenEffects(ef.effects));
+    } else {
+      result.push(ef);
+    }
+  }
+  return result;
 }
 
 // ── DataDrivenSkillEventFrame ───────────────────────────────────────────────
@@ -160,10 +205,11 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
   constructor(frame: JsonFrame) {
     super();
-    this._offsetSeconds = frame.offset.value;
+    const offset = frame.properties?.offset ?? frame.offset;
+    this._offsetSeconds = offset!.value;
     this._damageElement = frame.damageElement ?? null;
     this._consumeReaction = null;
-    this._duplicatesSourceInfliction = frame.duplicatesSourceInfliction ?? false;
+    let duplicatesSource = frame.duplicatesSourceInfliction ?? false; // legacy compat
 
     let sp = 0;
     let stagger = 0;
@@ -177,29 +223,57 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
     if (frame.effects) {
       // ── DSL effects path ──────────────────────────────────────────────
-      for (const ef of frame.effects) {
+      // Flatten compound effects (PERFORM_ALL) so nested ABSORB/APPLY/etc. are processed
+      const flatEffects = flattenEffects(frame.effects);
+      for (const ef of flatEffects) {
+        const wp = ef.withPreposition;
+        const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
+        const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
+        const isForced = adjectives.includes('FORCED');
+        const isSource = adjectives.includes('SOURCE');
+        const reactionAdj = adjectives.find(a => ['COMBUSTION', 'SOLIDIFICATION', 'CORROSION', 'ELECTRIFICATION'].includes(a));
+
         switch (ef.verbType) {
           case 'RECOVER':
-            if (ef.objectType === 'SKILL_POINT') sp = ef.cardinality ?? 0;
-            if (ef.objectType === 'STAGGER') stagger = ef.cardinality ?? 0;
+            if (ef.objectType === 'SKILL_POINT') sp = withValue(wp?.cardinality);
+            if (ef.objectType === 'STAGGER') stagger = withValue(wp?.cardinality);
             break;
 
           case 'APPLY':
-            if (ef.objectType === 'INFLICTION') {
-              applyInfliction = { element: ef.element!, stacks: ef.stacks ?? 1 };
-            } else if (ef.objectType === 'FORCED_REACTION') {
+            // APPLY SOURCE INFLICTION / APPLY SOURCE STATUS — duplicate triggering effect
+            if (isSource && (ef.objectType === 'INFLICTION' || ef.objectType === 'STATUS')) {
+              duplicatesSource = true;
+            } else if (ef.objectType === 'INFLICTION') {
+              applyInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
+            } else if (ef.objectType === 'REACTION' && isForced) {
+              const reactionName = reactionAdj ?? ef.objectId;
+              const dur = wp?.duration;
               forcedReaction = {
-                reaction: (ef.objectId ?? ef.element!) as StatusType,
-                statusLevel: ef.cardinality ?? 1,
-                ...(ef.durationSeconds != null && { durationFrames: Math.round(ef.durationSeconds * 120) }),
+                reaction: reactionName as StatusType,
+                statusLevel: withValue(wp?.statusLevel) || 1,
+                ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
+              };
+            } else if (ef.objectType === 'FORCED_REACTION') {
+              // Legacy objectType compat
+              const dur = wp?.duration;
+              forcedReaction = {
+                reaction: (ef.objectId ?? elementAdj!) as StatusType,
+                statusLevel: withValue(wp?.statusLevel) || withValue(wp?.cardinality) || 1,
+                ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
               };
             } else if (ef.objectType === 'STATUS') {
+              const durVal = wp?.duration;
+              const isStandardTarget = ['THIS_OPERATOR', 'ENEMY', 'ALL_OPERATORS'].includes(ef.toObjectType ?? '');
               const status: FrameApplyStatus = {
                 target: dslTargetToTargetType(ef.toObjectType),
                 status: ef.objectId!,
-                stacks: ef.stacks ?? 1,
-                durationFrames: ef.durationSeconds != null ? Math.round(ef.durationSeconds * 120) : 0,
+                stacks: withValue(wp?.stacks) || 1,
+                durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
               };
+              // If toObjectType is not a standard target, treat it as an operator ID
+              if (ef.toObjectType && !isStandardTarget) {
+                status.targetOperatorId = ef.toObjectType;
+              }
               if (ef.susceptibility) {
                 status.susceptibility = ef.susceptibility as Partial<Record<ElementType, readonly number[]>>;
               }
@@ -213,8 +287,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case 'ABSORB':
             if (ef.objectType === 'INFLICTION') {
               absorbInfliction = {
-                element: ef.element!,
-                stacks: ef.stacks ?? 1,
+                element: elementAdj!,
+                stacks: withValue(wp?.stacks) || 1,
                 exchangeStatus: (ef.conversion?.objectId as StatusType) ?? StatusType.MELTING_FLAME,
                 ratio: '1:1',
               };
@@ -223,13 +297,13 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
           case 'CONSUME':
             if (ef.objectType === 'INFLICTION') {
-              consumeInfliction = { element: ef.element!, stacks: ef.stacks ?? 1 };
+              consumeInfliction = { element: elementAdj!, stacks: withValue(wp?.stacks) || 1 };
             } else if (ef.objectType === 'STATUS') {
               consumeStatus = ef.objectId!;
             } else if (ef.objectType === 'REACTION') {
               // CONSUME REACTION with optional applyOnConsume
               const cr: FrameReactionConsumption = {
-                columnId: (ef.objectId ?? '').toLowerCase(),
+                columnId: (reactionAdj ?? ef.objectId ?? '').toLowerCase(),
               };
               if (ef.applyOnConsume) {
                 const aoc = ef.applyOnConsume;
@@ -260,6 +334,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._applyStatus = applyStatus;
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
+    this._duplicatesSourceInfliction = duplicatesSource;
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -285,9 +360,10 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
 
   constructor(segment: JsonSegment) {
     super();
-    this._durationSeconds = segment.duration.value;
+    const duration = segment.properties?.duration ?? segment.duration;
+    this._durationSeconds = duration!.value;
     this._frames = segment.frames.map(f => new DataDrivenSkillEventFrame(f));
-    this.segmentName = segment.name;
+    this.segmentName = segment.properties?.name ?? segment.name;
   }
 
   getDurationSeconds(): number { return this._durationSeconds; }
@@ -303,7 +379,15 @@ function mergeSkillOverride(base: JsonSkillCategory, override: Record<string, un
   if (override.frames) merged.frames = override.frames as JsonFrame[];
   if (override.segments) merged.segments = override.segments as JsonSegment[];
 
-  // Override objects merge
+  // Override properties (new structure)
+  if (override.properties) {
+    const overrideProps = override.properties as Record<string, unknown>;
+    merged.properties = { ...merged.properties } as any;
+    if (overrideProps.duration) merged.properties!.duration = overrideProps.duration as JsonDuration;
+    if (overrideProps.animation) merged.properties!.animation = overrideProps.animation as any;
+  }
+
+  // Legacy override objects (compat)
   if (override.duration) merged.duration = override.duration as JsonDuration;
   if (override.animation) merged.animation = override.animation as any;
   if (override.effects) merged.effects = override.effects as JsonEffect[];
@@ -322,15 +406,15 @@ export function buildSequencesFromSkillCategory(
 ): readonly DataDrivenSkillEventSequence[] {
   if (skillCategory.segments) {
     return skillCategory.segments
-      .filter(seg => seg.duration.value > 0)
+      .filter(seg => (seg.properties?.duration ?? seg.duration)!.value > 0)
       .map(seg => new DataDrivenSkillEventSequence(seg));
   }
 
   // Flat shape: wrap duration + frames into a single segment
-  if (skillCategory.duration && skillCategory.frames) {
+  const catDuration = skillCategory.properties?.duration ?? skillCategory.duration;
+  if (catDuration && skillCategory.frames) {
     const segment: JsonSegment = {
-      eventComponentType: 'SEGMENT',
-      duration: skillCategory.duration,
+      properties: { duration: catDuration },
       frames: skillCategory.frames,
     };
     return [new DataDrivenSkillEventSequence(segment)];
@@ -364,6 +448,16 @@ export function buildSequencesFromOperatorJson(
 
 function dur(seconds: number): number { return Math.round(seconds * 120); }
 
+/** Get duration from a skill category (new properties path or legacy). */
+function catDuration(cat?: JsonSkillCategory): number {
+  return (cat?.properties?.duration ?? cat?.duration)?.value ?? 0;
+}
+
+/** Get animation from a skill category (new properties path or legacy). */
+function catAnimation(cat?: JsonSkillCategory) {
+  return cat?.properties?.animation ?? cat?.animation;
+}
+
 export interface SkillTimings {
   battleDur: number;
   comboDur: number;
@@ -375,27 +469,29 @@ export interface SkillTimings {
 }
 
 export function getSkillTimings(operatorJson: Record<string, any>): SkillTimings {
-  const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
+  const skills = (operatorJson.skills ?? {}) as Record<string, JsonSkillCategory>;
   const overrides = operatorJson.skillOverrides as Record<string, Record<string, unknown>> | undefined;
 
   // Battle skill duration
   let battleSkill = skills.BATTLE_SKILL;
   if (overrides?.BATTLE_SKILL) battleSkill = mergeSkillOverride(battleSkill, overrides.BATTLE_SKILL);
-  const battleDur = dur(battleSkill?.duration?.value ?? 0);
+  const battleDur = dur(catDuration(battleSkill));
 
   // Combo skill
   let comboSkill = skills.COMBO_SKILL;
   if (overrides?.COMBO_SKILL) comboSkill = mergeSkillOverride(comboSkill, overrides.COMBO_SKILL);
-  const comboDur = dur(comboSkill?.duration?.value ?? 0);
+  const comboDur = dur(catDuration(comboSkill));
   const comboCd = dur(findValue(comboSkill, 'COOLDOWN', 'EXPEND') ?? 0);
-  const comboAnimDur = dur(comboSkill?.animation?.duration?.value ?? 0.5);
+  const comboAnim = catAnimation(comboSkill);
+  const comboAnimDur = dur(comboAnim?.duration?.value ?? 0.5);
 
   // Ultimate
   let ultimate = skills.ULTIMATE;
   if (overrides?.ULTIMATE) ultimate = mergeSkillOverride(ultimate, overrides.ULTIMATE);
-  const ultTotalDur = dur(ultimate?.duration?.value ?? 0);
-  const ultAnimDur = ultimate?.animation?.duration?.value != null
-    ? dur(ultimate.animation.duration.value)
+  const ultTotalDur = dur(catDuration(ultimate));
+  const ultAnim = catAnimation(ultimate);
+  const ultAnimDur = ultAnim?.duration?.value != null
+    ? dur(ultAnim.duration.value)
     : ultTotalDur;
   const ultCdRaw = findValue(ultimate, 'COOLDOWN', 'EXPEND');
 
@@ -481,7 +577,7 @@ export function getSkillCategoryData(
   const baseBattle = skills?.BATTLE_SKILL;
 
   return {
-    duration: cat?.duration?.value ?? 0,
+    duration: catDuration(cat),
     spCost: findValue(cat, 'SKILL_POINT', 'EXPEND')
          ?? findValue(baseBattle, 'SKILL_POINT', 'EXPEND')
          ?? 0,
@@ -489,7 +585,7 @@ export function getSkillCategoryData(
             ?? findValue(baseBattle, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF')
             ?? 0,
     cooldown: findValue(cat, 'COOLDOWN', 'EXPEND') ?? 0,
-    animationTime: cat?.animation?.duration?.value ?? 0,
+    animationTime: catAnimation(cat)?.duration?.value ?? 0,
     energyCost: findValue(cat, 'ULTIMATE_ENERGY', 'EXPEND') ?? 0,
   };
 }
@@ -502,5 +598,5 @@ export function getBasicAttackDurations(operatorJson: Record<string, any>): numb
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const basicAttack = skills?.BASIC_ATTACK;
   if (!basicAttack?.segments) return [];
-  return basicAttack.segments.map(seg => seg.duration.value);
+  return basicAttack.segments.map(seg => (seg.properties?.duration ?? seg.duration)!.value);
 }

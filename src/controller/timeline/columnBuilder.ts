@@ -1,9 +1,10 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, StatusType, TimeDependency, TimelineSourceType, TriggerConditionType } from '../../consts/enums';
-import type { Potential } from '../../consts/types';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { VerbType, ObjectType } from '../../consts/semantics';
+import type { Interaction } from '../../consts/semantics';
 import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getWeaponEffects, WeaponSkillEffect } from '../../consts/weaponSkillEffects';
+import { getWeaponEffects } from '../../consts/weaponSkillEffects';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
@@ -11,7 +12,8 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
-import { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
+import { getLinksForSlot } from '../custom/customSkillLinkController';
+import { getCustomSkills } from '../custom/customSkillController';
 
 // ── Derive columns from statusEvents ────────────────────────────────────────
 
@@ -19,8 +21,9 @@ interface StatusEventDef {
   name: string;
   target: string;
   element?: string;
-  stack: { instances: number; interactionType?: string };
+  stack: { instances: number; verbType?: string };
   duration?: { value: number[]; unit: string };
+  properties?: { duration?: { value: number[]; unit: string } };
   isNamedEvent?: boolean;
 }
 
@@ -53,7 +56,8 @@ function buildDerivedColumnsFromStatusEvents(
     const label = (STATUS_LABELS[def.name as StatusType] ?? def.name).toUpperCase();
 
     const instances = def.stack.instances;
-    const durValue = def.duration?.value?.[0] ?? -1;
+    const dur = def.properties?.duration ?? def.duration;
+    const durValue = dur?.value?.[0] ?? -1;
     const durationFrames = durValue > 0 ? Math.round(durValue * 120) : TOTAL_FRAMES * 10;
 
     const col: MiniTimeline = {
@@ -103,7 +107,7 @@ export interface Slot {
   comboSkillLevel?: number;
 }
 
-const MF_MICRO_COLS = 4;
+
 const MIN_SLOT_COLS = 4;
 
 /** Build the full ordered list of timeline columns from app state. */
@@ -577,30 +581,41 @@ export function buildColumns(
           const battleSeqs = op && getFrameSequences(op.id, 'BATTLE_SKILL');
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const battleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
+            const battleSegments = battleCd > 0
+              ? [...seg.segments, { durationFrames: battleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+              : seg.segments;
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
-              segments: seg.segments,
+              segments: battleSegments,
             };
             // Empowered battle skill variant (e.g. Arclight's additional attack on Electrification)
             const empoweredBattleSeqs = getFrameSequences(op!.id, 'EMPOWERED_BATTLE_SKILL');
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
               const empoweredName = `${col.defaultEvent!.name}_EMPOWERED` as CombatSkillsType;
+              const empBattleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
+              const empBaseSegs = empBattleCd > 0
+                ? [...seg.segments, { durationFrames: empBattleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+                : seg.segments;
+              const empVarSegs = empBattleCd > 0
+                ? [...empowered.segments, { durationFrames: empBattleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+                : empowered.segments;
               col.eventVariants = [
                 {
                   name: col.defaultEvent!.name!,
                   defaultActivationDuration: seg.totalDurationFrames,
                   defaultActiveDuration: 0,
-                  defaultCooldownDuration: col.defaultEvent!.defaultCooldownDuration ?? 0,
-                  segments: seg.segments,
+                  defaultCooldownDuration: 0,
+                  segments: empBaseSegs,
                 },
                 {
                   name: empoweredName,
                   defaultActivationDuration: empowered.totalDurationFrames,
                   defaultActiveDuration: 0,
-                  defaultCooldownDuration: col.defaultEvent!.defaultCooldownDuration ?? 0,
-                  segments: empowered.segments,
+                  defaultCooldownDuration: 0,
+                  segments: empVarSegs,
                   triggerCondition: 'Requires: Empowered condition',
                 },
               ];
@@ -615,7 +630,7 @@ export function buildColumns(
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
-              segments: [...seg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }],
+              segments: [...seg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }],
             };
           }
           // Generic ultimate: build Animation / Statis / Active / Cooldown segments
@@ -632,16 +647,16 @@ export function buildColumns(
             if (ultSeqs?.length) {
               const ultLabels = getSegmentLabels(op!.id, 'ULTIMATE');
               const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
-              activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active' };
+              activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active', segmentType: SegmentType.ACTIVE };
             } else {
-              activeSegment = { durationFrames: activeDur, label: 'Active' };
+              activeSegment = { durationFrames: activeDur, label: 'Active', segmentType: SegmentType.ACTIVE };
             }
 
             const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
-              { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME },
-              { durationFrames: statisDur, label: 'Statis' },
+              { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.ANIMATION },
+              { durationFrames: statisDur, label: 'Statis', segmentType: SegmentType.NORMAL },
               activeSegment,
-              { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME },
+              { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN },
             ];
 
             col.defaultEvent = {
@@ -649,6 +664,30 @@ export function buildColumns(
               segments: ultSegments,
             };
           }
+          // ── Append linked custom skills as event variants ──
+          if (op) {
+            const linkedIds = getLinksForSlot(op.id, skillType);
+            if (linkedIds.length > 0) {
+              const allCustom = getCustomSkills();
+              if (!col.eventVariants) {
+                col.eventVariants = col.defaultEvent ? [{ ...col.defaultEvent }] : [];
+              }
+              for (const csId of linkedIds) {
+                const cs = allCustom.find((s) => s.id === csId);
+                if (!cs) continue;
+                col.eventVariants.push({
+                  name: cs.id,
+                  displayName: cs.name,
+                  defaultActivationDuration: Math.round(cs.durationSeconds * FPS),
+                  defaultActiveDuration: 0,
+                  defaultCooldownDuration: Math.round((cs.cooldownSeconds ?? 0) * FPS),
+                  animationDuration: cs.animationSeconds ? Math.round(cs.animationSeconds * FPS) : undefined,
+                  skillPointCost: cs.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT')?.value,
+                });
+              }
+            }
+          }
+
           columns.push(col);
           slotHasCols = true;
         }
@@ -860,19 +899,16 @@ export function buildColumns(
 
   // ── Dynamic enemy columns based on team composition ──────────────────────
   // Collect all published triggers and explicit enemy columns from team operators
-  const ARTS_INFLICTION_TRIGGERS = new Set([
-    TriggerConditionType.COMBUSTION,
-    TriggerConditionType.SOLIDIFICATION,
-    TriggerConditionType.CORROSION,
-    TriggerConditionType.ELECTRIFICATION,
-    TriggerConditionType.APPLY_ARTS_INFLICTION,
-    TriggerConditionType.APPLY_HEAT_INFLICTION,
-    TriggerConditionType.APPLY_CRYO_INFLICTION,
-    TriggerConditionType.APPLY_NATURE_INFLICTION,
-    TriggerConditionType.APPLY_ELECTRIC_INFLICTION,
-  ]);
+  // Check if any published interaction matches a pattern
+  const isArtsInfliction = (i: Interaction) =>
+    (i.verbType === VerbType.APPLY && i.objectType === ObjectType.INFLICTION) ||
+    (i.verbType === VerbType.IS && [ObjectType.COMBUSTED, ObjectType.SOLIDIFIED, ObjectType.CORRODED, ObjectType.ELECTRIFIED].includes(i.objectType as any));
+  const isPhysicalStatus = (i: Interaction) =>
+    i.verbType === VerbType.APPLY && i.objectType === ObjectType.STATUS && i.objectId === 'PHYSICAL';
+  const isVulnerable = (i: Interaction) =>
+    i.verbType === VerbType.APPLY && i.objectType === ObjectType.STATUS && i.objectId === 'VULNERABILITY';
 
-  const teamPublishedTriggers = new Set<TriggerConditionType>();
+  const teamPublished: Interaction[] = [];
   const teamEnemyColumns = new Set<string>();
 
   for (const slot of slots) {
@@ -880,18 +916,17 @@ export function buildColumns(
     if (!op) continue;
     const cap = op.triggerCapability;
     if (!cap) continue;
-    for (const triggers of Object.values(cap.publishesTriggers)) {
-      if (triggers) triggers.forEach((t) => teamPublishedTriggers.add(t));
+    for (const interactions of Object.values(cap.publishesTriggers)) {
+      if (interactions) interactions.forEach((i) => teamPublished.push(i));
     }
     if (cap.derivedEnemyColumns) {
       cap.derivedEnemyColumns.forEach((c) => teamEnemyColumns.add(c));
     }
   }
 
-  let hasArtsInfliction = false;
-  teamPublishedTriggers.forEach((t) => { if (ARTS_INFLICTION_TRIGGERS.has(t)) hasArtsInfliction = true; });
-  const hasPhysicalStatus = teamPublishedTriggers.has(TriggerConditionType.APPLY_PHYSICAL_STATUS);
-  const hasVulnerable = teamPublishedTriggers.has(TriggerConditionType.APPLY_VULNERABILITY);
+  const hasArtsInfliction = teamPublished.some(isArtsInfliction);
+  const hasPhysicalStatus = teamPublished.some(isPhysicalStatus);
+  const hasVulnerable = teamPublished.some(isVulnerable);
 
   if (hasArtsInfliction) {
     // Arts infliction mini-timeline for the enemy (stacking like MF)

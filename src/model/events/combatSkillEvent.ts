@@ -1,6 +1,6 @@
 import { CombatSkillType, DurationUnit, EventOriginType, EventType, OperatorType, TargetType } from "../../consts/enums";
 import type { Clause } from "../../consts/semantics";
-import { Duration, Event } from "./event";
+import { Event } from "./event";
 
 export abstract class CombatSkillEvent extends Event {
   readonly combatSkillType: CombatSkillType;

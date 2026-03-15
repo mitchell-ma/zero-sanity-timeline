@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface AppBarProps {
   activeLoadoutName: string;
@@ -7,6 +7,7 @@ interface AppBarProps {
   onClearAll: () => void;
   onExport: () => void;
   onImport: () => void;
+  onShare: () => Promise<string>;
   onDevlog: () => void;
   onKeys: () => void;
   onCustomContent: () => void;
@@ -19,12 +20,13 @@ interface AppBarProps {
 export default function AppBar({
   activeLoadoutName, onRenameLoadout,
   onClearLoadout, onClearAll,
-  onExport, onImport, onDevlog, onKeys, onCustomContent,
+  onExport, onImport, onShare, onDevlog, onKeys, onCustomContent,
   debugMode, onToggleDebug,
   lightMode, onToggleTheme,
 }: AppBarProps) {
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const cancellingRef = useRef(false);
 
@@ -39,6 +41,19 @@ export default function AppBar({
     setRenameValue(activeLoadoutName);
     setRenaming(true);
   };
+
+  const handleShare = useCallback(async () => {
+    setShareStatus('copying');
+    try {
+      const url = await onShare();
+      await navigator.clipboard.writeText(url);
+      setShareStatus('copied');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    } catch {
+      setShareStatus('error');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    }
+  }, [onShare]);
 
   const handleRenameSubmit = () => {
     if (cancellingRef.current) { cancellingRef.current = false; return; }
@@ -55,7 +70,7 @@ export default function AppBar({
         <span className="brand-hex">&#x2B21;</span>
         <div className="brand-text">
           <span className="brand-title">ENDFIELD</span>
-          <span className="brand-sub">ZERO SANITY TIMELINE</span>
+          <span className="brand-sub">ZERO SANITY SIMULATIONS</span>
         </div>
       </div>
 
@@ -105,7 +120,14 @@ export default function AppBar({
       <button className="btn-devlog" onClick={onCustomContent}>
         CUSTOM
       </button>
-
+      <button
+        className={`btn-devlog${shareStatus === 'copied' ? ' btn-share--copied' : ''}`}
+        onClick={handleShare}
+        disabled={shareStatus === 'copying'}
+        title="Copy shareable URL to clipboard"
+      >
+        {shareStatus === 'copied' ? 'COPIED!' : shareStatus === 'error' ? 'FAILED' : 'SHARE'}
+      </button>
       <div className="app-bar-right">
         <button
           className="btn-theme"

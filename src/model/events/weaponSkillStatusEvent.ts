@@ -7,9 +7,9 @@ import {
   StatType,
   StatusType,
   TargetType,
-  TriggerConditionType,
   WeaponSkillType,
 } from "../../consts/enums";
+import type { Interaction } from "../../consts/semantics";
 import { WeaponEffectBuff } from "../../consts/weaponSkillEffects";
 import { StatusEvent } from "./statusEvent";
 
@@ -33,12 +33,12 @@ export class WeaponSkillStatusEvent extends StatusEvent {
     element?: ElementType;
     durationSeconds: number;
     maxStacks: number;
-    triggers?: TriggerConditionType[];
+    triggers?: Interaction[];
     cooldownSeconds?: number;
     buffs?: readonly WeaponEffectBuff[];
     stats: Partial<Record<StatType | string, number>>;
   }) {
-    const { weaponSkillType, target, triggers, stats } = params;
+    const { weaponSkillType, target, stats } = params;
 
     super({
       statusType: weaponSkillType as unknown as StatusType,
@@ -56,7 +56,7 @@ export class WeaponSkillStatusEvent extends StatusEvent {
         instances: params.maxStacks,
         thresholdEffects: {},
       },
-      // TODO: migrate TriggerConditionType[] → Clause (Predicate[])
+      // TODO: migrate Interaction[] → Clause (Predicate[])
       triggerClause: [],
       interactionTypes: [],
       stats: Object.entries(stats)

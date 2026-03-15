@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { GearCategory } from '../../consts/enums';
 import { ObjectType } from '../../consts/semantics';
-import type { CustomGearSet, CustomGearPiece, CustomGearEffect, CustomGearBuff } from '../../model/custom/customGearTypes';
+import type { CustomGearSet, CustomGearPiece, CustomGearEffect } from '../../model/custom/customGearTypes';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import IdField from './IdField';
 

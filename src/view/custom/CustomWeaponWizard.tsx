@@ -2,11 +2,10 @@
  * Multi-step wizard for creating/editing custom weapons.
  */
 import { useState } from 'react';
-import { WeaponType, ElementType } from '../../consts/enums';
-import type { CustomWeapon, CustomWeaponSkillDef, CustomWeaponBuff, CustomWeaponNamedEffect } from '../../model/custom/customWeaponTypes';
+import { WeaponType } from '../../consts/enums';
+import type { CustomWeapon, CustomWeaponSkillDef, CustomWeaponNamedEffect } from '../../model/custom/customWeaponTypes';
 import { maxSkillsForRarity } from '../../model/custom/customWeaponTypes';
-import { ObjectType, SubjectType, VerbType } from '../../consts/semantics';
-import type { Interaction } from '../../consts/semantics';
+import { ObjectType } from '../../consts/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import IdField from './IdField';
 
@@ -30,8 +29,6 @@ export default function CustomWeaponWizard({ initial, onSave, onCancel }: Props)
   const [errors, setErrors] = useState<string[]>([]);
 
   const update = (patch: Partial<CustomWeapon>) => setWeapon((w) => ({ ...w, ...patch }));
-  const maxSkills = maxSkillsForRarity(weapon.weaponRarity);
-
   const handleSave = () => {
     const errs = onSave(weapon);
     if (errs.length > 0) setErrors(errs);

@@ -99,18 +99,31 @@ export class SkillSegmentBuilder {
           ? `${i + 1}`
           : undefined;
 
+      // Split out-of-bound frames into an implied trailing segment.
+      // Some skills (e.g. delayed explosions) have frames beyond the segment duration.
+      const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
+      const outOfBound = frames.filter(f => f.offsetFrame > durationFrames);
+
       segments.push({
         durationFrames,
         label,
-        frames: frames.length > 0 ? frames : undefined,
+        frames: inBound.length > 0 ? inBound : undefined,
       });
-
       totalDurationFrames += durationFrames;
+
+      if (outOfBound.length > 0) {
+        // Re-base offsets relative to the new segment's start (= end of the parent segment)
+        const rebased = outOfBound.map(f => ({ ...f, offsetFrame: f.offsetFrame - durationFrames }));
+        const impliedDuration = Math.max(...rebased.map(f => f.offsetFrame)) + 1;
+        segments.push({
+          durationFrames: impliedDuration,
+          label: 'Delay',
+          frames: rebased,
+        });
+        totalDurationFrames += impliedDuration;
+      }
     }
 
     return { totalDurationFrames, segments };
   }
 }
-
-/** @deprecated Use SkillSegmentBuilder instead. */
-export const BasicAttackController = SkillSegmentBuilder;

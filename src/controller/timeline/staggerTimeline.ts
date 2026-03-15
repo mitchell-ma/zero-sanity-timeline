@@ -187,4 +187,51 @@ export class StaggerTimeline extends ResourceTimeline {
 
   /** No-op — crossings computed inline in recompute. */
   protected onRecompute(): void {}
+
+  /**
+   * Generate derived TimelineEvent objects for the stagger frailty column.
+   *
+   * - Each node crossing produces a "Node Stagger" event at the crossing frame.
+   * - Each full stagger break produces a "Full Stagger" event spanning the break.
+   *
+   * @param nodeRecoveryFrames Duration of node stagger frailty in frames.
+   * @param idPrefix Prefix for generated event IDs (must be stable for override persistence).
+   */
+  generateFrailtyEvents(
+    nodeRecoveryFrames: number,
+    columnId: string,
+    ownerId: string,
+    idPrefix: string,
+  ): TimelineEvent[] {
+    const events: TimelineEvent[] = [];
+
+    for (const crossing of this.cachedNodeCrossings) {
+      events.push({
+        id: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
+        name: 'Node Stagger',
+        ownerId,
+        columnId,
+        startFrame: crossing.frame,
+        activationDuration: nodeRecoveryFrames,
+        activeDuration: 0,
+        cooldownDuration: 0,
+      });
+    }
+
+    for (const brk of this.cachedBreaks) {
+      const duration = brk.endFrame - brk.startFrame;
+      events.push({
+        id: `${idPrefix}-full-${brk.startFrame}`,
+        name: 'Full Stagger',
+        ownerId,
+        columnId,
+        startFrame: brk.startFrame,
+        activationDuration: duration,
+        activeDuration: 0,
+        cooldownDuration: 0,
+      });
+    }
+
+    return events;
+  }
 }
