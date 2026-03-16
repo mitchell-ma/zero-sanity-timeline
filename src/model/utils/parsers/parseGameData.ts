@@ -21,7 +21,7 @@ const OPERATORS_DIR = path.resolve(__dirname, '../../game-data/operators');
 
 function operatorFilePath(operatorType: string): string {
   const slug = operatorType.toLowerCase().replace(/_/g, '-');
-  return path.join(OPERATORS_DIR, `${slug}.json`);
+  return path.join(OPERATORS_DIR, `${slug}-operator.json`);
 }
 
 function loadOperator(operatorType: string): Record<string, unknown> {
@@ -73,67 +73,6 @@ const WARFARIN_SLUG_TO_GAMEDATA_ID: Record<string, string> = {
 
 /** All known Warfarin slugs in order. */
 const ALL_WARFARIN_SLUGS = Object.keys(WARFARIN_SLUG_TO_GAMEDATA_ID);
-
-// ── Override comparison ──────────────────────────────────────────────────────
-
-/**
- * Extracts comparable numeric values from a skill category for override comparison.
- * Returns a flat map of dot-path → value for diffing.
- */
-function extractComparableValues(obj: unknown, prefix = ''): Map<string, number> {
-  const values = new Map<string, number>();
-  if (obj == null || typeof obj !== 'object') return values;
-  if (Array.isArray(obj)) {
-    obj.forEach((item, i) => {
-      extractComparableValues(item, `${prefix}[${i}]`).forEach((v, k) => {
-        values.set(k, v);
-      });
-    });
-    return values;
-  }
-  const record = obj as Record<string, unknown>;
-  for (const [key, val] of Object.entries(record)) {
-    if (key === 'dataSources' || key === 'eventComponentType' || key === 'metadata') continue;
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (typeof val === 'number') {
-      values.set(path, val);
-    } else if (typeof val === 'object' && val != null) {
-      extractComparableValues(val, path).forEach((v, k) => {
-        values.set(k, v);
-      });
-    }
-  }
-  return values;
-}
-
-/**
- * Compares incoming base skill data against existing overrides.
- * Logs warnings when new source data differs from override values,
- * since the updated source data may be more accurate than the overrides.
- */
-function compareAgainstOverrides(
-  operatorType: string,
-  incoming: Record<string, unknown>,
-  overrides: Record<string, unknown>,
-): void {
-  for (const [categoryKey, overrideCategory] of Object.entries(overrides)) {
-    const incomingCategory = incoming[categoryKey];
-    if (!incomingCategory) continue;
-
-    const overrideValues = extractComparableValues(overrideCategory);
-    const incomingValues = extractComparableValues(incomingCategory);
-
-    overrideValues.forEach((overrideVal, path) => {
-      const incomingVal = incomingValues.get(path);
-      if (incomingVal !== undefined && Math.abs(incomingVal - overrideVal) > 0.0001) {
-        console.warn(
-          `    ⚠ OVERRIDE CONFLICT in ${operatorType} ${categoryKey}.${path}: ` +
-          `source=${incomingVal}, override=${overrideVal} — new source data may be more accurate`
-        );
-      }
-    });
-  }
-}
 
 /**
  * Merges incoming skill data as the new base. Always overwrites base skills.
@@ -607,22 +546,11 @@ async function parseOne(slug: string, roster: unknown[]) {
 
   // Merge End-Axis data (skills)
   if (endAxisData) {
-    // Compare incoming data against existing overrides before merging
-    const existingOverrides = existing.skillOverrides as Record<string, unknown> | undefined;
-    if (existingOverrides) {
-      compareAgainstOverrides(operatorType, endAxisData.skills, existingOverrides);
-    }
-
     merged.skills = mergeSkills(
       existing.skills as Record<string, unknown> | undefined,
       endAxisData.skills,
     );
     console.log(`  End-Axis: ${Object.keys(endAxisData.skills).length} skill categories merged`);
-
-    // Preserve existing skillOverrides (never modified by parser)
-    if (existingOverrides) {
-      merged.skillOverrides = existingOverrides;
-    }
   }
 
   // Warfarin-only fallback: create skeleton skills from multiplier data when End-Axis has none
@@ -773,22 +701,11 @@ async function parseAll(roster: unknown[]) {
     }
 
     if (endAxisData) {
-      // Compare incoming data against existing overrides before merging
-      const existingOverrides = existing.skillOverrides as Record<string, unknown> | undefined;
-      if (existingOverrides) {
-        compareAgainstOverrides(operatorType, endAxisData.skills, existingOverrides);
-      }
-
       merged.skills = mergeSkills(
         existing.skills as Record<string, unknown> | undefined,
         endAxisData.skills,
       );
       console.log(`  End-Axis: ${Object.keys(endAxisData.skills).length} skill categories merged`);
-
-      // Preserve existing skillOverrides (never modified by parser)
-      if (existingOverrides) {
-        merged.skillOverrides = existingOverrides;
-      }
     }
 
     if (skillDescriptions && merged.skills) {

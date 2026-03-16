@@ -8,7 +8,7 @@
 import { EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
-import { MeltingFlameController } from './meltingFlameController';
+import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { getUltimateActiveWindow } from './eventValidator';
 import type { CombatLoadout } from '../combat-loadout/combatLoadout';
@@ -357,14 +357,15 @@ export function validateUpdate(
           .map((f) => {
             const clamped = { ...f, offsetFrame: Math.max(0, Math.min(maxOffset, f.offsetFrame)) };
             // Populate final strike values from templates, clear for normal hits
-            if (clamped.hitType === EventFrameType.FINAL_STRIKE) {
+            const types = clamped.frameTypes ?? [EventFrameType.NORMAL];
+            if (types.includes(EventFrameType.FINAL_STRIKE)) {
               if (clamped.skillPointRecovery === 0 && clamped.templateFinalStrikeSP) {
                 clamped.skillPointRecovery = clamped.templateFinalStrikeSP;
               }
               if (clamped.stagger === 0 && clamped.templateFinalStrikeStagger) {
                 clamped.stagger = clamped.templateFinalStrikeStagger;
               }
-            } else if (clamped.hitType != null) {
+            } else if (!types.includes(EventFrameType.NORMAL)) {
               clamped.skillPointRecovery = 0;
             }
             return clamped;
@@ -374,7 +375,7 @@ export function validateUpdate(
     });
   }
 
-  let validated = MeltingFlameController.validateUpdate(allEvents, target, clamped);
+  let validated = { ...clamped };
   validated = ComboSkillEventController.validateUpdate(target, validated, processedEvents as TimelineEvent[] | null);
   const merged = { ...target, ...validated };
   if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame, processedEvents ?? undefined)) return null;
@@ -413,7 +414,7 @@ export function validateMove(
   newStartFrame: number,
   processedEvents?: readonly TimelineEvent[] | null,
 ): number {
-  let clamped = MeltingFlameController.validateMove(allEvents, target, newStartFrame);
+  let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
   clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
   clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
   // Clamp non-ultimate events to the edge of ultimate animation regions

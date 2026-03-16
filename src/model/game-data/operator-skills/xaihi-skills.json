@@ -1,8 +1,13 @@
 {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "BASIC_ATTACK",
+    "BATTLE_SKILL": "DISTRIBUTED_DOS",
+    "COMBO_SKILL": "STRESS_TESTING",
+    "ULTIMATE": "STACK_OVERFLOW"
+  },
   "BASIC_ATTACK": {
     "name": "Cooldown",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
-    "id": "BASIC_ATTACK",
     "segments": [
       {
         "metadata": {
@@ -675,10 +680,9 @@
     ],
     "originId": "xaihi"
   },
-  "BATTLE_SKILL": {
+  "DISTRIBUTED_DOS": {
     "name": "Distributed DoS",
     "description": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. \nAfter the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. \nWhen the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack.",
-    "id": "DISTRIBUTED_DOS",
     "properties": {
       "duration": {
         "value": 1,
@@ -722,10 +726,9 @@
     ],
     "originId": "xaihi"
   },
-  "COMBO_SKILL": {
+  "STRESS_TESTING": {
     "name": "Stress Testing",
     "description": "COMBO TRIGGER: When the Auxiliary Crystal uses up its HP treatments. \nQuickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction.",
-    "id": "STRESS_TESTING",
     "properties": {
       "duration": {
         "value": 0.83,
@@ -903,10 +906,9 @@
     ],
     "originId": "xaihi"
   },
-  "ULTIMATE": {
+  "STACK_OVERFLOW": {
     "name": "Stack Overflow",
     "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
-    "id": "STACK_OVERFLOW",
     "properties": {
       "duration": {
         "value": 2.23,

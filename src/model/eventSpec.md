@@ -326,6 +326,13 @@ combatSkillEvent = {
 
 Condition-triggered status effect, buff, debuff, infliction, or reaction. Extends the abstract Event with status-specific fields.
 
+### StatusEventType
+
+| Type | Behavior |
+|------|----------|
+| *(none)* | Standard status — created by triggers, lives on a timeline micro-column. |
+| `TALENT` | Operator talent passive. Created as a permanent presence event at frame 0 when the talent level is met. Trigger clause effects define side-effect conditions (e.g. absorption exchange) whose output may redirect to a different status via PERFORM_ALL → APPLY. Talent JSONs live in `operator-talents/`. |
+
 ```ts
 statusEvent = {
   // ── Inherited from Event ──
@@ -336,6 +343,7 @@ statusEvent = {
   "segments"?: Segment[],
 
   // ── StatusEvent-specific ──
+  "type"?: StatusEventType,                // optional — "TALENT" for operator talent passives
   "target": ObjectType,                    // THIS_OPERATOR, ENEMY, ALL_OPERATORS, OTHER_OPERATOR
   "isNamedEvent": boolean,                 // whether this appears as a named event on the timeline
   "isForceApplied": boolean,               // set by source — forced reactions have no initial damage
@@ -345,8 +353,7 @@ statusEvent = {
   // Current stack count = status level. A status at 3 stacks uses index [2] (0-indexed).
   "stack": {
     "interactionType": StackInteractionType,  // NONE, RESET, EXTEND, MERGE
-    "max": number[],                          // indexed by potential (length 6, index 0 = P1)
-                                              // 0 = infinite, 1 = single, N = up to N concurrent
+    "max": Record<PotentialType, number>,     // keyed by potential (P0–P5)
     "instances": number,                      // how many independent timeline instances exist
   },
 
@@ -358,7 +365,17 @@ statusEvent = {
 
   // Trigger clause — predicates that determine when this status is created.
   // Each predicate is evaluated independently; any passing predicate can create the status.
+  // For TALENT type: triggers define side-effect conditions (e.g. absorption exchange).
+  // The talent itself is created as a permanent presence event at frame 0.
   "triggerClause": Predicate[],
+
+  // Consume clause — predicates that determine when stacks are consumed.
+  // When conditions are met (e.g. cast battle skill at max stacks), all active
+  // stacks are clamped, freeing slots for re-accumulation.
+  "consumeClause"?: Predicate[],
+
+  // Talent level requirement — only process this def when the talent is unlocked.
+  "minTalentLevel"?: { "talent": number, "minLevel": number },
 
   // Stats — flat buffs/debuffs applied for the entire status duration (no time variation).
   // For time-varying stats, use segments instead.
@@ -429,123 +446,96 @@ Enemy-specific stat types applied by debuff statuses. Each maps to a `DamageFact
 
 ### Melting Flame (operator self-buff, permanent independent stacks)
 
+Located in `operator-skills/laevatain-skills.json`. Stacks from battle skills and combo skills.
+At max stacks, the threshold clause applies SCORCHING_HEART_EFFECT to the operator.
+
 ```json
 {
   "name": "MELTING_FLAME",
-  "source": "LAEVATAIN",
   "target": "THIS_OPERATOR",
-  "isNamedEvent": true,
   "element": "HEAT",
-  "isForceApplied": false,
-  "stack": {
-    "interactionType": "NONE",
-    "max": [
-      4,
-      4,
-      4,
-      4,
-      4,
-      4
-    ],
-    "instances": 4
-  },
+  "isNamedEvent": true,
+  "stack": { "max": { "P0": 4, ... }, "instances": 4, "verbType": "NONE" },
   "clause": [
     {
       "conditions": [
-        {
-          "subjectType": "THIS_EVENT",
-          "verbType": "HAVE",
-          "objectType": "STACKS",
-          "cardinalityConstraint": "EXACTLY",
-          "cardinality": "MAX"
-        }
+        { "subjectType": "THIS_EVENT", "verbType": "HAVE", "objectType": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
       ],
       "effects": [
-        {
-          "verbType": "APPLY",
-          "objectType": "STATUS",
-          "objectId": "SCORCHING_HEART",
-          "toObjectType": "THIS_OPERATOR"
-        }
+        { "verbType": "APPLY", "objectType": "STATUS", "objectId": "SCORCHING_HEART_EFFECT", "toObjectType": "THIS_OPERATOR" }
       ]
     }
   ],
   "triggerClause": [
+    { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "BATTLE_SKILL" }] },
+    { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "COMBO_SKILL" }] }
+  ],
+  "consumeClause": [
     {
       "conditions": [
-        {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "BATTLE_SKILL"
-        }
+        { "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "BATTLE_SKILL" },
+        { "subjectType": "THIS_EVENT", "verbType": "HAVE", "objectType": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
       ],
-      "effects": []
+      "effects": [{ "verbType": "CONSUME", "objectType": "ALL_STACKS" }]
     }
   ],
-  "duration": {
-    "value": [
-      -1,
-      -1,
-      -1,
-      -1
-    ],
-    "unit": "SECOND"
-  },
-  "stats": []
+  "properties": { "duration": { "value": [-1], "unit": "SECOND" } }
 }
 ```
 
-### Scorching Heart (single-stack enemy debuff, resets on reapply)
+### Scorching Heart (Talent 1 — absorption exchange passive)
+
+Located in `operator-talents/laevatain-talents.json`. Permanent passive (type: TALENT).
+When any operator performs a Final Strike while enemy has Heat Infliction, absorbs
+the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output redirect).
 
 ```json
 {
   "name": "SCORCHING_HEART",
-  "source": "LAEVATAIN",
-  "target": "ENEMY",
-  "isNamedEvent": true,
+  "type": "TALENT",
+  "originId": "laevatain",
+  "target": "THIS_OPERATOR",
   "element": "HEAT",
-  "isForceApplied": false,
-  "stack": {
-    "interactionType": "RESET",
-    "max": [
-      1,
-      1,
-      1,
-      1,
-      1,
-      1
-    ],
-    "instances": 1
-  },
+  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verbType": "NONE" },
   "triggerClause": [
     {
       "conditions": [
-        {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "HAVE",
-          "objectType": "STATUS",
-          "objectId": "MELTING_FLAME",
-          "cardinalityConstraint": "EXACTLY",
-          "cardinality": 4
-        }
+        { "subjectType": "ANY_OPERATOR", "verbType": "PERFORM", "objectType": "FINAL_STRIKE" },
+        { "subjectType": "ENEMY", "verbType": "HAVE", "objectType": "INFLICTION", "objectId": "HEAT" }
       ],
-      "effects": []
-    }
-  ],
-  "duration": {
-    "value": [
-      20
-    ],
-    "unit": "SECOND"
-  },
-  "stats": [
-    {
-      "statType": "HEAT_RESISTANCE_IGNORE",
-      "value": [
-        10
+      "effects": [
+        {
+          "verbType": "PERFORM_ALL",
+          "cardinalityConstraint": "AT_MOST",
+          "cardinality": "MAX",
+          "effects": [
+            { "verbType": "ABSORB", "cardinality": 1, "objectType": "INFLICTION", "element": "HEAT", "fromObjectType": "ENEMY" },
+            { "verbType": "APPLY", "cardinality": 1, "objectType": "STATUS", "objectId": "MELTING_FLAME", "toObjectType": "THIS_OPERATOR" }
+          ]
+        }
       ]
     }
-  ]
+  ],
+  "properties": { "duration": { "value": [-1], "unit": "SECOND" } },
+  "minTalentLevel": { "talent": 1, "minLevel": 1 }
+}
+```
+
+### Scorching Heart Effect (self-buff from max MF stacks, RESET on reapply)
+
+Located in `operator-skills/laevatain-skills.json`. Applied by MELTING_FLAME's threshold clause.
+Provides Heat Resistance Ignore scaling by talent level.
+
+```json
+{
+  "name": "SCORCHING_HEART_EFFECT",
+  "target": "THIS_OPERATOR",
+  "element": "HEAT",
+  "isNamedEvent": true,
+  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verbType": "RESET" },
+  "triggerClause": [],
+  "stats": [{ "statType": "HEAT_RESISTANCE_IGNORE", "value": [10, 15, 20] }],
+  "properties": { "duration": { "value": [20], "unit": "SECOND" } }
 }
 ```
 

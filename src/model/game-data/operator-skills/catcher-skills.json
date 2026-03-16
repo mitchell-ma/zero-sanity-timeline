@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "RIGID_INTERDICTION_BASIC",
+    "BATTLE_SKILL": "RIGID_INTERDICTION",
+    "COMBO_SKILL": "TIMELY_SUPPRESSION",
+    "ULTIMATE": "TEXTBOOK_ASSAULT"
+  },
+  "RIGID_INTERDICTION_BASIC": {
     "name": "Basic Tactics",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
-    "id": "RIGID_INTERDICTION_BASIC",
     "segments": [
       {
         "metadata": {
@@ -490,10 +495,9 @@
     ],
     "originId": "catcher"
   },
-  "BATTLE_SKILL": {
+  "RIGID_INTERDICTION": {
     "name": "Rigid Interdiction",
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
-    "id": "RIGID_INTERDICTION",
     "properties": {
       "duration": {
         "value": 3.17,
@@ -660,10 +664,9 @@
     ],
     "originId": "catcher"
   },
-  "COMBO_SKILL": {
+  "TIMELY_SUPPRESSION": {
     "name": "Timely Suppression",
     "description": "COMBO TRIGGER: When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below  HP. \nA powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized).\nDEF can further increase Shield points.",
-    "id": "TIMELY_SUPPRESSION",
     "properties": {
       "duration": {
         "value": 0.8,
@@ -877,10 +880,9 @@
     ],
     "originId": "catcher"
   },
-  "ULTIMATE": {
+  "TEXTBOOK_ASSAULT": {
     "name": "Textbook Assault",
     "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
-    "id": "TEXTBOOK_ASSAULT",
     "properties": {
       "duration": {
         "value": 3.43,

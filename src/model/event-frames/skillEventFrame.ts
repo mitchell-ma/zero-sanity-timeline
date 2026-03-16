@@ -33,6 +33,13 @@ export interface FrameReactionConsumption {
   applyStatus?: FrameApplyStatus;  // conditional status to apply if consumed
 }
 
+/** A segment within a multi-phase status (e.g. Focus → Empowered Focus). */
+export interface StatusSegment {
+  name: string;
+  durationFrames: number;
+  susceptibility?: Partial<Record<ElementType, readonly number[]>>;
+}
+
 /** Status applied by a frame tick to a target. */
 export interface FrameApplyStatus {
   target: TargetType;          // SELF (e.g. Melting Flame) or ENEMY (e.g. Focus)
@@ -40,6 +47,14 @@ export interface FrameApplyStatus {
   stacks: number;              // stack count (for self-targeted statuses)
   durationFrames: number;      // duration in frames (for enemy-targeted statuses)
   susceptibility?: Partial<Record<ElementType, readonly number[]>>;  // ElementType → per-level bonus array (12 levels)
+  /** How reapplication interacts with existing instances (e.g. 'RESET' refreshes the previous). */
+  stackingInteraction?: string;
+  /** Minimum operator potential required for this effect to apply. */
+  potentialMin?: number;
+  /** Maximum operator potential for this effect to apply (effect skipped if potential exceeds this). */
+  potentialMax?: number;
+  /** Multi-phase segments with per-segment susceptibility (e.g. Focus → Empowered Focus at P5). */
+  segments?: StatusSegment[];
   /** Override event name (defaults to status). Use when the in-game name differs from the column. */
   eventName?: string;
   /** Specific operator ID when targeting a named operator (e.g. 'LAEVATAIN'). Resolved to slot ID at runtime. */
@@ -71,6 +86,9 @@ export abstract class SkillEventFrame {
 
   /** Status applied by this frame to a target, or null. */
   getApplyStatus(): FrameApplyStatus | null { return null; }
+
+  /** All status applications by this frame (supports multiple conditional effects). */
+  getApplyStatuses(): readonly FrameApplyStatus[] { return []; }
 
   /** Reaction consumed by this frame (e.g. Corrosion consumed by Dolly Rush), or null. */
   getConsumeReaction(): FrameReactionConsumption | null { return null; }

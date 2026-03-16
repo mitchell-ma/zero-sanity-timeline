@@ -31,6 +31,7 @@ import {
   setCombatLoadout,
   hasSufficientSP,
 } from '../controller/timeline/eventController';
+import { ComboSkillEventController } from '../controller/timeline/comboSkillEventController';
 import {
   serializeSheet,
   clearLocalStorage,
@@ -184,7 +185,7 @@ export function useApp() {
   );
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
-  const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(true);
+  const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(1 as 0 | 1 | 2);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
   const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
   const [scrollSynced,     setScrollSynced]     = useState(true);
@@ -358,9 +359,17 @@ export function useApp() {
     return wirings;
   }, [operators]);
 
+  const slotOperatorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (let i = 0; i < operators.length; i++) {
+      if (operators[i]) map[SLOT_IDS[i]] = operators[i]!.id;
+    }
+    return map;
+  }, [operators]);
+
   const processedEvents = useMemo(
-    () => processInflictionEvents(validEvents, loadoutStats, undefined, slotWirings),
-    [validEvents, loadoutStats, slotWirings],
+    () => processInflictionEvents(validEvents, loadoutStats, undefined, slotWirings, slotOperatorMap),
+    [validEvents, loadoutStats, slotWirings, slotOperatorMap],
   );
 
   const { combatLoadout } =
@@ -1022,7 +1031,8 @@ export function useApp() {
       const processed = debugModeRef.current ? null : processedEventsRef.current;
       const clamped = validateMove(prev, target, newStartFrame, processed);
       if (clamped === target.startFrame) return prev;
-      return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped } : ev));
+      const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
+      return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1033,7 +1043,12 @@ export function useApp() {
       const clampedDelta = validateBatchMoveDelta(prev, ids, delta, processed);
       if (clampedDelta === 0) return prev;
       const idSet = new Set(ids);
-      return prev.map((ev) => idSet.has(ev.id) ? { ...ev, startFrame: ev.startFrame + clampedDelta } : ev);
+      return prev.map((ev) => {
+        if (!idSet.has(ev.id)) return ev;
+        const newFrame = ev.startFrame + clampedDelta;
+        const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(ev, newFrame, processed);
+        return { ...ev, startFrame: newFrame, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) };
+      });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

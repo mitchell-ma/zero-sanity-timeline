@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "EXCHANGE_CURRENT",
+    "BATTLE_SKILL": "SPECIFIED_RESEARCH_SUBJECT",
+    "COMBO_SKILL": "EMP_TEST_SITE",
+    "ULTIMATE": "OVERCLOCKED_MOMENT"
+  },
+  "EXCHANGE_CURRENT": {
     "name": "Exchange Current",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
-    "id": "EXCHANGE_CURRENT",
     "segments": [
       {
         "metadata": {
@@ -576,10 +581,9 @@
     ],
     "originId": "antal"
   },
-  "BATTLE_SKILL": {
+  "SPECIFIED_RESEARCH_SUBJECT": {
     "name": "Specified Research Subject",
     "description": "Applies Focus with a long duration on the enemy and deals Electric DMG. An enemy with an active Focus also suffers Electric Susceptibility and Heat Susceptibility. Focus can only be applied to 1 enemy at any given time.",
-    "id": "SPECIFIED_RESEARCH_SUBJECT",
     "properties": {
       "duration": {
         "value": 1,
@@ -627,6 +631,8 @@
             "objectId": "FOCUS",
             "toObjectType": "ENEMY",
             "eventName": "Focus",
+            "stackingInteraction": "RESET",
+            "potentialMax": 4,
             "withPreposition": {
               "duration": {
                 "verb": "IS",
@@ -634,9 +640,120 @@
               }
             },
             "susceptibility": {
-              "ELECTRIC": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.10],
-              "HEAT": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.10]
+              "ELECTRIC": [
+                0.05,
+                0.05,
+                0.06,
+                0.06,
+                0.07,
+                0.07,
+                0.08,
+                0.08,
+                0.08,
+                0.09,
+                0.09,
+                0.1
+              ],
+              "HEAT": [
+                0.05,
+                0.05,
+                0.06,
+                0.06,
+                0.07,
+                0.07,
+                0.08,
+                0.08,
+                0.08,
+                0.09,
+                0.09,
+                0.1
+              ]
             }
+          },
+          {
+            "verbType": "APPLY",
+            "objectType": "STATUS",
+            "objectId": "FOCUS",
+            "toObjectType": "ENEMY",
+            "eventName": "Empowered Focus",
+            "stackingInteraction": "RESET",
+            "potentialMin": 5,
+            "withPreposition": {
+              "duration": {
+                "verb": "IS",
+                "value": 60
+              }
+            },
+            "segments": [
+              {
+                "name": "Focus",
+                "duration": 20,
+                "susceptibility": {
+                  "ELECTRIC": [
+                    0.05,
+                    0.05,
+                    0.06,
+                    0.06,
+                    0.07,
+                    0.07,
+                    0.08,
+                    0.08,
+                    0.08,
+                    0.09,
+                    0.09,
+                    0.1
+                  ],
+                  "HEAT": [
+                    0.05,
+                    0.05,
+                    0.06,
+                    0.06,
+                    0.07,
+                    0.07,
+                    0.08,
+                    0.08,
+                    0.08,
+                    0.09,
+                    0.09,
+                    0.1
+                  ]
+                }
+              },
+              {
+                "name": "Empowered Focus",
+                "duration": 40,
+                "susceptibility": {
+                  "ELECTRIC": [
+                    0.09,
+                    0.09,
+                    0.1,
+                    0.1,
+                    0.11,
+                    0.11,
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.14
+                  ],
+                  "HEAT": [
+                    0.09,
+                    0.09,
+                    0.1,
+                    0.1,
+                    0.11,
+                    0.11,
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.14
+                  ]
+                }
+              }
+            ]
           }
         ],
         "multipliers": [
@@ -751,10 +868,9 @@
     ],
     "originId": "antal"
   },
-  "COMBO_SKILL": {
+  "EMP_TEST_SITE": {
     "name": "EMP Test Site",
     "description": "COMBO TRIGGER: When an enemy with active Focus suffers a Physical Status or Arts Infliction. \nTriggers 1 energy explosion on the enemy that deals Electric DMG and applies another stack of the same Physical Status or Arts Infliction.",
-    "id": "EMP_TEST_SITE",
     "properties": {
       "duration": {
         "value": 0.8,
@@ -954,10 +1070,9 @@
     ],
     "originId": "antal"
   },
-  "ULTIMATE": {
+  "OVERCLOCKED_MOMENT": {
     "name": "Overclocked Moment",
     "description": "Applies temporary Electric Amp and Heat Amp to the entire team.",
-    "id": "OVERCLOCKED_MOMENT",
     "properties": {
       "duration": {
         "value": 1.87,

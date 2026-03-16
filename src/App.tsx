@@ -609,7 +609,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
             debugMode={app.debugMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
@@ -632,7 +632,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
             allProcessedEvents={app.allProcessedEvents}
           />
         ) : app.editingEnemyOpen ? (
@@ -646,7 +646,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
           />
         ) : app.editingResourceCol && app.editingResourceConfig ? (
           <InformationPane
@@ -660,7 +660,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
             wasted={app.editingResourceKey ? app.resourceGraphs?.get(app.editingResourceKey)?.wasted : undefined}
           />
         ) : app.editingDamageRow ? (
@@ -672,7 +672,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => !v)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
           />
         ) : null}
 

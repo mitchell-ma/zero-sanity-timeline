@@ -62,15 +62,59 @@
  *    - Main STRENGTH, secondary AGILITY
  *    - Talent names and levels
  */
+import { TimelineEvent } from '../consts/viewTypes';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+
+jest.mock('../model/event-frames/operatorJsonLoader', () => ({
+  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
+  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
+  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
+  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
+  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
+  getBasicAttackDurations: () => undefined,
+}));
+jest.mock('../model/game-data/weaponGameData', () => ({
+  getSkillValues: () => [], getConditionalValues: () => [],
+  getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
+}));
+jest.mock('../view/InformationPane', () => ({
+  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+}));
+
+// eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
+// eslint-disable-next-line import/first
+import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
+// eslint-disable-next-line import/first
+import { applyPotentialEffects } from '../controller/timeline/processComboSkill';
+// eslint-disable-next-line import/first
+import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
+// eslint-disable-next-line import/first
+import { deriveReactions } from '../controller/timeline/deriveReactions';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/wulfgard-operator.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockSkillsJson = require('../model/game-data/operator-skills/wulfgard-skills.json');
 
-const { statusEvents: _skStatusEvents, ...wulfgardSkillCategories } = mockSkillsJson as Record<string, any>;
-const mockJson = { ...mockOperatorJson, skills: wulfgardSkillCategories, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
+const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...wulfgardSkillEntries } = mockSkillsJson as Record<string, any>;
+// Build skills keyed by both skill ID and category name (tests access by category)
+// Add `id` field from key name so tests can verify skill identity
+const wulfgardSkills: Record<string, any> = {};
+for (const [key, val] of Object.entries(wulfgardSkillEntries)) {
+  wulfgardSkills[key] = { ...(val as any), id: key };
+}
+if (_skTypeMap) {
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
+    if (wulfgardSkills[skillId]) wulfgardSkills[category] = wulfgardSkills[skillId];
+    for (const suffix of variantSuffixes) {
+      const variantSkillId = `${skillId}_${suffix}`;
+      if (wulfgardSkills[variantSkillId]) wulfgardSkills[`${suffix}_${category}`] = wulfgardSkills[variantSkillId];
+    }
+  }
+}
+const mockJson = { ...mockOperatorJson, skills: wulfgardSkills, skillTypeMap: _skTypeMap, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -624,6 +668,322 @@ describe('H. Operator Identity & Metadata', () => {
 
   test('H6: Basic attack default duration is 0.1667 seconds', () => {
     expect(mockJson.basicAttackDefaultDuration).toBe(0.1667);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group I: Status & Infliction Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('I. Status & Infliction Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  /** Create a battle skill event with Heat infliction on frame 3 (0.767s). */
+  function battleSkillWithFrames(startFrame: number): TimelineEvent {
+    return {
+      id: `bs-${startFrame}`, name: 'THERMITE_TRACERS', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame,
+      activationDuration: Math.round(1.07 * FPS), activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(1.07 * FPS),
+        frames: [
+          { offsetFrame: Math.round(0.2 * FPS) },
+          { offsetFrame: Math.round(0.53 * FPS) },
+          {
+            offsetFrame: Math.round(0.767 * FPS),
+            applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          },
+        ],
+      }],
+    };
+  }
+
+  /** Create an ultimate event with forced Combustion on the last frame. */
+  function ultimateWithFrames(startFrame: number): TimelineEvent {
+    return {
+      id: `ult-${startFrame}`, name: 'WOLVEN_FURY', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
+      activationDuration: Math.round(2.5 * FPS), activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(2.5 * FPS),
+        frames: [
+          { offsetFrame: Math.round(1.53 * FPS) },
+          { offsetFrame: Math.round(1.73 * FPS) },
+          { offsetFrame: Math.round(1.967 * FPS) },
+          { offsetFrame: Math.round(1.13 * FPS) },
+          {
+            offsetFrame: Math.round(2.3 * FPS),
+            applyForcedReaction: { reaction: 'COMBUSTION', statusLevel: 1 },
+          },
+        ],
+      }],
+    };
+  }
+
+  test('I1: Battle skill frame 3 derives Heat infliction on enemy', () => {
+    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
+    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
+    expect(inflictions.length).toBe(1);
+    expect(inflictions[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(inflictions[0].startFrame).toBe(Math.round(0.767 * FPS));
+    expect(inflictions[0].activationDuration).toBe(2400); // 20s
+    expect(inflictions[0].sourceSkillName).toBe('THERMITE_TRACERS');
+  });
+
+  test('I2: Battle skill frames 1 and 2 do NOT produce inflictions', () => {
+    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
+    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    // Only 1 infliction from frame 3
+    expect(inflictions.length).toBe(1);
+  });
+
+  test('I3: Ultimate last frame derives forced Combustion on enemy', () => {
+    const result = deriveFrameInflictions([ultimateWithFrames(0)]);
+    const reactions = result.filter(ev => ev.columnId === REACTION_COLUMNS.COMBUSTION);
+    expect(reactions.length).toBe(1);
+    expect(reactions[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(reactions[0].statusLevel).toBe(1);
+    expect(reactions[0].sourceSkillName).toBe('WOLVEN_FURY');
+    expect((reactions[0] as any).forcedReaction).toBe(true);
+  });
+
+  test('I4: Forced Combustion from ultimate does not require prior inflictions', () => {
+    // No Heat/Nature/etc. inflictions exist — forced reaction still fires
+    const result = deriveFrameInflictions([ultimateWithFrames(0)]);
+    const combustion = result.filter(ev => ev.columnId === REACTION_COLUMNS.COMBUSTION);
+    expect(combustion.length).toBe(1);
+  });
+
+  test('I5: Heat infliction from battle skill + cross-element from teammate → reaction', () => {
+    // Wulfgard Heat + teammate Nature → Corrosion
+    const heat: TimelineEvent = {
+      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: SLOT_ID,
+    };
+    const nature: TimelineEvent = {
+      id: 'n1', name: INFLICTION_COLUMNS.NATURE, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.NATURE, startFrame: FPS,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+    };
+    const result = deriveReactions([heat, nature]);
+    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
+    expect(reactions.length).toBe(1);
+    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
+  });
+
+  test('I6: Multiple battle skills produce stacking inflictions', () => {
+    const events = [battleSkillWithFrames(0), battleSkillWithFrames(300), battleSkillWithFrames(600)];
+    const result = deriveFrameInflictions(events);
+    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
+    expect(inflictions.length).toBe(3);
+  });
+
+  test('I7: Combo skill frame applies Heat infliction (from JSON)', () => {
+    const comboFrame = mockJson.skills.COMBO_SKILL.frames[0];
+    const infliction = comboFrame.effects.find(
+      (e: any) => e.verbType === 'APPLY' && e.objectType === 'INFLICTION'
+    );
+    expect(infliction).toBeDefined();
+    expect(infliction.adjective).toBe('HEAT');
+  });
+
+  test('I8: Combo triggers on Combustion — trigger clause verified', () => {
+    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
+    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
+  });
+
+  test('I9: Scorching Fangs triggers when enemy has Combustion (trigger clause 1)', () => {
+    const sf = mockJson.statusEvents[0];
+    const clause1 = sf.triggerClause[0];
+    expect(clause1.conditions[0].subjectType).toBe('ENEMY');
+    expect(clause1.conditions[0].verbType).toBe('HAVE');
+    expect(clause1.conditions[0].objectId).toBe('COMBUSTION');
+  });
+
+  test('I10: Scorching Fangs refreshes on battle skill while active (trigger clause 2)', () => {
+    const sf = mockJson.statusEvents[0];
+    const clause2 = sf.triggerClause[1];
+    // Requires: THIS_OPERATOR PERFORM BATTLE_SKILL AND THIS_OPERATOR HAVE SCORCHING_FANGS
+    expect(clause2.conditions[0].subjectType).toBe('THIS_OPERATOR');
+    expect(clause2.conditions[0].verbType).toBe('PERFORM');
+    expect(clause2.conditions[0].objectType).toBe('BATTLE_SKILL');
+    expect(clause2.conditions[1].subjectType).toBe('THIS_OPERATOR');
+    expect(clause2.conditions[1].verbType).toBe('HAVE');
+    expect(clause2.conditions[1].objectId).toBe('SCORCHING_FANGS');
+  });
+
+  test('I11: Empowered battle skill does NOT apply infliction (frame data check)', () => {
+    const ebsFrames = mockJson.skills.EMPOWERED_BATTLE_SKILL.frames;
+    for (const frame of ebsFrames) {
+      const infliction = frame.effects?.find(
+        (e: any) => e.verbType === 'APPLY' && e.objectType === 'INFLICTION'
+      );
+      expect(infliction).toBeUndefined();
+    }
+  });
+
+  test('I12: Ultimate → forced Combustion → satisfies Scorching Fangs trigger + combo trigger', () => {
+    // Both Scorching Fangs (ENEMY HAVE COMBUSTION) and combo (ENEMY IS COMBUSTED)
+    // are satisfied by forced Combustion from the ultimate
+    const sf = mockJson.statusEvents[0];
+    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
+    // Scorching Fangs clause 1 triggers on Combustion
+    expect(sf.triggerClause[0].conditions[0].objectId).toBe('COMBUSTION');
+    // Combo triggers on COMBUSTED state
+    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group J: Cooldown Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('I. Cooldown Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
+    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  test('I1: Basic attack (Rapid Fire Akimbo) has no cooldown', () => {
+    const ba = mockJson.skills.BASIC_ATTACK;
+    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
+      .flatMap((f: any) => f.effects ?? [])
+      .find((e: any) => e.objectType === 'COOLDOWN');
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('I2: Battle skill (Thermite Tracers) has no COOLDOWN effect', () => {
+    const cooldown = mockJson.skills.BATTLE_SKILL.effects?.find(
+      (e: any) => e.objectType === 'COOLDOWN'
+    );
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('I3: Combo skill (Frag Grenade Beta) has 20s cooldown', () => {
+    const cooldown = mockJson.skills.COMBO_SKILL.effects.find(
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+    );
+    expect(cooldown).toBeDefined();
+    expect(cooldown.withPreposition.cardinality.value).toBe(20);
+  });
+
+  test('I4: Combo placement during 20s cooldown is blocked', () => {
+    const comboDuration = Math.round(1 * FPS); // 120 frames
+    const comboCooldown = 20 * FPS; // 2400 frames
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+    // Mid-cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 1200, 1, [cs1])).toBe(true);
+    // After cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+  });
+
+  test('I5: Battle skill back-to-back is valid (no cooldown)', () => {
+    const bsDuration = Math.round(1.07 * FPS); // 128 frames
+    const bs1 = makeEvent({
+      id: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: bsDuration, nonOverlappableRange: bsDuration,
+    });
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+  });
+
+  test('I6: P5 Wolven Fury resets combo cooldown when cast during cooldown phase', () => {
+    const comboDuration = Math.round(1 * FPS); // 120 frames
+    const comboCooldown = 20 * FPS; // 2400 frames
+
+    // Combo at frame 0, ultimate at frame 600 (during cooldown phase)
+    const comboEvent = makeEvent({
+      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0, activationDuration: comboDuration,
+      cooldownDuration: comboCooldown,
+    });
+    const ultEvent = makeEvent({
+      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
+      startFrame: 600, activationDuration: Math.round(2.5 * FPS),
+      operatorPotential: 5, // P5 required
+    } as any);
+
+    const result = applyPotentialEffects([comboEvent, ultEvent]);
+    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+
+    // Cooldown should be truncated: originally ends at 120+2400=2520, now cut to ultFrame - activeEnd = 600 - 120 = 480
+    expect(modifiedCombo.cooldownDuration).toBe(480);
+  });
+
+  test('I7: P5 Wolven Fury does NOT reset cooldown if potential < 5', () => {
+    const comboDuration = 120;
+    const comboCooldown = 2400;
+
+    const comboEvent = makeEvent({
+      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0, activationDuration: comboDuration,
+      cooldownDuration: comboCooldown,
+    });
+    const ultEvent = makeEvent({
+      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
+      startFrame: 600, activationDuration: 300,
+      operatorPotential: 4, // Below P5 threshold
+    } as any);
+
+    const result = applyPotentialEffects([comboEvent, ultEvent]);
+    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+
+    // Cooldown should be unchanged
+    expect(modifiedCombo.cooldownDuration).toBe(comboCooldown);
+  });
+
+  test('I8: P5 Wolven Fury does NOT reset cooldown if combo is still in activation phase', () => {
+    const comboDuration = 120;
+    const comboCooldown = 2400;
+
+    const comboEvent = makeEvent({
+      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0, activationDuration: comboDuration,
+      cooldownDuration: comboCooldown,
+    });
+    // Ultimate fires during combo activation, not cooldown
+    const ultEvent = makeEvent({
+      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
+      startFrame: 60, // Mid-activation (before frame 120)
+      activationDuration: 300,
+      operatorPotential: 5,
+    } as any);
+
+    const result = applyPotentialEffects([comboEvent, ultEvent]);
+    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+
+    // Cooldown unchanged — ultimate was during activation, not cooldown
+    expect(modifiedCombo.cooldownDuration).toBe(comboCooldown);
+  });
+
+  test('I9: P5 cooldown reset only applies to same-owner combo', () => {
+    const comboEvent = makeEvent({
+      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
+      ownerId: 'slot-0', startFrame: 0, activationDuration: 120,
+      cooldownDuration: 2400,
+    });
+    // Different owner's ultimate
+    const ultEvent = makeEvent({
+      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
+      ownerId: 'slot-1', startFrame: 600, activationDuration: 300,
+      operatorPotential: 5,
+    } as any);
+
+    const result = applyPotentialEffects([comboEvent, ultEvent]);
+    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+
+    // Different owner — no reset
+    expect(modifiedCombo.cooldownDuration).toBe(2400);
   });
 });
 

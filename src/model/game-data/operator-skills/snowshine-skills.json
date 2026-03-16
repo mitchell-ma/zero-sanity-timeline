@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "HYPOTHERMIC_ASSAULT",
+    "BATTLE_SKILL": "SATURATED_DEFENSE",
+    "COMBO_SKILL": "POLAR_RESCUE",
+    "ULTIMATE": "FRIGID_SNOWFIELD"
+  },
+  "HYPOTHERMIC_ASSAULT": {
     "name": "Hypothermic Assault",
     "description": "BASIC ATTACK: \nAn attack with up to 3 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
-    "id": "HYPOTHERMIC_ASSAULT",
     "segments": [
       {
         "metadata": {
@@ -477,10 +482,9 @@
     ],
     "originId": "snowshine"
   },
-  "BATTLE_SKILL": {
+  "SATURATED_DEFENSE": {
     "name": "Saturated Defense",
     "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker.",
-    "id": "SATURATED_DEFENSE",
     "properties": {
       "duration": {
         "value": 4.5,
@@ -647,10 +651,9 @@
     ],
     "originId": "snowshine"
   },
-  "COMBO_SKILL": {
+  "POLAR_RESCUE": {
     "name": "Polar Rescue",
     "description": "COMBO TRIGGER: After controlled operator gets attacked and drops below  HP. \nSnowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. \nThe attribute of Will increases the amount of HP treatment.",
-    "id": "POLAR_RESCUE",
     "properties": {
       "duration": {
         "value": 0.5,
@@ -707,10 +710,9 @@
     ],
     "originId": "snowshine"
   },
-  "ULTIMATE": {
+  "FRIGID_SNOWFIELD": {
     "name": "Frigid Snowfield",
     "description": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration.",
-    "id": "FRIGID_SNOWFIELD",
     "properties": {
       "duration": {
         "value": 2.37,

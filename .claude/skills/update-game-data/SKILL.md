@@ -17,7 +17,7 @@ Parse operator data from two remote sources into per-operator files under `game-
 
 | Source | URL | Provides |
 |---|---|---|
-| **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Operator info, stats, potentials, levels, skill descriptions, **skill multipliers** (per-level atk_scale from `skillPatchTable`) |
+| **Warfarin API** | `https://api.warfarin.wiki/v1/en/operators/<slug>` | Operator info, stats, potentials, levels, skill descriptions, **skill multipliers** (per-level atk_scale from `skillPatchTable`), **ultimate active duration** (from `blackboard.duration`) |
 | **End-Axis gamedata.json** | `https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json` | Skill frame timing data, attack segments, anomalies, variants |
 | **Endfield Wiki** | `https://endfield.wiki.gg/wiki/<Operator_Name>` | Skill descriptions, talent details, skill mechanics, **operator images** (banner/splash art, icon) — useful for cross-referencing and verifying data from the other two sources |
 
@@ -72,6 +72,7 @@ npx tsx src/model/utils/parsers/parseEndAxisGameData.ts laevatain
 ```
 Warfarin API ──→ parseWarfarinOperator.ts ──→ operator info (stats, potentials, levels, skill descriptions)
                                            ──→ skill multipliers (per-level atk_scale from skillPatchTable)
+                                           ──→ timing overrides (ultimateActiveDuration from blackboard.duration)
                                                       ↓
 End-Axis GitHub ──→ parseEndAxisGameData.ts ──→ skill frame timing (segments, frames, resource/status interactions)
                                                       ↓
@@ -79,6 +80,25 @@ End-Axis GitHub ──→ parseEndAxisGameData.ts ──→ skill frame timing (
                                                               ──→ operators/<slug>-operator.json (base config)
                                                               ──→ operator-skills/<slug>-skills.json (skill data)
 ```
+
+## Skill Timing Overrides
+
+Top-level timing fields in operator JSON (`ultimateActiveDuration`, `ultimateCooldownDuration`, `battleSkillActivationDuration`, `comboSkillActivationDuration`) control the timeline event durations, overriding values derived from the skills JSON.
+
+### Auto-extracted from Warfarin (by parser)
+
+| Field | Source | Notes |
+|---|---|---|
+| `ultimateActiveDuration` | `ultimate_skill.blackboard.duration` | Active phase duration in seconds. Only present for ultimates with a sustained buff/transformation phase. |
+
+### Manual only (NOT auto-extracted)
+
+| Field | Why manual |
+|---|---|
+| `ultimateCooldownDuration` | Warfarin's `ultimate_skill.coolDown` is **ambiguous** — it represents either a real post-ult cooldown (e.g., Laevatain 10s) or an energy recharge lockout (e.g., Antal, Yvonne, Ardelia where cooldown should be 0). The Warfarin data has no field to distinguish these cases. Must be verified in-game. Set to `0` or omit for energy-gated ults with no real cooldown. |
+| `battleSkillActivationDuration` | Not available from Warfarin. `normal_skill.blackboard.duration` is the skill's *effect* duration (e.g., Focus 60s), not the cast/activation time. Sourced from End-Axis `skill_duration` or manual measurement. |
+| `comboSkillActivationDuration` | Not available from Warfarin. Sourced from End-Axis `link_duration` or manual measurement. |
+| `basicAttackDefaultDuration` | Not available from any external source. Must be manually measured. |
 
 ## Skill ID Convention
 

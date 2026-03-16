@@ -9,6 +9,12 @@
 - Horizontal timeline mode with improved layout and touch controls
 - Major data pipeline improvements — operator skill data split into separate files, parsers updated for better accuracy
 - Lots of UI polish: light/dark theme toggle, starred operators, improved info pane, better mobile support
+- Rewrote how status effects and reactions are calculated — combo skills, inflictions, and element reactions are now processed through a unified pipeline
+- Info pane and event detail panels moved to proper controller logic instead of living in the view
+- New event validation system catches invalid skill placements before they happen
+- Antal and Ardelia skill data greatly expanded with full frame timing and multipliers
+- Laevatain damage calculation test suite added
+- Combo trigger resolution tests added to verify multi-operator interaction chains
 
 ## 2026-03-14
 - All operator, weapon, and gear data now loads from JSON files instead of being hardcoded — makes it much easier to add new content and keep up with game updates

@@ -29,6 +29,10 @@ Rules:
 - After completing any task, run `npx tsc --noEmit` and fix all compilation errors in changed files before reporting done.
 - Avoid explicit TypeScript typing unless absolutely necessary. Prefer type inference; only add annotations when the compiler cannot infer correctly or when a public API requires clarity.
 
+Game data:
+- All skill data (frames, multipliers, effects, properties, animation timings) lives in `src/model/game-data/operator-skills/*-skills.json`. Operator JSONs (`src/model/game-data/operators/*-operator.json`) store only operator-level data (stats, potentials, talents, metadata) — never skill frames or overrides.
+- When debugging missing/wrong skill data in the UI, always check the skills JSON first — that is the single source of truth. There is no override mechanism in operator JSONs.
+
 Processes:
 - **"summarize and sync"** — Write a concise git commit message with a descriptive summary in the body, then run `gitsync <DETAILS>` with the summary details.
 - **"look at screenshot"** / **"ss"** — Read the latest image file from the `.claude-adhoc/` folder.

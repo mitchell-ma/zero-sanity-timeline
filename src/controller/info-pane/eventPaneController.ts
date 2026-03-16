@@ -5,10 +5,12 @@ import {
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
 } from '../../consts/timelineColumnLabels';
 import { interactionToLabel } from '../../consts/semantics';
+import type { Interaction, Effect } from '../../consts/semantics';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../calculation/statusQueryService';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Event Identity ──────────────────────────────────────────────────────────
 
@@ -392,4 +394,285 @@ export function resolveActiveModifiers(
   }
 
   return modifiers;
+}
+
+// ── DSL Semantics Resolution ──────────────────────────────────────────────
+
+/** Human-readable text for an Interaction (condition). */
+export function interactionToText(i: Interaction): string {
+  const parts: string[] = [];
+  parts.push(i.subjectType.replace(/_/g, ' '));
+  if (i.subjectProperty) parts.push(`'s ${String(i.subjectProperty).replace(/_/g, ' ')}`);
+  if (i.negated) parts.push('NOT');
+  parts.push(i.verbType.replace(/_/g, ' '));
+  parts.push(i.objectType.replace(/_/g, ' '));
+  if (i.objectId) parts.push(`(${i.objectId})`);
+  if (i.cardinalityConstraint && i.cardinality != null) {
+    parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${i.cardinality}`);
+  }
+  if (i.element) parts.push(`[${i.element}]`);
+  return parts.join(' ');
+}
+
+/** Human-readable text for an Effect. */
+export function effectToText(e: Effect): string {
+  const parts: string[] = [];
+  parts.push(e.verbType.replace(/_/g, ' '));
+  if (e.cardinality != null) parts.push(String(e.cardinality));
+  if (e.adjective) {
+    const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
+    parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
+  }
+  if (e.objectType) parts.push(String(e.objectType).replace(/_/g, ' '));
+  if (e.objectId) parts.push(`(${e.objectId})`);
+  if (e.toObjectType) parts.push(`TO ${String(e.toObjectType).replace(/_/g, ' ')}`);
+  if (e.fromObjectType) parts.push(`FROM ${String(e.fromObjectType).replace(/_/g, ' ')}`);
+  if (e.onObjectType) parts.push(`ON ${String(e.onObjectType).replace(/_/g, ' ')}`);
+  if (e.forPreposition) {
+    parts.push(`FOR ${e.forPreposition.cardinalityConstraint.replace(/_/g, ' ')} ${e.forPreposition.cardinality}`);
+  } else if (e.cardinalityConstraint) {
+    parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
+  }
+  if (e.withPreposition) {
+    const wpParts: string[] = [];
+    for (const [k, v] of Object.entries(e.withPreposition)) {
+      const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}${(v.value as number[]).length > 3 ? '...' : ''}]`;
+      wpParts.push(`${k.replace(/_/g, ' ').toUpperCase()} ${val}`);
+    }
+    if (wpParts.length) parts.push(`WITH ${wpParts.join(', ')}`);
+  }
+  return parts.join(' ');
+}
+
+/** A resolved predicate with text-form conditions and effects. */
+export interface ResolvedPredicate {
+  conditions: string[];
+  effects: string[];
+}
+
+/** DSL data resolved for an event's skill. */
+export interface EventDslData {
+  /** Skill-level predicates (clause). */
+  predicates: ResolvedPredicate[];
+  /** Segment-level predicates, keyed by segment index. */
+  segmentPredicates: Record<number, ResolvedPredicate[]>;
+  /** Segment-level effects (non-predicate), keyed by segment index. */
+  segmentEffects: Record<number, string[]>;
+  /** Frame-level effects, keyed by `segmentIndex-frameIndex`. */
+  frameEffects: Record<string, string[]>;
+}
+
+/**
+ * Resolve DSL predicates and effects from the operator JSON for an event's skill.
+ * Returns null if no operator JSON or skill data is available.
+ */
+export function resolveEventDsl(
+  operatorId: string | undefined,
+  skillName: string,
+): EventDslData | null {
+  if (!operatorId) return null;
+  const json = getOperatorJson(operatorId);
+  if (!json?.skills) return null;
+
+  // Look up skill data directly by skill ID
+  const skillCat = json.skills[skillName] as Record<string, any> | undefined;
+  if (!skillCat) return null;
+
+  const predicates: ResolvedPredicate[] = [];
+  const segmentPredicates: Record<number, ResolvedPredicate[]> = {};
+  const segmentEffects: Record<number, string[]> = {};
+  const frameEffects: Record<string, string[]> = {};
+
+  // Skill-level clause
+  if (skillCat.clause && Array.isArray(skillCat.clause)) {
+    for (const pred of skillCat.clause) {
+      predicates.push({
+        conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
+        effects: (pred.effects ?? []).map((e: Effect) => effectToText(e)),
+      });
+    }
+  }
+
+  // Segment-level data
+  const segments: any[] = skillCat.segments ?? [];
+  for (let si = 0; si < segments.length; si++) {
+    const seg = segments[si];
+
+    // Segment clause
+    if (seg.clause && Array.isArray(seg.clause)) {
+      segmentPredicates[si] = seg.clause.map((pred: any) => ({
+        conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
+        effects: (pred.effects ?? []).map((e: Effect) => effectToText(e)),
+      }));
+    }
+
+    // Segment effects
+    if (seg.effects && Array.isArray(seg.effects)) {
+      segmentEffects[si] = seg.effects.map((e: Effect) => effectToText(e));
+    }
+
+    // Frame-level effects
+    const frames: any[] = seg.frames ?? [];
+    for (let fi = 0; fi < frames.length; fi++) {
+      const frame = frames[fi];
+      if (frame.effects && Array.isArray(frame.effects)) {
+        frameEffects[`${si}-${fi}`] = frame.effects.map((e: Effect) => effectToText(e));
+      }
+    }
+  }
+
+  // Flat shape (single segment, no segments array)
+  if (segments.length === 0 && skillCat.frames) {
+    const frames: any[] = skillCat.frames;
+    for (let fi = 0; fi < frames.length; fi++) {
+      const frame = frames[fi];
+      if (frame.effects && Array.isArray(frame.effects)) {
+        frameEffects[`0-${fi}`] = frame.effects.map((e: Effect) => effectToText(e));
+      }
+    }
+  }
+
+  // Skill-level effects
+  if (skillCat.effects && Array.isArray(skillCat.effects)) {
+    segmentEffects[-1] = skillCat.effects.map((e: Effect) => effectToText(e));
+  }
+
+  const hasData = predicates.length > 0 ||
+    Object.keys(segmentPredicates).length > 0 ||
+    Object.keys(segmentEffects).length > 0 ||
+    Object.keys(frameEffects).length > 0;
+
+  return hasData ? { predicates, segmentPredicates, segmentEffects, frameEffects } : null;
+}
+
+// ── Full Event Detail (verbose mode) ───────────────────────────────────────
+
+/** Complete structured detail for the verbose event pane. */
+export interface EventFullDetail {
+  /** Skill ID (e.g. "FLAMING_CINDERS") */
+  skillId: string;
+  /** Origin operator ID from the skill JSON */
+  originId: string | null;
+  /** Skill name from JSON */
+  name: string | null;
+  /** Skill description from JSON */
+  description: string | null;
+  /** Skill-level properties (duration, etc.) */
+  properties: Record<string, { value: number | string; unit?: string }> | null;
+  /** Status event data if this skill has statusEvents */
+  statusEvents: any[] | null;
+  /** Skill-level clause (raw predicates) */
+  clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
+  /** Skill-level effects (non-predicate) */
+  effects: Effect[] | null;
+  /** Segment details */
+  segments: {
+    index: number;
+    properties: Record<string, { value: number | string; unit?: string }> | null;
+    clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
+    effects: Effect[] | null;
+    metadata: Record<string, any> | null;
+    frames: {
+      index: number;
+      properties: Record<string, { value: number | string; unit?: string }> | null;
+      effects: Effect[] | null;
+      multipliers: Record<string, number>[] | null;
+      metadata: Record<string, any> | null;
+    }[];
+  }[];
+  /** Metadata from JSON (dataSources, etc.) */
+  metadata: Record<string, any> | null;
+  /** skillTypeMap entry for this skill (e.g. BASIC_ATTACK → FLAMING_CINDERS) */
+  skillTypeMapping: string | null;
+}
+
+/**
+ * Resolve the full raw detail from operator JSON for verbose display.
+ * Returns null if no operator JSON or skill data is available.
+ */
+export function resolveEventFullDetail(
+  operatorId: string | undefined,
+  skillName: string,
+): EventFullDetail | null {
+  if (!operatorId) return null;
+  const json = getOperatorJson(operatorId);
+  if (!json?.skills) return null;
+
+  const skillCat = json.skills[skillName] as Record<string, any> | undefined;
+  if (!skillCat) return null;
+
+  // Find which skill type maps to this skill
+  const skillTypeMap = json.skills.skillTypeMap as Record<string, string> | undefined;
+  let skillTypeMapping: string | null = null;
+  if (skillTypeMap) {
+    for (const [type, id] of Object.entries(skillTypeMap)) {
+      if (id === skillName) { skillTypeMapping = type; break; }
+    }
+  }
+
+  const segments: EventFullDetail['segments'] = [];
+  const rawSegments: any[] = skillCat.segments ?? [];
+
+  for (let si = 0; si < rawSegments.length; si++) {
+    const seg = rawSegments[si];
+    const frames: EventFullDetail['segments'][0]['frames'] = [];
+    const rawFrames: any[] = seg.frames ?? [];
+
+    for (let fi = 0; fi < rawFrames.length; fi++) {
+      const frame = rawFrames[fi];
+      frames.push({
+        index: fi,
+        properties: frame.properties ?? null,
+        effects: frame.effects ?? null,
+        multipliers: frame.multipliers ?? null,
+        metadata: frame.metadata ?? null,
+      });
+    }
+
+    segments.push({
+      index: si,
+      properties: seg.properties ?? null,
+      clause: seg.clause ?? null,
+      effects: seg.effects ?? null,
+      metadata: seg.metadata ?? null,
+      frames,
+    });
+  }
+
+  // Flat shape (single segment, frames at skill level)
+  if (rawSegments.length === 0 && skillCat.frames) {
+    const frames: EventFullDetail['segments'][0]['frames'] = [];
+    for (let fi = 0; fi < skillCat.frames.length; fi++) {
+      const frame = skillCat.frames[fi];
+      frames.push({
+        index: fi,
+        properties: frame.properties ?? null,
+        effects: frame.effects ?? null,
+        multipliers: frame.multipliers ?? null,
+        metadata: frame.metadata ?? null,
+      });
+    }
+    segments.push({
+      index: 0,
+      properties: skillCat.properties ?? null,
+      clause: null,
+      effects: null,
+      metadata: null,
+      frames,
+    });
+  }
+
+  return {
+    skillId: skillName,
+    originId: skillCat.originId ?? null,
+    name: skillCat.name ?? null,
+    description: skillCat.description ?? null,
+    properties: skillCat.properties ?? null,
+    statusEvents: skillCat.statusEvents ?? null,
+    clause: skillCat.clause ?? null,
+    effects: skillCat.effects ?? null,
+    segments,
+    metadata: skillCat.metadata ?? null,
+    skillTypeMapping,
+  };
 }

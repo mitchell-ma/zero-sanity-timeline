@@ -14,17 +14,20 @@
  * - Stack interaction types: NONE (independent), RESET (refresh earlier)
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType } from '../../consts/enums';
+import { CombatSkillsType, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
-import { getOperatorJson, getSkillNameMap, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson, getSkillIds, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
 import { LoadoutStats } from '../../view/InformationPane';
+import { ELEMENT_TO_INFLICTION_COLUMN } from './processInfliction';
+import { getFinalStrikeTriggerFrame } from './processComboSkill';
 
 // ── Types from JSON ─────────────────────────────────────────────────────────
 
 interface StatusEventDef {
   name: string;
+  type?: string;
   target: string;
   element?: string;
   isNamedEvent?: boolean;
@@ -46,6 +49,7 @@ interface StatusEventDef {
 
 interface TriggerClause {
   conditions: Predicate[];
+  effects?: TriggerEffect[];
 }
 
 interface EffectClause {
@@ -70,6 +74,23 @@ interface Effect {
   toObjectType?: string;
 }
 
+interface TriggerEffect {
+  verbType: string;
+  cardinalityConstraint?: string;
+  cardinality?: number | string;
+  effects?: TriggerSubEffect[];
+}
+
+interface TriggerSubEffect {
+  verbType: string;
+  cardinality?: number;
+  objectType?: string;
+  objectId?: string;
+  element?: string;
+  fromObjectType?: string;
+  toObjectType?: string;
+}
+
 // ── Operator detection ──────────────────────────────────────────────────────
 
 /** Find which slot owns a given operator by scanning events for their skill names. */
@@ -77,7 +98,7 @@ function findOperatorSlot(
   events: TimelineEvent[],
   operatorId: string,
 ): string | null {
-  const skillNames = new Set(Object.keys(getSkillNameMap(operatorId)));
+  const skillNames = getSkillIds(operatorId);
   for (const ev of events) {
     if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
     if (skillNames.has(ev.name)) return ev.ownerId;
@@ -149,6 +170,19 @@ interface TriggerMatch {
   frame: number;
   sourceOwnerId: string;
   sourceSkillName: string;
+  effects?: TriggerEffect[];
+}
+
+interface AbsorbedInfliction {
+  eventId: string;
+  clampFrame: number;
+  sourceOwnerId: string;
+  sourceSkillName: string;
+}
+
+interface DeriveResult {
+  derived: TimelineEvent[];
+  absorbedInflictions: AbsorbedInfliction[];
 }
 
 /**
@@ -195,6 +229,16 @@ function checkPredicate(
         }
         return true;
       }
+      if (pred.objectType === 'INFLICTION' && pred.objectId) {
+        const colId = ELEMENT_TO_INFLICTION_COLUMN[pred.objectId];
+        if (!colId) return false;
+        return events.some(ev =>
+          ev.ownerId === ENEMY_OWNER_ID &&
+          ev.columnId === colId &&
+          ev.startFrame <= candidateFrame &&
+          candidateFrame < ev.startFrame + ev.activationDuration
+        );
+      }
       return false;
     }
 
@@ -221,33 +265,63 @@ function findTriggerMatches(
 
     if (presenceConds.length > 0) {
       // IS_PRESENT: trigger once at frame 0
-      matches.push({ frame: 0, sourceOwnerId: operatorSlotId, sourceSkillName: def.name });
+      matches.push({ frame: 0, sourceOwnerId: operatorSlotId, sourceSkillName: def.name, effects: clause.effects });
       continue;
     }
 
     if (performConds.length > 0) {
-      // PERFORM trigger: find all skill casts by this operator matching the objectType
       const performCond = performConds[0];
-      const matchingSkillColumn = performCond.objectType === 'BATTLE_SKILL' ? 'battle'
-        : performCond.objectType === 'COMBO_SKILL' ? 'combo'
-        : performCond.objectType === 'ULTIMATE' ? 'ultimate'
-        : performCond.objectType;
+      const isAnyOperator = performCond.subjectType === 'ANY_OPERATOR';
+      const isFinalStrike = performCond.objectType === 'FINAL_STRIKE';
 
-      for (const ev of events) {
-        if (ev.ownerId !== operatorSlotId) continue;
-        if (ev.columnId !== matchingSkillColumn) continue;
+      if (isFinalStrike) {
+        // FINAL_STRIKE: scan basic attack events for Final Strike frames
+        for (const ev of events) {
+          if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
+          if (!isAnyOperator && ev.ownerId !== operatorSlotId) continue;
+          if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+          // Skip non-sequence basic attacks (Finisher, Dive)
+          if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
 
-        // Check additional HAVE conditions at this frame
-        const allHaveMet = haveConds.every(hc =>
-          checkPredicate(hc, events, operatorSlotId, ev.startFrame)
-        );
-        if (!allHaveMet) continue;
+          const triggerFrame = getFinalStrikeTriggerFrame(ev);
+          if (triggerFrame == null) continue;
 
-        matches.push({
-          frame: ev.startFrame,
-          sourceOwnerId: ev.ownerId,
-          sourceSkillName: ev.name,
-        });
+          const allHaveMet = haveConds.every(hc =>
+            checkPredicate(hc, events, operatorSlotId, triggerFrame)
+          );
+          if (!allHaveMet) continue;
+
+          matches.push({
+            frame: triggerFrame,
+            sourceOwnerId: ev.ownerId,
+            sourceSkillName: ev.name,
+            effects: clause.effects,
+          });
+        }
+      } else {
+        // Standard PERFORM trigger: find skill casts matching the objectType
+        const matchingSkillColumn = performCond.objectType === 'BATTLE_SKILL' ? 'battle'
+          : performCond.objectType === 'COMBO_SKILL' ? 'combo'
+          : performCond.objectType === 'ULTIMATE' ? 'ultimate'
+          : performCond.objectType;
+
+        for (const ev of events) {
+          if (!isAnyOperator && ev.ownerId !== operatorSlotId) continue;
+          if (isAnyOperator && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
+          if (ev.columnId !== matchingSkillColumn) continue;
+
+          const allHaveMet = haveConds.every(hc =>
+            checkPredicate(hc, events, operatorSlotId, ev.startFrame)
+          );
+          if (!allHaveMet) continue;
+
+          matches.push({
+            frame: ev.startFrame,
+            sourceOwnerId: ev.ownerId,
+            sourceSkillName: ev.name,
+            effects: clause.effects,
+          });
+        }
       }
     } else if (haveConds.length > 0) {
       // Pure HAVE trigger (e.g. ENEMY HAVE COMBUSTION, or THIS_OPERATOR HAVE STATUS X EXACTLY N):
@@ -268,6 +342,7 @@ function findTriggerMatches(
             frame: ev.startFrame,
             sourceOwnerId: ev.ownerId,
             sourceSkillName: ev.name,
+            effects: clause.effects,
           });
         }
       }
@@ -292,6 +367,8 @@ interface DeriveContext {
   potential: number;
   /** Maps operator ID (lowercase) → slot ID for cross-operator target resolution. */
   operatorSlotMap: Record<string, string>;
+  /** Loadout stats for the operator's slot (talent levels, etc.). */
+  loadoutStats?: LoadoutStats;
 }
 
 function deriveStatusEvents(
@@ -301,74 +378,208 @@ function deriveStatusEvents(
   minTriggerFrame = -1,
   /** Pre-existing derived events to include in active stack count (consumed events with clamped durations). */
   priorDerived: TimelineEvent[] = [],
-): TimelineEvent[] {
+): DeriveResult {
   const { events, operatorSlotId } = ctx;
+  const empty: DeriveResult = { derived: [], absorbedInflictions: [] };
 
-  const duration = def.properties?.duration ?? def.duration;
-  if (!duration) return [];
+  // Check if PERFORM_ALL effects redirect output to a different status (e.g. talent triggers that produce MF)
+  const applySubEffect = def.triggerClause
+    .flatMap(c => c.effects ?? [])
+    .filter(e => e.verbType === 'PERFORM_ALL')
+    .flatMap(e => e.effects ?? [])
+    .find(e => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId);
+  let outputDef = def;
+  if (applySubEffect?.objectId) {
+    const json = getOperatorJson(ctx.operatorId);
+    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+      .find(d => d.name === applySubEffect.objectId);
+    if (targetDef) outputDef = targetDef;
+  }
+
+  const duration = outputDef.properties?.duration ?? outputDef.duration;
+  if (!duration) return empty;
   const durationFrames = getDurationFrames(duration);
-  const ownerId = resolveOwnerId(def.target, operatorSlotId, ctx.operatorSlotMap);
-  const columnId = statusNameToColumnId(def.name);
-  const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
+  const ownerId = resolveOwnerId(outputDef.target, operatorSlotId, ctx.operatorSlotMap);
+  const columnId = statusNameToColumnId(outputDef.name);
+  const maxStacks = getMaxStacks(outputDef.stack.max, ctx.potential);
 
   const triggers = findTriggerMatches(def, events, operatorSlotId);
-  if (triggers.length === 0) return [];
+  if (triggers.length === 0) return empty;
 
   // Check dedup: don't create if active (non-consumed) events already exist.
   // Prevents double-derivation when a status is reachable via both a triggerClause
   // and a threshold clause on another status. Consumed events are excluded so that
   // re-derivation after consumption can produce new stacks.
-  if (events.some(ev =>
+  // Skip dedup when the def redirects output to a different status (e.g. talent → MF),
+  // since the talent is contributing additional triggers to an existing status.
+  if (outputDef === def && events.some(ev =>
     ev.columnId === columnId && ev.eventStatus !== EventStatusType.CONSUMED
-  )) return [];
+  )) return empty;
 
   const derived: TimelineEvent[] = [];
+  const absorbedInflictions: AbsorbedInfliction[] = [];
+  const absorbedIds = new Set<string>();
   let idCounter = 0;
 
   for (const trigger of triggers) {
     // Skip triggers at or before the minimum frame (for post-consumption re-derivation)
     if (trigger.frame <= minTriggerFrame) continue;
 
-    // Enforce max stack cap: count active events from both prior (consumed) and new derived
+    // Enforce max stack cap: count active events from prior, new derived, and (for redirected
+    // output) existing events in the timeline that match the output column
     const allDerived = [...priorDerived, ...derived];
-    const activeAtFrame = allDerived.filter(ev => {
+    let activeAtFrame = allDerived.filter(ev => {
       const end = ev.startFrame + ev.activationDuration;
       return ev.startFrame <= trigger.frame && trigger.frame < end;
     }).length;
+    if (outputDef !== def) {
+      // Count existing events in the timeline for the output column (from a previous derivation pass)
+      activeAtFrame += events.filter(ev =>
+        ev.columnId === columnId &&
+        ev.ownerId === ownerId &&
+        ev.eventStatus !== EventStatusType.CONSUMED &&
+        ev.startFrame <= trigger.frame &&
+        trigger.frame < ev.startFrame + ev.activationDuration
+      ).length;
+    }
     if (activeAtFrame >= maxStacks) continue;
 
-    const evId = `${def.name.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
+    // Determine how many events to create: 1 normally, N for PERFORM_ALL with ABSORB
+    let createCount = 1;
+    const performAllEffect = trigger.effects?.find(e => e.verbType === 'PERFORM_ALL');
+    const absorbSubEffect = performAllEffect?.effects?.find(e => e.verbType === 'ABSORB');
+    let inflictionsToAbsorb: TimelineEvent[] = [];
 
-    // For RESET stacks: clamp previous instances
-    if (def.stack.verbType === 'RESET' && derived.length > 0) {
-      const prev = derived[derived.length - 1];
-      const prevEnd = prev.startFrame + prev.activationDuration;
-      if (trigger.frame < prevEnd) {
-        derived[derived.length - 1] = {
-          ...prev,
-          activationDuration: trigger.frame - prev.startFrame,
-          eventStatus: EventStatusType.REFRESHED,
-          eventStatusOwnerId: trigger.sourceOwnerId,
-          eventStatusSkillName: trigger.sourceSkillName,
-        };
+    if (absorbSubEffect?.element) {
+      const inflictionCol = ELEMENT_TO_INFLICTION_COLUMN[absorbSubEffect.element];
+      if (inflictionCol) {
+        inflictionsToAbsorb = events.filter(ev =>
+          ev.ownerId === ENEMY_OWNER_ID &&
+          ev.columnId === inflictionCol &&
+          ev.startFrame <= trigger.frame &&
+          trigger.frame < ev.startFrame + ev.activationDuration &&
+          ev.eventStatus !== EventStatusType.CONSUMED &&
+          !absorbedIds.has(ev.id)
+        ).sort((a, b) => a.startFrame - b.startFrame);
+
+        createCount = Math.min(maxStacks - activeAtFrame, inflictionsToAbsorb.length);
+        if (createCount <= 0) continue;
       }
     }
 
-    derived.push({
-      id: evId,
-      name: def.name,
-      ownerId,
-      columnId,
-      startFrame: trigger.frame,
-      activationDuration: durationFrames,
-      activeDuration: 0,
-      cooldownDuration: 0,
-      sourceOwnerId: operatorSlotId,
-      sourceSkillName: trigger.sourceSkillName,
-    });
+    for (let ci = 0; ci < createCount; ci++) {
+      const evId = `${outputDef.name.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
+
+      // For RESET stacks: clamp previous instances
+      if (outputDef.stack.verbType === 'RESET' && derived.length > 0) {
+        const prev = derived[derived.length - 1];
+        const prevEnd = prev.startFrame + prev.activationDuration;
+        if (trigger.frame < prevEnd) {
+          derived[derived.length - 1] = {
+            ...prev,
+            activationDuration: trigger.frame - prev.startFrame,
+            eventStatus: EventStatusType.REFRESHED,
+            eventStatusOwnerId: trigger.sourceOwnerId,
+            eventStatusSkillName: trigger.sourceSkillName,
+          };
+        }
+      }
+
+      const ev: TimelineEvent = {
+        id: evId,
+        name: outputDef.name,
+        ownerId,
+        columnId,
+        startFrame: trigger.frame,
+        activationDuration: durationFrames,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: operatorSlotId,
+        sourceSkillName: trigger.sourceSkillName,
+      };
+
+      // Susceptibility from config (e.g. Tactful Approach: Electric Susceptibility)
+      if (outputDef.susceptibility) {
+        const resolved: Record<string, number> = {};
+        for (const [element, values] of Object.entries(outputDef.susceptibility)) {
+          const arr = values as number[];
+          const talentLevel = outputDef.minTalentLevel?.talent === 2
+            ? (ctx.loadoutStats?.talentTwoLevel ?? 0)
+            : (ctx.loadoutStats?.talentOneLevel ?? 0);
+          resolved[element] = arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
+        }
+        ev.susceptibility = resolved;
+      }
+
+      // statusValue from stats config (e.g. Wildland Trekker: perIntellect * p3Multiplier)
+      if (outputDef.stats && outputDef.stats.length > 0) {
+        const stat = outputDef.stats[0] as { perIntellect?: number[]; p3Multiplier?: number };
+        if (stat.perIntellect) {
+          const talentLevel = outputDef.minTalentLevel?.talent === 2
+            ? (ctx.loadoutStats?.talentTwoLevel ?? 0)
+            : (ctx.loadoutStats?.talentOneLevel ?? 0);
+          const base = stat.perIntellect[Math.min(talentLevel, stat.perIntellect.length) - 1] ?? stat.perIntellect[0];
+          const p3Mult = (stat.p3Multiplier && ctx.potential >= 3) ? stat.p3Multiplier : 1.0;
+          ev.statusValue = base * p3Mult;
+        }
+      }
+
+      derived.push(ev);
+
+      // Track absorption
+      if (ci < inflictionsToAbsorb.length) {
+        absorbedIds.add(inflictionsToAbsorb[ci].id);
+        absorbedInflictions.push({
+          eventId: inflictionsToAbsorb[ci].id,
+          clampFrame: trigger.frame,
+          sourceOwnerId: trigger.sourceOwnerId,
+          sourceSkillName: trigger.sourceSkillName,
+        });
+      }
+
+      // p3TeamShare: create shared copies for all other team operators at reduced duration
+      if (outputDef.p3TeamShare && ctx.potential >= 3) {
+        const sharedDuration = Math.floor(durationFrames * outputDef.p3TeamShare.durationMultiplier);
+        const teamSlots = new Set<string>();
+        for (const e of events) {
+          if (e.ownerId !== ENEMY_OWNER_ID && e.ownerId !== COMMON_OWNER_ID && e.ownerId !== operatorSlotId) {
+            teamSlots.add(e.ownerId);
+          }
+        }
+        for (const teamSlotId of Array.from(teamSlots)) {
+          // RESET: clamp previous team copy
+          if (outputDef.stack.verbType === 'RESET') {
+            const prev = derived.filter(d => d.ownerId === teamSlotId);
+            const last = prev[prev.length - 1];
+            if (last && trigger.frame < last.startFrame + last.activationDuration) {
+              const idx = derived.indexOf(last);
+              derived[idx] = {
+                ...last,
+                activationDuration: trigger.frame - last.startFrame,
+                eventStatus: EventStatusType.REFRESHED,
+                eventStatusOwnerId: operatorSlotId,
+                eventStatusSkillName: trigger.sourceSkillName,
+              };
+            }
+          }
+          derived.push({
+            id: `${evId}-share-${teamSlotId}`,
+            name: outputDef.name,
+            ownerId: teamSlotId,
+            columnId,
+            startFrame: trigger.frame,
+            activationDuration: sharedDuration,
+            activeDuration: 0,
+            cooldownDuration: 0,
+            sourceOwnerId: operatorSlotId,
+            sourceSkillName: trigger.sourceSkillName,
+          });
+        }
+      }
+    }
   }
 
-  return derived;
+  return { derived, absorbedInflictions };
 }
 
 // ── Stack threshold evaluation ──────────────────────────────────────────────
@@ -483,15 +694,23 @@ function evaluateThresholdClauses(
  * Mutates `derivedEvents` in place (shortens activationDuration).
  * Returns the frames at which consumption occurred (for downstream use).
  */
+interface PreExistingConsumption {
+  id: string;
+  clampFrame: number;
+  sourceOwnerId: string;
+  sourceSkillName: string;
+}
+
 function evaluateConsumeClauses(
   def: StatusEventDef,
   derivedEvents: TimelineEvent[],
   ctx: DeriveContext,
-): number[] {
-  if (!def.consumeClause || def.consumeClause.length === 0) return [];
+): { consumeFrames: number[]; preExistingConsumptions: PreExistingConsumption[] } {
+  if (!def.consumeClause || def.consumeClause.length === 0) return { consumeFrames: [], preExistingConsumptions: [] };
 
   const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
   const consumeFrames: number[] = [];
+  const preExistingConsumptions: PreExistingConsumption[] = [];
   const columnId = statusNameToColumnId(def.name);
   const ownerId = resolveOwnerId(def.target, ctx.operatorSlotId, ctx.operatorSlotMap);
 
@@ -540,7 +759,7 @@ function evaluateConsumeClauses(
         if (stackCond.cardinalityConstraint === 'AT_LEAST' && preExistingCount < targetCount) continue;
       }
 
-      // Consume: clamp all active derived events at this frame
+      // Consume: clamp all active events (both derived and pre-existing) at this frame
       for (const d of derivedEvents) {
         if (d.columnId !== columnId || d.ownerId !== ownerId) continue;
         const end = d.startFrame + d.activationDuration;
@@ -551,18 +770,41 @@ function evaluateConsumeClauses(
           d.eventStatusSkillName = ev.name;
         }
       }
+      // Also clamp pre-existing events in the input array (e.g. Originium Crystals
+      // placed by frame effects, not engine-derived)
+      for (const d of ctx.events) {
+        if (d.columnId !== columnId || d.ownerId !== ownerId) continue;
+        if (d.eventStatus === EventStatusType.CONSUMED) continue;
+        const end = d.startFrame + d.activationDuration;
+        if (d.startFrame <= ev.startFrame && ev.startFrame < end) {
+          preExistingConsumptions.push({
+            id: d.id,
+            clampFrame: ev.startFrame,
+            sourceOwnerId: ev.ownerId,
+            sourceSkillName: ev.name,
+          });
+        }
+      }
 
       consumeFrames.push(ev.startFrame);
     }
   }
 
-  return consumeFrames;
+  return { consumeFrames, preExistingConsumptions };
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
 
-/** Operator IDs for which the engine handles status derivation (others use legacy code). */
-const ENGINE_HANDLED_OPERATORS = new Set(['gilberta', 'laevatain']);
+/**
+ * Operator IDs with statusEvents in their JSON.
+ * Built dynamically — any operator with statusEvents is automatically handled.
+ */
+const ENGINE_HANDLED_OPERATORS = new Set(
+  getAllOperatorIds().filter(id => {
+    const json = getOperatorJson(id);
+    return json?.statusEvents;
+  })
+);
 
 /**
  * Run the generic status derivation engine for all operators present in the timeline.
@@ -571,12 +813,21 @@ const ENGINE_HANDLED_OPERATORS = new Set(['gilberta', 'laevatain']);
 export function deriveStatusesFromEngine(
   events: TimelineEvent[],
   loadoutStats?: Record<string, LoadoutStats>,
+  /** Slot ID → operator ID mapping from the app layer (guarantees slot detection without events). */
+  slotOperatorMap?: Record<string, string>,
 ): TimelineEvent[] {
   let result = [...events];
 
-  // Build operator ID → slot ID map for cross-operator target resolution
+  // Build operator ID → slot ID map for cross-operator target resolution.
+  // Prefer the app-provided slotOperatorMap (works even when no events exist).
   const operatorSlotMap: Record<string, string> = {};
+  if (slotOperatorMap) {
+    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
+      operatorSlotMap[opId] = slotId;
+    }
+  }
   for (const opId of Array.from(ENGINE_HANDLED_OPERATORS)) {
+    if (operatorSlotMap[opId]) continue;
     const slot = findOperatorSlot(result, opId);
     if (slot) operatorSlotMap[opId] = slot;
   }
@@ -591,7 +842,7 @@ export function deriveStatusesFromEngine(
     const json = getOperatorJson(operatorId);
     if (!json?.statusEvents) continue;
 
-    const slotId = findOperatorSlot(result, operatorId);
+    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(result, operatorId);
     if (!slotId) continue;
 
     const stats = loadoutStats?.[slotId];
@@ -613,24 +864,95 @@ export function deriveStatusesFromEngine(
         operatorSlotId: slotId,
         potential,
         operatorSlotMap,
+        loadoutStats: stats,
       };
 
-      const derived = deriveStatusEvents(def, ctx);
+      // TALENT type: create a permanent presence event on the operator's timeline.
+      // The talent event is separate from the trigger effects (e.g. absorption → MF).
+      if (def.type === 'TALENT') {
+        const talentDuration = def.properties?.duration ?? def.duration;
+        const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
+        const talentOwnerId = resolveOwnerId(def.target, slotId, operatorSlotMap);
+        const talentColumnId = statusNameToColumnId(def.name);
+        // Only create if not already present
+        if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
+          result.push({
+            id: `${def.name.toLowerCase()}-talent-${slotId}`,
+            name: def.name,
+            ownerId: talentOwnerId,
+            columnId: talentColumnId,
+            startFrame: 0,
+            activationDuration: talentDurationFrames,
+            activeDuration: 0,
+            cooldownDuration: 0,
+            sourceOwnerId: slotId,
+            sourceSkillName: def.name,
+          });
+        }
+      }
+
+      const { derived, absorbedInflictions } = deriveStatusEvents(def, ctx);
+
+      // Apply absorption clamping to infliction events (e.g. heat infliction consumed by Final Strike)
+      if (absorbedInflictions.length > 0) {
+        result = result.map(ev => {
+          const absorption = absorbedInflictions.find(a => a.eventId === ev.id);
+          if (!absorption) return ev;
+          return {
+            ...ev,
+            activationDuration: Math.max(0, absorption.clampFrame - ev.startFrame),
+            eventStatus: EventStatusType.CONSUMED,
+            eventStatusOwnerId: absorption.sourceOwnerId,
+            eventStatusSkillName: absorption.sourceSkillName,
+          };
+        });
+      }
 
       // Evaluate consume clauses — mutates derived events (clamps durations)
-      const consumeFrames = evaluateConsumeClauses(def, derived, ctx);
+      const { consumeFrames, preExistingConsumptions } = evaluateConsumeClauses(def, derived, ctx);
+
+      // Apply clamping to pre-existing events (e.g. Originium Crystals placed by frame effects)
+      if (preExistingConsumptions.length > 0) {
+        result = result.map(ev => {
+          const consumption = preExistingConsumptions.find(c => c.id === ev.id);
+          if (!consumption) return ev;
+          return {
+            ...ev,
+            activationDuration: Math.max(0, consumption.clampFrame - ev.startFrame),
+            eventStatus: EventStatusType.CONSUMED,
+            eventStatusOwnerId: consumption.sourceOwnerId,
+            eventStatusSkillName: consumption.sourceSkillName,
+          };
+        });
+      }
 
       // After consumption, re-derive to fill new stacks from triggers after each consume point.
       if (consumeFrames.length > 0) {
         const earliestConsume = Math.min(...consumeFrames);
-        const reDerived = deriveStatusEvents(def, ctx, earliestConsume, derived);
+        const reCtx = { ...ctx, events: result };
+        const { derived: reDerived, absorbedInflictions: reAbsorbed } = deriveStatusEvents(def, reCtx, earliestConsume, derived);
+
+        // Apply re-absorption clamping
+        if (reAbsorbed.length > 0) {
+          result = result.map(ev => {
+            const absorption = reAbsorbed.find(a => a.eventId === ev.id);
+            if (!absorption) return ev;
+            return {
+              ...ev,
+              activationDuration: Math.max(0, absorption.clampFrame - ev.startFrame),
+              eventStatus: EventStatusType.CONSUMED,
+              eventStatusOwnerId: absorption.sourceOwnerId,
+              eventStatusSkillName: absorption.sourceSkillName,
+            };
+          });
+        }
 
         // Recursively handle additional consume cycles in re-derived events
-        const reConsumeFrames = evaluateConsumeClauses(def, reDerived, ctx);
+        const { consumeFrames: reConsumeFrames } = evaluateConsumeClauses(def, reDerived, reCtx);
         if (reConsumeFrames.length > 0) {
           const nextConsume = Math.min(...reConsumeFrames);
-          const reReDerived = deriveStatusEvents(
-            def, ctx, nextConsume, [...derived, ...reDerived],
+          const { derived: reReDerived } = deriveStatusEvents(
+            def, { ...ctx, events: result }, nextConsume, [...derived, ...reDerived],
           );
           reDerived.push(...reReDerived);
         }
@@ -645,3 +967,5 @@ export function deriveStatusesFromEngine(
 
   return result;
 }
+
+// (collectExchangeAbsorptions removed — absorption is now handled inline by deriveStatusEvents)

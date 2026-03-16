@@ -69,7 +69,8 @@ export function getDefaultLoadoutStats(op: { rarity: number; maxTalentOneLevel: 
 type InformationPaneProps = {
   pinned?: boolean;
   onTogglePin?: () => void;
-  verbose?: boolean;
+  /** 0 = succinct, 1 = detailed, 2 = verbose */
+  verbose?: 0 | 1 | 2;
   onToggleVerbose?: () => void;
   triggerClose?: boolean;
   debugMode?: boolean;
@@ -134,7 +135,7 @@ type InformationPaneProps = {
 export default function InformationPane(props: InformationPaneProps) {
   const [closing, setClosing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const verbose = props.verbose ?? true;
+  const verbose = props.verbose ?? 1;
 
   const handleClose = useCallback(() => {
     setClosing(true);
@@ -162,14 +163,14 @@ export default function InformationPane(props: InformationPaneProps) {
     >
       <div className="edit-panel-actions">
         {props.onToggleVerbose && <button
-          className={`edit-panel-verbose${verbose ? ' edit-panel-verbose--active' : ''}`}
+          className={`edit-panel-verbose${verbose > 0 ? ' edit-panel-verbose--active' : ''}`}
           onClick={props.onToggleVerbose}
-          title={verbose ? 'Hide descriptions' : 'Show descriptions'}
+          title={verbose === 0 ? 'Succinct' : verbose === 1 ? 'Detailed' : 'Verbose'}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 6h16"/>
-            <path d="M4 12h10"/>
-            <path d="M4 18h14"/>
+            <path d="M4 12h16"/>
+            {verbose >= 1 && <path d="M4 7h10"/>}
+            {verbose >= 2 && <path d="M4 17h14"/>}
           </svg>
         </button>}
         {props.onTogglePin && (
@@ -214,6 +215,7 @@ export default function InformationPane(props: InformationPaneProps) {
           damageRows={props.damageRows}
           spConsumptionHistory={props.spConsumptionHistory}
           onSaveAsCustomSkill={props.onSaveAsCustomSkill}
+          verbose={verbose}
         />
       ) : props.mode === 'loadout' ? (
         <LoadoutPane

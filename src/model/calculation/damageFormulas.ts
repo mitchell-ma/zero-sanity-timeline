@@ -369,10 +369,19 @@ export function getPhysicalStatusHiddenMultiplier(operatorLevel: number): number
 }
 
 /**
- * Arts burst/reaction hidden multiplier = 1 + (operatorLevel − 119) / 6
+ * Hidden multiplier for arts bursts and arts reactions.
+ * HiddenMultiplier = 1 + (operatorLevel − 1) / 196
  */
 export function getArtsHiddenMultiplier(operatorLevel: number): number {
-  return 1 + (operatorLevel - 119) / 6;
+  return 1 + (operatorLevel - 1) / 196;
+}
+
+/**
+ * Hidden multiplier for physical statuses.
+ * HiddenMultiplier = 1 + (operatorLevel − 1) / 392
+ */
+export function getPhysicalHiddenMultiplier(operatorLevel: number): number {
+  return 1 + (operatorLevel - 1) / 392;
 }
 
 // ── Composite Damage Formula ────────────────────────────────────────────────

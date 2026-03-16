@@ -71,10 +71,6 @@ export interface OperatorTalentFragility {
   requiredColumnId: string;
 }
 
-/** Antal P5: after Focus is active for 20s, susceptibility increases by 4%. */
-const FOCUS_P5_THRESHOLD_FRAMES = 2400; // 20s at 120fps
-const FOCUS_P5_SUSCEPTIBILITY_BONUS = 0.04;
-
 /**
  * Link bonus table by stack count.
  * Stacks | Battle Skill | Ultimate
@@ -147,7 +143,7 @@ export class StatusQueryService {
     this.aggregatedStats = aggregatedStats;
     this.weaponFragility = weaponFragility ?? {};
     this.talentFragility = talentFragility ?? [];
-    this.scorchingHeartEvents = events.filter(e => e.columnId === StatusType.SCORCHING_HEART && e.ownerId === ENEMY_OWNER_ID);
+    this.scorchingHeartEvents = events.filter(e => e.columnId === 'scorching-heart-effect');
     this.wildlandTrekkerEvents = events.filter(e => e.columnId === StatusType.WILDLAND_TREKKER);
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
@@ -177,20 +173,42 @@ export class StatusQueryService {
   getSusceptibilityBonus(frame: number, element: ElementType): number {
     let sum = 0;
     for (const ev of this.susceptibilityEvents) {
-      if (this.isActive(ev, frame) && ev.susceptibility?.[element]) {
-        // Susceptibility stored as percentage (e.g. 0.15 for 15%), use directly as bonus
-        let bonus = ev.susceptibility[element];
-        // Focus P5: after Focus active for 20s game-time on the same target, +4% susceptibility
-        if (ev.name === StatusType.FOCUS && ev.sourceOwnerId) {
-          const potential = this.loadoutStats[ev.sourceOwnerId]?.potential ?? 0;
-          if (potential >= 5 && this.gameTimeElapsed(ev.startFrame, frame) >= FOCUS_P5_THRESHOLD_FRAMES) {
-            bonus += FOCUS_P5_SUSCEPTIBILITY_BONUS;
-          }
-        }
-        sum += bonus;
-      }
+      if (!this.isActive(ev, frame)) continue;
+      const bonus = this.resolveSegmentSusceptibility(ev, frame, element);
+      if (bonus) sum += bonus;
     }
     return sum;
+  }
+
+  /** Resolve susceptibility for a status event, checking per-segment overrides. */
+  private resolveSegmentSusceptibility(ev: TimelineEvent, frame: number, element: ElementType): number {
+    // Check per-segment susceptibility if segments are present
+    if (ev.segments && ev.segments.length > 0) {
+      const elapsed = this.gameTimeElapsed(ev.startFrame, frame);
+      let segStart = 0;
+      for (const seg of ev.segments) {
+        if (elapsed >= segStart && elapsed < segStart + seg.durationFrames) {
+          return seg.susceptibility?.[element] ?? ev.susceptibility?.[element] ?? 0;
+        }
+        segStart += seg.durationFrames;
+      }
+    }
+    return ev.susceptibility?.[element] ?? 0;
+  }
+
+  /** Resolve the display label for a status event, using the active segment label if available. */
+  private resolveSegmentLabel(ev: TimelineEvent, frame: number): string {
+    if (ev.segments && ev.segments.length > 0) {
+      const elapsed = this.gameTimeElapsed(ev.startFrame, frame);
+      let segStart = 0;
+      for (const seg of ev.segments) {
+        if (elapsed >= segStart && elapsed < segStart + seg.durationFrames) {
+          return seg.label ?? ev.name ?? ev.columnId;
+        }
+        segStart += seg.durationFrames;
+      }
+    }
+    return ev.name ?? ev.columnId;
   }
 
   isLinkActive(frame: number): boolean {
@@ -434,16 +452,10 @@ export class StatusQueryService {
   getSusceptibilitySources(frame: number, element: ElementType): MultiplierSource[] {
     const sources: MultiplierSource[] = [];
     for (const ev of this.susceptibilityEvents) {
-      if (this.isActive(ev, frame) && ev.susceptibility?.[element]) {
-        let bonus = ev.susceptibility[element];
-        let label = ev.name ?? ev.columnId;
-        if (ev.name === StatusType.FOCUS && ev.sourceOwnerId) {
-          const potential = this.loadoutStats[ev.sourceOwnerId]?.potential ?? 0;
-          if (potential >= 5 && this.gameTimeElapsed(ev.startFrame, frame) >= FOCUS_P5_THRESHOLD_FRAMES) {
-            bonus += FOCUS_P5_SUSCEPTIBILITY_BONUS;
-            label += ' (P5 +4%)';
-          }
-        }
+      if (!this.isActive(ev, frame)) continue;
+      const bonus = this.resolveSegmentSusceptibility(ev, frame, element);
+      if (bonus) {
+        const label = this.resolveSegmentLabel(ev, frame);
         sources.push({ label, value: bonus });
       }
     }
@@ -511,9 +523,9 @@ export class StatusQueryService {
   getIgnoredResistance(frame: number, element: ElementType, attackerOwnerId: string): number {
     if (element !== ElementType.HEAT) return 0;
 
-    // Check for active Scorching Heart debuff on enemy (derived when Laevatain reaches 4 MF stacks)
+    // Check for active Scorching Heart Effect buff on attacker (derived when Laevatain reaches 4 MF stacks)
     const activeSH = this.scorchingHeartEvents.find(
-      (ev) => ev.sourceOwnerId === attackerOwnerId && this.isActive(ev, frame),
+      (ev) => ev.ownerId === attackerOwnerId && this.isActive(ev, frame),
     );
     if (!activeSH) return 0;
 

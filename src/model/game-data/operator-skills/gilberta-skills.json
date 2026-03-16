@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "BEAM_COHESION_ARTS",
+    "BATTLE_SKILL": "GRAVITY_MODE",
+    "COMBO_SKILL": "MATRIX_DISPLACEMENT",
+    "ULTIMATE": "GRAVITY_FIELD"
+  },
+  "BEAM_COHESION_ARTS": {
     "name": "Arcane Staff: Beam Cohesion Arts",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
-    "id": "BEAM_COHESION_ARTS",
     "segments": [
       {
         "metadata": {
@@ -920,10 +925,9 @@
     ],
     "originId": "gilberta"
   },
-  "BATTLE_SKILL": {
+  "GRAVITY_MODE": {
     "name": "Arcane Staff: Gravity Mode",
     "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect.",
-    "id": "GRAVITY_MODE",
     "properties": {
       "duration": {
         "value": 4.1,
@@ -1482,10 +1486,9 @@
     ],
     "originId": "gilberta"
   },
-  "COMBO_SKILL": {
+  "MATRIX_DISPLACEMENT": {
     "name": "Arcane Staff: Matrix Displacement",
     "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. \nA quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
-    "id": "MATRIX_DISPLACEMENT",
     "properties": {
       "duration": {
         "value": 1.77,
@@ -1678,10 +1681,9 @@
     ],
     "originId": "gilberta"
   },
-  "ULTIMATE": {
+  "GRAVITY_FIELD": {
     "name": "Arcane Staff: Gravity Field",
     "description": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off.",
-    "id": "GRAVITY_FIELD",
     "properties": {
       "duration": {
         "value": 2.13,

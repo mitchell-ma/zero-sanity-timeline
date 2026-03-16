@@ -221,7 +221,7 @@ function EventBlock({
             return (
               <div
                 key={`f-${fi}`}
-                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${f.hitType === EventFrameType.FINAL_STRIKE ? ' event-frame-diamond--final-strike' : ''}${f.hitType === EventFrameType.FINISHER ? ' event-frame-diamond--finisher' : ''}${f.hitType === EventFrameType.DIVE ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
+                className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
                 style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
                 title={f.statusLabel ?? undefined}
                 onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, i, fi); }}
@@ -331,8 +331,7 @@ function EventBlock({
       style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight } as React.CSSProperties}
       onContextMenu={(e) => onContextMenu(e, id)}
       onMouseDown={(e) => {
-        if (e.button === 0) e.stopPropagation();
-        if (!notDraggable && variant === SKILL_COLUMNS.ULTIMATE && e.button === 0) onDragStart(e, id, startFrame);
+        if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, id, startFrame); }
       }}
       onClick={(e) => onSelect?.(e, id)}
       onMouseEnter={() => onHover?.(id)}

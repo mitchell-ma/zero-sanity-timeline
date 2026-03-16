@@ -55,6 +55,11 @@ global.DecompressionStream = MockDecompressionStream;
 // Mock operatorJsonLoader to avoid require.context
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined,
+  getAllOperatorIds: () => [],
+  getSkillIds: () => new Set(),
+  getSkillTypeMap: () => ({}),
+  resolveSkillType: () => null,
+  getSkillJson: () => undefined,
   getFrameSequences: () => [],
   getSegmentLabels: () => undefined,
   getSkillTimings: () => undefined,

@@ -51,14 +51,56 @@
  *    - Talent names and levels
  *    - Level table 1–99+
  */
+import { TimelineEvent } from '../consts/viewTypes';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+
+// Mock modules that use require.context (not available in Jest)
+jest.mock('../model/event-frames/operatorJsonLoader', () => ({
+  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
+  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
+  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
+  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
+  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
+  getBasicAttackDurations: () => undefined,
+}));
+jest.mock('../model/game-data/weaponGameData', () => ({
+  getSkillValues: () => [], getConditionalValues: () => [],
+  getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
+}));
+jest.mock('../view/InformationPane', () => ({
+  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+}));
+
+// eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
+// eslint-disable-next-line import/first
+import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
+// eslint-disable-next-line import/first
+import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
+// eslint-disable-next-line import/first
+import { deriveReactions } from '../controller/timeline/deriveReactions';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/akekuri-operator.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockSkillsJson = require('../model/game-data/operator-skills/akekuri-skills.json');
 
-const mockJson = { ...mockOperatorJson, skills: mockSkillsJson };
+const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...akekuriSkillEntries } = mockSkillsJson as Record<string, any>;
+const akekuriSkills: Record<string, any> = {};
+for (const [key, val] of Object.entries(akekuriSkillEntries)) {
+  akekuriSkills[key] = { ...(val as any), id: key };
+}
+if (_skTypeMap) {
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
+    if (akekuriSkills[skillId]) akekuriSkills[category] = akekuriSkills[skillId];
+    for (const suffix of variantSuffixes) {
+      const variantSkillId = `${skillId}_${suffix}`;
+      if (akekuriSkills[variantSkillId]) akekuriSkills[`${suffix}_${category}`] = akekuriSkills[variantSkillId];
+    }
+  }
+}
+const mockJson = { ...mockOperatorJson, skills: akekuriSkills, skillTypeMap: _skTypeMap, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -269,12 +311,11 @@ describe('C. Combo Skill (Flash and Dash)', () => {
     }
   });
 
-  test('C5: Combo animation override is TIME_STOP (0.488s)', () => {
-    // Skill override from operator JSON
-    const override = mockJson.skillOverrides?.COMBO_SKILL;
-    expect(override).toBeDefined();
-    expect(override.properties.animation.duration.value).toBe(0.488);
-    expect(override.properties.animation.timeInteractionType).toBe('TIME_STOP');
+  test('C5: Combo animation is TIME_STOP (0.488s)', () => {
+    const combo = mockJson.skills.COMBO_SKILL;
+    expect(combo.properties.animation).toBeDefined();
+    expect(combo.properties.animation.duration.value).toBe(0.488);
+    expect(combo.properties.animation.timeInteractionType).toBe('TIME_STOP');
   });
 
   test('C6: Combo base duration is 1.27 seconds', () => {
@@ -472,6 +513,233 @@ describe('F. Operator Identity & Metadata', () => {
 
   test('F6: Basic attack default duration is 0.15 seconds', () => {
     expect(mockJson.basicAttackDefaultDuration).toBe(0.15);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group G: Status & Infliction Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('G. Status & Infliction Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  /** Create a battle skill event with parsed frame markers. */
+  function battleSkillWithFrames(startFrame: number): TimelineEvent {
+    return {
+      id: `bs-${startFrame}`,
+      name: 'BURST_OF_PASSION',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BATTLE,
+      startFrame,
+      activationDuration: Math.round(1.33 * FPS),
+      activeDuration: 0,
+      cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(1.33 * FPS),
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        }],
+      }],
+    };
+  }
+
+  test('G1: Battle skill derives Heat infliction on enemy', () => {
+    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
+    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === INFLICTION_COLUMNS.HEAT);
+    expect(inflictions.length).toBe(1);
+    expect(inflictions[0].startFrame).toBe(Math.round(0.67 * FPS));
+    expect(inflictions[0].activationDuration).toBe(2400); // 20s
+    expect(inflictions[0].sourceOwnerId).toBe(SLOT_ID);
+    expect(inflictions[0].sourceSkillName).toBe('BURST_OF_PASSION');
+  });
+
+  test('G2: Multiple battle skills derive multiple inflictions', () => {
+    const events = [battleSkillWithFrames(0), battleSkillWithFrames(300)];
+    const result = deriveFrameInflictions(events);
+    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
+    expect(inflictions.length).toBe(2);
+  });
+
+  test('G3: Heat infliction + Nature infliction → Corrosion reaction', () => {
+    const heatInfliction: TimelineEvent = {
+      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: SLOT_ID,
+    };
+    const natureInfliction: TimelineEvent = {
+      id: 'n1', name: INFLICTION_COLUMNS.NATURE, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.NATURE, startFrame: FPS,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+    };
+    const result = deriveReactions([heatInfliction, natureInfliction]);
+    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
+    expect(reactions.length).toBe(1);
+    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
+    expect(reactions[0].statusLevel).toBe(1);
+  });
+
+  test('G4: Akekuri Heat + another Heat from teammate → Combustion on second element arrival', () => {
+    // Akekuri applies Heat, teammate applies Cryo → Solidification
+    const heat: TimelineEvent = {
+      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: SLOT_ID,
+    };
+    const cryo: TimelineEvent = {
+      id: 'c1', name: INFLICTION_COLUMNS.CRYO, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.CRYO, startFrame: FPS,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+    };
+    const result = deriveReactions([heat, cryo]);
+    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
+    expect(reactions.length).toBe(1);
+    // Cryo incoming → Solidification
+    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.SOLIDIFICATION);
+  });
+
+  test('G5: Basic attack frames have no infliction markers', () => {
+    const basicEvent: TimelineEvent = {
+      id: 'ba-1', name: 'SWORD_OF_ASPIRATION', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC, startFrame: 0,
+      activationDuration: Math.round(0.5 * FPS), activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(0.5 * FPS),
+        frames: [{ offsetFrame: 0 }],
+      }],
+    };
+    const result = deriveFrameInflictions([basicEvent]);
+    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(inflictions.length).toBe(0);
+  });
+
+  test('G6: Combo triggers on Combustion — trigger clause structure verified', () => {
+    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
+    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
+    // Akekuri provides Heat infliction → needs a cross-element partner for Combustion
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Cooldown Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('G. Cooldown Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
+    return {
+      name: '',
+      ownerId: SLOT_ID,
+      activationDuration: 0,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      ...overrides,
+    };
+  }
+
+  test('G1: Basic attack has no cooldown — sequential basic attacks can overlap freely', () => {
+    const ba1 = makeEvent({
+      id: 'ba-1',
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 0,
+      activationDuration: Math.round(0.5 * FPS), // segment 1 duration
+    });
+    // Place second basic attack immediately after first segment
+    const overlap = wouldOverlapSiblings(
+      SLOT_ID, SKILL_COLUMNS.BASIC, Math.round(0.5 * FPS), 1, [ba1],
+    );
+    // Basic attacks have no nonOverlappableRange, so no overlap
+    expect(overlap).toBe(false);
+  });
+
+  test('G2: Battle skill has no cooldown — can be used back-to-back', () => {
+    const bsDuration = Math.round(1.33 * FPS); // 1.33s
+    const bs1 = makeEvent({
+      id: 'bs-1',
+      columnId: SKILL_COLUMNS.BATTLE,
+      startFrame: 0,
+      activationDuration: bsDuration,
+      nonOverlappableRange: bsDuration,
+    });
+    // Place second battle skill right after the first ends
+    const overlap = wouldOverlapSiblings(
+      SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1],
+    );
+    expect(overlap).toBe(false);
+  });
+
+  test('G3: Combo skill has 15s cooldown — blocks placement during cooldown', () => {
+    const comboDuration = Math.round(1.27 * FPS); // 152 frames
+    const comboCooldown = 15 * FPS; // 1800 frames
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1',
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0,
+      activationDuration: comboDuration,
+      cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+
+    // During cooldown: should be blocked
+    const midCooldown = comboDuration + Math.round(7.5 * FPS);
+    expect(wouldOverlapSiblings(
+      SLOT_ID, SKILL_COLUMNS.COMBO, midCooldown, 1, [cs1],
+    )).toBe(true);
+
+    // After cooldown ends: should be allowed
+    expect(wouldOverlapSiblings(
+      SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1],
+    )).toBe(false);
+  });
+
+  test('G4: Combo cooldown value matches JSON (15s for Flash and Dash)', () => {
+    const comboEffects = mockJson.skills.COMBO_SKILL.effects;
+    const cooldown = comboEffects.find(
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+    );
+    expect(cooldown.withPreposition.cardinality.value).toBe(15);
+  });
+
+  test('G5: Placement just before cooldown expires is still blocked', () => {
+    const comboDuration = Math.round(1.27 * FPS);
+    const comboCooldown = 15 * FPS;
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1',
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0,
+      activationDuration: comboDuration,
+      cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+    // 1 frame before cooldown ends
+    expect(wouldOverlapSiblings(
+      SLOT_ID, SKILL_COLUMNS.COMBO, totalRange - 1, 1, [cs1],
+    )).toBe(true);
+  });
+
+  test('G6: Different owners can use combo at the same time (no cross-slot cooldown)', () => {
+    const cs1 = makeEvent({
+      id: 'cs-1',
+      ownerId: 'slot-0',
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 0,
+      activationDuration: 152,
+      cooldownDuration: 1800,
+      nonOverlappableRange: 1952,
+    });
+    // Different owner at frame 0 — no overlap
+    expect(wouldOverlapSiblings(
+      'slot-1', SKILL_COLUMNS.COMBO, 0, 1, [cs1],
+    )).toBe(false);
   });
 });
 

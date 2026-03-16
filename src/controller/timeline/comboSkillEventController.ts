@@ -21,6 +21,23 @@ export class ComboSkillEventController {
   }
 
   /**
+   * Find the combo activation window containing `frame` for a given owner.
+   * Returns the window event or undefined if none matches.
+   */
+  private static findWindowAt(
+    ownerId: string,
+    frame: number,
+    processedEvents: TimelineEvent[],
+  ): TimelineEvent | undefined {
+    const windows = this.getWindows(ownerId, processedEvents);
+    for (const w of windows) {
+      const endFrame = comboWindowEndFrame(w);
+      if (frame >= w.startFrame && frame < endFrame) return w;
+    }
+    return undefined;
+  }
+
+  /**
    * Validate a move for a combo event. Clamps startFrame to the nearest
    * activation window boundary if the new position falls outside all windows.
    * Returns the original newStartFrame if valid, or the clamped value.
@@ -60,6 +77,21 @@ export class ComboSkillEventController {
   }
 
   /**
+   * Resolve the comboTriggerColumnId for a combo event at a given frame.
+   * Returns the trigger column from the matching activation window, or the
+   * event's existing value if no window is found or not a combo event.
+   */
+  static resolveComboTriggerColumnId(
+    target: TimelineEvent,
+    atFrame: number,
+    processedEvents: TimelineEvent[] | null,
+  ): string | undefined {
+    if (!this.isCombo(target) || !processedEvents) return target.comboTriggerColumnId;
+    const window = this.findWindowAt(target.ownerId, atFrame, processedEvents);
+    return window?.comboTriggerColumnId ?? target.comboTriggerColumnId;
+  }
+
+  /**
    * Validate an update to a combo event's startFrame.
    * Delegates to validateMove for the startFrame field.
    */
@@ -69,9 +101,12 @@ export class ComboSkillEventController {
     processedEvents: TimelineEvent[] | null,
   ): Partial<TimelineEvent> {
     if (updates.startFrame === undefined || !this.isCombo(target)) return updates;
+    const clampedFrame = this.validateMove(target, updates.startFrame, processedEvents);
+    const triggerCol = this.resolveComboTriggerColumnId(target, clampedFrame, processedEvents);
     return {
       ...updates,
-      startFrame: this.validateMove(target, updates.startFrame, processedEvents),
+      startFrame: clampedFrame,
+      ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}),
     };
   }
 }

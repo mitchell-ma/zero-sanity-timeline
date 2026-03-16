@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "SWORD_OF_ASPIRATION",
+    "BATTLE_SKILL": "BURST_OF_PASSION",
+    "COMBO_SKILL": "FLASH_AND_DASH",
+    "ULTIMATE": "SQUAD_ON_ME"
+  },
+  "SWORD_OF_ASPIRATION": {
     "name": "Sword of Aspiration",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
-    "id": "SWORD_OF_ASPIRATION",
     "segments": [
       {
         "metadata": {
@@ -748,10 +753,9 @@
     ],
     "originId": "akekuri"
   },
-  "BATTLE_SKILL": {
+  "BURST_OF_PASSION": {
     "name": "Burst of Passion",
     "description": "A frontal slash that deals Heat DMG and applies Heat Infliction.",
-    "id": "BURST_OF_PASSION",
     "properties": {
       "duration": {
         "value": 1.33,
@@ -906,10 +910,9 @@
     ],
     "originId": "akekuri"
   },
-  "COMBO_SKILL": {
+  "FLASH_AND_DASH": {
     "name": "Flash and Dash",
     "description": "COMBO TRIGGER: When an enemy becomes Staggered or hits a Stagger Node. \nPerforms a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
-    "id": "FLASH_AND_DASH",
     "properties": {
       "duration": {
         "value": 1.27,
@@ -917,10 +920,13 @@
       },
       "animation": {
         "duration": {
-          "value": 0.5,
+          "value": 0.488,
           "unit": "SECOND"
         },
-        "timeInteractionType": "TIME_STOP"
+        "timeInteractionType": "TIME_STOP",
+        "dataSources": [
+          "SELF"
+        ]
       },
       "trigger": {
         "triggerClause": [
@@ -1173,10 +1179,9 @@
     ],
     "originId": "akekuri"
   },
-  "ULTIMATE": {
+  "SQUAD_ON_ME": {
     "name": "SQUAD! ON ME!",
     "description": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.",
-    "id": "SQUAD_ON_ME",
     "properties": {
       "duration": {
         "value": 4.3,

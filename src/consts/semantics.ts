@@ -313,6 +313,8 @@ export enum PrepositionType {
   ON = "ON",
   /** Properties/qualifiers: "PERFORM HEAT DAMAGE TO ENEMY *WITH* MULTIPLIER ..., STAGGER_VALUE ...". */
   WITH = "WITH",
+  /** Cardinality limit: "PERFORM_ALL *FOR* AT_MOST 4" — how many times a compound action can occur. */
+  FOR = "FOR",
 }
 
 // ── WITH preposition value verbs ─────────────────────────────────────────────
@@ -372,7 +374,7 @@ export type WithPreposition = Record<string, WithValue>;
  *   ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *
  * Compound effects use PERFORM_ALL as a grouping verb:
- *   PERFORM_ALL AT_MOST MAX:
+ *   PERFORM_ALL FOR AT_MOST MAX:
  *     ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *     APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
  */
@@ -395,6 +397,8 @@ export interface Effect {
   onObjectType?: SubjectType | string;
   /** WITH — properties/cardinalities of this effect (duration, stacks, multiplier, etc.). */
   withPreposition?: WithPreposition;
+  /** FOR — cardinality limit on compound actions: "PERFORM_ALL FOR AT_MOST 4". */
+  forPreposition?: { cardinalityConstraint: CardinalityConstraintType; cardinality: number | typeof THRESHOLD_MAX };
 
   /**
    * Child effects for compound PERFORM_ALL grouping.

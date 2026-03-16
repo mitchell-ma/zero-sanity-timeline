@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "SOARING_BREAK",
+    "BATTLE_SKILL": "ASCENDING_STRIKE",
+    "COMBO_SKILL": "SOAR_TO_THE_STARS",
+    "ULTIMATE": "BLADE_GALE"
+  },
+  "SOARING_BREAK": {
     "name": "Soaring Break",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
-    "id": "SOARING_BREAK",
     "segments": [
       {
         "metadata": {
@@ -847,10 +852,9 @@
     ],
     "originId": "chenQianyu"
   },
-  "BATTLE_SKILL": {
+  "ASCENDING_STRIKE": {
     "name": "Ascending Strike",
     "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
-    "id": "ASCENDING_STRIKE",
     "properties": {
       "duration": {
         "value": 0.83,
@@ -1017,10 +1021,9 @@
     ],
     "originId": "chenQianyu"
   },
-  "COMBO_SKILL": {
+  "SOAR_TO_THE_STARS": {
     "name": "Soar to the Stars",
     "description": "COMBO TRIGGER: When an enemy becomes Vulnerable. \nA slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
-    "id": "SOAR_TO_THE_STARS",
     "properties": {
       "duration": {
         "value": 0.77,
@@ -1175,10 +1178,9 @@
     ],
     "originId": "chenQianyu"
   },
-  "ULTIMATE": {
+  "BLADE_GALE": {
     "name": "Blade Gale",
     "description": "A 7-sequence slash attack that deals Physical DMG with each sequence to the target enemy. The final slash sequence deals even more DMG.",
-    "id": "BLADE_GALE",
     "properties": {
       "duration": {
         "value": 3.73,

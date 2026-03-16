@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "AUDIO_NOISE",
+    "BATTLE_SKILL": "ONOMATOPOEIA",
+    "COMBO_SKILL": "DISTORTION",
+    "ULTIMATE": "TREMOLO"
+  },
+  "AUDIO_NOISE": {
     "name": "Audio Noise",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
-    "id": "AUDIO_NOISE",
     "segments": [
       {
         "metadata": {
@@ -576,10 +581,9 @@
     ],
     "originId": "estella"
   },
-  "BATTLE_SKILL": {
+  "ONOMATOPOEIA": {
     "name": "Onomatopoeia",
     "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path.",
-    "id": "ONOMATOPOEIA",
     "properties": {
       "duration": {
         "value": 1.5,
@@ -734,10 +738,9 @@
     ],
     "originId": "estella"
   },
-  "COMBO_SKILL": {
+  "DISTORTION": {
     "name": "Distortion",
     "description": "COMBO TRIGGER: When an enemy suffers Solidification. \nQuickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility.",
-    "id": "DISTORTION",
     "properties": {
       "duration": {
         "value": 0.67,
@@ -939,10 +942,9 @@
     ],
     "originId": "estella"
   },
-  "ULTIMATE": {
+  "TREMOLO": {
     "name": "Tremolo",
     "description": "Estella expends all her strength to unleash a powerful slam of the spear shaft, dealing Physical DMG to all enemies in a circular area around self. To enemies with Physical Susceptibility, the skill forcibly applies Lift to them.",
-    "id": "TREMOLO",
     "properties": {
       "duration": {
         "value": 2,

@@ -7,7 +7,7 @@
  */
 import { BasicAttackType } from '../../consts/enums';
 import { Potential, SkillLevel } from '../../consts/types';
-import { getOperatorJson, getSkillNameMap } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -143,6 +143,10 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
     segmentLabels.push(seg.label);
   }
 
+  // If no frames had any multiplier data, treat as no data (allows empowered fallback)
+  const hasAnyMultiplier = segmentMultipliers.some(seg => seg.some(m => m !== 0));
+  if (!hasAnyMultiplier) return null;
+
   return {
     segmentMultipliers,
     perFrameMultipliers,
@@ -154,9 +158,21 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
 function getCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {
   const key = getCacheKey(operatorId, category);
   if (cache.has(key)) return cache.get(key)!;
-  const data = buildCategoryCache(operatorId, category);
+  let data = buildCategoryCache(operatorId, category);
+  // Empowered variants may lack multiplier data — fall back to base category
+  if (!data) {
+    const baseCategory = getEmpoweredFallback(category);
+    if (baseCategory) data = buildCategoryCache(operatorId, baseCategory);
+  }
   if (data) cache.set(key, data);
   return data;
+}
+
+/** Map empowered skill IDs to their non-empowered base for multiplier fallback. */
+function getEmpoweredFallback(skillId: string): string | null {
+  if (skillId.endsWith('_ENHANCED_EMPOWERED')) return skillId.replace('_ENHANCED_EMPOWERED', '_ENHANCED');
+  if (skillId.endsWith('_EMPOWERED')) return skillId.slice(0, -'_EMPOWERED'.length);
+  return null;
 }
 
 // ── Potential modifier application ──────────────────────────────────────────
@@ -205,10 +221,17 @@ function getPotentialMultiplier(
   return result;
 }
 
-// ── Skill name → category resolution ────────────────────────────────────────
+// ── Skill ID resolution ─────────────────────────────────────────────────────
 
-function resolveCategory(operatorId: string, skillName: string): string | null {
-  return getSkillNameMap(operatorId)[skillName] ?? null;
+/** Check if a skill ID exists in the operator's skills JSON (or its empowered base). */
+function resolveSkillKey(operatorId: string, skillName: string): string | null {
+  const json = getOperatorJson(operatorId);
+  if (!json?.skills) return null;
+  if (json.skills[skillName]) return skillName;
+  // Empowered variants may not have their own entry — resolve to base
+  const fallback = getEmpoweredFallback(skillName);
+  if (fallback && json.skills[fallback]) return skillName;
+  return null;
 }
 
 // ── Segment index resolution ────────────────────────────────────────────────
@@ -258,7 +281,7 @@ export function getSkillMultiplier(
   level: SkillLevel,
   potential: Potential,
 ): number | null {
-  const category = resolveCategory(operatorId, skillName);
+  const category = resolveSkillKey(operatorId, skillName);
   if (!category) return null;
 
   const data = getCategoryCache(operatorId, category);
@@ -288,7 +311,7 @@ export function getPerTickMultiplier(
   potential: Potential,
   frameIndex: number,
 ): number | null {
-  const category = resolveCategory(operatorId, skillName);
+  const category = resolveSkillKey(operatorId, skillName);
   if (!category) return null;
 
   const data = getCategoryCache(operatorId, category);

@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "EXUBERANT_TRIGGER",
+    "BATTLE_SKILL": "BRR_BRR_BOMB",
+    "COMBO_SKILL": "FLASHFREEZER",
+    "ULTIMATE": "CRYOBLASTING_PISTOLIER"
+  },
+  "EXUBERANT_TRIGGER": {
     "name": "Exuberant Trigger",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
-    "id": "EXUBERANT_TRIGGER",
     "segments": [
       {
         "metadata": {
@@ -589,10 +594,9 @@
     ],
     "originId": "yvonne"
   },
-  "BATTLE_SKILL": {
+  "BRR_BRR_BOMB": {
     "name": "Brr-Brr-Bomb β",
     "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
-    "id": "BRR_BRR_BOMB",
     "properties": {
       "duration": {
         "value": 1.13,
@@ -783,10 +787,9 @@
     ],
     "originId": "yvonne"
   },
-  "COMBO_SKILL": {
+  "FLASHFREEZER": {
     "name": "Flashfreezer υ37",
     "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Solidification.\nImmediately deploys Frost-e-Bytee next to the enemy. While active, Frost-e-Bytee constantly releases energy to attack nearby enemies, deals Cryo DMG to them, and pulls them towards itself. After Frost-e-Bytee expires, it explodes to forcibly apply Solidification and deal Cryo DMG to nearby enemies.\nAfter the combo skill successfully hits the enemy, Yvonne gains additional Ultimate Energy. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
-    "id": "FLASHFREEZER",
     "properties": {
       "duration": {
         "value": 0.63,
@@ -1012,10 +1015,9 @@
     ],
     "originId": "yvonne"
   },
-  "ULTIMATE": {
+  "CRYOBLASTING_PISTOLIER": {
     "name": "Cryoblasting Pistolier",
     "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
-    "id": "CRYOBLASTING_PISTOLIER",
     "properties": {
       "duration": {
         "value": 2.13,
@@ -1044,7 +1046,7 @@
     ],
     "originId": "yvonne"
   },
-  "EMPOWERED_BASIC_ATTACK": {
+  "EXUBERANT_TRIGGER_EMPOWERED": {
     "segments": [
       {
         "metadata": {

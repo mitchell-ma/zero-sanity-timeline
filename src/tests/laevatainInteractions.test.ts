@@ -42,7 +42,7 @@
  *    - Stagger recovery: 10 on first frame
  *
  * E. Ultimate & Enhanced Variants
- *    - EMPOWERED_BASIC_ATTACK: 4 segments, segment 3 applies HEAT infliction
+ *    - ENHANCED_BASIC_ATTACK: 4 segments, segment 3 applies HEAT infliction
  *    - ENHANCED_BATTLE_SKILL: exists with correct ID
  *    - ENHANCED_EMPOWERED_BATTLE_SKILL: exists
  *    - Normal basic attack: no Heat infliction
@@ -76,6 +76,7 @@
  *   combo events in the timeline yet)
  */
 import { TimelineEvent } from '../consts/viewTypes';
+import { EventStatusType } from '../consts/enums';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS } from '../model/channels';
 
 // ── Mock require.context before importing modules that use it ────────────────
@@ -86,34 +87,50 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const mockOperatorJson = require('../model/game-data/operators/laevatain-operator.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
-  const { statusEvents: skStatusEvents, ...skillCategories } = mockSkillsJson;
-  const mockJson = { ...mockOperatorJson, skills: skillCategories, ...(skStatusEvents ? { statusEvents: skStatusEvents } : {}) };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mockTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
+  const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = mockSkillsJson;
+  const mergedStatusEvents = [...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
+  const laevatainSkills: Record<string, any> = {};
+  for (const [key, val] of Object.entries(skillEntries as Record<string, any>)) {
+    laevatainSkills[key] = { ...(val as any), id: key };
+  }
+  if (skTypeMap) {
+    const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+    for (const [category, skillId] of Object.entries(skTypeMap as Record<string, string>)) {
+      if (laevatainSkills[skillId]) laevatainSkills[category] = laevatainSkills[skillId];
+      for (const suffix of variantSuffixes) {
+        const variantSkillId = `${skillId}_${suffix}`;
+        if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
+      }
+    }
+  }
+  const mockJson = { ...mockOperatorJson, skills: laevatainSkills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
   const json: Record<string, any> = { laevatain: mockJson };
 
   const sequenceCache = new Map<string, any>();
-  const skillNameMapCache = new Map<string, Record<string, string>>();
 
   return {
     getOperatorJson: (id: string) => json[id],
     getAllOperatorIds: () => Object.keys(json),
-    getSkillNameMap: (operatorId: string) => {
-      if (skillNameMapCache.has(operatorId)) return skillNameMapCache.get(operatorId);
+    getSkillIds: (operatorId: string) => {
       const opJson = json[operatorId];
-      if (!opJson?.skills) return {};
-      const map: Record<string, string> = { FINISHER: 'BASIC_ATTACK', DIVE: 'BASIC_ATTACK' };
-      for (const [category, skill] of Object.entries(opJson.skills) as [string, any][]) {
-        if (skill.id) map[skill.id] = category;
+      if (!opJson?.skills) return new Set<string>();
+      const ids = new Set<string>(['FINISHER', 'DIVE']);
+      for (const key of Object.keys(opJson.skills)) {
+        if (key !== 'statusEvents' && key !== 'skillTypeMap') ids.add(key);
       }
-      skillNameMapCache.set(operatorId, map);
-      return map;
+      return ids;
     },
-    getFrameSequences: (operatorId: string, skillCategory: string) => {
-      const cacheKey = `${operatorId}:${skillCategory}`;
+    getSkillTypeMap: (operatorId: string) => json[operatorId]?.skillTypeMap ?? {},
+    resolveSkillType: () => null,
+    getFrameSequences: (operatorId: string, skillId: string) => {
+      const cacheKey = `${operatorId}:${skillId}`;
       const cached = sequenceCache.get(cacheKey);
       if (cached) return cached;
       const opJson = json[operatorId];
       if (!opJson) return [];
-      const sequences = actual.buildSequencesFromOperatorJson(opJson, skillCategory);
+      const sequences = actual.buildSequencesFromOperatorJson(opJson, skillId);
       sequenceCache.set(cacheKey, sequences);
       return sequences;
     },
@@ -144,14 +161,33 @@ jest.mock('../view/InformationPane', () => ({
 import { deriveStatusesFromEngine } from '../controller/timeline/statusDerivationEngine';
 // eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
+// eslint-disable-next-line import/first
+import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 
 // Load JSON for direct assertion in tests (not in jest.mock scope)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainOperatorJson = require('../model/game-data/operators/laevatain-operator.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
-const { statusEvents: _skStatusEvents, ...laevatainSkillCategories } = laevatainSkillsJson;
-const mockLaevatainJson = { ...laevatainOperatorJson, skills: laevatainSkillCategories, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const laevatainTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
+const { statusEvents: _skStatusEvents2, skillTypeMap: _skTypeMap2, ...laevatainSkillEntries2 } = laevatainSkillsJson;
+const _mergedStatusEvents = [...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
+const laevatainSkillCategories: Record<string, any> = {};
+for (const [key, val] of Object.entries(laevatainSkillEntries2 as Record<string, any>)) {
+  laevatainSkillCategories[key] = { ...(val as any), id: key };
+}
+if (_skTypeMap2) {
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, skillId] of Object.entries(_skTypeMap2 as Record<string, string>)) {
+    if (laevatainSkillCategories[skillId]) laevatainSkillCategories[category] = laevatainSkillCategories[skillId];
+    for (const suffix of variantSuffixes) {
+      const variantSkillId = `${skillId}_${suffix}`;
+      if (laevatainSkillCategories[variantSkillId]) laevatainSkillCategories[`${suffix}_${category}`] = laevatainSkillCategories[variantSkillId];
+    }
+  }
+}
+const mockLaevatainJson = { ...laevatainOperatorJson, skills: laevatainSkillCategories, skillTypeMap: _skTypeMap2, ...(_mergedStatusEvents.length > 0 ? { statusEvents: _mergedStatusEvents } : {}) };
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
 const SLOT_ID = 'slot1';
@@ -291,11 +327,11 @@ describe('B. Scorching Heart Threshold', () => {
       battleSkillEvent(600),
     ];
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(0);
   });
 
-  test('B2: 4 Melting Flame stacks → exactly 1 Scorching Heart on enemy', () => {
+  test('B2: 4 Melting Flame stacks → exactly 1 Scorching Heart Effect on Laevatain', () => {
     const events: TimelineEvent[] = [
       battleSkillEvent(0),
       battleSkillEvent(300),
@@ -303,9 +339,9 @@ describe('B. Scorching Heart Threshold', () => {
       battleSkillEvent(900),
     ];
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(1);
-    expect(shEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(shEvents[0].ownerId).toBe(SLOT_ID);
   });
 
   test('B3: 10 battle skills → Scorching Heart triggers once per accumulation cycle', () => {
@@ -313,7 +349,7 @@ describe('B. Scorching Heart Threshold', () => {
       battleSkillEvent(i * 300)
     );
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     // 10 battle skills = 2 full cycles (4 + consume + 4 + consume) → 2 Scorching Hearts
     expect(shEvents.length).toBe(2);
   });
@@ -326,7 +362,7 @@ describe('B. Scorching Heart Threshold', () => {
       battleSkillEvent(900),
     ];
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(1);
     expect(shEvents[0].activationDuration).toBe(2400);
   });
@@ -340,15 +376,15 @@ describe('B. Scorching Heart Threshold', () => {
       battleSkillEvent(900),
     ];
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(1);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     expect(mfEvents.length).toBe(4);
   });
 
-  test('B6: Scorching Heart has Heat Resistance Ignore stats in JSON', () => {
+  test('B6: Scorching Heart Effect has Heat Resistance Ignore stats in JSON', () => {
     const statusEvents = mockLaevatainJson.statusEvents as any[];
-    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART');
+    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART_EFFECT');
     expect(shDef).toBeDefined();
     expect(shDef.stats).toBeDefined();
     expect(shDef.stats.length).toBeGreaterThan(0);
@@ -426,12 +462,12 @@ describe('B2. Melting Flame Consumption', () => {
     ];
     const result = deriveStatusesFromEngine(events);
 
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     // Two Scorching Hearts: first from initial accumulation, second from re-accumulation
     expect(shEvents.length).toBe(2);
-    // Both target enemy
-    expect(shEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
-    expect(shEvents[1].ownerId).toBe(ENEMY_OWNER_ID);
+    // Both target Laevatain (self-buff)
+    expect(shEvents[0].ownerId).toBe(SLOT_ID);
+    expect(shEvents[1].ownerId).toBe(SLOT_ID);
     // Second one should RESET (clamp) the first if still active
     expect(shEvents[0].activationDuration).toBeLessThan(2400);
   });
@@ -458,7 +494,7 @@ describe('B2. Melting Flame Consumption', () => {
       battleSkillEvent(3900),
     ];
     const result = deriveStatusesFromEngine(events);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     // 3 Scorching Hearts from 3 threshold crossings
     expect(shEvents.length).toBe(3);
   });
@@ -491,17 +527,16 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     }
   });
 
-  test('C3: Normal (non-override) battle skill first frame has MELTING_FLAME infliction', () => {
-    // The raw BATTLE_SKILL (before override) has APPLY INFLICTION MELTING_FLAME
-    // This tests the raw skills definition
+  test('C3: Battle skill first frame applies MELTING_FLAME status to Laevatain', () => {
     const rawSkills = mockLaevatainJson.skills;
     const battleFrames = rawSkills.BATTLE_SKILL.frames;
     const firstFrameEffects = battleFrames[0].effects;
     const mfEffect = firstFrameEffects.find(
-      (e: any) => e.verbType === 'APPLY' && e.adjective === 'MELTING_FLAME'
+      (e: any) => e.verbType === 'APPLY' && e.objectId === 'MELTING_FLAME'
     );
     expect(mfEffect).toBeDefined();
-    expect(mfEffect.objectType).toBe('INFLICTION');
+    expect(mfEffect.objectType).toBe('STATUS');
+    expect(mfEffect.toObjectType).toBe('LAEVATAIN');
   });
 
   test('C4: Empowered battle skill forced Combustion has 5s duration in multipliers', () => {
@@ -553,8 +588,8 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('E. Ultimate & Enhanced Variants', () => {
-  test('E1: Enhanced basic attack (EMPOWERED_BASIC_ATTACK) has 4 segments', () => {
-    const sequences = getSequences('EMPOWERED_BASIC_ATTACK');
+  test('E1: Enhanced basic attack (ENHANCED_BASIC_ATTACK) has 4 segments', () => {
+    const sequences = getSequences('ENHANCED_BASIC_ATTACK');
     expect(sequences.length).toBe(4);
   });
 
@@ -568,7 +603,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
   });
 
   test('E4: Enhanced basic segment 3 applies Heat Infliction to enemy', () => {
-    const sequences = getSequences('EMPOWERED_BASIC_ATTACK');
+    const sequences = getSequences('ENHANCED_BASIC_ATTACK');
     // Segment 3 (index 2) — "BATK sequence 3 also applies Heat Infliction"
     const segment3 = sequences[2];
     const frames = segment3.getFrames();
@@ -623,17 +658,16 @@ describe('F. Potentials', () => {
     expect(spEffects[0].skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
   });
 
-  test('F2: P1 adds x1.2 damage multiplier to Smouldering Fire', () => {
-    const p1 = mockLaevatainJson.potentials[0];
-    const dmgEffects = p1.effects.filter(
+  test('F2: P0 adds x1.2 DAMAGE_MULTIPLIER to Smouldering Fire Enhanced', () => {
+    const p0 = mockLaevatainJson.potentials[0];
+    // Enhanced: ×1.2 on DAMAGE_MULTIPLIER
+    const enhancedDmg = p0.effects.find(
       (e: any) => e.potentialEffectType === 'SKILL_PARAMETER' &&
+        e.skillParameterModifier.skillType === 'SMOULDERING_FIRE_ENHANCED' &&
         e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER'
     );
-    expect(dmgEffects.length).toBe(2); // Normal and Enhanced
-    for (const eff of dmgEffects) {
-      expect(eff.skillParameterModifier.value).toBe(1.2);
-      expect(eff.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
-    }
+    expect(enhancedDmg).toBeDefined();
+    expect(enhancedDmg.skillParameterModifier.value).toBe(1.2);
   });
 
   test('F3: P3 Combustion reaction multiplier is x1.5', () => {
@@ -705,9 +739,9 @@ describe('G. Chain Interactions', () => {
     expect(mfEvents.length).toBe(4);
 
     // Scorching Heart derived
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBe(1);
-    expect(shEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(shEvents[0].ownerId).toBe(SLOT_ID);
     // Source operator tracked
     expect(shEvents[0].sourceOwnerId).toBe(SLOT_ID);
   });
@@ -722,7 +756,7 @@ describe('G. Chain Interactions', () => {
     const result = deriveStatusesFromEngine(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME)
       .sort((a, b) => a.startFrame - b.startFrame);
-    const shEvents = filterByColumn(result, 'scorching-heart');
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
 
     // Scorching Heart should start at the frame of the 4th MF event (the one that crosses threshold)
     expect(shEvents.length).toBe(1);
@@ -746,7 +780,7 @@ describe('G. Chain Interactions', () => {
     // Effect: APPLY STATUS SCORCHING_HEART
     expect(clause.effects[0].verbType).toBe('APPLY');
     expect(clause.effects[0].objectType).toBe('STATUS');
-    expect(clause.effects[0].objectId).toBe('SCORCHING_HEART');
+    expect(clause.effects[0].objectId).toBe('SCORCHING_HEART_EFFECT');
   });
 
   test('G4: Empowered battle skill has forced Combustion on last frame → Seethe trigger data present', () => {
@@ -776,9 +810,9 @@ describe('G. Chain Interactions', () => {
     expect(trigger.triggerClause.length).toBe(2);
   });
 
-  test('G6: Scorching Heart RESET interaction — second trigger clamps previous', () => {
+  test('G6: Scorching Heart Effect RESET interaction — second trigger clamps previous', () => {
     const statusEvents = mockLaevatainJson.statusEvents as any[];
-    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART');
+    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART_EFFECT');
     expect(shDef).toBeDefined();
     expect(shDef.stack.verbType).toBe('RESET');
     expect(shDef.stack.instances).toBe(1);
@@ -800,10 +834,316 @@ describe('G. Chain Interactions', () => {
     expect(mfDef.stack.verbType).toBe('NONE');
   });
 
-  test('G9: Scorching Heart target is ENEMY', () => {
+  test('G9: Scorching Heart Effect target is THIS_OPERATOR', () => {
     const statusEvents = mockLaevatainJson.statusEvents as any[];
-    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART');
-    expect(shDef.target).toBe('ENEMY');
+    const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART_EFFECT');
+    expect(shDef.target).toBe('THIS_OPERATOR');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group I: Final Strike → Melting Flame Conversion
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('I. Final Strike → Melting Flame Conversion', () => {
+  const SLOT2_ID = 'slot2';
+
+  /** Loadout stats with talent 1 unlocked (required for Scorching Heart talent processing). */
+  const LOADOUT_STATS: Record<string, any> = {
+    [SLOT_ID]: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 },
+  };
+
+  /** Create a basic attack event with 3 segments (final strike on segment 3). */
+  function basicAttackWithFinalStrike(startFrame: number, ownerId = SLOT_ID): TimelineEvent {
+    return {
+      id: `basic-${eventIdCounter++}`,
+      name: 'FLAMING_CINDERS',
+      ownerId,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame,
+      activationDuration: 360, // 3 segments × 120 frames
+      activeDuration: 0,
+      cooldownDuration: 0,
+      segments: [
+        { durationFrames: 120, label: '1' },
+        { durationFrames: 120, label: '2' },
+        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+      ],
+    };
+  }
+
+  /** Create a heat infliction event on the enemy. */
+  function heatInflictionEvent(startFrame: number, duration = 600): TimelineEvent {
+    return {
+      id: `heat-${eventIdCounter++}`,
+      name: 'HEAT',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame,
+      activationDuration: duration,
+      activeDuration: 0,
+      cooldownDuration: 0,
+    };
+  }
+
+  test('I1: Final strike with active heat infliction → creates Melting Flame', () => {
+    // Final strike lands at startFrame + 240 + 100 = 340
+    // Heat infliction active from frame 0 to 600
+    const events: TimelineEvent[] = [
+      basicAttackWithFinalStrike(0),
+      heatInflictionEvent(0),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(1);
+    expect(mfEvents[0].startFrame).toBe(340); // seg offset 240 + frame offset 100
+  });
+
+  test('I2: Final strike without heat infliction → no Melting Flame from that trigger', () => {
+    // Heat infliction ends before final strike
+    const events: TimelineEvent[] = [
+      basicAttackWithFinalStrike(0),
+      heatInflictionEvent(0, 200), // ends at frame 200, before final strike at 340
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(0);
+  });
+
+  test('I3: Cross-operator final strike creates MF on Laevatain', () => {
+    // Another operator's basic attack triggers MF on Laevatain.
+    // A Laevatain battle skill is needed so findOperatorSlot can map Laevatain to slot1.
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0), // Laevatain event for slot detection
+      basicAttackWithFinalStrike(600, SLOT2_ID),
+      heatInflictionEvent(600),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    // 1 from battle skill + 1 from final strike = 2
+    expect(mfEvents.length).toBe(2);
+    // Both MF events are on Laevatain's slot
+    expect(mfEvents.every(ev => ev.ownerId === SLOT_ID)).toBe(true);
+  });
+
+  test('I4: Final strike MF stacks with battle skill MF', () => {
+    // 2 battle skills + 1 final strike with heat → 3 total MF
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      basicAttackWithFinalStrike(600),
+      heatInflictionEvent(600, 600),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(3);
+  });
+
+  test('I5: Final strike MF respects max 4 stacks', () => {
+    // 4 battle skills fill max, final strike should not add more
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      battleSkillEvent(900),
+      basicAttackWithFinalStrike(1200),
+      heatInflictionEvent(1200, 600),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(4); // capped at 4
+  });
+
+  test('I6: FINISHER and DIVE basic attacks do NOT trigger final strike', () => {
+    const finisher: TimelineEvent = {
+      id: `basic-${eventIdCounter++}`,
+      name: 'FINISHER',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 0,
+      activationDuration: 120,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      segments: [
+        { durationFrames: 60, label: '1' },
+        { durationFrames: 60, label: '2', frames: [{ offsetFrame: 30, skillPointRecovery: 0 }] },
+      ],
+    };
+    const events: TimelineEvent[] = [finisher, heatInflictionEvent(0)];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(0);
+  });
+
+  test('I7: Final strike absorbs heat infliction (infliction clamped, status CONSUMED)', () => {
+    // Final strike lands at frame 340 (240 seg offset + 100 frame offset)
+    // Heat infliction active from 0 to 600
+    const heat = heatInflictionEvent(0);
+    const events: TimelineEvent[] = [
+      basicAttackWithFinalStrike(0),
+      heat,
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+
+    // MF created
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(1);
+
+    // Heat infliction should be clamped at trigger frame (340)
+    const clampedHeat = result.find(ev => ev.id === heat.id)!;
+    expect(clampedHeat.activationDuration).toBe(340); // triggerFrame - startFrame
+    expect(clampedHeat.eventStatus).toBe(EventStatusType.CONSUMED);
+  });
+
+  test('I8: PERFORM_ALL multiplicity — 2 inflictions + 2 slots = 2 absorptions', () => {
+    // 2 battle skills fill 2 MF slots, leaving 2 open (max 4)
+    // Final strike with 2 active heat inflictions → absorb 2
+    const heat1 = heatInflictionEvent(0, 1200);
+    const heat2 = heatInflictionEvent(200, 1200);
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      heat1,
+      heat2,
+      basicAttackWithFinalStrike(600),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    // 2 from battle skills + 2 from final strike absorption = 4
+    expect(mfEvents.length).toBe(4);
+
+    // Both inflictions should be clamped
+    const clamped1 = result.find(ev => ev.id === heat1.id)!;
+    const clamped2 = result.find(ev => ev.id === heat2.id)!;
+    expect(clamped1.eventStatus).toBe(EventStatusType.CONSUMED);
+    expect(clamped2.eventStatus).toBe(EventStatusType.CONSUMED);
+    // Final strike at frame 940 (600 + 240 seg offset + 100 frame offset)
+    expect(clamped1.activationDuration).toBe(940);
+    expect(clamped2.activationDuration).toBe(940 - 200);
+  });
+
+  test('I9: Slot cap — 3 inflictions + 1 available slot = 1 absorption', () => {
+    // 3 battle skills fill 3 MF slots, leaving 1 open
+    // Final strike with 3 active heat inflictions → absorb only 1
+    const heat1 = heatInflictionEvent(0, 2400);
+    const heat2 = heatInflictionEvent(100, 2400);
+    const heat3 = heatInflictionEvent(200, 2400);
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      heat1,
+      heat2,
+      heat3,
+      basicAttackWithFinalStrike(900),
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    // 3 from battle skills + 1 from absorption = 4 (capped at max)
+    expect(mfEvents.length).toBe(4);
+
+    // Only the oldest infliction should be consumed (oldest first)
+    const clamped1 = result.find(ev => ev.id === heat1.id)!;
+    const clamped2 = result.find(ev => ev.id === heat2.id)!;
+    expect(clamped1.eventStatus).toBe(EventStatusType.CONSUMED);
+    expect(clamped2.eventStatus).toBeUndefined(); // not consumed
+  });
+
+  test('I10: Cross-operator final strike absorbs heat infliction', () => {
+    // Another operator (slot2) performs the final strike.
+    // Laevatain battle skill needed for slot detection.
+    const heat = heatInflictionEvent(600);
+    const events: TimelineEvent[] = [
+      battleSkillEvent(0), // Laevatain slot detection
+      basicAttackWithFinalStrike(600, SLOT2_ID),
+      heat,
+    ];
+    const result = deriveStatusesFromEngine(events, LOADOUT_STATS);
+
+    // 1 MF from battle skill + 1 MF from cross-operator final strike = 2
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(2);
+    // Both MF events belong to Laevatain's slot
+    expect(mfEvents.every(ev => ev.ownerId === SLOT_ID)).toBe(true);
+
+    // Heat infliction should be consumed at trigger frame (600 + 240 + 100 = 940)
+    const clampedHeat = result.find(ev => ev.id === heat.id)!;
+    expect(clampedHeat.eventStatus).toBe(EventStatusType.CONSUMED);
+    expect(clampedHeat.activationDuration).toBe(940 - 600); // 340 frames
+    // Absorption source is the other operator's basic attack
+    expect(clampedHeat.eventStatusOwnerId).toBe(SLOT2_ID);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Cooldown Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Cooldown Interactions', () => {
+  const FPS = 120;
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
+    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  test('H1: Battle skill (Smouldering Fire) has no COOLDOWN effect', () => {
+    const bs = mockLaevatainJson.skills.BATTLE_SKILL;
+    const cooldown = bs.effects?.find((e: any) => e.objectType === 'COOLDOWN');
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('H2: Combo skill (Seethe) has 10s cooldown', () => {
+    const cs = mockLaevatainJson.skills.COMBO_SKILL;
+    const cooldown = cs.effects.find(
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+    );
+    expect(cooldown).toBeDefined();
+    expect(cooldown.withPreposition.cardinality.value).toBe(10);
+  });
+
+  test('H3: Ultimate (Twilight) has 10s cooldown from operator JSON', () => {
+    expect(mockLaevatainJson.ultimateCooldownDuration).toBe(10);
+  });
+
+  test('H4: Combo placement during 10s cooldown is blocked', () => {
+    const comboDuration = Math.round(1.37 * FPS); // 164 frames
+    const comboCooldown = 10 * FPS; // 1200 frames
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+    // During cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 300, 1, [cs1])).toBe(true);
+    // After cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+  });
+
+  test('H5: Ultimate placement during cooldown is blocked', () => {
+    const ultAnimation = Math.round(2.37 * FPS); // 284 frames
+    const ultActive = 15 * FPS; // 1800 frames
+    const ultCooldown = 10 * FPS; // 1200 frames
+    const totalRange = ultAnimation + ultActive + ultCooldown;
+    const ult1 = makeEvent({
+      id: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      activationDuration: ultAnimation, activeDuration: ultActive,
+      cooldownDuration: ultCooldown, nonOverlappableRange: totalRange,
+    });
+    // During cooldown phase
+    const cooldownStart = ultAnimation + ultActive;
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, cooldownStart + 300, 1, [ult1])).toBe(true);
+    // After cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+  });
+
+  test('H6: Battle skill back-to-back is valid (no cooldown)', () => {
+    const bsDuration = Math.round(2.2 * FPS); // 264 frames
+    const bs1 = makeEvent({
+      id: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: bsDuration, nonOverlappableRange: bsDuration,
+    });
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 

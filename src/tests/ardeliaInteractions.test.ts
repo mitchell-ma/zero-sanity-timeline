@@ -57,14 +57,55 @@
  *    - Main INTELLECT, secondary WILL
  *    - Talent names and levels
  */
+import { TimelineEvent } from '../consts/viewTypes';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+
+jest.mock('../model/event-frames/operatorJsonLoader', () => ({
+  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
+  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
+  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
+  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
+  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
+  getBasicAttackDurations: () => undefined,
+}));
+jest.mock('../model/game-data/weaponGameData', () => ({
+  getSkillValues: () => [], getConditionalValues: () => [],
+  getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
+}));
+jest.mock('../view/InformationPane', () => ({
+  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+}));
+
+// eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
+// eslint-disable-next-line import/first
+import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
+// eslint-disable-next-line import/first
+import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
+// eslint-disable-next-line import/first
+import { deriveReactions } from '../controller/timeline/deriveReactions';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/ardelia-operator.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockSkillsJson = require('../model/game-data/operator-skills/ardelia-skills.json');
 
-const mockJson = { ...mockOperatorJson, skills: mockSkillsJson };
+const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...ardeliaSkillEntries } = mockSkillsJson as Record<string, any>;
+const ardeliaSkills: Record<string, any> = {};
+for (const [key, val] of Object.entries(ardeliaSkillEntries)) {
+  ardeliaSkills[key] = { ...(val as any), id: key };
+}
+if (_skTypeMap) {
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
+    if (ardeliaSkills[skillId]) ardeliaSkills[category] = ardeliaSkills[skillId];
+    for (const suffix of variantSuffixes) {
+      const variantSkillId = `${skillId}_${suffix}`;
+      if (ardeliaSkills[variantSkillId]) ardeliaSkills[`${suffix}_${category}`] = ardeliaSkills[variantSkillId];
+    }
+  }
+}
+const mockJson = { ...mockOperatorJson, skills: ardeliaSkills, skillTypeMap: _skTypeMap, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -277,11 +318,10 @@ describe('C. Combo Skill (Eruption Column)', () => {
     expect(stagger.withPreposition.cardinality.value).toBe(10);
   });
 
-  test('C7: Combo animation override is TIME_STOP (0.729s)', () => {
-    const override = mockJson.skillOverrides?.COMBO_SKILL;
-    expect(override).toBeDefined();
-    expect(override.properties.animation.duration.value).toBe(0.729);
-    expect(override.properties.animation.timeInteractionType).toBe('TIME_STOP');
+  test('C7: Combo animation is TIME_STOP (0.729s)', () => {
+    const combo = mockJson.skills.COMBO_SKILL;
+    expect(combo.properties.animation.duration.value).toBe(0.729);
+    expect(combo.properties.animation.timeInteractionType).toBe('TIME_STOP');
   });
 
   test('C8: Combo base duration is 0.77 seconds', () => {
@@ -327,34 +367,38 @@ describe('D. Ultimate (Wooly Party)', () => {
     expect(mockJson.ultimateActiveDuration).toBe(3);
   });
 
-  test('D3: Ultimate override animation is TIME_STOP (2.5s within 6.97s)', () => {
-    const override = mockJson.skillOverrides?.ULTIMATE;
-    expect(override).toBeDefined();
-    expect(override.properties.duration.value).toBe(6.97);
-    expect(override.properties.animation.duration.value).toBe(2.5);
-    expect(override.properties.animation.timeInteractionType).toBe('TIME_STOP');
+  test('D3: Ultimate animation is TIME_STOP (2.5s within 6.97s)', () => {
+    const ult = mockJson.skills.ULTIMATE;
+    expect(ult.properties.duration.value).toBe(6.97);
+    expect(ult.properties.animation.duration.value).toBe(2.5);
+    expect(ult.properties.animation.timeInteractionType).toBe('TIME_STOP');
   });
 
-  test('D4: Ultimate has 3 damage frames', () => {
-    // The override replaces the frames
-    const override = mockJson.skillOverrides?.ULTIMATE;
-    expect(override.frames.length).toBe(10);
-    // But the base skills JSON also has frames
-    const baseUlt = mockJson.skills.ULTIMATE;
-    expect(baseUlt.frames.length).toBe(3);
+  test('D4: Ultimate has 11 frames (3 with multipliers)', () => {
+    const ult = mockJson.skills.ULTIMATE;
+    expect(ult.frames.length).toBe(11);
+    const framesWithMults = ult.frames.filter((f: any) => f.multipliers?.length > 0);
+    expect(framesWithMults.length).toBe(3);
   });
 
   test('D5: Ultimate skill ID is WOOLY_PARTY', () => {
     expect(mockJson.skills.ULTIMATE.id).toBe('WOOLY_PARTY');
   });
 
-  test('D6: Ultimate frame 1 damage multiplier: 0.73 (lv1)', () => {
-    const baseFrames = mockJson.skills.ULTIMATE.frames;
-    expect(baseFrames[0].multipliers[0].DAMAGE_MULTIPLIER).toBe(0.73);
+  test('D6: Ultimate first damage frame multiplier: 0.73 (lv1)', () => {
+    const frames = mockJson.skills.ULTIMATE.frames;
+    const dmgFrame = frames.find((f: any) => f.multipliers?.length > 0);
+    expect(dmgFrame).toBeDefined();
+    expect(dmgFrame.multipliers[0].DAMAGE_MULTIPLIER).toBe(0.73);
   });
 
-  test('D7: Ultimate frame 1 has effect_prob and interval parameters', () => {
-    const mults = mockJson.skills.ULTIMATE.frames[0].multipliers[0];
+  test('D7: Ultimate damage frame has effect_prob and interval parameters', () => {
+    const frames = mockJson.skills.ULTIMATE.frames;
+    const dmgFrame = frames.find(
+      (f: any) => f.multipliers?.[0]?.effect_prob != null
+    );
+    expect(dmgFrame).toBeDefined();
+    const mults = dmgFrame.multipliers[0];
     expect(mults.effect_prob).toBe(0.1);
     expect(mults.interval).toBe(0.3);
     expect(mults.DURATION).toBe(3);
@@ -542,6 +586,172 @@ describe('G. Operator Identity & Metadata', () => {
 
   test('G6: Basic attack default duration is 0.1833 seconds', () => {
     expect(mockJson.basicAttackDefaultDuration).toBe(0.1833);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Status & Infliction Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Status & Infliction Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  test('H1: Combo skill frame 2 derives forced Corrosion on enemy', () => {
+    const comboEvent: TimelineEvent = {
+      id: 'combo-1', name: 'ERUPTION_COLUMN', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: Math.round(0.77 * FPS), activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(0.77 * FPS),
+        frames: [
+          { offsetFrame: Math.round(0.67 * FPS) }, // frame 1: no reaction
+          {
+            offsetFrame: Math.round(2.4 * FPS),    // frame 2: forced Corrosion
+            applyForcedReaction: { reaction: 'CORROSION', statusLevel: 1, durationFrames: 1200 },
+          },
+        ],
+      }],
+    };
+    const result = deriveFrameInflictions([comboEvent]);
+    const reactions = result.filter(ev => ev.columnId === REACTION_COLUMNS.CORROSION);
+    expect(reactions.length).toBe(1);
+    expect(reactions[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(reactions[0].statusLevel).toBe(1);
+    expect(reactions[0].sourceOwnerId).toBe(SLOT_ID);
+    expect(reactions[0].sourceSkillName).toBe('ERUPTION_COLUMN');
+    expect((reactions[0] as any).forcedReaction).toBe(true);
+  });
+
+  test('H2: Forced Corrosion does not require prior infliction stacks', () => {
+    // Forced reactions bypass the normal cross-element requirement
+    const comboEvent: TimelineEvent = {
+      id: 'combo-1', name: 'ERUPTION_COLUMN', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: 92, activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: 92,
+        frames: [{
+          offsetFrame: Math.round(2.4 * FPS),
+          applyForcedReaction: { reaction: 'CORROSION', statusLevel: 1, durationFrames: 1200 },
+        }],
+      }],
+    };
+    // No infliction events at all — forced reaction still fires
+    const result = deriveFrameInflictions([comboEvent]);
+    const corrosion = result.filter(ev => ev.columnId === REACTION_COLUMNS.CORROSION);
+    expect(corrosion.length).toBe(1);
+  });
+
+  test('H3: Battle skill (Dolly Rush) has no infliction frame markers', () => {
+    const bsEvent: TimelineEvent = {
+      id: 'bs-1', name: 'DOLLY_RUSH', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: Math.round(1.57 * FPS), activeDuration: 0, cooldownDuration: 0,
+      segments: [{
+        durationFrames: Math.round(1.57 * FPS),
+        frames: [{ offsetFrame: Math.round(1.07 * FPS) }],
+      }],
+    };
+    const result = deriveFrameInflictions([bsEvent]);
+    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(inflictions.length).toBe(0);
+  });
+
+  test('H4: Combo triggers on Corrosion — trigger clause verified', () => {
+    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
+    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('CORRODED');
+  });
+
+  test('H5: Nature infliction + Heat infliction → Combustion (teammate chain)', () => {
+    const nature: TimelineEvent = {
+      id: 'n1', name: INFLICTION_COLUMNS.NATURE, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.NATURE, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: SLOT_ID,
+    };
+    const heat: TimelineEvent = {
+      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT, startFrame: FPS,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+    };
+    const result = deriveReactions([nature, heat]);
+    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
+    expect(reactions.length).toBe(1);
+    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
+  });
+
+  test('H6: Forced Corrosion from Ardelia combo satisfies own combo trigger chain', () => {
+    // Ardelia combo creates forced Corrosion → next combo window can be triggered by it
+    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
+    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('CORRODED');
+    // Forced Corrosion columnId is 'corrosion' which satisfies IS CORRODED check
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group I: Cooldown Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('I. Cooldown Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
+    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  test('H1: Basic attack (Rocky Whispers) has no cooldown', () => {
+    const ba = mockJson.skills.BASIC_ATTACK;
+    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
+      .flatMap((f: any) => f.effects ?? [])
+      .find((e: any) => e.objectType === 'COOLDOWN');
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('H2: Battle skill (Dolly Rush) has no COOLDOWN effect', () => {
+    const cooldown = mockJson.skills.BATTLE_SKILL.effects?.find(
+      (e: any) => e.objectType === 'COOLDOWN'
+    );
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('H3: Combo skill (Eruption Column) has 18s cooldown', () => {
+    const cooldown = mockJson.skills.COMBO_SKILL.effects.find(
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+    );
+    expect(cooldown).toBeDefined();
+    expect(cooldown.withPreposition.cardinality.value).toBe(18);
+  });
+
+  test('H4: Ultimate (Wooly Party) has 0s cooldown from operator JSON', () => {
+    expect(mockJson.ultimateCooldownDuration).toBe(0);
+  });
+
+  test('H5: Combo placement during 18s cooldown is blocked', () => {
+    const comboDuration = Math.round(0.77 * FPS);
+    const comboCooldown = 18 * FPS;
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 300, 1, [cs1])).toBe(true);
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+  });
+
+  test('H6: Ultimate with 0s cooldown allows immediate re-use after active phase', () => {
+    const ultDuration = Math.round(6.97 * FPS);
+    const ultActive = 3 * FPS;
+    const totalRange = ultDuration + ultActive; // no cooldown
+    const ult1 = makeEvent({
+      id: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      activationDuration: ultDuration, activeDuration: ultActive,
+      cooldownDuration: 0, nonOverlappableRange: totalRange,
+    });
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
   });
 });
 

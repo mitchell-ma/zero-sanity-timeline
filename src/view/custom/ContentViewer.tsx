@@ -928,9 +928,11 @@ function VariantView({ variantKey, data }: { variantKey: string; data: Record<st
 
 function StatusEventView({ data }: { data: Record<string, any> }) {
   const stack = data.stack ?? {};
-  const maxArr = stack.max ?? [];
-  const maxStr = Array.isArray(maxArr) ? maxArr.join('/') : String(maxArr);
-  const dur = data.duration;
+  const maxRaw = stack.max ?? [];
+  const maxVals = Array.isArray(maxRaw) ? maxRaw : typeof maxRaw === 'object' && maxRaw !== null ? Object.values(maxRaw) : [maxRaw];
+  const maxUnique = Array.from(new Set(maxVals));
+  const maxStr = maxUnique.join('/');
+  const dur = data.duration ?? data.properties?.duration;
   const durStr = dur ? (Array.isArray(dur.value) ? dur.value.join(', ') : dur.value) + (dur.unit === 'FRAME' ? 'f' : 's') : '';
   const stats: any[] = data.stats ?? [];
   const triggerClause: any[] = data.triggerClause ?? [];
@@ -947,7 +949,7 @@ function StatusEventView({ data }: { data: Record<string, any> }) {
         {durStr && <Field label="Duration" value={durStr} />}
       </div>
       <div className="cv-field-grid">
-        <Field label="Stack Type" value={String(stack.interactionType ?? 'NONE')} />
+        <Field label="Stack Type" value={String(stack.verbType ?? stack.interactionType ?? 'NONE')} />
         <Field label="Max Stacks" value={maxStr} />
         <Field label="Instances" value={String(stack.instances ?? 1)} />
       </div>

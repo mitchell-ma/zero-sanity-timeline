@@ -677,6 +677,42 @@ function buildSkillIds(
   return result;
 }
 
+/**
+ * Extracts deterministic skill timing overrides from the Warfarin skillPatchTable.
+ *
+ * Only extracts values that are unambiguously timeline-relevant:
+ *   - ultimateActiveDuration: from ultimate_skill.blackboard.duration (seconds, when present)
+ *
+ * NOT extracted:
+ *   - ultimateCooldownDuration: Warfarin's ultimate coolDown represents energy recharge lockout,
+ *     not a timeline cooldown. Ultimates are gated by energy, not cooldown timers.
+ */
+export interface SkillTimingOverrides {
+  ultimateActiveDuration?: number;
+}
+
+function buildSkillTimingOverrides(
+  skillPatchTable: Record<string, { SkillPatchDataBundle: WarfarinSkillPatchBundle[] }>,
+): SkillTimingOverrides {
+  const overrides: SkillTimingOverrides = {};
+
+  for (const [skillId, patchData] of Object.entries(skillPatchTable)) {
+    const classification = classifyWarfarinSkillId(skillId);
+    if (!classification) continue;
+
+    const bundles = patchData.SkillPatchDataBundle;
+    if (!bundles.length) continue;
+    const first = bundles[0];
+
+    if (classification.category === 'ULTIMATE') {
+      const duration = first.blackboard.find(b => b.key === 'duration');
+      if (duration) overrides.ultimateActiveDuration = duration.value;
+    }
+  }
+
+  return overrides;
+}
+
 /** Strip Warfarin rich text tags and template variables from skill descriptions. */
 function stripRichText(text: string): string {
   return text
@@ -770,6 +806,7 @@ export function buildOperatorEntry(raw: WarfarinApiResponse) {
   const skillMultipliers = buildSkillMultipliers(raw.data.skillPatchTable ?? {});
   const skillIds = buildSkillIds(raw.data.skillPatchTable ?? {});
   const talents = buildTalents(raw.data.charGrowthTable.talentNodeMap ?? {});
+  const timingOverrides = buildSkillTimingOverrides(raw.data.skillPatchTable ?? {});
 
   return {
     [OperatorInformationType.OPERATOR_TYPE]: operatorType,
@@ -793,6 +830,7 @@ export function buildOperatorEntry(raw: WarfarinApiResponse) {
     skillMultipliers,
     skillIds,
     talents,
+    ...timingOverrides,
     dataSources: ['WARFARIN'],
   };
 }
@@ -810,7 +848,7 @@ async function main() {
   const I = OperatorInformationType;
   const operatorType = entry[I.OPERATOR_TYPE];
   const fileSlug = operatorType.toLowerCase().replace(/_/g, '-');
-  const filePath = path.join(OPERATORS_DIR, `${fileSlug}.json`);
+  const filePath = path.join(OPERATORS_DIR, `${fileSlug}-operator.json`);
 
   // Load existing or create new
   let existing: Record<string, unknown> = {};

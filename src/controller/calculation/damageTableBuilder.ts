@@ -6,13 +6,13 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, CombatSkillType, CritMode, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
 import { getSkillMultiplier, getPerTickMultiplier } from './jsonMultiplierEngine';
 import { evaluateTalentBonuses, evaluateTalentAttackBonus } from './talentBonusEngine';
-import { getOperatorJson, getSkillNameMap } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import {
@@ -70,6 +70,8 @@ export interface DamageTableRow {
   params: DamageParams | null;
   /** Status/reaction damage parameters. Null for normal skill hits. */
   statusParams?: StatusDamageParams | null;
+  /** Damage type: NORMAL or DAMAGE_OVER_TIME. DOT cannot crit. */
+  damageType?: DamageType;
 }
 
 /** Column descriptor for the damage table header. */
@@ -412,12 +414,15 @@ export function buildDamageTableRows(
                   }
                 }
 
-                // Crit multiplier based on crit mode
-                const expectedCrit = critMode === CritMode.ALWAYS
-                  ? getCritMultiplier(true, opData.critDamage + talentCritDmgBonus)
-                  : critMode === CritMode.NONE
-                    ? 1
-                    : getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
+                // Crit multiplier based on crit mode (DOT frames cannot crit)
+                const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
+                const expectedCrit = isDot
+                  ? 1
+                  : critMode === CritMode.ALWAYS
+                    ? getCritMultiplier(true, opData.critDamage + talentCritDmgBonus)
+                    : critMode === CritMode.NONE
+                      ? 1
+                      : getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
 
                 // Finisher: applies when the event is a finisher attack during stagger break
                 const isFinisher = ev.name === CombatSkillsType.FINISHER;
@@ -511,6 +516,7 @@ export function buildDamageTableRows(
               skillName: ev.name,
               hpRemaining: null, // computed after sorting
               params,
+              damageType: frame.damageType,
             });
           }
         }
@@ -530,7 +536,7 @@ export function buildDamageTableRows(
 
     const json = getOperatorJson(oid);
     const talentEffects = (json?.talentEffects ?? []) as any[];
-    const evCategory = getSkillNameMap(oid)[ev.name];
+    const evCategory = columnIdToSkillType(ev.columnId);
 
     const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);
     if (!col) continue;

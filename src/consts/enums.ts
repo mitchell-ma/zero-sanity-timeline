@@ -52,6 +52,10 @@ export enum EventFrameType {
   FINAL_STRIKE = "FINAL_STRIKE",
   FINISHER = "FINISHER",
   DIVE = "DIVE",
+  DAMAGE_OVER_TIME = "DAMAGE_OVER_TIME",
+  GUARANTEED_HIT = "GUARANTEED_HIT",
+  PASSIVE = "PASSIVE",
+  INTERRUPTIBLE = "INTERRUPTIBLE",
 }
 
 export enum EventStatusType {
@@ -103,6 +107,7 @@ export enum ElementType {
 /** Maps status types to their associated element (for coloring). */
 export const STATUS_ELEMENT: Record<string, string> = {
   MELTING_FLAME:    ElementType.HEAT,
+  SCORCHING_HEART_EFFECT: ElementType.HEAT,
   COMBUSTION:       ElementType.HEAT,
   SOLIDIFICATION:   ElementType.CRYO,
   CRIT_STACKS:      ElementType.CRYO,
@@ -150,8 +155,10 @@ export enum StatusType {
   UNBRIDLED_EDGE = "UNBRIDLED_EDGE",
   WILDLAND_TREKKER = "WILDLAND_TREKKER",
   MESSENGERS_SONG = "MESSENGERS_SONG",
-  // ── Enemy debuffs ─────────────────────────────────────────────────────────
+  // ── Operator talents ──────────────────────────────────────────────────────
   SCORCHING_HEART = "SCORCHING_HEART",
+  SCORCHING_HEART_EFFECT = "SCORCHING_HEART_EFFECT",
+  // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
   FRAGILITY = "FRAGILITY",
@@ -223,7 +230,8 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.SHIELD]: DamageFactorType.NONE,
   [StatusType.UNBRIDLED_EDGE]: DamageFactorType.MULTIPLIER_GROUP,
   [StatusType.WILDLAND_TREKKER]: DamageFactorType.MULTIPLIER_GROUP,
-  [StatusType.SCORCHING_HEART]: DamageFactorType.RESISTANCE,
+  [StatusType.SCORCHING_HEART]: DamageFactorType.NONE,
+  [StatusType.SCORCHING_HEART_EFFECT]: DamageFactorType.RESISTANCE,
   // Enemy debuffs
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
@@ -629,6 +637,11 @@ export enum CritMode {
   EXPECTED = 'EXPECTED',
   NONE = 'NONE',
   ALWAYS = 'ALWAYS',
+}
+
+export enum DamageType {
+  NORMAL = 'NORMAL',
+  DAMAGE_OVER_TIME = 'DAMAGE_OVER_TIME',
 }
 
 

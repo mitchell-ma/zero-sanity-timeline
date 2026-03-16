@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "PROTOCOL_ALPHA_BREACH",
+    "BATTLE_SKILL": "PROTOCOL_OMEGA_STRIKE",
+    "COMBO_SKILL": "INSTANT_PROTOCOL_CHAIN",
+    "ULTIMATE": "PROTOCOL_EPSILON"
+  },
+  "PROTOCOL_ALPHA_BREACH": {
     "name": "Protocol α: Breach",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Electric DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP.",
-    "id": "PROTOCOL_ALPHA_BREACH",
     "segments": [
       {
         "metadata": {
@@ -748,10 +753,9 @@
     ],
     "originId": "perlica"
   },
-  "BATTLE_SKILL": {
+  "PROTOCOL_OMEGA_STRIKE": {
     "name": "Protocol ω: Strike",
     "description": "Unleashes a bolt of electro-magnetic energy that deals Electric DMG and Electric Infliction to enemies in a small area.",
-    "id": "PROTOCOL_OMEGA_STRIKE",
     "properties": {
       "duration": {
         "value": 0.93,
@@ -906,10 +910,9 @@
     ],
     "originId": "perlica"
   },
-  "COMBO_SKILL": {
+  "INSTANT_PROTOCOL_CHAIN": {
     "name": "Instant Protocol: Chain",
     "description": "COMBO TRIGGER: When controlled operator performs a Final Strike on any enemy. \nUnleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification.",
-    "id": "INSTANT_PROTOCOL_CHAIN",
     "properties": {
       "duration": {
         "value": 0.83,
@@ -1087,10 +1090,9 @@
     ],
     "originId": "perlica"
   },
-  "ULTIMATE": {
+  "PROTOCOL_EPSILON": {
     "name": "Protocol ε: 70.41K",
     "description": "Tele-protocols a massive piece of orbital debris into the battlefield with devastating impact. All enemies in the area of effect suffer massive Electric DMG.",
-    "id": "PROTOCOL_EPSILON",
     "properties": {
       "duration": {
         "value": 2.1,

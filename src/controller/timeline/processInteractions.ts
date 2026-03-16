@@ -6,9 +6,9 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { LoadoutStats } from '../../view/InformationPane';
 import { collectTimeStopRegions, applyTimeStopExtension, resolveFramePositions, validateTimeStopStarts } from './processTimeStop';
-import { applyComboChaining, applyPotentialEffects, deriveComboActivationWindows, SlotTriggerWiring } from './processComboSkill';
+import { applyComboChaining, applyPotentialEffects, deriveComboActivationWindows, resolveComboTriggerColumns, SlotTriggerWiring } from './processComboSkill';
 import { deriveFrameInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh, attachReactionFrames, attachSusceptibilityFrames, consumeReactionsForStatus } from './processInfliction';
-import { consumeTeamStatuses, consumeOperatorStatuses, consumeOriginiumCrystals, deriveScorchingFangs, deriveUnbridledEdge, deriveWildlandTrekker, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
+import { consumeTeamStatuses, consumeOperatorStatuses, deriveUnbridledEdge, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
 import { deriveStatusesFromEngine } from './statusDerivationEngine';
 
 
@@ -33,6 +33,8 @@ export function processInflictionEvents(
   loadoutStats?: Record<string, LoadoutStats>,
   slotWeapons?: Record<string, string | undefined>,
   slotWirings?: SlotTriggerWiring[],
+  /** Slot ID → operator ID mapping (guarantees slot detection for talent events). */
+  slotOperatorMap?: Record<string, string>,
 ): TimelineEvent[] {
   // ── Phase 1: Finalize time-stop regions ──────────────────────────────────
   // Combo chaining truncates overlapping combo animations, finalizing the
@@ -49,8 +51,15 @@ export function processInflictionEvents(
   // have their durations extended (timer paused during time-stops).
   const ext1 = applyTimeStopExtension(withComboChaining, stops, extendedIds);
 
+  // ── Phase 2b: Resolve combo trigger columns ───────────────────────────────
+  // Derive combo windows early so that combo events' comboTriggerColumnId
+  // reflects the current source (e.g. when the source event was dragged).
+  const withResolvedCombos = slotWirings && slotWirings.length > 0
+    ? resolveComboTriggerColumns(ext1, slotWirings, stops)
+    : ext1;
+
   // ── Phase 3: Process pipeline (all durations are extended real-time) ──────
-  const withPotentialEffects = applyPotentialEffects(ext1);
+  const withPotentialEffects = applyPotentialEffects(withResolvedCombos);
   const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats, stops);
   // Extend newly derived events by time-stop overlap
   const ext2 = applyTimeStopExtension(withDerivedInflictions, stops, extendedIds);
@@ -64,10 +73,9 @@ export function processInflictionEvents(
   const withAbsorptions = applyAbsorptions(withConsumedTeam, stops);
   // Consume operator statuses (e.g. Melting Flame) after absorptions derive them
   const withConsumedOperatorStatuses = consumeOperatorStatuses(withAbsorptions, stops, extendedIds);
-  // Generic status derivation engine (replaces deriveScorchingHeart, deriveMessengersSong)
-  const withEngineDerived = deriveStatusesFromEngine(withConsumedOperatorStatuses, loadoutStats);
-  const withConsumedCrystals = consumeOriginiumCrystals(withEngineDerived);
-  const withReactions = deriveReactions(withConsumedCrystals);
+  // Generic status derivation engine — handles all operators with statusEvents in their JSON
+  const withEngineDerived = deriveStatusesFromEngine(withConsumedOperatorStatuses, loadoutStats, slotOperatorMap);
+  const withReactions = deriveReactions(withEngineDerived);
   const withReactionFrames = attachReactionFrames(withReactions);
   const withSusceptibilityFrames = attachSusceptibilityFrames(withReactionFrames, loadoutStats);
   const ext3 = applyTimeStopExtension(withSusceptibilityFrames, stops, extendedIds);
@@ -76,11 +84,9 @@ export function processInflictionEvents(
   const withVulnConsumed = consumeVulnerabilityForSusceptibility(withConsumedReactions, loadoutStats);
   const withCryoConsumed = consumeCryoForSusceptibility(withVulnConsumed, loadoutStats);
   const withXaihiP5 = applyXaihiP5AmpBoost(withCryoConsumed, loadoutStats);
-  const withScorchingFangs = deriveScorchingFangs(withXaihiP5, loadoutStats);
-  const withUnbridledEdge = deriveUnbridledEdge(withScorchingFangs, slotWeapons, stops);
-  const withWildlandTrekker = deriveWildlandTrekker(withUnbridledEdge, loadoutStats);
-  // Final extension for Scorching Fangs, Unbridled Edge, and any other derived events
-  const ext4 = applyTimeStopExtension(withWildlandTrekker, stops, extendedIds);
+  const withUnbridledEdge = deriveUnbridledEdge(withXaihiP5, slotWeapons, stops);
+  // Final extension for engine-derived events, Unbridled Edge, and other derived events
+  const ext4 = applyTimeStopExtension(withUnbridledEdge, stops, extendedIds);
 
   // ── Derive combo activation windows ────────────────────────────────────
   const withComboWindows = slotWirings && slotWirings.length > 0

@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "ROD_CASTING",
+    "BATTLE_SKILL": "UNCONVENTIONAL_LURE",
+    "COMBO_SKILL": "AUGER_ANGLING",
+    "ULTIMATE": "ONE_MONSTER_CATCH"
+  },
+  "ROD_CASTING": {
     "name": "Basic Rod Casting",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
-    "id": "ROD_CASTING",
     "segments": [
       {
         "metadata": {
@@ -675,10 +680,9 @@
     ],
     "originId": "alesh"
   },
-  "BATTLE_SKILL": {
+  "UNCONVENTIONAL_LURE": {
     "name": "Unconventional Lure",
     "description": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies.",
-    "id": "UNCONVENTIONAL_LURE",
     "properties": {
       "duration": {
         "value": 1.67,
@@ -869,10 +873,9 @@
     ],
     "originId": "alesh"
   },
-  "COMBO_SKILL": {
+  "AUGER_ANGLING": {
     "name": "Auger Angling",
     "description": "COMBO TRIGGER: When the Arts Reaction or Originium Crystals of a nearby target is consumed. \nOpens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
-    "id": "AUGER_ANGLING",
     "properties": {
       "duration": {
         "value": 1.3,
@@ -1110,10 +1113,9 @@
     ],
     "originId": "alesh"
   },
-  "ULTIMATE": {
+  "ONE_MONSTER_CATCH": {
     "name": "One Monster Catch!",
     "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
-    "id": "ONE_MONSTER_CATCH",
     "properties": {
       "duration": {
         "value": 3.2,
@@ -1289,7 +1291,7 @@
     ],
     "originId": "alesh"
   },
-  "EMPOWERED_BATTLE_SKILL": {
+  "UNCONVENTIONAL_LURE_EMPOWERED": {
     "properties": {
       "duration": {
         "value": 1.67,

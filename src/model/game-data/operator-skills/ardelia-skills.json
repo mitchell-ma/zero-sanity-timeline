@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "ROCKY_WHISPERS",
+    "BATTLE_SKILL": "DOLLY_RUSH",
+    "COMBO_SKILL": "ERUPTION_COLUMN",
+    "ULTIMATE": "WOOLY_PARTY"
+  },
+  "ROCKY_WHISPERS": {
     "name": "Rocky Whispers",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
-    "id": "ROCKY_WHISPERS",
     "segments": [
       {
         "metadata": {
@@ -748,10 +753,9 @@
     ],
     "originId": "ardelia"
   },
-  "BATTLE_SKILL": {
+  "DOLLY_RUSH": {
     "name": "Dolly Rush",
     "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target.",
-    "id": "DOLLY_RUSH",
     "properties": {
       "duration": {
         "value": 1.57,
@@ -930,10 +934,9 @@
     ],
     "originId": "ardelia"
   },
-  "COMBO_SKILL": {
+  "ERUPTION_COLUMN": {
     "name": "Eruption Column",
     "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. \nLaunches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
-    "id": "ERUPTION_COLUMN",
     "properties": {
       "duration": {
         "value": 0.77,
@@ -941,10 +944,13 @@
       },
       "animation": {
         "duration": {
-          "value": 0.5,
+          "value": 0.729,
           "unit": "SECOND"
         },
-        "timeInteractionType": "TIME_STOP"
+        "timeInteractionType": "TIME_STOP",
+        "dataSources": [
+          "SELF"
+        ]
       },
       "trigger": {
         "triggerClause": [
@@ -1241,10 +1247,9 @@
     ],
     "originId": "ardelia"
   },
-  "ULTIMATE": {
+  "WOOLY_PARTY": {
     "name": "Wooly Party",
     "description": "Ardelia enters a mobile channeling state and summons the aid of Mr. Dolly. Multiple copies of Mr. Dolly are thrown in random directions. Each copy deals Nature DMG when hitting the enemy. Each enemy can only take 1 damaging hit every s.",
-    "id": "WOOLY_PARTY",
     "properties": {
       "duration": {
         "value": 6.97,
@@ -1263,7 +1268,275 @@
         "metadata": {
           "eventComponentType": "FRAME",
           "dataSources": [
-            "END_AXIS"
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.3,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.6,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.9,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 1.2,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS",
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 1.8,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ],
+        "multipliers": [
+          {
+            "level": 1,
+            "DAMAGE_MULTIPLIER": 0.73
+          },
+          {
+            "level": 2,
+            "DAMAGE_MULTIPLIER": 0.81
+          },
+          {
+            "level": 3,
+            "DAMAGE_MULTIPLIER": 0.88
+          },
+          {
+            "level": 4,
+            "DAMAGE_MULTIPLIER": 0.95
+          },
+          {
+            "level": 5,
+            "DAMAGE_MULTIPLIER": 1.03
+          },
+          {
+            "level": 6,
+            "DAMAGE_MULTIPLIER": 1.1
+          },
+          {
+            "level": 7,
+            "DAMAGE_MULTIPLIER": 1.17
+          },
+          {
+            "level": 8,
+            "DAMAGE_MULTIPLIER": 1.25
+          },
+          {
+            "level": 9,
+            "DAMAGE_MULTIPLIER": 1.32
+          },
+          {
+            "level": 10,
+            "DAMAGE_MULTIPLIER": 1.41
+          },
+          {
+            "level": 11,
+            "DAMAGE_MULTIPLIER": 1.52
+          },
+          {
+            "level": 12,
+            "DAMAGE_MULTIPLIER": 1.65
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 2.1,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 2.4,
+            "unit": "SECOND"
+          }
+        },
+        "effects": [
+          {
+            "verbType": "RECOVER",
+            "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
+            "withPreposition": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "END_AXIS",
+            "SELF"
           ]
         },
         "properties": {
@@ -1275,17 +1548,8 @@
         "effects": [
           {
             "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verbType": "RECOVER",
             "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
             "withPreposition": {
               "cardinality": {
                 "verb": "IS",
@@ -1397,85 +1661,26 @@
         "metadata": {
           "eventComponentType": "FRAME",
           "dataSources": [
-            "END_AXIS"
+            "SELF"
           ]
         },
         "properties": {
           "offset": {
-            "value": 1.8,
+            "value": 3,
             "unit": "SECOND"
           }
         },
         "effects": [
           {
             "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verbType": "RECOVER",
             "objectType": "STAGGER",
+            "toObjectType": "THIS_OPERATOR",
             "withPreposition": {
               "cardinality": {
                 "verb": "IS",
                 "value": 2
               }
             }
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.73
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.81
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.88
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.95
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 1.03
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 1.1
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 1.17
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.25
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.32
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.41
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.52
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.65
           }
         ]
       },
@@ -1570,6 +1775,7 @@
       {
         "verbType": "EXPEND",
         "objectType": "ULTIMATE_ENERGY",
+        "toObjectType": "THIS_OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -1580,7 +1786,7 @@
     ],
     "originId": "ardelia"
   },
-  "EMPOWERED_BATTLE_SKILL": {
+  "DOLLY_RUSH_EMPOWERED": {
     "properties": {
       "duration": {
         "value": 1.57,

@@ -16,7 +16,7 @@ import { Potential } from '../../consts/types';
 import {
   getOperatorJson,
   getAllOperatorIds,
-  getSkillNameMap,
+  getSkillTypeMap,
   getSkillTimings as loadSkillTimings,
   getSkillGaugeGains as loadSkillGaugeGains,
   getUltimateEnergyCost as loadUltimateEnergyCost,
@@ -144,14 +144,13 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   // Splash art: explicit field → asset auto-discovery
   const splash = opJson.splashArt ?? getSplashArt(opJson.name);
 
-  // Build skill name map (category → CombatSkillsType enum key)
-  const skillNameMap = getSkillNameMap(operatorId);
+  // Build skill type → base skill ID map from skillTypeMap
+  const typeMap = getSkillTypeMap(operatorId);
   const categoryToName: Record<string, string> = {};
-  for (const [name, cat] of Object.entries(skillNameMap)) {
-    if (name === 'FINISHER' || name === 'DIVE') continue;
-    const viewKey = cat === 'BASIC_ATTACK' ? 'basic' : cat === 'BATTLE_SKILL' ? 'battle'
-      : cat === 'COMBO_SKILL' ? 'combo' : cat === 'ULTIMATE' ? 'ultimate' : null;
-    if (viewKey && !categoryToName[viewKey]) categoryToName[viewKey] = name;
+  for (const [type, baseId] of Object.entries(typeMap)) {
+    const viewKey = type === 'BASIC_ATTACK' ? 'basic' : type === 'BATTLE_SKILL' ? 'battle'
+      : type === 'COMBO_SKILL' ? 'combo' : type === 'ULTIMATE' ? 'ultimate' : null;
+    if (viewKey) categoryToName[viewKey] = baseId;
   }
 
   // Compute skill timing — use JSON override fields when available, fall back to getSkillTimings
@@ -252,7 +251,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   }
 
   // Combo trigger from JSON
-  const comboTrigger = opSkills?.COMBO_SKILL?.trigger;
+  const comboTrigger = opSkills?.COMBO_SKILL?.properties?.trigger;
   let triggerCapability: TriggerCapability | undefined;
   const parsedTrigger = comboTrigger ? parseTriggerClause(comboTrigger) : null;
   if (parsedTrigger && parsedTrigger.comboRequires.length > 0) {
@@ -414,10 +413,10 @@ export function getUltimateEnergyCostForPotential(
     for (const eff of pot.effects) {
       if (eff.potentialEffectType === 'SKILL_COST' && eff.skillCostModifier) {
         const mod = eff.skillCostModifier;
-        const snm = getSkillNameMap(operatorId);
-        const ultNames = Object.entries(snm).filter(([_, cat]) => cat === 'ULTIMATE').map(([name]) => name);
+        const tm = getSkillTypeMap(operatorId);
+        const ultBaseId = tm['ULTIMATE'];
         const modSkill = mod.skillType;
-        if (ultNames.some(n => modSkill.endsWith(n) || modSkill === n)) {
+        if (ultBaseId && (modSkill === ultBaseId || modSkill.endsWith(ultBaseId))) {
           baseCost = Math.round(baseCost * mod.value);
         }
       }

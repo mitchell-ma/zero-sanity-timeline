@@ -1,4 +1,4 @@
-import { ElementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
+import { DamageType, ElementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
@@ -120,19 +120,23 @@ export interface EventFrameMarker {
   /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
   applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
   /** Status applied by this frame to a target (self or enemy). */
-  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string };
+  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string };
+  /** Multiple status applications on this frame (conditional on potential). */
+  applyStatuses?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string }[];
   /** Consume an active reaction on the enemy; if successful, conditionally apply a status. */
   consumeReaction?: { columnId: string; applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string } };
   /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
   consumeStatus?: string;
+  /** Damage type: NORMAL (default) or DAMAGE_OVER_TIME (cannot crit). */
+  damageType?: DamageType;
   /** Element of damage dealt by this frame (for coloring when no infliction). */
   damageElement?: string;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
   /** Whether this frame duplicates the source infliction that triggered it. */
   duplicatesSourceInfliction?: boolean;
-  /** Hit type classification (Normal or Final Strike). */
-  hitType?: EventFrameType;
+  /** Frame type classifications (defaults to [NORMAL]). */
+  frameTypes?: EventFrameType[];
   /** Template SP recovery for this frame when it is the final strike (from model data). */
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
@@ -169,6 +173,8 @@ export interface EventSegmentData {
   timeDependency?: TimeDependency;
   /** The phase type of this segment. Defaults to NORMAL. */
   segmentType?: SegmentType;
+  /** Per-segment susceptibility override (resolved scalar values). Used for multi-phase statuses like Empowered Focus. */
+  susceptibility?: Partial<Record<ElementType, number>>;
 }
 
 export interface TimelineEvent {
@@ -299,7 +305,7 @@ export type MiniTimeline = {
   columnId: string;
   label: string;
   color: string;
-  headerVariant: "skill" | "infliction" | "mf";
+  headerVariant: "skill" | "infliction";
 
   /** If present, this mini-timeline has micro-columns. */
   microColumns?: MicroColumn[];

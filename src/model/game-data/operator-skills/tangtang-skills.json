@@ -1,8 +1,13 @@
 {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "BASIC_ATTACK",
+    "BATTLE_SKILL": "BATTLE_SKILL",
+    "COMBO_SKILL": "COMBO_SKILL",
+    "ULTIMATE": "ULTIMATE"
+  },
   "BASIC_ATTACK": {
     "name": "I'LL BLOW YOUR MIND!",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
-    "id": "BASIC_ATTACK",
     "segments": [
       {
         "metadata": {
@@ -196,7 +201,6 @@
   "BATTLE_SKILL": {
     "name": "IMA WAVERIDAAH!",
     "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
-    "id": "BATTLE_SKILL",
     "properties": {
       "duration": {
         "value": 1.867,
@@ -204,6 +208,34 @@
       }
     },
     "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.77,
+            "unit": "SECOND"
+          }
+        }
+      },
+      {
+        "metadata": {
+          "eventComponentType": "FRAME",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "offset": {
+            "value": 0.9,
+            "unit": "SECOND"
+          }
+        }
+      },
       {
         "metadata": {
           "eventComponentType": "FRAME",
@@ -438,7 +470,6 @@
   "COMBO_SKILL": {
     "name": "RIVER, TO ME!",
     "description": "COMBO TRIGGER: When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
-    "id": "COMBO_SKILL",
     "properties": {
       "duration": {
         "value": 1.65,
@@ -604,7 +635,6 @@
   "ULTIMATE": {
     "name": "DA CHIEF SEES YOU!",
     "description": "Tangtang opens her eyepatch and unleashes an OLDEN STARE from her eye that temporarily locks down, immobilizes, and deals Cryo DMG over time to enemies within its area of effect.\nWhen the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG to enemies in its area of effect.\nIf the controlled operator performs a dive attack in the OLDEN STARE pattern, its evolution ends and the rogue wave is summoned immediately to deal even more Cryo DMG.",
-    "id": "ULTIMATE",
     "properties": {
       "duration": {
         "value": 2.9,

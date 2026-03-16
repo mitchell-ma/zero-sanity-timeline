@@ -30,6 +30,7 @@ export const enum ColumnLabel {
   STAGGER_FRAILTY      = 'STAGGER FRAILTY',
   SCORCHING_FANGS      = 'SCORCHING FANGS',
   SCORCHING_HEART      = 'SCORCHING HEART',
+  SCORCHING_HEART_EFFECT = 'SCORCHING HEART',
   ORIGINIUM_CRYSTAL    = 'CRYSTAL',
   WILDLAND_TREKKER     = 'WILDLAND TREKKER',
   MESSENGERS_SONG      = "MESSENGER'S SONG",
@@ -52,6 +53,7 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.WILDLAND_TREKKER]: 'Wildland Trekker',
   [StatusType.MESSENGERS_SONG]: "Messenger's Song",
   [StatusType.SCORCHING_HEART]: 'Scorching Heart',
+  [StatusType.SCORCHING_HEART_EFFECT]: 'Scorching Heart',
   [StatusType.FOCUS]:           'Focus',
   [StatusType.SUSCEPTIBILITY]:  'Susceptibility',
   [StatusType.FRAGILITY]:       'Fragility',
@@ -247,6 +249,7 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   SHIELD:               'Shield',
   // Enemy debuffs
   SCORCHING_HEART:      'Scorching Heart',
+  SCORCHING_HEART_EFFECT: 'Scorching Heart',
   FRAGILITY:            'Fragility',
   ORIGINIUM_CRYSTAL:    'Originium Crystal',
   'originium-crystal':  'Originium Crystal',

@@ -41,6 +41,10 @@ interface JsonEffect {
   cardinality?: number;
   eventName?: string;
   susceptibility?: Record<string, number[]>;
+  stackingInteraction?: string;
+  potentialMin?: number;
+  potentialMax?: number;
+  segments?: { name: string; duration: number; susceptibility?: Record<string, number[]> }[];
   conversion?: { objectType: string; objectId?: string };
   conditions?: { enemiesHitThreshold: number };
   /** Nested effects for compound verbs like PERFORM_ALL. */
@@ -197,7 +201,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _absorbArtsInfliction: FrameArtsAbsorption | null;
   private readonly _consumeArtsInfliction: FrameArtsConsumption | null;
   private readonly _applyForcedReaction: FrameForcedReaction | null;
-  private readonly _applyStatus: FrameApplyStatus | null;
+  private readonly _applyStatuses: FrameApplyStatus[];
   private readonly _consumeStatus: string | null;
   private readonly _damageElement: string | null;
   private readonly _consumeReaction: FrameReactionConsumption | null;
@@ -217,7 +221,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     let absorbInfliction: FrameArtsAbsorption | null = null;
     let consumeInfliction: FrameArtsConsumption | null = null;
     let forcedReaction: FrameForcedReaction | null = null;
-    let applyStatus: FrameApplyStatus | null = null;
+    const applyStatuses: FrameApplyStatus[] = [];
     let consumeStatus: string | null = null;
     let consumeReaction: FrameReactionConsumption | null = null;
 
@@ -280,7 +284,19 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               if (ef.eventName) {
                 status.eventName = ef.eventName;
               }
-              applyStatus = status;
+              if (ef.stackingInteraction) {
+                status.stackingInteraction = ef.stackingInteraction;
+              }
+              if (ef.potentialMin != null) status.potentialMin = ef.potentialMin;
+              if (ef.potentialMax != null) status.potentialMax = ef.potentialMax;
+              if (ef.segments) {
+                status.segments = ef.segments.map(s => ({
+                  name: s.name,
+                  durationFrames: Math.round(s.duration * 120),
+                  ...(s.susceptibility && { susceptibility: s.susceptibility as Partial<Record<ElementType, readonly number[]>> }),
+                }));
+              }
+              applyStatuses.push(status);
             }
             break;
 
@@ -331,7 +347,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._absorbArtsInfliction = absorbInfliction;
     this._consumeArtsInfliction = consumeInfliction;
     this._applyForcedReaction = forcedReaction;
-    this._applyStatus = applyStatus;
+    this._applyStatuses = applyStatuses;
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
     this._duplicatesSourceInfliction = duplicatesSource;
@@ -344,7 +360,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getAbsorbArtsInfliction(): FrameArtsAbsorption | null { return this._absorbArtsInfliction; }
   getConsumeArtsInfliction(): FrameArtsConsumption | null { return this._consumeArtsInfliction; }
   getApplyForcedReaction(): FrameForcedReaction | null { return this._applyForcedReaction; }
-  getApplyStatus(): FrameApplyStatus | null { return this._applyStatus; }
+  getApplyStatus(): FrameApplyStatus | null { return this._applyStatuses[0] ?? null; }
+  getApplyStatuses(): readonly FrameApplyStatus[] { return this._applyStatuses; }
   getConsumeReaction(): FrameReactionConsumption | null { return this._consumeReaction; }
   getConsumeStatus(): string | null { return this._consumeStatus; }
   getDamageElement(): string | null { return this._damageElement; }
@@ -368,31 +385,6 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
 
   getDurationSeconds(): number { return this._durationSeconds; }
   getFrames(): readonly DataDrivenSkillEventFrame[] { return this._frames; }
-}
-
-// ── Override merging ────────────────────────────────────────────────────────
-
-function mergeSkillOverride(base: JsonSkillCategory, override: Record<string, unknown>): JsonSkillCategory {
-  const merged = { ...base };
-
-  // Override arrays replace entirely
-  if (override.frames) merged.frames = override.frames as JsonFrame[];
-  if (override.segments) merged.segments = override.segments as JsonSegment[];
-
-  // Override properties (new structure)
-  if (override.properties) {
-    const overrideProps = override.properties as Record<string, unknown>;
-    merged.properties = { ...merged.properties } as any;
-    if (overrideProps.duration) merged.properties!.duration = overrideProps.duration as JsonDuration;
-    if (overrideProps.animation) merged.properties!.animation = overrideProps.animation as any;
-  }
-
-  // Legacy override objects (compat)
-  if (override.duration) merged.duration = override.duration as JsonDuration;
-  if (override.animation) merged.animation = override.animation as any;
-  if (override.effects) merged.effects = override.effects as JsonEffect[];
-
-  return merged;
 }
 
 // ── Factory ─────────────────────────────────────────────────────────────────
@@ -424,7 +416,8 @@ export function buildSequencesFromSkillCategory(
 }
 
 /**
- * Build sequences for a given skill category from an operator JSON, applying overrides.
+ * Build sequences for a given skill category from an operator JSON.
+ * All skill data lives in the skills JSON — no operator-level overrides.
  */
 export function buildSequencesFromOperatorJson(
   operatorJson: Record<string, any>,
@@ -432,16 +425,7 @@ export function buildSequencesFromOperatorJson(
 ): readonly DataDrivenSkillEventSequence[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   if (!skills?.[skillCategoryKey]) return [];
-
-  let category = skills[skillCategoryKey];
-
-  // Apply overrides if present
-  const overrides = operatorJson.skillOverrides as Record<string, Record<string, unknown>> | undefined;
-  if (overrides?.[skillCategoryKey]) {
-    category = mergeSkillOverride(category, overrides[skillCategoryKey]);
-  }
-
-  return buildSequencesFromSkillCategory(category);
+  return buildSequencesFromSkillCategory(skills[skillCategoryKey]);
 }
 
 // ── Timing extraction (from operator JSON) ──────────────────────────────────
@@ -470,24 +454,20 @@ export interface SkillTimings {
 
 export function getSkillTimings(operatorJson: Record<string, any>): SkillTimings {
   const skills = (operatorJson.skills ?? {}) as Record<string, JsonSkillCategory>;
-  const overrides = operatorJson.skillOverrides as Record<string, Record<string, unknown>> | undefined;
 
   // Battle skill duration
-  let battleSkill = skills.BATTLE_SKILL;
-  if (overrides?.BATTLE_SKILL) battleSkill = mergeSkillOverride(battleSkill, overrides.BATTLE_SKILL);
+  const battleSkill = skills.BATTLE_SKILL;
   const battleDur = dur(catDuration(battleSkill));
 
   // Combo skill
-  let comboSkill = skills.COMBO_SKILL;
-  if (overrides?.COMBO_SKILL) comboSkill = mergeSkillOverride(comboSkill, overrides.COMBO_SKILL);
+  const comboSkill = skills.COMBO_SKILL;
   const comboDur = dur(catDuration(comboSkill));
   const comboCd = dur(findValue(comboSkill, 'COOLDOWN', 'EXPEND') ?? 0);
   const comboAnim = catAnimation(comboSkill);
   const comboAnimDur = dur(comboAnim?.duration?.value ?? 0.5);
 
   // Ultimate
-  let ultimate = skills.ULTIMATE;
-  if (overrides?.ULTIMATE) ultimate = mergeSkillOverride(ultimate, overrides.ULTIMATE);
+  const ultimate = skills.ULTIMATE;
   const ultTotalDur = dur(catDuration(ultimate));
   const ultAnim = catAnimation(ultimate);
   const ultAnimDur = ultAnim?.duration?.value != null

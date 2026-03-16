@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "SEEK_AND_HUNT",
+    "BATTLE_SKILL": "TEMPESTUOUS_ARC",
+    "COMBO_SKILL": "PEAL_OF_THUNDER",
+    "ULTIMATE": "EXPLODING_BLITZ"
+  },
+  "SEEK_AND_HUNT": {
     "name": "Seek and Hunt",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
-    "id": "SEEK_AND_HUNT",
     "segments": [
       {
         "metadata": {
@@ -675,10 +680,9 @@
     ],
     "originId": "arclight"
   },
-  "BATTLE_SKILL": {
+  "TEMPESTUOUS_ARC": {
     "name": "Tempestuous Arc",
     "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP.",
-    "id": "TEMPESTUOUS_ARC",
     "properties": {
       "duration": {
         "value": 1.2,
@@ -931,10 +935,9 @@
     ],
     "originId": "arclight"
   },
-  "COMBO_SKILL": {
+  "PEAL_OF_THUNDER": {
     "name": "Peal of Thunder",
     "description": "COMBO TRIGGER: When an enemy suffers Electrification or after an enemy's Electrification is consumed. \nBlinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
-    "id": "PEAL_OF_THUNDER",
     "properties": {
       "duration": {
         "value": 0.9,
@@ -1284,10 +1287,9 @@
     ],
     "originId": "arclight"
   },
-  "ULTIMATE": {
+  "EXPLODING_BLITZ": {
     "name": "Exploding Blitz",
     "description": "Performs a short forward dash while wreathed in arcs of electricity to deal Electric DMG and apply Electric Infliction to all enemies in the path. The lingering arcs explode after a short while, dealing another hit of Electric DMG. If the enemy has active Electric Infliction, consume the Electric Infliction and forcibly apply Electrification.",
-    "id": "EXPLODING_BLITZ",
     "properties": {
       "animation": {
         "duration": {
@@ -1504,7 +1506,7 @@
     ],
     "originId": "arclight"
   },
-  "EMPOWERED_BATTLE_SKILL": {
+  "TEMPESTUOUS_ARC_EMPOWERED": {
     "properties": {
       "duration": {
         "value": 1.6,

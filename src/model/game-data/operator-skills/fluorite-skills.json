@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "SIGNATURE_GUN_KATA",
+    "BATTLE_SKILL": "TINY_SURPRISE",
+    "COMBO_SKILL": "FREE_GIVEAWAY",
+    "ULTIMATE": "APEX_PRANKSTER"
+  },
+  "SIGNATURE_GUN_KATA": {
     "name": "Signature Gun Kata",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
-    "id": "SIGNATURE_GUN_KATA",
     "segments": [
       {
         "metadata": {
@@ -490,10 +495,9 @@
     ],
     "originId": "fluorite"
   },
-  "BATTLE_SKILL": {
+  "TINY_SURPRISE": {
     "name": "Tiny Surprise",
     "description": "Kicks an Improvised Explosive that sticks to the target, applying Slow and exploding after a short duration. The explosion deals Nature DMG and Nature Infliction to enemies in the area of effect. Defeating the target also sets off the Improvised Explosive immediately.\nOnly 1 Improvised Explosive can be present in the battlefield.",
-    "id": "TINY_SURPRISE",
     "properties": {
       "duration": {
         "value": 1.13,
@@ -771,10 +775,9 @@
     ],
     "originId": "fluorite"
   },
-  "COMBO_SKILL": {
+  "FREE_GIVEAWAY": {
     "name": "Free Giveaway",
     "description": "COMBO TRIGGER: When an enemy has 2 or more stacks of Cryo Infliction or Nature Infliction. \nShoots the target enemy to trigger a special explosion that deals Nature DMG and applies another Arts Infliction of the element already on the enemy.",
-    "id": "FREE_GIVEAWAY",
     "properties": {
       "duration": {
         "value": 0.57,
@@ -1009,10 +1012,9 @@
     ],
     "originId": "fluorite"
   },
-  "ULTIMATE": {
+  "APEX_PRANKSTER": {
     "name": "Apex Prankster",
     "description": "Fluorite quickly moves in an arc and rapidly fires at the target within the arc to deal 4 sequences of Nature DMG. If an Improvised Explosive has been stuck to the target, the skill detonates it immediately and increases the DMG and size of the explosion.\nIf the final DMG sequence hits a target with at least 2 stacks of Cryo Infliction or Nature Infliction, then apply the same Arts Infliction again.",
-    "id": "APEX_PRANKSTER",
     "properties": {
       "duration": {
         "value": 2.57,

@@ -15,7 +15,7 @@
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => null,
   getAllOperatorIds: () => [],
-  getSkillNameMap: () => ({}),
+  getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
   getFrameSequences: () => [],
   getSegmentLabels: () => undefined,
   getSkillTimings: () => undefined,

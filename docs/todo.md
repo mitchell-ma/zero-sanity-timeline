@@ -1,5 +1,35 @@
 # TODO
 
+## Remove weaponSkillEffects.ts and related weapon effect infrastructure
+
+The weapon status timeline columns have been removed from the column builder and view.
+The following files/code still reference `weaponSkillEffects.ts` and can be cleaned up:
+
+- `src/consts/weaponSkillEffects.ts` — the data registry itself
+- `src/controller/custom/customWeaponRegistrar.ts`
+- `src/controller/custom/builtinToCustomConverter.ts`
+- `src/controller/info-pane/loadoutPaneController.ts`
+- `src/model/events/weaponSkillStatusEvent.ts`
+- `src/model/weapon-skills/weaponSkill.ts`
+- `src/view/CombatSheet.tsx`
+- `src/view/custom/ContentViewer.tsx`
+- `src/controller/custom/contentCatalogController.ts`
+- `TimelineSourceType.WEAPON` enum value in `src/consts/enums.ts`
+- `ColumnLabel.WEAPON_BUFF` in `src/consts/timelineColumnLabels.ts`
+- `StatusType.UNBRIDLED_EDGE` and related entries in enums/labels
+
+## Migrate legacy status functions to the generic status derivation engine
+
+The following operators still use hardcoded `derive*` / `consume*` functions in `processStatus.ts`
+instead of being driven by `statusEvents` in their JSON configs through the generic engine:
+
+- **Wulfgard** — `deriveScorchingFangs` (reaction-based trigger, P3 team share)
+- **Arclight** — `deriveWildlandTrekker` (compound trigger: PERFORM + ENEMY HAVE STATUS)
+- **Endministrator** — `consumeOriginiumCrystals` (crystal consumption on BS/Ult cast)
+
+Once migrated, the legacy functions in `processStatus.ts` and their calls in
+`processInteractions.ts` can be removed.
+
 ## Foreign `parameterKey` values in operator JSON potentials
 
 These raw Warfarin API keys in `skillParameterModifier.parameterKey` need manual review

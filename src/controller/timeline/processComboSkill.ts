@@ -387,6 +387,162 @@ export function getFinalStrikeTriggerFrame(
   return segAbsStart + lastHitOffset;
 }
 
+/**
+ * Map a derived interaction to its enemy infliction column ID.
+ * Returns undefined if the interaction is not a derived infliction type.
+ */
+function derivedInteractionToColumnId(i: Interaction): string | undefined {
+  for (const [columnId, interactions] of Object.entries(ENEMY_COLUMN_TO_INTERACTIONS)) {
+    if (interactions.some((d) => matchInteraction(i, d))) return columnId;
+  }
+  return undefined;
+}
+
+/**
+ * Update comboTriggerColumnId on combo events to match their containing
+ * activation window. Runs before infliction derivation, so it uses Phase 1
+ * interactions (including derived-type triggers that would normally be
+ * deferred to Phase 2) to determine the source element.
+ */
+export function resolveComboTriggerColumns(
+  events: TimelineEvent[],
+  slotWirings: SlotTriggerWiring[],
+  stops: readonly TimeStopRegion[],
+): TimelineEvent[] {
+  if (slotWirings.length === 0) return events;
+
+  // Build slotId → index for event ownership lookup
+  const slotIdToIndex = new Map<string, number>();
+  for (let i = 0; i < slotWirings.length; i++) {
+    slotIdToIndex.set(slotWirings[i].slotId, i);
+  }
+
+  // Pre-index combo events per slot for cooldown checks
+  const comboEventsBySlot = new Map<string, TimelineEvent[]>();
+  for (const ev of events) {
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+    if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
+    comboEventsBySlot.get(ev.ownerId)!.push(ev);
+  }
+
+  // Build combo windows using Phase 1 interactions only (before derived events exist).
+  // Unlike deriveComboActivationWindows, we include derived-type interactions here
+  // because the Phase 2 enemy events don't exist yet. We map them to their column ID
+  // so that comboTriggerColumnId can be resolved.
+  type WindowInfo = { startFrame: number; endFrame: number; sourceColumnId?: string };
+  const windowsBySlot = new Map<string, WindowInfo[]>();
+
+  for (const event of events) {
+    const slotIndex = slotIdToIndex.get(event.ownerId);
+    if (slotIndex === undefined) continue;
+    const cap = slotWirings[slotIndex].capability;
+    const published = cap.publishesTriggers[event.columnId];
+    if (!published || published.length === 0) continue;
+
+    const triggerFrame = event.startFrame + event.activationDuration;
+
+    for (const interaction of published) {
+      for (const wiring of slotWirings) {
+        const wcap = wiring.capability;
+        if (!wcap.comboRequires.some((req) => matchInteraction(interaction, req))) continue;
+        if (event.sourceOwnerId === wiring.slotId) continue;
+
+        // Cooldown check
+        const slotCombos = comboEventsBySlot.get(wiring.slotId);
+        if (slotCombos?.some((ce) => {
+          const cooldownStart = ce.startFrame + ce.activationDuration + ce.activeDuration;
+          const cooldownEnd = cooldownStart + ce.cooldownDuration;
+          return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
+        })) continue;
+
+        const forbids = wcap.comboForbidsActiveColumns;
+        if (forbids?.length && hasActiveEventInColumns(events, forbids, triggerFrame)) continue;
+        const requires = wcap.comboRequiresActiveColumns;
+        if (requires?.length && !hasActiveEventInColumns(events, requires, triggerFrame)) continue;
+
+        const baseDuration = wcap.comboWindowFrames;
+        const extDuration = extendByTimeStops(triggerFrame, baseDuration, stops);
+
+        // Resolve source column: for derived interactions, map to the enemy column
+        const sourceColumnId = derivedInteractionToColumnId(interaction) ?? event.columnId;
+
+        if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
+        windowsBySlot.get(wiring.slotId)!.push({
+          startFrame: triggerFrame,
+          endFrame: triggerFrame + extDuration,
+          sourceColumnId,
+        });
+      }
+    }
+  }
+
+  // Also include Phase 2 windows from existing enemy events (handles cases where
+  // derived events are already in the events list, e.g. from a previous pass)
+  for (const event of events) {
+    if (event.ownerId !== ENEMY_OWNER_ID) continue;
+    const interactions = ENEMY_COLUMN_TO_INTERACTIONS[event.columnId];
+    if (!interactions) continue;
+    for (const interaction of interactions) {
+      for (const wiring of slotWirings) {
+        if (!wiring.capability.comboRequires.some((req) => matchInteraction(interaction, req))) continue;
+        const requires = wiring.capability.comboRequiresActiveColumns;
+        if (requires?.length && !hasActiveEventInColumns(events, requires, event.startFrame)) continue;
+        const forbids = wiring.capability.comboForbidsActiveColumns;
+        if (forbids?.length && hasActiveEventInColumns(events, forbids, event.startFrame)) continue;
+        const baseDuration = wiring.capability.comboWindowFrames;
+        const extDuration = extendByTimeStops(event.startFrame, baseDuration, stops);
+        if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
+        windowsBySlot.get(wiring.slotId)!.push({
+          startFrame: event.startFrame,
+          endFrame: event.startFrame + extDuration,
+          sourceColumnId: event.columnId,
+        });
+      }
+    }
+  }
+
+  // Pre-merge windows per slot (avoid re-sorting in the per-event loop)
+  const mergedBySlot = new Map<string, WindowInfo[]>();
+  windowsBySlot.forEach((wins, slotId) => {
+    wins.sort((a: WindowInfo, b: WindowInfo) => a.startFrame - b.startFrame);
+    const merged: WindowInfo[] = [];
+    for (const w of wins) {
+      const prev = merged.length > 0 ? merged[merged.length - 1] : null;
+      if (prev && w.startFrame <= prev.endFrame) {
+        prev.endFrame = Math.max(prev.endFrame, w.endFrame);
+      } else {
+        merged.push({ ...w });
+      }
+    }
+    mergedBySlot.set(slotId, merged);
+  });
+
+  // Resolve combo events: update or clear comboTriggerColumnId
+  let changed = false;
+  const result = events.map((ev) => {
+    if (ev.columnId !== SKILL_COLUMNS.COMBO) return ev;
+
+    const merged = mergedBySlot.get(ev.ownerId);
+    const match = merged?.find(
+      (w) => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame,
+    );
+
+    if (match?.sourceColumnId != null) {
+      // Combo is in a valid window — update trigger column if it changed
+      if (match.sourceColumnId !== ev.comboTriggerColumnId) {
+        changed = true;
+        return { ...ev, comboTriggerColumnId: match.sourceColumnId };
+      }
+    } else if (ev.comboTriggerColumnId != null) {
+      // Combo is outside all windows — clear trigger column so no inflictions derive
+      changed = true;
+      return { ...ev, comboTriggerColumnId: undefined };
+    }
+    return ev;
+  });
+  return changed ? result : events;
+}
+
 /** Get the end frame of a combo activation window event. */
 export function comboWindowEndFrame(ev: TimelineEvent): number {
   const duration = ev.segments

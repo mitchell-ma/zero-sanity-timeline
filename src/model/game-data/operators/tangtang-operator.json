@@ -3082,42 +3082,5 @@
     "BATTLE_SKILL": "TANGTANG_BATTLE_SKILL",
     "ULTIMATE": "TANGTANG_ULTIMATE",
     "COMBO_SKILL": "TANGTANG_COMBO_SKILL"
-  },
-  "skillOverrides": {
-    "BATTLE_SKILL": {
-      "frames": [
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0.77,
-              "unit": "SECOND"
-            }
-          }
-        },
-        {
-          "metadata": {
-            "eventComponentType": "FRAME",
-            "dataSources": [
-              "SELF"
-            ]
-          },
-          "properties": {
-            "offset": {
-              "value": 0.9,
-              "unit": "SECOND"
-            }
-          }
-        }
-      ],
-      "dataSources": [
-        "SELF"
-      ]
-    }
   }
 }

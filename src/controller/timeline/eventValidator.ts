@@ -155,6 +155,115 @@ function findInsufficientZones(
 }
 
 /**
+ * Adjusts a resource graph by adding back excluded consumption amounts.
+ * For each exclusion at a given frame, the consumed SP/energy is restored to
+ * all subsequent graph points (capped at max). This is approximate near the
+ * cap (may slightly overestimate available resources when regen would have
+ * been wasted), but correct when the pool doesn't hit the cap between events.
+ */
+function adjustGraphExcluding(
+  points: ReadonlyArray<{ frame: number; value: number }>,
+  exclusions: { frame: number; cost: number }[],
+  max: number,
+): { frame: number; value: number }[] {
+  if (exclusions.length === 0) return points as { frame: number; value: number }[];
+
+  // Build lookup: frame → total cost to add back
+  const costByFrame = new Map<number, number>();
+  for (const ex of exclusions) {
+    costByFrame.set(ex.frame, (costByFrame.get(ex.frame) ?? 0) + ex.cost);
+  }
+
+  const result: { frame: number; value: number }[] = [];
+  let offset = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const pt = points[i];
+
+    // Detect consumption pair: two points at the same frame where value drops.
+    // The first is pre-consumption, the second is post-consumption.
+    // When we find the excluded consumption, add its cost to the running offset.
+    if (
+      costByFrame.has(pt.frame) &&
+      i > 0 &&
+      points[i - 1].frame === pt.frame &&
+      points[i - 1].value > pt.value
+    ) {
+      const drop = points[i - 1].value - pt.value;
+      const excludeCost = costByFrame.get(pt.frame)!;
+      costByFrame.delete(pt.frame);
+      offset += Math.min(excludeCost, drop);
+    }
+
+    result.push({ frame: pt.frame, value: Math.min(pt.value + offset, max) });
+  }
+
+  return result;
+}
+
+/**
+ * Computes resource insufficiency zones with specified events excluded from
+ * the resource graph. Used at drag start so that the dragged event's own
+ * resource consumption doesn't block repositioning.
+ */
+export function computeResourceZonesForDrag(
+  resourceGraphs: Map<string, ResourceGraphData>,
+  slots: Slot[],
+  draggedIds: ReadonlySet<string>,
+  events: ReadonlyArray<TimelineEvent>,
+): Map<string, ResourceZone[]> {
+  // Collect SP exclusions from dragged battle events
+  const spExclusions: { frame: number; cost: number }[] = [];
+  for (const ev of events) {
+    if (!draggedIds.has(ev.id)) continue;
+    if (ev.columnId === SKILL_COLUMNS.BATTLE) {
+      const slot = slots.find((s) => s.slotId === ev.ownerId);
+      const cost = slot?.operator?.skills.battle.skillPointCost ?? 0;
+      if (cost > 0) spExclusions.push({ frame: ev.startFrame, cost });
+    }
+  }
+
+  // Collect ultimate exclusions from dragged ultimate events
+  const ultExclusions = new Map<string, { frame: number; cost: number }[]>();
+  for (const ev of events) {
+    if (!draggedIds.has(ev.id)) continue;
+    if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
+      const ultKey = `${ev.ownerId}-${SKILL_COLUMNS.ULTIMATE}`;
+      const graph = resourceGraphs.get(ultKey);
+      if (graph) {
+        const arr = ultExclusions.get(ultKey) ?? [];
+        arr.push({ frame: ev.startFrame, cost: graph.max });
+        ultExclusions.set(ultKey, arr);
+      }
+    }
+  }
+
+  // Build adjusted resource graphs
+  const adjusted = new Map(resourceGraphs);
+  if (spExclusions.length > 0) {
+    const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
+    const spGraph = resourceGraphs.get(spKey);
+    if (spGraph) {
+      adjusted.set(spKey, {
+        ...spGraph,
+        points: adjustGraphExcluding(spGraph.points, spExclusions, spGraph.max),
+      });
+    }
+  }
+  for (const [ultKey, exclusions] of Array.from(ultExclusions)) {
+    const graph = resourceGraphs.get(ultKey);
+    if (graph) {
+      adjusted.set(ultKey, {
+        ...graph,
+        points: adjustGraphExcluding(graph.points, exclusions, graph.max),
+      });
+    }
+  }
+
+  return computeResourceInsufficiencyZones(adjusted, slots);
+}
+
+/**
  * Computes resource insufficiency zones for all resource-gated column types.
  * Returns a Map keyed by `slotId:columnId` → ResourceZone[].
  * Currently covers:

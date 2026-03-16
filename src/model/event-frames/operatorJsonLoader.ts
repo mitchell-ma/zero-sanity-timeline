@@ -28,9 +28,18 @@ for (const key of skillContext.keys()) {
   SKILL_JSON[operatorId] = skillContext(key);
 }
 
+// Talent configs: game-data/operator-talents/*-talents.json
+const talentContext = (require as any).context('../game-data/operator-talents', false, /-talents\.json$/);
+const TALENT_JSON: Record<string, Record<string, any>> = {};
+for (const key of talentContext.keys()) {
+  const filename = key.replace('./', '').replace('-talents.json', '');
+  const operatorId = filenameToCamelCase(filename);
+  TALENT_JSON[operatorId] = talentContext(key);
+}
+
 // ── Public API ──────────────────────────────────────────────────────────────
 
-/** Sequence cache keyed by `operatorId:skillCategory`. */
+/** Sequence cache keyed by `operatorId:skillId`. */
 const sequenceCache = new Map<string, readonly DataDrivenSkillEventSequence[]>();
 
 /** Get the raw operator JSON for a given operator ID (includes skills merged in). */
@@ -39,9 +48,21 @@ export function getOperatorJson(operatorId: string): Record<string, any> | undef
   if (!base) return undefined;
   const skills = SKILL_JSON[operatorId];
   if (!skills) return base;
-  // Hoist non-skill keys (e.g. statusEvents) from skills JSON to top level
-  const { statusEvents, ...skillCategories } = skills as Record<string, any>;
-  return { ...base, skills: skillCategories, ...(statusEvents ? { statusEvents } : {}) };
+  // Hoist non-skill keys (statusEvents, skillTypeMap) from skills JSON to top level
+  const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, any>;
+  // Merge talent statusEvents if present
+  const talentJson = TALENT_JSON[operatorId];
+  const talentStatusEvents = talentJson?.statusEvents as any[] | undefined;
+  const mergedStatusEvents = [
+    ...(statusEvents ?? []),
+    ...(talentStatusEvents ?? []),
+  ];
+  return {
+    ...base,
+    skills: skillEntries,
+    skillTypeMap,
+    ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}),
+  };
 }
 
 /** Get the skill JSON for a given operator ID. */
@@ -54,52 +75,83 @@ export function getAllOperatorIds(): string[] {
   return Object.keys(OPERATOR_JSON);
 }
 
-/** Skill name map cache: operatorId → { skillId → categoryKey }. */
-const skillNameMapCache = new Map<string, Record<string, string>>();
+// ── Skill ID resolution ────────────────────────────────────────────────────
 
 /**
- * Build skill name map from operator skill data.
- * Derives { skillId → category } from skills[category].id.
- * Includes universal FINISHER/DIVE → BASIC_ATTACK mappings.
+ * Get all skill IDs for an operator (keys of the skills JSON, excluding metadata).
+ * Includes FINISHER and DIVE as universal basic-attack skill IDs.
  */
-export function getSkillNameMap(operatorId: string): Record<string, string> {
-  if (skillNameMapCache.has(operatorId)) return skillNameMapCache.get(operatorId)!;
+export function getSkillIds(operatorId: string): Set<string> {
   const skills = SKILL_JSON[operatorId];
-  if (!skills) return {};
-  const map: Record<string, string> = { FINISHER: 'BASIC_ATTACK', DIVE: 'BASIC_ATTACK' };
-  for (const [category, skill] of Object.entries(skills)) {
-    if ((skill as any).id) map[(skill as any).id] = category;
+  if (!skills) return new Set();
+  const ids = new Set<string>();
+  ids.add('FINISHER');
+  ids.add('DIVE');
+  for (const key of Object.keys(skills)) {
+    if (key === 'statusEvents' || key === 'skillTypeMap') continue;
+    ids.add(key);
   }
-  skillNameMapCache.set(operatorId, map);
-  return map;
+  return ids;
 }
 
-/** Get frame sequences for a skill category, with caching. */
+/**
+ * Get the skill type map for an operator: { BASIC_ATTACK → baseSkillId, BATTLE_SKILL → baseSkillId, ... }.
+ * Read from the skillTypeMap in the skills JSON.
+ */
+export function getSkillTypeMap(operatorId: string): Record<string, string> {
+  return SKILL_JSON[operatorId]?.skillTypeMap ?? {};
+}
+
+/**
+ * Resolve the skill type (BASIC_ATTACK, BATTLE_SKILL, etc.) for a given skill ID.
+ * Uses the skillTypeMap + variant suffix convention (_ENHANCED, _EMPOWERED, _ENHANCED_EMPOWERED).
+ */
+export function resolveSkillType(operatorId: string, skillId: string): string | null {
+  if (skillId === 'FINISHER' || skillId === 'DIVE') return 'BASIC_ATTACK';
+  const typeMap = getSkillTypeMap(operatorId);
+  // Direct match: base skill ID is in the type map values
+  for (const [type, baseId] of Object.entries(typeMap)) {
+    if (baseId === skillId) return type;
+  }
+  // Variant match: strip suffix and check
+  const suffixes = ['_ENHANCED_EMPOWERED', '_ENHANCED', '_EMPOWERED'];
+  for (const suffix of suffixes) {
+    if (skillId.endsWith(suffix)) {
+      const baseId = skillId.slice(0, -suffix.length);
+      for (const [type, id] of Object.entries(typeMap)) {
+        if (id === baseId) return type;
+      }
+    }
+  }
+  return null;
+}
+
+/** Get frame sequences for a skill ID, with caching. */
 export function getFrameSequences(
   operatorId: string,
-  skillCategory: string,
+  skillId: string,
 ): readonly DataDrivenSkillEventSequence[] {
-  const cacheKey = `${operatorId}:${skillCategory}`;
+  const cacheKey = `${operatorId}:${skillId}`;
   const cached = sequenceCache.get(cacheKey);
   if (cached) return cached;
 
   const json = getOperatorJson(operatorId);
   if (!json) return [];
 
-  const sequences = buildSequencesFromOperatorJson(json, skillCategory);
+  const sequences = buildSequencesFromOperatorJson(json, skillId);
   sequenceCache.set(cacheKey, sequences);
   return sequences;
 }
 
 /**
- * Get segment labels for a multi-sequence skill category.
+ * Get segment labels for a multi-sequence skill.
  * Returns undefined for single-sequence skills.
  */
 export function getSegmentLabels(
   operatorId: string,
-  skillCategory: string,
+  skillId: string,
 ): string[] | undefined {
-  const sequences = getFrameSequences(operatorId, skillCategory);
+  const sequences = getFrameSequences(operatorId, skillId);
   if (sequences.length <= 1) return undefined;
 
   const labels = sequences

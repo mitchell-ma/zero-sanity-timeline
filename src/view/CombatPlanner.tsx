@@ -34,13 +34,13 @@ import {
   computeSegmentsSpan,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
-import { MeltingFlameController } from '../controller/timeline/meltingFlameController';
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import type { Slot } from '../controller/timeline/columnBuilder';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
+import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
   getAlwaysAvailableComboSlots,
   computeResourceInsufficiencyZones,
+  computeResourceZonesForDrag,
   clampDeltaByResourceZones,
   isDuplicatePlacementInResourceZone,
   clampDeltaByComboWindow,
@@ -54,6 +54,7 @@ import {
   buildFrameAddItems as buildFrameAddItemsCtrl,
 } from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
+import { throttleByRAF } from '../utils/throttle';
 import type { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { getAxisMap, type Orientation } from '../utils/axisMap';
 
@@ -316,8 +317,16 @@ export default function CombatPlanner({
   eventsRef.current = events;
   const resourceZonesRef = useRef(resourceInsufficiencyZones);
   resourceZonesRef.current = resourceInsufficiencyZones;
+  const resourceGraphsRef = useRef(resourceGraphs);
+  resourceGraphsRef.current = resourceGraphs;
+  const slotsRef = useRef(slots);
+  slotsRef.current = slots;
   const debugModeRef = useRef(debugMode);
   debugModeRef.current = debugMode;
+
+  // Throttled action executor for drag operations — fires at most once per animation frame.
+  // Uses a generic action callback so any drag path can share it.
+  const throttledDragAction = useRef(throttleByRAF((action: () => void) => action()));
 
   // Clear event selection when frames become selected (mutual exclusion)
   useEffect(() => {
@@ -361,7 +370,7 @@ export default function CombatPlanner({
   }, [onSwapEnemy]);
 
   // ─── Compute slot groups for loadout row ──────────────────────────────────
-  const commonColCount = columns.filter((c) => c.type === 'mini-timeline' && (c.source === TimelineSourceType.COMMON || (c.source === TimelineSourceType.WEAPON && c.ownerId === COMMON_OWNER_ID))).length;
+  const commonColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.COMMON).length;
   const slotGroups: SlotGroup[] = [];
   const commonStartCol = 2; // right after time axis
   let colIdx = 2 + commonColCount; // common columns come first
@@ -413,7 +422,7 @@ export default function CombatPlanner({
     for (let i = 0; i < columns.length; i++) {
       const col = columns[i];
       let fr: number;
-      if (col.type === 'mini-timeline' && (col.source === TimelineSourceType.COMMON || (col.source === TimelineSourceType.WEAPON && col.ownerId === COMMON_OWNER_ID))) {
+      if (col.type === 'mini-timeline' && col.source === TimelineSourceType.COMMON) {
         fr = COMMON_FR / Math.max(1, commonColCount);
       } else {
         const sg = slotGroups.find((g) => g.slot.slotId === col.ownerId);
@@ -604,7 +613,7 @@ export default function CombatPlanner({
 
   // ─── Greedy micro-column slot assignments for reuseExpiredSlots columns ────
   const greedySlotAssignments = useMemo(
-    () => MeltingFlameController.greedySlotAssignments(events, columns),
+    () => MicroColumnController.greedySlotAssignments(events, columns),
     [events, columns],
   );
 
@@ -835,21 +844,21 @@ export default function CombatPlanner({
         }
       }
 
-      // Batch move: delegate to controller which applies full validation
-      // (non-overlappable, combo windows, etc.) and picks the most restrictive
-      // delta so all events preserve their relative positions.
-      if (eventIds.length > 1 && onMoveEvents) {
-        // Pass incremental delta (from last applied position, not from origin)
-        // to avoid double-counting since handleMoveEvents adds delta to current startFrame.
-        const incrementalDelta = clampedDelta - dragRef.current.lastAppliedDelta;
-        onMoveEvents(eventIds, incrementalDelta);
-        dragRef.current.lastAppliedDelta = clampedDelta;
-      } else {
-        for (const eid of eventIds) {
-          const orig = startFrames.get(eid) ?? 0;
-          onMoveEvent(eid, orig + clampedDelta);
+      // Throttle the expensive move calls (triggers React state + interaction recalc).
+      // Hover line stays at full rate below; only the controller dispatch is batched.
+      const dragState = dragRef.current;
+      throttledDragAction.current(() => {
+        if (eventIds.length > 1 && onMoveEvents) {
+          const incrementalDelta = clampedDelta - dragState.lastAppliedDelta;
+          onMoveEvents(eventIds, incrementalDelta);
+          dragState.lastAppliedDelta = clampedDelta;
+        } else {
+          for (const eid of eventIds) {
+            const orig = startFrames.get(eid) ?? 0;
+            onMoveEvent(eid, orig + clampedDelta);
+          }
         }
-      }
+      });
       primaryNewFrame = (startFrames.get(primaryId) ?? 0) + clampedDelta;
 
       if (scrollRef.current && bodyTopRef.current !== null) {
@@ -870,7 +879,7 @@ export default function CombatPlanner({
       const { eventId, segmentIndex, frameIndex, startMouseFrame: startMouseF, startOffsetFrame, minOffset, maxOffset } = frameDragRef.current;
       const deltaFrames = Math.round((e[axis.clientFrame] - startMouseF) / getPxPerFrame(zoomRef.current));
       const newOffset = Math.max(minOffset, Math.min(maxOffset, startOffsetFrame + deltaFrames));
-      onMoveFrame?.(eventId, segmentIndex, frameIndex, newOffset);
+      throttledDragAction.current(() => onMoveFrame?.(eventId, segmentIndex, frameIndex, newOffset));
       return;
     }
 
@@ -961,6 +970,8 @@ export default function CombatPlanner({
   }, []);
 
   const handleMouseUp = useCallback(() => {
+    // Flush any pending throttled drag action so the final position is applied.
+    throttledDragAction.current.flush();
     if (dragRef.current) {
       dragRef.current = null;
       setDraggingIds(null);
@@ -1022,16 +1033,24 @@ export default function CombatPlanner({
           startFrames.set(ev.id, ev.startFrame);
         }
       }
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
-      setDraggingIds(new Set(draggedIds));
+      const dragSet = new Set(draggedIds);
+      const resZones = resourceGraphsRef.current
+        ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
+        : resourceZonesRef.current;
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
+      setDraggingIds(dragSet);
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
         setSelectedIds(new Set());
       }
       const startFrames = new Map<string, number>();
       startFrames.set(eventId, startFrame);
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resourceZonesRef.current };
-      setDraggingIds(new Set([eventId]));
+      const dragSet = new Set([eventId]);
+      const resZones = resourceGraphsRef.current
+        ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
+        : resourceZonesRef.current;
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
+      setDraggingIds(dragSet);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart, axis]);
@@ -1506,7 +1525,7 @@ export default function CombatPlanner({
           {columns.map((col) => (
             <div
               key={`hdr-${col.key}`}
-              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${col.type === 'mini-timeline' && col.headerVariant === 'mf' ? ' tl-header-cell--mf' : ''}${hoverColKey === col.key ? ' tl-header-cell--col-hover' : ''}`}
+              className={`tl-header-cell${col.type === 'mini-timeline' && col.headerVariant === 'infliction' ? ' enemy-header' : ''}${col.type === 'placeholder' ? ' tl-header-cell--empty' : ''}${hoverColKey === col.key ? ' tl-header-cell--col-hover' : ''}`}
               style={{ '--op-color': col.color } as React.CSSProperties}
             >
               {col.type === 'mini-timeline' && col.headerVariant === 'skill' ? (
@@ -1517,13 +1536,6 @@ export default function CombatPlanner({
                 <span
                   className="skill-badge skill-badge--vertical"
                   style={{ color: col.color }}
-                >
-                  {col.label}
-                </span>
-              ) : col.type === 'mini-timeline' && col.headerVariant === 'mf' ? (
-                <span
-                  className="skill-badge skill-badge--vertical skill-badge--mf"
-                  style={{ '--op-color': col.color } as React.CSSProperties}
                 >
                   {col.label}
                 </span>
@@ -1630,8 +1642,6 @@ export default function CombatPlanner({
               return evEnd >= visibleRange.startFrame && ev.startFrame <= visibleRange.endFrame;
             });
 
-            const isMf = col.headerVariant === 'mf';
-            const empowered = isMf && col.maxEvents != null && colEvents.length >= col.maxEvents;
             const colPos = columnPositions.get(col.key);
 
             return (
@@ -1858,7 +1868,7 @@ export default function CombatPlanner({
                     return (
                       <div
                         key={ev.id}
-                        className={`mf-micro-slot${empowered ? ' mf-micro-slot--empowered' : ''}`}
+                        className="mf-micro-slot"
                         style={{
                           position: 'absolute',
                           top: 0,

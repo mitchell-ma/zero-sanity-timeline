@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "RUINATION",
+    "BATTLE_SKILL": "TURBID_AVATAR",
+    "COMBO_SKILL": "ASPECT_OF_WRATH",
+    "ULTIMATE": "HEART_OF_THE_UNMOVING"
+  },
+  "RUINATION": {
     "name": "Ruination",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
-    "id": "RUINATION",
     "segments": [
       {
         "metadata": {
@@ -662,10 +667,9 @@
     ],
     "originId": "lifeng"
   },
-  "BATTLE_SKILL": {
+  "TURBID_AVATAR": {
     "name": "Turbid Avatar",
     "description": "Swings the polearm multiple times to deal 2 hits of Physical DMG, then slams the ground to deal Physical DMG and Knock Down to all enemies in the area of effect. \nIf the enemy struck by the last hit of this skill has no Vulnerability stacks, apply Physical Susceptibility to the said enemy instead.",
-    "id": "TURBID_AVATAR",
     "properties": {
       "duration": {
         "value": 2.23,
@@ -1040,10 +1044,9 @@
     ],
     "originId": "lifeng"
   },
-  "COMBO_SKILL": {
+  "ASPECT_OF_WRATH": {
     "name": "Aspect of Wrath",
     "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. \nUnleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
-    "id": "ASPECT_OF_WRATH",
     "properties": {
       "duration": {
         "value": 1.67,
@@ -1307,10 +1310,9 @@
     ],
     "originId": "lifeng"
   },
-  "ULTIMATE": {
+  "HEART_OF_THE_UNMOVING": {
     "name": "Heart of the Unmoving",
     "description": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG.",
-    "id": "HEART_OF_THE_UNMOVING",
     "properties": {
       "animation": {
         "duration": {

@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "RAPID_FIRE_AKIMBO",
+    "BATTLE_SKILL": "THERMITE_TRACERS",
+    "COMBO_SKILL": "FRAG_GRENADE_BETA",
+    "ULTIMATE": "WOLVEN_FURY"
+  },
+  "RAPID_FIRE_AKIMBO": {
     "name": "Rapid Fire Akimbo",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
-    "id": "RAPID_FIRE_AKIMBO",
     "segments": [
       {
         "metadata": {
@@ -834,10 +839,9 @@
     ],
     "originId": "wulfgard"
   },
-  "BATTLE_SKILL": {
+  "THERMITE_TRACERS": {
     "name": "Thermite Tracers",
     "description": "Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG.",
-    "id": "THERMITE_TRACERS",
     "properties": {
       "duration": {
         "value": 1.07,
@@ -1272,10 +1276,9 @@
     ],
     "originId": "wulfgard"
   },
-  "COMBO_SKILL": {
+  "FRAG_GRENADE_BETA": {
     "name": "Frag Grenade·β",
     "description": "COMBO TRIGGER: When an Arts Infliction is applied to an enemy. \nThrows a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies.",
-    "id": "FRAG_GRENADE_BETA",
     "properties": {
       "duration": {
         "value": 1,
@@ -1453,10 +1456,9 @@
     ],
     "originId": "wulfgard"
   },
-  "ULTIMATE": {
+  "WOLVEN_FURY": {
     "name": "Wolven Fury",
     "description": "Fire a rapid barrage of shots and unleashes the Wolven Fury to attack nearby enemies, dealing 5 hits of Heat DMG and forcibly applying Combustion.",
-    "id": "WOLVEN_FURY",
     "properties": {
       "duration": {
         "value": 2.5,
@@ -1952,7 +1954,7 @@
     ],
     "originId": "wulfgard"
   },
-  "EMPOWERED_BATTLE_SKILL": {
+  "THERMITE_TRACERS_EMPOWERED": {
     "properties": {
       "duration": {
         "value": 2.07,

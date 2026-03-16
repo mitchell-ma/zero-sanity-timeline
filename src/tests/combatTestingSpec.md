@@ -72,8 +72,8 @@ Source: `laevatain.json` descriptions and endfield.wiki.gg.
 | "Laevatain gains 1 stack of Melting Flame" (Seethe on hit) | COMBO_SKILL frame: `APPLY STATUS MELTING_FLAME to LAEVATAIN` | ✅ Implemented + tested (A1b) |
 | "further gains Ultimate Energy per enemy hit" (Seethe) | Conditional gauge gain by enemy count | ✅ Present in JSON effects |
 | "BATK sequence 3 also applies Heat Infliction" (Enhanced basic during ult) | EMPOWERED_BASIC_ATTACK segment 3: `APPLY INFLICTION HEAT` | ✅ Tested (E4) |
-| "Final Strikes absorb nearby Heat Inflictions → Melting Flame" (Scorching Heart T1) | Any operator's BASIC_ATTACK Final Strike: `ABSORB HEAT` → `APPLY STATUS MELTING_FLAME to LAEVATAIN` | ⬜ Not yet implemented — see Known Gaps |
-| "At 4 stacks, ignores enemy Heat Resistance" (Scorching Heart T1) | Threshold clause: 4 MF → SCORCHING_HEART on enemy | ✅ Implemented + tested (B1-B6) |
+| "Final Strikes absorb nearby Heat Inflictions → Melting Flame" (Scorching Heart T1) | TALENT type in `operator-talents/laevatain-talents.json`: PERFORM_ALL { ABSORB HEAT, APPLY MELTING_FLAME } | ✅ Implemented + tested (I1-I10) |
+| "At 4 stacks, ignores enemy Heat Resistance" (Scorching Heart T1) | Threshold clause: 4 MF → SCORCHING_HEART_EFFECT on operator (self-buff) | ✅ Implemented + tested (B1-B6) |
 | "Below 40% HP, gains Protection and restores HP" (Re-Ignition T2) | Not modeled — HP-based triggers out of scope for timeline sim | N/A |
 | P1: "+20 SP to both skill types" | SP Return (ADDITIVE) on SMOULDERING_FIRE + ENHANCED variant | ✅ Tested (F1) |
 | P1: "damage multiplier ×1.2" | UNIQUE_MULTIPLIER on SMOULDERING_FIRE + ENHANCED variant | ✅ Tested (F2) |
@@ -103,7 +103,7 @@ All three sources feed the **same 4-stack pool**:
 1. **Max stack cap** — `deriveStatusEvents()` now counts active events at each trigger frame and skips if at `stack.max`.
 2. **HAVE predicate cardinality** — `checkPredicate()` and `findTriggerMatches()` now enforce `cardinalityConstraint` (EXACTLY, AT_LEAST) on HAVE STATUS predicates instead of boolean "exists?" check.
 3. **Dedup broadened** — Dedup check uses columnId only (ignoring ownerId) and excludes CONSUMED events, preventing double-derivation while allowing post-consumption re-accumulation.
-4. **Threshold target resolution** — `evaluateThresholdClauses()` resolves target owner from the target status def's own `target` field (e.g. SCORCHING_HEART → ENEMY) instead of the clause's `toObjectType`.
+4. **Threshold target resolution** — `evaluateThresholdClauses()` resolves target owner from the target status def's own `target` field (e.g. SCORCHING_HEART_EFFECT → THIS_OPERATOR) instead of the clause's `toObjectType`.
 5. **Consumption** — `consumeClause` processing added: detects battle skills at max pre-existing stacks, clamps all active MF events, then re-derives for post-consumption triggers. Supports multiple consume-reaccumulate cycles.
 
 ### JSON Data Changes Applied
@@ -111,7 +111,8 @@ All three sources feed the **same 4-stack pool**:
 1. Battle skill MF: `toObjectType` changed from `THIS_OPERATOR` to `LAEVATAIN`
 2. Combo skill MF: Added `APPLY STATUS MELTING_FLAME to LAEVATAIN` on combo skill frame (via override)
 3. Combo skill trigger: Added second `triggerClause` for `COMBO_SKILL` on MELTING_FLAME status
-4. SCORCHING_HEART: Removed redundant `triggerClause` (now only derived via MELTING_FLAME's threshold clause)
+4. SCORCHING_HEART → extracted to `operator-talents/laevatain-talents.json` as type TALENT. Owns absorption exchange (FINAL_STRIKE + HEAT INFLICTION → PERFORM_ALL { ABSORB, APPLY MF }).
+5. SCORCHING_HEART_EFFECT: Renamed from SCORCHING_HEART in skills JSON. Target changed from ENEMY to THIS_OPERATOR (self-buff). Applied via MELTING_FLAME's threshold clause.
 5. EMPOWERED_BATTLE_SKILL: Added `CONSUME STATUS MELTING_FLAME` on last frame
 6. MELTING_FLAME: Added `consumeClause` (PERFORM BATTLE_SKILL while HAVE STACKS EXACTLY MAX → CONSUME ALL_STACKS)
 

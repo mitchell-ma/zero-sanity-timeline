@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "ROLLING_CUT",
+    "BATTLE_SKILL": "FLIP_DA_WOK",
+    "COMBO_SKILL": "MORE_SPICE",
+    "ULTIMATE": "CHOP_N_DUNK"
+  },
+  "ROLLING_CUT": {
     "name": "ROLLING CUT!",
     "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
-    "id": "ROLLING_CUT",
     "segments": [
       {
         "metadata": {
@@ -576,10 +581,9 @@
     ],
     "originId": "daPan"
   },
-  "BATTLE_SKILL": {
+  "FLIP_DA_WOK": {
     "name": "FLIP DA WOK!",
     "description": "Takes out a wok, quickly charges it up, and performs a powerful wok flip that deals Physical DMG and Lift to the enemy.",
-    "id": "FLIP_DA_WOK",
     "properties": {
       "duration": {
         "value": 2.17,
@@ -820,10 +824,9 @@
     ],
     "originId": "daPan"
   },
-  "COMBO_SKILL": {
+  "MORE_SPICE": {
     "name": "MORE SPICE!",
     "description": "COMBO TRIGGER: When an enemy reaches 4 stacks of Vulnerability. \nSwings the wok at the enemy to deal massive Physical DMG and Crush. This Crush also deals more DMG.",
-    "id": "MORE_SPICE",
     "properties": {
       "duration": {
         "value": 0.8,
@@ -1003,10 +1006,9 @@
     ],
     "originId": "daPan"
   },
-  "ULTIMATE": {
+  "CHOP_N_DUNK": {
     "name": "CHOP 'N DUNK!",
     "description": "Da Pan slams the chopping board to forcibly Lift all enemies in the area of effect in front of him. This is followed by a 6-sequence flurry of slashes that deals Physical DMG. The final step is to bash every enemy to the ground to forcibly Knock Down and deal massive Physical DMG to them.",
-    "id": "CHOP_N_DUNK",
     "properties": {
       "duration": {
         "value": 2.87,

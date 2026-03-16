@@ -57,8 +57,20 @@ export class SkillSegmentBuilder {
           statusLevel: forced.statusLevel,
           ...(forced.durationFrames != null && { durationFrames: forced.durationFrames }),
         };
-        const status = f.getApplyStatus();
-        if (status) marker.applyStatus = { target: status.target, status: status.status, stacks: status.stacks, durationFrames: status.durationFrames, ...(status.susceptibility && { susceptibility: status.susceptibility }), ...(status.eventName && { eventName: status.eventName }) };
+        const statuses = f.getApplyStatuses();
+        if (statuses.length > 0) {
+          const mapStatus = (s: typeof statuses[number]) => ({
+            target: s.target, status: s.status, stacks: s.stacks, durationFrames: s.durationFrames,
+            ...(s.susceptibility && { susceptibility: s.susceptibility }),
+            ...(s.stackingInteraction && { stackingInteraction: s.stackingInteraction }),
+            ...(s.potentialMin != null && { potentialMin: s.potentialMin }),
+            ...(s.potentialMax != null && { potentialMax: s.potentialMax }),
+            ...(s.segments && { segments: s.segments }),
+            ...(s.eventName && { eventName: s.eventName }),
+          });
+          marker.applyStatus = mapStatus(statuses[0]);
+          if (statuses.length > 1) marker.applyStatuses = statuses.map(mapStatus);
+        }
         const consumeReaction = f.getConsumeReaction();
         if (consumeReaction) marker.consumeReaction = { columnId: consumeReaction.columnId, ...(consumeReaction.applyStatus && { applyStatus: { target: consumeReaction.applyStatus.target, status: consumeReaction.applyStatus.status, stacks: consumeReaction.applyStatus.stacks, durationFrames: consumeReaction.applyStatus.durationFrames, ...(consumeReaction.applyStatus.susceptibility && { susceptibility: consumeReaction.applyStatus.susceptibility }), ...(consumeReaction.applyStatus.eventName && { eventName: consumeReaction.applyStatus.eventName }) } }) };
         const consumeStatus = f.getConsumeStatus();
@@ -73,7 +85,7 @@ export class SkillSegmentBuilder {
       // SP recovery is granted only on the final strike
       if (isMulti && !customLabels && i === sequences.length - 1 && frames.length > 0) {
         const finalFrame = frames[frames.length - 1];
-        finalFrame.hitType = EventFrameType.FINAL_STRIKE;
+        finalFrame.frameTypes = [EventFrameType.FINAL_STRIKE];
         finalFrame.skillPointRecovery = allSequenceTotalSP;
         finalFrame.templateFinalStrikeSP = allSequenceTotalSP;
         finalFrame.templateFinalStrikeStagger = finalFrame.stagger ?? 0;
@@ -82,9 +94,9 @@ export class SkillSegmentBuilder {
       // Mark all frames in Finisher / Dive segments with the appropriate hit type
       const segLabel = customLabels?.[i];
       if (segLabel === 'Finisher' && frames.length > 0) {
-        for (const f of frames) f.hitType = EventFrameType.FINISHER;
+        for (const f of frames) f.frameTypes = [EventFrameType.FINISHER];
       } else if (segLabel === 'Dive' && frames.length > 0) {
-        for (const f of frames) f.hitType = EventFrameType.DIVE;
+        for (const f of frames) f.frameTypes = [EventFrameType.DIVE];
       }
 
       // Assign gauge gain to the first frame of the first segment

@@ -12,6 +12,7 @@ import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
 import { setNextEventId, genEventId } from '../controller/timeline/eventController';
+import { IS_DEV } from '../consts/devFlags';
 
 export const NUM_SLOTS = 4;
 export const SLOT_IDS = Array.from({ length: NUM_SLOTS }, (_, i) => `slot-${i}`);
@@ -33,8 +34,18 @@ export const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
   ]),
 );
 
+const DEV_LAEVATAIN_LOADOUT: OperatorLoadoutState = {
+  weaponName:     'Forgeborn Scathe',
+  armorName:      'Tide Fall Light Armor',
+  glovesName:     'Hot Work Gauntlets',
+  kit1Name:       'Redeemer Seal',
+  kit2Name:       'Redeemer Seal',
+  consumableName: null,
+  tacticalName:   null,
+};
+
 export const INITIAL_LOADOUTS: Record<string, OperatorLoadoutState> = Object.fromEntries(
-  SLOT_IDS.map((id) => [id, EMPTY_LOADOUT]),
+  SLOT_IDS.map((id, i) => [id, IS_DEV && i === 0 ? DEV_LAEVATAIN_LOADOUT : EMPTY_LOADOUT]),
 );
 
 export const INITIAL_LOADOUT_STATS: Record<string, LoadoutStats> = Object.fromEntries(

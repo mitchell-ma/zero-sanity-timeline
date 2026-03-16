@@ -1,8 +1,13 @@
 {
-  "BASIC_ATTACK": {
+  "skillTypeMap": {
+    "BASIC_ATTACK": "ALL_OUT_OFFENSIVE",
+    "BATTLE_SKILL": "THE_PULVERIZING_FRONT",
+    "COMBO_SKILL": "FULL_MOON_SLASH",
+    "ULTIMATE": "SHIELDGUARD_BANNER"
+  },
+  "ALL_OUT_OFFENSIVE": {
     "name": "All-Out Offensive",
     "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
-    "id": "ALL_OUT_OFFENSIVE",
     "segments": [
       {
         "metadata": {
@@ -1191,10 +1196,9 @@
     ],
     "originId": "pogranichnik"
   },
-  "BATTLE_SKILL": {
+  "THE_PULVERIZING_FRONT": {
     "name": "The Pulverizing Front",
     "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets.",
-    "id": "THE_PULVERIZING_FRONT",
     "properties": {
       "duration": {
         "value": 1.5,
@@ -1471,10 +1475,9 @@
     ],
     "originId": "pogranichnik"
   },
-  "COMBO_SKILL": {
+  "FULL_MOON_SLASH": {
     "name": "Full Moon Slash",
     "description": "COMBO TRIGGER: When Crush or Breach consumes the enemy's Vulnerability stack(s). \nPerforms a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. \nConsuming 4 stacks of Vulnerability enhances the 3rd slash sequence.",
-    "id": "FULL_MOON_SLASH",
     "properties": {
       "duration": {
         "value": 2.2,
@@ -1993,10 +1996,9 @@
     ],
     "originId": "pogranichnik"
   },
-  "ULTIMATE": {
+  "SHIELDGUARD_BANNER": {
     "name": "Shieldguard Banner, Forward",
     "description": "Summons 4 Shieldguards to advance and push all enemies along the way towards the target, dealing Physical DMG while generating 5 points of Steel Oath. After an enemy suffers a Physical Status or takes DMG from Pogranichnik's combo skill, Pogranichnik consumes 1 point of Steel Oath and summons 1 Shieldguard to harass the said enemy, dealing Physical DMG and recovering some SP. When the last Steel Oath point is consumed, all 4 Shieldguards will initiate a Decisive Assault that deals massive Physical DMG to the target while recovering plenty of SP.",
-    "id": "SHIELDGUARD_BANNER",
     "properties": {
       "duration": {
         "value": 3,

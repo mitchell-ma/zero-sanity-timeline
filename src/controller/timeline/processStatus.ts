@@ -2,22 +2,21 @@ import { TimelineEvent } from '../../consts/viewTypes';
 import { LoadoutStats } from '../../view/InformationPane';
 import { ElementType, EventStatusType, StatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS } from '../../model/channels';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor, extendByTimeStops } from './processTimeStop';
 import { EXCHANGE_STATUS_COLUMN, TEAM_STATUS_COLUMN, StatusSource } from './processInfliction';
-import { TOTAL_FRAMES } from '../../utils/timeline';
-import { getOperatorJson, getAllOperatorIds, getSkillNameMap } from '../../model/event-frames/operatorJsonLoader';
+import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
 
 // ── JSON-driven operator detection ──────────────────────────────────────────
 
-/** Cache: operatorId → Set of CombatSkillsType names from skillNameMap. */
-const skillNameCache = new Map<string, Set<string>>();
+/** Cache: operatorId → Set of skill IDs. */
+const skillIdCache = new Map<string, Set<string>>();
 
 function getSkillNames(operatorId: string): Set<string> {
-  if (skillNameCache.has(operatorId)) return skillNameCache.get(operatorId)!;
-  const names = new Set(Object.keys(getSkillNameMap(operatorId)));
-  skillNameCache.set(operatorId, names);
-  return names;
+  if (skillIdCache.has(operatorId)) return skillIdCache.get(operatorId)!;
+  const ids = getSkillIds(operatorId);
+  skillIdCache.set(operatorId, ids);
+  return ids;
 }
 
 /** Find the slot ID for a given operator by scanning events. */
@@ -31,10 +30,14 @@ function findSlot(events: TimelineEvent[], operatorId: string): string | null {
   return null;
 }
 
-/** Get skill names that map to a given category for an operator. */
-function getSkillNamesForCategory(operatorId: string, category: string): string[] {
-  const map = getSkillNameMap(operatorId);
-  return Object.entries(map).filter(([_, cat]) => cat === category).map(([name]) => name);
+/** Get all skill IDs of a given type (BASIC_ATTACK, BATTLE_SKILL, etc.) including variants. */
+function getSkillIdsForType(operatorId: string, skillType: string): string[] {
+  const typeMap = getSkillTypeMap(operatorId);
+  const baseId = typeMap[skillType];
+  if (!baseId) return [];
+  const ids = getSkillIds(operatorId);
+  // Return the base ID + any variants (_ENHANCED, _EMPOWERED, _ENHANCED_EMPOWERED)
+  return Array.from(ids).filter(id => id === baseId || id.startsWith(baseId + '_'));
 }
 
 
@@ -165,177 +168,6 @@ export function consumeOperatorStatuses(events: TimelineEvent[], stops: readonly
   });
 }
 
-// ── Scorching Fangs (data-driven: reads from wulfgard JSON statusEvents) ────
-
-/** Scorching Fangs base duration: 15s at 120fps. */
-const SCORCHING_FANGS_DURATION = 1800;
-
-/**
- * Derives Scorching Fangs buff events from Combustion reaction events.
- * Finds the operator with SCORCHING_FANGS statusEvents (Wulfgard) dynamically.
- * P3+: Battle skill refreshes Scorching Fangs and shares it with teammates at 50%.
- */
-export function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
-  // Find operator with SCORCHING_FANGS in statusEvents
-  let sourceOpId: string | null = null;
-  for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
-    const statusEvents = json?.statusEvents as any[] | undefined;
-    if (statusEvents?.some((se: any) => se.name === 'SCORCHING_FANGS')) {
-      sourceOpId = opId;
-      break;
-    }
-  }
-  if (!sourceOpId) return events;
-
-  const ownerSlotId = findSlot(events, sourceOpId);
-  if (!ownerSlotId) return events;
-
-  const stats = loadoutStats?.[ownerSlotId];
-  const potential = stats?.potential ?? 0;
-
-  // Get battle skill names for this operator
-  const battleSkillNames = new Set(getSkillNamesForCategory(sourceOpId, 'BATTLE_SKILL'));
-
-  // Collect combustion reaction events on enemy
-  const combustionEvents = events.filter(
-    (ev) => ev.columnId === REACTION_COLUMNS.COMBUSTION && ev.ownerId === ENEMY_OWNER_ID,
-  );
-  if (combustionEvents.length === 0) return events;
-
-  // Collect all operator slot IDs
-  const operatorSlots = new Set<string>();
-  for (const ev of events) {
-    if (ev.ownerId !== ENEMY_OWNER_ID && ev.ownerId !== COMMON_OWNER_ID) {
-      operatorSlots.add(ev.ownerId);
-    }
-  }
-
-  const hasP3 = potential >= 3;
-  const derived: TimelineEvent[] = [];
-  const clamped = new Map<string, TimelineEvent>();
-
-  type ActiveFang = { id: string; startFrame: number; endFrame: number };
-  const activeFangs = new Map<string, ActiveFang[]>();
-
-  const sortedCombustions = [...combustionEvents].sort((a, b) => a.startFrame - b.startFrame);
-
-  // Collect battle skill cast frames for P3 refresh
-  const battleSkillFrames: number[] = [];
-  if (hasP3) {
-    for (const ev of events) {
-      if (ev.ownerId === ownerSlotId && battleSkillNames.has(ev.name)) {
-        battleSkillFrames.push(ev.startFrame);
-      }
-    }
-    battleSkillFrames.sort((a, b) => a - b);
-  }
-
-  let idCounter = 0;
-  const makeFangId = (owner: string) => `sf-${owner}-${idCounter++}`;
-
-  for (const combustion of sortedCombustions) {
-    const frame = combustion.startFrame;
-    const fangId = makeFangId(ownerSlotId);
-    derived.push({
-      id: fangId,
-      name: StatusType.SCORCHING_FANGS,
-      ownerId: ownerSlotId,
-      columnId: StatusType.SCORCHING_FANGS,
-      startFrame: frame,
-      activationDuration: SCORCHING_FANGS_DURATION,
-      activeDuration: 0,
-      cooldownDuration: 0,
-      sourceOwnerId: combustion.sourceOwnerId,
-      sourceSkillName: combustion.sourceSkillName,
-    });
-    const wulfFangs = activeFangs.get(ownerSlotId) ?? [];
-    wulfFangs.push({ id: fangId, startFrame: frame, endFrame: frame + SCORCHING_FANGS_DURATION });
-    activeFangs.set(ownerSlotId, wulfFangs);
-  }
-
-  // P3: Refresh on battle skill and share with team
-  if (hasP3) {
-    const battleSkillName = battleSkillNames.values().next().value ?? 'battle';
-    for (const bsFrame of battleSkillFrames) {
-      const wulfFangs = activeFangs.get(ownerSlotId) ?? [];
-      const activeFang = wulfFangs.find((f) => bsFrame >= f.startFrame && bsFrame < f.endFrame);
-      if (!activeFang) continue;
-
-      for (const f of wulfFangs) {
-        if (bsFrame >= f.startFrame && bsFrame < f.endFrame) {
-          const existing = derived.find((ev) => ev.id === f.id);
-          if (existing) {
-            clamped.set(f.id, {
-              ...existing,
-              activationDuration: bsFrame - f.startFrame,
-              eventStatus: EventStatusType.REFRESHED,
-              eventStatusOwnerId: ownerSlotId,
-              eventStatusSkillName: battleSkillName,
-            });
-          }
-          f.endFrame = bsFrame;
-        }
-      }
-
-      const refreshedId = makeFangId(ownerSlotId);
-      derived.push({
-        id: refreshedId,
-        name: StatusType.SCORCHING_FANGS,
-        ownerId: ownerSlotId,
-        columnId: StatusType.SCORCHING_FANGS,
-        startFrame: bsFrame,
-        activationDuration: SCORCHING_FANGS_DURATION,
-        activeDuration: 0,
-        cooldownDuration: 0,
-        sourceOwnerId: ownerSlotId,
-        sourceSkillName: battleSkillName,
-      });
-      wulfFangs.push({ id: refreshedId, startFrame: bsFrame, endFrame: bsFrame + SCORCHING_FANGS_DURATION });
-
-      const sharedDuration = Math.floor(SCORCHING_FANGS_DURATION * 0.5);
-      for (const slotId of Array.from(operatorSlots)) {
-        if (slotId === ownerSlotId) continue;
-        const slotFangs = activeFangs.get(slotId) ?? [];
-        for (const f of slotFangs) {
-          if (bsFrame >= f.startFrame && bsFrame < f.endFrame) {
-            const existing = derived.find((ev) => ev.id === f.id);
-            if (existing) {
-              clamped.set(f.id, {
-                ...existing,
-                activationDuration: bsFrame - f.startFrame,
-                eventStatus: EventStatusType.REFRESHED,
-                eventStatusOwnerId: ownerSlotId,
-                eventStatusSkillName: battleSkillName,
-              });
-            }
-            f.endFrame = bsFrame;
-          }
-        }
-        const sharedId = makeFangId(slotId);
-        derived.push({
-          id: sharedId,
-          name: StatusType.SCORCHING_FANGS,
-          ownerId: slotId,
-          columnId: StatusType.SCORCHING_FANGS,
-          startFrame: bsFrame,
-          activationDuration: sharedDuration,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          sourceOwnerId: ownerSlotId,
-          sourceSkillName: battleSkillName,
-        });
-        slotFangs.push({ id: sharedId, startFrame: bsFrame, endFrame: bsFrame + sharedDuration });
-        activeFangs.set(slotId, slotFangs);
-      }
-    }
-  }
-
-  if (derived.length === 0) return events;
-  const finalDerived = derived.map((ev) => clamped.get(ev.id) ?? ev);
-  return [...events, ...finalDerived];
-}
-
 // ── Unbridled Edge (weapon buff — SP recovery triggers stacking team buff) ──
 
 const UNBRIDLED_EDGE_WEAPON = 'OBJ Edge of Lightness';
@@ -435,73 +267,6 @@ export function deriveUnbridledEdge(
   return [...events, ...finalDerived];
 }
 
-// ── Originium Crystal consumption (data-driven) ─────────────────────────────
-
-/**
- * Consumes Originium Crystal events on the enemy when the source operator casts
- * battle skill or ultimate. Finds consuming skills via skillNameMap.
- */
-export function consumeOriginiumCrystals(events: TimelineEvent[]): TimelineEvent[] {
-  // Find operator with ORIGINIUM_CRYSTAL statusEvent
-  let sourceOpId: string | null = null;
-  for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
-    const se = json?.statusEvents as any[] | undefined;
-    if (se?.some((s: any) => s.name === 'ORIGINIUM_CRYSTAL')) {
-      sourceOpId = opId;
-      break;
-    }
-  }
-  if (!sourceOpId) return events;
-
-  const ownerSlotId = findSlot(events, sourceOpId);
-  if (!ownerSlotId) return events;
-
-  // Consuming skills: battle skill + ultimate
-  const consumingNames = new Set([
-    ...getSkillNamesForCategory(sourceOpId, 'BATTLE_SKILL'),
-    ...getSkillNamesForCategory(sourceOpId, 'ULTIMATE'),
-  ]);
-
-  const consumeFrames: { frame: number; ownerId: string; skillName: string }[] = [];
-  for (const ev of events) {
-    if (ev.ownerId !== ownerSlotId) continue;
-    if (consumingNames.has(ev.name)) {
-      consumeFrames.push({ frame: ev.startFrame, ownerId: ev.ownerId, skillName: ev.name });
-    }
-  }
-
-  if (consumeFrames.length === 0) return events;
-  consumeFrames.sort((a, b) => a.frame - b.frame);
-
-  const clampMap = new Map<string, { frame: number; source: { ownerId: string; skillName: string } }>();
-
-  for (const cf of consumeFrames) {
-    for (const ev of events) {
-      if (ev.ownerId !== ENEMY_OWNER_ID || ev.columnId !== OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL) continue;
-      if (clampMap.has(ev.id)) continue;
-      const endFrame = ev.startFrame + ev.activationDuration;
-      if (ev.startFrame <= cf.frame && endFrame > cf.frame) {
-        clampMap.set(ev.id, { frame: cf.frame, source: { ownerId: cf.ownerId, skillName: cf.skillName } });
-      }
-    }
-  }
-
-  if (clampMap.size === 0) return events;
-
-  return events.map((ev) => {
-    const clamp = clampMap.get(ev.id);
-    if (!clamp) return ev;
-    return {
-      ...ev,
-      activationDuration: Math.max(0, clamp.frame - ev.startFrame),
-      eventStatus: EventStatusType.CONSUMED,
-      eventStatusOwnerId: clamp.source.ownerId,
-      eventStatusSkillName: clamp.source.skillName,
-    };
-  });
-}
-
 // ── Vulnerability → Susceptibility consumption (data-driven) ────────────────
 
 /** Per-level Arts Susceptibility bonus per vulnerability stack consumed. */
@@ -523,16 +288,15 @@ export function consumeVulnerabilityForSusceptibility(
   // This is Gilberta's Gravity Field — find by checking for ultimate skill names
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    // Gilberta is identified by having GRAVITY_FIELD in her skillNameMap
-    const map = getSkillNameMap(opId);
-    if (Object.keys(map).some(name => name === 'GRAVITY_FIELD')) {
+    // Gilberta is identified by having GRAVITY_FIELD in her skill IDs
+    if (getSkillIds(opId).has('GRAVITY_FIELD')) {
       sourceOpId = opId;
       break;
     }
   }
   if (!sourceOpId) return events;
 
-  const ultimateNames = new Set(getSkillNamesForCategory(sourceOpId, 'ULTIMATE'));
+  const ultimateNames = new Set(getSkillIdsForType(sourceOpId, 'ULTIMATE'));
 
   const gravityFieldEvents = events.filter(
     (ev) => ultimateNames.has(ev.name) && ev.ownerId !== ENEMY_OWNER_ID,
@@ -625,15 +389,14 @@ export function consumeCryoForSusceptibility(
   // Find operator with WINTERS_DEVOURER combo skill
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    const map = getSkillNameMap(opId);
-    if (Object.keys(map).some(name => name === 'WINTERS_DEVOURER')) {
+    if (getSkillIds(opId).has('WINTERS_DEVOURER')) {
       sourceOpId = opId;
       break;
     }
   }
   if (!sourceOpId) return events;
 
-  const comboNames = new Set(getSkillNamesForCategory(sourceOpId, 'COMBO_SKILL'));
+  const comboNames = new Set(getSkillIdsForType(sourceOpId, 'COMBO_SKILL'));
 
   const comboEvents = events.filter(
     (ev) => comboNames.has(ev.name) && ev.ownerId !== ENEMY_OWNER_ID,
@@ -714,8 +477,7 @@ export function applyXaihiP5AmpBoost(
   // Find operator with STACK_OVERFLOW (Xaihi's ultimate)
   let sourceOpId: string | null = null;
   for (const opId of getAllOperatorIds()) {
-    const map = getSkillNameMap(opId);
-    if (Object.keys(map).some(name => name === 'STACK_OVERFLOW')) {
+    if (getSkillIds(opId).has('STACK_OVERFLOW')) {
       sourceOpId = opId;
       break;
     }
@@ -732,165 +494,4 @@ export function applyXaihiP5AmpBoost(
     const base = ev.statusValue ?? 0.15;
     return { ...ev, statusValue: base * 1.1 };
   });
-}
-
-// ── Wildland Trekker (data-driven) ──────────────────────────────────────────
-
-const WILDLAND_TREKKER_DURATION = 1800;
-const WILDLAND_TREKKER_PER_INTELLECT: Record<number, number> = { 1: 0.0005, 2: 0.0008 };
-const TACTFUL_APPROACH_SUSCEPTIBILITY: Record<number, number> = { 1: 0.06, 2: 0.10 };
-const TACTFUL_APPROACH_DURATION = 1200;
-
-/**
- * Derives Wildland Trekker trigger stacks and team buff.
- * Finds Arclight dynamically by checking for WILDLAND_TREKKER_TRIGGER in statusEvents.
- */
-export function deriveWildlandTrekker(
-  events: TimelineEvent[],
-  loadoutStats?: Record<string, LoadoutStats>,
-): TimelineEvent[] {
-  // Find operator with WILDLAND_TREKKER_TRIGGER in statusEvents
-  let sourceOpId: string | null = null;
-  for (const opId of getAllOperatorIds()) {
-    const json = getOperatorJson(opId);
-    const statusEvents = json?.statusEvents as any[] | undefined;
-    if (statusEvents?.some((se: any) => se.name === 'WILDLAND_TREKKER_TRIGGER')) {
-      sourceOpId = opId;
-      break;
-    }
-  }
-  if (!sourceOpId) return events;
-
-  const ownerSlotId = findSlot(events, sourceOpId);
-  if (!ownerSlotId) return events;
-
-  const stats = loadoutStats?.[ownerSlotId];
-  const potential = stats?.potential ?? 0;
-  const talentTwoLevel = stats?.talentTwoLevel ?? 0;
-
-  const derived: TimelineEvent[] = [];
-  const clamped = new Map<string, TimelineEvent>();
-  let idCounter = 0;
-
-  // Get battle skill and ultimate names
-  const battleSkillNames = new Set(getSkillNamesForCategory(sourceOpId, 'BATTLE_SKILL'));
-  const ultimateNames = new Set(getSkillNamesForCategory(sourceOpId, 'ULTIMATE'));
-
-  // ── Wildland Trekker: trigger stacks + team buff ──────────────────────────
-  if (talentTwoLevel >= 1) {
-    const threshold = potential >= 5 ? 2 : 3;
-    const perIntellect = WILDLAND_TREKKER_PER_INTELLECT[talentTwoLevel] ?? WILDLAND_TREKKER_PER_INTELLECT[1];
-    const p3Multiplier = potential >= 3 ? 1.3 : 1.0;
-    const statusValue = perIntellect * p3Multiplier;
-
-    const battleSkillCasts = events
-      .filter((ev) => ev.ownerId === ownerSlotId && battleSkillNames.has(ev.name))
-      .sort((a, b) => a.startFrame - b.startFrame);
-
-    const electrificationEvents = events.filter(
-      (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === REACTION_COLUMNS.ELECTRIFICATION,
-    );
-
-    const pendingTriggers: { id: string; startFrame: number }[] = [];
-    let activeBuff: { id: string; startFrame: number; endFrame: number } | null = null;
-    const battleSkillName = battleSkillNames.values().next().value ?? 'battle';
-
-    for (const cast of battleSkillCasts) {
-      const hasElectrification = electrificationEvents.some((ef) => {
-        const end = ef.startFrame + ef.activationDuration;
-        return ef.startFrame <= cast.startFrame && cast.startFrame < end;
-      });
-
-      if (!hasElectrification) continue;
-
-      const triggerId = `wt-trigger-${ownerSlotId}-${idCounter++}`;
-      derived.push({
-        id: triggerId,
-        name: StatusType.WILDLAND_TREKKER,
-        ownerId: ownerSlotId,
-        columnId: OPERATOR_COLUMNS.WILDLAND_TREKKER_TRIGGER,
-        startFrame: cast.startFrame,
-        activationDuration: TOTAL_FRAMES * 10,
-        activeDuration: 0,
-        cooldownDuration: 0,
-        sourceOwnerId: ownerSlotId,
-        sourceSkillName: battleSkillName,
-      });
-      pendingTriggers.push({ id: triggerId, startFrame: cast.startFrame });
-
-      if (pendingTriggers.length >= threshold) {
-        for (const trigger of pendingTriggers) {
-          const existing = derived.find((ev) => ev.id === trigger.id);
-          if (existing) {
-            clamped.set(trigger.id, {
-              ...existing,
-              activationDuration: cast.startFrame - trigger.startFrame,
-              eventStatus: EventStatusType.CONSUMED,
-              eventStatusOwnerId: ownerSlotId,
-              eventStatusSkillName: battleSkillName,
-            });
-          }
-        }
-        pendingTriggers.length = 0;
-
-        const currentBuff = activeBuff;
-        if (currentBuff && cast.startFrame < currentBuff.endFrame) {
-          const existing = derived.find((ev) => ev.id === currentBuff.id);
-          if (existing) {
-            clamped.set(currentBuff.id, {
-              ...existing,
-              activationDuration: cast.startFrame - currentBuff.startFrame,
-              eventStatus: EventStatusType.REFRESHED,
-              eventStatusOwnerId: ownerSlotId,
-              eventStatusSkillName: battleSkillName,
-            });
-          }
-        }
-
-        const buffId = `wt-buff-${idCounter++}`;
-        derived.push({
-          id: buffId,
-          name: StatusType.WILDLAND_TREKKER,
-          ownerId: COMMON_OWNER_ID,
-          columnId: StatusType.WILDLAND_TREKKER,
-          startFrame: cast.startFrame,
-          activationDuration: WILDLAND_TREKKER_DURATION,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          sourceOwnerId: ownerSlotId,
-          sourceSkillName: battleSkillName,
-          statusValue,
-        });
-        activeBuff = { id: buffId, startFrame: cast.startFrame, endFrame: cast.startFrame + WILDLAND_TREKKER_DURATION };
-      }
-    }
-  }
-
-  // ── Tactful Approach: Electric Susceptibility from ultimate ────────────────
-  if (talentTwoLevel >= 1) {
-    const suscValue = TACTFUL_APPROACH_SUSCEPTIBILITY[talentTwoLevel] ?? TACTFUL_APPROACH_SUSCEPTIBILITY[1];
-    const ultimateEvents = events.filter(
-      (ev) => ev.ownerId === ownerSlotId && ultimateNames.has(ev.name),
-    );
-
-    for (const ult of ultimateEvents) {
-      derived.push({
-        id: `ta-susc-${ult.id}`,
-        name: StatusType.SUSCEPTIBILITY,
-        ownerId: ENEMY_OWNER_ID,
-        columnId: StatusType.SUSCEPTIBILITY,
-        startFrame: ult.startFrame,
-        activationDuration: TACTFUL_APPROACH_DURATION,
-        activeDuration: 0,
-        cooldownDuration: 0,
-        sourceOwnerId: ownerSlotId,
-        sourceSkillName: ult.name,
-        susceptibility: { [ElementType.ELECTRIC]: suscValue },
-      });
-    }
-  }
-
-  if (derived.length === 0) return events;
-  const finalDerived = derived.map((ev) => clamped.get(ev.id) ?? ev);
-  return [...events, ...finalDerived];
 }

@@ -1,0 +1,74 @@
+{
+  "statusEvents": [
+    {
+      "name": "SCORCHING_HEART",
+      "type": "TALENT",
+      "originId": "laevatain",
+      "target": "THIS_OPERATOR",
+      "element": "HEAT",
+      "isNamedEvent": true,
+      "stack": {
+        "max": {
+          "P0": 1,
+          "P1": 1,
+          "P2": 1,
+          "P3": 1,
+          "P4": 1,
+          "P5": 1
+        },
+        "instances": 1,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ANY_OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "FINAL_STRIKE"
+            },
+            {
+              "subjectType": "ENEMY",
+              "verbType": "HAVE",
+              "objectType": "INFLICTION",
+              "objectId": "HEAT"
+            }
+          ],
+          "effects": [
+            {
+              "verbType": "PERFORM_ALL",
+              "cardinalityConstraint": "AT_MOST",
+              "cardinality": "MAX",
+              "effects": [
+                {
+                  "verbType": "ABSORB",
+                  "cardinality": 1,
+                  "objectType": "INFLICTION",
+                  "element": "HEAT",
+                  "fromObjectType": "ENEMY"
+                },
+                {
+                  "verbType": "APPLY",
+                  "cardinality": 1,
+                  "objectType": "STATUS",
+                  "objectId": "MELTING_FLAME",
+                  "toObjectType": "THIS_OPERATOR"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [-1],
+          "unit": "SECOND"
+        }
+      },
+      "minTalentLevel": {
+        "talent": 1,
+        "minLevel": 1
+      }
+    }
+  ]
+}

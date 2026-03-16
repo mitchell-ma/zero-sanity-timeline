@@ -1,16 +1,416 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutStats } from '../InformationPane';
-import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain } from '../../controller/info-pane/eventPaneController';
+import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail } from '../../controller/info-pane/eventPaneController';
+import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
+import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 
 const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
+
+// ── Frame DSL effects display ───────────────────────────────────────────────
+
+/** Renders DSL effect lines for a frame marker (infliction, absorption, status, etc.). */
+function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrameMarker }) {
+  return (
+    <>
+      {f.applyArtsInfliction && (
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
+          APPLY {f.applyArtsInfliction.stacks} {f.applyArtsInfliction.element.toUpperCase()} INFLICTION TO ENEMY
+        </div>
+      )}
+      {f.absorbArtsInfliction && (
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+          {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `ABSORB ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
+        </div>
+      )}
+      {f.consumeArtsInfliction && (
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
+          CONSUME {f.consumeArtsInfliction.stacks} {f.consumeArtsInfliction.element.toUpperCase()} INFLICTION FROM ENEMY
+        </div>
+      )}
+      {f.consumeStatus && (
+        <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
+          CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
+        </div>
+      )}
+      {f.applyStatus && (
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
+          APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target === 'ENEMY' ? 'ENEMY' : f.applyStatus.target === 'SELF' ? 'THIS OPERATOR' : f.applyStatus.target.toUpperCase()}
+        </div>
+      )}
+      {f.applyForcedReaction && (
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
+          APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.statusLevel})
+        </div>
+      )}
+      {f.consumeReaction && (
+        <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
+          CONSUME {f.consumeReaction.columnId.toUpperCase().replace(/ /g, '_')} REACTION FROM ENEMY
+          {f.consumeReaction.applyStatus && (
+            <> → APPLY {f.consumeReaction.applyStatus.stacks > 0 ? `${f.consumeReaction.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.consumeReaction.applyStatus.status as StatusType] ?? f.consumeReaction.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS</>
+          )}
+        </div>
+      )}
+      {f.duplicatesSourceInfliction && (
+        <div className="frame-dsl-effect" style={{ color: 'var(--text-muted)' }}>
+          APPLY SOURCE INFLICTION TO ENEMY
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Renders a list of DSL predicates (conditions → effects). */
+function PredicateDisplay({ predicates, label }: { predicates: ResolvedPredicate[]; label?: string }) {
+  if (predicates.length === 0) return null;
+  return (
+    <div style={{ marginTop: 4 }}>
+      {label && <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginBottom: 2 }}>{label}</div>}
+      {predicates.map((pred, pi) => (
+        <div key={pi} style={{ marginBottom: 4, paddingLeft: 6, borderLeft: '2px solid rgba(255,221,68,0.2)' }}>
+          {pred.conditions.length > 0 && (
+            <div>
+              <span style={{ color: 'var(--text-muted)', fontSize: 9, fontWeight: 600 }}>WHEN</span>
+              {pred.conditions.map((c, ci) => (
+                <div key={ci} className="frame-dsl-effect" style={{ color: 'var(--gold)', paddingLeft: 4 }}>{c}</div>
+              ))}
+            </div>
+          )}
+          {pred.effects.length > 0 && (
+            <div>
+              <span style={{ color: 'var(--text-muted)', fontSize: 9, fontWeight: 600 }}>THEN</span>
+              {pred.effects.map((e, ei) => (
+                <div key={ei} className="frame-dsl-effect" style={{ color: '#55aadd', paddingLeft: 4 }}>{e}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Renders DSL effect tags for raw effects (not predicate-gated). */
+function DslEffectTags({ effects }: { effects: string[] }) {
+  if (effects.length === 0) return null;
+  return (
+    <div style={{ marginTop: 2 }}>
+      {effects.map((e, i) => (
+        <div key={i} className="frame-dsl-effect" style={{ color: '#55aadd' }}>{e}</div>
+      ))}
+    </div>
+  );
+}
+
+// ── Verbose detail rendering ────────────────────────────────────────────────
+
+const DETAIL_LABEL: React.CSSProperties = {
+  color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-mono)',
+  textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 6, marginBottom: 2,
+};
+const DETAIL_VALUE: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', paddingLeft: 6,
+};
+const DETAIL_MONO: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)', fontSize: 11,
+};
+
+/** Renders a single Interaction (condition) with syntax coloring. */
+function InteractionLine({ interaction }: { interaction: Interaction }) {
+  const fmt = (s: string) => s.replace(/_/g, ' ');
+  return (
+    <div style={{ ...DETAIL_MONO, paddingLeft: 8 }}>
+      <span style={{ color: '#dd8844' }}>{fmt(interaction.subjectType)}</span>
+      {interaction.subjectProperty && <span style={{ color: 'var(--text-muted)' }}>.{fmt(String(interaction.subjectProperty))}</span>}
+      {interaction.negated && <span style={{ color: '#ff5555' }}> NOT</span>}
+      <span style={{ color: 'var(--gold)' }}> {fmt(interaction.verbType)}</span>
+      <span style={{ color: '#55aadd' }}> {fmt(interaction.objectType)}</span>
+      {interaction.objectId && <span style={{ color: 'var(--text-muted)' }}> ({interaction.objectId})</span>}
+      {interaction.cardinalityConstraint && <span style={{ color: '#88cc44' }}> {fmt(interaction.cardinalityConstraint)} {interaction.cardinality}</span>}
+      {interaction.element && <span style={{ color: ELEMENT_COLORS[interaction.element.toUpperCase() as ElementType] ?? '#aaa' }}> [{interaction.element}]</span>}
+      {interaction.stacks != null && <span style={{ color: 'var(--text-muted)' }}> stacks={interaction.stacks}</span>}
+    </div>
+  );
+}
+
+/** Renders a single Effect with syntax coloring, including nested child effects. */
+function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
+  const fmt = (s: string) => s.replace(/_/g, ' ');
+  const adjs = effect.adjective ? (Array.isArray(effect.adjective) ? effect.adjective : [effect.adjective]) : [];
+
+  return (
+    <div style={{ paddingLeft: 8 + depth * 10 }}>
+      <div style={DETAIL_MONO}>
+        <span style={{ color: 'var(--gold)' }}>{fmt(effect.verbType)}</span>
+        {effect.cardinality != null && <span style={{ color: '#88cc44' }}> {String(effect.cardinality)}</span>}
+        {adjs.length > 0 && <span style={{ color: '#dd8844' }}> {adjs.map(a => fmt(a)).join(' ')}</span>}
+        {effect.objectType && <span style={{ color: '#55aadd' }}> {fmt(String(effect.objectType))}</span>}
+        {effect.objectId && <span style={{ color: 'var(--text-muted)' }}> ({effect.objectId})</span>}
+        {effect.toObjectType && <span style={{ color: '#cc88dd' }}> TO {fmt(String(effect.toObjectType))}</span>}
+        {effect.fromObjectType && <span style={{ color: '#cc88dd' }}> FROM {fmt(String(effect.fromObjectType))}</span>}
+        {effect.onObjectType && <span style={{ color: '#cc88dd' }}> ON {fmt(String(effect.onObjectType))}</span>}
+        {effect.forPreposition && (
+          <span style={{ color: '#88cc44' }}> FOR {fmt(effect.forPreposition.cardinalityConstraint)} {effect.forPreposition.cardinality}</span>
+        )}
+        {effect.cardinalityConstraint && !effect.forPreposition && (
+          <span style={{ color: '#88cc44' }}> {fmt(effect.cardinalityConstraint)}</span>
+        )}
+      </div>
+      {effect.withPreposition && (
+        <div style={{ ...DETAIL_MONO, paddingLeft: 16 + depth * 10, color: 'var(--text-muted)' }}>
+          {Object.entries(effect.withPreposition).map(([k, v]) => {
+            const val = typeof v.value === 'number' ? String(v.value)
+              : `[${(v.value as number[]).slice(0, 4).join(', ')}${(v.value as number[]).length > 4 ? ` ...+${(v.value as number[]).length - 4}` : ''}]`;
+            return (
+              <div key={k}>
+                <span style={{ color: '#888' }}>WITH</span>{' '}
+                <span style={{ color: '#55aadd' }}>{k.replace(/_/g, ' ')}</span>{' '}
+                <span style={{ color: '#88cc44' }}>{v.verb}</span>{' '}
+                {v.object && <span style={{ color: '#dd8844' }}>{v.object} </span>}
+                <span style={{ color: 'var(--text-primary)' }}>{val}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {effect.effects && effect.effects.length > 0 && (
+        <div>
+          {effect.effects.map((child, i) => (
+            <EffectLine key={i} effect={child} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Renders the full verbose detail panel for an event. */
+function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; event: TimelineEvent }) {
+  return (
+    <div className="edit-panel-section">
+      <span className="edit-section-label">Internal Structure</span>
+      <div style={{ padding: '4px 6px' }}>
+        {/* Identity */}
+        <div style={DETAIL_LABEL}>Identity</div>
+        <div style={DETAIL_VALUE}>
+          <div>Skill ID: <span style={{ color: 'var(--text-primary)' }}>{detail.skillId}</span></div>
+          {detail.skillTypeMapping && (
+            <div>Skill Type: <span style={{ color: '#dd8844' }}>{detail.skillTypeMapping}</span></div>
+          )}
+          {detail.originId && (
+            <div>Origin: <span style={{ color: 'var(--text-primary)' }}>{detail.originId}</span></div>
+          )}
+          <div>Event ID: <span style={{ color: 'var(--text-muted)' }}>{event.id}</span></div>
+          <div>Column: <span style={{ color: 'var(--text-primary)' }}>{event.columnId}</span></div>
+          <div>Owner: <span style={{ color: 'var(--text-primary)' }}>{event.ownerId}</span></div>
+        </div>
+
+        {/* Properties */}
+        {detail.properties && (
+          <>
+            <div style={DETAIL_LABEL}>Skill Properties</div>
+            <div style={DETAIL_VALUE}>
+              {Object.entries(detail.properties).map(([k, v]) => (
+                <div key={k}>{k}: <span style={{ color: 'var(--text-primary)' }}>{v.value}{v.unit ? ` ${v.unit}` : ''}</span></div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Event timing */}
+        <div style={DETAIL_LABEL}>Event Timing (frames)</div>
+        <div style={DETAIL_VALUE}>
+          <div>startFrame: <span style={{ color: 'var(--text-primary)' }}>{event.startFrame}</span></div>
+          <div>activationDuration: <span style={{ color: 'var(--text-primary)' }}>{event.activationDuration}</span></div>
+          <div>activeDuration: <span style={{ color: 'var(--text-primary)' }}>{event.activeDuration}</span></div>
+          <div>cooldownDuration: <span style={{ color: 'var(--text-primary)' }}>{event.cooldownDuration}</span></div>
+          {event.animationDuration != null && (
+            <div>animationDuration: <span style={{ color: 'var(--text-primary)' }}>{event.animationDuration}</span></div>
+          )}
+        </div>
+
+        {/* Event metadata */}
+        {(event.skillPointCost != null || event.gaugeGain != null || event.teamGaugeGain != null || event.forcedReaction || event.inflictionStacks != null || event.statusLevel != null || event.statusValue != null) && (
+          <>
+            <div style={DETAIL_LABEL}>Event Data</div>
+            <div style={DETAIL_VALUE}>
+              {event.skillPointCost != null && <div>skillPointCost: <span style={{ color: 'var(--gold)' }}>{event.skillPointCost}</span></div>}
+              {event.gaugeGain != null && <div>gaugeGain: <span style={{ color: '#55aadd' }}>{event.gaugeGain}</span></div>}
+              {event.teamGaugeGain != null && <div>teamGaugeGain: <span style={{ color: '#55aadd' }}>{event.teamGaugeGain}</span></div>}
+              {event.gaugeGainByEnemies != null && <div>gaugeGainByEnemies: <span style={{ color: '#55aadd' }}>{JSON.stringify(event.gaugeGainByEnemies)}</span></div>}
+              {event.inflictionStacks != null && <div>inflictionStacks: <span style={{ color: '#dd8844' }}>{event.inflictionStacks}</span></div>}
+              {event.statusLevel != null && <div>statusLevel: <span style={{ color: '#88cc44' }}>{event.statusLevel}</span></div>}
+              {event.statusValue != null && <div>statusValue: <span style={{ color: '#88cc44' }}>{(event.statusValue * 100).toFixed(1)}%</span></div>}
+              {event.forcedReaction && <div style={{ color: '#ff5522' }}>forcedReaction: true</div>}
+              {event.isForced && <div style={{ color: '#ff5522' }}>isForced: true</div>}
+              {event.eventStatus && <div>eventStatus: <span style={{ color: 'var(--gold)' }}>{event.eventStatus}</span></div>}
+            </div>
+          </>
+        )}
+
+        {/* Source event data */}
+        {(event.sourceOwnerId || event.sourceSkillName || event.comboTriggerColumnId) && (
+          <>
+            <div style={DETAIL_LABEL}>Source / Trigger</div>
+            <div style={DETAIL_VALUE}>
+              {event.sourceOwnerId && <div>sourceOwnerId: <span style={{ color: 'var(--text-primary)' }}>{event.sourceOwnerId}</span></div>}
+              {event.sourceSkillName && <div>sourceSkillName: <span style={{ color: 'var(--text-primary)' }}>{event.sourceSkillName}</span></div>}
+              {event.comboTriggerColumnId && <div>comboTriggerColumnId: <span style={{ color: 'var(--text-primary)' }}>{event.comboTriggerColumnId}</span></div>}
+            </div>
+          </>
+        )}
+
+        {/* Skill-level clause */}
+        {detail.clause && detail.clause.length > 0 && (
+          <>
+            <div style={DETAIL_LABEL}>Skill Clause</div>
+            {detail.clause.map((pred, pi) => (
+              <div key={pi} style={{ marginBottom: 4, paddingLeft: 6, borderLeft: '2px solid rgba(255,221,68,0.15)' }}>
+                {pred.conditions.length > 0 && (
+                  <>
+                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>CONDITIONS</div>
+                    {pred.conditions.map((c, ci) => <InteractionLine key={ci} interaction={c} />)}
+                  </>
+                )}
+                {pred.effects.length > 0 && (
+                  <>
+                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9, marginTop: 2 }}>EFFECTS</div>
+                    {pred.effects.map((e, ei) => <EffectLine key={ei} effect={e} />)}
+                  </>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Skill-level effects */}
+        {detail.effects && detail.effects.length > 0 && (
+          <>
+            <div style={DETAIL_LABEL}>Skill Effects</div>
+            {detail.effects.map((e, i) => <EffectLine key={i} effect={e} />)}
+          </>
+        )}
+
+        {/* Segments */}
+        {detail.segments.length > 0 && (
+          <>
+            <div style={DETAIL_LABEL}>Segments ({detail.segments.length})</div>
+            {detail.segments.map((seg) => (
+              <div key={seg.index} style={{ marginBottom: 6, paddingLeft: 4, borderLeft: '2px solid rgba(100,200,255,0.1)' }}>
+                <div style={{ ...DETAIL_MONO, color: '#55aadd', fontWeight: 600, fontSize: 10 }}>
+                  Segment {seg.index + 1}
+                  {seg.properties?.duration && (
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
+                      {' '}— {(seg.properties.duration as any).value}{(seg.properties.duration as any).unit ? `${(seg.properties.duration as any).unit.toLowerCase().replace('second', 's')}` : ''}
+                    </span>
+                  )}
+                  {seg.metadata?.dataSources && (
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> [{seg.metadata.dataSources.join(', ')}]</span>
+                  )}
+                </div>
+
+                {/* Segment clause */}
+                {seg.clause && seg.clause.length > 0 && (
+                  <div style={{ marginLeft: 6, marginTop: 2 }}>
+                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>CLAUSE</div>
+                    {seg.clause.map((pred, pi) => (
+                      <div key={pi} style={{ paddingLeft: 4, borderLeft: '2px solid rgba(255,221,68,0.1)', marginBottom: 2 }}>
+                        {pred.conditions.length > 0 && pred.conditions.map((c, ci) => <InteractionLine key={ci} interaction={c} />)}
+                        {pred.effects.length > 0 && pred.effects.map((e, ei) => <EffectLine key={ei} effect={e} />)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Segment effects */}
+                {seg.effects && seg.effects.length > 0 && (
+                  <div style={{ marginLeft: 6, marginTop: 2 }}>
+                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>EFFECTS</div>
+                    {seg.effects.map((e, i) => <EffectLine key={i} effect={e} />)}
+                  </div>
+                )}
+
+                {/* Frames */}
+                {seg.frames.length > 0 && (
+                  <div style={{ marginLeft: 6, marginTop: 2 }}>
+                    {seg.frames.map((frame) => (
+                      <div key={frame.index} style={{ marginBottom: 3 }}>
+                        <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>
+                          FRAME {frame.index + 1}
+                          {frame.properties?.offset && (
+                            <span> @ {(frame.properties.offset as any).value}{(frame.properties.offset as any).unit ? `${(frame.properties.offset as any).unit.toLowerCase().replace('second', 's')}` : ''}</span>
+                          )}
+                        </div>
+                        {frame.effects && frame.effects.length > 0 && (
+                          frame.effects.map((e, i) => <EffectLine key={i} effect={e} />)
+                        )}
+                        {frame.multipliers && frame.multipliers.length > 0 && (
+                          <div style={{ ...DETAIL_MONO, paddingLeft: 8, color: 'var(--text-muted)', fontSize: 10 }}>
+                            multipliers: [{frame.multipliers.length} levels]
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Status events */}
+        {detail.statusEvents && detail.statusEvents.length > 0 && (
+          <>
+            <div style={DETAIL_LABEL}>Status Events</div>
+            {detail.statusEvents.map((se, i) => (
+              <div key={i} style={{ ...DETAIL_VALUE, marginBottom: 4, paddingLeft: 6, borderLeft: '2px solid rgba(255,100,50,0.15)' }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{se.name}</div>
+                {se.target && <div>target: {se.target}</div>}
+                {se.element && <div>element: <span style={{ color: ELEMENT_COLORS[se.element?.toUpperCase() as ElementType] ?? 'inherit' }}>{se.element}</span></div>}
+                {se.stack && (
+                  <div>
+                    stacks: max={typeof se.stack.max === 'object' ? JSON.stringify(se.stack.max) : se.stack.max}
+                    {se.stack.instances != null && `, instances=${se.stack.instances}`}
+                  </div>
+                )}
+                {se.clause && se.clause.length > 0 && (
+                  <div style={{ marginTop: 2 }}>
+                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>CLAUSE</div>
+                    {se.clause.map((pred: any, pi: number) => (
+                      <div key={pi} style={{ paddingLeft: 4, borderLeft: '2px solid rgba(255,221,68,0.1)' }}>
+                        {pred.conditions?.map((c: Interaction, ci: number) => <InteractionLine key={ci} interaction={c} />)}
+                        {pred.effects?.map((e: Effect, ei: number) => <EffectLine key={ei} effect={e} />)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Metadata */}
+        {detail.metadata && (
+          <>
+            <div style={DETAIL_LABEL}>Metadata</div>
+            <div style={DETAIL_VALUE}>
+              {Object.entries(detail.metadata).map(([k, v]) => (
+                <div key={k}>{k}: <span style={{ color: 'var(--text-primary)' }}>{JSON.stringify(v)}</span></div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── Event pane content ──────────────────────────────────────────────────────
 
@@ -35,6 +435,7 @@ interface EventPaneProps {
   damageRows?: DamageTableRow[];
   spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
   onSaveAsCustomSkill?: (event: TimelineEvent) => void;
+  verbose?: 0 | 1 | 2;
 }
 
 function EventPane({
@@ -58,6 +459,7 @@ function EventPane({
   damageRows,
   spConsumptionHistory,
   onSaveAsCustomSkill,
+  verbose = 1,
 }: EventPaneProps) {
   /** Format a real-time frame as a detail label. */
   const dualTimeLabel = (frame: number) => frameToDetailLabel(frame);
@@ -84,6 +486,19 @@ function EventPane({
   } = resolveEventIdentity(event, slots, enemy);
 
   const isSequenced = event.segments && event.segments.length > 0;
+
+  // Resolve DSL semantic data for this event's skill
+  const dslData = useMemo(() => {
+    const slot = slots.find((s) => s.slotId === event.ownerId);
+    return resolveEventDsl(slot?.operator?.id, event.name);
+  }, [event.ownerId, event.name, slots]);
+
+  // Full detail for verbose mode
+  const fullDetail = useMemo(() => {
+    if (verbose < 2) return null;
+    const slot = slots.find((s) => s.slotId === event.ownerId);
+    return resolveEventFullDetail(slot?.operator?.id, event.name);
+  }, [event.ownerId, event.name, slots, verbose]);
 
   // Filter damage rows for this event — keyed by segmentIndex-frameIndex
   const eventDamageRows = useMemo(() => {
@@ -256,6 +671,47 @@ function EventPane({
         {debugMode && processedEvent && (
           <DebugPane event={event} processedEvent={processedEvent} rawEvents={rawEvents} allProcessedEvents={allProcessedEvents} />
         )}
+
+        {/* ── Triggers & Effects (all events) ─────────────────────────── */}
+        {dslData && (
+          dslData.predicates.length > 0 ||
+          Object.keys(dslData.segmentEffects).length > 0 ||
+          Object.keys(dslData.frameEffects).length > 0 ||
+          Object.keys(dslData.segmentPredicates).length > 0
+        ) && (
+          <div className="edit-panel-section">
+            <span className="edit-section-label">Triggers & Effects</span>
+            <div style={{ padding: '4px 6px' }}>
+              {dslData.segmentEffects[-1] && (
+                <DslEffectTags effects={dslData.segmentEffects[-1]} />
+              )}
+              {dslData.predicates.length > 0 && (
+                <PredicateDisplay predicates={dslData.predicates} />
+              )}
+              {Object.entries(dslData.segmentPredicates).map(([si, preds]) => (
+                <PredicateDisplay key={`sp-${si}`} predicates={preds} label={`Segment ${Number(si) + 1}`} />
+              ))}
+              {Object.entries(dslData.segmentEffects).filter(([k]) => k !== '-1').map(([si, effs]) => (
+                <div key={`se-${si}`}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>Segment {Number(si) + 1}</div>
+                  <DslEffectTags effects={effs} />
+                </div>
+              ))}
+              {Object.entries(dslData.frameEffects).map(([key, effs]) => {
+                const [si, fi] = key.split('-');
+                return (
+                  <div key={`fe-${key}`}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>Frame {Number(fi) + 1}{Number(si) > 0 ? ` (Seg ${Number(si) + 1})` : ''}</div>
+                    <DslEffectTags effects={effs} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {fullDetail && <EventFullDetailPanel detail={fullDetail} event={event} />}
+
         {editContext?.startsWith('combo-trigger') ? (() => {
           const parts = editContext.split(':');
           const winStart = parseInt(parts[1]) || 0;
@@ -498,7 +954,7 @@ function EventPane({
                   const isNumeric = /^\d+$/.test(seg.label);
                   const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames?.length ?? 1;
                   segMultipliers.push({
-                    label: isNumeric ? `Seq ${seg.label}` : seg.label,
+                    label: seg.name ?? (isNumeric ? `Seq ${seg.label}` : seg.label),
                     value: m,
                     maxFrames,
                   });
@@ -846,7 +1302,7 @@ function EventPane({
                             borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
                           }}
                         >
-                          <span className="edit-field-label">Hit {fi + 1}</span>
+                          <span className="edit-field-label">Frame {fi + 1}</span>
                           <div className="edit-info-text">
                             <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
@@ -854,6 +1310,10 @@ function EventPane({
                             {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                             {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
+                            <FrameDslEffects f={f} />
+                            {dslData?.frameEffects[`${si}-${fi}`] && (
+                              <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                            )}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
@@ -922,7 +1382,7 @@ function EventPane({
                             borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
                           }}
                         >
-                          <span className="edit-field-label">Hit {fi + 1}</span>
+                          <span className="edit-field-label">Frame {fi + 1}</span>
                           <FrameOffsetField
                             eventId={event.id}
                             segmentIndex={si}
@@ -938,6 +1398,10 @@ function EventPane({
                             {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                             {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
+                            <FrameDslEffects f={f} />
+                            {dslData?.frameEffects[`${si}-${fi}`] && (
+                              <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                            )}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
@@ -992,9 +1456,11 @@ function EventPane({
               segCumOffset += seg.durationFrames;
               const pSeg = processedEvent?.segments?.[si];
               const isNumericLabel = seg.label && /^\d+$/.test(seg.label);
-              const segLabel = seg.label
-                ? (isNumericLabel ? `Sequence ${seg.label}` : seg.label)
-                : `Sequence ${si + 1}`;
+              const segLabel = seg.name
+                ? seg.name
+                : seg.label
+                  ? (isNumericLabel ? `Sequence ${seg.label}` : seg.label)
+                  : `Sequence ${si + 1}`;
               // Segment-level damage: sum per-frame damages and get multiplier
               const segDamageFrames = seg.frames
                 ? seg.frames.map((_, fi) => eventDamageRows.get(`${si}-${fi}`))
@@ -1040,6 +1506,22 @@ function EventPane({
                         )}
                       </div>
                     )}
+                    {(seg.segmentType || seg.timeDependency) && (
+                      <div className="edit-info-text" style={{ marginTop: 2 }}>
+                        {seg.segmentType && seg.segmentType !== SegmentType.NORMAL && (
+                          <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{seg.segmentType}</div>
+                        )}
+                        {seg.timeDependency && (
+                          <div><span style={{ color: 'var(--text-muted)' }}>Time: </span>{seg.timeDependency}</div>
+                        )}
+                      </div>
+                    )}
+                    {dslData?.segmentEffects[si] && (
+                      <DslEffectTags effects={dslData.segmentEffects[si]} />
+                    )}
+                    {dslData?.segmentPredicates[si] && (
+                      <PredicateDisplay predicates={dslData.segmentPredicates[si]} />
+                    )}
                   </div>
                   {seg.frames && seg.frames.length > 0 && (
                     <div style={{ marginTop: 4 }}>
@@ -1058,7 +1540,7 @@ function EventPane({
                               background: isSelected ? 'var(--overlay-08)' : 'transparent',
                             }}
                           >
-                            <span className="edit-field-label">Hit {fi + 1}</span>
+                            <span className="edit-field-label">Frame {fi + 1}</span>
                             {(readOnly || isDerived) ? (
                               <div className="edit-info-text">
                                 <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
@@ -1077,20 +1559,20 @@ function EventPane({
                             <div className="edit-info-text">
                               {event.columnId === SKILL_COLUMNS.BASIC && (
                                 (readOnly || isDerived) ? (
-                                  <div>Type: {f.hitType === EventFrameType.FINAL_STRIKE ? 'Final Strike' : f.hitType === EventFrameType.FINISHER ? 'Finisher' : f.hitType === EventFrameType.DIVE ? 'Dive' : 'Normal'}</div>
+                                  <div>Type: {(f.frameTypes ?? [EventFrameType.NORMAL]).includes(EventFrameType.FINAL_STRIKE) ? 'Final Strike' : (f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? 'Finisher' : (f.frameTypes ?? []).includes(EventFrameType.DIVE) ? 'Dive' : 'Normal'}</div>
                                 ) : (
                                   <>
                                     <div>Type:</div>
                                     <div className="edit-field-row">
                                       <select
                                         className="edit-input"
-                                        value={f.hitType ?? EventFrameType.NORMAL}
+                                        value={(f.frameTypes ?? [EventFrameType.NORMAL])[0]}
                                         onChange={(e) => {
                                           const newEventFrameType = e.target.value as EventFrameType;
                                           const newSegments = event.segments!.map((s, ssi) => {
                                             if (ssi !== si || !s.frames) return s;
                                             return { ...s, frames: s.frames.map((fr, ffi) =>
-                                              ffi === fi ? { ...fr, hitType: newEventFrameType } : fr,
+                                              ffi === fi ? { ...fr, frameTypes: [newEventFrameType] } : fr,
                                             )};
                                           });
                                           onUpdate(event.id, { segments: newSegments });
@@ -1105,7 +1587,7 @@ function EventPane({
                                   </>
                                 )
                               )}
-                              {f.hitType === EventFrameType.FINAL_STRIKE && (
+                              {(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) && (
                                 (readOnly || isDerived) ? (
                                   <>
                                     {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
@@ -1152,7 +1634,7 @@ function EventPane({
                                   </>
                                 )
                               )}
-                              {f.hitType !== EventFrameType.FINAL_STRIKE && (f.stagger ?? 0) > 0 && (
+                              {!(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) && (f.stagger ?? 0) > 0 && (
                                 readOnly || isDerived || event.columnId === SKILL_COLUMNS.BASIC ? (
                                   <div>Stagger: {f.stagger}</div>
                                 ) : (
@@ -1180,35 +1662,9 @@ function EventPane({
                               )}
                               {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                               {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
-                              {f.applyArtsInfliction && (
-                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.applyArtsInfliction.element as ElementType] ?? '#f07030' }}>
-                                  APPLY {f.applyArtsInfliction.stacks} {f.applyArtsInfliction.element.toUpperCase()} INFLICTION TO ENEMY
-                                </div>
-                              )}
-                              {f.absorbArtsInfliction && (
-                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                  {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `ABSORB ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
-                                </div>
-                              )}
-                              {f.consumeArtsInfliction && (
-                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.consumeArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-                                  CONSUME {f.consumeArtsInfliction.stacks} {f.consumeArtsInfliction.element.toUpperCase()} INFLICTION FROM ENEMY
-                                </div>
-                              )}
-                              {f.consumeStatus && (
-                                <div className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>
-                                  CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
-                                </div>
-                              )}
-                              {f.applyStatus && (
-                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
-                                  APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target === 'ENEMY' ? 'ENEMY' : f.applyStatus.target === 'SELF' ? 'THIS OPERATOR' : f.applyStatus.target.toUpperCase()}
-                                </div>
-                              )}
-                              {f.applyForcedReaction && (
-                                <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
-                                  APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.statusLevel})
-                                </div>
+                              <FrameDslEffects f={f} />
+                              {dslData?.frameEffects[`${si}-${fi}`] && (
+                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
                               )}
                               {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
@@ -1243,10 +1699,24 @@ function EventPane({
               </div>
             )}
 
+            {dslData && (dslData.predicates.length > 0 || Object.keys(dslData.segmentEffects).some(k => k === '-1')) && (
+              <div className="edit-panel-section">
+                <span className="edit-section-label">Semantics</span>
+                <div style={{ padding: '4px 6px' }}>
+                  {dslData.segmentEffects[-1] && (
+                    <DslEffectTags effects={dslData.segmentEffects[-1]} />
+                  )}
+                  {dslData.predicates.length > 0 && (
+                    <PredicateDisplay predicates={dslData.predicates} label="Predicates" />
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="edit-panel-section">
               <span className="edit-section-label">Summary</span>
               <div className="edit-info-text" style={{ paddingLeft: 6 }}>
-                <div>Sequences: {event.segments!.length}</div>
+                <div>Segments: {event.segments!.length}</div>
                 {dualDuration(event.startFrame, totalDurationFrames, 'Time', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
                 {event.columnId === SKILL_COLUMNS.ULTIMATE && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active phase', pActive)}
                 {event.cooldownDuration > 0 && dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, 'Cooldown', pCooldown)}

@@ -929,8 +929,8 @@
 }
 
 .cv-field-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 0.25rem 1rem;
 }
 .cv-field {
@@ -1255,6 +1255,7 @@
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: 0.6rem;
+  width: 100%;
 }
 .cv-mult-table th,
 .cv-mult-table td {
@@ -2602,7 +2603,9 @@
 .event-frame-diamond:active {
   cursor: grabbing;
 }
-/* Larger invisible hit area so the diamond is easy to click */
+/* Visible hover feedback around diamond; pointer-events stay on the
+   diamond itself so clicks between diamonds reach the segment/wrapper
+   for event dragging (critical for short/dense sequenced events). */
 .event-frame-diamond::before {
   content: '';
   position: absolute;
@@ -2610,7 +2613,6 @@
   left: -3px;
   right: -3px;
   bottom: -8px;
-  pointer-events: auto;
 }
 .event-frame-diamond:hover {
   opacity: 1;

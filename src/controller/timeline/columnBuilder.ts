@@ -2,7 +2,6 @@ import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../cons
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getWeaponEffects } from '../../consts/weaponSkillEffects';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
@@ -41,6 +40,9 @@ export function buildColumns(
   // Pre-scan: detect operators with team-shared status effects (e.g. Scorching Fangs)
   type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number; minPotentialForTeam: number };
   const teamStatusDefs: TeamStatusDef[] = [];
+  // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
+  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string };
+  const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
   for (const s of slots) {
     if (!s.operator) continue;
     const json = getOperatorJson(s.operator.id);
@@ -48,7 +50,7 @@ export function buildColumns(
     if (!statusEvents) continue;
     for (const se of statusEvents) {
       if (se.p3TeamShare) {
-        const dur = se.duration?.value?.[0] ?? 15;
+        const dur = se.duration?.value?.[0] ?? se.properties?.duration?.value?.[0] ?? 15;
         const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
         teamStatusDefs.push({
           sourceSlot: s,
@@ -57,6 +59,21 @@ export function buildColumns(
           duration: durationFrames,
           minPotentialForTeam: 3, // P3 required for team share
         });
+      }
+      if (se.target === 'THIS_OPERATOR') {
+        const dur = se.properties?.duration?.value?.[0] ?? se.duration?.value?.[0] ?? -1;
+        const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+        const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.name]
+          ?? se.name.toLowerCase().replace(/_/g, '-');
+        const defs = operatorStatusMap.get(s.slotId) ?? [];
+        defs.push({
+          statusName: se.name,
+          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+          columnId: colId,
+          duration: durationFrames,
+          color: s.operator.color,
+        });
+        operatorStatusMap.set(s.slotId, defs);
       }
     }
   }
@@ -182,81 +199,6 @@ export function buildColumns(
     });
   }
 
-  // ── Unbridled Edge team buff (OBJ Edge of Lightness) ─────────────────────
-  const UNBRIDLED_EDGE_MAX_STACKS = 3;
-  const hasUnbridledEdge = slots.some((s) => s.weaponName === 'OBJ Edge of Lightness');
-  if (hasUnbridledEdge) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-unbridled-edge`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.WEAPON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.UNBRIDLED_EDGE,
-      label: STATUS_LABELS[StatusType.UNBRIDLED_EDGE].toUpperCase(),
-      color: '#88ddaa',
-      headerVariant: 'mf',
-      microColumns: Array.from({ length: UNBRIDLED_EDGE_MAX_STACKS }, (_, i) => ({
-        id: `ue-${i}`,
-        label: String(i + 1),
-        color: '#88ddaa',
-      })),
-      microColumnAssignment: 'by-order',
-      maxEvents: UNBRIDLED_EDGE_MAX_STACKS,
-      reuseExpiredSlots: true,
-      derived: true,
-      defaultEvent: {
-        name: StatusType.UNBRIDLED_EDGE,
-        defaultActivationDuration: 2400, // 20s at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    });
-  }
-
-  // ── Shared team weapon buff column ────────────────────────────────────────
-  const teamWeaponBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
-  for (const slot of slots) {
-    if (!slot.operator || !slot.weaponName) continue;
-    const weaponEntry = getWeaponEffects(slot.weaponName);
-    if (!weaponEntry) continue;
-    for (const effect of weaponEntry.effects) {
-      if (effect.target === 'team') {
-        teamWeaponBuffs.push({
-          slotId: slot.slotId,
-          label: effect.label,
-          durationFrames: Math.round(effect.durationSeconds * 120),
-          color: slot.operator.color,
-        });
-      }
-    }
-  }
-  if (teamWeaponBuffs.length > 0) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-team-weapon-status`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.WEAPON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: 'team-weapon-status',
-      label: ColumnLabel.WEAPON_BUFF,
-      color: '#66aa88',
-      headerVariant: 'skill',
-      derived: true,
-      microColumns: teamWeaponBuffs.map((twb) => ({
-        id: `weapon-team-${twb.slotId}`,
-        label: twb.label,
-        color: twb.color,
-        defaultEvent: {
-          name: twb.label,
-          defaultActivationDuration: twb.durationFrames,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      })),
-      microColumnAssignment: 'dynamic-split',
-      matchColumnIds: teamWeaponBuffs.map((twb) => `weapon-team-${twb.slotId}`),
-    });
-  }
-
   // ── Shared team gear set buff column ──────────────────────────────────────
   const teamGearBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
   for (const slot of slots) {
@@ -305,9 +247,11 @@ export function buildColumns(
     const op = slot.operator;
     const opJson = op ? getOperatorJson(op.id) : null;
     const opSkills = (opJson?.skills ?? {}) as Record<string, any>;
-    // Detect variants by presence of ENHANCED_*/EMPOWERED_* skill categories
-    const hasBasicVariants = !!opSkills.ENHANCED_BASIC_ATTACK || !!opSkills.EMPOWERED_BASIC_ATTACK;
-    const hasBattleVariants = !!opSkills.ENHANCED_BATTLE_SKILL || !!opSkills.EMPOWERED_BATTLE_SKILL;
+    // Detect variants by presence of _ENHANCED/_EMPOWERED skill ID suffixes
+    const basicName = op?.skills.basic?.name;
+    const battleName = op?.skills.battle?.name;
+    const hasBasicVariants = basicName && (!!opSkills[basicName + '_ENHANCED'] || !!opSkills[basicName + '_EMPOWERED']);
+    const hasBattleVariants = battleName && (!!opSkills[battleName + '_ENHANCED'] || !!opSkills[battleName + '_EMPOWERED']);
     const hasComboOverride = false; // Combo frame overrides now handled generically
     let slotHasCols = false;
     if (op) {
@@ -386,7 +330,7 @@ export function buildColumns(
           }
           // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
           if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
-            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, 'BASIC_ATTACK'));
+            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name));
             col.defaultEvent = {
               name: skill.name,
               defaultActivationDuration: base.totalDurationFrames,
@@ -395,15 +339,16 @@ export function buildColumns(
               segments: base.segments,
             };
             col.eventVariants = [{ ...col.defaultEvent }];
-            // Auto-discover variant categories
-            for (const varCat of ['ENHANCED_BASIC_ATTACK', 'EMPOWERED_BASIC_ATTACK']) {
-              const varSkill = opSkills[varCat];
+            // Auto-discover variant skill IDs
+            for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
+              const varId = skill.name + suffix;
+              const varSkill = opSkills[varId];
               if (!varSkill) continue;
-              const variantSeqs = getFrameSequences(op.id, varCat);
+              const variantSeqs = getFrameSequences(op.id, varId);
               if (variantSeqs?.length) {
                 const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
                 col.eventVariants.push({
-                  name: varSkill.id ?? `${skill.name}_${varCat}`,
+                  name: varId,
                   defaultActivationDuration: variantSeg.totalDurationFrames,
                   defaultActiveDuration: 0,
                   defaultCooldownDuration: 0,
@@ -419,21 +364,21 @@ export function buildColumns(
                 defaultActivationDuration: FINISHER_FRAMES,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
-                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.FINISHER }] }],
+                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
               },
               {
                 name: CombatSkillsType.DIVE,
                 defaultActivationDuration: DIVE_FRAMES,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
-                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, hitType: EventFrameType.DIVE }] }],
+                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }],
               },
             );
           }
           // Battle skill variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
           if (hasBattleVariants && skillType === SKILL_COLUMNS.BATTLE && op) {
             const baseSeg = SkillSegmentBuilder.buildSegments(
-              getFrameSequences(op.id, 'BATTLE_SKILL'),
+              getFrameSequences(op.id, skill.name),
               { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain },
             );
             col.defaultEvent = {
@@ -447,18 +392,19 @@ export function buildColumns(
               teamGaugeGain: skill.teamGaugeGain,
             };
             col.eventVariants = [{ ...col.defaultEvent! }];
-            // Auto-discover variant categories
-            for (const varCat of ['ENHANCED_BATTLE_SKILL', 'EMPOWERED_BATTLE_SKILL', 'ENHANCED_EMPOWERED_BATTLE_SKILL']) {
-              const varSkill = opSkills[varCat];
+            // Auto-discover variant skill IDs
+            for (const suffix of ['_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED']) {
+              const varId = skill.name + suffix;
+              const varSkill = opSkills[varId];
               if (!varSkill) continue;
-              const variantSeqs = getFrameSequences(op.id, varCat);
+              const variantSeqs = getFrameSequences(op.id, varId);
               if (!variantSeqs?.length) continue;
               // Enhanced variants default to 0 gauge gain; empowered inherits base
-              const isEnhanced = varCat.startsWith('ENHANCED');
+              const isEnhanced = suffix.includes('ENHANCED');
               const gg = isEnhanced ? 0 : skill.gaugeGain;
               const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
               const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { gaugeGain: gg, teamGaugeGain: tgg });
-              // Apply frame modifications if defined on the variant category
+              // Apply frame modifications if defined on the variant
               if (varSkill.frameModifications) {
                 for (const fm of varSkill.frameModifications) {
                   const seg = variantSeg.segments[fm.segmentIndex];
@@ -476,7 +422,7 @@ export function buildColumns(
               }
               col.eventVariants!.push({
                 ...col.defaultEvent!,
-                name: varSkill.id ?? `${skill.name}_${varCat}`,
+                name: varId,
                 defaultActivationDuration: variantSeg.totalDurationFrames,
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
@@ -486,7 +432,7 @@ export function buildColumns(
             }
           }
           // Generic basic attack: data-driven frame sequences
-          const basicSeqs = op && getFrameSequences(op.id, 'BASIC_ATTACK');
+          const basicSeqs = op && basicName ? getFrameSequences(op.id, basicName) : undefined;
           if (basicSeqs?.length && skillType === SKILL_COLUMNS.BASIC) {
             const base = SkillSegmentBuilder.buildSegments(basicSeqs);
             col.defaultEvent = {
@@ -498,7 +444,7 @@ export function buildColumns(
             };
           }
           // Generic battle skill: data-driven frame sequences
-          const battleSeqs = op && getFrameSequences(op.id, 'BATTLE_SKILL');
+          const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const battleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
@@ -511,10 +457,11 @@ export function buildColumns(
               segments: battleSegments,
             };
             // Empowered battle skill variant (e.g. Arclight's additional attack on Electrification)
-            const empoweredBattleSeqs = getFrameSequences(op!.id, 'EMPOWERED_BATTLE_SKILL');
+            const empoweredBattleId = battleName + '_EMPOWERED';
+            const empoweredBattleSeqs = battleName ? getFrameSequences(op!.id, empoweredBattleId) : undefined;
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-              const empoweredName = `${col.defaultEvent!.name}_EMPOWERED` as CombatSkillsType;
+              const empoweredName = empoweredBattleId as CombatSkillsType;
               const empBattleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
               const empBaseSegs = empBattleCd > 0
                 ? [...seg.segments, { durationFrames: empBattleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
@@ -542,9 +489,10 @@ export function buildColumns(
             }
           }
           // Generic combo skill: data-driven frame sequences
-          const comboSeqs = op && getFrameSequences(op.id, 'COMBO_SKILL');
+          const comboName = op?.skills.combo?.name;
+          const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
-            const comboLabels = getSegmentLabels(op!.id, 'COMBO_SKILL');
+            const comboLabels = getSegmentLabels(op!.id, comboName!);
             const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
@@ -562,10 +510,11 @@ export function buildColumns(
             const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
 
             // Build active-phase segment from frame data if available
-            const ultSeqs = op && getFrameSequences(op!.id, 'ULTIMATE');
+            const ultName = op?.skills.ultimate?.name;
+            const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
             let activeSegment: import('../../consts/viewTypes').EventSegmentData;
             if (ultSeqs?.length) {
-              const ultLabels = getSegmentLabels(op!.id, 'ULTIMATE');
+              const ultLabels = getSegmentLabels(op!.id, ultName!);
               const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
               activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active', segmentType: SegmentType.ACTIVE };
             } else {
@@ -613,43 +562,6 @@ export function buildColumns(
         }
       }
     }
-    // ── Weapon skill buff column (shared dynamic-split) ──────────────────────
-    let weaponColCount = 0;
-    if (op && slot.weaponName) {
-      const weaponEntry = getWeaponEffects(slot.weaponName);
-      if (weaponEntry) {
-        const wielderEffects = weaponEntry.effects.filter((e) => e.target === 'wielder');
-        if (wielderEffects.length > 0) {
-          const microCols = wielderEffects.map((eff, i) => ({
-            id: i === 0 ? 'weapon-buff' : `weapon-buff-${i}`,
-            label: eff.label,
-            color: op.color,
-            defaultEvent: {
-              name: eff.label,
-              defaultActivationDuration: Math.round(eff.durationSeconds * 120),
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
-            },
-          }));
-          columns.push({
-            key: `${slot.slotId}-weapon-buff`,
-            type: 'mini-timeline',
-            source: TimelineSourceType.WEAPON,
-            ownerId: slot.slotId,
-            columnId: 'operator-weapon-status',
-            label: ColumnLabel.WEAPON_BUFF,
-            color: op.color,
-            headerVariant: 'skill',
-            derived: true,
-            microColumns: microCols,
-            microColumnAssignment: 'dynamic-split',
-            matchColumnIds: microCols.map((mc) => mc.id),
-          });
-          weaponColCount++;
-        }
-      }
-    }
-
     // ── Gear set buff column (wielder effects) ─────────────────────────────────
     let gearColCount = 0;
     if (op && slot.gearSetType) {
@@ -718,22 +630,38 @@ export function buildColumns(
       }
     }
 
-    // ── Team-shared status columns (e.g. Scorching Fangs) ───────────────────
-    let teamStatusColCount = 0;
+    // ── Operator status column (Melting Flame, Scorching Fangs, etc.) ────────
+    let statusColCount = 0;
     if (op) {
+      // Collect micro-columns: own statuses + team-shared statuses from other operators
+      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: any }[] = [];
+      const matchIds: string[] = [];
+      const ownDefs = operatorStatusMap.get(slot.slotId) ?? [];
+      for (const def of ownDefs) {
+        statusMicroCols.push({
+          id: def.columnId,
+          label: def.label,
+          color: def.color,
+          defaultEvent: {
+            name: def.label,
+            defaultActivationDuration: def.duration,
+            defaultActiveDuration: 0,
+            defaultCooldownDuration: 0,
+          },
+        });
+        matchIds.push(def.columnId);
+        // Also match StatusType enum value (e.g. 'SCORCHING_FANGS') used by processStatus.ts
+        if (def.statusName !== def.columnId) matchIds.push(def.statusName);
+      }
+      // Team-shared statuses from other operators (e.g. Scorching Fangs shared at P3)
       for (const tsd of teamStatusDefs) {
         const isSource = slot === tsd.sourceSlot;
-        if (isSource || (tsd.sourceSlot.potential ?? 0) >= tsd.minPotentialForTeam) {
-          columns.push({
-            key: `${slot.slotId}-${tsd.statusName.toLowerCase().replace(/_/g, '-')}`,
-            type: 'mini-timeline',
-            source: TimelineSourceType.OPERATOR,
-            ownerId: slot.slotId,
-            columnId: tsd.statusName,
-            label: tsd.label.toUpperCase(),
+        if (!isSource && (tsd.sourceSlot.potential ?? 0) >= tsd.minPotentialForTeam) {
+          // Use statusName directly as ID — matches events from processStatus.ts
+          statusMicroCols.push({
+            id: tsd.statusName,
+            label: tsd.label,
             color: op.color,
-            headerVariant: 'skill',
-            derived: true,
             defaultEvent: {
               name: tsd.label,
               defaultActivationDuration: tsd.duration,
@@ -741,8 +669,28 @@ export function buildColumns(
               defaultCooldownDuration: 0,
             },
           });
-          teamStatusColCount++;
+          matchIds.push(tsd.statusName);
+          // Also match kebab-case form used by statusDerivationEngine
+          const kebab = tsd.statusName.toLowerCase().replace(/_/g, '-');
+          if (kebab !== tsd.statusName) matchIds.push(kebab);
         }
+      }
+      if (statusMicroCols.length > 0) {
+        columns.push({
+          key: `${slot.slotId}-operator-status`,
+          type: 'mini-timeline',
+          source: TimelineSourceType.OPERATOR,
+          ownerId: slot.slotId,
+          columnId: 'operator-status',
+          label: ColumnLabel.STATUS,
+          color: op.color,
+          headerVariant: 'skill',
+          derived: true,
+          microColumns: statusMicroCols,
+          microColumnAssignment: 'dynamic-split',
+          matchColumnIds: matchIds,
+        });
+        statusColCount++;
       }
     }
 
@@ -750,7 +698,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + weaponColCount + gearColCount + tacticalColCount + teamStatusColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + gearColCount + tacticalColCount + statusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -776,24 +724,7 @@ export function buildColumns(
 
   // ── Unified enemy status column ─────────────────────────────────────────────
   // Single column collecting all enemy statuses: inflictions, reactions, physical
-  // statuses, stagger frailty, debuffs, and weapon effects.
-  const enemyWeaponDebuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
-  for (const slot of slots) {
-    if (!slot.operator || !slot.weaponName) continue;
-    const weaponEntry = getWeaponEffects(slot.weaponName);
-    if (!weaponEntry) continue;
-    for (const effect of weaponEntry.effects) {
-      if (effect.target === 'enemy') {
-        enemyWeaponDebuffs.push({
-          slotId: slot.slotId,
-          label: effect.label,
-          durationFrames: Math.round(effect.durationSeconds * 120),
-          color: slot.operator.color,
-        });
-      }
-    }
-  }
-
+  // statuses, stagger frailty, and debuffs.
   const statusMicroColumns = [
     // Stagger frailty
     {
@@ -888,19 +819,6 @@ export function buildColumns(
           }));
       });
     })(),
-    ...enemyWeaponDebuffs.map((ewd) => ({
-      id: `fragility-${ewd.slotId}`,
-      label: ewd.label,
-      color: ewd.color,
-      defaultEvent: {
-        name: ewd.label,
-        defaultActivationDuration: ewd.durationFrames,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-        sourceOwnerId: DEBUGGER_OWNER_ID,
-        sourceSkillName: 'Debug',
-      },
-    })),
   ];
 
   columns.push({

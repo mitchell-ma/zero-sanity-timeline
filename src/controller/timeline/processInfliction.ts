@@ -1,6 +1,6 @@
 import { TimelineEvent, EventFrameMarker, FrameAbsorptionMarker, SkillType } from '../../consts/viewTypes';
 import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
-import { CombatSkillsType, ELEMENT_LABELS, ElementType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
+import { CombatSkillsType, ElementType, EventFrameType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction } from '../../model/calculation/damageFormulas';
@@ -150,35 +150,32 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
           }
 
           // Status applied by this frame (self or enemy target)
-          if (frame.applyStatus) {
-            if (frame.applyStatus.target === TargetType.SELF) {
-              // Self-targeted status (e.g. Melting Flame, Thunderlance)
-              const grantColumnId = EXCHANGE_STATUS_COLUMN[frame.applyStatus.status];
+          const statusEffects = frame.applyStatuses ?? (frame.applyStatus ? [frame.applyStatus] : []);
+          for (let sti = 0; sti < statusEffects.length; sti++) {
+            const statusEffect = statusEffects[sti];
+
+            // Potential gating: resolve from loadout stats via source operator's slot ID
+            const pot = loadoutStats?.[event.ownerId]?.potential ?? 0;
+            if (statusEffect.potentialMin != null && pot < statusEffect.potentialMin) continue;
+            if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
+
+            if (statusEffect.target === TargetType.SELF) {
+              // Exchange statuses (Melting Flame, Thunderlance) are handled by
+              // deriveStatusesFromEngine — skip frame-level creation to avoid
+              // blocking the engine's dedup check (which would prevent final
+              // strike absorption and threshold/consumption logic from running).
+              const grantColumnId = EXCHANGE_STATUS_COLUMN[statusEffect.status];
               if (grantColumnId) {
-                const statusDuration = EXCHANGE_STATUS_DURATION[frame.applyStatus.status] ?? EXCHANGE_EVENT_DURATION;
-                for (let s = 0; s < frame.applyStatus.stacks; s++) {
-                  derived.push({
-                    id: `${event.id}-status-${si}-${fi}-${s}`,
-                    name: frame.applyStatus.status,
-                    ownerId: event.ownerId,
-                    columnId: grantColumnId,
-                    startFrame: absFrame,
-                    activationDuration: statusDuration,
-                    activeDuration: 0,
-                    cooldownDuration: 0,
-                    sourceOwnerId: event.ownerId,
-                    sourceSkillName: event.name,
-                  });
-                }
+                // no-op: engine handles stacking, max cap, consumption, thresholds
               }
               // Team status (e.g. Squad Buff → Link)
-              const teamColumnId = TEAM_STATUS_COLUMN[frame.applyStatus.status];
+              const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
               if (teamColumnId) {
                 // Link duration = remaining ultimate active phase from grant frame
                 const ultActiveEnd = event.startFrame + event.activationDuration + event.activeDuration;
                 let linkDuration = Math.max(0, ultActiveEnd - absFrame);
                 // P5: extend link buff duration beyond ultimate active phase
-                if ((event.operatorPotential ?? 0) >= 5) {
+                if (pot >= 5) {
                   linkDuration += P5_LINK_EXTENSION_FRAMES;
                 }
                 derived.push({
@@ -194,22 +191,60 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: R
                   sourceSkillName: event.name,
                 });
               }
-            } else if (frame.applyStatus.target === TargetType.ENEMY) {
+            } else if (statusEffect.target === TargetType.ENEMY) {
+              // RESET stacking: clamp all active instances on the same column
+              if (statusEffect.stackingInteraction === 'RESET') {
+                for (let di = derived.length - 1; di >= 0; di--) {
+                  const prev = derived[di];
+                  if (prev.columnId !== statusEffect.status || prev.ownerId !== ENEMY_OWNER_ID) continue;
+                  const prevEnd = prev.startFrame + prev.activationDuration;
+                  if (absFrame < prevEnd) {
+                    derived[di] = {
+                      ...prev,
+                      activationDuration: absFrame - prev.startFrame,
+                      eventStatus: EventStatusType.REFRESHED,
+                      eventStatusOwnerId: event.ownerId,
+                      eventStatusSkillName: event.name,
+                    };
+                  }
+                }
+              }
+
+              // Build segments with per-segment susceptibility if present
+              let segments: import('../../consts/viewTypes').EventSegmentData[] | undefined;
+              let susceptibility: Partial<Record<ElementType, number>> | undefined;
+
+              if (statusEffect.segments && statusEffect.segments.length > 0) {
+                segments = statusEffect.segments.map(seg => ({
+                  durationFrames: seg.durationFrames,
+                  label: seg.name,
+                  ...(seg.susceptibility && {
+                    susceptibility: resolveSusceptibility(seg.susceptibility, event.columnId, event.ownerId, loadoutStats),
+                  }),
+                }));
+                // Use the first segment's susceptibility as the event-level default
+                const firstSeg = statusEffect.segments[0];
+                if (firstSeg.susceptibility) {
+                  susceptibility = resolveSusceptibility(firstSeg.susceptibility, event.columnId, event.ownerId, loadoutStats);
+                }
+              } else if (statusEffect.susceptibility) {
+                susceptibility = resolveSusceptibility(statusEffect.susceptibility, event.columnId, event.ownerId, loadoutStats);
+              }
+
               // Enemy-targeted status (e.g. Focus → Susceptibility column)
               derived.push({
-                id: `${event.id}-status-${si}-${fi}`,
-                name: frame.applyStatus.eventName ?? frame.applyStatus.status,
+                id: `${event.id}-status-${si}-${fi}-${sti}`,
+                name: statusEffect.eventName ?? statusEffect.status,
                 ownerId: ENEMY_OWNER_ID,
-                columnId: frame.applyStatus.status,
+                columnId: statusEffect.status,
                 startFrame: absFrame,
-                activationDuration: frame.applyStatus.durationFrames,
+                activationDuration: statusEffect.durationFrames,
                 activeDuration: 0,
                 cooldownDuration: 0,
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
-                ...(frame.applyStatus.susceptibility && {
-                  susceptibility: resolveSusceptibility(frame.applyStatus.susceptibility, event.columnId, event.ownerId, loadoutStats),
-                }),
+                ...(susceptibility && { susceptibility }),
+                ...(segments && { segments }),
               });
             }
           }
@@ -937,12 +972,15 @@ function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; labe
     frames.push({ offsetFrame: 0, damageElement: element });
   }
 
+  const COMBUSTION_FRAME_TYPES = [EventFrameType.GUARANTEED_HIT, EventFrameType.DAMAGE_OVER_TIME, EventFrameType.PASSIVE];
   if (ev.columnId === REACTION_COLUMNS.COMBUSTION) {
+    // Initial hit also gets combustion frame types
+    if (frames.length > 0) frames[0].frameTypes = COMBUSTION_FRAME_TYPES;
     // DoT ticks at 1-second intervals
     for (let i = 1; i <= COMBUSTION_TICK_COUNT; i++) {
       const tickOffset = i * FPS;
       if (tickOffset > ev.activationDuration) break;
-      frames.push({ offsetFrame: tickOffset, damageElement: element });
+      frames.push({ offsetFrame: tickOffset, damageElement: element, frameTypes: COMBUSTION_FRAME_TYPES });
     }
   } else if (ev.columnId === REACTION_COLUMNS.SOLIDIFICATION) {
     // Shatter at the end of the duration
@@ -973,64 +1011,18 @@ function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; labe
   };
 }
 
-// ── Susceptibility P5 frame attachment ────────────────────────────────────
-
-/** Game-time threshold for P5 susceptibility upgrade (20s at 120fps). */
-const P5_SUSCEPTIBILITY_THRESHOLD = 2400;
-/** Susceptibility bonus added at P5 threshold. */
-const P5_SUSCEPTIBILITY_BONUS = 0.04;
-
+// ── Susceptibility frame attachment ───────────────────────────────────────
 
 /**
- * Attaches a P5 frame marker to susceptibility events whose source operator
- * has potential >= 5. The marker is placed at the game-time threshold (20s)
- * and shows the susceptibility increase.
- *
- * Called before time-stop extension so `offsetFrame` uses game-time;
- * `resolveFramePositions` will convert it to real-time later.
+ * Attaches susceptibility frame markers to status events.
+ * Now a no-op for Focus (P5 uses data-driven segments instead).
+ * Retained for other status types that may need frame markers in the future.
  */
 export function attachSusceptibilityFrames(
   events: TimelineEvent[],
-  loadoutStats?: Record<string, LoadoutStats>,
+  _loadoutStats?: Record<string, LoadoutStats>,
 ): TimelineEvent[] {
-  return events.map((ev) => {
-    if (ev.ownerId !== ENEMY_OWNER_ID || ev.name !== StatusType.FOCUS) return ev;
-    if (ev.columnId !== StatusType.SUSCEPTIBILITY && ev.columnId !== StatusType.FOCUS) return ev;
-    if (ev.segments) return ev; // already has frames
-
-    const potential = ev.sourceOwnerId
-      ? (loadoutStats?.[ev.sourceOwnerId]?.potential ?? 0)
-      : 0;
-    if (potential < 5) return ev;
-
-    // P5 threshold must be within the event's base duration
-    // (activationDuration may already be time-stop-extended, but the
-    //  offset is game-time and resolveFramePositions handles extension)
-    if (P5_SUSCEPTIBILITY_THRESHOLD >= ev.activationDuration) return ev;
-
-    // Build detailed label showing base → upgraded susceptibility per element
-    const elements = ev.susceptibility ? Object.entries(ev.susceptibility) : [];
-    const detailLines = elements.map(([elem, base]) => {
-      const basePct = `${(base * 100).toFixed(0)}%`;
-      const upgradedPct = `${((base + P5_SUSCEPTIBILITY_BONUS) * 100).toFixed(0)}%`;
-      return `${ELEMENT_LABELS[elem as ElementType] ?? elem}: ${basePct} → ${upgradedPct}`;
-    });
-    const statusLabel = `P5 — High Specs Tech Tester\n${detailLines.join(', ')}`;
-
-    const frames: EventFrameMarker[] = [{
-      offsetFrame: P5_SUSCEPTIBILITY_THRESHOLD,
-      statusLabel,
-    }];
-
-    return {
-      ...ev,
-      segments: [{
-        durationFrames: ev.activationDuration,
-        label: 'Focus',
-        frames,
-      }],
-    };
-  });
+  return events;
 }
 
 // ── Consume reaction → apply status ────────────────────────────────────────

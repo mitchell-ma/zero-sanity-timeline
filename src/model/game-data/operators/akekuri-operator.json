@@ -1768,22 +1768,6 @@
       }
     }
   ],
-  "skillOverrides": {
-    "COMBO_SKILL": {
-      "properties": {
-        "animation": {
-          "duration": {
-            "value": 0.488,
-            "unit": "SECOND"
-          },
-          "timeInteractionType": "TIME_STOP",
-          "dataSources": [
-            "SELF"
-          ]
-        }
-      }
-    }
-  },
   "talents": {
     "one": {
       "name": "Cheer of Victory",

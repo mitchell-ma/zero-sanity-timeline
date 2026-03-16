@@ -12,7 +12,7 @@
  *               × FragilityMultiplier × DMGReductionMultiplier
  */
 
-import { ElementType } from '../../consts/enums';
+import { DamageType, ElementType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
@@ -76,6 +76,8 @@ export interface ReactionDamageTick {
   damage: number;
   /** Full calculation parameters for breakdown display. */
   params: StatusDamageParams;
+  /** Damage type: NORMAL or DAMAGE_OVER_TIME. */
+  damageType?: DamageType;
 }
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
@@ -204,6 +206,7 @@ export function computeCombustionDamage(
       label: `Combustion > DoT Tick ${i}`,
       damage: calculateStatusDamage(dotParams) * p3Multiplier,
       params: dotParams,
+      damageType: DamageType.DAMAGE_OVER_TIME,
     });
   }
 
@@ -335,6 +338,7 @@ export function buildReactionDamageRows(
     hpRemaining: null,
     params: null,
     statusParams: tick.params,
+    damageType: tick.damageType,
   }));
 }
 

@@ -3,7 +3,7 @@ import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { StatType, StatOwnerType } from '../../consts/enums';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { LoadoutStats } from '../InformationPane';
-import { LevelSelect } from './SharedFields';
+import { StatField } from './SharedFields';
 import {
   formatStatValue,
   resolveWeaponBreakdown,
@@ -69,21 +69,6 @@ const STAT_LABELS: Record<StatType, string> = {
 
 const DESC_FONT_SIZE = 14;
 
-// ── Dropdown option arrays ──────────────────────────────────────────────────
-
-function range(from: number, to: number): number[] {
-  const arr: number[] = [];
-  for (let i = from; i <= to; i++) arr.push(i);
-  return arr;
-}
-
-const OPERATOR_LEVELS = range(1, 90);
-const SKILL_LEVELS = range(1, 12);
-const WEAPON_SKILL_LEVELS = range(1, 9);
-const POTENTIAL_LEVELS = range(0, 5);
-const POTENTIAL_LABELS = ['P0 (None)', 'P1', 'P2', 'P3', 'P4', 'P5'];
-const GEAR_RANKS = range(1, 4);
-
 const statRowStyle: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
   padding: '1px 0', fontSize: 13,
@@ -106,10 +91,10 @@ interface LoadoutPaneProps {
   onStatsChange: (stats: LoadoutStats) => void;
   onClose: () => void;
   allProcessedEvents?: readonly TimelineEvent[];
-  verbose?: boolean;
+  verbose?: 0 | 1 | 2;
 }
 
-function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChange, onClose, allProcessedEvents, verbose = true }: LoadoutPaneProps) {
+function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChange, onClose, allProcessedEvents, verbose = 1 }: LoadoutPaneProps) {
   const set = (key: keyof LoadoutStats) => (v: number) =>
     onStatsChange({ ...stats, [key]: v });
 
@@ -140,9 +125,9 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
       <div className="edit-panel-body">
         <div className="edit-panel-section">
           <span className="edit-section-label">Operator</span>
-          <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Operator Level</span>} value={stats.operatorLevel} options={OPERATOR_LEVELS} onChange={set('operatorLevel')} />
-          <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Potential</span>} value={stats.potential} options={POTENTIAL_LEVELS} optionLabels={POTENTIAL_LABELS} onChange={set('potential')} />
-          {verbose && operator.potentialDescriptions && stats.potential > 0 && operator.potentialDescriptions.slice(0, stats.potential).map((desc, i) => (
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Operator Level</span>} value={stats.operatorLevel} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={set('operatorLevel')} />
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Potential</span>} value={stats.potential} min={0} max={5} showMinMax onChange={set('potential')} />
+          {verbose >= 1 &&operator.potentialDescriptions && stats.potential > 0 && operator.potentialDescriptions.slice(0, stats.potential).map((desc, i) => (
             <div key={i} style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px' }}>
               <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginRight: 4 }}>P{i + 1}</span>
               {desc}
@@ -152,8 +137,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
 
         <div className="edit-panel-section">
           <span className="edit-section-label">Talents</span>
-          <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Attribute Increase</span>} value={stats.attributeIncreaseLevel} options={range(0, operator.maxAttributeIncreaseLevel)} onChange={set('attributeIncreaseLevel')} />
-          {verbose && stats.attributeIncreaseLevel > 0 && (
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Attribute Increase</span>} value={stats.attributeIncreaseLevel} min={0} max={operator.maxAttributeIncreaseLevel} showMinMax onChange={set('attributeIncreaseLevel')} />
+          {verbose >= 1 &&stats.attributeIncreaseLevel > 0 && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.attributeIncreaseName}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 13, lineHeight: 1.4, padding: '2px 6px 4px' }}>
@@ -162,8 +147,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               </div>
             </>
           )}
-          <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 1</span>} value={stats.talentOneLevel} options={range(0, operator.maxTalentOneLevel)} onChange={set('talentOneLevel')} />
-          {verbose && stats.talentOneLevel > 0 && operator.talentDescriptions?.[1]?.length && (
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 1</span>} value={stats.talentOneLevel} min={0} max={operator.maxTalentOneLevel} showMinMax onChange={set('talentOneLevel')} />
+          {verbose >= 1 &&stats.talentOneLevel > 0 && operator.talentDescriptions?.[1]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentOneName}</div>
               <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
@@ -171,8 +156,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               </div>
             </>
           )}
-          <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 2</span>} value={stats.talentTwoLevel} options={range(0, operator.maxTalentTwoLevel)} onChange={set('talentTwoLevel')} />
-          {verbose && stats.talentTwoLevel > 0 && operator.talentDescriptions?.[2]?.length && (
+          <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 2</span>} value={stats.talentTwoLevel} min={0} max={operator.maxTalentTwoLevel} showMinMax onChange={set('talentTwoLevel')} />
+          {verbose >= 1 &&stats.talentTwoLevel > 0 && operator.talentDescriptions?.[2]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentTwoName}</div>
               <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
@@ -190,13 +175,15 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             const labelText = ({ basic: 'Basic Attack', battle: 'Battle Skill', combo: 'Combo Skill', ultimate: 'Ultimate Skill' })[skillType];
             return (
               <React.Fragment key={skillType}>
-                <LevelSelect
+                <StatField
                   label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{labelText}</span>}
                   value={stats[levelKey]}
-                  options={SKILL_LEVELS}
+                  min={1} max={12}
+                  holdSnaps={[1, 3, 6, 9, 12]}
+                  showMinMax
                   onChange={set(levelKey)}
                 />
-                {verbose && skill.description && (
+                {verbose >= 1 &&skill.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{skill.name.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}</div>
                     {skill.description}
@@ -211,13 +198,15 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <div className="edit-panel-section">
             <span className="edit-section-label">Weapon</span>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>{weaponData.name}</div>
-            <LevelSelect label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Weapon Level</span>} value={stats.weaponLevel} options={OPERATOR_LEVELS} onChange={set('weaponLevel')} />
+            <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Weapon Level</span>} value={stats.weaponLevel} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={set('weaponLevel')} />
             {weaponData.skills.map((sk) => (
-              <LevelSelect
+              <StatField
                 key={`skill-${sk.index}`}
                 label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Skill {sk.index + 1} ({sk.name})</span>}
                 value={[stats.weaponSkill1Level, stats.weaponSkill2Level, stats.weaponSkill3Level][sk.index]}
-                options={WEAPON_SKILL_LEVELS}
+                min={1} max={9}
+                holdSnaps={[1, 3, 6, 9]}
+                showMinMax
                 onChange={set((['weaponSkill1Level', 'weaponSkill2Level', 'weaponSkill3Level'] as const)[sk.index])}
               />
             ))}
@@ -242,7 +231,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 <div style={{ ...statRowStyle, marginTop: ei === 0 ? 4 : 8 }}>
                   <span style={statLabelStyle}>Skill 3: {eff.label}</span>
                 </div>
-                {verbose && eff.description && (
+                {verbose >= 1 &&eff.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 2, marginTop: -1 }}>
                     {eff.description}
                   </div>
@@ -259,7 +248,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                     <span style={statValueStyle}>{b.valueStr}{b.perStack ? eff.stackSuffix : ''}</span>
                   </div>
                 ))}
-                {verbose && eff.metaStr && (
+                {verbose >= 1 &&eff.metaStr && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: 2 }}>
                     {eff.metaStr}
                   </div>
@@ -277,7 +266,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
                   Set: {gearData.setName}
                 </div>
-                {verbose && gearData.setDescription && (
+                {verbose >= 1 &&gearData.setDescription && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
                     {gearData.setDescription}
                   </div>
@@ -288,11 +277,13 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               <React.Fragment key={piece.ranksKey}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', marginTop: 6 }}>{piece.name}</div>
                 {piece.statKeys.map((statType) => (
-                  <LevelSelect
+                  <StatField
                     key={statType}
                     label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{STAT_LABELS[statType] ?? statType}</span>}
                     value={piece.ranks[statType] ?? 4}
-                    options={GEAR_RANKS}
+                    min={1}
+                    max={4}
+                    showMinMax
                     onChange={(v) => onStatsChange({ ...stats, [piece.ranksKey]: { ...piece.ranks, [statType]: v } })}
                   />
                 ))}
@@ -332,10 +323,12 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             {tactical && (
               <>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{tactical.name}</div>
-                <LevelSelect
+                <StatField
                   label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Uses</span>}
                   value={tactical.currentMaxUses}
-                  options={range(0, tactical.modelMaxUses)}
+                  min={0}
+                  max={tactical.modelMaxUses}
+                  showMinMax
                   onChange={(v) => onStatsChange({ ...stats, tacticalMaxUses: v })}
                 />
               </>

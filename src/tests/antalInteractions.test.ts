@@ -55,14 +55,51 @@
  *    - Combo skill activation: 3s
  *    - Ultimate active duration: 12s, cooldown: 25s
  */
+import { TimelineEvent } from '../consts/viewTypes';
+import { SKILL_COLUMNS } from '../model/channels';
+
+jest.mock('../model/event-frames/operatorJsonLoader', () => ({
+  getOperatorJson: () => undefined, getAllOperatorIds: () => [],
+  getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
+  getSegmentLabels: () => undefined, getSkillTimings: () => undefined,
+  getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
+  getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
+  getBasicAttackDurations: () => undefined,
+}));
+jest.mock('../model/game-data/weaponGameData', () => ({
+  getSkillValues: () => [], getConditionalValues: () => [],
+  getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
+}));
+jest.mock('../view/InformationPane', () => ({
+  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+}));
+
+// eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
+// eslint-disable-next-line import/first
+import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/antal-operator.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockSkillsJson = require('../model/game-data/operator-skills/antal-skills.json');
 
-const mockAntalJson = { ...mockOperatorJson, skills: mockSkillsJson };
+const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...antalSkillEntries } = mockSkillsJson as Record<string, any>;
+const antalSkills: Record<string, any> = {};
+for (const [key, val] of Object.entries(antalSkillEntries)) {
+  antalSkills[key] = { ...(val as any), id: key };
+}
+if (_skTypeMap) {
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
+    if (antalSkills[skillId]) antalSkills[category] = antalSkills[skillId];
+    for (const suffix of variantSuffixes) {
+      const variantSkillId = `${skillId}_${suffix}`;
+      if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
+    }
+  }
+}
+const mockAntalJson = { ...mockOperatorJson, skills: antalSkills, skillTypeMap: _skTypeMap, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -376,8 +413,9 @@ describe('D. Ultimate (Overclocked Moment)', () => {
     expect(mockAntalJson.ultimateActiveDuration).toBe(12);
   });
 
-  test('D3: Ultimate cooldown is 25 seconds', () => {
-    expect(mockAntalJson.ultimateCooldownDuration).toBe(25);
+  test('D3: Ultimate cooldown duration not in split JSON (was 25s in combined format)', () => {
+    // ultimateCooldownDuration was part of the old combined JSON; not present in split operator JSON
+    expect(mockAntalJson.ultimateCooldownDuration).toBeUndefined();
   });
 
   test('D4: Ultimate animation is TIME_STOP (1.4s within 1.87s)', () => {
@@ -417,7 +455,7 @@ describe('E. Potentials', () => {
 
     const effect = p2.effects[0];
     expect(effect.potentialEffectType).toBe('SKILL_COST');
-    expect(effect.skillCostModifier.skillType).toBe('ANTAL_OVERCLOCKED_MOMENT');
+    expect(effect.skillCostModifier.skillType).toBe('OVERCLOCKED_MOMENT');
     expect(effect.skillCostModifier.value).toBe(0.9);
   });
 
@@ -502,8 +540,8 @@ describe('F. Resource Properties', () => {
     expect(mockAntalJson.battleSkillActivationDuration).toBe(8);
   });
 
-  test('F2: Battle skill cooldown is 12 seconds', () => {
-    expect(mockAntalJson.battleSkillCooldownDuration).toBe(12);
+  test('F2: Battle skill has no cooldown duration field', () => {
+    expect(mockAntalJson.battleSkillCooldownDuration).toBeUndefined();
   });
 
   test('F3: Combo skill activation duration is 3 seconds', () => {
@@ -560,6 +598,90 @@ describe('G. Operator Identity', () => {
     expect(lv1.attributes.BASE_HP).toBe(500);
     expect(lv1.attributes.CRITICAL_RATE).toBe(0.05);
     expect(lv1.attributes.ATTACK_RANGE).toBe(10);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Cooldown Interactions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Cooldown Interactions', () => {
+  const FPS = 120;
+  const SLOT_ID = 'slot-0';
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
+    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  test('H1: Basic attack (Exchange Current) has no cooldown', () => {
+    const ba = mockAntalJson.skills.BASIC_ATTACK;
+    // Basic attacks are segment-based with no COOLDOWN effect
+    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
+      .flatMap((f: any) => f.effects ?? [])
+      .find((e: any) => e.objectType === 'COOLDOWN');
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
+    const bs = mockAntalJson.skills.BATTLE_SKILL;
+    const cooldown = bs.effects?.find(
+      (e: any) => e.objectType === 'COOLDOWN'
+    );
+    expect(cooldown).toBeUndefined();
+  });
+
+  test('H3: Combo skill (EMP Test Site) has 15s cooldown', () => {
+    const cs = mockAntalJson.skills.COMBO_SKILL;
+    const cooldown = cs.effects.find(
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+    );
+    expect(cooldown).toBeDefined();
+    expect(cooldown.withPreposition.cardinality.value).toBe(15);
+  });
+
+  test('H4: Ultimate has no cooldown duration in split JSON', () => {
+    expect(mockAntalJson.ultimateCooldownDuration).toBeUndefined();
+  });
+
+  test('H5: Combo placement during cooldown is blocked', () => {
+    const comboDuration = Math.round(0.8 * FPS); // 96 frames
+    const comboCooldown = 15 * FPS; // 1800 frames
+    const totalRange = comboDuration + comboCooldown;
+    const cs1 = makeEvent({
+      id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
+      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      nonOverlappableRange: totalRange,
+    });
+    // Mid-cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, comboDuration + 600, 1, [cs1])).toBe(true);
+    // After cooldown
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.COMBO, totalRange, 1, [cs1])).toBe(false);
+  });
+
+  test('H6: Ultimate placement during cooldown is blocked', () => {
+    const ultAnimation = Math.round(1.87 * FPS); // 224 frames
+    const ultActive = 12 * FPS; // 1440 frames
+    const ultCooldown = 25 * FPS; // 3000 frames
+    const totalRange = ultAnimation + ultActive + ultCooldown;
+    const ult1 = makeEvent({
+      id: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
+      activationDuration: ultAnimation, activeDuration: ultActive,
+      cooldownDuration: ultCooldown, nonOverlappableRange: totalRange,
+    });
+    // During cooldown phase
+    const cooldownStart = ultAnimation + ultActive;
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, cooldownStart + 600, 1, [ult1])).toBe(true);
+    // After cooldown ends
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+  });
+
+  test('H7: Battle skill has no cooldown — back-to-back is valid', () => {
+    const bsDuration = Math.round(1 * FPS); // 120 frames
+    const bs1 = makeEvent({
+      id: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: bsDuration, nonOverlappableRange: bsDuration,
+    });
+    expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 });
 
