@@ -39,7 +39,9 @@ export function getOperatorJson(operatorId: string): Record<string, any> | undef
   if (!base) return undefined;
   const skills = SKILL_JSON[operatorId];
   if (!skills) return base;
-  return { ...base, skills };
+  // Hoist non-skill keys (e.g. statusEvents) from skills JSON to top level
+  const { statusEvents, ...skillCategories } = skills as Record<string, any>;
+  return { ...base, skills: skillCategories, ...(statusEvents ? { statusEvents } : {}) };
 }
 
 /** Get the skill JSON for a given operator ID. */

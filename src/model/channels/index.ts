@@ -101,10 +101,8 @@ export const FRAGILITY_COLUMN_PREFIX = 'fragility-';
 // ── Enemy group columns ───────────────────────────────────────────────────
 
 export const ENEMY_GROUP_COLUMNS = {
-  STAGGER_FRAILTY:      'stagger-frailty',
-  ARTS_INFLICTION:      'arts-infliction',
-  ARTS_REACTION:        'arts-reaction',
-  PHYSICAL_INFLICTION:  'physical-infliction',
-  PHYSICAL_STATUS:      'physical-status',
   ENEMY_STATUS:         'enemy-status',
 } as const;
+
+/** Event-level column IDs for stagger frailty events (routed to unified status column). */
+export const STAGGER_FRAILTY_COLUMN_ID = 'stagger-frailty';

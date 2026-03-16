@@ -10,6 +10,86 @@
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
 
+// Mock operatorRegistry to avoid require.context for splash art assets
+jest.mock('../controller/operators/operatorRegistry', () => ({
+  getOperatorConfig: (id: string) => {
+    if (id !== 'laevatain') return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../model/game-data/operators/laevatain-operator.json');
+  },
+  ALL_OPERATORS: [],
+}));
+
+// Mock loadoutRegistry to avoid require.context for asset discovery
+jest.mock('../utils/loadoutRegistry', () => {
+  // Weapon skill values at lv9 (from weaponGameData mock)
+  const SKILL_VALUES: Record<string, Record<string, number[]>> = {
+    INTELLECT_BOOST_L: { INTELLECT: [20, 30, 44, 57, 70, 87, 109, 131, 156] },
+    ATTACK_BOOST_L: { ATTACK_BONUS: [0.05, 0.07, 0.10, 0.14, 0.17, 0.22, 0.28, 0.34, 0.39] },
+    FORGEBORN_SCATHE_TWILIGHT_BLAZING_WAIL: { HEAT_DAMAGE_BONUS: [0.16, 0.192, 0.224, 0.256, 0.288, 0.32, 0.364, 0.406, 0.448] },
+  };
+
+  const mockSkill = (type: string) => {
+    const values = SKILL_VALUES[type] ?? {};
+    const statKey = Object.keys(values)[0];
+    const arr = statKey ? values[statKey] : [];
+    return {
+      weaponSkillType: type,
+      level: 1,
+      getValue() { return arr[this.level - 1] ?? 0; },
+      getPassiveStats() { return {}; },
+    };
+  };
+
+  const gearFactory = (defense: number, gearSetType: string, allLevels: Record<string, Record<string, number>>) => () => ({
+    defense,
+    gearSetType,
+    rank: 4,
+    getStatsPerLine(_lineRanks: Record<string, number>) {
+      // Return rank-4 stats (test always uses default rank 4)
+      const stats = { ...(allLevels['4'] ?? allLevels['1'] ?? {}) };
+      if (defense > 0) stats.BASE_DEFENSE = defense;
+      return stats;
+    },
+  });
+
+  return {
+    WEAPONS: [{
+      name: 'Forgeborn Scathe',
+      weaponType: 'SWORD',
+      rarity: 6,
+      create: () => ({
+        level: 90,
+        getBaseAttack: () => 510,
+        weaponSkillOne: mockSkill('INTELLECT_BOOST_L'),
+        weaponSkillTwo: mockSkill('ATTACK_BOOST_L'),
+        weaponSkillThree: mockSkill('FORGEBORN_SCATHE_TWILIGHT_BLAZING_WAIL'),
+        getPassiveStats: () => ({}),
+      }),
+    }],
+    ARMORS: [{
+      name: 'Tide Fall Light Armor',
+      rarity: 5,
+      gearSetType: 'TIDE_SURGE',
+      create: gearFactory(56, 'TIDE_SURGE', { '4': { INTELLECT: 113, STRENGTH: 75, ULTIMATE_GAIN_EFFICIENCY: 0.16 } }),
+    }],
+    GLOVES: [{
+      name: 'Hot Work Gauntlets',
+      rarity: 5,
+      gearSetType: 'HOT_WORK',
+      create: gearFactory(42, 'HOT_WORK', { '4': { INTELLECT: 84, STRENGTH: 55, HEAT_DAMAGE_BONUS: 0.249, NATURE_DAMAGE_BONUS: 0.249 } }),
+    }],
+    KITS: [{
+      name: 'Redeemer Seal',
+      rarity: 5,
+      gearSetType: 'NONE',
+      create: gearFactory(21, 'NONE', { '4': { INTELLECT: 55, ULTIMATE_GAIN_EFFICIENCY: 0.334 } }),
+    }],
+    CONSUMABLES: [],
+    TACTICALS: [],
+  };
+});
+
 // Mock operatorJsonLoader to avoid require.context
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined,
@@ -141,9 +221,9 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
     expect(sourceNames).toContain('Weapon Skill');
     expect(sourceNames).toContain('Gear');
 
-    // Operator intellect source should be floor(177.985) = 177
+    // Operator intellect source preserves full precision (no rounding)
     const opSource = intSources!.find(s => s.source === 'Operator');
-    expect(opSource?.value).toBe(177);
+    expect(opSource?.value).toBeCloseTo(177.985, 2);
   });
 
   it('operator base stats should preserve full precision (no rounding)', () => {

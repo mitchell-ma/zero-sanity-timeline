@@ -102,7 +102,7 @@ function parseTriggerClause(trigger: Record<string, any>): {
         // Column constraint: ENEMY HAVE STATUS with objectId
         if (cond.subjectType === SubjectType.ENEMY && cond.verbType === VerbType.HAVE
             && cond.objectType === ObjectType.STATUS && cond.objectId) {
-          const columnId = `enemy-${cond.objectId.toLowerCase()}`;
+          const columnId = cond.objectId;
           if (cond.negated) {
             if (!forbids.includes(columnId)) forbids.push(columnId);
           } else {

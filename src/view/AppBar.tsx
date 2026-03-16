@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { IS_DEV } from '../consts/devFlags';
 
 interface AppBarProps {
   activeLoadoutName: string;
@@ -151,7 +152,7 @@ export default function AppBar({
         >
           DEBUG
         </button>
-        <span className="wip-badge">WIP</span>
+        {!IS_DEV && <span className="wip-badge">WIP</span>}
         <button className="btn-devlog" onClick={onDevlog}>
           DEVLOG
         </button>

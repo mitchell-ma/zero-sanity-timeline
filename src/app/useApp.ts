@@ -82,7 +82,7 @@ import {
 } from '../controller/appStateController';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS } from '../model/channels';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID, STAGGER_FRAILTY_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -404,7 +404,7 @@ export function useApp() {
     const nodeRecoveryFrames = Math.round((enemyStats.staggerNodeRecoverySeconds ?? 0) * FPS);
     return combatLoadout.commonSlot.stagger.generateFrailtyEvents(
       nodeRecoveryFrames,
-      ENEMY_GROUP_COLUMNS.STAGGER_FRAILTY,
+      STAGGER_FRAILTY_COLUMN_ID,
       ENEMY_OWNER_ID,
       'stagger-frailty',
     );

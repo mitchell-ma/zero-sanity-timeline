@@ -41,5 +41,5 @@ Processes:
 - **"wrap up"** — End-of-session process:
   1. Summarize all changes done today (including earlier commits) and the current file changes; this will be the git commit message body.
   2. Summarize the above in very high-level and layman's terms and update the devlog (`public/devlog.md`) for today's local date.
-  3. Build GitHub Pages (`npm run deploy`).
-  4. Commit all changes.
+  3. Commit all changes and push to `main`.
+- **"push to prod"** — Rebase `prod` onto `main` to pick up all new changes, then push `prod` to remote.

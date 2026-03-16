@@ -83,7 +83,11 @@ import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS } from '../model/channe
 jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const actual = jest.requireActual('../model/event-frames/dataDrivenEventFrames');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockJson = require('../model/game-data/operators/laevatain.json');
+  const mockOperatorJson = require('../model/game-data/operators/laevatain-operator.json');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mockSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
+  const { statusEvents: skStatusEvents, ...skillCategories } = mockSkillsJson;
+  const mockJson = { ...mockOperatorJson, skills: skillCategories, ...(skStatusEvents ? { statusEvents: skStatusEvents } : {}) };
   const json: Record<string, any> = { laevatain: mockJson };
 
   const sequenceCache = new Map<string, any>();
@@ -143,7 +147,11 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 
 // Load JSON for direct assertion in tests (not in jest.mock scope)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockLaevatainJson = require('../model/game-data/operators/laevatain.json');
+const laevatainOperatorJson = require('../model/game-data/operators/laevatain-operator.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const laevatainSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
+const { statusEvents: _skStatusEvents, ...laevatainSkillCategories } = laevatainSkillsJson;
+const mockLaevatainJson = { ...laevatainOperatorJson, skills: laevatainSkillCategories, ...(_skStatusEvents ? { statusEvents: _skStatusEvents } : {}) };
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
 const SLOT_ID = 'slot1';
@@ -155,7 +163,7 @@ function resetIdCounter() { eventIdCounter = 0; }
 function battleSkillEvent(startFrame: number): TimelineEvent {
   return {
     id: `battle-${eventIdCounter++}`,
-    name: 'LAEVATAIN_SMOULDERING_FIRE',
+    name: 'SMOULDERING_FIRE',
     ownerId: SLOT_ID,
     columnId: SKILL_COLUMNS.BATTLE,
     startFrame,
@@ -552,7 +560,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
 
   test('E2: Enhanced battle skill (ENHANCED_BATTLE_SKILL) exists in JSON', () => {
     expect(mockLaevatainJson.skills.ENHANCED_BATTLE_SKILL).toBeDefined();
-    expect(mockLaevatainJson.skills.ENHANCED_BATTLE_SKILL.id).toBe('LAEVATAIN_SMOULDERING_FIRE_ENHANCED');
+    expect(mockLaevatainJson.skills.ENHANCED_BATTLE_SKILL.id).toBe('SMOULDERING_FIRE_ENHANCED');
   });
 
   test('E3: Enhanced + Empowered battle skill variant exists', () => {
@@ -667,7 +675,7 @@ describe('F. Potentials', () => {
     const dmgEffects = p5.effects.filter(
       (e: any) => e.potentialEffectType === 'SKILL_PARAMETER' &&
         e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER' &&
-        e.skillParameterModifier.skillType === 'LAEVATAIN_FLAMING_CINDERS_ENHANCED'
+        e.skillParameterModifier.skillType === 'FLAMING_CINDERS_ENHANCED'
     );
     // P5 has two UNIQUE_MULTIPLIER entries for enhanced basic (multiplicative stacking)
     expect(dmgEffects.length).toBeGreaterThanOrEqual(1);

@@ -58,7 +58,11 @@
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const mockAntalJson = require('../model/game-data/operators/antal.json');
+const mockOperatorJson = require('../model/game-data/operators/antal-operator.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mockSkillsJson = require('../model/game-data/operator-skills/antal-skills.json');
+
+const mockAntalJson = { ...mockOperatorJson, skills: mockSkillsJson };
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -204,7 +208,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B8: Battle skill ID is ANTAL_SPECIFIED_RESEARCH_SUBJECT', () => {
-    expect(mockAntalJson.skills.BATTLE_SKILL.id).toBe('ANTAL_SPECIFIED_RESEARCH_SUBJECT');
+    expect(mockAntalJson.skills.BATTLE_SKILL.id).toBe('SPECIFIED_RESEARCH_SUBJECT');
   });
 });
 
@@ -296,7 +300,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C10: Combo skill ID is ANTAL_EMP_TEST_SITE', () => {
-    expect(mockAntalJson.skills.COMBO_SKILL.id).toBe('ANTAL_EMP_TEST_SITE');
+    expect(mockAntalJson.skills.COMBO_SKILL.id).toBe('EMP_TEST_SITE');
   });
 });
 
@@ -384,7 +388,7 @@ describe('D. Ultimate (Overclocked Moment)', () => {
   });
 
   test('D5: Ultimate skill ID is ANTAL_OVERCLOCKED_MOMENT', () => {
-    expect(mockAntalJson.skills.ULTIMATE.id).toBe('ANTAL_OVERCLOCKED_MOMENT');
+    expect(mockAntalJson.skills.ULTIMATE.id).toBe('OVERCLOCKED_MOMENT');
   });
 });
 
@@ -400,7 +404,7 @@ describe('E. Potentials', () => {
 
     const effect = p1.effects[0];
     expect(effect.potentialEffectType).toBe('SKILL_PARAMETER');
-    expect(effect.skillParameterModifier.skillType).toBe('ANTAL_OVERCLOCKED_MOMENT');
+    expect(effect.skillParameterModifier.skillType).toBe('OVERCLOCKED_MOMENT');
     expect(effect.skillParameterModifier.parameterKey).toBe('rate');
     expect(effect.skillParameterModifier.value).toBe(1.1);
     expect(effect.skillParameterModifier.parameterModifyType).toBe('MULTIPLICATIVE');
@@ -424,12 +428,12 @@ describe('E. Potentials', () => {
     expect(p3.effects.length).toBe(2);
 
     const uniqueMult = p3.effects[0];
-    expect(uniqueMult.skillParameterModifier.skillType).toBe('ANTAL_SPECIFIED_RESEARCH_SUBJECT');
+    expect(uniqueMult.skillParameterModifier.skillType).toBe('SPECIFIED_RESEARCH_SUBJECT');
     expect(uniqueMult.skillParameterModifier.value).toBe(1);
     expect(uniqueMult.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const additive = p3.effects[1];
-    expect(additive.skillParameterModifier.skillType).toBe('ANTAL_SPECIFIED_RESEARCH_SUBJECT');
+    expect(additive.skillParameterModifier.skillType).toBe('SPECIFIED_RESEARCH_SUBJECT');
     expect(additive.skillParameterModifier.value).toBe(15);
     expect(additive.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
   });

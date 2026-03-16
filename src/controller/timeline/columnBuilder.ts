@@ -1,97 +1,17 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { VerbType, ObjectType } from '../../consts/semantics';
-import type { Interaction } from '../../consts/semantics';
-import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS } from '../../model/channels';
-import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS, PHYSICAL_INFLICTION_MICRO_COLUMNS, PHYSICAL_STATUS_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
+import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
+import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffects } from '../../consts/weaponSkillEffects';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import { FPS } from '../../utils/timeline';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
-
-// ── Derive columns from statusEvents ────────────────────────────────────────
-
-interface StatusEventDef {
-  name: string;
-  target: string;
-  element?: string;
-  stack: { instances: number; verbType?: string };
-  duration?: { value: number[]; unit: string };
-  properties?: { duration?: { value: number[]; unit: string } };
-  isNamedEvent?: boolean;
-}
-
-/**
- * Build micro-column configs derived from operator JSON `statusEvents`.
- * StatusEvents with stack.instances > 1 produce micro-columns.
- * Target determines owner: THIS_OPERATOR → slot, ENEMY → enemy timeline.
- */
-function buildDerivedColumnsFromStatusEvents(
-  operatorId: string,
-  slotId: string,
-  operatorColor: string,
-): MiniTimeline[] {
-  const json = getOperatorJson(operatorId);
-  if (!json?.statusEvents) return [];
-
-  const defs = json.statusEvents as StatusEventDef[];
-  const result: MiniTimeline[] = [];
-
-  for (const def of defs) {
-    if (!def.stack || def.stack.instances <= 1) continue; // Single-instance statuses don't need columns
-
-    const isEnemy = def.target === 'ENEMY';
-    const ownerId = isEnemy ? ENEMY_OWNER_ID : slotId;
-    const columnId = def.name.toLowerCase().replace(/_/g, '-');
-    const key = isEnemy ? `enemy-${columnId}` : `${slotId}-${columnId}`;
-    const elementColor = def.element
-      ? ELEMENT_COLORS[def.element as ElementType] ?? operatorColor
-      : operatorColor;
-    const label = (STATUS_LABELS[def.name as StatusType] ?? def.name).toUpperCase();
-
-    const instances = def.stack.instances;
-    const dur = def.properties?.duration ?? def.duration;
-    const durValue = dur?.value?.[0] ?? -1;
-    const durationFrames = durValue > 0 ? Math.round(durValue * 120) : TOTAL_FRAMES * 10;
-
-    const col: MiniTimeline = {
-      key,
-      type: 'mini-timeline',
-      source: isEnemy ? TimelineSourceType.ENEMY : TimelineSourceType.OPERATOR,
-      ownerId,
-      columnId,
-      label,
-      color: operatorColor,
-      headerVariant: 'mf',
-      derived: true,
-      microColumns: Array.from({ length: instances }, (_, i) => ({
-        id: `${columnId}-${i}`,
-        label: String(i + 1),
-        color: elementColor,
-      })),
-      microColumnAssignment: 'by-order' as any,
-      maxEvents: instances,
-      reuseExpiredSlots: true,
-      requiresMonotonicOrder: true,
-      defaultEvent: {
-        name: STATUS_LABELS[def.name as StatusType] ?? def.name,
-        defaultActivationDuration: durationFrames,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    };
-
-    result.push(col);
-  }
-
-  return result;
-}
 
 export interface Slot {
   slotId: string;
@@ -693,12 +613,6 @@ export function buildColumns(
         }
       }
     }
-    // ── JSON-driven derived columns (Melting Flame, Thunderlance, Crit Stacks, etc.) ──
-    const derivedCols = op ? buildDerivedColumnsFromStatusEvents(op.id, slot.slotId, op.color) : [];
-    const operatorDerivedCols = derivedCols.filter(c => c.source === TimelineSourceType.OPERATOR);
-    for (const col of operatorDerivedCols) {
-      columns.push(col);
-    }
     // ── Weapon skill buff column (shared dynamic-split) ──────────────────────
     let weaponColCount = 0;
     if (op && slot.weaponName) {
@@ -836,8 +750,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const mfColCount = operatorDerivedCols.length;
-    const needed = MIN_SLOT_COLS - (skillColCount + mfColCount + weaponColCount + gearColCount + tacticalColCount + teamStatusColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + weaponColCount + gearColCount + tacticalColCount + teamStatusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -861,180 +774,9 @@ export function buildColumns(
     noAdd: true,
   });
 
-  // ── Stagger status (node stagger + full stagger break) ───────────────────
-  const nodeStaggerFrames = Math.round(enemy.staggerNodeRecoverySeconds * FPS);
-  const fullStaggerFrames = Math.round(enemy.staggerBreakDurationSeconds * FPS);
-  columns.push({
-    key: 'enemy-stagger-frailty',
-    type: 'mini-timeline',
-    source: TimelineSourceType.ENEMY,
-    ownerId: ENEMY_OWNER_ID,
-    columnId: ENEMY_GROUP_COLUMNS.STAGGER_FRAILTY,
-    label: ColumnLabel.STAGGER_FRAILTY,
-    color: '#dd8844',
-    headerVariant: 'skill',
-    noAdd: true,
-    derived: true,
-    eventVariants: [
-      {
-        name: 'Node Stagger',
-        defaultActivationDuration: nodeStaggerFrames,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-      {
-        name: 'Full Stagger',
-        defaultActivationDuration: fullStaggerFrames,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    ],
-    defaultEvent: {
-      name: 'Node Stagger',
-      defaultActivationDuration: nodeStaggerFrames,
-      defaultActiveDuration: 0,
-      defaultCooldownDuration: 0,
-    },
-  });
-
-  // ── Dynamic enemy columns based on team composition ──────────────────────
-  // Collect all published triggers and explicit enemy columns from team operators
-  // Check if any published interaction matches a pattern
-  const isArtsInfliction = (i: Interaction) =>
-    (i.verbType === VerbType.APPLY && i.objectType === ObjectType.INFLICTION) ||
-    (i.verbType === VerbType.IS && [ObjectType.COMBUSTED, ObjectType.SOLIDIFIED, ObjectType.CORRODED, ObjectType.ELECTRIFIED].includes(i.objectType as any));
-  const isPhysicalStatus = (i: Interaction) =>
-    i.verbType === VerbType.APPLY && i.objectType === ObjectType.STATUS && i.objectId === 'PHYSICAL';
-  const isVulnerable = (i: Interaction) =>
-    i.verbType === VerbType.APPLY && i.objectType === ObjectType.STATUS && i.objectId === 'VULNERABILITY';
-
-  const teamPublished: Interaction[] = [];
-  const teamEnemyColumns = new Set<string>();
-
-  for (const slot of slots) {
-    const op = slot.operator;
-    if (!op) continue;
-    const cap = op.triggerCapability;
-    if (!cap) continue;
-    for (const interactions of Object.values(cap.publishesTriggers)) {
-      if (interactions) interactions.forEach((i) => teamPublished.push(i));
-    }
-    if (cap.derivedEnemyColumns) {
-      cap.derivedEnemyColumns.forEach((c) => teamEnemyColumns.add(c));
-    }
-  }
-
-  const hasArtsInfliction = teamPublished.some(isArtsInfliction);
-  const hasPhysicalStatus = teamPublished.some(isPhysicalStatus);
-  const hasVulnerable = teamPublished.some(isVulnerable);
-
-  if (hasArtsInfliction) {
-    // Arts infliction mini-timeline for the enemy (stacking like MF)
-    const inflictionStatuses = enemy.statuses;
-    const inflictionColumnIds = inflictionStatuses.map((s) => s.id);
-    columns.push({
-      key: 'enemy-arts-infliction',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: ENEMY_OWNER_ID,
-      columnId: ENEMY_GROUP_COLUMNS.ARTS_INFLICTION,
-      label: ColumnLabel.INFLICTION,
-      color: '#cc3333',
-      headerVariant: 'infliction',
-      microColumns: inflictionStatuses.map((s) => ({
-        id: s.id,
-        label: s.label,
-        color: s.color,
-      })),
-      microColumnAssignment: 'by-order',
-      matchColumnIds: inflictionColumnIds,
-      maxEvents: 4,
-      reuseExpiredSlots: true,
-      derived: true,
-      defaultEvent: {
-        name: 'Infliction',
-        defaultActivationDuration: 2400, // 20 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    });
-
-    // Arts reaction mini-timeline for the enemy
-    columns.push({
-      key: 'enemy-arts-reaction',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: ENEMY_OWNER_ID,
-      columnId: ENEMY_GROUP_COLUMNS.ARTS_REACTION,
-      label: ColumnLabel.ARTS_REACTION,
-      color: '#dd6644',
-      headerVariant: 'infliction',
-      microColumns: REACTION_MICRO_COLUMNS,
-      microColumnAssignment: 'dynamic-split',
-      matchColumnIds: REACTION_MICRO_COLUMNS.map((mc) => mc.id),
-      derived: true,
-    });
-  }
-
-  if (hasVulnerable) {
-    // Physical infliction mini-timeline for the enemy (Vulnerable stacking)
-    columns.push({
-      key: 'enemy-physical-infliction',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: ENEMY_OWNER_ID,
-      columnId: ENEMY_GROUP_COLUMNS.PHYSICAL_INFLICTION,
-      label: ColumnLabel.PHYSICAL_INFLICTION,
-      color: '#c0c8d0',
-      headerVariant: 'infliction',
-      microColumns: PHYSICAL_INFLICTION_MICRO_COLUMNS,
-      microColumnAssignment: 'by-order',
-      matchColumnIds: ['vulnerableInfliction'],
-      reuseExpiredSlots: true,
-      derived: true,
-      defaultEvent: {
-        name: 'Vulnerable',
-        defaultActivationDuration: 2400, // 20 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
-      },
-    });
-  }
-
-  if (hasPhysicalStatus) {
-    // Physical status mini-timeline for the enemy (Breach)
-    columns.push({
-      key: 'enemy-physical-status',
-      type: 'mini-timeline',
-      source: TimelineSourceType.ENEMY,
-      ownerId: ENEMY_OWNER_ID,
-      columnId: ENEMY_GROUP_COLUMNS.PHYSICAL_STATUS,
-      label: ColumnLabel.PHYSICAL_STATUS,
-      color: '#c0c8d0',
-      headerVariant: 'infliction',
-      microColumns: PHYSICAL_STATUS_MICRO_COLUMNS,
-      microColumnAssignment: 'dynamic-split',
-      matchColumnIds: PHYSICAL_STATUS_MICRO_COLUMNS.map((mc) => mc.id),
-      derived: true,
-    });
-  }
-
-  // ── JSON-driven enemy-side derived columns (Originium Crystal, etc.) ────────
-  for (const slot of slots) {
-    if (!slot.operator) continue;
-    const enemyCols = buildDerivedColumnsFromStatusEvents(slot.operator.id, slot.slotId, slot.operator.color)
-      .filter(c => c.source === TimelineSourceType.ENEMY);
-    for (const col of enemyCols) {
-      // Avoid duplicates (enemy columns are global)
-      if (!columns.some(c => c.type === 'mini-timeline' && (c as MiniTimeline).columnId === col.columnId)) {
-        columns.push(col);
-      }
-    }
-  }
-
   // ── Unified enemy status column ─────────────────────────────────────────────
-  // Collects all enemy debuff statuses (Focus, Susceptibility, Fragility, weapon debuffs).
-  // Always present — supports both derived events from operator skills and manual debug additions.
+  // Single column collecting all enemy statuses: inflictions, reactions, physical
+  // statuses, stagger frailty, debuffs, and weapon effects.
   const enemyWeaponDebuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
   for (const slot of slots) {
     if (!slot.operator || !slot.weaponName) continue;
@@ -1053,6 +795,37 @@ export function buildColumns(
   }
 
   const statusMicroColumns = [
+    // Stagger frailty
+    {
+      id: STAGGER_FRAILTY_COLUMN_ID,
+      label: 'STAGGER',
+      color: '#dd8844',
+    },
+    // Arts inflictions
+    ...enemy.statuses.map((s) => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+    })),
+    // Arts reactions
+    ...REACTION_MICRO_COLUMNS.map((mc) => ({
+      id: mc.id,
+      label: mc.label,
+      color: mc.color,
+    })),
+    // Physical inflictions
+    {
+      id: 'vulnerableInfliction',
+      label: 'VULN',
+      color: '#c0c8d0',
+    },
+    // Physical statuses
+    {
+      id: 'breach',
+      label: 'BREACH',
+      color: '#c0c8d0',
+    },
+    // Debuffs
     {
       id: StatusType.FOCUS,
       label: STATUS_LABELS[StatusType.FOCUS],
@@ -1092,21 +865,29 @@ export function buildColumns(
         sourceSkillName: 'Debug',
       },
     },
-    // Scorching Heart (Laevatain talent — ignored Heat RES for 20s)
-    // Data-driven enemy status entries from operator statusEvents
-    ...slots.flatMap(s => {
-      if (!s.operator) return [];
-      const json = getOperatorJson(s.operator.id);
-      const statusEvents = json?.statusEvents as any[] | undefined;
-      if (!statusEvents) return [];
-      return statusEvents
-        .filter((se: any) => se.target === 'ENEMY' && se.isNamedEvent)
-        .map((se: any) => ({
-          id: se.name,
-          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
-          color: s.operator!.color,
-        }));
-    }),
+    // Data-driven enemy status entries from operator statusEvents (deduped by id)
+    ...(() => {
+      const seen = new Set<string>();
+      return slots.flatMap(s => {
+        if (!s.operator) return [];
+        const json = getOperatorJson(s.operator.id);
+        const statusEvents = json?.statusEvents as any[] | undefined;
+        if (!statusEvents) return [];
+        return statusEvents
+          .filter((se: any) => se.target === 'ENEMY')
+          .filter((se: any) => {
+            const id = se.name.toLowerCase().replace(/_/g, '-');
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          })
+          .map((se: any) => ({
+            id: se.name.toLowerCase().replace(/_/g, '-'),
+            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+            color: s.operator!.color,
+          }));
+      });
+    })(),
     ...enemyWeaponDebuffs.map((ewd) => ({
       id: `fragility-${ewd.slotId}`,
       label: ewd.label,

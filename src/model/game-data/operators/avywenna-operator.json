@@ -1779,37 +1779,6 @@
       }
     }
   ],
-  "statusEvents": [
-    {
-      "name": "THUNDERLANCE",
-      "target": "THIS_OPERATOR",
-      "element": "ELECTRIC",
-      "isNamedEvent": true,
-      "isForceApplied": false,
-      "stack": {
-        "max": {
-          "P0": 4,
-          "P1": 4,
-          "P2": 4,
-          "P3": 4,
-          "P4": 4,
-          "P5": 4
-        },
-        "instances": 4,
-        "verbType": "NONE"
-      },
-      "triggerClause": [],
-      "stats": [],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
-    }
-  ],
   "talents": {
     "one": {
       "name": "Expedited Delivery",

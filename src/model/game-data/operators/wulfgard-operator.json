@@ -1756,66 +1756,6 @@
       }
     }
   ],
-  "statusEvents": [
-    {
-      "name": "SCORCHING_FANGS",
-      "target": "THIS_OPERATOR",
-      "element": "HEAT",
-      "isNamedEvent": true,
-      "isForceApplied": false,
-      "stack": {
-        "max": {
-          "P0": 1,
-          "P1": 1,
-          "P2": 1,
-          "P3": 1,
-          "P4": 1,
-          "P5": 1
-        },
-        "instances": 1,
-        "verbType": "RESET"
-      },
-      "triggerClause": [
-        {
-          "conditions": [
-            {
-              "subjectType": "ENEMY",
-              "verbType": "HAVE",
-              "objectType": "STATUS",
-              "objectId": "COMBUSTION"
-            }
-          ]
-        },
-        {
-          "conditions": [
-            {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
-            },
-            {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "HAVE",
-              "objectType": "STATUS",
-              "objectId": "SCORCHING_FANGS"
-            }
-          ]
-        }
-      ],
-      "stats": [],
-      "p3TeamShare": {
-        "durationMultiplier": 0.5
-      },
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      }
-    }
-  ],
   "talents": {
     "one": {
       "name": "Scorching Fangs",
