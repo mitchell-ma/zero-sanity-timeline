@@ -8,7 +8,7 @@
  */
 import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
 import { ElementType, OperatorClassType, ELEMENT_COLORS } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
 import type { Predicate, Interaction } from '../../consts/semantics';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
@@ -74,11 +74,11 @@ const I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Int
   ({ subjectType, verbType, objectType, ...extra } as Interaction);
 
 const ELEMENT_INTERACTIONS: Partial<Record<string, Interaction[]>> = {
-  HEAT:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED),  I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
-  CRYO:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED), I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
-  NATURE:   [I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED),   I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
-  ELECTRIC: [I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED),I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
-  PHYSICAL: [I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' }), I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
+  HEAT:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED),  I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
+  CRYO:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED), I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'CRYO' })],
+  NATURE:   [I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED),   I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'NATURE' })],
+  ELECTRIC: [I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED),I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'ELECTRIC' })],
+  PHYSICAL: [I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'PHYSICAL' }), I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'VULNERABILITY' })],
 };
 
 // ── Helper: seconds → frames ────────────────────────────────────────────────
@@ -205,10 +205,10 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
   const battleInteractions = ELEMENT_INTERACTIONS[elementType] ?? [];
 
   const SKILL_PUBLISH_MAP: Record<string, Interaction> = {
-    [SKILL_COLUMNS.BASIC]:    I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.FINAL_STRIKE),
-    [SKILL_COLUMNS.BATTLE]:   I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.BATTLE_SKILL),
-    [SKILL_COLUMNS.COMBO]:    I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.COMBO_SKILL),
-    [SKILL_COLUMNS.ULTIMATE]: I(SubjectType.THIS_OPERATOR, VerbType.PERFORM, ObjectType.ULTIMATE),
+    [SKILL_COLUMNS.BASIC]:    I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.FINAL_STRIKE, { subjectDeterminer: DeterminerType.THIS }),
+    [SKILL_COLUMNS.BATTLE]:   I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.BATTLE_SKILL, { subjectDeterminer: DeterminerType.THIS }),
+    [SKILL_COLUMNS.COMBO]:    I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.COMBO_SKILL, { subjectDeterminer: DeterminerType.THIS }),
+    [SKILL_COLUMNS.ULTIMATE]: I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.ULTIMATE, { subjectDeterminer: DeterminerType.THIS }),
   };
 
   const skills: Record<string, SkillDef> = {};
@@ -216,7 +216,8 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     const skillName = categoryToName[key] ?? key;
     const categoryKey = key === 'basic' ? 'BASIC_ATTACK' : key === 'battle' ? 'BATTLE_SKILL'
       : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';
-    const catData = opSkills?.[categoryKey];
+    const resolvedSkillId = typeMap[categoryKey] ?? categoryKey;
+    const catData = opSkills?.[resolvedSkillId];
 
     const defaultTriggers: Interaction[] = [];
     const skillPublish = SKILL_PUBLISH_MAP[key];
@@ -244,14 +245,16 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     };
   }
 
-  // SP return notes from JSON
-  const spReturnNotes = opSkills?.BATTLE_SKILL?.spReturnNotes;
+  // SP return notes from JSON (resolve via skillTypeMap)
+  const battleSkillId = typeMap.BATTLE_SKILL;
+  const spReturnNotes = battleSkillId ? opSkills?.[battleSkillId]?.spReturnNotes : undefined;
   if (skills.battle && spReturnNotes?.length) {
     skills.battle = { ...skills.battle, spReturnNotes };
   }
 
-  // Combo trigger from JSON
-  const comboTrigger = opSkills?.COMBO_SKILL?.properties?.trigger;
+  // Combo trigger from JSON (resolve via skillTypeMap → actual skill ID)
+  const comboSkillId = typeMap.COMBO_SKILL;
+  const comboTrigger = comboSkillId ? opSkills?.[comboSkillId]?.properties?.trigger : undefined;
   let triggerCapability: TriggerCapability | undefined;
   const parsedTrigger = comboTrigger ? parseTriggerClause(comboTrigger) : null;
   if (parsedTrigger && parsedTrigger.comboRequires.length > 0) {
@@ -271,11 +274,34 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     };
   }
 
+  // Scan statusEvents for derivedTeamColumns declarations
+  const statusEventsRaw = opJson.statusEvents as { derivedTeamColumns?: string[] }[] | undefined;
+  if (statusEventsRaw) {
+    const teamCols: string[] = [];
+    for (const se of statusEventsRaw) {
+      if (se.derivedTeamColumns) teamCols.push(...se.derivedTeamColumns);
+    }
+    if (teamCols.length > 0) {
+      if (!triggerCapability) {
+        triggerCapability = {
+          publishesTriggers: {},
+          comboRequires: [],
+          comboDescription: '',
+          comboWindowFrames: 720,
+          derivedTeamColumns: teamCols,
+        };
+      } else {
+        triggerCapability = { ...triggerCapability, derivedTeamColumns: teamCols };
+      }
+    }
+  }
+
   return {
     id: operatorId,
     name: opJson.name,
     color,
     element: elementType,
+    operatorClassType: opJson.operatorClassType,
     role: ROLE_LABELS[opJson.operatorClassType] ?? opJson.operatorClassType,
     rarity: opJson.operatorRarity,
     splash,

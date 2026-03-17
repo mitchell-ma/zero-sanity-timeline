@@ -37,6 +37,38 @@ for (const key of talentContext.keys()) {
   TALENT_JSON[operatorId] = talentContext(key);
 }
 
+// Status configs: game-data/operator-statuses/*-statuses.json
+const statusContext = (require as any).context('../game-data/operator-statuses', false, /-statuses\.json$/);
+const STATUS_JSON: Record<string, any[]> = {};
+for (const key of statusContext.keys()) {
+  const filename = key.replace('./', '').replace('-statuses.json', '');
+  const operatorId = filenameToCamelCase(filename);
+  STATUS_JSON[operatorId] = statusContext(key);
+}
+
+// ── Status key normalization ─────────────────────────────────────────────────
+
+/** Key mappings: short (operator-statuses) → long (engine-expected). */
+const KEY_EXPAND: Record<string, string> = {
+  verb: 'verbType', object: 'objectType', subject: 'subjectType',
+  subjectDet: 'subjectDeterminer',
+  to: 'toObjectType', toDet: 'toObjectDeterminer',
+  from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
+  on: 'onObjectType', onDet: 'onObjectDeterminer',
+  with: 'withPreposition', for: 'forPreposition',
+};
+
+/** Recursively expand short keys in a JSON value. */
+function expandKeys(val: any): any {
+  if (val == null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) return val.map(expandKeys);
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(val)) {
+    out[KEY_EXPAND[k] ?? k] = expandKeys(v);
+  }
+  return out;
+}
+
 // ── Public API ──────────────────────────────────────────────────────────────
 
 /** Sequence cache keyed by `operatorId:skillId`. */
@@ -50,10 +82,12 @@ export function getOperatorJson(operatorId: string): Record<string, any> | undef
   if (!skills) return base;
   // Hoist non-skill keys (statusEvents, skillTypeMap) from skills JSON to top level
   const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, any>;
-  // Merge talent statusEvents if present
+  // Merge status sources: operator-statuses JSONs (short keys → expanded) > skills JSON > talent JSON
+  const operatorStatuses = (STATUS_JSON[operatorId] ?? []).map(expandKeys);
   const talentJson = TALENT_JSON[operatorId];
   const talentStatusEvents = talentJson?.statusEvents as any[] | undefined;
   const mergedStatusEvents = [
+    ...operatorStatuses,
     ...(statusEvents ?? []),
     ...(talentStatusEvents ?? []),
   ];
@@ -68,6 +102,11 @@ export function getOperatorJson(operatorId: string): Record<string, any> | undef
 /** Get the skill JSON for a given operator ID. */
 export function getSkillJson(operatorId: string): Record<string, any> | undefined {
   return SKILL_JSON[operatorId];
+}
+
+/** Get the operator-statuses JSON for a given operator ID. */
+export function getOperatorStatuses(operatorId: string): any[] | undefined {
+  return STATUS_JSON[operatorId];
 }
 
 /** Get all registered operator IDs. */

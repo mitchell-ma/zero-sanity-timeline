@@ -1,0 +1,49 @@
+{
+  "weaponName": "Valiant",
+  "statusEvents": [
+    {
+      "name": "VALIANT_VIRTUOUS_GAIN",
+      "type": "WEAPON_EFFECT",
+      "originId": "VALIANT",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Virtuous Gain",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Extra hit + ATK buff"
+    }
+  ]
+}

@@ -32,6 +32,7 @@ import {
   getArtsHiddenMultiplier,
   getArtsIntensityMultiplier,
   getCombustionDotMultiplier,
+  getScorchingHeartIgnoredResistance,
 } from '../model/calculation/damageFormulas';
 import { Potential, SkillLevel } from '../consts/types';
 
@@ -204,15 +205,13 @@ jest.mock('../model/game-data/weaponGameData', () => ({
 // ── Mock InformationPane (view) ─────────────────────────────────────────────
 
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {
-    operatorLevel: 90, potential: 5,
-    talentOneLevel: 3, talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12,
-    weaponLevel: 90, weaponSkill1Level: 9, weaponSkill2Level: 9, weaponSkill3Level: 9,
-    armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {},
+  DEFAULT_LOADOUT_PROPERTIES: {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   },
-  LoadoutStats: {},
+  LoadoutProperties: {},
 }));
 
 // ── Test ──────────────────────────────────────────────────────────────────────
@@ -232,24 +231,11 @@ describe('Laevatain damage calculation — Flaming Cinders (basic attack)', () =
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   // Expected per-frame damage for each segment (non-crit, vs Rhodagn DEF 100)
@@ -270,12 +256,12 @@ describe('Laevatain damage calculation — Flaming Cinders (basic attack)', () =
   let defenseMultiplier: number;
 
   beforeAll(() => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });
@@ -348,24 +334,11 @@ describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () 
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   // Expected per-tick damage (non-crit, P5, vs Rhodagn DEF 100)
@@ -380,12 +353,12 @@ describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () 
   let defenseMultiplier: number;
 
   beforeAll(() => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });
@@ -459,33 +432,20 @@ describe('Laevatain damage calculation — Seethe (combo skill)', () => {
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   it('combo skill hit → 26908', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });
@@ -553,24 +513,11 @@ describe('Laevatain damage calculation — Enhanced basic attack (during ultimat
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   // Enhanced basic attack: 4 segments
@@ -589,12 +536,12 @@ describe('Laevatain damage calculation — Enhanced basic attack (during ultimat
   let defenseMultiplier: number;
 
   beforeAll(() => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });
@@ -673,24 +620,11 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 1,
-    weaponSkill1Level: 1,
-    weaponSkill2Level: 4,
-    weaponSkill3Level: 1,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 1, skill1Level: 1, skill2Level: 4, skill3Level: 1 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   const SKILL_LEVEL = 12 as SkillLevel;
@@ -710,12 +644,12 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
   let defenseMultiplier: number;
 
   beforeAll(() => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });
@@ -887,6 +821,156 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Enhanced Battle Skill — Smouldering Fire Enhanced (during ultimate, full loadout)
+// With Scorching Heart active (4 MF stacks → ignored Heat Resistance).
+// P1 ×1.2 DAMAGE_MULTIPLIER on SMOULDERING_FIRE_ENHANCED.
+// Hit 1 = DAMAGE_MULTIPLIER, Hit 2 = DAMAGE_MULTIPLIER_INCREMENT,
+// Additional hit = atk_scale_3 (benefits from Scorching Heart resMult).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Laevatain damage calculation — Enhanced battle skill (during ultimate, Scorching Heart active)', () => {
+  const OPERATOR_ID = 'laevatain';
+  const SKILL_LEVEL = 12 as SkillLevel;
+  const POTENTIAL = 5 as Potential;
+
+  const loadout = {
+    weaponName: 'Forgeborn Scathe',
+    armorName: 'Tide Fall Light Armor',
+    glovesName: 'Hot Work Gauntlets',
+    kit1Name: 'Redeemer Seal',
+    kit2Name: 'Redeemer Seal',
+    consumableName: null,
+    tacticalName: null,
+  };
+
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
+  };
+
+  let totalAttack: number;
+  let attributeBonus: number;
+  let multiplierGroup: number;
+  let defenseMultiplier: number;
+
+  beforeAll(() => {
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
+    if (!agg) throw new Error('aggregateLoadoutStats returned null');
+
+    const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
+      potential: POTENTIAL,
+      stats: agg.stats,
+    });
+
+    totalAttack = getTotalAttack(
+      agg.operatorBaseAttack,
+      agg.weaponBaseAttack,
+      agg.stats[StatType.ATTACK_BONUS] + extraAttackPct,
+      agg.flatAttackBonuses,
+    );
+    attributeBonus = agg.attributeBonus;
+    multiplierGroup = getDamageBonus(
+      agg.stats[StatType.HEAT_DAMAGE_BONUS],
+      agg.stats[StatType.BATTLE_SKILL_DAMAGE_BONUS] ?? 0,
+      agg.stats[StatType.SKILL_DAMAGE_BONUS],
+      agg.stats[StatType.ARTS_DAMAGE_BONUS],
+    );
+    defenseMultiplier = getDefenseMultiplier(100);
+  });
+
+  it('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
+    // SMOULDERING_FIRE_ENHANCED frame 1: DAMAGE_MULTIPLIER = 3.3 at lv12
+    // P1 potential ×1.2 → 3.96
+    const perTickMult = getPerTickMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE_ENHANCED', SKILL_LEVEL, POTENTIAL, 0);
+    expect(perTickMult).not.toBeNull();
+
+    const damage = calculateDamage({
+      attack: totalAttack,
+      baseMultiplier: perTickMult!,
+      attributeBonus,
+      multiplierGroup,
+      critMultiplier: 1,
+      ampMultiplier: getAmpMultiplier(0),
+      staggerMultiplier: getStaggerMultiplier(false),
+      finisherMultiplier: getFinisherMultiplier(EnemyTierType.BOSS, false),
+      linkMultiplier: getLinkMultiplier(0, false),
+      weakenMultiplier: getWeakenMultiplier([]),
+      susceptibilityMultiplier: getSusceptibilityMultiplier(0),
+      fragilityMultiplier: getFragilityMultiplier(0),
+      dmgReductionMultiplier: getDmgReductionMultiplier([]),
+      protectionMultiplier: getProtectionMultiplier([]),
+      defenseMultiplier,
+      resistanceMultiplier: 1.0, // no SH on hit 1
+    });
+
+    expect(Math.abs(Math.round(damage) - 19732)).toBeLessThanOrEqual(3);
+  });
+
+  it('hit 2 (DAMAGE_MULTIPLIER_INCREMENT) → 22124', () => {
+    // SMOULDERING_FIRE_ENHANCED frame 1: DAMAGE_MULTIPLIER_INCREMENT = 3.7 at lv12
+    // P1 potential ×1.2 → 4.44
+    const potMod = 1.2; // P1 UNIQUE_MULTIPLIER on SMOULDERING_FIRE_ENHANCED
+    const hit2Mult = 3.7 * potMod;
+
+    const damage = calculateDamage({
+      attack: totalAttack,
+      baseMultiplier: hit2Mult,
+      attributeBonus,
+      multiplierGroup,
+      critMultiplier: 1,
+      ampMultiplier: getAmpMultiplier(0),
+      staggerMultiplier: getStaggerMultiplier(false),
+      finisherMultiplier: getFinisherMultiplier(EnemyTierType.BOSS, false),
+      linkMultiplier: getLinkMultiplier(0, false),
+      weakenMultiplier: getWeakenMultiplier([]),
+      susceptibilityMultiplier: getSusceptibilityMultiplier(0),
+      fragilityMultiplier: getFragilityMultiplier(0),
+      dmgReductionMultiplier: getDmgReductionMultiplier([]),
+      protectionMultiplier: getProtectionMultiplier([]),
+      defenseMultiplier,
+      resistanceMultiplier: 1.0, // no SH on hit 2
+    });
+
+    expect(Math.abs(Math.round(damage) - 22124)).toBeLessThanOrEqual(3);
+  });
+
+  it('additional hit (atk_scale_3, Scorching Heart active) → 64578', () => {
+    // atk_scale_3 = 9 at lv12, P1 potential ×1.2 → 10.8
+    // Scorching Heart (talent lv3) ignores 20 Heat Resistance → resMult += 0.20
+    const potMod = 1.2;
+    const atkScale3 = 9 * potMod;
+    const shIgnoredRes = getScorchingHeartIgnoredResistance(3 as any);
+    const resistanceMultiplier = 1.0 + shIgnoredRes / 100; // 1.0 + 0.20 = 1.20
+
+    const damage = calculateDamage({
+      attack: totalAttack,
+      baseMultiplier: atkScale3,
+      attributeBonus,
+      multiplierGroup,
+      critMultiplier: 1,
+      ampMultiplier: getAmpMultiplier(0),
+      staggerMultiplier: getStaggerMultiplier(false),
+      finisherMultiplier: getFinisherMultiplier(EnemyTierType.BOSS, false),
+      linkMultiplier: getLinkMultiplier(0, false),
+      weakenMultiplier: getWeakenMultiplier([]),
+      susceptibilityMultiplier: getSusceptibilityMultiplier(0),
+      fragilityMultiplier: getFragilityMultiplier(0),
+      dmgReductionMultiplier: getDmgReductionMultiplier([]),
+      protectionMultiplier: getProtectionMultiplier([]),
+      defenseMultiplier,
+      resistanceMultiplier,
+    });
+
+    // ±1% tolerance — effective ATK precision gap scales with larger multiplier
+    expect(Math.abs(Math.round(damage) - 64578) / 64578).toBeLessThan(0.01);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Full loadout — Empowered Battle Skill Additional Hit + Forced Combustion DOT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -904,24 +988,11 @@ describe('Laevatain damage calculation — Empowered additional hit + combustion
     tacticalName: null,
   };
 
-  const loadoutStats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   let totalAttack: number;
@@ -930,12 +1001,12 @@ describe('Laevatain damage calculation — Empowered additional hit + combustion
   let defenseMultiplier: number;
 
   beforeAll(() => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutStats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
     const { extraAttackPct } = evaluateTalentAttackBonus(OPERATOR_ID, {
-      talentOneLevel: loadoutStats.talentOneLevel,
-      talentTwoLevel: loadoutStats.talentTwoLevel,
+      talentOneLevel: loadoutProperties.operator.talentOneLevel,
+      talentTwoLevel: loadoutProperties.operator.talentTwoLevel,
       potential: POTENTIAL,
       stats: agg.stats,
     });

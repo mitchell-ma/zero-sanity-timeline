@@ -4,11 +4,11 @@
  * combo activation windows, and SP return calculations.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { LoadoutStats } from '../../view/InformationPane';
+import { LoadoutProperties } from '../../view/InformationPane';
 import { collectTimeStopRegions, applyTimeStopExtension, resolveFramePositions, validateTimeStopStarts } from './processTimeStop';
 import { applyComboChaining, applyPotentialEffects, deriveComboActivationWindows, resolveComboTriggerColumns, SlotTriggerWiring } from './processComboSkill';
-import { deriveFrameInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh, attachReactionFrames, attachSusceptibilityFrames, consumeReactionsForStatus } from './processInfliction';
-import { consumeTeamStatuses, consumeOperatorStatuses, deriveUnbridledEdge, consumeVulnerabilityForSusceptibility, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
+import { deriveFrameInflictions, deriveComboMirroredInflictions, applyAbsorptions, deriveReactions, mergeReactions, applySameElementRefresh, applyPhysicalInflictionRefresh, attachReactionFrames, attachSusceptibilityFrames, consumeReactionsForStatus } from './processInfliction';
+import { consumeTeamStatuses, consumeOperatorStatuses, consumeCryoForSusceptibility, applyXaihiP5AmpBoost } from './processStatus';
 import { deriveStatusesFromEngine } from './statusDerivationEngine';
 
 
@@ -30,11 +30,13 @@ export { COMBO_WINDOW_COLUMN_ID, ENEMY_COLUMN_TO_INTERACTIONS, comboWindowEndFra
  */
 export function processInflictionEvents(
   rawEvents: TimelineEvent[],
-  loadoutStats?: Record<string, LoadoutStats>,
+  loadoutProperties?: Record<string, LoadoutProperties>,
   slotWeapons?: Record<string, string | undefined>,
   slotWirings?: SlotTriggerWiring[],
   /** Slot ID → operator ID mapping (guarantees slot detection for talent events). */
   slotOperatorMap?: Record<string, string>,
+  /** Slot ID → gear set type mapping for gear effect derivation. */
+  slotGearSets?: Record<string, string | undefined>,
 ): TimelineEvent[] {
   // ── Phase 1: Finalize time-stop regions ──────────────────────────────────
   // Combo chaining truncates overlapping combo animations, finalizing the
@@ -58,35 +60,49 @@ export function processInflictionEvents(
     ? resolveComboTriggerColumns(ext1, slotWirings, stops)
     : ext1;
 
-  // ── Phase 3: Process pipeline (all durations are extended real-time) ──────
+  // ── Phase 3: Derive inflictions and statuses ─────────────────────────────
+  // Focus and other frame-level statuses are created here (from battle skill
+  // frames with applyStatus). These must exist before combo trigger resolution.
   const withPotentialEffects = applyPotentialEffects(withResolvedCombos);
-  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats, stops);
-  // Extend newly derived events by time-stop overlap
-  const ext2 = applyTimeStopExtension(withDerivedInflictions, stops, extendedIds);
-  // Refresh same-element stacks BEFORE absorptions/reactions so that
-  // overlapping stacks get their durations extended using the original
-  // infliction duration. Later steps (absorption, reaction) can then
-  // clamp the already-extended events as needed.
-  const withSameElementRefresh = applySameElementRefresh(ext2);
+  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutProperties, stops);
+  // Build reaction segments before time-stop extension so segment durations
+  // are based on raw game-time (extension stretches segments afterward).
+  const withEarlyReactionFrames = attachReactionFrames(withDerivedInflictions);
+  const ext2 = applyTimeStopExtension(withEarlyReactionFrames, stops, extendedIds);
+  const withConsumedTeam = consumeTeamStatuses(ext2);
+
+  // ── Phase 3b: Re-resolve combo trigger columns after frame-derived statuses ─
+  // Statuses like Focus are derived by deriveFrameInflictions above. Combos that
+  // require an active status column (e.g. Antal requires Focus) couldn't resolve
+  // in Phase 2b. Re-resolve now and derive combo-mirrored inflictions.
+  const withReResolvedCombos = slotWirings && slotWirings.length > 0
+    ? resolveComboTriggerColumns(withConsumedTeam, slotWirings, stops)
+    : withConsumedTeam;
+  const withLateInflictions = deriveComboMirroredInflictions(withReResolvedCombos, stops);
+  const withLateReactionFrames = attachReactionFrames(withLateInflictions);
+  const extLate = applyTimeStopExtension(withLateReactionFrames, stops, extendedIds);
+
+  // ── Phase 4: Refresh, engine, absorb, consume ──────────────────────────
+  // All inflictions (regular + combo-mirrored) now exist.
+  const withSameElementRefresh = applySameElementRefresh(extLate);
   const withPhysicalRefresh = applyPhysicalInflictionRefresh(withSameElementRefresh);
-  const withConsumedTeam = consumeTeamStatuses(withPhysicalRefresh);
-  const withAbsorptions = applyAbsorptions(withConsumedTeam, stops);
+  // Engine-derived statuses (Scorching Heart, etc.) run AFTER combo mirroring
+  // so they see all inflictions (e.g. Antal's mirrored heat for MF absorption).
+  const withEngineDerived = deriveStatusesFromEngine(withPhysicalRefresh, loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets);
+  const withAbsorptions = applyAbsorptions(withEngineDerived, stops);
   // Consume operator statuses (e.g. Melting Flame) after absorptions derive them
   const withConsumedOperatorStatuses = consumeOperatorStatuses(withAbsorptions, stops, extendedIds);
-  // Generic status derivation engine — handles all operators with statusEvents in their JSON
-  const withEngineDerived = deriveStatusesFromEngine(withConsumedOperatorStatuses, loadoutStats, slotOperatorMap);
-  const withReactions = deriveReactions(withEngineDerived);
+
+  const withReactions = deriveReactions(withConsumedOperatorStatuses);
   const withReactionFrames = attachReactionFrames(withReactions);
-  const withSusceptibilityFrames = attachSusceptibilityFrames(withReactionFrames, loadoutStats);
+  const withSusceptibilityFrames = attachSusceptibilityFrames(withReactionFrames, loadoutProperties);
   const ext3 = applyTimeStopExtension(withSusceptibilityFrames, stops, extendedIds);
   const withMergedReactions = mergeReactions(ext3);
-  const withConsumedReactions = consumeReactionsForStatus(withMergedReactions, loadoutStats, stops);
-  const withVulnConsumed = consumeVulnerabilityForSusceptibility(withConsumedReactions, loadoutStats);
-  const withCryoConsumed = consumeCryoForSusceptibility(withVulnConsumed, loadoutStats);
-  const withXaihiP5 = applyXaihiP5AmpBoost(withCryoConsumed, loadoutStats);
-  const withUnbridledEdge = deriveUnbridledEdge(withXaihiP5, slotWeapons, stops);
-  // Final extension for engine-derived events, Unbridled Edge, and other derived events
-  const ext4 = applyTimeStopExtension(withUnbridledEdge, stops, extendedIds);
+  const withConsumedReactions = consumeReactionsForStatus(withMergedReactions, loadoutProperties, stops);
+  const withCryoConsumed = consumeCryoForSusceptibility(withConsumedReactions, loadoutProperties);
+  const withXaihiP5 = applyXaihiP5AmpBoost(withCryoConsumed, loadoutProperties);
+  // Final extension for engine-derived events, weapon/gear effects, and other derived events
+  const ext4 = applyTimeStopExtension(withXaihiP5, stops, extendedIds);
 
   // ── Derive combo activation windows ────────────────────────────────────
   const withComboWindows = slotWirings && slotWirings.length > 0

@@ -1,0 +1,44 @@
+{
+  "weaponName": "Freedom to Proselytize",
+  "statusEvents": [
+    {
+      "name": "FREEDOM_TO_PROSELYTIZE_REDEMPTION_OF_FAITH",
+      "type": "WEAPON_EFFECT",
+      "originId": "FREEDOM_TO_PROSELYTIZE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Redemption of Faith",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "HP"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 15,
+      "note": "Heal controlled operator; 15s CD"
+    }
+  ]
+}

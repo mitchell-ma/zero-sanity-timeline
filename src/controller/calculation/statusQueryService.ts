@@ -13,7 +13,7 @@ import {
 import { getCorrosionReduction, getScorchingHeartIgnoredResistance, MultiplierSource } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
 import { collectTimeStopRegions, type TimeStopRegion } from '../timeline/processTimeStop';
-import type { LoadoutStats } from '../../view/InformationPane';
+import type { LoadoutProperties } from '../../view/InformationPane';
 
 // ── Fragility tables (from combat-status models) ─────────────────────────────
 
@@ -108,7 +108,7 @@ export class StatusQueryService {
   private weaponFragilityEvents: TimelineEvent[];
   private staggerBreaks: readonly StaggerBreak[];
   private timeStopRegions: readonly TimeStopRegion[];
-  private loadoutStats: Record<string, LoadoutStats>;
+  private loadoutProperties: Record<string, LoadoutProperties>;
   private aggregatedStats?: Record<string, { stats: Record<StatType, number> }>;
   private weaponFragility: Record<string, WeaponFragilityEffect[]>;
   private talentFragility: OperatorTalentFragility[];
@@ -121,7 +121,7 @@ export class StatusQueryService {
   constructor(
     events: TimelineEvent[],
     staggerBreaks: readonly StaggerBreak[],
-    loadoutStats?: Record<string, LoadoutStats>,
+    loadoutProperties?: Record<string, LoadoutProperties>,
     aggregatedStats?: Record<string, { stats: Record<StatType, number> }>,
     weaponFragility?: Record<string, WeaponFragilityEffect[]>,
     talentFragility?: OperatorTalentFragility[],
@@ -139,7 +139,7 @@ export class StatusQueryService {
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
     this.staggerBreaks = staggerBreaks;
     this.timeStopRegions = collectTimeStopRegions(events);
-    this.loadoutStats = loadoutStats ?? {};
+    this.loadoutProperties = loadoutProperties ?? {};
     this.aggregatedStats = aggregatedStats;
     this.weaponFragility = weaponFragility ?? {};
     this.talentFragility = talentFragility ?? [];
@@ -530,8 +530,8 @@ export class StatusQueryService {
     if (!activeSH) return 0;
 
     // Look up talent level from loadout stats
-    const stats = this.loadoutStats[attackerOwnerId];
-    const talentLevel = Math.min(stats?.talentOneLevel ?? 0, 3) as TalentLevel;
+    const props = this.loadoutProperties[attackerOwnerId];
+    const talentLevel = Math.min(props?.operator.talentOneLevel ?? 0, 3) as TalentLevel;
     return getScorchingHeartIgnoredResistance(talentLevel);
   }
 }

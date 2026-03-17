@@ -1,0 +1,49 @@
+{
+  "weaponName": "Wedge",
+  "statusEvents": [
+    {
+      "name": "WEDGE_WEDGE_OF_CIVILIZATION",
+      "type": "WEAPON_EFFECT",
+      "originId": "WEDGE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Wedge of Civilization",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.08,
+          "valueMax": 0.224
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Battle skill: +8-22.4%, Arts reaction: +16-44.8%"
+    }
+  ]
+}

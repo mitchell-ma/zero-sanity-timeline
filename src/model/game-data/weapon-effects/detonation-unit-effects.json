@@ -1,0 +1,92 @@
+{
+  "weaponName": "Detonation Unit",
+  "statusEvents": [
+    {
+      "name": "DETONATION_UNIT_IMPOSING_CHAMPION",
+      "type": "WEAPON_EFFECT",
+      "originId": "DETONATION_UNIT",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Imposing Champion",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "ARTS_REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "WILL_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Secondary attribute bonus"
+    },
+    {
+      "name": "DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY",
+      "type": "WEAPON_EFFECT",
+      "originId": "DETONATION_UNIT",
+      "target": "ENEMY",
+      "label": "Imposing Champion (Enemy)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "ARTS_REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.09,
+          "valueMax": 0.252
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Enemy Arts DMG Taken (Fragility)"
+    }
+  ]
+}

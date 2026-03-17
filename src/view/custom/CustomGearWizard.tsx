@@ -3,7 +3,7 @@
  */
 import { useState } from 'react';
 import { GearCategory } from '../../consts/enums';
-import { ObjectType } from '../../consts/semantics';
+import { ObjectType, DeterminerType } from '../../consts/semantics';
 import type { CustomGearSet, CustomGearPiece, CustomGearEffect } from '../../model/custom/customGearTypes';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import IdField from './IdField';
@@ -233,7 +233,7 @@ function defaultGearEffect(): CustomGearEffect {
   return {
     label: '',
     triggers: [defaultInteraction()],
-    target: ObjectType.THIS_OPERATOR,
+    target: ObjectType.OPERATOR,
     durationSeconds: 15,
     maxStacks: 1,
     buffs: [],
@@ -259,8 +259,8 @@ function GearEffectEditor({ effect, onChange, onRemove }: {
       <label className="wz-field">
         <span>Target</span>
         <select value={effect.target} onChange={(e) => update({ target: e.target.value })}>
-          <option value={ObjectType.THIS_OPERATOR}>This Operator</option>
-          <option value={ObjectType.ALL_OPERATORS}>All Operators</option>
+          <option value={ObjectType.OPERATOR}>This Operator</option>
+          <option value={`${DeterminerType.ALL}_${ObjectType.OPERATOR}`}>All Operators</option>
           <option value={ObjectType.ENEMY}>Enemy</option>
         </select>
       </label>

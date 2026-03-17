@@ -20,7 +20,7 @@ import { Consumable } from '../../model/consumables/consumable';
 import { Tactical } from '../../model/consumables/tactical';
 import { WeaponSkill } from '../../model/weapon-skills/weaponSkill';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
-import { LoadoutStats } from '../../view/InformationPane';
+import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
 import {
@@ -133,21 +133,21 @@ export function weaponSkillStat(
 export function aggregateLoadoutStats(
   operatorId: string,
   loadout: OperatorLoadoutState,
-  loadoutStats: LoadoutStats,
+  loadoutProperties: LoadoutProperties,
 ): AggregatedStats | null {
   const config = getOperatorConfig(operatorId);
   if (!config) return null;
 
   // 1. Create operator model and apply user's loadout state
-  const model = new DataDrivenOperator(config, loadoutStats.operatorLevel);
-  model.potential = loadoutStats.potential as any;
-  model.talentOneLevel = loadoutStats.talentOneLevel;
-  model.talentTwoLevel = loadoutStats.talentTwoLevel;
-  model.attributeIncreaseLevel = loadoutStats.attributeIncreaseLevel ?? 4;
-  model.basicAttackLevel = loadoutStats.basicAttackLevel as any;
-  model.battleSkillLevel = loadoutStats.battleSkillLevel as any;
-  model.comboSkillLevel = loadoutStats.comboSkillLevel as any;
-  model.ultimateLevel = loadoutStats.ultimateLevel as any;
+  const model = new DataDrivenOperator(config, loadoutProperties.operator.level);
+  model.potential = loadoutProperties.operator.potential as any;
+  model.talentOneLevel = loadoutProperties.operator.talentOneLevel;
+  model.talentTwoLevel = loadoutProperties.operator.talentTwoLevel;
+  model.attributeIncreaseLevel = loadoutProperties.operator.attributeIncreaseLevel ?? 4;
+  model.basicAttackLevel = loadoutProperties.skills.basicAttackLevel as any;
+  model.battleSkillLevel = loadoutProperties.skills.battleSkillLevel as any;
+  model.comboSkillLevel = loadoutProperties.skills.comboSkillLevel as any;
+  model.ultimateLevel = loadoutProperties.skills.ultimateLevel as any;
 
   const operatorBaseAttack = model.getBaseAttack();
   const stats: Record<StatType, number> = { ...model.stats };
@@ -196,16 +196,16 @@ export function aggregateLoadoutStats(
     const weaponEntry = WEAPONS.find((w) => w.name === loadout.weaponName);
     if (weaponEntry) {
       const weapon: Weapon = weaponEntry.create();
-      weapon.level = loadoutStats.weaponLevel;
+      weapon.level = loadoutProperties.weapon.level;
       weaponBaseAttack = weapon.getBaseAttack();
 
       // Apply weapon skill stat boosts and passive stats
       const allSkills: { skill: WeaponSkill; levelKey: number }[] = [
-        { skill: weapon.weaponSkillOne, levelKey: loadoutStats.weaponSkill1Level },
-        { skill: weapon.weaponSkillTwo, levelKey: loadoutStats.weaponSkill2Level },
+        { skill: weapon.weaponSkillOne, levelKey: loadoutProperties.weapon.skill1Level },
+        { skill: weapon.weaponSkillTwo, levelKey: loadoutProperties.weapon.skill2Level },
       ];
       if (weapon.weaponSkillThree) {
-        allSkills.push({ skill: weapon.weaponSkillThree, levelKey: loadoutStats.weaponSkill3Level });
+        allSkills.push({ skill: weapon.weaponSkillThree, levelKey: loadoutProperties.weapon.skill3Level });
       }
       for (const { skill, levelKey } of allSkills) {
         skill.level = levelKey;
@@ -237,7 +237,7 @@ export function aggregateLoadoutStats(
   }
 
   // 3. Gear pieces — collect stats and count effect types for set bonus
-  const gearPieces: { name: string | null; registry: typeof ARMORS; ranksKey: 'armorRanks' | 'glovesRanks' | 'kit1Ranks' | 'kit2Ranks' }[] = [
+  const gearPieces: { name: string | null; registry: typeof ARMORS; ranksKey: keyof typeof loadoutProperties.gear }[] = [
     { name: loadout.armorName,  registry: ARMORS, ranksKey: 'armorRanks' },
     { name: loadout.glovesName, registry: GLOVES, ranksKey: 'glovesRanks' },
     { name: loadout.kit1Name,   registry: KITS,   ranksKey: 'kit1Ranks' },
@@ -252,7 +252,7 @@ export function aggregateLoadoutStats(
     if (!entry) continue;
     const gear: Gear = entry.create();
     gear.rank = 4; // default rank for fallback
-    const lineRanks = loadoutStats[piece.ranksKey] ?? {};
+    const lineRanks = loadoutProperties.gear[piece.ranksKey] ?? {};
     const gearStats = gear.getStatsPerLine(lineRanks);
     for (const [key, value] of Object.entries(gearStats)) {
       addStat(key as StatType, value as number, 'Gear');

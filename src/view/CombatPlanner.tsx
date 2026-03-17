@@ -36,6 +36,7 @@ import {
 import { MicroColumnController } from '../controller/timeline/microColumnController';
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import type { Slot } from '../controller/timeline/columnBuilder';
+import { formatSegmentShortName } from '../utils/semanticsTranslation';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import {
   getAlwaysAvailableComboSlots,
@@ -47,6 +48,7 @@ import {
 } from '../controller/timeline/eventValidator';
 import { computeAllValidations } from '../controller/timeline/eventValidationController';
 import { computeSlotElementColors, computeEventPresentation } from '../controller/timeline/eventPresentationController';
+import { computeStatusViewOverrides } from '../controller/timeline/statusViewController';
 import {
   buildColumnContextMenu,
   buildEventAddItems,
@@ -149,6 +151,8 @@ interface CombatPlannerProps {
   staggerBreaks?: readonly import('../controller/timeline/staggerTimeline').StaggerBreak[];
   /** Dynamic timeline length in frames (grows with content). */
   contentFrames?: number;
+  /** Per-slot SP insufficiency zones from the SP controller, keyed by `slotId:battle`. */
+  spInsufficiencyZones?: Map<string, import('../controller/timeline/skillPointTimeline').ResourceZone[]>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -210,6 +214,7 @@ export default function CombatPlanner({
   debugMode,
   staggerBreaks,
   contentFrames: contentFramesProp,
+  spInsufficiencyZones: spInsufficiencyZonesProp,
   orientation = 'vertical',
   onToggleOrientation,
 }: CombatPlannerProps) {
@@ -271,6 +276,7 @@ export default function CombatPlanner({
   const [dupValid, setDupValid] = useState(false);
   const enemyNameRef = useRef<HTMLDivElement>(null);
   const [draggingIds, setDraggingIds] = useState<Set<string> | null>(null);
+  const [dragZonesSnapshot, setDragZonesSnapshot] = useState<Map<string, import('../controller/timeline/skillPointTimeline').ResourceZone[]> | null>(null);
   const enemyMenuRef = useRef<HTMLDivElement>(null);
 
   // Map slotId → element color for sequenced event coloring
@@ -287,10 +293,43 @@ export default function CombatPlanner({
     [events, slots, resourceGraphs, staggerBreaks, draggingIds, debugMode],
   );
 
-  const resourceInsufficiencyZones = useMemo(
-    () => resourceGraphs ? computeResourceInsufficiencyZones(resourceGraphs, slots) : new Map(),
-    [resourceGraphs, slots],
-  );
+  const resourceInsufficiencyZones = useMemo(() => {
+    // SP zones come from the controller; ultimate zones computed here
+    const zones = new Map<string, import('../controller/timeline/skillPointTimeline').ResourceZone[]>();
+    if (spInsufficiencyZonesProp) {
+      spInsufficiencyZonesProp.forEach((val, key) => zones.set(key, val));
+    }
+    if (resourceGraphs) {
+      const ultZones = computeResourceInsufficiencyZones(resourceGraphs, slots);
+      // Only merge ultimate zones (SP zones already in controller output)
+      ultZones.forEach((val, key) => {
+        if (!key.endsWith(`:${SKILL_COLUMNS.BATTLE}`)) zones.set(key, val);
+      });
+    }
+    return zones;
+  }, [spInsufficiencyZonesProp, resourceGraphs, slots]);
+
+  // Validate dragged events against the resource zones snapshot captured at
+  // drag start (excludes the dragged event's own consumption). The live graph
+  // lags behind event position during drag, so snapshot zones are stable.
+  const dragResourceWarnings = useMemo(() => {
+    if (!draggingIds || !dragZonesSnapshot) return null;
+    const warnings = new Map<string, string>();
+    for (const ev of events) {
+      if (!draggingIds.has(ev.id)) continue;
+      if (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+      const zones = dragZonesSnapshot.get(`${ev.ownerId}:${ev.columnId}`);
+      if (!zones) continue;
+      for (const zone of zones) {
+        if (ev.startFrame >= zone.start && ev.startFrame < zone.end) {
+          const label = ev.columnId === SKILL_COLUMNS.BATTLE ? 'SP' : 'ultimate energy';
+          warnings.set(ev.id, `Not enough ${label}`);
+          break;
+        }
+      }
+    }
+    return warnings.size > 0 ? warnings : null;
+  }, [draggingIds, dragZonesSnapshot, events]);
 
   const filteredEnemies = useMemo(() => {
     if (!allEnemies) return [];
@@ -383,10 +422,10 @@ export default function CombatPlanner({
   }
   const enemyColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY).length;
 
-  // Build fluid gridTemplateColumns: equal-width operator/enemy groups, smaller TEAM
-  // Each operator & enemy group gets GROUP_FR total fr; common (TEAM) gets COMMON_FR
-  const GROUP_FR = 1;
-  const COMMON_FR = 0.5;
+  // Build fluid gridTemplateColumns: team:operator:enemy = 1:3:2
+  const GROUP_FR = 3;
+  const COMMON_FR = 1;
+  const ENEMY_FR = 2;
   const colFrStrings: string[] = [];
   // Common columns
   for (let i = 0; i < commonColCount; i++) {
@@ -401,7 +440,7 @@ export default function CombatPlanner({
   }
   // Enemy columns
   for (let i = 0; i < enemyColCount; i++) {
-    colFrStrings.push(`minmax(0, ${GROUP_FR / enemyColCount}fr)`);
+    colFrStrings.push(`minmax(0, ${ENEMY_FR / enemyColCount}fr)`);
   }
   const gridCols = `${TIME_AXIS_WIDTH}px ${colFrStrings.join(' ')}`;
   // In horizontal mode, lanes become rows — use fixed min height so rows don't collapse
@@ -412,7 +451,7 @@ export default function CombatPlanner({
   const containerWidth = outerRect?.width ?? 800;
   const totalFr = commonColCount * (COMMON_FR / Math.max(1, commonColCount))
     + slotGroups.reduce((sum, g) => sum + g.columnCount * (GROUP_FR / g.columnCount), 0)
-    + (enemyColCount > 0 ? enemyColCount * (GROUP_FR / enemyColCount) : 0);
+    + (enemyColCount > 0 ? enemyColCount * (ENEMY_FR / enemyColCount) : 0);
   const pxPerFr = totalFr > 0 ? (containerWidth - TIME_AXIS_WIDTH) / totalFr : 0;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -426,7 +465,7 @@ export default function CombatPlanner({
         fr = COMMON_FR / Math.max(1, commonColCount);
       } else {
         const sg = slotGroups.find((g) => g.slot.slotId === col.ownerId);
-        fr = sg ? GROUP_FR / sg.columnCount : GROUP_FR / enemyColCount;
+        fr = sg ? GROUP_FR / sg.columnCount : ENEMY_FR / enemyColCount;
       }
       const w = fr * pxPerFr;
       map.set(col.key, { left: x, right: x + w });
@@ -621,6 +660,12 @@ export default function CombatPlanner({
   const microColumnEventPositions = useMemo(
     () => MicroColumnController.computeMicroColumnPixelPositions(events, columns, columnPositions, greedySlotAssignments),
     [events, columns, columnPositions, greedySlotAssignments],
+  );
+
+  // ─── Precompute stack-aware status view overrides ──────────────────────────
+  const statusViewOverrides = useMemo(
+    () => computeStatusViewOverrides(events, columns),
+    [events, columns],
   );
 
   // ─── Marquee intersection helper ────────────────────────────────────────────
@@ -975,6 +1020,7 @@ export default function CombatPlanner({
     if (dragRef.current) {
       dragRef.current = null;
       setDraggingIds(null);
+      setDragZonesSnapshot(null);
       onBatchEnd?.();
     }
     if (frameDragRef.current) {
@@ -1039,6 +1085,7 @@ export default function CombatPlanner({
         : resourceZonesRef.current;
       dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
       setDraggingIds(dragSet);
+      setDragZonesSnapshot(resZones);
     } else {
       if (!(e.ctrlKey || e.metaKey) && !(selectedIds.has(eventId) && selectedIds.size === 1)) {
         setSelectedIds(new Set());
@@ -1051,6 +1098,7 @@ export default function CombatPlanner({
         : resourceZonesRef.current;
       dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
       setDraggingIds(dragSet);
+      setDragZonesSnapshot(resZones);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds, events, computeMonotonicBounds, onEditEvent, onBatchStart, axis]);
@@ -1355,7 +1403,7 @@ export default function CombatPlanner({
         ...(addFrameItems.length > 0 ? [...addFrameItems, { separator: true } as const] : []),
         ...(addSegItems.length > 0 ? [...addSegItems, { separator: true } as const] : []),
         ...(multiSegment && !isCombo && ev?.columnId === SKILL_COLUMNS.BASIC ? [{
-          label: `Remove Sequence${segLabel ? ` ${segLabel}` : ` ${segmentIndex + 1}`}`,
+          label: `Remove Sequence ${segLabel ?? formatSegmentShortName(undefined, segmentIndex)}`,
           action: () => { onRemoveSegment?.(eventId, segmentIndex); onContextMenu(null); },
           danger: true,
         }] : []),
@@ -1794,13 +1842,21 @@ export default function CombatPlanner({
                 {(() => {
                   // ── Shared EventBlock props via presentation controller ──
                   const isDerivedCol = !!col.derived && !debugMode;
+                  let mergedValidationMaps = validationMaps;
+                  if (dragResourceWarnings) {
+                    const merged = new Map(validationMaps.resource);
+                    dragResourceWarnings.forEach((v, k) => merged.set(k, v));
+                    mergedValidationMaps = { ...validationMaps, resource: merged };
+                  }
                   const presentationOpts = {
                     slotElementColors, alwaysAvailableComboSlots, autoFinisherIds,
-                    validationMaps, debugMode,
+                    validationMaps: mergedValidationMaps, debugMode, statusViewOverrides,
                   };
 
                   const buildEventBlockProps = (ev: TimelineEvent, pres: import('../controller/timeline/eventPresentationController').EventPresentation) => ({
-                    event: ev,
+                    event: pres.visualActivationDuration != null
+                      ? { ...ev, activationDuration: pres.visualActivationDuration, activeDuration: 0, cooldownDuration: 0 }
+                      : ev,
                     zoom,
                     axis,
                     variant: pres.variant,

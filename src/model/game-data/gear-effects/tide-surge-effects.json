@@ -1,0 +1,49 @@
+{
+  "gearSetType": "TIDE_SURGE",
+  "label": "Tide Surge",
+  "statusEvents": [
+    {
+      "name": "TIDE_SURGE",
+      "type": "GEAR_EFFECT",
+      "originId": "TIDE_SURGE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Tide Surge",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "INFLICTION",
+              "stacks": 2
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "value": 0.35
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "gearSetType": "AETHERTECH",
+  "label": "Æthertech",
+  "statusEvents": [
+    {
+      "name": "AETHERTECH",
+      "type": "GEAR_EFFECT",
+      "originId": "AETHERTECH",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Æthertech",
+      "stack": {
+        "max": {
+          "P0": 4
+        },
+        "instances": 4,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "VULNERABILITY"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "value": 0.08,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "AETHERTECH_MAX",
+      "type": "GEAR_EFFECT",
+      "originId": "AETHERTECH",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Æthertech (Max)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "VULNERABILITY"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "value": 0.16
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Activates at 4 stacks of Vulnerability"
+    }
+  ]
+}

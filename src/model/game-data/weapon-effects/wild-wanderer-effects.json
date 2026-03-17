@@ -1,0 +1,52 @@
+{
+  "weaponName": "Wild Wanderer",
+  "statusEvents": [
+    {
+      "name": "WILD_WANDERER_WILDERNESS_CLUSTER",
+      "type": "WEAPON_EFFECT",
+      "originId": "WILD_WANDERER",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Wilderness Cluster",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "ELECTRIFIED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "valueMin": 0.08,
+          "valueMax": 0.16
+        },
+        {
+          "stat": "ELECTRIC_DAMAGE_BONUS",
+          "valueMin": 0.08,
+          "valueMax": 0.16
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

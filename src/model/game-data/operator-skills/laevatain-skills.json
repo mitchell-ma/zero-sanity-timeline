@@ -2238,7 +2238,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "SKILL_POINT",
         "withPreposition": {
           "cardinality": {
@@ -2341,10 +2341,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 10
               }
@@ -2465,7 +2466,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "COOLDOWN",
         "withPreposition": {
           "cardinality": {
@@ -2507,7 +2508,7 @@
     "frames": [],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "ULTIMATE_ENERGY",
         "withPreposition": {
           "cardinality": {
@@ -2520,6 +2521,9 @@
     "originId": "laevatain"
   },
   "SMOULDERING_FIRE_ENHANCED": {
+    "enhancementTypes": [
+      "ENHANCED"
+    ],
     "properties": {
       "duration": {
         "value": 1.1,
@@ -2799,6 +2803,10 @@
     "originId": "laevatain"
   },
   "SMOULDERING_FIRE_ENHANCED_EMPOWERED": {
+    "enhancementTypes": [
+      "ENHANCED",
+      "EMPOWERED"
+    ],
     "properties": {
       "duration": {
         "value": 1.9,
@@ -3113,6 +3121,9 @@
     ]
   },
   "SMOULDERING_FIRE_EMPOWERED": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
     "properties": {
       "duration": {
         "value": 1.95,
@@ -4172,145 +4183,10 @@
       }
     ]
   },
-  "statusEvents": [
-    {
-      "name": "MELTING_FLAME",
-      "target": "THIS_OPERATOR",
-      "element": "HEAT",
-      "isNamedEvent": true,
-      "isForceApplied": false,
-      "stack": {
-        "max": {
-          "P0": 4,
-          "P1": 4,
-          "P2": 4,
-          "P3": 4,
-          "P4": 4,
-          "P5": 4
-        },
-        "instances": 4,
-        "verbType": "NONE"
-      },
-      "clause": [
-        {
-          "conditions": [
-            {
-              "subjectType": "THIS_EVENT",
-              "verbType": "HAVE",
-              "objectType": "STACKS",
-              "cardinalityConstraint": "EXACTLY",
-              "cardinality": "MAX"
-            }
-          ],
-          "effects": [
-            {
-              "verbType": "APPLY",
-              "objectType": "STATUS",
-              "objectId": "SCORCHING_HEART_EFFECT",
-              "toObjectType": "THIS_OPERATOR"
-            }
-          ]
-        }
-      ],
-      "triggerClause": [
-        {
-          "conditions": [
-            {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
-            }
-          ]
-        },
-        {
-          "conditions": [
-            {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "COMBO_SKILL"
-            }
-          ]
-        }
-      ],
-      "consumeClause": [
-        {
-          "conditions": [
-            {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
-            },
-            {
-              "subjectType": "THIS_EVENT",
-              "verbType": "HAVE",
-              "objectType": "STACKS",
-              "cardinalityConstraint": "EXACTLY",
-              "cardinality": "MAX"
-            }
-          ],
-          "effects": [
-            {
-              "verbType": "CONSUME",
-              "objectType": "ALL_STACKS"
-            }
-          ]
-        }
-      ],
-      "stats": [],
-      "properties": {
-        "duration": {
-          "value": [
-            -1,
-            -1,
-            -1,
-            -1
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "originId": "laevatain"
-    },
-    {
-      "name": "SCORCHING_HEART_EFFECT",
-      "target": "THIS_OPERATOR",
-      "element": "HEAT",
-      "isNamedEvent": true,
-      "isForceApplied": false,
-      "stack": {
-        "max": {
-          "P0": 1,
-          "P1": 1,
-          "P2": 1,
-          "P3": 1,
-          "P4": 1,
-          "P5": 1
-        },
-        "instances": 1,
-        "verbType": "RESET"
-      },
-      "triggerClause": [],
-      "stats": [
-        {
-          "statType": "HEAT_RESISTANCE_IGNORE",
-          "value": [
-            10,
-            15,
-            20
-          ]
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "originId": "laevatain"
-    }
-  ],
   "FLAMING_CINDERS_ENHANCED": {
+    "enhancementTypes": [
+      "ENHANCED"
+    ],
     "segments": [
       {
         "metadata": {

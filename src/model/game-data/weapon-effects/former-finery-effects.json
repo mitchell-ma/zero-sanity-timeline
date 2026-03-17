@@ -1,0 +1,49 @@
+{
+  "weaponName": "Former Finery",
+  "statusEvents": [
+    {
+      "name": "FORMER_FINERY_MINCING_THERAPY",
+      "type": "WEAPON_EFFECT",
+      "originId": "FORMER_FINERY",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Mincing Therapy",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "HIT",
+              "objectType": "OPERATOR"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "TREATMENT_EFFICIENCY",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 15,
+      "note": "Heal protected operator; 15s CD"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "weaponName": "Sundered Prince",
+  "statusEvents": [
+    {
+      "name": "SUNDERED_PRINCE_PRINCELY_DETERRENCE",
+      "type": "WEAPON_EFFECT",
+      "originId": "SUNDERED_PRINCE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Princely Deterrence",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "FINAL_STRIKE"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        },
+        {
+          "stat": "STAGGER_EFFICIENCY_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.336
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            8
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "ATK doubled when controlled (+20-56%)"
+    }
+  ]
+}

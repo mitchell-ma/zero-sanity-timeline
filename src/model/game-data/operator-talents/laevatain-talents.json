@@ -4,7 +4,8 @@
       "name": "SCORCHING_HEART",
       "type": "TALENT",
       "originId": "laevatain",
-      "target": "THIS_OPERATOR",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
       "element": "HEAT",
       "isNamedEvent": true,
       "stack": {
@@ -23,7 +24,8 @@
         {
           "conditions": [
             {
-              "subjectType": "ANY_OPERATOR",
+              "subjectDeterminer": "ANY",
+              "subjectType": "OPERATOR",
               "verbType": "PERFORM",
               "objectType": "FINAL_STRIKE"
             },
@@ -36,12 +38,12 @@
           ],
           "effects": [
             {
-              "verbType": "PERFORM_ALL",
+              "verbType": "ALL",
               "cardinalityConstraint": "AT_MOST",
               "cardinality": "MAX",
               "effects": [
                 {
-                  "verbType": "ABSORB",
+                  "verbType": "CONSUME",
                   "cardinality": 1,
                   "objectType": "INFLICTION",
                   "element": "HEAT",
@@ -52,7 +54,8 @@
                   "cardinality": 1,
                   "objectType": "STATUS",
                   "objectId": "MELTING_FLAME",
-                  "toObjectType": "THIS_OPERATOR"
+                  "toObjectDeterminer": "THIS",
+                  "toObjectType": "OPERATOR"
                 }
               ]
             }
@@ -61,7 +64,9 @@
       ],
       "properties": {
         "duration": {
-          "value": [-1],
+          "value": [
+            -1
+          ],
           "unit": "SECOND"
         }
       },

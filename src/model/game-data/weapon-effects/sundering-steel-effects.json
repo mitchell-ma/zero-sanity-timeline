@@ -1,0 +1,49 @@
+{
+  "weaponName": "Sundering Steel",
+  "statusEvents": [
+    {
+      "name": "SUNDERING_STEEL_ANTHEM_OF_CINDER",
+      "type": "WEAPON_EFFECT",
+      "originId": "SUNDERING_STEEL",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Anthem of Cinder",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.05,
+          "valueMax": 0.14,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

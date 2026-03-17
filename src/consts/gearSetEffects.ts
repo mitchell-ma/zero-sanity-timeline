@@ -10,13 +10,14 @@
  * Replaces the old gearEffects.ts abstract class hierarchy.
  */
 import { GearSetEffectType, GearSetType, StatType } from './enums';
-import { SubjectType, VerbType, ObjectType } from './semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType } from './semantics';
 import type { Interaction } from './semantics';
 
 const _I = (s: any, v: any, o: any, x?: Partial<Interaction>): Interaction => ({ subjectType: s, verbType: v, objectType: o, ...x } as Interaction);
-const THIS = SubjectType.THIS_OPERATOR;
+const _IO = (det: DeterminerType, v: any, o: any, x?: Partial<Interaction>): Interaction => ({ subjectDeterminer: det, subjectType: SubjectType.OPERATOR, verbType: v, objectType: o, ...x } as Interaction);
+const THIS = DeterminerType.THIS;
 const ENEMY = SubjectType.ENEMY;
-const ANY = SubjectType.ANY_OPERATOR;
+const ANY = DeterminerType.ANY;
 const PERFORM = VerbType.PERFORM;
 const APPLY = VerbType.APPLY;
 const RECOVER = VerbType.RECOVER;
@@ -93,7 +94,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'AIC Light',
       gearSetEffectType: GearSetEffectType.AIC_LIGHT,
-      triggers: [_I(THIS, VerbType.DEFEAT, ObjectType.ENEMY)],
+      triggers: [_IO(THIS, VerbType.DEFEAT, ObjectType.ENEMY)],
       target: 'wielder',
       durationSeconds: 5,
       maxStacks: 1,
@@ -114,9 +115,9 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       label: "Aburrey's Legacy",
       gearSetEffectType: GearSetEffectType.ABURREY_LEGACY,
       triggers: [
-        _I(THIS, PERFORM, ObjectType.BATTLE_SKILL),
-        _I(THIS, PERFORM, ObjectType.COMBO_SKILL),
-        _I(THIS, PERFORM, ObjectType.ULTIMATE),
+        _IO(THIS, PERFORM, ObjectType.BATTLE_SKILL),
+        _IO(THIS, PERFORM, ObjectType.COMBO_SKILL),
+        _IO(THIS, PERFORM, ObjectType.ULTIMATE),
       ],
       target: 'wielder',
       durationSeconds: 15,
@@ -138,7 +139,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'LYNX',
       gearSetEffectType: GearSetEffectType.LYNX,
-      triggers: [_I(THIS, RECOVER, ObjectType.HP)],
+      triggers: [_IO(THIS, RECOVER, ObjectType.HP)],
       target: 'team',
       durationSeconds: 10,
       maxStacks: 1,
@@ -161,7 +162,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Æthertech',
         gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
+        triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
         target: 'wielder',
         durationSeconds: 15,
         maxStacks: 4,
@@ -173,7 +174,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'Æthertech (Max)',
         gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
+        triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
         target: 'wielder',
         durationSeconds: 10,
         maxStacks: 1,
@@ -230,7 +231,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Frontiers',
       gearSetEffectType: GearSetEffectType.FRONTIERS,
-      triggers: [_I(THIS, RECOVER, ObjectType.SKILL_POINT)],
+      triggers: [_IO(THIS, RECOVER, ObjectType.SKILL_POINT)],
       target: 'team',
       durationSeconds: 15,
       maxStacks: 1,
@@ -288,7 +289,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'MI Security',
         gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [_I(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
+        triggers: [_IO(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
         target: 'wielder',
         durationSeconds: 5,
         maxStacks: 5,
@@ -300,7 +301,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
       {
         label: 'MI Security (Max)',
         gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [_I(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
+        triggers: [_IO(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
         target: 'wielder',
         durationSeconds: 5,
         maxStacks: 1,
@@ -322,7 +323,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Tide Surge',
       gearSetEffectType: GearSetEffectType.TIDE_SURGE,
-      triggers: [_I(THIS, APPLY, ObjectType.INFLICTION, { stacks: 2 })],
+      triggers: [_IO(THIS, APPLY, ObjectType.INFLICTION, { stacks: 2 })],
       target: 'wielder',
       durationSeconds: 15,
       maxStacks: 1,
@@ -343,7 +344,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Eternal Xiranite',
       gearSetEffectType: GearSetEffectType.ETERNAL_XIRANITE,
-      triggers: [_I(THIS, APPLY, ObjectType.STATUS, { objectId: "BUFF" })],
+      triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "BUFF" })],
       target: 'team',
       durationSeconds: 15,
       maxStacks: 1,
@@ -364,7 +365,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Catastrophe',
       gearSetEffectType: GearSetEffectType.CATASTROPHE,
-      triggers: [_I(THIS, PERFORM, ObjectType.BATTLE_SKILL)],
+      triggers: [_IO(THIS, PERFORM, ObjectType.BATTLE_SKILL)],
       target: 'wielder',
       durationSeconds: 1,
       maxStacks: 1,
@@ -383,7 +384,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Swordmancer',
       gearSetEffectType: GearSetEffectType.SWORDMANCER,
-      triggers: [_I(THIS, APPLY, ObjectType.STATUS)],
+      triggers: [_IO(THIS, APPLY, ObjectType.STATUS)],
       target: 'enemy',
       durationSeconds: 1,
       maxStacks: 1,
@@ -403,7 +404,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Bonekrusha',
       gearSetEffectType: GearSetEffectType.BONEKRUSHA,
-      triggers: [_I(THIS, PERFORM, ObjectType.COMBO_SKILL)],
+      triggers: [_IO(THIS, PERFORM, ObjectType.COMBO_SKILL)],
       target: 'wielder',
       durationSeconds: 0,
       maxStacks: 2,
@@ -425,7 +426,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     effects: [{
       label: 'Type 50 Yinglung',
       gearSetEffectType: GearSetEffectType.TYPE_50_YINGLUNG,
-      triggers: [_I(ANY, PERFORM, ObjectType.BATTLE_SKILL)],
+      triggers: [_IO(ANY, PERFORM, ObjectType.BATTLE_SKILL)],
       target: 'wielder',
       durationSeconds: 0,
       maxStacks: 3,

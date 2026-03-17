@@ -8,8 +8,8 @@ import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
 import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { legacyTargetToObjectType } from './bridgeUtils';
-import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
+import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
 import type { Predicate, Interaction } from '../../consts/semantics';
 import { OperatorClassType } from '../../model/enums/operators';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
@@ -43,7 +43,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
           name: matchedEffect.label,
           description: matchedEffect.description,
           triggers: matchedEffect.triggers,
-          target: legacyTargetToObjectType(matchedEffect.target === 'wielder' ? 'wielder' : matchedEffect.target === 'team' ? 'team' : 'enemy').toString(),
+          target: encodeLegacyTarget(legacyTargetToObjectType(matchedEffect.target === 'wielder' ? 'wielder' : matchedEffect.target === 'team' ? 'team' : 'enemy')),
           durationSeconds: matchedEffect.durationSeconds,
           maxStacks: matchedEffect.maxStacks,
           cooldownSeconds: matchedEffect.cooldownSeconds,
@@ -97,7 +97,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
       effects: effectsEntry.effects.map((e) => ({
         label: e.label,
         triggers: e.triggers,
-        target: legacyTargetToObjectType(e.target === 'wielder' ? 'wielder' : e.target === 'team' ? 'team' : 'enemy').toString(),
+        target: encodeLegacyTarget(legacyTargetToObjectType(e.target === 'wielder' ? 'wielder' : e.target === 'team' ? 'team' : 'enemy')),
         durationSeconds: e.durationSeconds,
         maxStacks: e.maxStacks,
         cooldownSeconds: e.cooldownSeconds,
@@ -147,7 +147,7 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
         }
         return { conditions, effects: [] };
       })
-    : [{ conditions: [{ subjectType: SubjectType.THIS_OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL }], effects: [] }];
+    : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL }], effects: [] }];
 
   return {
     id: `clone_${operatorId}_${Date.now()}`,

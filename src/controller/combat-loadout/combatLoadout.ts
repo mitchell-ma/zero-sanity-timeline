@@ -1,7 +1,7 @@
 import { TimelineEvent, Operator, computeSegmentsSpan } from '../../consts/viewTypes';
 import type { Slot } from '../timeline/columnBuilder';
 import { CombatSkillsType } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
 import type { Interaction } from '../../consts/semantics';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ENEMY_OWNER_ID } from '../../model/channels';
@@ -36,23 +36,23 @@ const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<In
   ({ subjectType, verbType, objectType, ...extra } as Interaction);
 
 const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
-  heatInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
-  cryoInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
-  natureInfliction:     [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
-  electricInfliction:   [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
+  heatInfliction:       [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
+  cryoInfliction:       [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'CRYO' })],
+  natureInfliction:     [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'NATURE' })],
+  electricInfliction:   [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'ELECTRIC' })],
   combustion:           [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED)],
   solidification:       [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED)],
   corrosion:            [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED)],
   electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
-  vulnerableInfliction: [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
-  breach:               [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
+  vulnerableInfliction: [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'VULNERABILITY' })],
+  breach:               [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'PHYSICAL' })],
 };
 
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.HP, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.HP, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_LEAST' as any }),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_MOST' as any }),
 ];
 
 function isAlwaysAvailable(i: Interaction): boolean {

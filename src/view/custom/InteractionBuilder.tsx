@@ -3,20 +3,23 @@
  * Renders a single Interaction as a form row with Subject/Verb/Object dropdowns.
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
-import { SubjectType, VerbType, ObjectType, CardinalityConstraintType } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType } from '../../consts/semantics';
 import type { Interaction, Effect } from '../../consts/semantics';
 import SentenceSlot from './SentenceSlot';
 
 /** Union type for building both conditions (Interaction) and effects (Effect). */
 type InteractionOrEffect = Interaction & Partial<Effect>;
 
+const DETERMINER_LABELS: Record<DeterminerType, string> = {
+  [DeterminerType.THIS]: 'This',
+  [DeterminerType.OTHER]: 'Other',
+  [DeterminerType.ALL]: 'All',
+  [DeterminerType.ANY]: 'Any',
+};
+
 const SUBJECT_LABELS: Partial<Record<SubjectType, string>> = {
-  [SubjectType.THIS_OPERATOR]: 'This Operator',
-  [SubjectType.OTHER_OPERATOR]: 'Other Operator',
-  [SubjectType.OTHER_OPERATORS]: 'Other Operators',
-  [SubjectType.ALL_OPERATORS]: 'All Operators',
+  [SubjectType.OPERATOR]: 'Operator',
   [SubjectType.ENEMY]: 'Enemy',
-  [SubjectType.ANY_OPERATOR]: 'Any Operator',
   [SubjectType.THIS_EVENT]: 'This Event',
   [SubjectType.SYSTEM]: 'System',
 };
@@ -25,21 +28,16 @@ const SUBJECT_LABELS: Partial<Record<SubjectType, string>> = {
 const SUBJECT_OPTIONS: SubjectType[] = Object.keys(SUBJECT_LABELS) as SubjectType[];
 
 const VERB_LABELS: Record<VerbType, string> = {
+  [VerbType.ALL]: 'All',
+  [VerbType.ANY]: 'Any',
   [VerbType.PERFORM]: 'Perform',
-  [VerbType.PERFORM_ALL]: 'Perform All',
   [VerbType.APPLY]: 'Apply',
   [VerbType.CONSUME]: 'Consume',
-  [VerbType.ABSORB]: 'Absorb',
   [VerbType.DEFEAT]: 'Defeat',
   [VerbType.HIT]: 'Hit',
-  [VerbType.EXPEND]: 'Expend',
   [VerbType.RECOVER]: 'Recover',
   [VerbType.OVERHEAL]: 'Overheal',
   [VerbType.RETURN]: 'Return',
-  [VerbType.LIFT]: 'Lift',
-  [VerbType.KNOCK_DOWN]: 'Knock Down',
-  [VerbType.BREACH]: 'Breach',
-  [VerbType.CRUSH]: 'Crush',
   [VerbType.REFRESH]: 'Refresh',
   [VerbType.EXTEND]: 'Extend',
   [VerbType.MERGE]: 'Merge',
@@ -47,8 +45,10 @@ const VERB_LABELS: Record<VerbType, string> = {
   [VerbType.HAVE]: 'Have',
   [VerbType.IS]: 'Is',
   [VerbType.BECOME]: 'Become',
+  [VerbType.RECEIVE]: 'Receive',
   [VerbType.IGNORE]: 'Ignore',
   [VerbType.EXPERIENCE]: 'Experience',
+  [VerbType.DEAL]: 'Deal',
 };
 
 // Object types grouped by verb context
@@ -58,7 +58,7 @@ const PERFORM_OBJECTS = [
 ];
 const STATUS_OBJECTS = [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ARTS_REACTION];
 const RESOURCE_OBJECTS = [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.STAGGER, ObjectType.COOLDOWN, ObjectType.HP];
-const ENTITY_OBJECTS = [ObjectType.ENEMY, ObjectType.THIS_OPERATOR, ObjectType.OTHER_OPERATOR, ObjectType.ALL_OPERATORS];
+const ENTITY_OBJECTS = [ObjectType.ENEMY, ObjectType.OPERATOR];
 const STATE_OBJECTS = [
   ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN,
   ObjectType.BREACHED, ObjectType.CRUSHED, ObjectType.COMBUSTED,
@@ -70,21 +70,16 @@ function getObjectsForVerb(verb: VerbType): ObjectType[] {
   switch (verb) {
     case VerbType.PERFORM: return PERFORM_OBJECTS;
     case VerbType.APPLY: return [...STATUS_OBJECTS, ...ENTITY_OBJECTS];
-    case VerbType.CONSUME:
-    case VerbType.ABSORB: return [...STATUS_OBJECTS, ObjectType.STACKS];
+    case VerbType.CONSUME: return [...STATUS_OBJECTS, ObjectType.STACKS, ...RESOURCE_OBJECTS];
     case VerbType.DEFEAT:
     case VerbType.HIT: return ENTITY_OBJECTS;
-    case VerbType.EXPEND:
     case VerbType.RECOVER:
     case VerbType.RETURN: return RESOURCE_OBJECTS;
     case VerbType.OVERHEAL: return [ObjectType.HP];
     case VerbType.HAVE: return [...STATUS_OBJECTS, ...RESOURCE_OBJECTS, ObjectType.STACKS];
     case VerbType.IS:
     case VerbType.BECOME: return STATE_OBJECTS;
-    case VerbType.LIFT:
-    case VerbType.KNOCK_DOWN:
-    case VerbType.BREACH:
-    case VerbType.CRUSH: return ENTITY_OBJECTS;
+    case VerbType.RECEIVE: return [...STATUS_OBJECTS, ObjectType.STAGGER];
     case VerbType.REFRESH:
     case VerbType.EXTEND:
     case VerbType.MERGE:
@@ -111,10 +106,7 @@ const OBJECT_LABELS: Partial<Record<ObjectType, string>> = {
   [ObjectType.STAGGER]: 'Stagger',
   [ObjectType.COOLDOWN]: 'Cooldown',
   [ObjectType.HP]: 'HP',
-  [ObjectType.THIS_OPERATOR]: 'This Operator',
-  [ObjectType.OTHER_OPERATOR]: 'Other Operator',
-  [ObjectType.OTHER_OPERATORS]: 'Other Operators',
-  [ObjectType.ALL_OPERATORS]: 'All Operators',
+  [ObjectType.OPERATOR]: 'Operator',
   [ObjectType.ENEMY]: 'Enemy',
   [ObjectType.ACTIVE]: 'Active',
   [ObjectType.LIFTED]: 'Lifted',
@@ -159,6 +151,19 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
   return (
     <div className={`interaction-builder${compact ? ' interaction-builder--compact' : ''}`}>
       <div className="interaction-row">
+        {/* Determiner — visible when subject is OPERATOR */}
+        <SentenceSlot active={value.subjectType === SubjectType.OPERATOR}>
+          <select
+            className="ib-select ib-determiner"
+            value={value.subjectDeterminer ?? DeterminerType.THIS}
+            onChange={(e) => update({ subjectDeterminer: e.target.value as DeterminerType })}
+          >
+            {Object.values(DeterminerType).map((d) => (
+              <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
+            ))}
+          </select>
+        </SentenceSlot>
+
         {/* Subject — always visible */}
         <select
           className="ib-select ib-subject"
@@ -271,7 +276,8 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
 /** Helper to create a default Interaction. */
 export function defaultInteraction(): Interaction {
   return {
-    subjectType: SubjectType.THIS_OPERATOR,
+    subjectDeterminer: DeterminerType.THIS,
+    subjectType: SubjectType.OPERATOR,
     verbType: VerbType.PERFORM,
     objectType: ObjectType.BATTLE_SKILL,
   };

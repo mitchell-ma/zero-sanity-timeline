@@ -1,0 +1,44 @@
+{
+  "gearSetType": "CATASTROPHE",
+  "label": "Catastrophe",
+  "statusEvents": [
+    {
+      "name": "CATASTROPHE",
+      "type": "GEAR_EFFECT",
+      "originId": "CATASTROPHE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Catastrophe",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "BATTLE_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [],
+      "properties": {
+        "duration": {
+          "value": [
+            1
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "+50 SP, once per battle"
+    }
+  ]
+}

@@ -47,7 +47,10 @@ export class MicroColumnController {
 
   /**
    * Compute dynamic-split overlap info for an event: returns the number of
-   * overlapping distinct types and this event's index in the stable ordering.
+   * overlapping distinct types and this event's type-group index in the stable ordering.
+   *
+   * Same-type events (same columnId) share a single slot — only events of
+   * different types split into separate sub-columns.
    */
   static dynamicSplitPosition(
     ev: TimelineEvent,
@@ -56,20 +59,26 @@ export class MicroColumnController {
   ): { count: number; index: number } {
     const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
 
-    const overlapping: TimelineEvent[] = [ev];
+    // Collect distinct types that overlap with this event
+    const overlappingTypes = new Set<string>([ev.columnId]);
     for (const other of colEvents) {
       if (other.id === ev.id) continue;
       const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
       if (other.startFrame < evEnd && otherEnd > ev.startFrame) {
-        overlapping.push(other);
+        overlappingTypes.add(other.columnId);
       }
     }
 
-    overlapping.sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
+    // Sort types by their order in the type order map for stable positioning
+    const sortedTypes = Array.from(overlappingTypes).sort((a, b) => {
+      const oa = _typeOrder.get(a) ?? 999;
+      const ob = _typeOrder.get(b) ?? 999;
+      return oa - ob || a.localeCompare(b);
+    });
 
     return {
-      count: overlapping.length,
-      index: overlapping.findIndex((o) => o.id === ev.id),
+      count: sortedTypes.length,
+      index: sortedTypes.indexOf(ev.columnId),
     };
   }
 

@@ -1,6 +1,6 @@
 import { TimelineEvent, VisibleSkills, ResourceConfig } from '../consts/viewTypes';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { LoadoutStats } from '../view/InformationPane';
+import { LoadoutProperties } from '../view/InformationPane';
 import { EnemyStats } from '../controller/appStateController';
 import { LoadoutTree } from './loadoutStorage';
 
@@ -14,7 +14,7 @@ export interface SheetData {
   enemyStats?: EnemyStats;
   events: TimelineEvent[];
   loadouts: Record<string, OperatorLoadoutState>;
-  loadoutStats: Record<string, LoadoutStats>;
+  loadoutProperties: Record<string, LoadoutProperties>;
   visibleSkills: VisibleSkills;
   nextEventId: number;
   resourceConfigs?: Record<string, ResourceConfig>;
@@ -27,7 +27,7 @@ export function serializeSheet(
   enemyStats: EnemyStats | undefined,
   events: TimelineEvent[],
   loadouts: Record<string, OperatorLoadoutState>,
-  loadoutStats: Record<string, LoadoutStats>,
+  loadoutProperties: Record<string, LoadoutProperties>,
   visibleSkills: VisibleSkills,
   nextEventId: number,
   resourceConfigs?: Record<string, ResourceConfig>,
@@ -40,7 +40,7 @@ export function serializeSheet(
     ...(enemyStats ? { enemyStats } : {}),
     events,
     loadouts,
-    loadoutStats,
+    loadoutProperties,
     visibleSkills,
     nextEventId,
     ...(resourceConfigs && Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
@@ -95,8 +95,14 @@ export function validateSheetData(raw: unknown): LoadResult {
   if (typeof obj.loadouts !== 'object' || obj.loadouts == null) {
     return { ok: false, error: 'Missing or invalid loadouts field.' };
   }
-  if (typeof obj.loadoutStats !== 'object' || obj.loadoutStats == null) {
-    return { ok: false, error: 'Missing or invalid loadoutStats field.' };
+  if (typeof obj.loadoutProperties !== 'object' || obj.loadoutProperties == null) {
+    // Also accept legacy 'loadoutStats' field
+    if (typeof obj.loadoutStats !== 'object' || obj.loadoutStats == null) {
+      return { ok: false, error: 'Missing or invalid loadoutProperties field.' };
+    }
+    // Migrate legacy field name
+    obj.loadoutProperties = obj.loadoutStats;
+    delete obj.loadoutStats;
   }
   if (typeof obj.visibleSkills !== 'object' || obj.visibleSkills == null) {
     return { ok: false, error: 'Missing or invalid visibleSkills field.' };
@@ -110,14 +116,14 @@ export function validateSheetData(raw: unknown): LoadResult {
 
 // ─── Clean & normalize ───────────────────────────────────────────────────
 
-/** Stamp current version and strip derived fields before persisting. */
+/** Stamp current version and strip transient derived fields before persisting.
+ *  Segments are preserved — user edits to segment durations and frame offsets
+ *  live on the segments array and must survive save/load round-trips.
+ *  Unedited events never have segments on the raw event (they are attached
+ *  from column templates at display time by attachDefaultSegments).
+ */
 export function cleanSheetData(data: SheetData): SheetData {
-  const events = data.events.map((ev) => {
-    // Strip derived segment/frame data — rebuilt from operator models on load
-    const { segments, ...rest } = ev as any;
-    return rest;
-  });
-  return { ...data, version: CURRENT_VERSION, events };
+  return { ...data, version: CURRENT_VERSION };
 }
 
 // ─── LocalStorage ────────────────────────────────────────────────────────

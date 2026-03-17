@@ -9,8 +9,8 @@ import { initCustomGearSets } from '../controller/custom/customGearController';
 import { initCustomOperators } from '../controller/custom/customOperatorController';
 import { useHistory } from '../utils/useHistory';
 import type { Orientation } from '../utils/axisMap';
-import { LoadoutStats, getDefaultLoadoutStats } from '../view/InformationPane';
-import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
+import { LoadoutProperties } from '../view/InformationPane';
+import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
@@ -43,7 +43,7 @@ import {
   INITIAL_OPERATORS,
   INITIAL_VISIBLE,
   INITIAL_LOADOUTS,
-  INITIAL_LOADOUT_STATS,
+  INITIAL_LOADOUT_PROPERTIES,
   applySheetData,
   loadInitialState,
 } from './sheetDefaults';
@@ -74,17 +74,17 @@ import {
   UndoableState,
   EnemyStats,
   swapOperator,
-  updateStatsWithPotential,
+  updatePropertiesWithPotential,
   computeSlots,
   computeDefaultResourceConfig,
   findEventDefaults,
   attachDefaultSegments,
   getDefaultEnemyStats,
 } from '../controller/appStateController';
-import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
+import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
 import { StatType } from '../consts/enums';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, STAGGER_FRAILTY_COLUMN_ID } from '../model/channels';
-import type { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
+import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ function initLoadouts() {
       initialLoad.loaded?.enemyStats,
       initialLoad.loaded?.events ?? [],
       initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
-      initialLoad.loaded?.loadoutStats ?? INITIAL_LOADOUT_STATS,
+      initialLoad.loaded?.loadoutProperties ?? INITIAL_LOADOUT_PROPERTIES,
       initialLoad.loaded?.visibleSkills ?? INITIAL_VISIBLE,
       getNextEventId(),
       initialLoad.loaded?.resourceConfigs ?? {},
@@ -142,11 +142,11 @@ export function useApp() {
     enemy: initialLoad.loaded?.enemy ?? DEFAULT_ENEMY,
     enemyStats: initialLoad.loaded?.enemyStats ?? getDefaultEnemyStats((initialLoad.loaded?.enemy ?? DEFAULT_ENEMY).id),
     loadouts: initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
-    loadoutStats: initialLoad.loaded?.loadoutStats ?? INITIAL_LOADOUT_STATS,
+    loadoutProperties: initialLoad.loaded?.loadoutProperties ?? INITIAL_LOADOUT_PROPERTIES,
     resourceConfigs: initialLoad.loaded?.resourceConfigs ?? {},
   });
 
-  const { events, operators, enemy, enemyStats, loadouts, loadoutStats, resourceConfigs } = undoable;
+  const { events, operators, enemy, enemyStats, loadouts, loadoutProperties, resourceConfigs } = undoable;
 
   const setEvents = useCallback((action: TimelineEvent[] | ((prev: TimelineEvent[]) => TimelineEvent[])) => {
     setUndoable((prev) => {
@@ -180,6 +180,7 @@ export function useApp() {
   const [editingDamageRow, setEditingDamageRow] = useState<DamageTableRow | null>(null);
   const [damageRows, setDamageRows] = useState<DamageTableRow[]>([]);
   const [spConsumptionHistory, setSpConsumptionHistory] = useState<SkillPointConsumptionHistory[]>([]);
+  const [spInsufficiencyZones, setSpInsufficiencyZones] = useState<Map<string, ResourceZone[]>>(new Map());
   const [derivedEventOverrides, setDerivedEventOverrides] = useState<Record<string, Partial<TimelineEvent>>>(
     initialLoad.loaded?.derivedEventOverrides ?? {},
   );
@@ -274,8 +275,8 @@ export function useApp() {
 
   // ─── Derived state ───────────────────────────────────────────────────────
   const slots = useMemo(
-    () => computeSlots(SLOT_IDS, operators, loadouts, loadoutStats),
-    [operators, loadouts, loadoutStats],
+    () => computeSlots(SLOT_IDS, operators, loadouts, loadoutProperties),
+    [operators, loadouts, loadoutProperties],
   );
 
   // Bump to force column rebuild when custom skill links change
@@ -296,6 +297,25 @@ export function useApp() {
     () => attachDefaultSegments(filterEventsToColumns(events, columns), columns),
     [events, columns],
   );
+
+  // Write resolved segment overrides back to raw events (one-time after embed decode)
+  useEffect(() => {
+    const pending = events.filter((ev) => ev._pendingSegmentOverrides);
+    if (pending.length === 0) return;
+    const resolved = new Map<string, TimelineEvent['segments']>();
+    for (const ev of pending) {
+      const valid = validEvents.find((v) => v.id === ev.id);
+      if (valid?.segments) resolved.set(ev.id, valid.segments);
+    }
+    if (resolved.size === 0) return;
+    setEvents((prev) => prev.map((ev) => {
+      const segs = resolved.get(ev.id);
+      if (!segs) return ev;
+      const { _pendingSegmentOverrides, ...rest } = ev;
+      return { ...rest, segments: segs };
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validEvents]);
 
   // ─── Embed URL loading (one-time on mount) ─────────────────────────────
   const embedLoadedRef = useRef(false);
@@ -327,7 +347,7 @@ export function useApp() {
         enemy: resolved.enemy,
         enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
         loadouts: resolved.loadouts,
-        loadoutStats: resolved.loadoutStats,
+        loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
       });
       setVisibleSkills(resolved.visibleSkills);
@@ -367,9 +387,21 @@ export function useApp() {
     return map;
   }, [operators]);
 
+  const slotWeapons = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const s of slots) map[s.slotId] = s.weaponName;
+    return map;
+  }, [slots]);
+
+  const slotGearSets = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const s of slots) map[s.slotId] = s.gearSetType;
+    return map;
+  }, [slots]);
+
   const processedEvents = useMemo(
-    () => processInflictionEvents(validEvents, loadoutStats, undefined, slotWirings, slotOperatorMap),
-    [validEvents, loadoutStats, slotWirings, slotOperatorMap],
+    () => processInflictionEvents(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets),
+    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets],
   );
 
   const { combatLoadout } =
@@ -386,23 +418,19 @@ export function useApp() {
   const tacticalMaxUsesOverrides = useMemo(() => {
     const map: Record<string, number | undefined> = {};
     for (const slotId of SLOT_IDS) {
-      map[slotId] = loadoutStats[slotId]?.tacticalMaxUses;
+      map[slotId] = loadoutProperties[slotId]?.tacticalMaxUses;
     }
     return map;
-  }, [loadoutStats]);
+  }, [loadoutProperties]);
 
   const gaugeGainMultipliers = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const slotId of SLOT_IDS) {
-      const op = operators[SLOT_IDS.indexOf(slotId)];
-      if (!op) continue;
-      const agg = aggregateLoadoutStats(op.id, loadouts[slotId] ?? EMPTY_LOADOUT, loadoutStats[slotId] ?? getDefaultLoadoutStats(op));
-      if (agg) {
-        map[slotId] = agg.stats[StatType.ULTIMATE_GAIN_EFFICIENCY] ?? 0;
-      }
+    const base = resolveGainEfficiencies(operators, SLOT_IDS, loadouts, loadoutProperties);
+    const msBonuses = resolveMessengersSongBonuses(operators, SLOT_IDS, loadoutProperties);
+    for (const [slotId, bonus] of Object.entries(msBonuses)) {
+      base[slotId] = (base[slotId] ?? 0) + bonus;
     }
-    return map;
-  }, [operators, loadouts, loadoutStats]);
+    return base;
+  }, [operators, loadouts, loadoutProperties]);
 
   const { resourceGraphs, tacticalEvents } = useResourceGraphs(
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
@@ -508,9 +536,9 @@ export function useApp() {
     : null;
 
   const getDefaultResourceConfig = useCallback((colKey: string): ResourceConfig => {
-    return computeDefaultResourceConfig(operators, loadoutStats, SLOT_IDS, colKey, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]);
+    return computeDefaultResourceConfig(operators, loadoutProperties, SLOT_IDS, colKey, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [operators, loadoutStats, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]]);
+  }, [operators, loadoutProperties, spKey, staggerKey, enemyStats[StatType.STAGGER_HP]]);
 
   const editingResourceConfig = editingResourceKey
     ? editingResourceKey === staggerKey
@@ -598,58 +626,17 @@ export function useApp() {
   }, [enemyStats, combatLoadout]);
 
   useEffect(() => {
-    const spSubtimeline = combatLoadout.commonSlot.getSubtimeline(COMMON_COLUMN_IDS.SKILL_POINTS);
-    if (!spSubtimeline) return;
-    const spRecovery = processedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS,
-    );
-    const battleCosts: TimelineEvent[] = [];
-    const spReturns: TimelineEvent[] = [];
-    for (const ev of processedEvents) {
-      if (ev.columnId !== SKILL_COLUMNS.BATTLE || !ev.skillPointCost) continue;
-      // Cost event
-      battleCosts.push({
-        id: `${ev.id}-sp`,
-        name: 'sp-cost',
-        ownerId: COMMON_OWNER_ID,
-        columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-        startFrame: ev.startFrame,
-        activationDuration: ev.skillPointCost,
-        activeDuration: 0,
-        cooldownDuration: 0,
-      } as TimelineEvent);
-      // Return events from frame-level skillPointRecovery
-      if (ev.segments) {
-        const animOffset = ev.animationDuration ?? 0;
-        let segOffset = 0;
-        for (const seg of ev.segments) {
-          if (seg.frames) {
-            for (const f of seg.frames) {
-              if (f.skillPointRecovery && f.skillPointRecovery > 0) {
-                const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
-                spReturns.push({
-                  id: `${ev.id}-sp-return-${frame}`,
-                  name: 'sp-return',
-                  ownerId: COMMON_OWNER_ID,
-                  columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-                  startFrame: frame,
-                  activationDuration: f.skillPointRecovery,
-                  activeDuration: 0,
-                  cooldownDuration: 0,
-                } as TimelineEvent);
-              }
-            }
-          }
-          segOffset += seg.durationFrames;
-        }
+    const slotSpCosts = new Map<string, number>();
+    for (const slot of slots) {
+      if (slot.operator) {
+        slotSpCosts.set(slot.slotId, slot.operator.skills.battle?.skillPointCost ?? 100);
       }
     }
-    const allSpEvents = [...spRecovery, ...battleCosts, ...spReturns]
-      .sort((a, b) => a.startFrame - b.startFrame || (a.name === 'sp-cost' ? -1 : 1));
-    spSubtimeline.setEvents(allSpEvents);
-    // After setEvents, recompute runs synchronously — read the updated consumption log
+    combatLoadout.commonSlot.syncSkillPointEvents(processedEvents, slotSpCosts);
+    // After sync, recompute runs synchronously — read the updated consumption log
     setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
-  }, [processedEvents, combatLoadout]);
+    setSpInsufficiencyZones(combatLoadout.commonSlot.spInsufficiencyZones);
+  }, [processedEvents, combatLoadout, slots]);
 
   // ─── Stagger event sync (must run synchronously before staggerFrailtyEvents) ─
   useMemo(() => {
@@ -742,13 +729,13 @@ export function useApp() {
       enemyStats,
       events,
       loadouts,
-      loadoutStats,
+      loadoutProperties,
       visibleSkills,
       getNextEventId(),
       resourceConfigs,
       derivedEventOverrides,
     );
-  }, [operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs, derivedEventOverrides]);
+  }, [operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, derivedEventOverrides]);
 
   useAutoSave(buildSheetData);
 
@@ -1027,7 +1014,18 @@ export function useApp() {
   const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === id);
-      if (!target) return prev;
+      if (!target) {
+        // Derived event — store startFrame override (debug mode drag)
+        if (debugModeRef.current) {
+          queueMicrotask(() => {
+            setDerivedEventOverrides((overrides) => ({
+              ...overrides,
+              [id]: { ...overrides[id], startFrame: Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame)) },
+            }));
+          });
+        }
+        return prev;
+      }
       const processed = debugModeRef.current ? null : processedEventsRef.current;
       const clamped = validateMove(prev, target, newStartFrame, processed);
       if (clamped === target.startFrame) return prev;
@@ -1038,11 +1036,33 @@ export function useApp() {
   }, []);
 
   const handleMoveEvents = useCallback((ids: string[], delta: number) => {
+    if (delta === 0) return;
     setEvents((prev) => {
       const processed = debugModeRef.current ? null : processedEventsRef.current;
-      const clampedDelta = validateBatchMoveDelta(prev, ids, delta, processed);
-      if (clampedDelta === 0) return prev;
       const idSet = new Set(ids);
+      // Separate raw vs derived event IDs
+      const rawIds = ids.filter((id) => prev.some((ev) => ev.id === id));
+      const derivedIds = debugModeRef.current ? ids.filter((id) => !prev.some((ev) => ev.id === id)) : [];
+      // Move derived events via overrides
+      if (derivedIds.length > 0) {
+        const clampedD = Math.max(-TOTAL_FRAMES, Math.min(TOTAL_FRAMES, delta));
+        queueMicrotask(() => {
+          setDerivedEventOverrides((overrides) => {
+            const next = { ...overrides };
+            const allEvents = processedEventsRef.current ?? prev;
+            for (const id of derivedIds) {
+              const ev = allEvents.find((e) => e.id === id);
+              if (!ev) continue;
+              const curFrame = overrides[id]?.startFrame ?? ev.startFrame;
+              next[id] = { ...next[id], startFrame: Math.max(0, Math.min(TOTAL_FRAMES - 1, curFrame + clampedD)) };
+            }
+            return next;
+          });
+        });
+      }
+      if (rawIds.length === 0) return prev;
+      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed);
+      if (clampedDelta === 0) return prev;
       return prev.map((ev) => {
         if (!idSet.has(ev.id)) return ev;
         const newFrame = ev.startFrame + clampedDelta;
@@ -1175,8 +1195,10 @@ export function useApp() {
   const handleRemoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === eventId);
-      if (!target?.segments?.[segmentIndex]?.frames) return prev;
-      const newSegments = target.segments.map((seg, si) => {
+      if (!target) return prev;
+      const segments = target.segments ?? findEventDefaults(target, columns)?.segments;
+      if (!segments?.[segmentIndex]?.frames) return prev;
+      const newSegments = segments.map((seg, si) => {
         if (si !== segmentIndex) return seg;
         return { ...seg, frames: seg.frames?.filter((_, fi) => fi !== frameIndex) };
       });
@@ -1184,7 +1206,7 @@ export function useApp() {
     });
     setSelectedFrames((prev) => prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex)));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [columns]);
 
   const handleRemoveFrames = useCallback((frames: SelectedFrame[]) => {
     const byEvent = new Map<string, { segmentIndex: number; frameIndex: number }[]>();
@@ -1195,9 +1217,11 @@ export function useApp() {
     }
     setEvents((prev) => prev.map((ev) => {
       const toRemove = byEvent.get(ev.id);
-      if (!toRemove || !ev.segments) return ev;
+      if (!toRemove) return ev;
+      const segments = ev.segments ?? findEventDefaults(ev, columns)?.segments;
+      if (!segments) return ev;
       const removeSet = new Set(toRemove.map((r) => `${r.segmentIndex}-${r.frameIndex}`));
-      const newSegments = ev.segments.map((seg, si) => {
+      const newSegments = segments.map((seg, si) => {
         if (!seg.frames) return seg;
         const filtered = seg.frames.filter((_, fi) => !removeSet.has(`${si}-${fi}`));
         return { ...seg, frames: filtered };
@@ -1206,7 +1230,7 @@ export function useApp() {
     }));
     setSelectedFrames([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [columns]);
 
   const handleAddSegment = useCallback((eventId: string, segmentLabel: string) => {
     setEvents((prev) => {
@@ -1293,8 +1317,11 @@ export function useApp() {
 
   const handleMoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
     setEvents((prev) => prev.map((ev) => {
-      if (ev.id !== eventId || !ev.segments) return ev;
-      const newSegments = ev.segments.map((seg, si) => {
+      if (ev.id !== eventId) return ev;
+      // Attach default segments from column definitions if the raw event doesn't have them
+      const segments = ev.segments ?? findEventDefaults(ev, columns)?.segments;
+      if (!segments) return ev;
+      const newSegments = segments.map((seg, si) => {
         if (si !== segmentIndex || !seg.frames) return seg;
         const newFrames = seg.frames.map((f, fi) =>
           fi === frameIndex ? { ...f, offsetFrame: newOffsetFrame } : f,
@@ -1304,7 +1331,7 @@ export function useApp() {
       return { ...ev, segments: newSegments };
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [columns]);
 
   // ─── Loadout & operator handlers ─────────────────────────────────────────
   const handleLoadoutChange = useCallback((slotId: string, state: OperatorLoadoutState) => {
@@ -1314,8 +1341,8 @@ export function useApp() {
     }));
   }, [setUndoable]);
 
-  const handleStatsChange = useCallback((slotId: string, stats: LoadoutStats) => {
-    setUndoable((prev) => updateStatsWithPotential(prev, slotId, stats, SLOT_IDS));
+  const handleStatsChange = useCallback((slotId: string, stats: LoadoutProperties) => {
+    setUndoable((prev) => updatePropertiesWithPotential(prev, slotId, stats, SLOT_IDS));
   }, [setUndoable]);
 
   const handleSwapOperator = useCallback((slotId: string, newOperatorId: string | null) => {
@@ -1385,7 +1412,7 @@ export function useApp() {
       enemy: DEFAULT_ENEMY,
       enemyStats: getDefaultEnemyStats(DEFAULT_ENEMY.id),
       loadouts: INITIAL_LOADOUTS,
-      loadoutStats: INITIAL_LOADOUT_STATS,
+      loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
     };
     resetUndoable(emptyState);
@@ -1402,7 +1429,7 @@ export function useApp() {
       emptyState.enemyStats,
       emptyState.events,
       emptyState.loadouts,
-      emptyState.loadoutStats,
+      emptyState.loadoutProperties,
       INITIAL_VISIBLE,
       1,
       emptyState.resourceConfigs,
@@ -1439,7 +1466,7 @@ export function useApp() {
         enemy: resolved.enemy,
         enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
         loadouts: resolved.loadouts,
-        loadoutStats: resolved.loadoutStats,
+        loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
       });
       setVisibleSkills(resolved.visibleSkills);
@@ -1449,7 +1476,7 @@ export function useApp() {
         INITIAL_OPERATORS.map((op) => op?.id ?? null),
         DEFAULT_ENEMY.id,
         getDefaultEnemyStats(DEFAULT_ENEMY.id),
-        [], INITIAL_LOADOUTS, INITIAL_LOADOUT_STATS, INITIAL_VISIBLE, 1, {},
+        [], INITIAL_LOADOUTS, INITIAL_LOADOUT_PROPERTIES, INITIAL_VISIBLE, 1, {},
       ));
       setDerivedEventOverrides({});
     }
@@ -1476,7 +1503,7 @@ export function useApp() {
         enemy: resolved.enemy,
         enemyStats: resolved.enemyStats ?? getDefaultEnemyStats(resolved.enemy.id),
         loadouts: resolved.loadouts,
-        loadoutStats: resolved.loadoutStats,
+        loadoutProperties: resolved.loadoutProperties,
         resourceConfigs: resolved.resourceConfigs,
       });
       setVisibleSkills(resolved.visibleSkills);
@@ -1489,7 +1516,7 @@ export function useApp() {
         enemy: DEFAULT_ENEMY,
         enemyStats: getDefaultEnemyStats(DEFAULT_ENEMY.id),
         loadouts: INITIAL_LOADOUTS,
-        loadoutStats: INITIAL_LOADOUT_STATS,
+        loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
         resourceConfigs: {},
       });
       setVisibleSkills(INITIAL_VISIBLE);
@@ -1523,7 +1550,7 @@ export function useApp() {
         enemy: DEFAULT_ENEMY,
         enemyStats: getDefaultEnemyStats(DEFAULT_ENEMY.id),
         loadouts: INITIAL_LOADOUTS,
-        loadoutStats: INITIAL_LOADOUT_STATS,
+        loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
         resourceConfigs: {},
       };
       resetUndoable(emptyState);
@@ -1540,7 +1567,7 @@ export function useApp() {
         emptyState.enemyStats,
         emptyState.events,
         emptyState.loadouts,
-        emptyState.loadoutStats,
+        emptyState.loadoutProperties,
         INITIAL_VISIBLE,
         1,
         emptyState.resourceConfigs,
@@ -1581,7 +1608,7 @@ export function useApp() {
       enemy: DEFAULT_ENEMY,
       enemyStats: getDefaultEnemyStats(DEFAULT_ENEMY.id),
       loadouts: INITIAL_LOADOUTS,
-      loadoutStats: INITIAL_LOADOUT_STATS,
+      loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
     });
     setVisibleSkills(INITIAL_VISIBLE);
@@ -1594,7 +1621,7 @@ export function useApp() {
     if (activeLoadoutId) {
       saveLoadoutData(activeLoadoutId, serializeSheet(
         [...INITIAL_OPERATORS].map((op) => op?.id ?? null),
-        DEFAULT_ENEMY.id, undefined, [], INITIAL_LOADOUTS, INITIAL_LOADOUT_STATS,
+        DEFAULT_ENEMY.id, undefined, [], INITIAL_LOADOUTS, INITIAL_LOADOUT_PROPERTIES,
         INITIAL_VISIBLE, 1, {},
       ));
     }
@@ -1618,7 +1645,7 @@ export function useApp() {
       enemy: DEFAULT_ENEMY,
       enemyStats: getDefaultEnemyStats(DEFAULT_ENEMY.id),
       loadouts: INITIAL_LOADOUTS,
-      loadoutStats: INITIAL_LOADOUT_STATS,
+      loadoutProperties: INITIAL_LOADOUT_PROPERTIES,
       resourceConfigs: {},
     };
     resetUndoable(emptyState);
@@ -1636,7 +1663,7 @@ export function useApp() {
       emptyState.enemyStats,
       emptyState.events,
       emptyState.loadouts,
-      emptyState.loadoutStats,
+      emptyState.loadoutProperties,
       INITIAL_VISIBLE,
       1,
       emptyState.resourceConfigs,
@@ -1757,8 +1784,8 @@ export function useApp() {
   // ─── Return ──────────────────────────────────────────────────────────────
   return {
     // Core state
-    operators, enemy, enemyStats, events, loadouts, loadoutStats, visibleSkills, resourceConfigs, buildSheetData,
-    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory,
+    operators, enemy, enemyStats, events, loadouts, loadoutProperties, visibleSkills, resourceConfigs, buildSheetData,
+    columns, slots, allProcessedEvents, contentFrames, resourceGraphs, staggerBreaks, spConsumptionHistory, spInsufficiencyZones,
 
     // UI state
     zoom, contextMenu, editingEvent, processedEditingEvent, editingEventReadOnly, editingEventIsDerived, editContext,

@@ -14,6 +14,7 @@ import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import type { CombatSkillsType } from '../../consts/enums';
 import type { SkillType } from '../../consts/viewTypes';
 import type { Interaction, Effect } from '../../consts/semantics';
+import { formatSegmentDisplayName } from '../../utils/semanticsTranslation';
 
 interface Props {
   selection: ContentSelection;
@@ -726,7 +727,7 @@ function SegmentView({ index, segment, isComboChain }: { index: number; segment:
     ? segment.name
     : isComboChain
       ? (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`)
-      : `Segment ${index + 1}`;
+      : formatSegmentDisplayName(undefined, index);
 
   // Count total hits (frames) in this segment
   const hitCount = frames.length;

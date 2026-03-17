@@ -1,0 +1,49 @@
+{
+  "gearSetType": "FRONTIERS",
+  "label": "Frontiers",
+  "statusEvents": [
+    {
+      "name": "FRONTIERS",
+      "type": "GEAR_EFFECT",
+      "originId": "FRONTIERS",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Frontiers",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "SKILL_DAMAGE_BONUS",
+          "value": 0.16
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Team DMG +16%"
+    }
+  ]
+}

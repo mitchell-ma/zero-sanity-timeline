@@ -22,9 +22,11 @@
  *    - Combo outside window produces no derived inflictions
  */
 import { TimelineEvent } from '../consts/viewTypes';
+import { StatusType } from '../consts/enums';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
-import { SubjectType, VerbType, ObjectType } from '../consts/semantics';
-import type { TriggerCapability } from '../consts/triggerCapabilities';
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
+// eslint-disable-next-line import/first
+import { TriggerCapability } from '../consts/triggerCapabilities';
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -39,7 +41,8 @@ jest.mock('../model/game-data/weaponGameData', () => ({
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
 }));
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+  DEFAULT_LOADOUT_PROPERTIES: {},
+  getDefaultLoadoutProperties: () => ({}),
 }));
 
 // eslint-disable-next-line import/first
@@ -67,11 +70,11 @@ function antalCapability(): TriggerCapability {
   return {
     publishesTriggers: {},
     comboRequires: [
-      { subjectType: SubjectType.ANY_OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+      { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
     ],
     comboDescription: 'any infliction',
     comboWindowFrames: 720,
-    comboRequiresActiveColumns: ['focus'],
+    comboRequiresActiveColumns: [StatusType.FOCUS],
   };
 }
 
@@ -80,7 +83,7 @@ function laevCapability(): TriggerCapability {
   return {
     publishesTriggers: {
       [SKILL_COLUMNS.BATTLE]: [
-        { subjectType: SubjectType.THIS_OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+        { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
       ],
     },
     comboRequires: [],
@@ -101,9 +104,9 @@ function standardWirings(): SlotTriggerWiring[] {
 function makeFocusEvent(startFrame: number, durationFrames: number): TimelineEvent {
   return makeEvent({
     id: `focus-${startFrame}`,
-    name: 'focus',
+    name: StatusType.FOCUS,
     ownerId: ENEMY_OWNER_ID,
-    columnId: 'focus',
+    columnId: StatusType.FOCUS,
     startFrame,
     activationDuration: durationFrames,
   });
@@ -351,6 +354,231 @@ describe('C. Pipeline integration', () => {
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
     );
     expect(windows.length).toBe(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group D: Antal + Akekuri cross-operator combo trigger
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction triggers combo window', () => {
+  const SLOT_AKEKURI = 'slot-0';
+  const ANTAL_SLOT = 'slot-1';
+
+  /** Akekuri: Heat Vanguard, battle skill publishes Heat infliction */
+  function akekuriCapability(): TriggerCapability {
+    return {
+      publishesTriggers: {
+        [SKILL_COLUMNS.BASIC]: [
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+        ],
+        [SKILL_COLUMNS.BATTLE]: [
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+          { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.COMBUSTED },
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+        ],
+      },
+      comboRequires: [
+        { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.COMBUSTED },
+      ],
+      comboDescription: 'Enemy is Combusted',
+      comboWindowFrames: 720,
+    };
+  }
+
+  /** Full Antal capability: both Physical Status and Infliction clauses */
+  function antalFullCapability(): TriggerCapability {
+    return {
+      publishesTriggers: {
+        [SKILL_COLUMNS.BASIC]: [
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+        ],
+        [SKILL_COLUMNS.BATTLE]: [
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+          { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.ELECTRIFIED },
+          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+        ],
+      },
+      comboRequires: [
+        { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.STATUS, objectId: 'PHYSICAL' },
+        { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+      ],
+      comboDescription: 'Enemy with Focus suffers Physical Status or Arts Infliction',
+      comboWindowFrames: 720,
+      comboRequiresActiveColumns: ['FOCUS'],
+    };
+  }
+
+  function akekuriAntalWirings(): SlotTriggerWiring[] {
+    return [
+      { slotId: SLOT_AKEKURI, capability: akekuriCapability() },
+      { slotId: ANTAL_SLOT, capability: antalFullCapability() },
+    ];
+  }
+
+  test('D1: Akekuri battle skill with Focus active produces Antal combo window', () => {
+    // Antal applies Focus at frame 0 (derived from her battle skill — simulated here)
+    const focus = makeEvent({
+      id: 'antal-focus',
+      name: 'Focus',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'FOCUS',
+      startFrame: 80, // offset ~0.67s from Antal battle skill at frame 0
+      activationDuration: 60 * FPS, // 60s Focus duration
+      sourceOwnerId: ANTAL_SLOT,
+      sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
+    });
+
+    // Akekuri casts battle skill after Antal, causing Heat infliction on enemy
+    const heatInfliction = makeEvent({
+      id: 'akekuri-heat-inf',
+      name: 'heatInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame: 400, // some time after Focus is active
+      activationDuration: 10 * FPS,
+      sourceOwnerId: SLOT_AKEKURI,
+      sourceSkillName: 'BURST_OF_PASSION',
+    });
+
+    const processed = processInflictionEvents(
+      [focus, heatInfliction],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    // Antal should have a combo activation window starting at the infliction frame
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    expect(antalWindows.length).toBeGreaterThan(0);
+    expect(antalWindows[0].startFrame).toBe(400);
+  });
+
+  test('D2: No Antal combo window when Focus has expired before infliction', () => {
+    // Focus expires before Akekuri's infliction
+    const focus = makeEvent({
+      id: 'antal-focus',
+      name: 'Focus',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'FOCUS',
+      startFrame: 80,
+      activationDuration: 200, // short Focus — expires at frame 280
+      sourceOwnerId: ANTAL_SLOT,
+      sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
+    });
+
+    const heatInfliction = makeEvent({
+      id: 'akekuri-heat-inf',
+      name: 'heatInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame: 400, // after Focus expired at 280
+      activationDuration: 10 * FPS,
+      sourceOwnerId: SLOT_AKEKURI,
+      sourceSkillName: 'BURST_OF_PASSION',
+    });
+
+    const processed = processInflictionEvents(
+      [focus, heatInfliction],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    expect(antalWindows.length).toBe(0);
+  });
+
+  test('D3: No Antal combo window when no Focus at all', () => {
+    // Akekuri infliction without any Focus on enemy
+    const heatInfliction = makeEvent({
+      id: 'akekuri-heat-inf',
+      name: 'heatInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame: 400,
+      activationDuration: 10 * FPS,
+      sourceOwnerId: SLOT_AKEKURI,
+      sourceSkillName: 'BURST_OF_PASSION',
+    });
+
+    const processed = processInflictionEvents(
+      [heatInfliction],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    expect(antalWindows.length).toBe(0);
+  });
+
+  test('D4: Antal combo window duration is 720 frames', () => {
+    const focus = makeEvent({
+      id: 'antal-focus',
+      name: 'Focus',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'FOCUS',
+      startFrame: 0,
+      activationDuration: 60 * FPS,
+      sourceOwnerId: ANTAL_SLOT,
+    });
+
+    const heatInfliction = makeEvent({
+      id: 'akekuri-heat-inf',
+      name: 'heatInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame: 400,
+      activationDuration: 10 * FPS,
+      sourceOwnerId: SLOT_AKEKURI,
+    });
+
+    const processed = processInflictionEvents(
+      [focus, heatInfliction],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    expect(antalWindows.length).toBe(1);
+    expect(antalWindows[0].activationDuration).toBe(720);
+  });
+
+  test('D5: Antal self-infliction does not trigger her own combo window', () => {
+    // Focus is active, but the infliction comes from Antal herself
+    const focus = makeEvent({
+      id: 'antal-focus',
+      name: 'Focus',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'FOCUS',
+      startFrame: 0,
+      activationDuration: 60 * FPS,
+      sourceOwnerId: ANTAL_SLOT,
+    });
+
+    const electricInfliction = makeEvent({
+      id: 'antal-elec-inf',
+      name: 'electricInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'electricInfliction',
+      startFrame: 400,
+      activationDuration: 10 * FPS,
+      sourceOwnerId: ANTAL_SLOT, // Antal's own infliction
+      sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
+    });
+
+    const processed = processInflictionEvents(
+      [focus, electricInfliction],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    // Self-trigger should be blocked
+    expect(antalWindows.length).toBe(0);
   });
 });
 

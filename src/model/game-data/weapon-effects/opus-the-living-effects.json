@@ -1,0 +1,49 @@
+{
+  "weaponName": "Opus: The Living",
+  "statusEvents": [
+    {
+      "name": "OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE",
+      "type": "WEAPON_EFFECT",
+      "originId": "OPUS_THE_LIVING",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Road Home for All Life",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.075,
+          "valueMax": 0.15,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

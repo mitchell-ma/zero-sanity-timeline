@@ -61,6 +61,39 @@ export interface FrameApplyStatus {
   targetOperatorId?: string;
 }
 
+// ── Clause/predicate types (DSL v2) ──────────────────────────────────────────
+
+/** A condition within a frame clause predicate. */
+export interface FrameCondition {
+  subjectType: string;
+  verbType: string;
+  negated?: boolean;
+  objectType?: string;
+  objectId?: string;
+  cardinalityConstraint?: string;
+  cardinality?: number;
+}
+
+/** Inline damage data from a DEAL DAMAGE effect. */
+export interface FrameDealDamage {
+  element?: string;          // "NATURE", "HEAT", etc.
+  multipliers: number[];     // per skill level (12 entries)
+}
+
+/** A single effect within a clause predicate. */
+export interface FrameClauseEffect {
+  type: 'consumeReaction' | 'applyStatus' | 'applyInfliction' | 'dealDamage' | 'recoverSP' | 'applyStagger';
+  consumeReaction?: FrameReactionConsumption;
+  applyStatus?: FrameApplyStatus;
+  dealDamage?: FrameDealDamage;
+}
+
+/** A predicate: conditions (AND'd) → effects. Empty conditions = unconditional. */
+export interface FrameClausePredicate {
+  conditions: FrameCondition[];
+  effects: FrameClauseEffect[];
+}
+
 /** A single damage tick within a skill sequence. */
 export abstract class SkillEventFrame {
   /** Offset in seconds from the start of the parent sequence. */
@@ -101,6 +134,15 @@ export abstract class SkillEventFrame {
 
   /** Whether this frame duplicates the source infliction that triggered it. */
   getDuplicatesSourceInfliction(): boolean { return false; }
+
+  /** Frame clauses (DSL v2): conditional and unconditional effect groups. */
+  getClauses(): readonly FrameClausePredicate[] { return []; }
+
+  /** Inline DEAL DAMAGE data (element + per-level multiplier array), or null. */
+  getDealDamage(): FrameDealDamage | null { return null; }
+
+  /** Ultimate gauge gained on this frame, or 0. */
+  getGaugeGain(): number { return 0; }
 
   /** Whether this frame grants any skill points. */
   hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }

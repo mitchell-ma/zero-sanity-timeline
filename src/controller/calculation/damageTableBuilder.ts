@@ -38,7 +38,7 @@ import {
   getWeakenMultiplier,
 } from '../../model/calculation/damageFormulas';
 import { StatusQueryService } from './statusQueryService';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
+import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
@@ -142,13 +142,13 @@ function columnIdToSkillType(columnId: string): CombatSkillType {
   }
 }
 
-/** Map columnId to the skill level field in LoadoutStats. */
-function getSkillLevel(columnId: string, stats: LoadoutStats): SkillLevel {
+/** Map columnId to the skill level field in LoadoutProperties. */
+function getSkillLevel(columnId: string, props: LoadoutProperties): SkillLevel {
   switch (columnId) {
-    case SKILL_COLUMNS.BASIC: return stats.basicAttackLevel as SkillLevel;
-    case SKILL_COLUMNS.BATTLE: return stats.battleSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.COMBO: return stats.comboSkillLevel as SkillLevel;
-    case SKILL_COLUMNS.ULTIMATE: return stats.ultimateLevel as SkillLevel;
+    case SKILL_COLUMNS.BASIC: return props.skills.basicAttackLevel as SkillLevel;
+    case SKILL_COLUMNS.BATTLE: return props.skills.battleSkillLevel as SkillLevel;
+    case SKILL_COLUMNS.COMBO: return props.skills.comboSkillLevel as SkillLevel;
+    case SKILL_COLUMNS.ULTIMATE: return props.skills.ultimateLevel as SkillLevel;
     default: return 12 as SkillLevel;
   }
 }
@@ -177,15 +177,15 @@ interface OperatorCalcData {
 function buildOperatorCalcData(
   operatorId: string,
   loadout: OperatorLoadoutState,
-  stats: LoadoutStats,
+  props: LoadoutProperties,
 ): OperatorCalcData | null {
-  const agg = aggregateLoadoutStats(operatorId, loadout, stats);
+  const agg = aggregateLoadoutStats(operatorId, loadout, props);
   if (!agg) return null;
 
   const { extraAttackPct } = evaluateTalentAttackBonus(operatorId, {
-    talentOneLevel: stats.talentOneLevel,
-    talentTwoLevel: stats.talentTwoLevel,
-    potential: (stats.potential ?? 0) as Potential,
+    talentOneLevel: props.operator.talentOneLevel,
+    talentTwoLevel: props.operator.talentTwoLevel,
+    potential: (props.operator.potential ?? 0) as Potential,
     stats: agg.stats,
   });
 
@@ -226,7 +226,7 @@ export function buildDamageTableRows(
   columns: Column[],
   slots: Slot[],
   enemy: ViewEnemy,
-  loadoutStats: Record<string, LoadoutStats>,
+  loadoutStats: Record<string, LoadoutProperties>,
   loadouts?: Record<string, OperatorLoadoutState>,
   statusQuery?: StatusQueryService,
   critMode?: CritMode,
@@ -251,7 +251,7 @@ export function buildDamageTableRows(
       continue;
     }
     const slotLoadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
-    const slotStats = loadoutStats[slot.slotId] ?? DEFAULT_LOADOUT_STATS;
+    const slotStats = loadoutStats[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
     const data = buildOperatorCalcData(slot.operator.id, slotLoadout, slotStats);
     opCache.set(slot.slotId, data);
     opIdCache.set(slot.slotId, slot.operator.id);
@@ -272,9 +272,9 @@ export function buildDamageTableRows(
     const eventName = getEventDisplayName(ev.name);
     const opData = opCache.get(ev.ownerId);
     const operatorId = opIdCache.get(ev.ownerId);
-    const stats = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_STATS;
-    const skillLevel = getSkillLevel(effectiveColumnId, stats);
-    const potential = (stats.potential ?? 5) as Potential;
+    const props = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const skillLevel = getSkillLevel(effectiveColumnId, props);
+    const potential = (props.operator.potential ?? 5) as Potential;
 
     // Look up default segments for max frame counts (users can delete frames)
     const defaultSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
@@ -300,40 +300,51 @@ export function buildDamageTableRows(
             let params: DamageParams | null = null;
 
             if (operatorId && opData) {
-              // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
-              const perTickMult = getPerTickMultiplier(
-                operatorId,
-                ev.name as CombatSkillsType,
-                skillLevel,
-                potential,
-                fi,
-              );
-
               let segmentMultiplier: number | null;
+              let isPerTick = false;
 
-              if (perTickMult != null) {
-                // Per-tick multiplier: use directly, no division needed
-                multiplier = perTickMult;
+              // Check for inline DEAL DAMAGE multiplier (DSL v2 clause)
+              if (frame.dealDamage && frame.dealDamage.multipliers.length > 0) {
+                const levelIdx = Math.min(skillLevel - 1, frame.dealDamage.multipliers.length - 1);
+                multiplier = frame.dealDamage.multipliers[levelIdx];
                 segmentMultiplier = null;
+                isPerTick = true;
               } else {
-                multiplier = getSkillMultiplier(
+                // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
+                const perTickMult = getPerTickMultiplier(
                   operatorId,
                   ev.name as CombatSkillsType,
-                  seg.label,
                   skillLevel,
                   potential,
+                  fi,
                 );
 
-                // Segment multiplier is for the entire segment; divide by max frame count
-                segmentMultiplier = multiplier;
-                if (multiplier != null && maxFrames > 1) {
-                  multiplier = multiplier / maxFrames;
+                if (perTickMult != null) {
+                  // Per-tick multiplier: use directly, no division needed
+                  multiplier = perTickMult;
+                  segmentMultiplier = null;
+                  isPerTick = true;
+                } else {
+                  multiplier = getSkillMultiplier(
+                    operatorId,
+                    ev.name as CombatSkillsType,
+                    seg.label,
+                    skillLevel,
+                    potential,
+                  );
+
+                  // Segment multiplier is for the entire segment; divide by max frame count
+                  segmentMultiplier = multiplier;
+                  if (multiplier != null && maxFrames > 1) {
+                    multiplier = multiplier / maxFrames;
+                  }
                 }
               }
 
               if (multiplier != null && multiplier > 0) {
-                // Get element from frame marker or skill column
-                const frameElement = frame.damageElement
+                // Get element from inline DEAL DAMAGE, frame marker, or skill column
+                const frameElement = frame.dealDamage?.element
+                  ?? frame.damageElement
                   ?? frame.applyArtsInfliction?.element
                   ?? col.skillElement;
                 const element = (frameElement as ElementType) ?? opData.element;
@@ -349,8 +360,8 @@ export function buildDamageTableRows(
                 const talentBonuses = evaluateTalentBonuses(
                   operatorId,
                   {
-                    talentOneLevel: stats.talentOneLevel,
-                    talentTwoLevel: stats.talentTwoLevel,
+                    talentOneLevel: props.operator.talentOneLevel,
+                    talentTwoLevel: props.operator.talentTwoLevel,
                     potential,
                     stats: opData.stats,
                   },
@@ -472,7 +483,7 @@ export function buildDamageTableRows(
                   specialSources,
                   segmentMultiplier: segmentMultiplier ?? undefined,
                   segmentFrameCount: (segmentMultiplier != null && maxFrames > 1) ? maxFrames : undefined,
-                  isPerTickMultiplier: perTickMult != null,
+                  isPerTickMultiplier: isPerTick,
                 };
 
                 params = {
@@ -531,8 +542,8 @@ export function buildDamageTableRows(
     if (!oid) continue;
     const opData = opCache.get(ev.ownerId);
     if (!opData) continue;
-    const evStats = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_STATS;
-    const evPotential = (evStats.potential ?? 5) as Potential;
+    const evProps = loadoutStats[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
+    const evPotential = (evProps.operator.potential ?? 5) as Potential;
 
     const json = getOperatorJson(oid);
     const talentEffects = (json?.talentEffects ?? []) as any[];
@@ -548,8 +559,8 @@ export function buildDamageTableRows(
         if (!allowedTypes.some((t: string) => evCategory === t)) continue;
         // Check source level
         if (te.source === 'POTENTIAL' && evPotential < (te.minPotential ?? 1)) continue;
-        if (te.source === 'TALENT_1' && evStats.talentOneLevel < (te.minLevel ?? 1)) continue;
-        if (te.source === 'TALENT_2' && evStats.talentTwoLevel < (te.minLevel ?? 1)) continue;
+        if (te.source === 'TALENT_1' && evProps.operator.talentOneLevel < (te.minLevel ?? 1)) continue;
+        if (te.source === 'TALENT_2' && evProps.operator.talentTwoLevel < (te.minLevel ?? 1)) continue;
 
         rows.push({
           key: `${ev.id}-${te.name.toLowerCase().replace(/\s+/g, '-')}`,
@@ -571,7 +582,7 @@ export function buildDamageTableRows(
       } else if (te.bonusType === 'SHOCKWAVE') {
         const allowedType = te.condition?.skillType;
         if (evCategory !== allowedType) continue;
-        const level = te.source === 'TALENT_2' ? evStats.talentTwoLevel : evStats.talentOneLevel;
+        const level = te.source === 'TALENT_2' ? evProps.operator.talentTwoLevel : evProps.operator.talentOneLevel;
         if (level < (te.minLevel ?? 1)) continue;
 
         const levelIdx = Math.min(level - 1, te.values.length - 1);
@@ -610,16 +621,16 @@ export function buildDamageTableRows(
 
     // Look up triggering operator's calc data
     const sourceOpData = opCache.get(ev.sourceOwnerId);
-    const sourceStats = loadoutStats[ev.sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+    const sourceProps = loadoutStats[ev.sourceOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
     if (!sourceOpData || !modelEnemy) continue;
 
     const sourceOperatorId = opIdCache.get(ev.sourceOwnerId) ?? undefined;
     const opCtx: ReactionOperatorContext = {
       totalAttack: sourceOpData.totalAttack,
       artsIntensity: sourceOpData.stats[StatType.ARTS_INTENSITY] ?? 0,
-      operatorLevel: sourceStats.operatorLevel,
+      operatorLevel: sourceProps.operator.level,
       operatorId: sourceOperatorId,
-      potential: sourceStats.potential,
+      potential: sourceProps.operator.potential,
     };
 
     // Find a column key for this reaction — use the source operator's column

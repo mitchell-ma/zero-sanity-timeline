@@ -27,6 +27,7 @@ interface Effect {
   verbType: string;
   objectType: string;
   adjective?: string | string[];
+  toObjectDeterminer?: string;
   toObjectType?: string;
   withPreposition?: {
     cardinality?: { verb: string; value: number };
@@ -197,7 +198,7 @@ const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
   magma_1:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
   magma_2:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
   magma_3:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_4:        { verbType: 'ABSORB', objectType: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  magma_4:        { verbType: 'CONSUME', objectType: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
   blaze_burst:    { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
   burning:        { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
   corrosion:      { verbType: 'APPLY', objectType: 'REACTION', adjective: 'CORROSION', isForced: true },
@@ -308,9 +309,11 @@ function buildResourceEffect(
 
   if (resourceType === 'ULTIMATE_ENERGY' && interactionType === 'RECOVER') {
     if (target === 'SELF') {
-      effect.toObjectType = 'THIS_OPERATOR';
+      effect.toObjectDeterminer = 'THIS';
+      effect.toObjectType = 'OPERATOR';
     } else if (target === 'TEAM') {
-      effect.toObjectType = 'ALL_OPERATORS';
+      effect.toObjectDeterminer = 'ALL';
+      effect.toObjectType = 'OPERATOR';
     }
   }
 
@@ -349,7 +352,7 @@ function parseBattleSkill(char: GameDataCharacter): SkillCategory {
 
   // SP cost
   if (char.skill_spCost) {
-    effects.push(buildResourceEffect('SKILL_POINT', 'EXPEND', char.skill_spCost));
+    effects.push(buildResourceEffect('SKILL_POINT', 'CONSUME', char.skill_spCost));
   }
 
   // Gauge gain (self)
@@ -382,7 +385,7 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
 
   // Cooldown
   if (char.link_cooldown) {
-    effects.push(buildResourceEffect('COOLDOWN', 'EXPEND', char.link_cooldown));
+    effects.push(buildResourceEffect('COOLDOWN', 'CONSUME', char.link_cooldown));
   }
 
   // Gauge gain
@@ -414,7 +417,7 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
 
   // Energy cost
   if (char.ultimate_gaugeMax) {
-    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'EXPEND', char.ultimate_gaugeMax));
+    effects.push(buildResourceEffect('ULTIMATE_ENERGY', 'CONSUME', char.ultimate_gaugeMax));
   }
 
   const ultimateDuration = char.ultimate_duration;

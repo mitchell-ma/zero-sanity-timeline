@@ -1,0 +1,48 @@
+{
+  "weaponName": "Quencher",
+  "statusEvents": [
+    {
+      "name": "QUENCHER_HONED_INTO_LEGION",
+      "type": "WEAPON_EFFECT",
+      "originId": "QUENCHER",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Honed into Legion",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "FINAL_STRIKE"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.24
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "gearSetType": "PULSER_LABS",
+  "label": "Pulser Labs",
+  "statusEvents": [
+    {
+      "name": "PULSER_LABS_ELECTRIC",
+      "type": "GEAR_EFFECT",
+      "originId": "PULSER_LABS",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Pulser Labs (Electric)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "ELECTRIFIED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ELECTRIC_DAMAGE_BONUS",
+          "value": 0.5
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "PULSER_LABS_CRYO",
+      "type": "GEAR_EFFECT",
+      "originId": "PULSER_LABS",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Pulser Labs (Cryo)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "SOLIDIFIED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRYO_DAMAGE_BONUS",
+          "value": 0.5
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

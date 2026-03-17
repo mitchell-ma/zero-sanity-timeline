@@ -1,9 +1,13 @@
 import { Subtimeline } from './subtimeline';
 import { ResourceTimeline, ResourcePoint } from './resourceTimeline';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
-const SP_MAX = 300;
-const SP_REGEN_PER_SECOND = 8;
+/** A frame range where a resource is below the required threshold. */
+export type ResourceZone = { start: number; end: number };
+
+const SP_MAX = GENERAL_MECHANICS.skillPoints.max;
+const SP_REGEN_PER_SECOND = GENERAL_MECHANICS.skillPoints.regenPerSecond;
 
 /** Record of how SP was consumed for a single battle skill cost event. */
 export interface SkillPointConsumptionHistory {
@@ -23,7 +27,7 @@ export interface SkillPointConsumptionHistory {
 export class SkillPointTimeline extends ResourceTimeline {
   min = 0;
   max = SP_MAX;
-  startValue = 200;
+  startValue = GENERAL_MECHANICS.skillPoints.startValue;
   regenPerFrame = SP_REGEN_PER_SECOND / FPS;
 
   /** Log of natural vs returned SP consumption per battle skill cost event. */
@@ -124,5 +128,54 @@ export class SkillPointTimeline extends ResourceTimeline {
     this.consumptionHistory = log;
     this.wastedSP = wasted;
     this.graphListeners.forEach((cb) => cb(finalPoints));
+  }
+
+  /**
+   * Compute frame ranges where SP is below `threshold`.
+   * Uses linear interpolation for threshold crossings between graph points.
+   */
+  insufficiencyZones(threshold: number): ResourceZone[] {
+    const pts = this.cachedGraph;
+    if (pts.length < 2) return [];
+    const zones: ResourceZone[] = [];
+    const EPSILON = 0.01;
+    const below = (v: number) => v < threshold - EPSILON;
+    let insuffStart: number | null = below(pts[0].value) ? pts[0].frame : null;
+
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
+
+      if (prev.frame === curr.frame) {
+        if (below(curr.value) && insuffStart === null) {
+          insuffStart = curr.frame;
+        } else if (!below(curr.value) && insuffStart !== null) {
+          zones.push({ start: insuffStart, end: curr.frame });
+          insuffStart = null;
+        }
+        continue;
+      }
+
+      const prevBelow = below(prev.value);
+      const currBelow = below(curr.value);
+
+      if (prevBelow && !currBelow) {
+        const t = (threshold - prev.value) / (curr.value - prev.value);
+        const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
+        if (insuffStart !== null) {
+          zones.push({ start: insuffStart, end: crossFrame });
+          insuffStart = null;
+        }
+      } else if (!prevBelow && currBelow) {
+        const t = (threshold - prev.value) / (curr.value - prev.value);
+        const crossFrame = Math.round(prev.frame + t * (curr.frame - prev.frame));
+        insuffStart = crossFrame;
+      }
+    }
+
+    if (insuffStart !== null) {
+      zones.push({ start: insuffStart, end: pts[pts.length - 1].frame });
+    }
+    return zones;
   }
 }

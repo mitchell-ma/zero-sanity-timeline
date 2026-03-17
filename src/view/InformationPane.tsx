@@ -9,58 +9,86 @@ import EnemyPane from './info-pane/EnemyPane';
 import ResourcePane from './info-pane/ResourcePane';
 import DamageBreakdownPane from './info-pane/DamageBreakdownPane';
 
-// ── Loadout stats type (shared across app) ──────────────────────────────────
+// ── Loadout properties type (shared across app) ─────────────────────────────
 
-export interface LoadoutStats {
-  operatorLevel: number;
+export interface OperatorProperties {
+  level: number;
   potential: number;
   talentOneLevel: number;
   talentTwoLevel: number;
   attributeIncreaseLevel: number;
+}
+
+export interface SkillProperties {
   basicAttackLevel: number;
   battleSkillLevel: number;
   comboSkillLevel: number;
   ultimateLevel: number;
-  weaponLevel: number;
-  weaponSkill1Level: number;
-  weaponSkill2Level: number;
-  weaponSkill3Level: number;
+}
+
+export interface WeaponProperties {
+  level: number;
+  skill1Level: number;
+  skill2Level: number;
+  skill3Level: number;
+}
+
+export interface GearProperties {
   /** Per-stat-line ranks for each gear piece. Keyed by StatType. Missing keys default to 4. */
   armorRanks: Record<string, number>;
   glovesRanks: Record<string, number>;
   kit1Ranks: Record<string, number>;
   kit2Ranks: Record<string, number>;
+}
+
+export interface LoadoutProperties {
+  operator: OperatorProperties;
+  skills: SkillProperties;
+  weapon: WeaponProperties;
+  gear: GearProperties;
   /** Override for tactical max uses. undefined = use model default. */
   tacticalMaxUses?: number;
 }
 
-export const DEFAULT_LOADOUT_STATS: LoadoutStats = {
-  operatorLevel: 90,
-  potential: 5,
-  talentOneLevel: 3,
-  talentTwoLevel: 3,
-  attributeIncreaseLevel: 4,
-  basicAttackLevel: 12,
-  battleSkillLevel: 12,
-  comboSkillLevel: 12,
-  ultimateLevel: 12,
-  weaponLevel: 90,
-  weaponSkill1Level: 9,
-  weaponSkill2Level: 9,
-  weaponSkill3Level: 9,
-  armorRanks: {},
-  glovesRanks: {},
-  kit1Ranks: {},
-  kit2Ranks: {},
+
+export const DEFAULT_LOADOUT_PROPERTIES: LoadoutProperties = {
+  operator: {
+    level: 90,
+    potential: 5,
+    talentOneLevel: 3,
+    talentTwoLevel: 3,
+    attributeIncreaseLevel: 4,
+  },
+  skills: {
+    basicAttackLevel: 12,
+    battleSkillLevel: 12,
+    comboSkillLevel: 12,
+    ultimateLevel: 12,
+  },
+  weapon: {
+    level: 90,
+    skill1Level: 9,
+    skill2Level: 9,
+    skill3Level: 9,
+  },
+  gear: {
+    armorRanks: {},
+    glovesRanks: {},
+    kit1Ranks: {},
+    kit2Ranks: {},
+  },
 };
 
-/** Generate default loadout stats for a given operator. */
-export function getDefaultLoadoutStats(op: { rarity: number; maxTalentOneLevel: number; maxTalentTwoLevel: number }): LoadoutStats {
+/** Generate default loadout properties for a given operator. */
+export function getDefaultLoadoutProperties(op: { rarity: number; maxTalentOneLevel: number; maxTalentTwoLevel: number }): LoadoutProperties {
   return {
-    ...DEFAULT_LOADOUT_STATS,
-    potential: op.rarity >= 6 ? 0 : 5,
-    talentOneLevel: op.maxTalentOneLevel,
-    talentTwoLevel: op.maxTalentTwoLevel,
+    ...DEFAULT_LOADOUT_PROPERTIES,
+    operator: {
+      ...DEFAULT_LOADOUT_PROPERTIES.operator,
+      potential: op.rarity >= 6 ? 0 : 5,
+      talentOneLevel: op.maxTalentOneLevel,
+      talentTwoLevel: op.maxTalentTwoLevel,
+    },
   };
 }
 
@@ -92,7 +120,7 @@ type InformationPaneProps = {
       editContext?: string | null;
       rawEvents?: readonly TimelineEvent[];
       allProcessedEvents?: readonly TimelineEvent[];
-      loadoutStats?: Record<string, LoadoutStats>;
+      loadoutProperties?: Record<string, LoadoutProperties>;
       damageRows?: DamageTableRow[];
       spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
       onSaveAsCustomSkill?: (event: TimelineEvent) => void;
@@ -103,8 +131,8 @@ type InformationPaneProps = {
       slotId: string;
       operator: Operator;
       loadout: OperatorLoadoutState;
-      stats: LoadoutStats;
-      onStatsChange: (stats: LoadoutStats) => void;
+      stats: LoadoutProperties;
+      onStatsChange: (stats: LoadoutProperties) => void;
       onClose: () => void;
       allProcessedEvents?: readonly TimelineEvent[];
     }
@@ -211,7 +239,7 @@ export default function InformationPane(props: InformationPaneProps) {
           debugMode={props.debugMode}
           rawEvents={props.rawEvents}
           allProcessedEvents={props.allProcessedEvents}
-          loadoutStats={props.loadoutStats}
+          loadoutProperties={props.loadoutProperties}
           damageRows={props.damageRows}
           spConsumptionHistory={props.spConsumptionHistory}
           onSaveAsCustomSkill={props.onSaveAsCustomSkill}

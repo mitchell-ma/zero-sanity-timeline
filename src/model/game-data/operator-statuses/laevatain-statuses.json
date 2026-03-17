@@ -1,0 +1,137 @@
+[
+  {
+    "name": "MELTING_FLAME",
+    "targetDeterminer": "THIS",
+    "target": "OPERATOR",
+    "element": "HEAT",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 4,
+        "P1": 4,
+        "P2": 4,
+        "P3": 4,
+        "P4": 4,
+        "P5": 4
+      },
+      "instances": 4,
+      "verb": "NONE"
+    },
+    "clause": [
+      {
+        "conditions": [
+          {
+            "subject": "THIS_EVENT",
+            "verb": "HAVE",
+            "object": "STACKS",
+            "cardinalityConstraint": "EXACTLY",
+            "cardinality": "MAX"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "SCORCHING_HEART_EFFECT",
+            "toDet": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "triggerClause": [],
+    "consumeClause": [
+      {
+        "conditions": [
+          {
+            "subjectDet": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "BATTLE_SKILL"
+          },
+          {
+            "subject": "THIS_EVENT",
+            "verb": "HAVE",
+            "object": "STACKS",
+            "cardinalityConstraint": "EXACTLY",
+            "cardinality": "MAX"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "CONSUME",
+            "object": "ALL_STACKS"
+          }
+        ]
+      }
+    ],
+    "stats": [],
+    "properties": {
+      "duration": {
+        "value": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "originId": "SMOULDERING_FIRE"
+  },
+  {
+    "name": "SCORCHING_HEART_EFFECT",
+    "targetDeterminer": "THIS",
+    "target": "OPERATOR",
+    "element": "HEAT",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 1,
+        "P1": 1,
+        "P2": 1,
+        "P3": 1,
+        "P4": 1,
+        "P5": 1
+      },
+      "instances": 1,
+      "verb": "RESET"
+    },
+    "triggerClause": [],
+    "properties": {
+      "duration": {
+        "value": [
+          20
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "IGNORE",
+            "adjective": "HEAT",
+            "object": "RESISTANCE",
+            "to": "TARGET",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  10,
+                  15,
+                  20
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "originId": "MELTING_FLAME"
+  }
+]

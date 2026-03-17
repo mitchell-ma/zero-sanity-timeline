@@ -9,6 +9,7 @@
  */
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
+import { LoadoutProperties } from '../view/InformationPane';
 
 // Mock operatorRegistry to avoid require.context for splash art assets
 jest.mock('../controller/operators/operatorRegistry', () => ({
@@ -133,28 +134,15 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
     tacticalName: null,
   };
 
-  const stats = {
-    operatorLevel: 90,
-    potential: 5,
-    talentOneLevel: 3,
-    talentTwoLevel: 3,
-    attributeIncreaseLevel: 4,
-    basicAttackLevel: 12,
-    battleSkillLevel: 12,
-    comboSkillLevel: 12,
-    ultimateLevel: 12,
-    weaponLevel: 90,
-    weaponSkill1Level: 9,
-    weaponSkill2Level: 9,
-    weaponSkill3Level: 9,
-    armorRanks: {},
-    glovesRanks: {},
-    kit1Ranks: {},
-    kit2Ranks: {},
+  const loadoutProperties: LoadoutProperties = {
+    operator: { level: 90, potential: 5, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+    gear: { armorRanks: {}, glovesRanks: {}, kit1Ranks: {}, kit2Ranks: {} },
   };
 
   it('should produce stats matching in-game values', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, stats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // Operator base stats use Math.floor (not Math.round)
@@ -206,7 +194,7 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
   });
 
   it('should track stat sources correctly', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, stats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // Intellect should have sources from: Operator, Potential, Attr Increase, Weapon Skill, Gear (x4)
@@ -227,7 +215,7 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
   });
 
   it('operator base stats should preserve full precision (no rounding)', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, stats);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // INTELLECT raw from JSON: 177.98527245949924 — no rounding

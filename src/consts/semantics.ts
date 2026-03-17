@@ -12,6 +12,9 @@
 /** Sentinel value meaning "the potential-resolved maximum" for stack counts and cardinality. */
 export const THRESHOLD_MAX = 'MAX' as const;
 
+/** Sentinel for UNTIL preposition — extend to the end of the parent event. */
+export const DURATION_END = 'END' as const;
+
 // ── Potential ───────────────────────────────────────────────────────────────
 
 /** Potential level (P0 = no potential unlocked, P1-P5 = unlocked potentials). */
@@ -24,23 +27,29 @@ export enum PotentialType {
   P5 = "P5",
 }
 
+// ── Determiner ──────────────────────────────────────────────────────────────
+
+/** Determiner — specifies which/how many of a noun. */
+export enum DeterminerType {
+  /** The operator who owns this event/status. */
+  THIS = "THIS",
+  /** Any single teammate (excludes owner). */
+  OTHER = "OTHER",
+  /** Entire team including owner. */
+  ALL = "ALL",
+  /** Any operator (wildcard for triggers). */
+  ANY = "ANY",
+}
+
 // ── Noun ────────────────────────────────────────────────────────────────────
 
 /** Core nouns — entities, skills, resources, statuses, and states. */
 enum CoreNounType {
   // Entities
-  /** The operator who owns this event/status. */
-  THIS_OPERATOR = "THIS_OPERATOR",
-  /** Any single teammate (excludes this operator). */
-  OTHER_OPERATOR = "OTHER_OPERATOR",
-  /** All teammates except this operator. */
-  OTHER_OPERATORS = "OTHER_OPERATORS",
-  /** Entire team including this operator. */
-  ALL_OPERATORS = "ALL_OPERATORS",
+  /** An operator — use DeterminerType to specify which. */
+  OPERATOR = "OPERATOR",
   /** The enemy target. */
   ENEMY = "ENEMY",
-  /** Any operator (used for triggers that can come from any team member). */
-  ANY_OPERATOR = "ANY_OPERATOR",
   /** The event/status that owns this clause — self-referential (e.g. "this event has MAX stacks"). */
   THIS_EVENT = "THIS_EVENT",
   /** System-initiated (threshold effects, passive triggers). */
@@ -105,64 +114,96 @@ export const SubjectType = NounType;
 // ── Verb ────────────────────────────────────────────────────────────────────
 
 export enum VerbType {
-  // Action verbs
+  // ── Compound (structural wrappers, can nest) ────────────────────────────
+  /** Evaluate all predicates in order, execute each one that passes. Optional cardinality (ALL AT_MOST 4). */
+  ALL = "ALL",
+  /** Evaluate predicates in order, execute the first that passes. */
+  ANY = "ANY",
+
+  // ── Action ──────────────────────────────────────────────────────────────
   /** Execute a skill or action. */
   PERFORM = "PERFORM",
-  /** Execute all child effects as an atomic group. */
-  PERFORM_ALL = "PERFORM_ALL",
-  /** Apply a status, infliction, or reaction. */
+  /** Apply status, infliction, reaction, stagger, physical status. */
   APPLY = "APPLY",
-  /** Remove/use stacks. */
+  /** Remove/spend: status, infliction, reaction, resource (SP, ult energy, cooldown). */
   CONSUME = "CONSUME",
-  /** Take stacks and optionally convert them (see conversion field). */
-  ABSORB = "ABSORB",
+  /** Deal damage (inline multiplier). */
+  DEAL = "DEAL",
+  /** Strike a target (cardinality = count). */
+  HIT = "HIT",
   /** Kill a target. */
   DEFEAT = "DEFEAT",
-  /** Strike a target (cardinality = how many hit). */
-  HIT = "HIT",
 
-  // Resource verbs
-  /** Spend a resource. */
-  EXPEND = "EXPEND",
-  /** Gain a resource. */
+  // ── Resource ────────────────────────────────────────────────────────────
+  /** Gain a resource (SP, ult energy, HP). */
   RECOVER = "RECOVER",
   /** Recovery exceeds maximum. */
   OVERHEAL = "OVERHEAL",
   /** Return resource to source. */
   RETURN = "RETURN",
 
-  // Physical mechanic verbs
-  LIFT = "LIFT",
-  KNOCK_DOWN = "KNOCK_DOWN",
-  BREACH = "BREACH",
-  CRUSH = "CRUSH",
-
-  // Stack/duration verbs
+  // ── Duration/stack ──────────────────────────────────────────────────────
   /** Reset duration to full. */
   REFRESH = "REFRESH",
-  /** Extend duration. */
+  /** Add to duration. */
   EXTEND = "EXTEND",
   /** Newer subsumes older. */
   MERGE = "MERGE",
   /** Reset stacks or cooldown to 0. */
   RESET = "RESET",
 
-  // Stat verbs
-  /** Ignore a stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
+  // ── Stat ────────────────────────────────────────────────────────────────
+  /** Ignore a resistance/stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   IGNORE = "IGNORE",
 
-  // Time verbs
-  /** Segment time interaction — what the segment experiences (TIME_STOP, NONE, TIME_DELAY). */
+  // ── Time ────────────────────────────────────────────────────────────────
+  /** Segment time interaction (GAME_TIME, REAL_TIME). */
   EXPERIENCE = "EXPERIENCE",
 
-  // State verbs
+  // ── Condition-only (used in predicate conditions, not effects) ──────────
   /** Quantity/possession assertion (uses cardinality). */
   HAVE = "HAVE",
   /** State assertion — subject is currently in this state. */
   IS = "IS",
   /** Transition assertion — subject just entered this state. */
   BECOME = "BECOME",
+  /** Target receives a status/infliction/reaction (fires each time, regardless of prior state). */
+  RECEIVE = "RECEIVE",
 }
+
+/** Physical status types — objects of APPLY, moved from VerbType. */
+export enum PhysicalStatusType {
+  LIFT = "LIFT",
+  KNOCK_DOWN = "KNOCK_DOWN",
+  BREACH = "BREACH",
+  CRUSH = "CRUSH",
+}
+
+/**
+ * Verb → valid object type chaining map.
+ * Defines which NounType/ObjectType values each verb can take as its object.
+ */
+export const VERB_OBJECTS: Partial<Record<VerbType, string[]>> = {
+  [VerbType.APPLY]:      ['INFLICTION', 'REACTION', 'STATUS', 'STAGGER', 'TIME_STOP'],
+  [VerbType.CONSUME]:    ['INFLICTION', 'REACTION', 'STATUS', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'COOLDOWN', 'STAGGER', 'STACKS'],
+  [VerbType.RECOVER]:    ['SKILL_POINT', 'ULTIMATE_ENERGY', 'HP'],
+  [VerbType.RETURN]:     ['SKILL_POINT'],
+  [VerbType.DEAL]:       ['DAMAGE'],
+  [VerbType.PERFORM]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE', 'FINAL_STRIKE', 'NORMAL_ATTACK'],
+  [VerbType.HIT]:        ['ENEMY'],
+  [VerbType.DEFEAT]:     ['ENEMY'],
+  [VerbType.REFRESH]:    ['STATUS', 'INFLICTION', 'REACTION'],
+  [VerbType.EXTEND]:     ['STATUS', 'INFLICTION', 'REACTION'],
+  [VerbType.MERGE]:      ['STATUS', 'INFLICTION'],
+  [VerbType.RESET]:      ['COOLDOWN', 'STACKS'],
+  [VerbType.IGNORE]:     ['STATUS'],
+  [VerbType.EXPERIENCE]: ['GAME_TIME', 'REAL_TIME'],
+  [VerbType.HAVE]:       ['STATUS', 'INFLICTION', 'REACTION', 'STACKS', 'SKILL_POINT', 'ULTIMATE_ENERGY'],
+  [VerbType.IS]:         ['ACTIVE', 'LIFTED', 'KNOCKED_DOWN', 'CRUSHED', 'BREACHED', 'COMBUSTED', 'CORRODED', 'ELECTRIFIED', 'SOLIDIFIED', 'NODE_STAGGERED', 'FULL_STAGGERED'],
+  [VerbType.BECOME]:     ['ACTIVE', 'LIFTED', 'KNOCKED_DOWN', 'CRUSHED', 'BREACHED', 'COMBUSTED', 'CORRODED', 'ELECTRIFIED', 'SOLIDIFIED', 'NODE_STAGGERED', 'FULL_STAGGERED'],
+  [VerbType.RECEIVE]:    ['STATUS', 'INFLICTION', 'REACTION', 'STAGGER'],
+  [VerbType.OVERHEAL]:   ['HP'],
+};
 
 // ── Adjective ──────────────────────────────────────────────────────────────
 
@@ -228,7 +269,7 @@ export const EXPERIENCE_OBJECTS: ObjectType[] = [
 /** Valid adjectives per object type (noun adjuncts like NORMAL_ATTACK, FINAL_STRIKE handled separately). */
 export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   [ObjectType.DAMAGE]: [
-    // Element prefix: PERFORM HEAT DAMAGE, PERFORM PHYSICAL DAMAGE
+    // Element prefix: DEAL HEAT DAMAGE, DEAL PHYSICAL DAMAGE
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
   [ObjectType.INFLICTION]: [
@@ -242,8 +283,21 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
     // Modifier
     AdjectiveType.FORCED,
   ],
+  [ObjectType.STATUS]: [
+    // Physical statuses (APPLY LIFT STATUS TO ENEMY)
+    AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
+  ],
   [ObjectType.TIME_STOP]: [
     AdjectiveType.COMBO, AdjectiveType.DODGE, AdjectiveType.ANIMATION,
+  ],
+  [ObjectType.STAGGER]: [
+    AdjectiveType.NODE_STAGGERED, AdjectiveType.FULL_STAGGERED,
+  ],
+  [ObjectType.NORMAL_ATTACK]: [
+    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
+  ],
+  [ObjectType.FINAL_STRIKE]: [
+    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
 };
 
@@ -282,6 +336,8 @@ export enum CardinalityConstraintType {
  * Used for conditions within predicates.
  */
 export interface Interaction {
+  /** Determiner for OPERATOR subjects (THIS, OTHER, ALL, ANY). Defaults to THIS. */
+  subjectDeterminer?: DeterminerType;
   subjectType: SubjectType;
   /** Possessive — "This Operator's ULTIMATE". Used with IS and OVERHEAL. */
   subjectProperty?: ObjectType;
@@ -307,14 +363,16 @@ export interface Interaction {
 export enum PrepositionType {
   /** Target/recipient: "APPLY MELTING_FLAME STATUS *TO* THIS_OPERATOR". */
   TO = "TO",
-  /** Source: "ABSORB HEAT INFLICTION *FROM* ENEMY". */
+  /** Source: "CONSUME HEAT INFLICTION *FROM* ENEMY". */
   FROM = "FROM",
   /** Stat target: "IGNORE HEAT_RESISTANCE *ON* ENEMY" — refers to the stat on the target entity. */
   ON = "ON",
   /** Properties/qualifiers: "PERFORM HEAT DAMAGE TO ENEMY *WITH* MULTIPLIER ..., STAGGER_VALUE ...". */
   WITH = "WITH",
-  /** Cardinality limit: "PERFORM_ALL *FOR* AT_MOST 4" — how many times a compound action can occur. */
+  /** Cardinality limit: "ALL *FOR* AT_MOST 4" — how many times a compound action can occur. */
   FOR = "FOR",
+  /** Duration cap: "EXTEND LIFT STATUS ON ENEMY *UNTIL* END". */
+  UNTIL = "UNTIL",
 }
 
 // ── WITH preposition value verbs ─────────────────────────────────────────────
@@ -322,31 +380,31 @@ export enum PrepositionType {
 /**
  * Verb that determines the shape of a WITH preposition value.
  * - IS: single value (number)
- * - DEPENDS_ON: multi-dimensional array indexed by the dependency (SKILL_LEVEL, RANK, etc.)
+ * - BASED_ON: multi-dimensional array indexed by the dependency (SKILL_LEVEL, RANK, etc.)
  */
 export enum WithValueVerb {
   IS = "IS",
-  DEPENDS_ON = "DEPENDS_ON",
+  BASED_ON = "BASED_ON",
 }
 
 /** A single WITH preposition entry: a cardinality with its own verb determining value shape. */
 export interface WithValue {
   verb: WithValueVerb;
-  /** Dependency target when verb is DEPENDS_ON (e.g. "SKILL_LEVEL", "RANK"). */
+  /** Dependency target when verb is BASED_ON (e.g. "SKILL_LEVEL", "RANK"). */
   object?: string;
-  /** The value — single number for IS, array for DEPENDS_ON. */
+  /** The value — single number for IS, array for BASED_ON. */
   value: number | number[];
 }
 
 /**
  * WITH preposition map — all properties/cardinalities of an effect.
  *
- * Each key is a named cardinality whose value shape is determined by its verb (IS or DEPENDS_ON).
+ * Each key is a named cardinality whose value shape is determined by its verb (IS or BASED_ON).
  *
  * Key hierarchy:
- *   cardinality      — generic count (e.g. RECOVER 100 SKILL_POINT, EXPEND 300 ULTIMATE_ENERGY)
+ *   cardinality      — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
  *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
- *   multiplier       — damage multiplier (DEPENDS_ON SKILL_LEVEL → per-level array)
+ *   multiplier       — damage multiplier (BASED_ON SKILL_LEVEL → per-level array)
  *   staggerValue     — stagger amount
  *   skillPoint       — SP value
  *   stacks           — stack count, implies stacking mechanism (STATUS, INFLICTION)
@@ -366,17 +424,18 @@ export type WithPreposition = Record<string, WithValue>;
  * Grammar: VERB [adjective] OBJECT [prepositions...]
  *
  * Examples:
- *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER DEPENDS_ON SKILL_LEVEL [0.5, ...]
+ *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER BASED_ON SKILL_LEVEL [0.5, ...]
  *   APPLY FORCED COMBUSTION REACTION TO ENEMY WITH STATUS_LEVEL IS 1
  *   APPLY COMBO TIME_STOP WITH DURATION IS 0.566
  *   RECOVER SKILL_POINT WITH CARDINALITY IS 20
  *   APPLY HEAT INFLICTION TO ENEMY WITH STACKS IS 1
- *   ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
+ *   CONSUME HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
  *
- * Compound effects use PERFORM_ALL as a grouping verb:
- *   PERFORM_ALL FOR AT_MOST MAX:
- *     ABSORB HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
- *     APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
+ * Compound effects use ALL/ANY as structural wrappers:
+ *   ALL FOR AT_MOST MAX:
+ *     [unconditional]:
+ *       CONSUME HEAT INFLICTION FROM ENEMY WITH STACKS IS 1
+ *       APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
  */
 export interface Effect {
   verbType: VerbType;
@@ -385,24 +444,41 @@ export interface Effect {
   objectId?: string;
   /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
   adjective?: AdjectiveType | AdjectiveType[];
-  /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound PERFORM_ALL grouping. */
+  /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
-  /** Cardinality for compound constraints (e.g. PERFORM_ALL AT_MOST MAX). */
+  /** Cardinality for compound constraints (e.g. ALL AT_MOST MAX). */
   cardinality?: number | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
   toObjectType?: SubjectType | string;
+  /** Determiner for TO target (THIS, OTHER, ALL, ANY). */
+  toObjectDeterminer?: DeterminerType;
+  /** Class filter for TO target (e.g. "GUARD"). */
+  toObjectClassFilter?: string;
   /** FROM — source. */
   fromObjectType?: SubjectType | string;
+  /** Determiner for FROM source (THIS, OTHER, ALL, ANY). */
+  fromObjectDeterminer?: DeterminerType;
   /** ON — stat target entity (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   onObjectType?: SubjectType | string;
+  /** Determiner for ON target (THIS, OTHER, ALL, ANY). */
+  onObjectDeterminer?: DeterminerType;
   /** WITH — properties/cardinalities of this effect (duration, stacks, multiplier, etc.). */
   withPreposition?: WithPreposition;
-  /** FOR — cardinality limit on compound actions: "PERFORM_ALL FOR AT_MOST 4". */
+  /** FOR — cardinality limit on compound actions: "ALL FOR AT_MOST 4". */
   forPreposition?: { cardinalityConstraint: CardinalityConstraintType; cardinality: number | typeof THRESHOLD_MAX };
+  /** UNTIL — duration cap: "EXTEND STATUS UNTIL END". */
+  untilPreposition?: typeof DURATION_END;
 
   /**
-   * Child effects for compound PERFORM_ALL grouping.
-   * "PERFORM_ALL AT_MOST MAX:" followed by a list of effects executed as a unit.
+   * Nested predicates for ALL/ANY compound effects.
+   * ALL: evaluate all predicates, execute each passing one.
+   * ANY: evaluate predicates in order, execute the first passing one.
+   */
+  predicates?: Predicate[];
+
+  /**
+   * Child effects (leaf-level, no conditions).
+   * Used for ALL/ANY with flat effect lists (no predicate conditions).
    */
   effects?: Effect[];
 }
@@ -449,8 +525,15 @@ export type Clause = Predicate[];
  * - Cardinality: ignored for matching (cardinality is an assertion, not a filter).
  */
 export function matchInteraction(published: Interaction, required: Interaction): boolean {
-  // Subject: ANY_OPERATOR in required matches any operator subject
-  if (required.subjectType !== NounType.ANY_OPERATOR && published.subjectType !== required.subjectType) return false;
+  // Subject: ANY determiner on OPERATOR matches any operator subject
+  const reqIsAnyOperator = required.subjectType === NounType.OPERATOR && (required.subjectDeterminer as string) === DeterminerType.ANY;
+  if (!reqIsAnyOperator && published.subjectType !== required.subjectType) return false;
+  // When both are OPERATOR, check determiner match (unless required is ANY)
+  if (!reqIsAnyOperator && published.subjectType === NounType.OPERATOR && required.subjectType === NounType.OPERATOR) {
+    const pubDet = published.subjectDeterminer ?? DeterminerType.THIS;
+    const reqDet = required.subjectDeterminer ?? DeterminerType.THIS;
+    if (pubDet !== reqDet) return false;
+  }
   // Verb
   if (published.verbType !== required.verbType) return false;
   // Object
@@ -472,7 +555,14 @@ export function matchInteraction(published: Interaction, required: Interaction):
 export function interactionToLabel(i: Interaction): string {
   const fmt = (s: string) => s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const subject = i.subjectType === NounType.THIS_OPERATOR ? '' : fmt(i.subjectType) + ' ';
+  let subject: string;
+  if (i.subjectType === NounType.OPERATOR) {
+    const det = i.subjectDeterminer ?? DeterminerType.THIS;
+    subject = det === DeterminerType.THIS ? '' : `${fmt(det)} Operator `;
+  } else {
+    subject = fmt(i.subjectType) + ' ';
+  }
+
   const verb = fmt(i.verbType);
   const obj = fmt(i.objectType);
   const id = i.objectId ? ` (${fmt(i.objectId)})` : '';

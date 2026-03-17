@@ -47,7 +47,7 @@ export default function CustomSkillWizard({ initial, onSave, onCancel }: Props) 
     if (errs.length > 0) setErrors(errs);
   };
 
-  const spCost = skill.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT' && r.verbType === 'EXPEND')?.value ?? 0;
+  const spCost = skill.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT' && r.verbType === 'CONSUME')?.value ?? 0;
 
   const totalSteps = 3;
 
@@ -134,8 +134,8 @@ export default function CustomSkillWizard({ initial, onSave, onCancel }: Props) 
               <span>SP Cost</span>
               <input type="number" min={0} value={spCost} onChange={(e) => {
                 const value = Number(e.target.value);
-                const ri = (skill.resourceInteractions ?? []).filter((r) => !(r.resourceType === 'SKILL_POINT' && r.verbType === 'EXPEND'));
-                if (value > 0) ri.push({ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value });
+                const ri = (skill.resourceInteractions ?? []).filter((r) => !(r.resourceType === 'SKILL_POINT' && r.verbType === 'CONSUME'));
+                if (value > 0) ri.push({ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value });
                 update({ resourceInteractions: ri.length > 0 ? ri : undefined });
               }} />
             </label>

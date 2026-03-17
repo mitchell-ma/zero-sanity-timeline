@@ -1,0 +1,17 @@
+{
+    "skillPoints": {
+        "max": 300,
+        "startValue": 200,
+        "regenPerSecond": 7.6923,
+        "perfectDodgeRecovery": 7.6923
+    },
+    "ultimateEnergy": {
+        "startAtMax": false,
+        "battleSkillRecoverySelf": 6.5,
+        "battleSkillRecoveryTeam": 6.5
+    },
+    "basicAttack": {
+        "finisherDurationSeconds": 1.0,
+        "diveDurationSeconds": 0.8
+    }
+}

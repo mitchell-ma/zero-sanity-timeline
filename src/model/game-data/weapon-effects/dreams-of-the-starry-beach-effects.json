@@ -1,0 +1,94 @@
+{
+  "weaponName": "Dreams of the Starry Beach",
+  "statusEvents": [
+    {
+      "name": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS",
+      "type": "WEAPON_EFFECT",
+      "originId": "DREAMS_OF_THE_STARRY_BEACH",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Tidal Murmurs",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "REACTION",
+              "objectId": "CORROSION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "WILL_BONUS",
+          "valueMin": 0.16,
+          "valueMax": 0.448
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            25
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Secondary attribute bonus"
+    },
+    {
+      "name": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY",
+      "type": "WEAPON_EFFECT",
+      "originId": "DREAMS_OF_THE_STARRY_BEACH",
+      "target": "ENEMY",
+      "label": "Tidal Murmurs (Enemy)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "REACTION",
+              "objectId": "CORROSION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            25
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Enemy Arts DMG Taken (Fragility)"
+    }
+  ]
+}

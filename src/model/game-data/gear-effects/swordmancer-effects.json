@@ -1,0 +1,44 @@
+{
+  "gearSetType": "SWORDMANCER",
+  "label": "Swordmancer",
+  "statusEvents": [
+    {
+      "name": "SWORDMANCER",
+      "type": "GEAR_EFFECT",
+      "originId": "SWORDMANCER",
+      "target": "ENEMY",
+      "label": "Swordmancer",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [],
+      "properties": {
+        "duration": {
+          "value": [
+            1
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 14,
+      "note": "250% ATK Physical DMG + 10 Stagger"
+    }
+  ]
+}

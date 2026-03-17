@@ -1,0 +1,47 @@
+{
+  "weaponName": "JET",
+  "statusEvents": [
+    {
+      "name": "JET_ASTROPHYSICS",
+      "type": "WEAPON_EFFECT",
+      "originId": "JET",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Astrophysics",
+      "stack": {
+        "max": { "P0": 1 },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "BATTLE_SKILL"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "COMBO_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        { "stat": "ARTS_DAMAGE_BONUS", "valueMin": 0.12, "valueMax": 0.336 }
+      ],
+      "properties": {
+        "duration": { "value": [15], "unit": "SECOND" }
+      }
+    }
+  ]
+}

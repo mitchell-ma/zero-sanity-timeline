@@ -1,13 +1,15 @@
 import { TimelineEvent, FrameAbsorptionMarker, SkillType, computeSegmentsSpan } from '../../consts/viewTypes';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../../view/InformationPane';
+import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import { CombatSkillsType, EventStatusType, StatusType, TargetType, TimeDependency } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
 import type { Interaction } from '../../consts/semantics';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS, SKILL_COLUMNS, EXCHANGE_STATUS_MAX_SLOTS } from '../../model/channels';
 import { deriveReactions } from './deriveReactions';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { TOTAL_FRAMES } from '../../utils/timeline';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
 
 // ── Combo time-stop chaining ─────────────────────────────────────────────────
@@ -480,16 +482,16 @@ const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<In
  * Used to generate combo windows from derived events at their actual frame timing.
  */
 export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
-  heatInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
-  cryoInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
-  natureInfliction:     [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
-  electricInfliction:   [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
+  heatInfliction:       [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
+  cryoInfliction:       [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'CRYO' })],
+  natureInfliction:     [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'NATURE' })],
+  electricInfliction:   [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'ELECTRIC' })],
   combustion:           [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED)],
   solidification:       [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED)],
   corrosion:            [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED)],
   electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
-  vulnerableInfliction: [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
-  breach:               [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
+  vulnerableInfliction: [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'VULNERABILITY' })],
+  breach:               [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'PHYSICAL' })],
 };
 
 /**
@@ -497,10 +499,10 @@ export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
  * get a full-timeline activation window regardless of team composition.
  */
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.HP, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.HP, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_LEAST' as any }),
+  _I(SubjectType.OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { subjectDeterminer: DeterminerType.THIS, cardinalityConstraint: 'AT_MOST' as any }),
 ];
 
 /** Check if an interaction is "always available" (matches any always-available pattern). */
@@ -771,7 +773,7 @@ export function comboWindowEndFrame(ev: TimelineEvent): number {
  */
 export function processInflictionEvents(
   rawEvents: TimelineEvent[],
-  loadoutStats?: Record<string, LoadoutStats>,
+  loadoutProperties?: Record<string, LoadoutProperties>,
   slotWeapons?: Record<string, string | undefined>,
   slotWirings?: SlotTriggerWiring[],
 ): TimelineEvent[] {
@@ -792,7 +794,7 @@ export function processInflictionEvents(
 
   // ── Phase 3: Process pipeline (all durations are extended real-time) ──────
   const withPotentialEffects = applyPotentialEffects(ext1);
-  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutStats, stops);
+  const withDerivedInflictions = deriveFrameInflictions(withPotentialEffects, loadoutProperties, stops);
   // Extend newly derived events by time-stop overlap
   const ext2 = applyTimeStopExtension(withDerivedInflictions, stops, extendedIds);
   // Refresh same-element stacks BEFORE absorptions/reactions so that
@@ -807,7 +809,7 @@ export function processInflictionEvents(
   const withReactions = deriveReactions(withAbsorptions);
   const ext3 = applyTimeStopExtension(withReactions, stops, extendedIds);
   const withMergedReactions = mergeReactions(ext3);
-  const withScorchingFangs = deriveScorchingFangs(withMergedReactions, loadoutStats);
+  const withScorchingFangs = deriveScorchingFangs(withMergedReactions, loadoutProperties);
   const withUnbridledEdge = deriveUnbridledEdge(withScorchingFangs, slotWeapons, stops);
   // Final extension for Scorching Fangs, Unbridled Edge, and any other derived events
   const ext4 = applyTimeStopExtension(withUnbridledEdge, stops, extendedIds);
@@ -957,15 +959,15 @@ function resolveSusceptibility(
   raw: Record<string, readonly number[]>,
   sourceColumnId: string,
   sourceOwnerId: string,
-  loadoutStats?: Record<string, LoadoutStats>,
+  loadoutProperties?: Record<string, LoadoutProperties>,
 ): Record<string, number> {
-  const stats = loadoutStats?.[sourceOwnerId] ?? DEFAULT_LOADOUT_STATS;
+  const stats = loadoutProperties?.[sourceOwnerId] ?? DEFAULT_LOADOUT_PROPERTIES;
   const skillType = sourceColumnId as SkillType;
   let skillLevel: number;
   switch (skillType) {
-    case 'combo': skillLevel = stats.comboSkillLevel; break;
-    case 'ultimate': skillLevel = stats.ultimateLevel; break;
-    default: skillLevel = stats.battleSkillLevel; break;
+    case 'combo': skillLevel = stats.skills.comboSkillLevel; break;
+    case 'ultimate': skillLevel = stats.skills.ultimateLevel; break;
+    default: skillLevel = stats.skills.battleSkillLevel; break;
   }
   const idx = Math.max(0, Math.min(skillLevel - 1, MAX_SKILL_LEVEL_INDEX));
   const resolved: Record<string, number> = {};
@@ -976,7 +978,7 @@ function resolveSusceptibility(
   return resolved;
 }
 
-function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>, stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
+function deriveFrameInflictions(events: TimelineEvent[], loadoutProperties?: Record<string, LoadoutProperties>, stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
@@ -1014,12 +1016,12 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
           // Status applied by this frame (self or enemy target)
           if (frame.applyStatus) {
             if (frame.applyStatus.target === TargetType.SELF) {
-              // Self-targeted status (e.g. Melting Flame, Thunderlance)
+              // Self-targeted exchange status (e.g. Melting Flame, Thunderlance)
               const grantColumnId = EXCHANGE_STATUS_COLUMN[frame.applyStatus.status];
               if (grantColumnId) {
-                const statusDuration = EXCHANGE_STATUS_DURATION[frame.applyStatus.status] ?? EXCHANGE_EVENT_DURATION;
+                const statusDuration = EXCHANGE_EVENT_DURATION;
                 const maxSlots = EXCHANGE_STATUS_MAX_SLOTS[frame.applyStatus.status];
-                // Count active stacks at this frame (stacks don't refresh at max)
+                // Count active stacks at this frame
                 let activeCount = 0;
                 if (maxSlots) {
                   for (const ev of [...events, ...derived]) {
@@ -1081,7 +1083,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
                 ...(frame.applyStatus.susceptibility && {
-                  susceptibility: resolveSusceptibility(frame.applyStatus.susceptibility, event.columnId, event.ownerId, loadoutStats),
+                  susceptibility: resolveSusceptibility(frame.applyStatus.susceptibility, event.columnId, event.ownerId, loadoutProperties),
                 }),
               });
             }
@@ -1180,7 +1182,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
     }
   }
 
-  // Perfect dodge dash events → SP recovery (7.5 SP)
+  // Perfect dodge dash events → SP recovery
   for (const event of events) {
     if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
       derived.push({
@@ -1189,7 +1191,7 @@ function deriveFrameInflictions(events: TimelineEvent[], loadoutStats?: Record<s
         ownerId: COMMON_OWNER_ID,
         columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
         startFrame: event.startFrame,
-        activationDuration: -7.5,
+        activationDuration: -GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
         activeDuration: 0,
         cooldownDuration: 0,
         sourceOwnerId: event.ownerId,
@@ -1208,16 +1210,9 @@ export const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
   THUNDERLANCE: 'thunderlance',
 };
 
-/** Max micro-column slots for each exchange status. */
-const EXCHANGE_STATUS_MAX_SLOTS: Record<string, number> = {
-  MELTING_FLAME: 4,
-  THUNDERLANCE: 4,
-};
+// EXCHANGE_STATUS_MAX_SLOTS imported from channels
 
 /** Duration (frames) for each exchange status. Unkeyed = effectively permanent. */
-const EXCHANGE_STATUS_DURATION: Record<string, number> = {
-  THUNDERLANCE: 2400, // 20s at 120fps
-};
 
 /** Default duration for generated exchange events (effectively permanent). */
 const EXCHANGE_EVENT_DURATION = TOTAL_FRAMES * 10;
@@ -1437,11 +1432,17 @@ function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeStopRegio
 // deriveReactions is imported from ./deriveReactions.ts
 
 /**
- * Clamps overlapping same-type arts reaction events when the newer one
- * would outlast the older. If the older event has a longer duration, both
- * are kept as-is and allowed to overlap visually.
+ * Merges overlapping same-type arts reaction events.
+ *
+ * **Corrosion** uses merge semantics: when a newer corrosion overlaps an
+ * active older one, the older is clamped at the merge point and the newer
+ * inherits max(statusLevel) and extends its duration if the older would
+ * have lasted longer.
+ *
+ * **Other reactions** use refresh semantics: the older event is clamped
+ * when the newer one would outlast it.
  */
-function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
+export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
     if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
@@ -1454,102 +1455,117 @@ function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   if (reactionsByType.size === 0) return events;
 
   const clampMap = new Map<string, { duration: number; source: StatusSource }>();
+  const mergeMap = new Map<string, { activationDuration: number; statusLevel: number; inflictionStacks: number; reductionFloor?: number }>();
 
-  reactionsByType.forEach((group) => {
+  reactionsByType.forEach((group, columnId) => {
     if (group.length <= 1) return;
     const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
 
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i];
-      const currentEnd = current.startFrame + (clampMap.get(current.id)?.duration ?? current.activationDuration);
-      const next = sorted[i + 1];
-      const nextEnd = next.startFrame + next.activationDuration;
+    if (columnId === REACTION_COLUMNS.CORROSION) {
+      // Corrosion merge: newer absorbs older's stats and remaining duration
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const current = sorted[i];
+        const currentDur = mergeMap.get(current.id)?.activationDuration ?? current.activationDuration;
+        const currentEnd = current.startFrame + currentDur;
+        const next = sorted[i + 1];
 
-      // Only clamp if the newer event outlasts the older one (refresh)
-      if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
+        // Only merge if the newer event starts while the older is still active
+        if (next.startFrame >= currentEnd) continue;
+
+        // Clamp older at the merge point
         clampMap.set(current.id, {
           duration: Math.max(0, next.startFrame - current.startFrame),
           source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
         });
+
+        // Newer inherits max statusLevel and max remaining duration
+        const currentStatusLevel = mergeMap.get(current.id)?.statusLevel ?? current.statusLevel ?? 1;
+        const nextStatusLevel = next.statusLevel ?? 1;
+        const currentStacks = mergeMap.get(current.id)?.inflictionStacks ?? current.inflictionStacks ?? 1;
+        const nextStacks = next.inflictionStacks ?? 1;
+
+        const remainingOldDuration = currentEnd - next.startFrame;
+        const newDuration = next.activationDuration;
+
+        // Compute the old corrosion's reduction at the merge point (with arts intensity)
+        const elapsedSeconds = (next.startFrame - current.startFrame) / FPS;
+        const oldReductionFloor = mergeMap.get(current.id)?.reductionFloor ?? 0;
+        const oldArtsIntensity = current.artsIntensity ?? 0;
+        const oldBaseReduction = getCorrosionBaseReduction(
+          Math.min(currentStatusLevel, 4) as import('../../consts/types').StatusLevel,
+          elapsedSeconds,
+        ) * getCorrosionReductionMultiplier(oldArtsIntensity);
+        const currentReduction = Math.max(oldReductionFloor, oldBaseReduction);
+
+        mergeMap.set(next.id, {
+          activationDuration: Math.max(remainingOldDuration, newDuration),
+          statusLevel: Math.max(currentStatusLevel, nextStatusLevel),
+          inflictionStacks: Math.max(currentStacks, nextStacks),
+          reductionFloor: currentReduction,
+        });
+      }
+    } else {
+      // Other reactions: refresh semantics (clamp older when newer outlasts it)
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const current = sorted[i];
+        const currentEnd = current.startFrame + (clampMap.get(current.id)?.duration ?? current.activationDuration);
+        const next = sorted[i + 1];
+        const nextEnd = next.startFrame + next.activationDuration;
+
+        if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
+          clampMap.set(current.id, {
+            duration: Math.max(0, next.startFrame - current.startFrame),
+            source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
+          });
+        }
       }
     }
   });
 
-  if (clampMap.size === 0) return events;
+  if (clampMap.size === 0 && mergeMap.size === 0) return events;
 
   return events.map((ev) => {
     const clamp = clampMap.get(ev.id);
-    return clamp !== undefined ? {
-      ...ev,
-      activationDuration: clamp.duration,
-      eventStatus: EventStatusType.REFRESHED,
-      eventStatusOwnerId: clamp.source.ownerId,
-      eventStatusSkillName: clamp.source.skillName,
-    } : ev;
+    const merge = mergeMap.get(ev.id);
+
+    if (clamp !== undefined) {
+      return {
+        ...ev,
+        activationDuration: clamp.duration,
+        eventStatus: EventStatusType.REFRESHED,
+        eventStatusOwnerId: clamp.source.ownerId,
+        eventStatusSkillName: clamp.source.skillName,
+      };
+    }
+    if (merge !== undefined) {
+      return {
+        ...ev,
+        activationDuration: merge.activationDuration,
+        statusLevel: merge.statusLevel,
+        inflictionStacks: merge.inflictionStacks,
+        reductionFloor: merge.reductionFloor,
+      };
+    }
+    return ev;
   });
 }
 
-/**
- * Processes physical infliction (Vulnerable) stacking with the same
- * refresh logic as arts inflictions.
- */
+/** Maximum concurrent stacks of the same element infliction (arts or physical). */
+const MAX_INFLICTION_STACKS = 4;
+
 function applyPhysicalInflictionRefresh(events: TimelineEvent[]): TimelineEvent[] {
-  const physInflictionsByColumn = new Map<string, TimelineEvent[]>();
-  for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID && PHYSICAL_INFLICTION_COLUMN_IDS.has(ev.columnId)) {
-      const group = physInflictionsByColumn.get(ev.columnId) ?? [];
-      group.push(ev);
-      physInflictionsByColumn.set(ev.columnId, group);
-    }
-  }
-
-  if (physInflictionsByColumn.size === 0) return events;
-
-  const processedMap = new Map<string, TimelineEvent>();
-
-  physInflictionsByColumn.forEach((group) => {
-    if (group.length <= 1) return;
-    const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
-
-    const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
-    for (let i = sorted.length - 2; i >= 0; i--) {
-      const nextEnd = sorted[i + 1].startFrame + extendedActive[i + 1];
-      const currentEnd = sorted[i].startFrame + extendedActive[i];
-      if (nextEnd > currentEnd) {
-        extendedActive[i] = nextEnd - sorted[i].startFrame;
-      }
-    }
-
-    for (let i = 0; i < sorted.length; i++) {
-      const ev = sorted[i];
-      if (extendedActive[i] !== ev.activationDuration) {
-        const next = sorted[i + 1];
-        processedMap.set(ev.id, {
-          ...ev,
-          activationDuration: extendedActive[i],
-          eventStatus: EventStatusType.EXTENDED,
-          eventStatusOwnerId: next.sourceOwnerId,
-          eventStatusSkillName: next.sourceSkillName,
-        });
-      }
-    }
-  });
-
-  if (processedMap.size === 0) return events;
-  return events.map((ev) => processedMap.get(ev.id) ?? ev);
+  return applyInflictionDeque(events, PHYSICAL_INFLICTION_COLUMN_IDS);
 }
 
-/**
- * Processes same-element infliction stacking:
- * Each event's activationDuration is extended to the latest end frame
- * reachable through a chain of overlapping subsequent same-element stacks.
- * This models the game mechanic where applying a new infliction refreshes
- * the timer on all existing stacks of the same element.
- */
 function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
+  return applyInflictionDeque(events, INFLICTION_COLUMN_IDS);
+}
+
+/** Shared deque-based infliction stacking logic. */
+function applyInflictionDeque(events: TimelineEvent[], columnIds: Set<string>): TimelineEvent[] {
   const inflictionsByColumn = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && columnIds.has(ev.columnId)) {
       const group = inflictionsByColumn.get(ev.columnId) ?? [];
       group.push(ev);
       inflictionsByColumn.set(ev.columnId, group);
@@ -1559,35 +1575,91 @@ function applySameElementRefresh(events: TimelineEvent[]): TimelineEvent[] {
   if (inflictionsByColumn.size === 0) return events;
 
   const processedMap = new Map<string, TimelineEvent>();
+  const clampMap = new Map<string, { frame: number; sourceOwnerId?: string; sourceSkillName?: string }>();
 
   inflictionsByColumn.forEach((group) => {
     if (group.length <= 1) return;
     const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
 
-    // Each earlier stack extends to the next stack's end time (backward pass
-    // so later extensions propagate). This models the game mechanic where
-    // applying a new same-element infliction refreshes all existing stacks.
     const extendedActive: number[] = sorted.map((ev) => ev.activationDuration);
+    const evicted = new Map<number, number>();
+
+    for (let i = 0; i < sorted.length; i++) {
+      const incoming = sorted[i];
+      const incomingEnd = incoming.startFrame + incoming.activationDuration;
+
+      const activeIndices: number[] = [];
+      for (let j = 0; j < i; j++) {
+        const evictFrame = evicted.get(j);
+        const jEnd = evictFrame !== undefined
+          ? evictFrame
+          : sorted[j].startFrame + extendedActive[j];
+        if (jEnd > incoming.startFrame) activeIndices.push(j);
+      }
+
+      if (activeIndices.length >= MAX_INFLICTION_STACKS) {
+        const oldestIdx = activeIndices[0];
+        evicted.set(oldestIdx, incoming.startFrame);
+        clampMap.set(sorted[oldestIdx].id, {
+          frame: incoming.startFrame,
+          sourceOwnerId: incoming.sourceOwnerId,
+          sourceSkillName: incoming.sourceSkillName,
+        });
+        activeIndices.shift();
+      }
+
+      for (const j of activeIndices) {
+        if (evicted.has(j)) continue;
+        const jEnd = sorted[j].startFrame + extendedActive[j];
+        if (incomingEnd > jEnd) {
+          extendedActive[j] = incomingEnd - sorted[j].startFrame;
+        }
+      }
+    }
+
     for (let i = sorted.length - 2; i >= 0; i--) {
-      const nextEnd = sorted[i + 1].startFrame + extendedActive[i + 1];
+      if (evicted.has(i)) continue;
+      let nextIdx = -1;
+      for (let j = i + 1; j < sorted.length; j++) {
+        if (!evicted.has(j)) { nextIdx = j; break; }
+      }
+      if (nextIdx === -1) continue;
       const currentEnd = sorted[i].startFrame + extendedActive[i];
+      if (sorted[nextIdx].startFrame > currentEnd) continue;
+      const nextEnd = sorted[nextIdx].startFrame + extendedActive[nextIdx];
       if (nextEnd > currentEnd) {
         extendedActive[i] = nextEnd - sorted[i].startFrame;
       }
     }
 
-    // Apply extensions — mark with 'extended' status and attribute to the
-    // next stack that caused the refresh.
     for (let i = 0; i < sorted.length; i++) {
       const ev = sorted[i];
-      if (extendedActive[i] !== ev.activationDuration) {
-        const next = sorted[i + 1];
+      if (evicted.has(i)) {
+        const evictFrame = evicted.get(i)!;
+        const clampedDur = Math.max(0, evictFrame - ev.startFrame);
+        if (clampedDur !== ev.activationDuration) {
+          const clamp = clampMap.get(ev.id)!;
+          processedMap.set(ev.id, {
+            ...ev,
+            activationDuration: clampedDur,
+            activeDuration: 0,
+            cooldownDuration: 0,
+            eventStatus: EventStatusType.CONSUMED,
+            eventStatusOwnerId: clamp.sourceOwnerId,
+            eventStatusSkillName: clamp.sourceSkillName,
+          });
+        }
+      } else if (extendedActive[i] !== ev.activationDuration) {
+        let nextEv: TimelineEvent | undefined;
+        for (let j = i + 1; j < sorted.length; j++) {
+          if (!evicted.has(j)) { nextEv = sorted[j]; break; }
+        }
         processedMap.set(ev.id, {
           ...ev,
           activationDuration: extendedActive[i],
           eventStatus: EventStatusType.EXTENDED,
-          eventStatusOwnerId: next.sourceOwnerId,
-          eventStatusSkillName: next.sourceSkillName,
+          eventStatusOwnerId: nextEv?.sourceOwnerId,
+          eventStatusSkillName: nextEv?.sourceSkillName,
         });
       }
     }
@@ -1620,7 +1692,7 @@ const SCORCHING_FANGS_DURATION = 1800;
  * Wulfgard gains Scorching Fangs when Combustion is applied to the enemy.
  * P3+: Battle skill refreshes Scorching Fangs and shares it with teammates at 50%.
  */
-function deriveScorchingFangs(events: TimelineEvent[], loadoutStats?: Record<string, LoadoutStats>): TimelineEvent[] {
+function deriveScorchingFangs(events: TimelineEvent[], loadoutProperties?: Record<string, LoadoutProperties>): TimelineEvent[] {
   // Find Wulfgard's slot by scanning for his unique skill names
   let wulfgardOwnerId: string | null = null;
   let wulfgardPotential = 0;

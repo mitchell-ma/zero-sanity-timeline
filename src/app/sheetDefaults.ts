@@ -7,7 +7,7 @@
 
 import { Operator, TimelineEvent, VisibleSkills, SkillType } from '../consts/viewTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS, getDefaultLoadoutStats } from '../view/InformationPane';
+import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
@@ -48,10 +48,10 @@ export const INITIAL_LOADOUTS: Record<string, OperatorLoadoutState> = Object.fro
   SLOT_IDS.map((id, i) => [id, IS_DEV && i === 0 ? DEV_LAEVATAIN_LOADOUT : EMPTY_LOADOUT]),
 );
 
-export const INITIAL_LOADOUT_STATS: Record<string, LoadoutStats> = Object.fromEntries(
+export const INITIAL_LOADOUT_PROPERTIES: Record<string, LoadoutProperties> = Object.fromEntries(
   SLOT_IDS.map((id, i) => {
     const op = INITIAL_OPERATORS[i];
-    return [id, op ? getDefaultLoadoutStats(op) : DEFAULT_LOADOUT_STATS];
+    return [id, op ? getDefaultLoadoutProperties(op) : DEFAULT_LOADOUT_PROPERTIES];
   }),
 );
 
@@ -91,9 +91,16 @@ export function applySheetData(data: SheetData) {
     enemyStats: data.enemyStats,
     events,
     loadouts: { ...INITIAL_LOADOUTS, ...data.loadouts },
-    loadoutStats: Object.fromEntries(
-      Object.entries({ ...INITIAL_LOADOUT_STATS, ...data.loadoutStats }).map(
-        ([k, v]) => [k, { ...DEFAULT_LOADOUT_STATS, ...v }],
+    loadoutProperties: Object.fromEntries(
+      Object.entries({ ...INITIAL_LOADOUT_PROPERTIES, ...data.loadoutProperties }).map(
+        ([k, v]) => [k, {
+          ...DEFAULT_LOADOUT_PROPERTIES,
+          operator: { ...DEFAULT_LOADOUT_PROPERTIES.operator, ...v.operator },
+          skills: { ...DEFAULT_LOADOUT_PROPERTIES.skills, ...v.skills },
+          weapon: { ...DEFAULT_LOADOUT_PROPERTIES.weapon, ...v.weapon },
+          gear: { ...DEFAULT_LOADOUT_PROPERTIES.gear, ...v.gear },
+          ...(v.tacticalMaxUses != null ? { tacticalMaxUses: v.tacticalMaxUses } : {}),
+        }],
       ),
     ),
     visibleSkills: { ...INITIAL_VISIBLE, ...data.visibleSkills },

@@ -1,0 +1,199 @@
+[
+  {
+    "name": "WILDLAND_TREKKER_TRIGGER",
+    "targetDeterminer": "THIS",
+    "target": "OPERATOR",
+    "element": "ELECTRIC",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 3,
+        "P1": 3,
+        "P2": 3,
+        "P3": 3,
+        "P4": 2,
+        "P5": 2
+      },
+      "instances": 3,
+      "verb": "NONE"
+    },
+    "triggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDet": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "BATTLE_SKILL"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "ELECTRIFICATION"
+          }
+        ]
+      }
+    ],
+    "clause": [
+      {
+        "conditions": [
+          {
+            "subject": "THIS_EVENT",
+            "verb": "HAVE",
+            "object": "STACKS",
+            "cardinalityConstraint": "EXACTLY",
+            "cardinality": "MAX"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "WILDLAND_TREKKER_BUFF",
+            "toDet": "ALL",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "minTalentLevel": {
+      "talent": 2,
+      "minLevel": 1
+    },
+    "properties": {
+      "duration": {
+        "value": [
+          -1
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "originId": "TEMPESTUOUS_ARC"
+  },
+  {
+    "name": "WILDLAND_TREKKER_BUFF",
+    "targetDeterminer": "ALL",
+    "target": "OPERATOR",
+    "element": "ELECTRIC",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 1,
+        "P1": 1,
+        "P2": 1,
+        "P3": 1,
+        "P4": 1,
+        "P5": 1
+      },
+      "instances": 1,
+      "verb": "RESET"
+    },
+    "triggerClause": [],
+    "properties": {
+      "duration": {
+        "value": [
+          15
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "adjective": "ELECTRIC",
+            "object": "DAMAGE_BONUS",
+            "to": "TARGET",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": ["POTENTIAL", "INTELLECT"],
+                "value": {
+                  "P0": { "1": 0.0008, "2": 0.0012 },
+                  "P1": { "1": 0.0008, "2": 0.0012 },
+                  "P2": { "1": 0.0008, "2": 0.0012 },
+                  "P3": { "1": 0.00104, "2": 0.00156 },
+                  "P4": { "1": 0.00104, "2": 0.00156 },
+                  "P5": { "1": 0.00104, "2": 0.00156 }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "originId": "WILDLAND_TREKKER_TRIGGER"
+  },
+  {
+    "name": "TACTFUL_APPROACH",
+    "target": "ENEMY",
+    "element": "ELECTRIC",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 1,
+        "P1": 1,
+        "P2": 1,
+        "P3": 1,
+        "P4": 1,
+        "P5": 1
+      },
+      "instances": 1,
+      "verb": "RESET"
+    },
+    "triggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDet": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "ULTIMATE"
+          }
+        ]
+      }
+    ],
+    "minTalentLevel": {
+      "talent": 2,
+      "minLevel": 1
+    },
+    "properties": {
+      "duration": {
+        "value": [
+          10
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "adjective": "ELECTRIC",
+            "object": "SUSCEPTIBILITY",
+            "to": "TARGET",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_LEVEL",
+                "value": [
+                  0.1,
+                  0.15
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "originId": "EXPLODING_BLITZ"
+  }
+]

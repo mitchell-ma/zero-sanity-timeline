@@ -1,0 +1,55 @@
+{
+  "weaponName": "Chimeric Justice",
+  "statusEvents": [
+    {
+      "name": "CHIMERIC_JUSTICE_CEMENTED_FURY",
+      "type": "WEAPON_EFFECT",
+      "originId": "CHIMERIC_JUSTICE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Cemented Fury",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "VULNERABILITY"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRITICAL_RATE",
+          "valueMin": 0.03,
+          "valueMax": 0.084
+        },
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.15,
+          "valueMax": 0.42
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "On applying Vulnerability to 0-stack enemy"
+    }
+  ]
+}

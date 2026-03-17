@@ -56,7 +56,8 @@
  *    - Ultimate active duration: 12s, cooldown: 25s
  */
 import { TimelineEvent } from '../consts/viewTypes';
-import { SKILL_COLUMNS } from '../model/channels';
+import { StatusType } from '../consts/enums';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -71,13 +72,20 @@ jest.mock('../model/game-data/weaponGameData', () => ({
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
 }));
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+  DEFAULT_LOADOUT_PROPERTIES: {},
+  getDefaultLoadoutProperties: () => ({}),
 }));
 
 // eslint-disable-next-line import/first
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
+// eslint-disable-next-line import/first
+import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+// eslint-disable-next-line import/first
+import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
+// eslint-disable-next-line import/first
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/antal-operator.json');
@@ -140,17 +148,23 @@ describe('A. Basic Attack (Exchange Current)', () => {
       (e: any) => e.objectType === 'STAGGER'
     );
     expect(spEffect.withPreposition.cardinality.value).toBe(15);
-    expect(staggerEffect.withPreposition.cardinality.value).toBe(15);
+    expect(staggerEffect.withPreposition.value.value).toBe(15);
   });
 
-  test('A4: Earlier segments recover 0 SP and 0 Stagger', () => {
+  test('A4: Earlier segments have SP and Stagger effects with value 0', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
       const spEffect = frame.effects.find(
         (e: any) => e.objectType === 'SKILL_POINT'
       );
+      const staggerEffect = frame.effects.find(
+        (e: any) => e.objectType === 'STAGGER'
+      );
+      expect(spEffect).toBeDefined();
       expect(spEffect.withPreposition.cardinality.value).toBe(0);
+      expect(staggerEffect).toBeDefined();
+      expect(staggerEffect.withPreposition.value.value).toBe(0);
     }
   });
 
@@ -199,23 +213,25 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const spCost = battleSkill.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     expect(spCost.withPreposition.cardinality.value).toBe(100);
   });
 
-  test('B3: Battle skill recovers 6.5 ultimate energy to self and 6.5 to all', () => {
+  test('B3: Battle skill includes 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const selfEnergy = battleSkill.effects.find(
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectType === 'THIS_OPERATOR'
+        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'THIS' && e.toObjectType === 'OPERATOR'
     );
     const allEnergy = battleSkill.effects.find(
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectType === 'ALL_OPERATORS'
+        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'ALL' && e.toObjectType === 'OPERATOR'
     );
+    expect(selfEnergy).toBeDefined();
     expect(selfEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(allEnergy).toBeDefined();
     expect(allEnergy.withPreposition.cardinality.value).toBe(6.5);
   });
 
@@ -264,7 +280,8 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies physical status
-    expect(clause.conditions[0].subjectType).toBe('ANY_OPERATOR');
+    expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
+    expect(clause.conditions[0].subjectType).toBe('OPERATOR');
     expect(clause.conditions[0].verbType).toBe('APPLY');
     expect(clause.conditions[0].objectType).toBe('STATUS');
     expect(clause.conditions[0].objectId).toBe('PHYSICAL');
@@ -281,7 +298,8 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies arts infliction
-    expect(clause.conditions[0].subjectType).toBe('ANY_OPERATOR');
+    expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
+    expect(clause.conditions[0].subjectType).toBe('OPERATOR');
     expect(clause.conditions[0].verbType).toBe('APPLY');
     expect(clause.conditions[0].objectType).toBe('INFLICTION');
 
@@ -300,7 +318,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   test('C5: Combo cooldown is 15 seconds', () => {
     const effects = mockAntalJson.skills.COMBO_SKILL.effects;
     const cooldown = effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.withPreposition.cardinality.value).toBe(15);
@@ -326,7 +344,8 @@ describe('C. Combo Skill (EMP Test Site)', () => {
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'RECOVER'
     );
     expect(energy).toBeDefined();
-    expect(energy.toObjectType).toBe('THIS_OPERATOR');
+    expect(energy.toObjectDeterminer).toBe('THIS');
+    expect(energy.toObjectType).toBe('OPERATOR');
     expect(energy.withPreposition.cardinality.value).toBe(10);
   });
 
@@ -349,7 +368,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   test('C2.1: Combo frame has APPLY SOURCE INFLICTION DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
     const sourceInfliction = comboFrame.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.adjective === 'SOURCE' && e.objectType === 'INFLICTION'
+      (e: any) => e.verbType === 'APPLY' && e.adjectiveType === 'SOURCE' && e.objectType === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.toObjectType).toBe('ENEMY');
@@ -358,7 +377,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   test('C2.2: Combo frame has APPLY SOURCE STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
     const sourceStatus = comboFrame.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.adjective === 'SOURCE' && e.objectType === 'STATUS'
+      (e: any) => e.verbType === 'APPLY' && e.adjectiveType === 'SOURCE' && e.objectType === 'STATUS'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.toObjectType).toBe('ENEMY');
@@ -403,7 +422,7 @@ describe('D. Ultimate (Overclocked Moment)', () => {
   test('D1: Ultimate energy cost is 90', () => {
     const effects = mockAntalJson.skills.ULTIMATE.effects;
     const energyCost = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.withPreposition.cardinality.value).toBe(90);
@@ -633,7 +652,7 @@ describe('H. Cooldown Interactions', () => {
   test('H3: Combo skill (EMP Test Site) has 15s cooldown', () => {
     const cs = mockAntalJson.skills.COMBO_SKILL;
     const cooldown = cs.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.withPreposition.cardinality.value).toBe(15);
@@ -682,6 +701,435 @@ describe('H. Cooldown Interactions', () => {
       activationDuration: bsDuration, nonOverlappableRange: bsDuration,
     });
     expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Combo Mirrored Infliction Pipeline
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Combo Mirrored Infliction Pipeline', () => {
+  const FPS = 120;
+  const SLOT_ANTAL = 'slot-1';
+  const SLOT_LAEV = 'slot-0';
+
+  function makeEv(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
+    return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  /** Antal: combo requires ANY_OPERATOR APPLY INFLICTION, requires Focus active */
+  function antalWiring(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_ANTAL,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+          ],
+        },
+        comboRequires: [
+          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+        ],
+        comboDescription: 'any infliction with Focus',
+        comboWindowFrames: 720,
+        comboRequiresActiveColumns: [StatusType.FOCUS],
+      },
+    };
+  }
+
+  /** Laevatain: battle skill publishes APPLY INFLICTION (HEAT) */
+  function laevWiring(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_LAEV,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+  }
+
+  function makeFocus(startFrame: number, duration: number): TimelineEvent {
+    return makeEv({ id: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: StatusType.FOCUS, startFrame, activationDuration: duration });
+  }
+
+  function makeLaevBattle(startFrame: number): TimelineEvent {
+    return makeEv({ id: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV, columnId: SKILL_COLUMNS.BATTLE, startFrame, activationDuration: FPS });
+  }
+
+  function makeAntalCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
+    return makeEv({
+      id: `antal-combo-${startFrame}`,
+      name: 'EMP_TEST_SITE',
+      ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame,
+      activationDuration: Math.round(0.8 * FPS),
+      animationDuration: Math.round(0.5 * FPS),
+      comboTriggerColumnId,
+      segments: [{
+        durationFrames: Math.round(0.8 * FPS),
+        frames: [{ offsetFrame: Math.round(0.7 * FPS) }],
+      }],
+    });
+  }
+
+  test('H1: Combo with comboTriggerColumnId generates mirrored heat infliction', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    const laevBattle = makeLaevBattle(100);
+    const antalCombo = makeAntalCombo(250, 'heatInfliction');
+    const wirings = [laevWiring(), antalWiring()];
+
+    const processed = processInflictionEvents([focus, laevBattle, antalCombo], undefined, undefined, wirings);
+    const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
+    expect(derived.length).toBeGreaterThan(0);
+    expect(derived[0].columnId).toBe('heatInfliction');
+    expect(derived[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(derived[0].sourceOwnerId).toBe(SLOT_ANTAL);
+  });
+
+  test('H2: Pipeline resolves comboTriggerColumnId from Laevatain battle skill', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    const laevBattle = makeLaevBattle(100);
+    // Combo placed with no trigger column — pipeline should resolve it
+    const antalCombo = makeAntalCombo(250);
+    const wirings = [laevWiring(), antalWiring()];
+
+    const processed = processInflictionEvents([focus, laevBattle, antalCombo], undefined, undefined, wirings);
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo).toBeDefined();
+    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+  });
+
+  test('H3: Mirrored infliction not generated when combo has no comboTriggerColumnId', () => {
+    // No Focus → combo trigger column not resolved
+    const laevBattle = makeLaevBattle(100);
+    const antalCombo = makeAntalCombo(250);
+    const wirings = [laevWiring(), antalWiring()];
+
+    const processed = processInflictionEvents([laevBattle, antalCombo], undefined, undefined, wirings);
+    const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
+    expect(derived.length).toBe(0);
+  });
+
+  test('H4: Combo mirrors electric infliction when triggered by another operator', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    // Simulate another operator (slot-2) applying electric infliction
+    const electricWiring: SlotTriggerWiring = {
+      slotId: 'slot-2',
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const arcBattle = makeEv({
+      id: 'arc-bs-100', name: 'LIGHTNING_STRIKE', ownerId: 'slot-2',
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 100, activationDuration: FPS,
+    });
+    const antalCombo = makeAntalCombo(250);
+    const wirings = [laevWiring(), antalWiring(), electricWiring];
+
+    const processed = processInflictionEvents([focus, arcBattle, antalCombo], undefined, undefined, wirings);
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo!.comboTriggerColumnId).toBe('electricInfliction');
+    const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
+    expect(derived.length).toBeGreaterThan(0);
+    expect(derived[0].columnId).toBe('electricInfliction');
+  });
+
+  test('H5: Combo window requires Focus — no window without Focus active', () => {
+    const laevBattle = makeLaevBattle(100);
+    const wirings = [laevWiring(), antalWiring()];
+
+    const processed = processInflictionEvents([laevBattle], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
+    );
+    expect(windows.length).toBe(0);
+  });
+
+  test('H6: Combo window appears when enemy has heat infliction and Focus active', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    // Derived heat infliction on enemy (as if Laevatain's battle skill frame created it)
+    const heatInfliction = makeEv({
+      id: 'heat-inf-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction', startFrame: 220, activationDuration: 10 * FPS,
+      sourceOwnerId: SLOT_LAEV, sourceSkillName: 'FLAMING_CINDERS',
+    });
+    const wirings = [laevWiring(), antalWiring()];
+
+    const processed = processInflictionEvents([focus, heatInfliction], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
+    );
+    expect(windows.length).toBeGreaterThan(0);
+    expect(windows[0].comboTriggerColumnId).toBe('heatInfliction');
+  });
+
+  test('H7: Full scenario — Akekuri heat infliction + Focus → Antal combo mirrors heat', () => {
+    const SLOT_AKEKURI = 'slot-0';
+    const focus = makeFocus(0, 120 * FPS);
+    // Akekuri's battle skill applies heat infliction to enemy
+    const akekuriHeatInfliction = makeEv({
+      id: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
+      sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
+    });
+    // Antal places combo within the activation window, with comboTriggerColumnId resolved
+    const antalCombo = makeAntalCombo(300, 'heatInfliction');
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [focus, akekuriHeatInfliction, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Original Akekuri heat infliction still present
+    const akekuriHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_AKEKURI,
+    );
+    expect(akekuriHeat.length).toBeGreaterThan(0);
+
+    // Antal combo mirrored heat infliction also present
+    const antalHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(antalHeat.length).toBeGreaterThan(0);
+    expect(antalHeat[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+
+    // Enemy now has 2 heat inflictions: one from Akekuri, one from Antal
+    const allHeat = processed.filter((e) => e.columnId === 'heatInfliction');
+    expect(allHeat.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test('H8: Re-resolve fixes comboTriggerColumnId when Focus appears mid-pipeline', () => {
+    // Simulates the real scenario: Focus is derived by the engine AFTER the first
+    // resolveComboTriggerColumns pass. The second pass (after engine) re-resolves
+    // the combo's trigger column so mirrored inflictions can be generated.
+    const SLOT_AKEKURI = 'slot-0';
+
+    // Focus exists (as if engine-derived) + Akekuri heat infliction on enemy
+    const focus = makeFocus(0, 120 * FPS);
+    const akekuriHeat = makeEv({
+      id: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
+      sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
+    });
+    // Antal combo placed WITHOUT comboTriggerColumnId (simulating first pass failing)
+    const antalCombo = makeAntalCombo(300);
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [focus, akekuriHeat, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Antal combo should have comboTriggerColumnId resolved
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo).toBeDefined();
+    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+
+    // Mirrored heat infliction from Antal should exist
+    const antalHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(antalHeat.length).toBeGreaterThan(0);
+    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+  });
+
+  test('H9: Antal own battle skill does NOT self-trigger combo (no electric mirroring)', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    // Antal's own battle skill — publishes APPLY INFLICTION element:ELECTRIC
+    const antalBattle = makeEv({
+      id: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: FPS,
+    });
+    // Antal combo placed after battle skill
+    const antalCombo = makeAntalCombo(250);
+    const wirings = [antalWiring()];
+
+    const processed = processInflictionEvents(
+      [focus, antalBattle, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Combo should NOT have comboTriggerColumnId from self-trigger
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo!.comboTriggerColumnId).toBeUndefined();
+
+    // No electric infliction from self-trigger
+    const electricInflictions = processed.filter(
+      (e) => e.columnId === 'electricInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(electricInflictions.length).toBe(0);
+  });
+
+  test('H10: Full pipeline combo window with Focus from Antal battle skill frame', () => {
+    // Antal battle skill creates Focus via deriveFrameInflictions.
+    // Akekuri heat infliction on enemy. Combo window should appear.
+    const antalBattle = makeEv({
+      id: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyStatus: {
+            target: 'ENEMY', status: StatusType.FOCUS, stacks: 1,
+            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
+          },
+        }],
+      }],
+    });
+    const akekuriHeat = makeEv({
+      id: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
+      sourceOwnerId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
+    });
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: 'slot-0',
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [antalBattle, akekuriHeat],
+      undefined, undefined, wirings,
+    );
+
+    // Focus should be derived from Antal's battle skill frame
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    expect(focusEvents.length).toBeGreaterThan(0);
+
+    // Combo activation window should appear
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
+    );
+    expect(windows.length).toBeGreaterThan(0);
+  });
+
+  test('H11: No mirrored infliction when source event is dragged away (stale comboTriggerColumnId cleared)', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    // Source (Akekuri battle) was dragged far below the combo — combo is now outside all windows.
+    // Combo still has a stale comboTriggerColumnId from initial placement.
+    const antalCombo = makeAntalCombo(300, 'heatInfliction');
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: 'slot-0',
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    // No Akekuri battle event in the events list — it was removed/dragged away
+    const processed = processInflictionEvents(
+      [focus, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Stale comboTriggerColumnId should be cleared
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo).toBeDefined();
+    expect(combo!.comboTriggerColumnId).toBeUndefined();
+
+    // No mirrored infliction should be generated
+    const antalHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(antalHeat.length).toBe(0);
+  });
+
+  test('H10: No mirrored infliction when combo is user-placed without a trigger source', () => {
+    const focus = makeFocus(0, 120 * FPS);
+    // Combo placed by user in debug mode — no trigger source, no comboTriggerColumnId
+    const antalCombo = makeAntalCombo(300);
+    const wirings = [antalWiring()];
+
+    const processed = processInflictionEvents(
+      [focus, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo).toBeDefined();
+    expect(combo!.comboTriggerColumnId).toBeUndefined();
+
+    // No inflictions of any kind from Antal
+    const antalInflictions = processed.filter(
+      (e) => e.ownerId === ENEMY_OWNER_ID && e.sourceOwnerId === SLOT_ANTAL
+        && (e.columnId.includes('Infliction') || e.columnId.includes('vulnerable')),
+    );
+    expect(antalInflictions.length).toBe(0);
   });
 });
 

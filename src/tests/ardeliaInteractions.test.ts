@@ -26,7 +26,7 @@
  *    - Damage multiplier: 1.42 (lv1) → 3.2 (lv12)
  *
  * C. Combo Skill (Eruption Column)
- *    - Trigger: enemy is Corroded (single clause)
+ *    - Trigger: any operator Final Strike AND enemy has no inflictions
  *    - Activation window: 720 frames (6s)
  *    - Cooldown: 18s
  *    - 2 frames: frame 2 has stagger 10 + forced Corrosion reaction
@@ -73,7 +73,16 @@ jest.mock('../model/game-data/weaponGameData', () => ({
   getConditionalScalar: () => null, getBaseAttackForLevel: () => 0,
 }));
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {}, getDefaultLoadoutStats: () => ({}),
+  DEFAULT_LOADOUT_PROPERTIES: {
+    operator: { level: 90, potential: 0, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+  },
+  getDefaultLoadoutProperties: () => ({
+    operator: { level: 90, potential: 0, talentOneLevel: 3, talentTwoLevel: 3, attributeIncreaseLevel: 4 },
+    skills: { basicAttackLevel: 12, battleSkillLevel: 12, comboSkillLevel: 12, ultimateLevel: 12 },
+    weapon: { level: 90, skill1Level: 9, skill2Level: 9, skill3Level: 9 },
+  }),
 }));
 
 // eslint-disable-next-line import/first
@@ -81,9 +90,19 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
+import { deriveFrameInflictions, consumeReactionsForStatus } from '../controller/timeline/processInfliction';
 // eslint-disable-next-line import/first
 import { deriveReactions } from '../controller/timeline/deriveReactions';
+// eslint-disable-next-line import/first
+import { SkillSegmentBuilder } from '../controller/events/basicAttackController';
+// eslint-disable-next-line import/first
+import { EventStatusType } from '../consts/enums';
+// eslint-disable-next-line import/first
+import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+// eslint-disable-next-line import/first
+import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
+// eslint-disable-next-line import/first
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/ardelia-operator.json');
@@ -145,17 +164,15 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
       (e: any) => e.objectType === 'STAGGER'
     );
     expect(spEffect.withPreposition.cardinality.value).toBe(18);
-    expect(staggerEffect.withPreposition.cardinality.value).toBe(18);
+    expect(staggerEffect.withPreposition.value.value).toBe(18);
   });
 
   test('A4: Earlier segments recover 0 SP', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
-      const spEffect = frame.effects.find(
-        (e: any) => e.objectType === 'SKILL_POINT'
-      );
-      expect(spEffect.withPreposition.cardinality.value).toBe(0);
+      // SP stored in multipliers, not effects
+      expect(frame.multipliers[0].SKILL_POINT).toBe(0);
     }
   });
 
@@ -205,23 +222,29 @@ describe('B. Battle Skill (Dolly Rush)', () => {
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
     const spCost = battleSkill.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     expect(spCost.withPreposition.cardinality.value).toBe(100);
   });
 
-  test('B3: Battle skill recovers 6.5 ultimate energy to self and 6.5 to all', () => {
+  test('B3: Battle skill has SP cost + 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
+    const spCost = battleSkill.effects.find(
+      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
+    );
+    expect(spCost).toBeDefined();
     const selfEnergy = battleSkill.effects.find(
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectType === 'THIS_OPERATOR'
+        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'THIS' && e.toObjectType === 'OPERATOR'
     );
     const allEnergy = battleSkill.effects.find(
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectType === 'ALL_OPERATORS'
+        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'ALL' && e.toObjectType === 'OPERATOR'
     );
+    expect(selfEnergy).toBeDefined();
     expect(selfEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(allEnergy).toBeDefined();
     expect(allEnergy.withPreposition.cardinality.value).toBe(6.5);
   });
 
@@ -272,12 +295,23 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C. Combo Skill (Eruption Column)', () => {
-  test('C1: Combo trigger requires enemy is Corroded (single clause)', () => {
+  test('C1: Combo trigger requires Final Strike with no Vulnerability or Arts Infliction', () => {
     const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
     expect(trigger.triggerClause.length).toBe(1);
-    expect(trigger.triggerClause[0].conditions[0].subjectType).toBe('ENEMY');
-    expect(trigger.triggerClause[0].conditions[0].verbType).toBe('IS');
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('CORRODED');
+    const conditions = trigger.triggerClause[0].conditions;
+    // 1 trigger condition + 5 negated forbid conditions
+    expect(conditions.length).toBe(6);
+    expect(conditions[0].subjectDeterminer).toBe('ANY');
+    expect(conditions[0].subjectType).toBe('OPERATOR');
+    expect(conditions[0].verbType).toBe('PERFORM');
+    expect(conditions[0].objectType).toBe('FINAL_STRIKE');
+    const negated = conditions.filter((c: any) => c.negated);
+    expect(negated.length).toBe(5);
+    for (const n of negated) {
+      expect(n.subjectType).toBe('ENEMY');
+      expect(n.verbType).toBe('HAVE');
+      expect(n.objectType).toBe('STATUS');
+    }
   });
 
   test('C2: Combo activation window is 720 frames (6 seconds)', () => {
@@ -288,7 +322,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C3: Combo cooldown is 18 seconds', () => {
     const effects = mockJson.skills.COMBO_SKILL.effects;
     const cooldown = effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.withPreposition.cardinality.value).toBe(18);
@@ -304,10 +338,15 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (e: any) => e.verbType === 'APPLY' && e.objectType === 'REACTION'
     );
     expect(reaction).toBeDefined();
-    expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
+    expect(reaction.adjectiveType).toEqual(['FORCED', 'CORROSION']);
     expect(reaction.toObjectType).toBe('ENEMY');
     expect(reaction.withPreposition.stacks.value).toBe(1);
-    expect(reaction.withPreposition.duration.value).toBe(10);
+    expect(reaction.withPreposition.duration.value).toBe(7);
+  });
+
+  test('C5b: Combo frame 2 is GUARANTEED_HIT and PASSIVE', () => {
+    const frame1 = mockJson.skills.COMBO_SKILL.frames[1];
+    expect(frame1.frameTypes).toEqual(['GUARANTEED_HIT', 'PASSIVE']);
   });
 
   test('C6: Combo frame 2 recovers 10 stagger', () => {
@@ -315,7 +354,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
     const stagger = frame1.effects.find(
       (e: any) => e.objectType === 'STAGGER'
     );
-    expect(stagger.withPreposition.cardinality.value).toBe(10);
+    expect(stagger.withPreposition.value.value).toBe(10);
   });
 
   test('C7: Combo animation is TIME_STOP (0.729s)', () => {
@@ -334,7 +373,8 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'RECOVER'
     );
     expect(energy).toBeDefined();
-    expect(energy.toObjectType).toBe('THIS_OPERATOR');
+    expect(energy.toObjectDeterminer).toBe('THIS');
+    expect(energy.toObjectType).toBe('OPERATOR');
     expect(energy.withPreposition.cardinality.value).toBe(10);
   });
 
@@ -357,7 +397,7 @@ describe('D. Ultimate (Wooly Party)', () => {
   test('D1: Ultimate energy cost is 90', () => {
     const effects = mockJson.skills.ULTIMATE.effects;
     const energyCost = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.withPreposition.cardinality.value).toBe(90);
@@ -658,9 +698,116 @@ describe('H. Status & Infliction Interactions', () => {
     expect(inflictions.length).toBe(0);
   });
 
-  test('H4: Combo triggers on Corrosion — trigger clause verified', () => {
+  test('H3b: DOLLY_RUSH frame has clause structure with consume reaction + apply status', () => {
+    const seqs = getSequences('DOLLY_RUSH');
+    expect(seqs.length).toBeGreaterThan(0);
+    const frames = seqs[0].getFrames();
+    expect(frames.length).toBeGreaterThan(0);
+
+    // Legacy consumeReaction still set (without applyStatus — that's in the clause)
+    const cr = frames[0].getConsumeReaction();
+    expect(cr).not.toBeNull();
+    expect(cr!.columnId).toBe('corrosion');
+
+    // Clause structure: first predicate is conditional (ENEMY HAVE CORROSION → CONSUME + APPLY STATUS)
+    const clauses = frames[0].getClauses();
+    expect(clauses.length).toBe(2);
+
+    // Conditional predicate: consume corrosion + apply vulnerability
+    const condPred = clauses[0];
+    expect(condPred.conditions.length).toBe(1);
+    expect(condPred.conditions[0].subjectType).toBe('ENEMY');
+    expect(condPred.conditions[0].verbType).toBe('HAVE');
+    expect(condPred.conditions[0].objectType).toBe('REACTION');
+    expect(condPred.conditions[0].objectId).toBe('CORROSION');
+    expect(condPred.effects.length).toBe(2);
+    expect(condPred.effects[0].type).toBe('consumeReaction');
+    expect(condPred.effects[0].consumeReaction!.columnId).toBe('corrosion');
+    expect(condPred.effects[1].type).toBe('applyStatus');
+    expect(condPred.effects[1].applyStatus!.status).toBe('vulnerableInfliction');
+
+    // Unconditional predicate: SP + stagger + deal damage
+    const uncondPred = clauses[1];
+    expect(uncondPred.conditions.length).toBe(0);
+    expect(uncondPred.effects.some(e => e.type === 'recoverSP')).toBe(true);
+    expect(uncondPred.effects.some(e => e.type === 'applyStagger')).toBe(true);
+    expect(uncondPred.effects.some(e => e.type === 'dealDamage')).toBe(true);
+
+    // DEAL DAMAGE has inline multipliers
+    const dealDmg = uncondPred.effects.find(e => e.type === 'dealDamage')!;
+    expect(dealDmg.dealDamage!.element).toBe('NATURE');
+    expect(dealDmg.dealDamage!.multipliers.length).toBe(12);
+    expect(dealDmg.dealDamage!.multipliers[0]).toBe(1.42);
+    expect(dealDmg.dealDamage!.multipliers[11]).toBe(3.2);
+  });
+
+  test('H3c: Battle skill consuming corrosion clamps corrosion and generates susceptibility', () => {
+    // Build battle skill event with real frame data
+    const seqs = getSequences('DOLLY_RUSH');
+    const seg = SkillSegmentBuilder.buildSegments(seqs);
+    const bsEvent: TimelineEvent = {
+      id: 'bs-1', name: 'DOLLY_RUSH', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: seg.totalDurationFrames, activeDuration: 0, cooldownDuration: 0,
+      segments: seg.segments,
+    };
+
+    // Create a corrosion event that starts before the battle skill hit
+    const corrosionEvent: TimelineEvent = {
+      id: 'cor-1', name: REACTION_COLUMNS.CORROSION, ownerId: ENEMY_OWNER_ID,
+      columnId: REACTION_COLUMNS.CORROSION, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+    };
+
+    const result = consumeReactionsForStatus([bsEvent, corrosionEvent], undefined, []);
+
+    // Corrosion should be clamped (consumed)
+    const corrosionResult = result.find(ev => ev.id === 'cor-1');
+    expect(corrosionResult).toBeDefined();
+    expect(corrosionResult!.eventStatus).toBe(EventStatusType.CONSUMED);
+    // activationDuration should be clamped to the consume frame
+    expect(corrosionResult!.activationDuration).toBeLessThan(2400);
+
+    // Susceptibility event should be generated
+    const suscEvents = result.filter(ev => ev.columnId === 'vulnerableInfliction');
+    expect(suscEvents.length).toBe(1);
+  });
+
+  test('H3d: Corrosion segments are clamped when consumed', () => {
+    const seqs = getSequences('DOLLY_RUSH');
+    const seg = SkillSegmentBuilder.buildSegments(seqs);
+    const bsEvent: TimelineEvent = {
+      id: 'bs-1', name: 'DOLLY_RUSH', ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
+      activationDuration: seg.totalDurationFrames, activeDuration: 0, cooldownDuration: 0,
+      segments: seg.segments,
+    };
+
+    // Corrosion with segments (as attachReactionFrames would produce)
+    const corrosionEvent: TimelineEvent = {
+      id: 'cor-1', name: REACTION_COLUMNS.CORROSION, ownerId: ENEMY_OWNER_ID,
+      columnId: REACTION_COLUMNS.CORROSION, startFrame: 0,
+      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
+      sourceOwnerId: 'slot-1',
+      segments: [{ durationFrames: 2400, label: 'Corrosion', frames: [] }],
+    };
+
+    const result = consumeReactionsForStatus([bsEvent, corrosionEvent], undefined, []);
+    const corrosionResult = result.find(ev => ev.id === 'cor-1');
+    expect(corrosionResult!.eventStatus).toBe(EventStatusType.CONSUMED);
+    // Segment duration should also be clamped
+    expect(corrosionResult!.segments![0].durationFrames).toBeLessThan(2400);
+    expect(corrosionResult!.segments![0].durationFrames).toBe(corrosionResult!.activationDuration);
+  });
+
+  test('H4: Combo triggers on Final Strike with no inflictions', () => {
     const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('CORRODED');
+    const cond = trigger.triggerClause[0].conditions[0];
+    expect(cond.subjectDeterminer).toBe('ANY');
+    expect(cond.subjectType).toBe('OPERATOR');
+    expect(cond.verbType).toBe('PERFORM');
+    expect(cond.objectType).toBe('FINAL_STRIKE');
   });
 
   test('H5: Nature infliction + Heat infliction → Combustion (teammate chain)', () => {
@@ -682,11 +829,19 @@ describe('H. Status & Infliction Interactions', () => {
     expect(reactions[0].columnId).toBe(REACTION_COLUMNS.COMBUSTION);
   });
 
-  test('H6: Forced Corrosion from Ardelia combo satisfies own combo trigger chain', () => {
-    // Ardelia combo creates forced Corrosion → next combo window can be triggered by it
+  test('H6: Combo has 5 negated forbid conditions (no Vulnerability or Arts Infliction)', () => {
     const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('CORRODED');
-    // Forced Corrosion columnId is 'corrosion' which satisfies IS CORRODED check
+    const conditions = trigger.triggerClause[0].conditions;
+    const negated = conditions.filter((c: any) => c.negated);
+    expect(negated.length).toBe(5);
+    const forbidIds = negated.map((c: any) => c.objectId).sort();
+    expect(forbidIds).toEqual([
+      'cryoInfliction',
+      'electricInfliction',
+      'heatInfliction',
+      'natureInfliction',
+      'vulnerableInfliction',
+    ]);
   });
 });
 
@@ -719,7 +874,7 @@ describe('I. Cooldown Interactions', () => {
 
   test('H3: Combo skill (Eruption Column) has 18s cooldown', () => {
     const cooldown = mockJson.skills.COMBO_SKILL.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.withPreposition.cardinality.value).toBe(18);
@@ -752,6 +907,157 @@ describe('I. Cooldown Interactions', () => {
       cooldownDuration: 0, nonOverlappableRange: totalRange,
     });
     expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.ULTIMATE, totalRange, 1, [ult1])).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group J: Combo Activation Window Pipeline
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('J. Combo Activation Window Pipeline', () => {
+  const FPS = 120;
+  const SLOT_ARDELIA = 'slot-0';
+  const SLOT_OTHER = 'slot-1';
+
+  function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
+    return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  function ardeliaCapability(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_ARDELIA,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+        },
+        comboRequires: [
+          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+        ],
+        comboDescription: 'Any operator Final Strike while enemy has no inflictions',
+        comboWindowFrames: 720,
+        comboForbidsActiveColumns: ['heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction', 'vulnerableInfliction'],
+      },
+    };
+  }
+
+  function otherOperatorCapability(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_OTHER,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+  }
+
+  function makeBasicAttack(slotId: string, startFrame: number): TimelineEvent {
+    return makeEvent({
+      id: `ba-${slotId}-${startFrame}`,
+      name: 'ROCKY_WHISPERS',
+      ownerId: slotId,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame,
+      activationDuration: Math.round(4.8 * FPS),
+      segments: [
+        { durationFrames: Math.round(0.4 * FPS), frames: [{ offsetFrame: Math.round(0.2 * FPS) }] },
+        { durationFrames: Math.round(0.7 * FPS), frames: [{ offsetFrame: Math.round(0.3 * FPS) }] },
+        { durationFrames: Math.round(1.53 * FPS), frames: [{ offsetFrame: Math.round(0.5 * FPS) }] },
+        { durationFrames: Math.round(2.167 * FPS), frames: [{ offsetFrame: Math.round(1.5 * FPS) }] },
+      ],
+    });
+  }
+
+  function makeInflictionEvent(element: string, startFrame: number, durationFrames: number): TimelineEvent {
+    return makeEvent({
+      id: `inflict-${element}-${startFrame}`,
+      name: `${element}Infliction`,
+      ownerId: ENEMY_OWNER_ID,
+      columnId: `${element}Infliction`,
+      startFrame,
+      activationDuration: durationFrames,
+      sourceOwnerId: SLOT_OTHER,
+    });
+  }
+
+  test('J1: Combo window appears after final strike with no inflictions on enemy', () => {
+    const ba = makeBasicAttack(SLOT_ARDELIA, 0);
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([ba], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(1);
+  });
+
+  test('J2: Combo window blocked when enemy has active heat infliction at trigger time', () => {
+    const ba = makeBasicAttack(SLOT_ARDELIA, 0);
+    // Heat infliction covering the entire basic attack duration
+    const heat = makeInflictionEvent('heat', 0, 20 * FPS);
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(0);
+  });
+
+  test('J3: Combo window blocked when enemy has active nature infliction at trigger time', () => {
+    const ba = makeBasicAttack(SLOT_ARDELIA, 0);
+    const nature = makeInflictionEvent('nature', 0, 20 * FPS);
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([ba, nature], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(0);
+  });
+
+  test('J4: Combo window appears when infliction expired before final strike trigger', () => {
+    const ba = makeBasicAttack(SLOT_ARDELIA, 10 * FPS);
+    // Heat infliction that ends well before the final strike trigger frame
+    const heat = makeInflictionEvent('heat', 0, 2 * FPS);
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(1);
+  });
+
+  test('J5: Combo window blocked when enemy has active vulnerability', () => {
+    const ba = makeBasicAttack(SLOT_ARDELIA, 0);
+    const vuln = makeInflictionEvent('vulnerable', 0, 20 * FPS);
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([ba, vuln], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(0);
+  });
+
+  test('J6: Other operator final strike also triggers Ardelia combo window', () => {
+    const otherBa = makeBasicAttack(SLOT_OTHER, 0);
+    // Give the other operator's basic attack segments so final strike can be detected
+    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+
+    const processed = processInflictionEvents([otherBa], undefined, undefined, wirings);
+    const windows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
+    );
+    expect(windows.length).toBe(1);
   });
 });
 

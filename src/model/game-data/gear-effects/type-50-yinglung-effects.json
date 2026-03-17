@@ -1,0 +1,50 @@
+{
+  "gearSetType": "TYPE_50_YINGLUNG",
+  "label": "Type 50 Yinglung",
+  "statusEvents": [
+    {
+      "name": "TYPE_50_YINGLUNG",
+      "type": "GEAR_EFFECT",
+      "originId": "TYPE_50_YINGLUNG",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Type 50 Yinglung",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "ANY",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "BATTLE_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "COMBO_SKILL_DAMAGE_BONUS",
+          "value": 0.2,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            0
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Consumed on next combo skill cast"
+    }
+  ]
+}

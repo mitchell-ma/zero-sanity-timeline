@@ -1,0 +1,54 @@
+{
+  "weaponName": "Delivery Guaranteed",
+  "statusEvents": [
+    {
+      "name": "DELIVERY_GUARANTEED_DUTY_FULFILLED",
+      "type": "WEAPON_EFFECT",
+      "originId": "DELIVERY_GUARANTEED",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Duty Fulfilled",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "LIFTED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.336
+        },
+        {
+          "stat": "NATURE_DAMAGE_BONUS",
+          "valueMin": 0.16,
+          "valueMax": 0.448
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

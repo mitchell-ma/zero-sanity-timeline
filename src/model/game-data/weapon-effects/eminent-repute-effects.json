@@ -1,0 +1,50 @@
+{
+  "weaponName": "Eminent Repute",
+  "statusEvents": [
+    {
+      "name": "EMINENT_REPUTE_DISCIPLINARIAN",
+      "type": "WEAPON_EFFECT",
+      "originId": "EMINENT_REPUTE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Disciplinarian",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "STATUS",
+              "objectId": "VULNERABILITY"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.05,
+          "valueMax": 0.1
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "ATK bonus scales with consumed stacks; team gets half"
+    }
+  ]
+}

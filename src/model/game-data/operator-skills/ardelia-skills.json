@@ -48,10 +48,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -162,10 +163,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -260,10 +262,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -362,10 +365,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -460,10 +464,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -546,10 +551,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -648,10 +654,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 18
                   }
@@ -776,26 +783,116 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "REACTION",
+                "objectId": "CORROSION"
               }
-            }
+            ],
+            "effects": [
+              {
+                "verbType": "CONSUME",
+                "objectType": "REACTION",
+                "objectId": "CORROSION"
+              },
+              {
+                "verbType": "APPLY",
+                "objectType": "STATUS",
+                "objectId": "vulnerableInfliction",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "duration": {
+                    "verb": "IS",
+                    "value": 30
+                  }
+                },
+                "susceptibility": {
+                  "PHYSICAL": [
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.13,
+                    0.14,
+                    0.14,
+                    0.16,
+                    0.17,
+                    0.18,
+                    0.2
+                  ],
+                  "NATURE": [
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.13,
+                    0.14,
+                    0.14,
+                    0.16,
+                    0.17,
+                    0.18,
+                    0.2
+                  ]
+                }
+              }
+            ]
           },
           {
-            "verbType": "RECOVER",
-            "objectType": "STAGGER",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 10
+            "conditions": [],
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "APPLY",
+                "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verbType": "DEAL",
+                "objectType": "DAMAGE",
+                "adjectiveType": "NATURE",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "multiplier": {
+                    "verb": "DEPEND_ON",
+                    "value": [
+                      1.42,
+                      1.56,
+                      1.71,
+                      1.85,
+                      1.99,
+                      2.13,
+                      2.28,
+                      2.42,
+                      2.56,
+                      2.74,
+                      2.95,
+                      3.2
+                    ]
+                  }
+                }
               }
-            }
+            ]
           }
         ],
         "multipliers": [
@@ -900,7 +997,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "SKILL_POINT",
         "withPreposition": {
           "cardinality": {
@@ -912,7 +1009,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "THIS_OPERATOR",
+        "toObjectDeterminer": "THIS",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -923,7 +1021,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "ALL_OPERATORS",
+        "toObjectDeterminer": "ALL",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -957,14 +1056,50 @@
           {
             "conditions": [
               {
+                "subjectDeterminer": "ANY",
+                "subjectType": "OPERATOR",
+                "verbType": "PERFORM",
+                "objectType": "FINAL_STRIKE"
+              },
+              {
                 "subjectType": "ENEMY",
-                "verbType": "IS",
-                "objectType": "CORRODED"
+                "verbType": "HAVE",
+                "objectType": "STATUS",
+                "objectId": "vulnerableInfliction",
+                "negated": true
+              },
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "STATUS",
+                "objectId": "heatInfliction",
+                "negated": true
+              },
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "STATUS",
+                "objectId": "cryoInfliction",
+                "negated": true
+              },
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "STATUS",
+                "objectId": "natureInfliction",
+                "negated": true
+              },
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "STATUS",
+                "objectId": "electricInfliction",
+                "negated": true
               }
             ]
           }
         ],
-        "description": "Enemy has Corrosion",
+        "description": "Controlled operator Final Strike on enemy with no Vulnerability or Arts Infliction",
         "windowFrames": 720
       },
       "hasDelayedHit": true
@@ -995,10 +1130,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 0
               }
@@ -1129,10 +1265,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 10
               }
@@ -1141,7 +1278,7 @@
           {
             "verbType": "APPLY",
             "objectType": "REACTION",
-            "adjective": [
+            "adjectiveType": [
               "FORCED",
               "CORROSION"
             ],
@@ -1153,10 +1290,14 @@
               },
               "duration": {
                 "verb": "IS",
-                "value": 10
+                "value": 7
               }
             }
           }
+        ],
+        "frameTypes": [
+          "GUARANTEED_HIT",
+          "PASSIVE"
         ],
         "multipliers": [
           {
@@ -1224,7 +1365,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "COOLDOWN",
         "withPreposition": {
           "cardinality": {
@@ -1236,7 +1377,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "THIS_OPERATOR",
+        "toObjectDeterminer": "THIS",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -1279,11 +1421,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1306,11 +1448,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1333,11 +1475,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1360,11 +1502,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1387,11 +1529,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1415,11 +1557,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1492,11 +1634,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1519,11 +1661,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1547,11 +1689,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1672,11 +1814,11 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
-            "toObjectType": "THIS_OPERATOR",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1709,10 +1851,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 2
               }
@@ -1773,9 +1916,10 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "THIS_OPERATOR",
+        "toObjectDeterminer": "THIS",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -1787,6 +1931,9 @@
     "originId": "ardelia"
   },
   "DOLLY_RUSH_EMPOWERED": {
+    "enhancementTypes": [
+      "EMPOWERED"
+    ],
     "properties": {
       "duration": {
         "value": 1.57,
@@ -1807,26 +1954,116 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [
+              {
+                "subjectType": "ENEMY",
+                "verbType": "HAVE",
+                "objectType": "REACTION",
+                "objectId": "CORROSION"
               }
-            }
+            ],
+            "effects": [
+              {
+                "verbType": "CONSUME",
+                "objectType": "REACTION",
+                "objectId": "CORROSION"
+              },
+              {
+                "verbType": "APPLY",
+                "objectType": "STATUS",
+                "objectId": "vulnerableInfliction",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "duration": {
+                    "verb": "IS",
+                    "value": 30
+                  }
+                },
+                "susceptibility": {
+                  "PHYSICAL": [
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.13,
+                    0.14,
+                    0.14,
+                    0.16,
+                    0.17,
+                    0.18,
+                    0.2
+                  ],
+                  "NATURE": [
+                    0.12,
+                    0.12,
+                    0.12,
+                    0.13,
+                    0.13,
+                    0.13,
+                    0.14,
+                    0.14,
+                    0.16,
+                    0.17,
+                    0.18,
+                    0.2
+                  ]
+                }
+              }
+            ]
           },
           {
-            "verbType": "RECOVER",
-            "objectType": "STAGGER",
-            "withPreposition": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 10
+            "conditions": [],
+            "effects": [
+              {
+                "verbType": "RECOVER",
+                "objectType": "SKILL_POINT",
+                "withPreposition": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "verbType": "APPLY",
+                "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verbType": "DEAL",
+                "objectType": "DAMAGE",
+                "adjectiveType": "NATURE",
+                "toObjectType": "ENEMY",
+                "withPreposition": {
+                  "multiplier": {
+                    "verb": "DEPEND_ON",
+                    "value": [
+                      1.42,
+                      1.56,
+                      1.71,
+                      1.85,
+                      1.99,
+                      2.13,
+                      2.28,
+                      2.42,
+                      2.56,
+                      2.74,
+                      2.95,
+                      3.2
+                    ]
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       }

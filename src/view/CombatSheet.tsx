@@ -15,7 +15,7 @@ import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { CritMode, ElementType, StatType } from '../consts/enums';
 import { getWeaponEffects } from '../consts/weaponSkillEffects';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS } from './InformationPane';
+import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from './InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
 import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
 
@@ -44,7 +44,7 @@ interface CombatSheetProps {
   events: TimelineEvent[];
   columns: Column[];
   enemy: Enemy;
-  loadoutStats: Record<string, LoadoutStats>;
+  loadoutProperties: Record<string, LoadoutProperties>;
   loadouts?: Record<string, OperatorLoadoutState>;
   zoom: number;
   loadoutRowHeight: number;
@@ -65,7 +65,7 @@ interface CombatSheetProps {
 }
 
 export default function CombatSheet({
-  slots, events, columns, enemy, loadoutStats, loadouts, zoom, loadoutRowHeight,
+  slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
   critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden,
@@ -83,14 +83,14 @@ export default function CombatSheet({
     for (const slot of slots) {
       if (!slot.operator) continue;
       const slotLoadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
-      const slotStats = loadoutStats[slot.slotId] ?? DEFAULT_LOADOUT_STATS;
+      const slotStats = loadoutProperties[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
       const agg = aggregateLoadoutStats(slot.operator.id, slotLoadout, slotStats);
       if (agg) {
         result[slot.slotId] = { stats: agg.stats };
       }
     }
     return result;
-  }, [slots, loadouts, loadoutStats]);
+  }, [slots, loadouts, loadoutProperties]);
 
   // Pre-compute weapon fragility config: which slots have enemy-targeting DMG Taken debuffs
   const weaponFragility = useMemo(() => {
@@ -121,31 +121,31 @@ export default function CombatSheet({
     const effects: OperatorTalentFragility[] = [];
     for (const slot of slots) {
       if (!slot.operator) continue;
-      const stats = loadoutStats[slot.slotId];
+      const stats = loadoutProperties[slot.slotId];
       if (!stats) continue;
 
       // Xaihi Execute Process: Cryo DMG Taken +7%/10% while Cryo Infliction active
-      if (slot.operator.id === 'xaihi' && stats.talentOneLevel >= 1) {
-        const bonus = stats.talentOneLevel >= 2 ? 0.10 : 0.07;
+      if (slot.operator.id === 'xaihi' && stats.operator.talentOneLevel >= 1) {
+        const bonus = stats.operator.talentOneLevel >= 2 ? 0.10 : 0.07;
         effects.push({ elements: [ElementType.CRYO], bonus, requiredColumnId: 'cryoInfliction' });
       }
 
       // Endministrator Realspace Stasis: Physical DMG Taken +10%/20% while Originium Crystals attached
-      if (slot.operator.id === 'endministrator' && stats.talentTwoLevel >= 1) {
-        const bonus = stats.talentTwoLevel >= 2 ? 0.20 : 0.10;
+      if (slot.operator.id === 'endministrator' && stats.operator.talentTwoLevel >= 1) {
+        const bonus = stats.operator.talentTwoLevel >= 2 ? 0.20 : 0.10;
         effects.push({ elements: [ElementType.PHYSICAL], bonus, requiredColumnId: 'originium-crystal' });
       }
     }
     return effects;
-  }, [slots, loadoutStats]);
+  }, [slots, loadoutProperties]);
 
   const statusQuery = useMemo(
-    () => new StatusQueryService(events, staggerBreaks ?? [], loadoutStats, aggregatedStats, weaponFragility, talentFragility),
-    [events, staggerBreaks, loadoutStats, aggregatedStats, weaponFragility, talentFragility],
+    () => new StatusQueryService(events, staggerBreaks ?? [], loadoutProperties, aggregatedStats, weaponFragility, talentFragility),
+    [events, staggerBreaks, loadoutProperties, aggregatedStats, weaponFragility, talentFragility],
   );
   const rows = useMemo(
-    () => buildDamageTableRows(events, columns, slots, enemy, loadoutStats, loadouts, statusQuery, critMode),
-    [events, columns, slots, enemy, loadoutStats, loadouts, statusQuery, critMode],
+    () => buildDamageTableRows(events, columns, slots, enemy, loadoutProperties, loadouts, statusQuery, critMode),
+    [events, columns, slots, enemy, loadoutProperties, loadouts, statusQuery, critMode],
   );
   const bossMaxHp = useMemo(() => {
     const model = getModelEnemy(enemy.id);

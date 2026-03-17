@@ -1,0 +1,50 @@
+{
+  "weaponName": "Khravengger",
+  "statusEvents": [
+    {
+      "name": "KHRAVENGGER_BONECHILLING",
+      "type": "WEAPON_EFFECT",
+      "originId": "KHRAVENGGER",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Bonechilling",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "INFLICTION",
+              "element": "CRYO"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRYO_DAMAGE_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.2
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Battle skill: +10-20%, Combo on Cryo: +20-40%"
+    }
+  ]
+}

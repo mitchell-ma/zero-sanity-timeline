@@ -1,0 +1,92 @@
+{
+  "gearSetType": "MI_SECURITY",
+  "label": "MI Security",
+  "statusEvents": [
+    {
+      "name": "MI_SECURITY",
+      "type": "GEAR_EFFECT",
+      "originId": "MI_SECURITY",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "MI Security",
+      "stack": {
+        "max": {
+          "P0": 5
+        },
+        "instances": 5,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "CRITICAL_HIT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "value": 0.05,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "MI_SECURITY_MAX",
+      "type": "GEAR_EFFECT",
+      "originId": "MI_SECURITY",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "MI Security (Max)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "CRITICAL_HIT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRITICAL_RATE",
+          "value": 0.05
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Activates at 5 stacks"
+    }
+  ]
+}

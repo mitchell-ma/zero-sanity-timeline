@@ -1,0 +1,93 @@
+{
+  "weaponName": "Thermite Cutter",
+  "statusEvents": [
+    {
+      "name": "THERMITE_CUTTER_THERMAL_RELEASE",
+      "type": "WEAPON_EFFECT",
+      "originId": "THERMITE_CUTTER",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Thermal Release",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "THERMITE_CUTTER_THERMAL_RELEASE_TEAM",
+      "type": "WEAPON_EFFECT",
+      "originId": "THERMITE_CUTTER",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Thermal Release (Team)",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.05,
+          "valueMax": 0.14,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

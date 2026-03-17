@@ -7,9 +7,8 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlo
 import { FPS } from '../utils/timeline';
 import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
 import { getUltimateActiveWindow } from '../controller/timeline/eventValidator';
-import { NATURAL_SP_TO_ULTIMATE_RATIO } from '../consts/stats';
-import { SkillPointConsumptionHistory } from '../controller/timeline/skillPointTimeline';
 import { computeUltimateEnergyGraph, UltEnergyEvent } from '../controller/timeline/ultimateEnergyTimeline';
+import { collectRawGaugeGains, applyGainEfficiency } from '../controller/timeline/ultimateEnergyController';
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
@@ -73,78 +72,9 @@ export function useResourceGraphs(
     const graphs = new Map<string, ResourceGraphData>();
     const allTacticalEvents: TimelineEvent[] = [];
 
-    // Read consumption log from SP timeline for battle skill gauge derivation
+    // Collect raw gauge gain events from battle/combo skill first frames
     const consumptionHistory = combatLoadout.commonSlot.skillPoints.consumptionHistory ?? [];
-    const consumptionByEventId = new Map<string, SkillPointConsumptionHistory>();
-    for (const rec of consumptionHistory) {
-      consumptionByEventId.set(rec.eventId, rec);
-    }
-
-    // Collect gauge gain events: battle skills derive from SP, combo skills use declared values
-    type GaugeEvent = { frame: number; selfSlotId: string; gaugeGain: number; teamGaugeGain: number };
-    const gaugeEvents: GaugeEvent[] = [];
-    for (const ev of events) {
-      if (ev.columnId === SKILL_COLUMNS.BATTLE) {
-        // Battle skills: derive gauge from natural SP consumed
-        const rec = consumptionByEventId.get(ev.id);
-        if (rec) {
-          const gain = rec.naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
-          if (gain > 0) {
-            gaugeEvents.push({
-              frame: rec.frame,
-              selfSlotId: ev.ownerId,
-              gaugeGain: gain,
-              teamGaugeGain: gain, // team-wide: all operators gain the same amount
-            });
-          }
-        }
-      } else if (ev.columnId === SKILL_COLUMNS.COMBO) {
-        // Combo skills: use declared gaugeGain values (unchanged)
-        const firstFrame = ev.segments?.[0]?.frames?.[0];
-        if (ev.gaugeGainByEnemies) {
-          const selfGain = ev.gaugeGain ?? firstFrame?.gaugeGain ?? 0;
-          const teamGain = firstFrame?.teamGaugeGain ?? ev.teamGaugeGain ?? 0;
-          if (selfGain > 0 || teamGain > 0) {
-            gaugeEvents.push({
-              frame: firstFrame?.absoluteFrame ?? ev.startFrame,
-              selfSlotId: ev.ownerId,
-              gaugeGain: selfGain,
-              teamGaugeGain: teamGain,
-            });
-          }
-        } else {
-          let found = false;
-          for (const seg of ev.segments ?? []) {
-            for (const f of seg.frames ?? []) {
-              const selfGain = f.gaugeGain ?? 0;
-              const teamGain = f.teamGaugeGain ?? 0;
-              if (selfGain > 0 || teamGain > 0) {
-                found = true;
-                gaugeEvents.push({
-                  frame: f.absoluteFrame ?? ev.startFrame,
-                  selfSlotId: ev.ownerId,
-                  gaugeGain: selfGain,
-                  teamGaugeGain: teamGain,
-                });
-              }
-            }
-          }
-          if (!found) {
-            const selfGain = ev.gaugeGain ?? 0;
-            const teamGain = ev.teamGaugeGain ?? 0;
-            if (selfGain > 0 || teamGain > 0) {
-              gaugeEvents.push({
-                frame: ev.startFrame,
-                selfSlotId: ev.ownerId,
-                gaugeGain: selfGain,
-                teamGaugeGain: teamGain,
-              });
-            }
-          }
-        }
-      }
-    }
-    gaugeEvents.sort((a, b) => a.frame - b.frame);
+    const gaugeEvents = collectRawGaugeGains(events, consumptionHistory);
 
     for (let i = 0; i < slotIds.length; i++) {
       const op = operators[i];
@@ -177,16 +107,9 @@ export function useResourceGraphs(
       }
 
       // Gauge gains from skills (self + team), scaled by ultimate gain efficiency
-      const multiplier = 1 + (gaugeGainMultipliers?.[slotId] ?? 0);
-      for (const ge of gaugeEvents) {
-        // Skip gauge gains during ultimate active phase
-        if (ultActiveWindows.some(w => ge.frame >= w.start && ge.frame < w.end)) continue;
-        const rawGain = (ge.selfSlotId === slotId ? ge.gaugeGain : 0) + ge.teamGaugeGain;
-        if (rawGain > 0) {
-          const gain = rawGain * multiplier;
-          timeline.push({ frame: ge.frame, type: 'gain', amount: gain });
-        }
-      }
+      const efficiencyBonus = gaugeGainMultipliers?.[slotId] ?? 0;
+      const gains = applyGainEfficiency(gaugeEvents, slotId, efficiencyBonus, ultActiveWindows);
+      timeline.push(...gains);
 
       timeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
 

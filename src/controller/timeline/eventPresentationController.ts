@@ -6,13 +6,15 @@
  * call to computeEventPresentation().
  */
 import { TimelineEvent, Column, EventSegmentData } from '../../consts/viewTypes';
-import { CombatSkillsType, TimelineSourceType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
+import { TimelineSourceType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
+import { CombatSkillsType } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { COMBO_WINDOW_COLUMN_ID } from './processInteractions';
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
 import { aggregateEventWarnings } from './eventValidationController';
+import type { StatusViewOverride } from './statusViewController';
 
 export interface EventPresentation {
   variant: 'default' | 'ultimate' | 'sequenced';
@@ -27,6 +29,8 @@ export interface EventPresentation {
   skillElement?: string;
   allSegmentLabels?: string[];
   allDefaultSegments?: EventSegmentData[];
+  /** If set, overrides the event's activationDuration for visual rendering only. */
+  visualActivationDuration?: number;
 }
 
 /**
@@ -81,9 +85,10 @@ export function computeEventPresentation(
     autoFinisherIds: Set<string>;
     validationMaps: ValidationMaps;
     debugMode?: boolean;
+    statusViewOverrides?: Map<string, StatusViewOverride>;
   },
 ): EventPresentation {
-  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, debugMode } = options;
+  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, debugMode, statusViewOverrides } = options;
   const isSequenced = ev.segments && ev.segments.length > 0;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && !debugMode;
@@ -93,7 +98,9 @@ export function computeEventPresentation(
     ? 'ultimate'
     : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced';
 
-  const label = isWindow ? 'COMBO ACTIVATION WINDOW' : resolveEventLabel(ev);
+  // Status view override: stack-aware label + visual truncation
+  const statusOverride = statusViewOverrides?.get(ev.id);
+  const label = isWindow ? 'COMBO ACTIVATION WINDOW' : (statusOverride?.label ?? resolveEventLabel(ev));
   const color = resolveEventColor(ev, col, slotElementColors);
 
   // Aggregate warnings — infliction-only for micro-column events, full for single-column
@@ -138,5 +145,6 @@ export function computeEventPresentation(
     skillElement,
     allSegmentLabels,
     allDefaultSegments,
+    visualActivationDuration: statusOverride?.visualActivationDuration,
   };
 }

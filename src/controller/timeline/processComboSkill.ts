@@ -1,6 +1,6 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillsType } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
 import type { Interaction } from '../../consts/semantics';
 import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { TOTAL_FRAMES } from '../../utils/timeline';
@@ -113,24 +113,27 @@ export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
 const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
   ({ subjectType, verbType, objectType, ...extra } as Interaction);
 
+const _IO = (determiner: DeterminerType, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectDeterminer: determiner, subjectType: SubjectType.OPERATOR, verbType, objectType, ...extra } as Interaction);
+
 export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
-  heatInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
-  cryoInfliction:       [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
-  natureInfliction:     [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
-  electricInfliction:   [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
+  heatInfliction:       [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
+  cryoInfliction:       [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
+  natureInfliction:     [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
+  electricInfliction:   [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
   combustion:           [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED)],
   solidification:       [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED)],
   corrosion:            [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED)],
   electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
-  vulnerableInfliction: [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
-  breach:               [_I(SubjectType.THIS_OPERATOR, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
+  vulnerableInfliction: [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
+  breach:               [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
 };
 
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
 ];
 
 function isAlwaysAvailable(i: Interaction): boolean {
@@ -445,6 +448,10 @@ export function resolveComboTriggerColumns(
       for (const wiring of slotWirings) {
         const wcap = wiring.capability;
         if (!wcap.comboRequires.some((req) => matchInteraction(interaction, req))) continue;
+        // Skip self-trigger for derived interactions (e.g. APPLY INFLICTION):
+        // an operator's own infliction shouldn't trigger its own combo mirroring.
+        // Direct triggers like PERFORM FINAL_STRIKE are allowed (operators can self-trigger).
+        if (isDerivedInteraction(interaction) && event.ownerId === wiring.slotId) continue;
         if (event.sourceOwnerId === wiring.slotId) continue;
 
         // Cooldown check

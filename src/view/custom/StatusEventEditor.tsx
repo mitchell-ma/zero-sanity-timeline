@@ -4,7 +4,7 @@
  */
 import { useState } from 'react';
 import { ElementType, StackInteractionType, DurationUnit } from '../../consts/enums';
-import { ObjectType } from '../../consts/semantics';
+import { ObjectType, DeterminerType } from '../../consts/semantics';
 import type { CustomStatusEventDef } from '../../model/custom/customOperatorTypes';
 import ClauseBuilder from './ClauseBuilder';
 import SegmentFrameEditor from './SegmentFrameEditor';
@@ -25,11 +25,10 @@ const STACK_INTERACTION_LABELS: Record<StackInteractionType, string> = {
 };
 
 const TARGET_OPTIONS = [
-  { value: ObjectType.THIS_OPERATOR, label: 'This Operator (self-buff)' },
+  { value: ObjectType.OPERATOR, label: 'This Operator (self-buff)' },
   { value: ObjectType.ENEMY, label: 'Enemy (debuff)' },
-  { value: ObjectType.ALL_OPERATORS, label: 'All Operators (team buff)' },
-  { value: ObjectType.OTHER_OPERATOR, label: 'Other Operator' },
-  { value: ObjectType.OTHER_OPERATORS, label: 'Other Operators' },
+  { value: `${DeterminerType.ALL}_${ObjectType.OPERATOR}`, label: 'All Operators (team buff)' },
+  { value: `${DeterminerType.OTHER}_${ObjectType.OPERATOR}`, label: 'Other Operator(s)' },
 ];
 
 interface StatusEventEditorProps {
@@ -257,7 +256,7 @@ export default function StatusEventEditor({ value, onChange, onRemove }: StatusE
 export function defaultStatusEventDef(): CustomStatusEventDef {
   return {
     name: '',
-    target: ObjectType.THIS_OPERATOR,
+    target: ObjectType.OPERATOR,
     element: ElementType.NONE,
     isNamedEvent: true,
     durationValues: [15],

@@ -181,14 +181,14 @@ export function computeCombustionDamage(
   const ticks: ReactionDamageTick[] = [];
 
   // Talent reaction multiplier (e.g. Laevatain P3 — Fragments from the Past: Combustion DMG x1.5)
-  const p3Multiplier = opCtx.operatorId
+  const reactionTalentMult = opCtx.operatorId
     ? getReactionTalentMultiplier(opCtx.operatorId, opCtx.potential ?? 0, reactionEvent.columnId)
     : 1;
 
   const initial = buildInitialTick(reactionEvent, 'Combustion', opCtx, modelEnemy, element, statusQuery);
   if (initial) {
-    if (p3Multiplier !== 1) {
-      initial.damage = initial.damage * p3Multiplier;
+    if (reactionTalentMult !== 1) {
+      initial.damage = initial.damage * reactionTalentMult;
     }
     ticks.push(initial);
   }
@@ -204,7 +204,7 @@ export function computeCombustionDamage(
     ticks.push({
       absoluteFrame: tickFrame,
       label: `Combustion > DoT Tick ${i}`,
-      damage: calculateStatusDamage(dotParams) * p3Multiplier,
+      damage: calculateStatusDamage(dotParams) * reactionTalentMult,
       params: dotParams,
       damageType: DamageType.DAMAGE_OVER_TIME,
     });
@@ -355,6 +355,8 @@ const REACTION_COLUMN_TO_TYPE: Record<string, string> = {
 /**
  * Get the talent-based reaction damage multiplier for an operator.
  * Reads from talentEffects with bonusType === 'REACTION_MULTIPLIER'.
+ * Supports both legacy format (source/minPotential/values) and
+ * BASED_ON format (value with multi-dimensional lookup).
  */
 function getReactionTalentMultiplier(operatorId: string, potential: number, reactionColumnId: string): number {
   const json = getOperatorJson(operatorId);
@@ -368,11 +370,69 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
     if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
     if (effect.condition?.reactionType !== reactionType) continue;
 
-    if (effect.source === 'POTENTIAL' && potential >= (effect.minPotential ?? 1)) {
-      multiplier *= effect.values[0];
+    if (effect.value?.verb === 'BASED_ON') {
+      const resolved = resolveBasedOnValueForCalc(effect.value, { potential });
+      if (resolved != null) multiplier *= resolved;
     }
-    // Could extend for TALENT_1/TALENT_2 sources if needed
   }
 
   return multiplier;
+}
+
+/**
+ * Resolve a BASED_ON value block for damage calculation contexts.
+ * Supports multi-dimensional lookups keyed by POTENTIAL, TALENT_LEVEL, SKILL_LEVEL.
+ */
+function resolveBasedOnValueForCalc(
+  wp: Record<string, any>,
+  ctx: { potential: number; talentLevel?: number; skillLevel?: number },
+): number | undefined {
+  if (wp.verb !== 'BASED_ON') return typeof wp.value === 'number' ? wp.value : undefined;
+
+  const dims = wp.object;
+  const val = wp.value;
+
+  // Single dimension with flat array
+  if (typeof dims === 'string' && Array.isArray(val)) {
+    if (dims === 'POTENTIAL') {
+      // Shouldn't be an array for potential, but handle gracefully
+      return val[0];
+    }
+    const level = dims === 'TALENT_LEVEL' ? (ctx.talentLevel ?? 1)
+      : dims === 'SKILL_LEVEL' ? (ctx.skillLevel ?? 12) : 1;
+    return val[Math.min(level, val.length) - 1] ?? val[0];
+  }
+
+  // Multi-dimension with nested map
+  if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
+    let current: any = val;
+    for (const dim of dims as string[]) {
+      if (typeof current !== 'object' || current === null) return undefined;
+      const keys = Object.keys(current);
+      let best: string | undefined;
+      let bestN = -1;
+
+      if (dim === 'POTENTIAL') {
+        for (const k of keys) {
+          const m = k.match(/^P(\d+)$/);
+          if (!m) continue;
+          const n = Number(m[1]);
+          if (n <= ctx.potential && n > bestN) { bestN = n; best = k; }
+        }
+      } else {
+        const level = dim === 'TALENT_LEVEL' ? (ctx.talentLevel ?? 1)
+          : dim === 'SKILL_LEVEL' ? (ctx.skillLevel ?? 12) : 1;
+        for (const k of keys) {
+          const n = Number(k);
+          if (!isNaN(n) && n <= level && n > bestN) { bestN = n; best = k; }
+        }
+      }
+
+      if (!best) return undefined;
+      current = current[best];
+    }
+    return typeof current === 'number' ? current : undefined;
+  }
+
+  return undefined;
 }

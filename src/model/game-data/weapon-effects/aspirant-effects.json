@@ -1,0 +1,51 @@
+{
+  "weaponName": "Aspirant",
+  "statusEvents": [
+    {
+      "name": "ASPIRANT_IMPOSING_PEAK",
+      "type": "WEAPON_EFFECT",
+      "originId": "ASPIRANT",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Imposing Peak",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "LIFTED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.24,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Phys DMG bonus on next ult skill"
+    }
+  ]
+}

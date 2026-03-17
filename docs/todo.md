@@ -18,17 +18,25 @@ The following files/code still reference `weaponSkillEffects.ts` and can be clea
 - `ColumnLabel.WEAPON_BUFF` in `src/consts/timelineColumnLabels.ts`
 - `StatusType.UNBRIDLED_EDGE` and related entries in enums/labels
 
-## Migrate legacy status functions to the generic status derivation engine
+## Migrate remaining hardcoded status functions to the effect executor
 
-The following operators still use hardcoded `derive*` / `consume*` functions in `processStatus.ts`
-instead of being driven by `statusEvents` in their JSON configs through the generic engine:
+The DSL effect executor (`effectExecutor.ts`) and shared condition evaluator
+(`conditionEvaluator.ts`) are in place. The following functions in `processStatus.ts`
+need executor extensions before they can be migrated:
 
-- **Wulfgard** — `deriveScorchingFangs` (reaction-based trigger, P3 team share)
-- **Arclight** — `deriveWildlandTrekker` (compound trigger: PERFORM + ENEMY HAVE STATUS)
-- **Endministrator** — `consumeOriginiumCrystals` (crystal consumption on BS/Ult cast)
+- **`deriveUnbridledEdge`** — weapon-triggered (SP recovery hits → stacking team buff).
+  Needs: weapon-based trigger support, SP recovery frame scanning.
+- **`consumeVulnerabilityForSusceptibility`** (Gilberta) — consume vulnerability stacks
+  at ultimate cast → arts susceptibility with stack-count × per-level value computation.
+  Needs: stack-count-based value derivation in executor.
+- **`consumeCryoForSusceptibility`** (Last Rite) — consume cryo stacks at combo cast →
+  cryo susceptibility with talent-gated per-stack value.
+  Needs: same stack-count-based value derivation.
+- **`applyXaihiP5AmpBoost`** (Xaihi P5) — mutate existing ARTS_AMP statusValue × 1.1.
+  Needs: event mutation support (not derivation).
 
-Once migrated, the legacy functions in `processStatus.ts` and their calls in
-`processInteractions.ts` can be removed.
+Once the executor supports these patterns, migrate one at a time into operator JSON
+`statusEvents` and remove the hardcoded functions.
 
 ## Foreign `parameterKey` values in operator JSON potentials
 
@@ -159,6 +167,17 @@ keys are dead data (potential modifiers silently ignored).
 | Perlica | P3 | `EXTRA_SCALING` | PERLICA_SHINING_STAR | 0.1 | ADDITIVE |
 | Perlica | P3 | `crit` | PERLICA_SHINING_STAR | 0.05 | ADDITIVE |
 
+## Ardelia combo skill cooldown should be 17s at level 12
+
+The Eruption Column combo skill cooldown is currently not level-dependent. At skill level 12
+it should be 17s (down from the base 18s).
+
+## Share link could be Huffman encoded
+
+The share/export URL codec could potentially use Huffman encoding to reduce link length,
+since certain values (operator IDs, skill types, common frame counts) appear with known
+frequency distributions.
+
 ## Multiplier entry keys in skill frame data
 
 The `multipliers` arrays in skill frame data use raw game keys (`atk_scale`, `atk_scale_2`,
@@ -172,3 +191,10 @@ Proposed mapping:
 - `poise` → `STAGGER`
 - `duration` → `DURATION`
 - `atb` → `SKILL_POINT`
+
+## Sheet statistics
+
+Add aggregate statistics for sheets, including:
+- Stagger uptime (% of timeline where enemy is staggered)
+- Buff uptime (per-buff active duration / total duration)
+- Other relevant combat uptime metrics

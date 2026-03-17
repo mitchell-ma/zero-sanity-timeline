@@ -3,26 +3,21 @@
  * Renders a single DSL Effect as a form row: VERB [cardinality] [adjective] OBJECT [prepositions].
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
-import { VerbType, ObjectType, AdjectiveType, SubjectType, OBJECT_ADJECTIVES, THRESHOLD_MAX } from '../../consts/semantics';
+import { VerbType, ObjectType, AdjectiveType, SubjectType, DeterminerType, OBJECT_ADJECTIVES, THRESHOLD_MAX, DURATION_END } from '../../consts/semantics';
 import type { Effect } from '../../consts/semantics';
 import SentenceSlot from './SentenceSlot';
 
 const VERB_LABELS: Record<VerbType, string> = {
+  [VerbType.ALL]: 'All',
+  [VerbType.ANY]: 'Any',
   [VerbType.PERFORM]: 'Perform',
-  [VerbType.PERFORM_ALL]: 'Perform All',
   [VerbType.APPLY]: 'Apply',
   [VerbType.CONSUME]: 'Consume',
-  [VerbType.ABSORB]: 'Absorb',
   [VerbType.DEFEAT]: 'Defeat',
   [VerbType.HIT]: 'Hit',
-  [VerbType.EXPEND]: 'Expend',
   [VerbType.RECOVER]: 'Recover',
   [VerbType.OVERHEAL]: 'Overheal',
   [VerbType.RETURN]: 'Return',
-  [VerbType.LIFT]: 'Lift',
-  [VerbType.KNOCK_DOWN]: 'Knock Down',
-  [VerbType.BREACH]: 'Breach',
-  [VerbType.CRUSH]: 'Crush',
   [VerbType.REFRESH]: 'Refresh',
   [VerbType.EXTEND]: 'Extend',
   [VerbType.MERGE]: 'Merge',
@@ -30,8 +25,10 @@ const VERB_LABELS: Record<VerbType, string> = {
   [VerbType.HAVE]: 'Have',
   [VerbType.IS]: 'Is',
   [VerbType.BECOME]: 'Become',
+  [VerbType.RECEIVE]: 'Receive',
   [VerbType.IGNORE]: 'Ignore',
   [VerbType.EXPERIENCE]: 'Experience',
+  [VerbType.DEAL]: 'Deal',
 };
 
 const OBJECT_LABELS: Partial<Record<ObjectType, string>> = {
@@ -56,10 +53,7 @@ const OBJECT_LABELS: Partial<Record<ObjectType, string>> = {
   [ObjectType.STAGGER]: 'Stagger',
   [ObjectType.COOLDOWN]: 'Cooldown',
   [ObjectType.HP]: 'HP',
-  [ObjectType.THIS_OPERATOR]: 'This Operator',
-  [ObjectType.OTHER_OPERATOR]: 'Other Operator',
-  [ObjectType.OTHER_OPERATORS]: 'Other Operators',
-  [ObjectType.ALL_OPERATORS]: 'All Operators',
+  [ObjectType.OPERATOR]: 'Operator',
   [ObjectType.ENEMY]: 'Enemy',
 };
 
@@ -95,33 +89,39 @@ const ADJ_LABELS: Record<AdjectiveType, string> = {
 };
 
 const TARGET_LABELS: Record<string, string> = {
-  [SubjectType.THIS_OPERATOR]: 'This Operator',
-  [SubjectType.OTHER_OPERATOR]: 'Other Operator',
-  [SubjectType.OTHER_OPERATORS]: 'Other Operators',
-  [SubjectType.ALL_OPERATORS]: 'All Operators',
+  [SubjectType.OPERATOR]: 'Operator',
   [SubjectType.ENEMY]: 'Enemy',
+};
+
+const DETERMINER_LABELS: Record<DeterminerType, string> = {
+  [DeterminerType.THIS]: 'This',
+  [DeterminerType.OTHER]: 'Other',
+  [DeterminerType.ALL]: 'All',
+  [DeterminerType.ANY]: 'Any',
 };
 
 // Effect verbs (subset relevant for effects — no state assertion verbs)
 const EFFECT_VERBS = [
-  VerbType.APPLY, VerbType.CONSUME, VerbType.ABSORB,
-  VerbType.RECOVER, VerbType.EXPEND, VerbType.RETURN,
-  VerbType.REFRESH, VerbType.RESET, VerbType.IGNORE,
-  VerbType.PERFORM, VerbType.PERFORM_ALL,
+  VerbType.APPLY, VerbType.CONSUME,
+  VerbType.RECOVER, VerbType.RETURN,
+  VerbType.REFRESH, VerbType.EXTEND, VerbType.MERGE, VerbType.RESET, VerbType.IGNORE,
+  VerbType.PERFORM, VerbType.DEAL,
+  VerbType.ALL, VerbType.ANY,
 ];
 
 function getObjectsForEffectVerb(verb: VerbType): ObjectType[] {
   switch (verb) {
     case VerbType.APPLY: return [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.TIME_STOP, ObjectType.STAGGER];
-    case VerbType.CONSUME: return [ObjectType.STACKS, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.ULTIMATE_ENERGY];
-    case VerbType.ABSORB: return [ObjectType.INFLICTION, ObjectType.STACKS];
+    case VerbType.CONSUME: return [ObjectType.STACKS, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ULTIMATE_ENERGY, ObjectType.SKILL_POINT, ObjectType.COOLDOWN];
     case VerbType.RECOVER:
-    case VerbType.EXPEND:
-    case VerbType.RETURN: return [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.STAGGER, ObjectType.HP];
+    case VerbType.RETURN: return [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP];
     case VerbType.REFRESH:
-    case VerbType.RESET: return [ObjectType.STACKS, ObjectType.COOLDOWN, ObjectType.STATUS];
+    case VerbType.EXTEND:
+    case VerbType.MERGE:
+    case VerbType.RESET: return [ObjectType.STACKS, ObjectType.COOLDOWN, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION];
     case VerbType.IGNORE: return [ObjectType.STATUS];
-    case VerbType.PERFORM: return [ObjectType.DAMAGE, ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE];
+    case VerbType.PERFORM: return [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.NORMAL_ATTACK];
+    case VerbType.DEAL: return [ObjectType.DAMAGE];
     default: return Object.values(ObjectType);
   }
 }
@@ -129,11 +129,13 @@ function getObjectsForEffectVerb(verb: VerbType): ObjectType[] {
 // Which verbs need a TO preposition
 const NEEDS_TO = new Set([VerbType.APPLY, VerbType.RECOVER, VerbType.RETURN]);
 // Which verbs need a FROM preposition
-const NEEDS_FROM = new Set([VerbType.ABSORB]);
+const NEEDS_FROM = new Set([VerbType.CONSUME]);
+// Which verbs need an ON preposition
+const NEEDS_ON = new Set([VerbType.EXTEND, VerbType.REFRESH, VerbType.MERGE, VerbType.IGNORE]);
 // Which objects need an objectId
 const NEEDS_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN]);
 // Which verbs support cardinality
-const NEEDS_CARDINALITY = new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.ABSORB, VerbType.RECOVER, VerbType.EXPEND, VerbType.RETURN]);
+const NEEDS_CARDINALITY = new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.RECOVER, VerbType.RETURN]);
 // Which verbs support FOR duration
 const NEEDS_DURATION = new Set([VerbType.APPLY]);
 
@@ -151,10 +153,12 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
   const showObjectId = NEEDS_ID.has(value.objectType ?? ObjectType.STATUS);
   const showTo = NEEDS_TO.has(value.verbType);
   const showFrom = NEEDS_FROM.has(value.verbType);
+  const showOn = NEEDS_ON.has(value.verbType);
   const showCardinality = NEEDS_CARDINALITY.has(value.verbType);
   const showDuration = NEEDS_DURATION.has(value.verbType) && value.objectType === ObjectType.TIME_STOP;
+  const showUntilEnd = value.verbType === VerbType.EXTEND;
   const isMax = value.cardinality === THRESHOLD_MAX;
-  const showQualifierRow = showTo || showFrom || showDuration;
+  const showQualifierRow = showTo || showFrom || showOn || showDuration || showUntilEnd;
 
   const update = (patch: Partial<Effect>) => onChange({ ...value, ...patch });
 
@@ -242,6 +246,17 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         <div className="interaction-row interaction-row--qualifier">
           <SentenceSlot active={showTo}>
             <span className="ib-label">TO</span>
+            <SentenceSlot active={value.toObjectType === SubjectType.OPERATOR}>
+              <select
+                className="ib-select ib-determiner"
+                value={value.toObjectDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ toObjectDeterminer: e.target.value as DeterminerType })}
+              >
+                {Object.values(DeterminerType).map((d) => (
+                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
+                ))}
+              </select>
+            </SentenceSlot>
             <select
               className="ib-select"
               value={value.toObjectType ?? ''}
@@ -255,6 +270,17 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           </SentenceSlot>
           <SentenceSlot active={showFrom}>
             <span className="ib-label">FROM</span>
+            <SentenceSlot active={value.fromObjectType === SubjectType.OPERATOR}>
+              <select
+                className="ib-select ib-determiner"
+                value={value.fromObjectDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ fromObjectDeterminer: e.target.value as DeterminerType })}
+              >
+                {Object.values(DeterminerType).map((d) => (
+                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
+                ))}
+              </select>
+            </SentenceSlot>
             <select
               className="ib-select"
               value={value.fromObjectType ?? ''}
@@ -265,6 +291,40 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
                 <option key={k} value={k}>{label}</option>
               ))}
             </select>
+          </SentenceSlot>
+          <SentenceSlot active={showOn}>
+            <span className="ib-label">ON</span>
+            <SentenceSlot active={value.onObjectType === SubjectType.OPERATOR}>
+              <select
+                className="ib-select ib-determiner"
+                value={value.onObjectDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ onObjectDeterminer: e.target.value as DeterminerType })}
+              >
+                {Object.values(DeterminerType).map((d) => (
+                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
+                ))}
+              </select>
+            </SentenceSlot>
+            <select
+              className="ib-select"
+              value={value.onObjectType ?? ''}
+              onChange={(e) => update({ onObjectType: e.target.value || undefined })}
+            >
+              <option value="">—</option>
+              {Object.entries(TARGET_LABELS).map(([k, label]) => (
+                <option key={k} value={k}>{label}</option>
+              ))}
+            </select>
+          </SentenceSlot>
+          <SentenceSlot active={showUntilEnd}>
+            <label className="ib-checkbox">
+              <input
+                type="checkbox"
+                checked={value.untilPreposition === DURATION_END}
+                onChange={(e) => update({ untilPreposition: e.target.checked ? DURATION_END : undefined })}
+              />
+              UNTIL END
+            </label>
           </SentenceSlot>
           <SentenceSlot active={showDuration}>
             <span className="ib-label">FOR</span>
@@ -293,6 +353,7 @@ export function defaultEffect(): Effect {
     verbType: VerbType.APPLY,
     objectType: ObjectType.STATUS,
     objectId: '',
-    toObjectType: SubjectType.THIS_OPERATOR,
+    toObjectDeterminer: DeterminerType.THIS,
+    toObjectType: SubjectType.OPERATOR,
   };
 }

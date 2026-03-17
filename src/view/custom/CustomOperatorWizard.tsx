@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import { WeaponType, ElementType, CombatSkillType } from '../../consts/enums';
 import { OperatorClassType } from '../../model/enums/operators';
-import { ObjectType, SubjectType, VerbType } from '../../consts/semantics';
+import { ObjectType, SubjectType, VerbType, DeterminerType } from '../../consts/semantics';
 import type { Interaction, Predicate } from '../../consts/semantics';
 import type { CustomOperator, CustomCombatSkillDef } from '../../model/custom/customOperatorTypes';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
@@ -19,10 +19,15 @@ import StatusEventEditor, { defaultStatusEventDef } from './StatusEventEditor';
 
 // ── Auto-generate combo description from trigger conditions ─────────────────
 
+const OPERATOR_DET_DESC: Partial<Record<DeterminerType, string>> = {
+  [DeterminerType.THIS]: 'this operator',
+  [DeterminerType.OTHER]: 'other operator',
+  [DeterminerType.ALL]: 'all operators',
+  [DeterminerType.ANY]: 'any operator',
+};
+
 const SUBJECT_DESC: Partial<Record<string, string>> = {
-  [SubjectType.THIS_OPERATOR]: 'this operator',
   [SubjectType.ENEMY]: 'enemy',
-  [SubjectType.ANY_OPERATOR]: 'any operator',
 };
 
 const VERB_DESC: Partial<Record<string, string>> = {
@@ -57,7 +62,9 @@ const OBJECT_DESC: Partial<Record<string, string>> = {
 };
 
 function describeCondition(c: Interaction): string {
-  const subject = SUBJECT_DESC[c.subjectType] ?? c.subjectType.toLowerCase().replace(/_/g, ' ');
+  const subject = c.subjectType === SubjectType.OPERATOR
+    ? (OPERATOR_DET_DESC[c.subjectDeterminer ?? DeterminerType.THIS] ?? 'this operator')
+    : (SUBJECT_DESC[c.subjectType] ?? c.subjectType.toLowerCase().replace(/_/g, ' '));
   const verb = c.negated
     ? `is not`
     : (VERB_DESC[c.verbType] ?? c.verbType.toLowerCase().replace(/_/g, ' '));
@@ -155,7 +162,7 @@ function buildSkillOptions(): SkillOption[] {
           cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
           animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
           resourceInteractions: skill.skillPointCost
-            ? [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: skill.skillPointCost }]
+            ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }]
             : undefined,
         },
       });

@@ -1,0 +1,50 @@
+{
+  "gearSetType": "ETERNAL_XIRANITE",
+  "label": "Eternal Xiranite",
+  "statusEvents": [
+    {
+      "name": "ETERNAL_XIRANITE",
+      "type": "GEAR_EFFECT",
+      "originId": "ETERNAL_XIRANITE",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Eternal Xiranite",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "BUFF"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "SKILL_DAMAGE_BONUS",
+          "value": 0.16
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "On applying Amp/Protected/Susceptibility/Weakened"
+    }
+  ]
+}

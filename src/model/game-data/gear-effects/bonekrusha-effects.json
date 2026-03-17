@@ -1,0 +1,50 @@
+{
+  "gearSetType": "BONEKRUSHA",
+  "label": "Bonekrusha",
+  "statusEvents": [
+    {
+      "name": "BONEKRUSHA",
+      "type": "GEAR_EFFECT",
+      "originId": "BONEKRUSHA",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Bonekrusha",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "COMBO_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "BATTLE_SKILL_DAMAGE_BONUS",
+          "value": 0.3,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            0
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Consumed on next battle skill cast"
+    }
+  ]
+}

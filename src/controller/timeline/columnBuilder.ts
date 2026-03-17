@@ -3,14 +3,18 @@ import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentT
 import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS } from '../../utils/timeline';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
+import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
+import { getBaseSkillId, formatSkillDisplayName } from '../../utils/semanticsTranslation';
 
 export interface Slot {
   slotId: string;
@@ -26,6 +30,12 @@ export interface Slot {
   comboSkillLevel?: number;
 }
 
+
+/** Resolve a variant skill's display name from its JSON data + base skill label. */
+function resolveVariantDisplayName(varId: string, varSkill: Record<string, any>): string {
+  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillsType] ?? varSkill.name;
+  return formatSkillDisplayName(baseName, varSkill.enhancementTypes, varSkill.name);
+}
 
 const MIN_SLOT_COLS = 4;
 
@@ -43,39 +53,86 @@ export function buildColumns(
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
   type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string };
   const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
+  // Pre-scan: collect team-targeting weapon/gear effects
+  type TeamEquipDef = { slotId: string; statusName: string; label: string; durationFrames: number; color: string };
+  const teamWeaponGearDefs: TeamEquipDef[] = [];
+  // Pre-scan: collect enemy-targeting weapon/gear effects
+  type EnemyEquipDef = { statusName: string; label: string; color: string };
+  const enemyWeaponGearDefs: EnemyEquipDef[] = [];
+
   for (const s of slots) {
     if (!s.operator) continue;
     const json = getOperatorJson(s.operator.id);
     const statusEvents = json?.statusEvents as any[] | undefined;
-    if (!statusEvents) continue;
-    for (const se of statusEvents) {
-      if (se.p3TeamShare) {
-        const dur = se.duration?.value?.[0] ?? se.properties?.duration?.value?.[0] ?? 15;
-        const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-        teamStatusDefs.push({
-          sourceSlot: s,
-          statusName: se.name,
-          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
-          duration: durationFrames,
-          minPotentialForTeam: 3, // P3 required for team share
-        });
-      }
-      if (se.target === 'THIS_OPERATOR') {
-        const dur = se.properties?.duration?.value?.[0] ?? se.duration?.value?.[0] ?? -1;
-        const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-        const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.name]
-          ?? se.name.toLowerCase().replace(/_/g, '-');
-        const defs = operatorStatusMap.get(s.slotId) ?? [];
-        defs.push({
-          statusName: se.name,
-          label: STATUS_LABELS[se.name as StatusType] ?? se.name,
-          columnId: colId,
-          duration: durationFrames,
-          color: s.operator.color,
-        });
-        operatorStatusMap.set(s.slotId, defs);
+    if (statusEvents) {
+      for (const se of statusEvents) {
+        if (se.p3TeamShare) {
+          const dur = se.duration?.value?.[0] ?? se.properties?.duration?.value?.[0] ?? 15;
+          const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+          teamStatusDefs.push({
+            sourceSlot: s,
+            statusName: se.name,
+            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+            duration: durationFrames,
+            minPotentialForTeam: 3, // P3 required for team share
+          });
+        }
+        if (se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS')) {
+          const dur = se.properties?.duration?.value?.[0] ?? se.duration?.value?.[0] ?? -1;
+          const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+          const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.name]
+            ?? se.name.toLowerCase().replace(/_/g, '-');
+          const defs = operatorStatusMap.get(s.slotId) ?? [];
+          defs.push({
+            statusName: se.name,
+            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+            columnId: colId,
+            duration: durationFrames,
+            color: s.operator.color,
+          });
+          operatorStatusMap.set(s.slotId, defs);
+        }
       }
     }
+
+    // Scan weapon effect DSL defs
+    const addEquipDefs = (dslDefs: any[]) => {
+      for (const se of dslDefs) {
+        const dur = se.properties?.duration?.value?.[0] ?? 10;
+        const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+        const colId = se.name.toLowerCase().replace(/_/g, '-');
+        if (se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS')) {
+          // Wielder-targeted → operator status micro-column
+          const defs = operatorStatusMap.get(s.slotId) ?? [];
+          defs.push({
+            statusName: se.name,
+            label: se.label ?? se.name,
+            columnId: colId,
+            duration: durationFrames,
+            color: s.operator!.color,
+          });
+          operatorStatusMap.set(s.slotId, defs);
+        } else if (se.target === 'OPERATOR' && se.targetDeterminer === 'OTHER') {
+          // Team-targeted → team weapon/gear column
+          teamWeaponGearDefs.push({
+            slotId: s.slotId,
+            statusName: se.name,
+            label: se.label ?? se.name,
+            durationFrames,
+            color: s.operator!.color,
+          });
+        } else if (se.target === 'ENEMY') {
+          // Enemy-targeted → enemy status micro-column
+          enemyWeaponGearDefs.push({
+            statusName: se.name,
+            label: se.label ?? se.name,
+            color: s.operator!.color,
+          });
+        }
+      }
+    };
+    if (s.weaponName) addEquipDefs(getWeaponEffectDefs(s.weaponName));
+    if (s.gearSetType) addEquipDefs(getGearEffectDefs(s.gearSetType));
   }
 
   // Common (global) columns — before operator slots
@@ -199,8 +256,10 @@ export function buildColumns(
     });
   }
 
-  // ── Shared team gear set buff column ──────────────────────────────────────
-  const teamGearBuffs: { slotId: string; label: string; durationFrames: number; color: string }[] = [];
+  // ── Shared team weapon/gear effect column ─────────────────────────────────
+  // Collect team-targeting effects from both old TS registry and new DSL defs
+  const teamGearBuffs: { slotId: string; statusName: string; label: string; durationFrames: number; color: string }[] = [];
+  // From TS registry (gear sets only — for backward compatibility during migration)
   for (const slot of slots) {
     if (!slot.operator || !slot.gearSetType) continue;
     const gearEntry = getGearSetEffects(slot.gearSetType);
@@ -209,6 +268,7 @@ export function buildColumns(
       if (effect.target === 'team') {
         teamGearBuffs.push({
           slotId: slot.slotId,
+          statusName: effect.label.toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
           label: effect.label,
           durationFrames: Math.round(effect.durationSeconds * 120),
           color: slot.operator.color,
@@ -216,7 +276,34 @@ export function buildColumns(
       }
     }
   }
+  // From DSL defs (weapon + gear team effects)
+  for (const twd of teamWeaponGearDefs) {
+    // Avoid duplicating gear effects already added from TS registry
+    if (!teamGearBuffs.some(b => b.slotId === twd.slotId && b.label === twd.label)) {
+      teamGearBuffs.push({
+        slotId: twd.slotId,
+        statusName: twd.statusName,
+        label: twd.label,
+        durationFrames: twd.durationFrames,
+        color: twd.color,
+      });
+    }
+  }
   if (teamGearBuffs.length > 0) {
+    const microCols = teamGearBuffs.map((tgb) => {
+      const id = tgb.statusName.toLowerCase().replace(/_/g, '-');
+      return {
+        id,
+        label: tgb.label,
+        color: tgb.color,
+        defaultEvent: {
+          name: tgb.label,
+          defaultActivationDuration: tgb.durationFrames,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      };
+    });
     columns.push({
       key: `${COMMON_OWNER_ID}-team-gear-status`,
       type: 'mini-timeline',
@@ -227,19 +314,9 @@ export function buildColumns(
       color: '#88aa66',
       headerVariant: 'skill',
       derived: true,
-      microColumns: teamGearBuffs.map((tgb) => ({
-        id: `gear-team-${tgb.slotId}`,
-        label: tgb.label,
-        color: tgb.color,
-        defaultEvent: {
-          name: tgb.label,
-          defaultActivationDuration: tgb.durationFrames,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      })),
+      microColumns: microCols,
       microColumnAssignment: 'dynamic-split',
-      matchColumnIds: teamGearBuffs.map((tgb) => `gear-team-${tgb.slotId}`),
+      matchColumnIds: microCols.map((mc) => mc.id),
     });
   }
 
@@ -258,8 +335,8 @@ export function buildColumns(
       // Dash subtimeline — before basic attack
       const DASH_FRAMES = Math.round(0.416 * 120); // 0.416s
       const DODGE_FRAMES = Math.round(0.351 * 120); // 0.351s game-time
-      const FINISHER_FRAMES = Math.round(1.0 * 120); // ~1.0s
-      const DIVE_FRAMES = Math.round(0.8 * 120); // ~0.8s
+      const FINISHER_FRAMES = Math.round(GENERAL_MECHANICS.basicAttack.finisherDurationSeconds * FPS);
+      const DIVE_FRAMES = Math.round(GENERAL_MECHANICS.basicAttack.diveDurationSeconds * FPS);
       columns.push({
         key: `${slot.slotId}-dash`,
         type: 'mini-timeline',
@@ -349,6 +426,7 @@ export function buildColumns(
                 const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
                 col.eventVariants.push({
                   name: varId,
+                  displayName: resolveVariantDisplayName(varId, varSkill),
                   defaultActivationDuration: variantSeg.totalDurationFrames,
                   defaultActiveDuration: 0,
                   defaultCooldownDuration: 0,
@@ -423,6 +501,7 @@ export function buildColumns(
               col.eventVariants!.push({
                 ...col.defaultEvent!,
                 name: varId,
+                displayName: resolveVariantDisplayName(varId, varSkill),
                 defaultActivationDuration: variantSeg.totalDurationFrames,
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
@@ -460,7 +539,7 @@ export function buildColumns(
             const empoweredBattleId = battleName + '_EMPOWERED';
             const empoweredBattleSeqs = battleName ? getFrameSequences(op!.id, empoweredBattleId) : undefined;
             if (empoweredBattleSeqs?.length) {
-              const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+              const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs);
               const empoweredName = empoweredBattleId as CombatSkillsType;
               const empBattleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
               const empBaseSegs = empBattleCd > 0
@@ -479,6 +558,7 @@ export function buildColumns(
                 },
                 {
                   name: empoweredName,
+                  displayName: resolveVariantDisplayName(empoweredBattleId, opSkills[empoweredBattleId] ?? {}),
                   defaultActivationDuration: empowered.totalDurationFrames,
                   defaultActiveDuration: 0,
                   defaultCooldownDuration: 0,
@@ -493,7 +573,7 @@ export function buildColumns(
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
-            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies });
             const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
@@ -820,6 +900,15 @@ export function buildColumns(
       });
     })(),
   ];
+
+  // Enemy-targeting weapon/gear effects (deduped against existing micro-column ids)
+  const existingEnemyIds = new Set(statusMicroColumns.map((mc) => mc.id));
+  for (const d of enemyWeaponGearDefs) {
+    const id = d.statusName.toLowerCase().replace(/_/g, '-');
+    if (existingEnemyIds.has(id)) continue;
+    existingEnemyIds.add(id);
+    statusMicroColumns.push({ id, label: d.label, color: d.color });
+  }
 
   columns.push({
     key: ENEMY_GROUP_COLUMNS.ENEMY_STATUS,

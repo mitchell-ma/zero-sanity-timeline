@@ -1,0 +1,33 @@
+[
+  {
+    "name": "CRIT_STACKS",
+    "targetDeterminer": "THIS",
+    "target": "OPERATOR",
+    "element": "CRYO",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": {
+        "P0": 10,
+        "P1": 10,
+        "P2": 10,
+        "P3": 10,
+        "P4": 10,
+        "P5": 10
+      },
+      "instances": 10,
+      "verb": "NONE"
+    },
+    "triggerClause": [],
+    "stats": [],
+    "properties": {
+      "duration": {
+        "value": [
+          7
+        ],
+        "unit": "SECOND"
+      }
+    },
+    "originId": "CRYOBLASTING_PISTOLIER"
+  }
+]

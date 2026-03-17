@@ -1,4 +1,4 @@
-import { SubjectType, VerbType, ObjectType, CardinalityConstraintType } from "../../consts/semantics";
+import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType } from "../../consts/semantics";
 import { Tactical } from "./tactical";
 
 export class StewMeeting extends Tactical {
@@ -12,7 +12,8 @@ export class StewMeeting extends Tactical {
       stats: {},
       durationSeconds: 0,
       triggerCondition: {
-        subjectType: SubjectType.THIS_OPERATOR,
+        subjectDeterminer: DeterminerType.THIS,
+        subjectType: SubjectType.OPERATOR,
         verbType: VerbType.HAVE,
         objectType: ObjectType.ULTIMATE_ENERGY,
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,

@@ -1,0 +1,88 @@
+{
+  "gearSetType": "HOT_WORK",
+  "label": "Hot Work",
+  "statusEvents": [
+    {
+      "name": "HOT_WORK_HEAT",
+      "type": "GEAR_EFFECT",
+      "originId": "HOT_WORK",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Hot Work (Heat)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "COMBUSTED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "HEAT_DAMAGE_BONUS",
+          "value": 0.5
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "HOT_WORK_NATURE",
+      "type": "GEAR_EFFECT",
+      "originId": "HOT_WORK",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Hot Work (Nature)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "CORRODED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "NATURE_DAMAGE_BONUS",
+          "value": 0.5
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

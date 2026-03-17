@@ -34,8 +34,8 @@ jest.mock('../model/game-data/weaponGameData', () => ({
 }));
 
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {},
-  getDefaultLoadoutStats: () => ({}),
+  DEFAULT_LOADOUT_PROPERTIES: {},
+  getDefaultLoadoutProperties: () => ({}),
 }));
 
 jest.mock('../controller/operators/operatorRegistry', () => ({

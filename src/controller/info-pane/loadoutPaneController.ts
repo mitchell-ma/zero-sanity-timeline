@@ -1,6 +1,6 @@
 import { StatType, WeaponSkillType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
-import { LoadoutStats } from '../../view/InformationPane';
+import { LoadoutProperties } from '../../view/InformationPane';
 import { WEAPONS, ARMORS, GLOVES, KITS, CONSUMABLES, TACTICALS } from '../../utils/loadoutRegistry';
 import { Gear } from '../../model/gears/gear';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
@@ -76,7 +76,7 @@ export interface WeaponBreakdown {
 export function resolveWeaponBreakdown(
   operatorId: string,
   loadout: OperatorLoadoutState,
-  stats: LoadoutStats,
+  stats: LoadoutProperties,
 ): WeaponBreakdown | null {
   const weaponEntry = loadout.weaponName !== null
     ? WEAPONS.find((w) => w.name === loadout.weaponName) ?? null
@@ -85,11 +85,11 @@ export function resolveWeaponBreakdown(
 
   const wpn = weaponEntry.create();
   const opConfig = getOperatorConfig(operatorId);
-  const operatorModel = opConfig ? new DataDrivenOperator(opConfig, stats.operatorLevel) : null;
+  const operatorModel = opConfig ? new DataDrivenOperator(opConfig, stats.operator.level) : null;
   const mainAttr = operatorModel?.mainAttributeType ?? StatType.STRENGTH;
 
   const allSkills = [wpn.weaponSkillOne, wpn.weaponSkillTwo, wpn.weaponSkillThree];
-  const levelValues = [stats.weaponSkill1Level, stats.weaponSkill2Level, stats.weaponSkill3Level];
+  const levelValues = [stats.weapon.skill1Level, stats.weapon.skill2Level, stats.weapon.skill3Level];
 
   const skills: WeaponBreakdown['skills'] = [];
   const statContributions: WeaponStatContribution[] = [];
@@ -119,7 +119,7 @@ export function resolveWeaponBreakdown(
     }
   }
 
-  const baseAtk = interpolateAttack(wpn.baseAttack, stats.weaponLevel);
+  const baseAtk = interpolateAttack(wpn.baseAttack, stats.weapon.level);
 
   // Named skill effects
   const effects: WeaponEffectDisplay[] = [];
@@ -208,7 +208,7 @@ export interface GearBreakdown {
 export function resolveGearBreakdown(
   operatorId: string,
   loadout: OperatorLoadoutState,
-  stats: LoadoutStats,
+  stats: LoadoutProperties,
 ): GearBreakdown | null {
   const armor  = loadout.armorName  !== null ? ARMORS.find((a) => a.name === loadout.armorName) ?? null : null;
   const gloves = loadout.glovesName !== null ? GLOVES.find((g) => g.name === loadout.glovesName) ?? null : null;
@@ -232,7 +232,7 @@ export function resolveGearBreakdown(
     const gear: Gear = entry.create();
     gear.rank = 4;
     const statKeys = gear.getStatKeys();
-    const ranks = stats[ranksKey] ?? {};
+    const ranks = stats.gear[ranksKey] ?? {};
     const resolvedStats = gear.getStatsPerLine(ranks);
     pieces.push({ name: entry.name, ranksKey, statKeys, ranks, resolvedStats });
   }
@@ -299,7 +299,7 @@ export interface TacticalData {
 
 export function resolveTactical(
   loadout: OperatorLoadoutState,
-  stats: LoadoutStats,
+  stats: LoadoutProperties,
 ): { foodName: string | null; tactical: TacticalData | null } {
   const food = loadout.consumableName !== null
     ? CONSUMABLES.find((c) => c.name === loadout.consumableName) ?? null
@@ -382,7 +382,7 @@ export interface AggregatedStatsDisplay {
 export function resolveAggregatedStats(
   operatorId: string,
   loadout: OperatorLoadoutState,
-  stats: LoadoutStats,
+  stats: LoadoutProperties,
   target: StatOwnerType = StatOwnerType.OPERATOR,
 ): AggregatedStatsDisplay | null {
   const agg = aggregateLoadoutStats(operatorId, loadout, stats);

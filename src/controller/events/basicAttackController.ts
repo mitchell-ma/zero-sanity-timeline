@@ -2,6 +2,7 @@ import { SkillEventSequence } from "../../model/event-frames/skillEventSequence"
 import { EventFrameType } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
+import { formatSegmentShortName } from "../../utils/semanticsTranslation";
 
 /** Convert skill event sequences into view-layer segment data. */
 export class SkillSegmentBuilder {
@@ -15,7 +16,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number },
+    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number> },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -78,6 +79,12 @@ export class SkillSegmentBuilder {
         const dmgEl = f.getDamageElement();
         if (dmgEl) marker.damageElement = dmgEl;
         if (f.getDuplicatesSourceInfliction()) marker.duplicatesSourceInfliction = true;
+        const clauses = f.getClauses();
+        if (clauses.length > 0) marker.clauses = clauses;
+        const dd = f.getDealDamage();
+        if (dd) marker.dealDamage = dd;
+        const gg = f.getGaugeGain();
+        if (gg) marker.gaugeGain = gg;
         return marker;
       });
 
@@ -103,12 +110,13 @@ export class SkillSegmentBuilder {
       if (i === 0 && frames.length > 0) {
         if (options?.gaugeGain) frames[0].gaugeGain = options.gaugeGain;
         if (options?.teamGaugeGain) frames[0].teamGaugeGain = options.teamGaugeGain;
+        if (options?.gaugeGainByEnemies) frames[0].gaugeGainByEnemies = options.gaugeGainByEnemies;
       }
 
       const label = customLabels
         ? customLabels[i]
         : isMulti
-          ? `${i + 1}`
+          ? formatSegmentShortName(undefined, i)
           : undefined;
 
       // Split out-of-bound frames into an implied trailing segment.

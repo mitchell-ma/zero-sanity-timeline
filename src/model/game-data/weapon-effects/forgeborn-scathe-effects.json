@@ -1,0 +1,53 @@
+{
+  "weaponName": "Forgeborn Scathe",
+  "statusEvents": [
+    {
+      "name": "FORGEBORN_SCATHE_BLAZING_WAIL",
+      "type": "WEAPON_EFFECT",
+      "originId": "FORGEBORN_SCATHE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Blazing Wail",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "ULTIMATE"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "BASIC_ATTACK_DAMAGE_BONUS",
+          "valueMin": 0.75,
+          "valueMax": 2.1
+        },
+        {
+          "stat": "HEAT_DAMAGE_BONUS",
+          "valueMin": 0.16,
+          "valueMax": 0.448
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

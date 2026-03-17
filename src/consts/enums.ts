@@ -24,8 +24,6 @@ export enum CombatResourceType {
 export enum VerbType {
   APPLY = "APPLY",
   CONSUME = "CONSUME",
-  ABSORB = "ABSORB",
-  EXPEND = "EXPEND",
   RECOVER = "RECOVER",
   RETURN = "RETURN",
 }

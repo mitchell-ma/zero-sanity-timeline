@@ -1,0 +1,48 @@
+{
+  "weaponName": "Wave Tide",
+  "statusEvents": [
+    {
+      "name": "WAVE_TIDE_UNENDING_CYCLE",
+      "type": "WEAPON_EFFECT",
+      "originId": "WAVE_TIDE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Unending Cycle",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "COMBO_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.24
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "weaponName": "Twelve Questions",
+  "statusEvents": [
+    {
+      "name": "TWELVE_QUESTIONS_SINCERE_INTERROGATION",
+      "type": "WEAPON_EFFECT",
+      "originId": "TWELVE_QUESTIONS",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Sincere Interrogation",
+      "stack": {
+        "max": {
+          "P0": 2
+        },
+        "instances": 2,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.075,
+          "valueMax": 0.15,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

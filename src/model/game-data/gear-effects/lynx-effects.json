@@ -1,0 +1,49 @@
+{
+  "gearSetType": "LYNX",
+  "label": "LYNX",
+  "statusEvents": [
+    {
+      "name": "LYNX",
+      "type": "GEAR_EFFECT",
+      "originId": "LYNX",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "LYNX",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "HP"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "FINAL_DAMAGE_REDUCTION",
+          "value": 0.15
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "30% if treatment exceeds max HP"
+    }
+  ]
+}

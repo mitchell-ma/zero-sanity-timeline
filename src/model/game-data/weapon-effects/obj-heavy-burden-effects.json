@@ -1,0 +1,49 @@
+{
+  "weaponName": "OBJ Heavy Burden",
+  "statusEvents": [
+    {
+      "name": "OBJ_HEAVY_BURDEN_TENACIOUS_WILL",
+      "type": "WEAPON_EFFECT",
+      "originId": "OBJ_HEAVY_BURDEN",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Tenacious Will",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "STATUS",
+              "objectId": "KNOCKED_DOWN"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "DEF",
+          "valueMin": 0.18,
+          "valueMax": 0.36
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

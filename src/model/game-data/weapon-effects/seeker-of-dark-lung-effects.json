@@ -1,0 +1,49 @@
+{
+  "weaponName": "Seeker of Dark Lung",
+  "statusEvents": [
+    {
+      "name": "SEEKER_OF_DARK_LUNG_SEEKER_OF_THE_ESOTERIC",
+      "type": "WEAPON_EFFECT",
+      "originId": "SEEKER_OF_DARK_LUNG",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Seeker of the Esoteric",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "ARTS_REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.06,
+          "valueMax": 0.12,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

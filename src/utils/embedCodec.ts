@@ -11,11 +11,11 @@
 
 import { SheetData, cleanSheetData } from './sheetStorage';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
-import { LoadoutStats, DEFAULT_LOADOUT_STATS } from '../view/InformationPane';
+import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../view/InformationPane';
 import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateController';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
-import type { TimelineEvent, Column } from '../consts/viewTypes';
+import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
 
 const EMBED_VERSION = 1;
 
@@ -39,6 +39,8 @@ interface EmbedData {
   enD?: Record<string, number>;
   slots?: Record<number, SlotDelta>;
   evs: EventCompact[];
+  /** Resource config overrides (SP start, ult gauge start, etc.). */
+  rc?: Record<string, { s: number; m: number; r: number }>;
 }
 
 interface SlotDelta {
@@ -60,6 +62,10 @@ interface EventCompact {
   pd?: boolean;
   fc?: boolean;
   ti?: string;
+  /** Per-segment durationFrames (only present when any segment differs from template). */
+  sg?: number[];
+  /** Frame offset overrides: [segIdx, frameIdx, offsetFrame] triples. */
+  fo?: number[][];
 }
 
 // ── Equipment key mapping ───────────────────────────────────────────────────
@@ -154,28 +160,39 @@ function sanitizeStr(val: unknown, maxLen: number): string | null {
 // ── Delta helpers ───────────────────────────────────────────────────────────
 
 function diffStats(
-  stats: LoadoutStats,
-  defaults: LoadoutStats,
+  stats: LoadoutProperties,
+  defaults: LoadoutProperties,
 ): Record<string, number> | undefined {
   const delta: Record<string, number> = {};
-  const numericKeys: (keyof LoadoutStats)[] = [
-    'operatorLevel', 'potential', 'talentOneLevel', 'talentTwoLevel',
-    'attributeIncreaseLevel', 'basicAttackLevel', 'battleSkillLevel',
-    'comboSkillLevel', 'ultimateLevel', 'weaponLevel',
-    'weaponSkill1Level', 'weaponSkill2Level', 'weaponSkill3Level',
+  // Operator properties
+  const opKeys: (keyof LoadoutProperties['operator'])[] = [
+    'level', 'potential', 'talentOneLevel', 'talentTwoLevel', 'attributeIncreaseLevel',
   ];
-  for (const key of numericKeys) {
-    const val = stats[key] as number;
-    const def = defaults[key] as number;
-    if (val !== def) delta[key] = val;
+  for (const key of opKeys) {
+    if (stats.operator[key] !== defaults.operator[key]) delta[`operator.${key}`] = stats.operator[key];
   }
+  // Skill properties
+  const skillKeys: (keyof LoadoutProperties['skills'])[] = [
+    'basicAttackLevel', 'battleSkillLevel', 'comboSkillLevel', 'ultimateLevel',
+  ];
+  for (const key of skillKeys) {
+    if (stats.skills[key] !== defaults.skills[key]) delta[`skills.${key}`] = stats.skills[key];
+  }
+  // Weapon properties
+  const weaponKeys: (keyof LoadoutProperties['weapon'])[] = [
+    'level', 'skill1Level', 'skill2Level', 'skill3Level',
+  ];
+  for (const key of weaponKeys) {
+    if (stats.weapon[key] !== defaults.weapon[key]) delta[`weapon.${key}`] = stats.weapon[key];
+  }
+  // Gear ranks
   for (const key of ['armorRanks', 'glovesRanks', 'kit1Ranks', 'kit2Ranks'] as const) {
-    const ranks = stats[key];
-    const defRanks = defaults[key];
+    const ranks = stats.gear[key];
+    const defRanks = defaults.gear[key];
     if (ranks && Object.keys(ranks).length > 0) {
       for (const [stat, rank] of Object.entries(ranks)) {
         if (rank !== (defRanks?.[stat] ?? 4)) {
-          delta[`${key}.${stat}`] = rank;
+          delta[`gear.${key}.${stat}`] = rank;
         }
       }
     }
@@ -187,32 +204,57 @@ function diffStats(
 }
 
 function applyStatDeltas(
-  defaults: LoadoutStats,
+  defaults: LoadoutProperties,
   delta: Record<string, number>,
-): LoadoutStats {
-  const result = { ...defaults, armorRanks: { ...defaults.armorRanks }, glovesRanks: { ...defaults.glovesRanks }, kit1Ranks: { ...defaults.kit1Ranks }, kit2Ranks: { ...defaults.kit2Ranks } };
-  const rankKeys = ['armorRanks', 'glovesRanks', 'kit1Ranks', 'kit2Ranks'] as const;
+): LoadoutProperties {
+  const result: LoadoutProperties = {
+    ...defaults,
+    operator: { ...defaults.operator },
+    skills: { ...defaults.skills },
+    weapon: { ...defaults.weapon },
+    gear: {
+      armorRanks: { ...defaults.gear.armorRanks },
+      glovesRanks: { ...defaults.gear.glovesRanks },
+      kit1Ranks: { ...defaults.gear.kit1Ranks },
+      kit2Ranks: { ...defaults.gear.kit2Ranks },
+    },
+  };
+  const opKeys = new Set(['level', 'potential', 'talentOneLevel', 'talentTwoLevel', 'attributeIncreaseLevel']);
+  const skillKeys = new Set(['basicAttackLevel', 'battleSkillLevel', 'comboSkillLevel', 'ultimateLevel']);
+  const weaponKeys = new Set(['level', 'skill1Level', 'skill2Level', 'skill3Level']);
+  const gearRankKeys = ['armorRanks', 'glovesRanks', 'kit1Ranks', 'kit2Ranks'] as const;
+
   for (const [key, val] of Object.entries(delta)) {
-    if (typeof val !== 'number' || !Number.isFinite(val)) continue; // sanitize
+    if (typeof val !== 'number' || !Number.isFinite(val)) continue;
     if (key === 'tacticalMaxUses') {
       result.tacticalMaxUses = sanitizeNum(val, 0, 100, 0);
       continue;
     }
-    const rankMatch = rankKeys.find(rk => key.startsWith(`${rk}.`));
-    if (rankMatch) {
-      const stat = key.slice(rankMatch.length + 1);
-      if (sanitizeStr(stat, 50)) {
-        result[rankMatch] = { ...result[rankMatch], [stat]: sanitizeNum(val, 1, 4, 4) };
+    // Nested paths: operator.*, skills.*, weapon.*, gear.*
+    if (key.startsWith('operator.')) {
+      const prop = key.slice('operator.'.length);
+      if (opKeys.has(prop)) {
+        (result.operator as any)[prop] = sanitizeNum(val, 0, 90, (defaults.operator as any)[prop]);
       }
-      continue;
-    }
-    // Only allow known numeric stat keys
-    const knownKeys = ['operatorLevel', 'potential', 'talentOneLevel', 'talentTwoLevel',
-      'attributeIncreaseLevel', 'basicAttackLevel', 'battleSkillLevel',
-      'comboSkillLevel', 'ultimateLevel', 'weaponLevel',
-      'weaponSkill1Level', 'weaponSkill2Level', 'weaponSkill3Level'];
-    if (knownKeys.includes(key)) {
-      (result as any)[key] = sanitizeNum(val, 0, 90, (defaults as any)[key]);
+    } else if (key.startsWith('skills.')) {
+      const prop = key.slice('skills.'.length);
+      if (skillKeys.has(prop)) {
+        (result.skills as any)[prop] = sanitizeNum(val, 0, 90, (defaults.skills as any)[prop]);
+      }
+    } else if (key.startsWith('weapon.')) {
+      const prop = key.slice('weapon.'.length);
+      if (weaponKeys.has(prop)) {
+        (result.weapon as any)[prop] = sanitizeNum(val, 0, 90, (defaults.weapon as any)[prop]);
+      }
+    } else if (key.startsWith('gear.')) {
+      const rest = key.slice('gear.'.length);
+      const rankMatch = gearRankKeys.find(rk => rest.startsWith(`${rk}.`));
+      if (rankMatch) {
+        const stat = rest.slice(rankMatch.length + 1);
+        if (sanitizeStr(stat, 50)) {
+          result.gear[rankMatch] = { ...result.gear[rankMatch], [stat]: sanitizeNum(val, 1, 4, 4) };
+        }
+      }
     }
   }
   return result;
@@ -239,6 +281,7 @@ interface EventDefaults {
   activeDuration: number;
   cooldownDuration: number;
   animationDuration?: number;
+  segments?: EventSegmentData[];
 }
 
 function findEventTemplate(columns: Column[], columnId: string, skillName: string): EventDefaults | null {
@@ -250,6 +293,7 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
         activeDuration: col.defaultEvent.defaultActiveDuration,
         cooldownDuration: col.defaultEvent.defaultCooldownDuration,
         animationDuration: col.defaultEvent.animationDuration,
+        segments: col.defaultEvent.segments,
       };
     }
     if (col.eventVariants) {
@@ -260,6 +304,7 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
             activeDuration: v.defaultActiveDuration,
             cooldownDuration: v.defaultCooldownDuration,
             animationDuration: v.animationDuration,
+            segments: v.segments,
           };
         }
       }
@@ -270,6 +315,7 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
         activeDuration: col.defaultEvent.defaultActiveDuration,
         cooldownDuration: col.defaultEvent.defaultCooldownDuration,
         animationDuration: col.defaultEvent.animationDuration,
+        segments: col.defaultEvent.segments,
       };
     }
   }
@@ -304,7 +350,7 @@ export async function encodeEmbed(
     if (!opId) continue;
 
     const loadout = cleaned.loadouts[slotId];
-    const stats = cleaned.loadoutStats[slotId];
+    const stats = cleaned.loadoutProperties[slotId];
     const slotDelta: SlotDelta = {};
 
     if (loadout) {
@@ -317,7 +363,7 @@ export async function encodeEmbed(
     }
 
     if (stats) {
-      slotDelta.st = diffStats(stats, DEFAULT_LOADOUT_STATS);
+      slotDelta.st = diffStats(stats, DEFAULT_LOADOUT_PROPERTIES);
     }
 
     if (slotDelta.eq || slotDelta.st) {
@@ -326,8 +372,20 @@ export async function encodeEmbed(
   }
   if (Object.keys(slots).length > 0) embed.slots = slots;
 
+  // Resource configs (SP start value, ult gauge overrides)
+  if (cleaned.resourceConfigs && Object.keys(cleaned.resourceConfigs).length > 0) {
+    const rc: Record<string, { s: number; m: number; r: number }> = {};
+    for (const [key, cfg] of Object.entries(cleaned.resourceConfigs)) {
+      rc[key] = { s: cfg.startValue, m: cfg.max, r: cfg.regenPerSecond };
+    }
+    embed.rc = rc;
+  }
+
   // Events — delta against templates
-  for (const ev of cleaned.events) {
+  // Use original events (before cleanSheetData strips segments) for segment delta computation
+  for (let ei = 0; ei < cleaned.events.length; ei++) {
+    const ev = cleaned.events[ei];
+    const origEv = sheetData.events[ei];
     const slotIdx = SLOT_IDS.indexOf(ev.ownerId);
     const template = findEventTemplate(columns, ev.columnId, ev.name);
 
@@ -355,6 +413,40 @@ export async function encodeEmbed(
     if (ev.isPerfectDodge) compact.pd = true;
     if (ev.isForced) compact.fc = true;
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
+
+    // Segment and frame deltas — compare original event's segments against template.
+    // Only edited events have segments on the raw event; unedited events have none
+    // (default segments are attached at display time by attachDefaultSegments).
+    const origSegments = origEv?.segments;
+    const templateSegments = template?.segments;
+    if (origSegments && templateSegments) {
+      const minLen = Math.min(origSegments.length, templateSegments.length);
+
+      // Check for segment duration differences
+      let hasSegDiff = origSegments.length !== templateSegments.length;
+      const segDurations: number[] = [];
+      for (let si = 0; si < origSegments.length; si++) {
+        segDurations.push(origSegments[si].durationFrames);
+        if (si < templateSegments.length && origSegments[si].durationFrames !== templateSegments[si].durationFrames) {
+          hasSegDiff = true;
+        }
+      }
+      if (hasSegDiff) compact.sg = segDurations;
+
+      // Check for frame offset differences
+      const frameOverrides: number[][] = [];
+      for (let si = 0; si < minLen; si++) {
+        const origFrames = origSegments[si].frames;
+        const tmplFrames = templateSegments[si].frames;
+        if (!origFrames || !tmplFrames) continue;
+        for (let fi = 0; fi < origFrames.length && fi < tmplFrames.length; fi++) {
+          if (origFrames[fi].offsetFrame !== tmplFrames[fi].offsetFrame) {
+            frameOverrides.push([si, fi, origFrames[fi].offsetFrame]);
+          }
+        }
+      }
+      if (frameOverrides.length > 0) compact.fo = frameOverrides;
+    }
 
     embed.evs.push(compact);
   }
@@ -454,6 +546,25 @@ function parseAndValidate(json: string): EmbedData {
     if (Object.keys(cleaned).length > 0) slots = cleaned;
   }
 
+  // Resource configs
+  let rc: Record<string, { s: number; m: number; r: number }> | undefined;
+  if (raw.rc && typeof raw.rc === 'object' && !Array.isArray(raw.rc)) {
+    const cleaned: Record<string, { s: number; m: number; r: number }> = {};
+    for (const [key, val] of Object.entries(raw.rc)) {
+      const k = sanitizeStr(key, 100);
+      if (!k || val == null || typeof val !== 'object') continue;
+      const v = val as Record<string, unknown>;
+      if (typeof v.s === 'number' && typeof v.m === 'number' && typeof v.r === 'number') {
+        cleaned[k] = {
+          s: sanitizeNum(v.s, 0, 100000, 0),
+          m: sanitizeNum(v.m, 0, 100000, 0),
+          r: sanitizeNum(v.r, 0, 1000, 0),
+        };
+      }
+    }
+    if (Object.keys(cleaned).length > 0) rc = cleaned;
+  }
+
   // Events: array of compact events
   if (!Array.isArray(raw.evs)) {
     throw new Error('Invalid events array');
@@ -481,10 +592,35 @@ function parseAndValidate(json: string): EmbedData {
     if (evRaw.fc === true) compact.fc = true;
     if (typeof evRaw.ti === 'string') compact.ti = sanitizeStr(evRaw.ti, 50) ?? undefined;
 
+    // Segment duration overrides
+    if (Array.isArray(evRaw.sg)) {
+      const sg: number[] = [];
+      for (const v of evRaw.sg.slice(0, 20)) {
+        sg.push(typeof v === 'number' && Number.isFinite(v) ? sanitizeNum(v, 0, MAX_FRAME, 0) : 0);
+      }
+      if (sg.length > 0) compact.sg = sg;
+    }
+
+    // Frame offset overrides: [[segIdx, frameIdx, offsetFrame], ...]
+    if (Array.isArray(evRaw.fo)) {
+      const fo: number[][] = [];
+      for (const triple of evRaw.fo.slice(0, 100)) {
+        if (Array.isArray(triple) && triple.length === 3 &&
+            triple.every((v: unknown) => typeof v === 'number' && Number.isFinite(v as number))) {
+          fo.push([
+            sanitizeNum(triple[0], 0, 19, 0),
+            sanitizeNum(triple[1], 0, 99, 0),
+            sanitizeNum(triple[2], 0, MAX_FRAME, 0),
+          ]);
+        }
+      }
+      if (fo.length > 0) compact.fo = fo;
+    }
+
     evs.push(compact);
   }
 
-  return { v, ops, en, enD, slots, evs };
+  return { v, ops, en, enD, slots, evs, rc };
 }
 
 /**
@@ -524,16 +660,16 @@ export async function decodeEmbed(
     }
   }
 
-  // Reconstruct loadouts and stats
+  // Reconstruct loadouts and properties
   const loadouts: Record<string, OperatorLoadoutState> = {};
-  const loadoutStats: Record<string, LoadoutStats> = {};
+  const loadoutProperties: Record<string, LoadoutProperties> = {};
 
   for (let i = 0; i < SLOT_IDS.length; i++) {
     const slotId = SLOT_IDS[i];
     const opId = embed.ops[i];
     if (!opId) {
       loadouts[slotId] = { ...EMPTY_LOADOUT };
-      loadoutStats[slotId] = { ...DEFAULT_LOADOUT_STATS };
+      loadoutProperties[slotId] = { ...DEFAULT_LOADOUT_PROPERTIES, operator: { ...DEFAULT_LOADOUT_PROPERTIES.operator }, skills: { ...DEFAULT_LOADOUT_PROPERTIES.skills }, weapon: { ...DEFAULT_LOADOUT_PROPERTIES.weapon }, gear: { ...DEFAULT_LOADOUT_PROPERTIES.gear } };
       continue;
     }
 
@@ -551,10 +687,10 @@ export async function decodeEmbed(
     }
     loadouts[slotId] = loadout;
 
-    // Stats
-    loadoutStats[slotId] = delta?.st
-      ? applyStatDeltas(DEFAULT_LOADOUT_STATS, delta.st)
-      : { ...DEFAULT_LOADOUT_STATS };
+    // Properties
+    loadoutProperties[slotId] = delta?.st
+      ? applyStatDeltas(DEFAULT_LOADOUT_PROPERTIES, delta.st)
+      : { ...DEFAULT_LOADOUT_PROPERTIES, operator: { ...DEFAULT_LOADOUT_PROPERTIES.operator }, skills: { ...DEFAULT_LOADOUT_PROPERTIES.skills }, weapon: { ...DEFAULT_LOADOUT_PROPERTIES.weapon }, gear: { ...DEFAULT_LOADOUT_PROPERTIES.gear } };
   }
 
   // Reconstruct events
@@ -584,6 +720,41 @@ export async function decodeEmbed(
     if (compact.fc) ev.isForced = true;
     if (compact.ti) ev.timeInteraction = compact.ti;
 
+    // Apply segment/frame overrides on top of template segments
+    if (compact.sg || compact.fo) {
+      if (template?.segments) {
+        // Columns available — apply overrides immediately
+        // Truncate to sg length if segment count differs (user removed segments)
+        const segCount = compact.sg ? compact.sg.length : template.segments.length;
+        const segments: EventSegmentData[] = template.segments
+          .slice(0, segCount)
+          .map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
+
+        if (compact.sg) {
+          for (let si = 0; si < compact.sg.length && si < segments.length; si++) {
+            segments[si] = { ...segments[si], durationFrames: compact.sg[si] };
+          }
+        }
+
+        if (compact.fo) {
+          for (const [si, fi, offset] of compact.fo) {
+            if (si < segments.length && segments[si].frames && fi < segments[si].frames!.length) {
+              segments[si].frames![fi] = { ...segments[si].frames![fi], offsetFrame: offset };
+            }
+          }
+        }
+
+        ev.segments = segments;
+      } else {
+        // Columns not available yet (embed loaded at mount time) — stash overrides
+        // for attachDefaultSegments to apply once columns are computed.
+        ev._pendingSegmentOverrides = {
+          ...(compact.sg ? { sg: compact.sg } : {}),
+          ...(compact.fo ? { fo: compact.fo } : {}),
+        };
+      }
+    }
+
     events.push(ev);
   }
 
@@ -593,6 +764,14 @@ export async function decodeEmbed(
     visibleSkills[slotId] = { basic: true, battle: true, combo: true, ultimate: true };
   }
 
+  // Reconstruct resource configs
+  const resourceConfigs: Record<string, import('../consts/viewTypes').ResourceConfig> = {};
+  if (embed.rc) {
+    for (const [key, val] of Object.entries(embed.rc)) {
+      resourceConfigs[key] = { startValue: val.s, max: val.m, regenPerSecond: val.r };
+    }
+  }
+
   return {
     version: 2,
     operatorIds: embed.ops,
@@ -600,13 +779,39 @@ export async function decodeEmbed(
     enemyStats,
     events,
     loadouts,
-    loadoutStats,
+    loadoutProperties,
     visibleSkills,
     nextEventId: events.length + 1,
+    ...(Object.keys(resourceConfigs).length > 0 ? { resourceConfigs } : {}),
   };
 }
 
 // ── URL helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Check whether this sheet references any custom (user-created) operators or skills.
+ * Returns a warning string if custom content is detected, null otherwise.
+ */
+export function detectCustomContent(sheetData: SheetData): string | null {
+  const customOpNames: string[] = [];
+  const customSlotIds = new Set<string>();
+
+  for (let i = 0; i < sheetData.operatorIds.length; i++) {
+    const opId = sheetData.operatorIds[i];
+    if (opId && opId.startsWith('custom_')) {
+      const entry = ALL_OPERATORS.find((o) => o.id === opId);
+      customOpNames.push(entry?.name ?? opId);
+      customSlotIds.add(SLOT_IDS[i]);
+    }
+  }
+
+  if (customOpNames.length === 0) return null;
+
+  const opList = customOpNames.join(', ');
+  return `This loadout uses custom operators (${opList}) that only exist in your browser. `
+    + 'Recipients without the same custom content will see empty slots. '
+    + 'Use File Export instead to share custom content.';
+}
 
 export async function buildShareUrl(
   sheetData: SheetData,

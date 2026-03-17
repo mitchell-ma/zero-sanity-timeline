@@ -36,7 +36,7 @@ Who is performing the action or being checked.
 | | `ABSORB` | Take stacks and optionally convert them (see `conversion` field) |
 | | `DEFEAT` | Kill a target |
 | | `HIT` | Strike a target (cardinality = how many hit) |
-| **Resource** | `EXPEND` | Spend a resource |
+| **Resource** | `CONSUME` | Spend a resource |
 | | `RECOVER` | Gain a resource |
 | | `OVERHEAL` | Recovery exceeds maximum |
 | | `RETURN` | Return resource to source |
@@ -223,9 +223,9 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
   "onObjectType"?: string,                  // ON preposition — stat target entity
   "withPreposition"?: {                     // WITH preposition — properties/cardinalities
     [key: string]: {
-      "verb": "IS" | "DEPENDS_ON",
-      "object"?: string,                    // dependency target for DEPENDS_ON (e.g. "SKILL_LEVEL")
-      "value": number | number[]            // single for IS, array for DEPENDS_ON
+      "verb": "IS" | "BASED_ON",
+      "object"?: string,                    // dependency target for BASED_ON (e.g. "SKILL_LEVEL")
+      "value": number | number[]            // single for IS, array for BASED_ON
     }
   }
 }
@@ -250,7 +250,7 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 | Verb | Value shape | Example |
 |------|-------------|---------|
 | `IS` | Single number | `{ "verb": "IS", "value": 10 }` |
-| `DEPENDS_ON` | Array indexed by dependency | `{ "verb": "DEPENDS_ON", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
+| `BASED_ON` | Array indexed by dependency | `{ "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
 
 #### Noun adjuncts
 
@@ -404,7 +404,7 @@ Defines what happens when a new instance is applied while at max stacks.
 ```ts
 {
   "subjectType": SubjectType,              // who initiates (THIS_OPERATOR, SYSTEM)
-  "verbType": VerbType,                    // EXPEND, RECOVER, RETURN
+  "verbType": VerbType,                    // CONSUME, RECOVER, RETURN
   "objectType": ObjectType,               // SKILL_POINT, ULTIMATE_ENERGY, STAGGER, COOLDOWN, HP
   "cardinality": number,
   "target"?: ObjectType,                   // who receives (THIS_OPERATOR, ALL_OPERATORS, ENEMY)
@@ -1367,7 +1367,7 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
   "resourceInteractions": [
     {
       "subjectType": "THIS_OPERATOR",
-      "verbType": "EXPEND",
+      "verbType": "CONSUME",
       "objectType": "SKILL_POINT",
       "cardinality": 100
     },

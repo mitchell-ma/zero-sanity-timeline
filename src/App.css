@@ -2493,8 +2493,8 @@
 }
 .event-wrap--passive {
   cursor: pointer !important;
-  width: 100% !important;
-  left: 0 !important;
+  left: 0;
+  right: 0;
   z-index: 0;
 }
 .event-wrap--passive .event-segment {
@@ -5095,9 +5095,10 @@
   right: auto;
 }
 .timeline-outer--horizontal .event-wrap--passive {
-  height: 100% !important;
-  width: auto !important;
-  top: 0 !important;
+  left: auto;
+  right: auto;
+  top: 0;
+  bottom: 0;
 }
 
 /* Event segments: fill lane vertically, position along X via JS */
@@ -5185,6 +5186,12 @@
   transform: translate(-50%, -50%);
 }
 
-/* SP/combo zone backgrounds use inline styles via axis map — no override needed */
+/* SP/combo zone backgrounds: swap lane-fill axis for horizontal */
+.timeline-outer--horizontal .sp-sufficient-bg {
+  left: auto;
+  right: auto;
+  top: 0;
+  bottom: 0;
+}
 
 /* Micro-column dividers stay vertical (lanes are still columns within each row) */

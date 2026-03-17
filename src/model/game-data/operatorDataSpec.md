@@ -184,6 +184,22 @@ Skills are organized by skill category under the `skills` key.
 
 Skill category keys correspond to `CombatSkillType` enum values plus variant prefixes (`ENHANCED_`, `EMPOWERED_`). Not all operators have all categories — only `BASIC_ATTACK`, `BATTLE_SKILL`, `COMBO_SKILL`, and `ULTIMATE` are universal.
 
+### Enhancement Types
+
+Variant skills (enhanced, empowered, or both) carry an `enhancementTypes` array indicating which enhancement conditions apply:
+
+```json
+"enhancementTypes": ["EMPOWERED"]
+```
+
+| Value | Meaning |
+|-------|---------|
+| `NORMAL` | Base skill (no enhancement) |
+| `EMPOWERED` | Requires operator-specific status at max stacks (e.g., Melting Flame, Crit Stacks) |
+| `ENHANCED` | Available during ultimate active phase |
+
+A skill can have multiple enhancement types (e.g., `["ENHANCED", "EMPOWERED"]` for skills that require both ultimate active and max status stacks). Base skills do not need this field — absence implies `NORMAL`.
+
 ### Event / Segment / Frame Hierarchy
 
 A skill is abstracted as an **event**. Every event follows a three-level hierarchy:
@@ -378,7 +394,7 @@ Resource interactions describe how a skill produces or consumes combat resources
 
 | Value    | Description                                             |
 |----------|---------------------------------------------------------|
-| `EXPEND` | Spend a resource to activate (SP cost, energy cost, cooldown) |
+| `CONSUME` | Spend a resource to activate (SP cost, energy cost, cooldown) |
 | `RECOVER`| Acquire a resource (SP on hit, gauge gain, stagger)     |
 | `RETURN` | SP return mechanic (empowered skills returning SP)      |
 
@@ -489,7 +505,7 @@ Single-segment event — `duration` and `frames[]` at the top level represent on
 {
   "duration": { "value": 2.2, "unit": "SECOND" },
   "resourceInteractions": [
-    { "resourceType": "SKILL_POINT", "interactionType": "EXPEND", "value": 100 },
+    { "resourceType": "SKILL_POINT", "interactionType": "CONSUME", "value": 100 },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 6.5, "target": "SELF" },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 6.5, "target": "TEAM" }
   ],
@@ -513,7 +529,7 @@ Multi-segment event — uses explicit `segments` array when a skill has multiple
 ```json
 {
   "resourceInteractions": [
-    { "resourceType": "SKILL_POINT", "interactionType": "EXPEND", "value": 100 },
+    { "resourceType": "SKILL_POINT", "interactionType": "CONSUME", "value": 100 },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 6.5, "target": "SELF" },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 6.5, "target": "TEAM" }
   ],
@@ -542,7 +558,7 @@ Single-segment combo skills use the flat format. Multi-segment (e.g., Ardelia's 
 {
   "duration": { "value": 1.37, "unit": "SECOND" },
   "resourceInteractions": [
-    { "resourceType": "COOLDOWN", "interactionType": "EXPEND", "value": 10 },
+    { "resourceType": "COOLDOWN", "interactionType": "CONSUME", "value": 10 },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 25, "target": "SELF",
       "conditions": { "enemiesHitThreshold": 1 } },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 30, "target": "SELF",
@@ -562,13 +578,156 @@ Single-segment combo skills use the flat format. Multi-segment (e.g., Ardelia's 
 {
   "duration": { "value": 2.37, "unit": "SECOND" },
   "resourceInteractions": [
-    { "resourceType": "ULTIMATE_ENERGY", "interactionType": "EXPEND", "value": 300 }
+    { "resourceType": "ULTIMATE_ENERGY", "interactionType": "CONSUME", "value": 300 }
   ],
   "animation": {
     "duration": { "value": 2.07, "unit": "SECOND" },
     "timeInteractionType": "TIME_STOP"
   },
   "frames": []
+}
+```
+
+---
+
+## Operator Statuses
+
+Status definitions live in `game-data/operator-statuses/<slug>-statuses.json`. Each file is a JSON array of status event definitions for one operator.
+
+### Source Chain
+
+Statuses resolve their source through `originId`:
+- `status.originId` → skill ID (e.g. `SMOULDERING_FIRE`)
+- `skill.originId` → operator ID (e.g. `laevatain`)
+- Derived statuses chain through other statuses: `SCORCHING_HEART_EFFECT.originId` → `MELTING_FLAME` → `SMOULDERING_FIRE` → `laevatain`
+
+At runtime, this chain allows a status to resolve skill-level-dependent values back to the operator's equipped skill level.
+
+### Status Event Structure
+
+```json
+{
+  "name": "FOCUS",
+  "displayName": "Focus",
+  "target": "ENEMY",
+  "isNamedEvent": true,
+  "isForceApplied": false,
+  "stack": {
+    "max": { "P0": 1, "P1": 1, "P2": 1, "P3": 1, "P4": 1, "P5": 1 },
+    "instances": 1,
+    "verbType": "RESET"
+  },
+  "triggerClause": [],
+  "properties": {
+    "duration": { "value": [60], "unit": "SECOND" }
+  },
+  "clause": [...],
+  "originId": "SPECIFIED_RESEARCH_SUBJECT"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Status identifier (e.g. `FOCUS`, `MELTING_FLAME`) |
+| `displayName` | string | Optional. Human-readable name |
+| `enhancementTypes` | string[] | Optional. `EnhancementType` values (e.g. `["EMPOWERED"]`) |
+| `target` | string | Who the status applies to: `ENEMY`, `THIS_OPERATOR`, `ALL_OPERATORS` |
+| `element` | string | Optional. `ElementType` associated with this status |
+| `isNamedEvent` | boolean | Whether this status creates named timeline events |
+| `isForceApplied` | boolean | Whether application bypasses normal rules |
+| `stack` | object | Stacking configuration (see below) |
+| `triggerClause` | array | Conditions that trigger status application |
+| `clause` | array | Effects active while the status is alive (see below) |
+| `consumeClause` | array | Optional. Conditions and effects for stack consumption |
+| `properties` | object | Fixed properties: `duration` (`Duration` struct) |
+| `segments` | array | Optional. Multi-phase statuses with per-segment properties and clauses |
+| `potentialMin` / `potentialMax` | number | Optional. Potential range this definition applies to |
+| `minTalentLevel` | object | Optional. `{ talent: number, minLevel: number }` |
+| `p3TeamShare` | object | Optional. Team sharing at P3+ with `{ durationMultiplier: number }` |
+| `originId` | string | Source skill ID or parent status name |
+
+### Stack Configuration
+
+```json
+{
+  "max": { "P0": 4, "P1": 4, "P2": 4, "P3": 4, "P4": 4, "P5": 4 },
+  "instances": 4,
+  "verbType": "RESET"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `max` | Record<string, number> | Max stacks per potential level (`P0`–`P5`) |
+| `instances` | number | Max concurrent status event instances |
+| `verbType` | `StackInteraction` | `NONE` (independent stacks), `RESET` (refresh duration on reapply) |
+
+### Status Clauses
+
+Clauses define effects that are active while the status is alive. Each clause has optional conditions (predicates) and a list of effects.
+
+**Properties are fixed** — they describe the status structure (duration, stacking). Variable effects like susceptibility and damage bonuses go in clauses because they depend on runtime state (enemy condition, skill level).
+
+```json
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verbType": "APPLY",
+          "objectType": "SUSCEPTIBILITY",
+          "adjective": "ELECTRIC",
+          "toObjectType": "TARGET",
+          "withPreposition": {
+            "value": { "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.05, 0.06, ...] }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Clause Effect Types (damage calculation bucket)
+
+| verbType | objectType | Description | Example |
+|----------|-----------|-------------|---------|
+| `APPLY` | `SUSCEPTIBILITY` | Adds to susceptibility multiplier bucket | Focus: ELECTRIC susceptibility |
+| `APPLY` | `DAMAGE_BONUS` | Adds to damage bonus multiplier bucket | Wildland Trekker: ELECTRIC damage bonus |
+| `IGNORE` | `RESISTANCE` | Ignores target resistance | Scorching Heart: HEAT resistance ignore |
+| `APPLY` | `STATUS` | Applies a derived status | Melting Flame → Scorching Heart |
+| `CONSUME` | `ALL_STACKS` | Consumes all active stacks | Melting Flame consumed on battle skill |
+
+#### Value Resolution
+
+Effect values use `withPreposition.value` with a `verb` indicating how to resolve:
+
+| verb | object | Description |
+|------|--------|-------------|
+| `IS` | — | Fixed scalar value |
+| `BASED_ON` | `SKILL_LEVEL` | Array indexed by skill level (1–12), resolved via source chain |
+| `BASED_ON` | `TALENT_LEVEL` | Array indexed by talent level |
+| `BASED_ON` | `INTELLECT` | Array of per-intellect scaling values |
+
+### Multi-Segment Statuses
+
+Statuses with phases use a `segments` array. Each segment has its own `properties` and `clause`:
+
+```json
+{
+  "segments": [
+    {
+      "name": "Focus",
+      "properties": { "duration": { "value": [20], "unit": "SECOND" } },
+      "clause": [{ "conditions": [], "effects": [...] }]
+    },
+    {
+      "name": "Empowered Focus",
+      "properties": { "duration": { "value": [40], "unit": "SECOND" } },
+      "clause": [{ "conditions": [], "effects": [...] }]
+    }
+  ]
 }
 ```
 
@@ -633,6 +792,7 @@ All enums used in this file are defined in the codebase:
 | `TimeInteractionType`    | `src/consts/enums.ts`         |
 | `TargetType`             | `src/consts/enums.ts`         |
 | `CombatSkillType`        | `src/consts/enums.ts`         |
+| `EnhancementType`        | `src/consts/enums.ts`         |
 | `DataSourceType`         | `src/consts/enums.ts`         |
 
 ## Data Sources

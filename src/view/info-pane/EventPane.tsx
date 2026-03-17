@@ -4,13 +4,14 @@ import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnL
 import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
-import type { LoadoutStats } from '../InformationPane';
+import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
+import { type TranslatedEffect, formatSegmentDisplayName } from '../../utils/semanticsTranslation';
 
 const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
 
@@ -27,7 +28,7 @@ function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrame
       )}
       {f.absorbArtsInfliction && (
         <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[f.absorbArtsInfliction.element as ElementType] ?? '#f0a040' }}>
-          {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `ABSORB ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
+          {(() => { const [a, b] = f.absorbArtsInfliction!.ratio.split(':').map(Number); const el = f.absorbArtsInfliction!.element.toUpperCase(); const status = f.absorbArtsInfliction!.exchangeStatus; return `CONSUME ${a} ${el} INFLICTION FROM ENEMY → APPLY ${b} ${status.replace(/_/g, ' ')} STATUS TO THIS OPERATOR (max ${f.absorbArtsInfliction!.stacks})`; })()}
         </div>
       )}
       {f.consumeArtsInfliction && (
@@ -40,7 +41,7 @@ function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrame
           CONSUME ALL {(STATUS_LABELS[f.consumeStatus as StatusType] ?? f.consumeStatus).toUpperCase().replace(/ /g, '_')} STACKS
         </div>
       )}
-      {f.applyStatus && (
+      {f.applyStatus && !(f.applyStatuses && f.applyStatuses.every(s => s.potentialMin != null || s.potentialMax != null)) && (
         <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
           APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target === 'ENEMY' ? 'ENEMY' : f.applyStatus.target === 'SELF' ? 'THIS OPERATOR' : f.applyStatus.target.toUpperCase()}
         </div>
@@ -97,13 +98,65 @@ function PredicateDisplay({ predicates, label }: { predicates: ResolvedPredicate
   );
 }
 
-/** Renders DSL effect tags for raw effects (not predicate-gated). */
-function DslEffectTags({ effects }: { effects: string[] }) {
+/** Check if a frame marker has any effects to display. */
+function frameHasEffects(f: import('../../consts/viewTypes').EventFrameMarker, dslFrameEffects?: TranslatedEffect[]) {
+  return !!(
+    f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
+    f.consumeStatus || f.applyStatus || f.applyStatuses?.length ||
+    f.applyForcedReaction || f.consumeReaction || f.duplicatesSourceInfliction ||
+    (dslFrameEffects && dslFrameEffects.length > 0)
+  );
+}
+
+
+
+const FRAME_SUB_LABEL: React.CSSProperties = {
+  color: 'var(--text-muted)', fontSize: 9, fontWeight: 600,
+  letterSpacing: '0.04em', marginTop: 4, marginBottom: 1,
+};
+
+/** First-level tree line: segment → frame */
+const TREE_LINE_1: React.CSSProperties = {
+  borderLeft: '2px solid rgba(255,255,255,0.10)',
+  paddingLeft: 8,
+  marginLeft: 2,
+};
+
+/** Second-level tree line: frame → properties/effects */
+const TREE_LINE_2: React.CSSProperties = {
+  borderLeft: '2px solid rgba(255,255,255,0.06)',
+  paddingLeft: 8,
+  marginLeft: 2,
+};
+
+/** Renders plain string DSL effects (segment-level, triggers & effects section). */
+function DslEffectStrings({ effects }: { effects: string[] }) {
   if (effects.length === 0) return null;
   return (
     <div style={{ marginTop: 2 }}>
       {effects.map((e, i) => (
         <div key={i} className="frame-dsl-effect" style={{ color: '#55aadd' }}>{e}</div>
+      ))}
+    </div>
+  );
+}
+
+/** Renders structured DSL effects with properties under tree lines (frame-level). */
+function DslEffectTags({ effects }: { effects: TranslatedEffect[] }) {
+  if (effects.length === 0) return null;
+  return (
+    <div style={{ marginTop: 2 }}>
+      {effects.map((te, i) => (
+        <div key={i}>
+          <div className="frame-dsl-effect" style={{ color: '#55aadd' }}>{te.sentence}</div>
+          {te.properties.length > 0 && (
+            <div style={{ borderLeft: '2px solid rgba(255,255,255,0.10)', paddingLeft: 8, marginLeft: 2 }}>
+              {te.properties.map((p, pi) => (
+                <div key={pi} className="frame-dsl-effect" style={{ color: 'var(--text-muted)' }}>{p}</div>
+              ))}
+            </div>
+          )}
+        </div>
       ))}
     </div>
   );
@@ -431,7 +484,7 @@ interface EventPaneProps {
   debugMode?: boolean;
   rawEvents?: readonly TimelineEvent[];
   allProcessedEvents?: readonly TimelineEvent[];
-  loadoutStats?: Record<string, LoadoutStats>;
+  loadoutProperties?: Record<string, LoadoutProperties>;
   damageRows?: DamageTableRow[];
   spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
   onSaveAsCustomSkill?: (event: TimelineEvent) => void;
@@ -455,7 +508,7 @@ function EventPane({
   debugMode,
   rawEvents,
   allProcessedEvents,
-  loadoutStats,
+  loadoutProperties,
   damageRows,
   spConsumptionHistory,
   onSaveAsCustomSkill,
@@ -490,8 +543,9 @@ function EventPane({
   // Resolve DSL semantic data for this event's skill
   const dslData = useMemo(() => {
     const slot = slots.find((s) => s.slotId === event.ownerId);
-    return resolveEventDsl(slot?.operator?.id, event.name);
-  }, [event.ownerId, event.name, slots]);
+    const potential = loadoutProperties?.[event.ownerId]?.operator.potential ?? 0;
+    return resolveEventDsl(slot?.operator?.id, event.name, potential);
+  }, [event.ownerId, event.name, slots, loadoutProperties]);
 
   // Full detail for verbose mode
   const fullDetail = useMemo(() => {
@@ -675,6 +729,7 @@ function EventPane({
         {/* ── Triggers & Effects (all events) ─────────────────────────── */}
         {dslData && (
           dslData.predicates.length > 0 ||
+          dslData.triggerPredicates.length > 0 ||
           Object.keys(dslData.segmentEffects).length > 0 ||
           Object.keys(dslData.frameEffects).length > 0 ||
           Object.keys(dslData.segmentPredicates).length > 0
@@ -682,19 +737,34 @@ function EventPane({
           <div className="edit-panel-section">
             <span className="edit-section-label">Triggers & Effects</span>
             <div style={{ padding: '4px 6px' }}>
+              {dslData.triggerPredicates.length > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>Trigger</div>
+                  {dslData.triggerDescription && (
+                    <div style={{ color: 'var(--gold)', fontSize: 11, paddingLeft: 4, marginBottom: 2 }}>{dslData.triggerDescription}</div>
+                  )}
+                  {dslData.triggerPredicates.map((pred, i) => (
+                    <div key={i} style={{ paddingLeft: 4 }}>
+                      {pred.conditions.map((c, ci) => (
+                        <div key={ci} className="frame-dsl-effect" style={{ color: 'var(--gold)' }}>{c}</div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
               {dslData.segmentEffects[-1] && (
-                <DslEffectTags effects={dslData.segmentEffects[-1]} />
+                <DslEffectStrings effects={dslData.segmentEffects[-1]} />
               )}
               {dslData.predicates.length > 0 && (
                 <PredicateDisplay predicates={dslData.predicates} />
               )}
               {Object.entries(dslData.segmentPredicates).map(([si, preds]) => (
-                <PredicateDisplay key={`sp-${si}`} predicates={preds} label={`Segment ${Number(si) + 1}`} />
+                <PredicateDisplay key={`sp-${si}`} predicates={preds} label={formatSegmentDisplayName(undefined, Number(si))} />
               ))}
               {Object.entries(dslData.segmentEffects).filter(([k]) => k !== '-1').map(([si, effs]) => (
                 <div key={`se-${si}`}>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>Segment {Number(si) + 1}</div>
-                  <DslEffectTags effects={effs} />
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>{formatSegmentDisplayName(undefined, Number(si))}</div>
+                  <DslEffectStrings effects={effs} />
                 </div>
               ))}
               {Object.entries(dslData.frameEffects).map(([key, effs]) => {
@@ -913,15 +983,15 @@ function EventPane({
           const skillEl = col && col.type !== 'placeholder' ? col.skillElement : undefined;
           const slot = slots.find((s) => s.slotId === event.ownerId);
           const operatorId = slot?.operator?.id;
-          const stats = operatorId && loadoutStats ? loadoutStats[event.ownerId] : undefined;
+          const stats = operatorId && loadoutProperties ? loadoutProperties[event.ownerId] : undefined;
 
           // Resolve skill level based on column type
           let skillLevel: number | undefined;
           if (stats) {
-            if (event.columnId === SKILL_COLUMNS.BASIC) skillLevel = stats.basicAttackLevel;
-            else if (event.columnId === SKILL_COLUMNS.BATTLE) skillLevel = stats.battleSkillLevel;
-            else if (event.columnId === SKILL_COLUMNS.COMBO) skillLevel = stats.comboSkillLevel;
-            else if (event.columnId === SKILL_COLUMNS.ULTIMATE) skillLevel = stats.ultimateLevel;
+            if (event.columnId === SKILL_COLUMNS.BASIC) skillLevel = stats.skills.basicAttackLevel;
+            else if (event.columnId === SKILL_COLUMNS.BATTLE) skillLevel = stats.skills.battleSkillLevel;
+            else if (event.columnId === SKILL_COLUMNS.COMBO) skillLevel = stats.skills.comboSkillLevel;
+            else if (event.columnId === SKILL_COLUMNS.ULTIMATE) skillLevel = stats.skills.ultimateLevel;
           }
 
           // Per-segment multipliers for sequenced events (basic attacks)
@@ -948,7 +1018,7 @@ function EventPane({
                   event.name as CombatSkillsType,
                   seg.label,
                   skillLevel as any,
-                  (stats?.potential ?? 0) as any,
+                  (stats?.operator.potential ?? 0) as any,
                 );
                 if (m != null) {
                   const isNumeric = /^\d+$/.test(seg.label);
@@ -966,7 +1036,7 @@ function EventPane({
                 event.name as CombatSkillsType,
                 undefined,
                 skillLevel as any,
-                (stats?.potential ?? 0) as any,
+                (stats?.operator.potential ?? 0) as any,
               );
               if (overallMultiplier != null && defaultSegs) {
                 overallMaxFrames = defaultSegs.reduce((sum, s) => sum + (s.frames?.length ?? 0), 0);
@@ -976,7 +1046,7 @@ function EventPane({
                 operatorId,
                 event.name as CombatSkillsType,
                 skillLevel as any,
-                (stats?.potential ?? 0) as any,
+                (stats?.operator.potential ?? 0) as any,
                 0,
               );
               if (tick0 != null && overallMaxFrames > 1) {
@@ -984,7 +1054,7 @@ function EventPane({
                   operatorId,
                   event.name as CombatSkillsType,
                   skillLevel as any,
-                  (stats?.potential ?? 0) as any,
+                  (stats?.operator.potential ?? 0) as any,
                   1,
                 );
                 perTickBase = tick0;
@@ -1190,9 +1260,18 @@ function EventPane({
                 value={event.enemiesHit ?? 1}
                 onChange={(e) => {
                   const n = Number(e.target.value);
+                  const gain = event.gaugeGainByEnemies![n] ?? event.gaugeGainByEnemies![1] ?? 0;
+                  // Update first frame's gaugeGain so the ult energy system picks it up
+                  const segments = event.segments ? [...event.segments] : [];
+                  if (segments[0]?.frames?.[0]) {
+                    const updatedFrames = [...segments[0].frames];
+                    updatedFrames[0] = { ...updatedFrames[0], gaugeGain: gain };
+                    segments[0] = { ...segments[0], frames: updatedFrames };
+                  }
                   onUpdate(event.id, {
                     enemiesHit: n,
-                    gaugeGain: event.gaugeGainByEnemies![n] ?? event.gaugeGainByEnemies![1] ?? 0,
+                    gaugeGain: gain,
+                    segments,
                   });
                 }}
               >
@@ -1283,9 +1362,16 @@ function EventPane({
               <div className="edit-info-text">
                 {dualDuration(event.startFrame + event.activationDuration, event.activeDuration, undefined, pActive)}
               </div>
-              {event.segments!.map((seg, si) => (
-                seg.frames && seg.frames.length > 0 && (
-                  <div key={si} style={{ marginTop: 4 }}>
+              {event.segments!.map((seg, si) => {
+                const ultSegName = seg.name ?? (seg.label ? seg.label : null);
+                const ultSegHeader = ultSegName
+                  ? `${ultSegName} (${formatSegmentDisplayName(undefined, si)})`
+                  : event.segments!.length > 1 ? formatSegmentDisplayName(undefined, si) : null;
+                return seg.frames && seg.frames.length > 0 && (
+                  <div key={si} style={{ marginTop: 6 }}>
+                    {ultSegHeader && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 10, fontWeight: 600, marginBottom: 2, paddingLeft: 4 }}>{ultSegHeader}</div>
+                    )}
                     {seg.frames.map((f, fi) => {
                       const isSelected = selectedFrames?.some(
                         (sf) => sf.eventId === event.id && sf.segmentIndex === si && sf.frameIndex === fi,
@@ -1296,24 +1382,22 @@ function EventPane({
                           key={fi}
                           ref={isSelected ? selectedFrameElRef : undefined}
                           style={{
-                            padding: '1px 4px',
+                            ...TREE_LINE_1,
+                            padding: '1px 4px 1px 8px',
                             borderRadius: 2,
                             background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
+                            borderLeftColor: isSelected ? '#ffdd44' : undefined,
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
-                          <div className="edit-info-text">
+                          {/* Properties */}
+                          <div className="edit-info-text" style={TREE_LINE_2}>
                             <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
                             {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
                             {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                             {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
-                            <FrameDslEffects f={f} />
-                            {dslData?.frameEffects[`${si}-${fi}`] && (
-                              <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                            )}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
@@ -1329,12 +1413,22 @@ function EventPane({
                               </div>
                             )}
                           </div>
+                          {/* Effects */}
+                          {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
+                            <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
+                              <div style={FRAME_SUB_LABEL}>EFFECTS</div>
+                              <FrameDslEffects f={f} />
+                              {dslData?.frameEffects[`${si}-${fi}`] && (
+                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-                )
-              ))}
+                );
+              })}
             </div>
 
             {event.cooldownDuration > 0 && (
@@ -1363,9 +1457,16 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Active Phase</span>
               <DurationField label="Duration" value={activePhaseSec} onChange={setActivePhaseSec} onCommit={handleBlur} />
-              {event.segments!.map((seg, si) => (
-                seg.frames && seg.frames.length > 0 && (
-                  <div key={si} style={{ marginTop: 4 }}>
+              {event.segments!.map((seg, si) => {
+                const ultEditSegName = seg.name ?? (seg.label ? seg.label : null);
+                const ultEditSegHeader = ultEditSegName
+                  ? `${ultEditSegName} (${formatSegmentDisplayName(undefined, si)})`
+                  : event.segments!.length > 1 ? formatSegmentDisplayName(undefined, si) : null;
+                return seg.frames && seg.frames.length > 0 && (
+                  <div key={si} style={{ marginTop: 6 }}>
+                    {ultEditSegHeader && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 10, fontWeight: 600, marginBottom: 2, paddingLeft: 4 }}>{ultEditSegHeader}</div>
+                    )}
                     {seg.frames.map((f, fi) => {
                       const isSelected = selectedFrames?.some(
                         (sf) => sf.eventId === event.id && sf.segmentIndex === si && sf.frameIndex === fi,
@@ -1376,32 +1477,32 @@ function EventPane({
                           key={fi}
                           ref={isSelected ? selectedFrameElRef : undefined}
                           style={{
-                            padding: '1px 4px',
+                            ...TREE_LINE_1,
+                            padding: '1px 4px 1px 8px',
                             borderRadius: 2,
                             background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            borderLeft: isSelected ? '2px solid #ffdd44' : '2px solid transparent',
+                            borderLeftColor: isSelected ? '#ffdd44' : undefined,
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
-                          <FrameOffsetField
-                            eventId={event.id}
-                            segmentIndex={si}
-                            frameIndex={fi}
-                            offsetFrame={f.offsetFrame}
-                            maxOffset={event.activeDuration}
-                            onUpdate={onUpdate}
-                            segments={event.segments}
-                          />
-                          <div className="edit-info-text">
+                          <div style={TREE_LINE_2}>
+                            <FrameOffsetField
+                              eventId={event.id}
+                              segmentIndex={si}
+                              frameIndex={fi}
+                              offsetFrame={f.offsetFrame}
+                              maxOffset={event.activeDuration}
+                              onUpdate={onUpdate}
+                              segments={event.segments}
+                            />
+                          </div>
+                          {/* Properties */}
+                          <div className="edit-info-text" style={TREE_LINE_2}>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
                             {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
                             {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                             {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
-                            <FrameDslEffects f={f} />
-                            {dslData?.frameEffects[`${si}-${fi}`] && (
-                              <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                            )}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
@@ -1417,12 +1518,22 @@ function EventPane({
                               </div>
                             )}
                           </div>
+                          {/* Effects */}
+                          {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
+                            <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
+                              <div style={FRAME_SUB_LABEL}>EFFECTS</div>
+                              <FrameDslEffects f={f} />
+                              {dslData?.frameEffects[`${si}-${fi}`] && (
+                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-                )
-              ))}
+                );
+              })}
             </div>
 
             {event.cooldownDuration > 0 && (
@@ -1456,11 +1567,10 @@ function EventPane({
               segCumOffset += seg.durationFrames;
               const pSeg = processedEvent?.segments?.[si];
               const isNumericLabel = seg.label && /^\d+$/.test(seg.label);
-              const segLabel = seg.name
-                ? seg.name
-                : seg.label
-                  ? (isNumericLabel ? `Sequence ${seg.label}` : seg.label)
-                  : `Sequence ${si + 1}`;
+              const segName = seg.name ?? (seg.label && !isNumericLabel ? seg.label : null);
+              const segLabel = segName
+                ? `${segName} (${formatSegmentDisplayName(undefined, si)})`
+                : formatSegmentDisplayName(undefined, si);
               // Segment-level damage: sum per-frame damages and get multiplier
               const segDamageFrames = seg.frames
                 ? seg.frames.map((_, fi) => eventDamageRows.get(`${si}-${fi}`))
@@ -1516,8 +1626,14 @@ function EventPane({
                         )}
                       </div>
                     )}
+                    {seg.statusLabel && (
+                      <div className="edit-info-text" style={{ marginTop: 2 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Effect: </span>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: '#66cc88' }}>{seg.statusLabel}</span>
+                      </div>
+                    )}
                     {dslData?.segmentEffects[si] && (
-                      <DslEffectTags effects={dslData.segmentEffects[si]} />
+                      <DslEffectStrings effects={dslData.segmentEffects[si]} />
                     )}
                     {dslData?.segmentPredicates[si] && (
                       <PredicateDisplay predicates={dslData.segmentPredicates[si]} />
@@ -1535,28 +1651,32 @@ function EventPane({
                             key={fi}
                             ref={isSelected ? selectedFrameElRef : undefined}
                             style={{
-                              padding: '4px 6px',
+                              ...TREE_LINE_1,
+                              padding: '4px 6px 4px 8px',
                               borderRadius: 3,
                               background: isSelected ? 'var(--overlay-08)' : 'transparent',
                             }}
                           >
                             <span className="edit-field-label">Frame {fi + 1}</span>
                             {(readOnly || isDerived) ? (
-                              <div className="edit-info-text">
+                              <div className="edit-info-text" style={TREE_LINE_2}>
                                 <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                               </div>
                             ) : (
-                              <FrameOffsetField
-                                eventId={event.id}
-                                segmentIndex={si}
-                                frameIndex={fi}
-                                offsetFrame={f.offsetFrame}
-                                maxOffset={Math.max(0, seg.durationFrames - 1)}
-                                onUpdate={onUpdate}
-                                segments={event.segments!}
-                              />
+                              <div style={TREE_LINE_2}>
+                                <FrameOffsetField
+                                  eventId={event.id}
+                                  segmentIndex={si}
+                                  frameIndex={fi}
+                                  offsetFrame={f.offsetFrame}
+                                  maxOffset={Math.max(0, seg.durationFrames - 1)}
+                                  onUpdate={onUpdate}
+                                  segments={event.segments!}
+                                />
+                              </div>
                             )}
-                            <div className="edit-info-text">
+                            {/* Properties */}
+                            <div className="edit-info-text" style={TREE_LINE_2}>
                               {event.columnId === SKILL_COLUMNS.BASIC && (
                                 (readOnly || isDerived) ? (
                                   <div>Type: {(f.frameTypes ?? [EventFrameType.NORMAL]).includes(EventFrameType.FINAL_STRIKE) ? 'Final Strike' : (f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? 'Finisher' : (f.frameTypes ?? []).includes(EventFrameType.DIVE) ? 'Dive' : 'Normal'}</div>
@@ -1662,10 +1782,6 @@ function EventPane({
                               )}
                               {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
                               {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
-                              <FrameDslEffects f={f} />
-                              {dslData?.frameEffects[`${si}-${fi}`] && (
-                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                              )}
                               {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                   {hitDmgRow.multiplier != null && (
@@ -1681,6 +1797,16 @@ function EventPane({
                                 </div>
                               )}
                             </div>
+                            {/* Effects */}
+                            {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
+                              <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
+                                <div style={FRAME_SUB_LABEL}>EFFECTS</div>
+                                <FrameDslEffects f={f} />
+                                {dslData?.frameEffects[`${si}-${fi}`] && (
+                                  <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                                )}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -1704,7 +1830,7 @@ function EventPane({
                 <span className="edit-section-label">Semantics</span>
                 <div style={{ padding: '4px 6px' }}>
                   {dslData.segmentEffects[-1] && (
-                    <DslEffectTags effects={dslData.segmentEffects[-1]} />
+                    <DslEffectStrings effects={dslData.segmentEffects[-1]} />
                   )}
                   {dslData.predicates.length > 0 && (
                     <PredicateDisplay predicates={dslData.predicates} label="Predicates" />

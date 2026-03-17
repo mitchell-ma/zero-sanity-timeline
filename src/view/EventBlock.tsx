@@ -6,6 +6,12 @@ import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
 import { SKILL_COLUMNS } from '../model/channels';
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
+import { formatSegmentShortName } from '../utils/semanticsTranslation';
+
+const ROMAN_RE = /^\d+$/;
+/** Convert bare numeric labels (legacy "1","2",...) to Roman numerals. */
+const toDisplayLabel = (label: string | undefined) =>
+  label && ROMAN_RE.test(label) ? formatSegmentShortName(undefined, Number(label) - 1) : label;
 
 function hasInflictionOrStatus(f: EventFrameMarker): boolean {
   return !!(f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
@@ -206,7 +212,7 @@ function EventBlock({
           onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
         >
           {(passive || segH > 14) && (seg.label || (isFirst && displayLabel)) && (
-            <span className="event-block-label" style={passive ? undefined : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }}>{seg.label ?? displayLabel}</span>
+            <span className="event-block-label" style={passive ? undefined : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }}>{toDisplayLabel(seg.label) ?? displayLabel}</span>
           )}
           {/* Frame diamonds */}
           {/* eslint-disable-next-line no-loop-func */}

@@ -1,0 +1,55 @@
+{
+  "weaponName": "OBJ Edge of Lightness",
+  "statusEvents": [
+    {
+      "name": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
+      "type": "WEAPON_EFFECT",
+      "originId": "OBJ_EDGE_OF_LIGHTNESS",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Unbridled Edge",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "HEAT_DAMAGE_BONUS",
+          "valueMin": 0.03,
+          "valueMax": 0.084,
+          "perStack": true
+        },
+        {
+          "stat": "ELECTRIC_DAMAGE_BONUS",
+          "valueMin": 0.03,
+          "valueMax": 0.084,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

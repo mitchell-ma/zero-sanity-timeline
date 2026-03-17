@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from './app/useApp';
 import AppBar from './view/AppBar';
-import { buildShareUrl } from './utils/embedCodec';
+import { buildShareUrl, detectCustomContent } from './utils/embedCodec';
 import LoadoutSidebar from './view/LoadoutSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
@@ -129,7 +129,7 @@ export default function App() {
           cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
           animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
           description: skill.description,
-          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: skill.skillPointCost }] : undefined,
+          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }] : undefined,
         };
         targetCategory = ContentCategory.SKILLS;
       }
@@ -199,7 +199,12 @@ export default function App() {
         onClearAll={() => app.setConfirmClearAll(true)}
         onExport={app.handleExport}
         onImport={app.handleImport}
-        onShare={async () => buildShareUrl(app.buildSheetData(), app.columns, app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? 'Shared Loadout')}
+        onShare={async () => {
+          const sheetData = app.buildSheetData();
+          const warning = detectCustomContent(sheetData);
+          if (warning) app.setWarningMessage(warning);
+          return buildShareUrl(sheetData, app.columns, app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? 'Shared Loadout');
+        }}
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
         onCustomContent={() => {
@@ -392,7 +397,7 @@ export default function App() {
                         cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
                         animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
                         description: skill.description,
-                        resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: skill.skillPointCost }] : undefined,
+                        resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }] : undefined,
                       };
                       targetCategory = ContentCategory.SKILLS;
                     }
@@ -468,6 +473,7 @@ export default function App() {
                     debugMode={app.debugMode}
                     staggerBreaks={app.staggerBreaks}
                     contentFrames={app.contentFrames}
+                    spInsufficiencyZones={app.spInsufficiencyZones}
                   />
                   {(app.hidePreview === 'left' || app.showPreview === 'left') && (
                     <div className="pane-hide-overlay">
@@ -499,27 +505,29 @@ export default function App() {
               </svg>
               {!app.hiddenPane && (
                 <div className="panel-resizer-buttons">
-                  <button
-                    className={`panel-resizer-btn${app.scrollSynced ? ' panel-resizer-btn--sync-active' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); app.handleToggleScrollSync(); }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    title={app.scrollSynced ? 'Desync scroll' : 'Sync scroll'}
-                  >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                      {app.scrollSynced ? (
-                        <>
-                          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
-                          <path d="M8 13h8v-2H8v2z"/>
-                          <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-                        </>
-                      ) : (
-                        <>
-                          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
-                          <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-                        </>
-                      )}
-                    </svg>
-                  </button>
+                  {app.orientation !== 'horizontal' && (
+                    <button
+                      className={`panel-resizer-btn${app.scrollSynced ? ' panel-resizer-btn--sync-active' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); app.handleToggleScrollSync(); }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      title={app.scrollSynced ? 'Desync scroll' : 'Sync scroll'}
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        {app.scrollSynced ? (
+                          <>
+                            <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
+                            <path d="M8 13h8v-2H8v2z"/>
+                            <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                          </>
+                        ) : (
+                          <>
+                            <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1z"/>
+                            <path d="M17 7h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="panel-resizer-btn"
                     onClick={(e) => { e.stopPropagation(); app.setSplitPct(50); }}
@@ -542,7 +550,7 @@ export default function App() {
                     events={app.allProcessedEvents}
                     columns={app.columns}
                     enemy={app.enemy}
-                    loadoutStats={app.loadoutStats}
+                    loadoutProperties={app.loadoutProperties}
                     loadouts={app.loadouts}
                     staggerBreaks={app.staggerBreaks}
                     zoom={app.zoom}
@@ -613,7 +621,7 @@ export default function App() {
             debugMode={app.debugMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
-            loadoutStats={app.loadoutStats}
+            loadoutProperties={app.loadoutProperties}
             damageRows={app.damageRows}
             spConsumptionHistory={app.spConsumptionHistory}
             onSaveAsCustomSkill={handleSaveAsCustomSkill}
@@ -625,7 +633,7 @@ export default function App() {
             slotId={app.editingSlot.slotId}
             operator={app.editingSlot.operator}
             loadout={app.loadouts[app.editingSlot.slotId]}
-            stats={app.loadoutStats[app.editingSlot.slotId]}
+            stats={app.loadoutProperties[app.editingSlot.slotId]}
             onStatsChange={(s) => app.handleStatsChange(app.editingSlot!.slotId, s)}
             onClose={app.handleCloseLoadoutPane}
             triggerClose={app.infoPaneClosing}

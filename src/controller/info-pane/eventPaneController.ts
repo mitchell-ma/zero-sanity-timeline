@@ -6,6 +6,8 @@ import {
 } from '../../consts/timelineColumnLabels';
 import { interactionToLabel } from '../../consts/semantics';
 import type { Interaction, Effect } from '../../consts/semantics';
+import { translateEffect } from '../../utils/semanticsTranslation';
+import type { TranslatedEffect } from '../../utils/semanticsTranslation';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
@@ -454,21 +456,79 @@ export interface ResolvedPredicate {
 export interface EventDslData {
   /** Skill-level predicates (clause). */
   predicates: ResolvedPredicate[];
+  /** Trigger predicates from properties.trigger.triggerClause. */
+  triggerPredicates: ResolvedPredicate[];
+  /** Trigger description from properties.trigger.description. */
+  triggerDescription: string | null;
   /** Segment-level predicates, keyed by segment index. */
   segmentPredicates: Record<number, ResolvedPredicate[]>;
   /** Segment-level effects (non-predicate), keyed by segment index. */
   segmentEffects: Record<number, string[]>;
-  /** Frame-level effects, keyed by `segmentIndex-frameIndex`. */
-  frameEffects: Record<string, string[]>;
+  /** Frame-level effects (structured), keyed by `segmentIndex-frameIndex`. */
+  frameEffects: Record<string, TranslatedEffect[]>;
+}
+
+/**
+ * Effects that are already represented by dedicated info pane sections
+ * (SP cost) or are zero-value noise. Filter these from DSL display.
+ */
+function isRedundantEffect(e: any): boolean {
+  const obj = e.objectType;
+  const verb = e.verbType;
+  // SP cost / ultimate energy cost shown in dedicated SP/Skill sections
+  if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
+  // Zero-value recoveries are noise
+  if (verb === 'RECOVER' && (obj === 'SKILL_POINT' || obj === 'STAGGER')) {
+    const val = e.withPreposition?.cardinality?.value ?? e.withPreposition?.value?.value;
+    if (val === 0) return true;
+  }
+  // Zero-value stagger applications are noise
+  if (verb === 'APPLY' && obj === 'STAGGER') {
+    const val = e.withPreposition?.value?.value;
+    if (val === 0) return true;
+  }
+  return false;
+}
+
+/**
+ * Resolve frame effects, filtering by operator potential when effects have
+ * potentialMin/potentialMax gates. Uses eventName for display when available.
+ * Returns structured TranslatedEffect objects for natural-language rendering.
+ */
+function resolveFrameEffects(
+  effects: any[],
+  key: string,
+  potential: number,
+  outEffects: Record<string, TranslatedEffect[]>,
+) {
+  const resolved: TranslatedEffect[] = [];
+
+  for (const e of effects) {
+    // Filter redundant/zero-value effects
+    if (isRedundantEffect(e)) continue;
+    // Filter by potential gate
+    if (e.potentialMin != null && potential < e.potentialMin) continue;
+    if (e.potentialMax != null && potential > e.potentialMax) continue;
+
+    // Use eventName for display when it differs from objectId
+    const displayEffect = e.eventName && e.eventName !== e.objectId
+      ? { ...e, objectId: e.eventName }
+      : e;
+    resolved.push(translateEffect(displayEffect));
+  }
+
+  if (resolved.length > 0) outEffects[key] = resolved;
 }
 
 /**
  * Resolve DSL predicates and effects from the operator JSON for an event's skill.
  * Returns null if no operator JSON or skill data is available.
+ * @param potential Operator potential (P0–P5) used to resolve conditional effects.
  */
 export function resolveEventDsl(
   operatorId: string | undefined,
   skillName: string,
+  potential = 0,
 ): EventDslData | null {
   if (!operatorId) return null;
   const json = getOperatorJson(operatorId);
@@ -479,9 +539,25 @@ export function resolveEventDsl(
   if (!skillCat) return null;
 
   const predicates: ResolvedPredicate[] = [];
+  const triggerPredicates: ResolvedPredicate[] = [];
+  let triggerDescription: string | null = null;
   const segmentPredicates: Record<number, ResolvedPredicate[]> = {};
   const segmentEffects: Record<number, string[]> = {};
-  const frameEffects: Record<string, string[]> = {};
+  const frameEffects: Record<string, TranslatedEffect[]> = {};
+
+  // Trigger clause from properties.trigger
+  const trigger = skillCat.properties?.trigger;
+  if (trigger) {
+    triggerDescription = trigger.description ?? null;
+    if (trigger.triggerClause && Array.isArray(trigger.triggerClause)) {
+      for (const pred of trigger.triggerClause) {
+        triggerPredicates.push({
+          conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
+          effects: [],
+        });
+      }
+    }
+  }
 
   // Skill-level clause
   if (skillCat.clause && Array.isArray(skillCat.clause)) {
@@ -511,12 +587,12 @@ export function resolveEventDsl(
       segmentEffects[si] = seg.effects.map((e: Effect) => effectToText(e));
     }
 
-    // Frame-level effects
+    // Frame-level effects (filtered by operator potential)
     const frames: any[] = seg.frames ?? [];
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
       if (frame.effects && Array.isArray(frame.effects)) {
-        frameEffects[`${si}-${fi}`] = frame.effects.map((e: Effect) => effectToText(e));
+        resolveFrameEffects(frame.effects, `${si}-${fi}`, potential, frameEffects);
       }
     }
   }
@@ -527,22 +603,26 @@ export function resolveEventDsl(
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
       if (frame.effects && Array.isArray(frame.effects)) {
-        frameEffects[`0-${fi}`] = frame.effects.map((e: Effect) => effectToText(e));
+        resolveFrameEffects(frame.effects, `0-${fi}`, potential, frameEffects);
       }
     }
   }
 
-  // Skill-level effects
+  // Skill-level effects (filter out SP/gauge effects already shown in dedicated sections)
   if (skillCat.effects && Array.isArray(skillCat.effects)) {
-    segmentEffects[-1] = skillCat.effects.map((e: Effect) => effectToText(e));
+    const filtered = (skillCat.effects as any[])
+      .filter((e) => !isRedundantEffect(e))
+      .map((e: Effect) => effectToText(e));
+    if (filtered.length > 0) segmentEffects[-1] = filtered;
   }
 
   const hasData = predicates.length > 0 ||
+    triggerPredicates.length > 0 ||
     Object.keys(segmentPredicates).length > 0 ||
     Object.keys(segmentEffects).length > 0 ||
     Object.keys(frameEffects).length > 0;
 
-  return hasData ? { predicates, segmentPredicates, segmentEffects, frameEffects } : null;
+  return hasData ? { predicates, triggerPredicates, triggerDescription, segmentPredicates, segmentEffects, frameEffects } : null;
 }
 
 // ── Full Event Detail (verbose mode) ───────────────────────────────────────

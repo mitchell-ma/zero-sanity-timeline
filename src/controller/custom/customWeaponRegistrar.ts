@@ -5,6 +5,7 @@
  */
 import { registerWeaponEffects, deregisterWeaponEffects } from '../../consts/weaponSkillEffects';
 import type { WeaponSkillEffect, WeaponEffectBuff } from '../../consts/weaponSkillEffects';
+import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { WEAPON_DATA, registerCustomSkillFactory, deregisterCustomSkillFactory, createWeaponFromData as createWeaponFromDataFn } from '../../model/weapons/weaponData';
 import type { WeaponConfig } from '../../model/weapons/weaponData';
 import { WEAPONS } from '../../utils/loadoutRegistry';
@@ -83,6 +84,12 @@ export function registerCustomWeapon(weapon: CustomWeapon): void {
   if (effects.length > 0) {
     registerWeaponEffects({ weaponName: weapon.name, effects });
   }
+
+  // Register DSL status event defs for the derivation engine
+  const dslDefs = buildDslDefsFromCustomWeapon(weapon);
+  if (dslDefs.length > 0) {
+    registerCustomWeaponEffectDefs(weapon.name, dslDefs);
+  }
 }
 
 export function deregisterCustomWeapon(weapon: CustomWeapon): void {
@@ -93,4 +100,44 @@ export function deregisterCustomWeapon(weapon: CustomWeapon): void {
   const wIdx = WEAPONS.findIndex((w) => w.name === weapon.name);
   if (wIdx >= 0) WEAPONS.splice(wIdx, 1);
   deregisterWeaponEffects(weapon.name);
+  deregisterCustomWeaponEffectDefs(weapon.name);
+}
+
+/** Convert a custom weapon's named effects to DSL StatusEventDef format. */
+function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): any[] {
+  const defs: any[] = [];
+  const originId = weapon.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+
+  for (const skill of weapon.skills) {
+    if (skill.type !== 'NAMED' || !skill.namedEffect) continue;
+    const ne = skill.namedEffect;
+    if (ne.triggers.length === 0) continue;
+
+    const targetMap: Record<string, string> = { self: 'OPERATOR', team: 'OPERATOR', enemy: 'ENEMY' };
+    const determinerMap: Record<string, string> = { self: 'THIS', team: 'OTHER' };
+    const target = targetMap[ne.target] ?? 'OPERATOR';
+    const targetDeterminer = determinerMap[ne.target];
+    const statusName = `${originId}_${ne.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+
+    defs.push({
+      name: statusName,
+      type: 'WEAPON_EFFECT',
+      originId,
+      target,
+      ...(targetDeterminer ? { targetDeterminer } : {}),
+      label: ne.name,
+      stack: {
+        max: { P0: ne.maxStacks },
+        instances: ne.maxStacks,
+        verbType: ne.maxStacks > 1 ? 'NONE' : 'RESET',
+      },
+      triggerClause: ne.triggers.map((t: any) => ({ conditions: [t] })),
+      clause: [],
+      buffs: ne.buffs,
+      properties: { duration: { value: [ne.durationSeconds], unit: 'SECOND' } },
+      ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
+    });
+  }
+
+  return defs;
 }

@@ -1,0 +1,47 @@
+{
+  "weaponName": "Finchaser 3.0",
+  "statusEvents": [
+    {
+      "name": "FINCHASER_3_0_FIN_CHASERS_INTENT",
+      "type": "WEAPON_EFFECT",
+      "originId": "FINCHASER_3_0",
+      "target": "ENEMY",
+      "label": "Fin Chaser's Intent",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "SOLIDIFIED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRYO_DAMAGE_BONUS",
+          "valueMin": 0.07,
+          "valueMax": 0.14
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Enemy Cryo DMG Taken (Fragility)"
+    }
+  ]
+}

@@ -95,7 +95,7 @@ export function getDefaultCustomOperator(): CustomOperator {
         name: 'Battle Skill',
         combatSkillType: CombatSkillType.BATTLE_SKILL,
         durationSeconds: 2,
-        resourceInteractions: [{ resourceType: 'SKILL_POINT', verbType: 'EXPEND', value: 100 }],
+        resourceInteractions: [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: 100 }],
       },
       comboSkill: {
         name: 'Combo Skill',
@@ -112,7 +112,7 @@ export function getDefaultCustomOperator(): CustomOperator {
         cooldownSeconds: 10,
         animationSeconds: 2,
         timeInteractionType: 'TIME_STOP' as any,
-        resourceInteractions: [{ resourceType: 'ULTIMATE_ENERGY', verbType: 'EXPEND', value: 300 }],
+        resourceInteractions: [{ resourceType: 'ULTIMATE_ENERGY', verbType: 'CONSUME', value: 300 }],
       },
     },
     combo: {

@@ -1,0 +1,53 @@
+{
+  "weaponName": "Grand Vision",
+  "statusEvents": [
+    {
+      "name": "GRAND_VISION_LONG_TIME_WISH",
+      "type": "WEAPON_EFFECT",
+      "originId": "GRAND_VISION",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Long Time Wish",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "SOLIDIFIED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_INTENSITY",
+          "valueMin": 30,
+          "valueMax": 60
+        },
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "valueMin": 0.36,
+          "valueMax": 0.72
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Phys DMG bonus on next battle/ult skill"
+    }
+  ]
+}

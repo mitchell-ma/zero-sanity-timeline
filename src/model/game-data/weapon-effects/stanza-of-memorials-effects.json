@@ -1,0 +1,49 @@
+{
+  "weaponName": "Stanza of Memorials",
+  "statusEvents": [
+    {
+      "name": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
+      "type": "WEAPON_EFFECT",
+      "originId": "STANZA_OF_MEMORIALS",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Lustrous Pyre",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "ULTIMATE"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.08,
+          "valueMax": 0.16
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Applies to different-element operators"
+    }
+  ]
+}

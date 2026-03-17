@@ -89,8 +89,32 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const mockSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mockStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = mockSkillsJson;
-  const mergedStatusEvents = [...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
+
+  // Expand short keys in status JSONs (same as operatorJsonLoader.ts expandKeys)
+  const KEY_EXPAND: Record<string, string> = {
+    verb: 'verbType', object: 'objectType', subject: 'subjectType',
+    subjectDet: 'subjectDeterminer',
+    to: 'toObjectType', toDet: 'toObjectDeterminer',
+    from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
+    on: 'onObjectType', onDet: 'onObjectDeterminer',
+    with: 'withPreposition', for: 'forPreposition',
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const expandKeys = (val: any): any => {
+    if (val == null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) return val.map(expandKeys);
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(val)) {
+      out[KEY_EXPAND[k] ?? k] = expandKeys(v);
+    }
+    return out;
+  };
+  const expandedStatuses = (mockStatusesJson as any[]).map(expandKeys);
+
+  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
   const laevatainSkills: Record<string, any> = {};
   for (const [key, val] of Object.entries(skillEntries as Record<string, any>)) {
     laevatainSkills[key] = { ...(val as any), id: key };
@@ -153,8 +177,8 @@ jest.mock('../model/game-data/weaponGameData', () => ({
 
 // Mock view components that statusDerivationEngine transitively imports
 jest.mock('../view/InformationPane', () => ({
-  DEFAULT_LOADOUT_STATS: {},
-  getDefaultLoadoutStats: () => ({}),
+  DEFAULT_LOADOUT_PROPERTIES: {},
+  getDefaultLoadoutProperties: () => ({}),
 }));
 
 // eslint-disable-next-line import/first
@@ -163,6 +187,12 @@ import { deriveStatusesFromEngine } from '../controller/timeline/statusDerivatio
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
+// eslint-disable-next-line import/first
+import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+// eslint-disable-next-line import/first
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
+// eslint-disable-next-line import/first
+import { StatusType } from '../consts/enums';
 
 // Load JSON for direct assertion in tests (not in jest.mock scope)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -171,8 +201,27 @@ const laevatainOperatorJson = require('../model/game-data/operators/laevatain-op
 const laevatainSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const laevatainStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
+const _KEY_EXPAND: Record<string, string> = {
+  verb: 'verbType', object: 'objectType', subject: 'subjectType',
+  subjectDet: 'subjectDeterminer',
+  to: 'toObjectType', toDet: 'toObjectDeterminer',
+  from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
+  on: 'onObjectType', onDet: 'onObjectDeterminer',
+  with: 'withPreposition', for: 'forPreposition',
+};
+function _expandKeys(val: any): any {
+  if (val == null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) return val.map(_expandKeys);
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(val)) {
+    out[_KEY_EXPAND[k] ?? k] = _expandKeys(v);
+  }
+  return out;
+}
 const { statusEvents: _skStatusEvents2, skillTypeMap: _skTypeMap2, ...laevatainSkillEntries2 } = laevatainSkillsJson;
-const _mergedStatusEvents = [...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
+const _mergedStatusEvents = [...(laevatainStatusesJson as any[]).map(_expandKeys), ...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
 const laevatainSkillCategories: Record<string, any> = {};
 for (const [key, val] of Object.entries(laevatainSkillEntries2 as Record<string, any>)) {
   laevatainSkillCategories[key] = { ...(val as any), id: key };
@@ -382,15 +431,20 @@ describe('B. Scorching Heart Threshold', () => {
     expect(mfEvents.length).toBe(4);
   });
 
-  test('B6: Scorching Heart Effect has Heat Resistance Ignore stats in JSON', () => {
+  test('B6: Scorching Heart Effect has Heat Resistance Ignore clause in JSON', () => {
     const statusEvents = mockLaevatainJson.statusEvents as any[];
     const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART_EFFECT');
     expect(shDef).toBeDefined();
-    expect(shDef.stats).toBeDefined();
-    expect(shDef.stats.length).toBeGreaterThan(0);
-    expect(shDef.stats[0].statType).toBe('HEAT_RESISTANCE_IGNORE');
-    // Values scale by talent level: [10, 15, 20]
-    expect(shDef.stats[0].value).toEqual([10, 15, 20]);
+    // Clause-based format: IGNORE HEAT RESISTANCE with BASED_ON TALENT_LEVEL
+    expect(shDef.clause).toBeDefined();
+    expect(shDef.clause.length).toBeGreaterThan(0);
+    const ignoreEffect = shDef.clause[0].effects[0];
+    expect(ignoreEffect.verbType ?? ignoreEffect.verb).toBe('IGNORE');
+    expect(ignoreEffect.adjective).toBe('HEAT');
+    expect(ignoreEffect.objectType ?? ignoreEffect.object).toBe('RESISTANCE');
+    const withBlock = ignoreEffect.withPreposition ?? ignoreEffect.with;
+    expect(withBlock.value.objectType ?? withBlock.value.object).toBe('TALENT_LEVEL');
+    expect(withBlock.value.value).toEqual([10, 15, 20]);
   });
 });
 
@@ -632,10 +686,19 @@ describe('E. Ultimate & Enhanced Variants', () => {
   test('E7: Ultimate energy cost is 300', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.withPreposition.cardinality.value).toBe(300);
+  });
+
+  test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
+    const sequences = getSequences('BATTLE_SKILL');
+    const allFrames = sequences.flatMap(s => s.getFrames());
+    expect(allFrames.length).toBe(11);
+
+    // Second frame (index 1) is a damage frame — it should not have gauge gain
+    expect(allFrames[1].getGaugeGain()).toBe(0);
   });
 });
 
@@ -676,9 +739,13 @@ describe('F. Potentials', () => {
       (e: any) => e.bonusType === 'REACTION_MULTIPLIER' && e.condition?.reactionType === 'COMBUSTION'
     );
     expect(p3Effect).toBeDefined();
-    expect(p3Effect.source).toBe('POTENTIAL');
-    expect(p3Effect.minPotential).toBe(3);
-    expect(p3Effect.values[0]).toBe(1.5);
+    // BASED_ON [POTENTIAL] format: P0 = 1 (no bonus), P3 = 1.5
+    expect(p3Effect.value.verb).toBe('BASED_ON');
+    expect(p3Effect.value.object).toEqual(['POTENTIAL']);
+    expect(p3Effect.value.value.P0).toBe(1);
+    expect(p3Effect.value.value.P2).toBe(1);
+    expect(p3Effect.value.value.P3).toBe(1.5);
+    expect(p3Effect.value.value.P5).toBe(1.5);
   });
 
   test('F4: P4 reduces Twilight cost by x0.85', () => {
@@ -834,10 +901,11 @@ describe('G. Chain Interactions', () => {
     expect(mfDef.stack.verbType).toBe('NONE');
   });
 
-  test('G9: Scorching Heart Effect target is THIS_OPERATOR', () => {
+  test('G9: Scorching Heart Effect target is THIS OPERATOR (self-buff)', () => {
     const statusEvents = mockLaevatainJson.statusEvents as any[];
     const shDef = statusEvents.find((d: any) => d.name === 'SCORCHING_HEART_EFFECT');
-    expect(shDef.target).toBe('THIS_OPERATOR');
+    expect(shDef.targetDeterminer).toBe('THIS');
+    expect(shDef.target).toBe('OPERATOR');
   });
 });
 
@@ -848,9 +916,9 @@ describe('G. Chain Interactions', () => {
 describe('I. Final Strike → Melting Flame Conversion', () => {
   const SLOT2_ID = 'slot2';
 
-  /** Loadout stats with talent 1 unlocked (required for Scorching Heart talent processing). */
+  /** Loadout properties with talent 1 unlocked (required for Scorching Heart talent processing). */
   const LOADOUT_STATS: Record<string, any> = {
-    [SLOT_ID]: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 },
+    [SLOT_ID]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
   };
 
   /** Create a basic attack event with 3 segments (final strike on segment 3). */
@@ -995,7 +1063,7 @@ describe('I. Final Strike → Melting Flame Conversion', () => {
     expect(clampedHeat.eventStatus).toBe(EventStatusType.CONSUMED);
   });
 
-  test('I8: PERFORM_ALL multiplicity — 2 inflictions + 2 slots = 2 absorptions', () => {
+  test('I8: ALL multiplicity — 2 inflictions + 2 slots = 2 absorptions', () => {
     // 2 battle skills fill 2 MF slots, leaving 2 open (max 4)
     // Final strike with 2 active heat inflictions → absorb 2
     const heat1 = heatInflictionEvent(0, 1200);
@@ -1095,7 +1163,7 @@ describe('H. Cooldown Interactions', () => {
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
     const cooldown = cs.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'EXPEND'
+      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.withPreposition.cardinality.value).toBe(10);
@@ -1144,6 +1212,258 @@ describe('H. Cooldown Interactions', () => {
       activationDuration: bsDuration, nonOverlappableRange: bsDuration,
     });
     expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group K: Scorching Heart + Antal Combo Mirrored Heat (Full Pipeline)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
+  const FPS = 120;
+  const SLOT_LAEV = 'slot-0';
+  const SLOT_ANTAL = 'slot-1';
+  const SLOT_AKEKURI = 'slot-2';
+
+  function makeEv(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
+    return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  }
+
+  function laevWiring(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_LAEV,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+  }
+
+  function antalWiring(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_ANTAL,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+          ],
+        },
+        comboRequires: [
+          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+        ],
+        comboDescription: 'any infliction with Focus',
+        comboWindowFrames: 720,
+        comboRequiresActiveColumns: [StatusType.FOCUS],
+      },
+    };
+  }
+
+  function akekuriWiring(): SlotTriggerWiring {
+    return {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          ],
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+  }
+
+  test('K1: Laevatain final strike absorbs both original and mirrored heat inflictions', () => {
+    const wirings = [laevWiring(), antalWiring(), akekuriWiring()];
+    const loadoutProps: Record<string, any> = {
+      [SLOT_LAEV]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
+    };
+
+    // Focus on enemy (from Antal's battle skill)
+    const focus = makeEv({
+      id: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID,
+      columnId: StatusType.FOCUS, startFrame: 0, activationDuration: 60 * FPS,
+    });
+    // Akekuri's heat infliction
+    const akekuriHeat = makeEv({
+      id: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
+      sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
+    });
+    // Antal combo with comboTriggerColumnId set (mirrors heat)
+    const antalCombo = makeEv({
+      id: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.COMBO, startFrame: 400,
+      activationDuration: Math.round(0.8 * FPS),
+      comboTriggerColumnId: 'heatInfliction',
+      segments: [{
+        durationFrames: Math.round(0.8 * FPS),
+        frames: [{ offsetFrame: Math.round(0.7 * FPS) }],
+      }],
+    });
+    // Laevatain final strike after both heat inflictions exist
+    const laevBasic = makeEv({
+      id: 'laev-basic-1', name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
+      columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+      activationDuration: 360,
+      segments: [
+        { durationFrames: 120, label: '1' },
+        { durationFrames: 120, label: '2' },
+        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+      ],
+    });
+
+    const processed = processInflictionEvents(
+      [focus, akekuriHeat, antalCombo, laevBasic],
+      loadoutProps, undefined, wirings,
+    );
+
+    // Mirrored heat infliction should have been generated
+    const mirroredHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(mirroredHeat.length).toBeGreaterThan(0);
+
+    // Melting Flame events should be generated from absorption
+    const mfEvents = processed.filter(
+      (e) => e.columnId === OPERATOR_COLUMNS.MELTING_FLAME,
+    );
+    // Both heat inflictions should be absorbed → 2 MF stacks
+    expect(mfEvents.length).toBe(2);
+
+    // Heat inflictions should be clamped (consumed by absorption)
+    const activeHeatAtFinalStrike = processed.filter((e) => {
+      if (e.columnId !== 'heatInfliction') return false;
+      const end = e.startFrame + e.activationDuration;
+      // Final strike frame = 600 + 240 + 100 = 940
+      return end > 940;
+    });
+    expect(activeHeatAtFinalStrike.length).toBe(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Group H: Chronological Ordering & Event Lifecycle
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('H. Chronological Ordering & Event Lifecycle', () => {
+  test('H1: No MF events when timeline has zero events', () => {
+    const result = deriveStatusesFromEngine([]);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(0);
+  });
+
+  test('H2: Battle skills in reverse array order produce same MF stacking as chronological', () => {
+    // Chronological order
+    const chronoEvents = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      battleSkillEvent(900),
+    ];
+    resetIdCounter();
+    // Reverse array order (simulates dragging events around)
+    const reverseEvents = [
+      battleSkillEvent(900),
+      battleSkillEvent(600),
+      battleSkillEvent(300),
+      battleSkillEvent(0),
+    ];
+
+    resetIdCounter();
+    const chronoResult = deriveStatusesFromEngine(chronoEvents);
+    const chronoMF = filterByColumn(chronoResult, OPERATOR_COLUMNS.MELTING_FLAME)
+      .sort((a, b) => a.startFrame - b.startFrame);
+
+    resetIdCounter();
+    const reverseResult = deriveStatusesFromEngine(reverseEvents);
+    const reverseMF = filterByColumn(reverseResult, OPERATOR_COLUMNS.MELTING_FLAME)
+      .sort((a, b) => a.startFrame - b.startFrame);
+
+    expect(reverseMF.length).toBe(chronoMF.length);
+    expect(reverseMF.length).toBe(4);
+    for (let i = 0; i < chronoMF.length; i++) {
+      expect(reverseMF[i].startFrame).toBe(chronoMF[i].startFrame);
+      expect(reverseMF[i].activationDuration).toBe(chronoMF[i].activationDuration);
+      expect(reverseMF[i].eventStatus).toBe(chronoMF[i].eventStatus);
+    }
+  });
+
+  test('H3: 5 battle skills in reverse order — consumption fires at correct chronological point', () => {
+    // In chronological order: skills at 0,300,600,900,1200
+    // Skill 5 (at 1200) should consume all 4 MF stacks
+    // Array is reversed to test that consumeClause sorts by frame
+    const events = [
+      battleSkillEvent(1200),
+      battleSkillEvent(900),
+      battleSkillEvent(600),
+      battleSkillEvent(300),
+      battleSkillEvent(0),
+    ];
+    const result = deriveStatusesFromEngine(events);
+    const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
+
+    // All 4 MF stacks from skills 1-4 should be consumed at frame 1200
+    const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(consumed.length).toBe(4);
+    consumed.forEach(ev => {
+      expect(ev.startFrame + ev.activationDuration).toBe(1200);
+    });
+  });
+
+  test('H4: Shuffled battle skill order produces same result as sorted', () => {
+    // Shuffled array order (e.g. after multiple drag operations)
+    const shuffled = [
+      battleSkillEvent(600),
+      battleSkillEvent(0),
+      battleSkillEvent(900),
+      battleSkillEvent(300),
+      battleSkillEvent(1200),
+    ];
+    resetIdCounter();
+    const sorted = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      battleSkillEvent(900),
+      battleSkillEvent(1200),
+    ];
+
+    resetIdCounter();
+    const shuffledResult = deriveStatusesFromEngine(shuffled);
+    const shuffledMF = filterByColumn(shuffledResult, OPERATOR_COLUMNS.MELTING_FLAME)
+      .sort((a, b) => a.startFrame - b.startFrame);
+
+    resetIdCounter();
+    const sortedResult = deriveStatusesFromEngine(sorted);
+    const sortedMF = filterByColumn(sortedResult, OPERATOR_COLUMNS.MELTING_FLAME)
+      .sort((a, b) => a.startFrame - b.startFrame);
+
+    expect(shuffledMF.length).toBe(sortedMF.length);
+    for (let i = 0; i < sortedMF.length; i++) {
+      expect(shuffledMF[i].startFrame).toBe(sortedMF[i].startFrame);
+      expect(shuffledMF[i].activationDuration).toBe(sortedMF[i].activationDuration);
+      expect(shuffledMF[i].eventStatus).toBe(sortedMF[i].eventStatus);
+    }
   });
 });
 

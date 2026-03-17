@@ -146,18 +146,18 @@ Each character in `characterRoster` has:
 | `attack_segments[].damage_ticks[].sp` | `resourceInteractions[SKILL_POINT/RECOVER]` | SP recovered on hit |
 | `attack_segments[].damage_ticks[].stagger` | `resourceInteractions[STAGGER/RECOVER]` | Stagger dealt |
 | `skill_duration` | `skills.BATTLE_SKILL.duration` | Duration struct |
-| `skill_spCost` | `resourceInteractions[SKILL_POINT/EXPEND]` | SP cost to activate |
+| `skill_spCost` | `resourceInteractions[SKILL_POINT/CONSUME]` | SP cost to activate |
 | `skill_gaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/SELF]` | Gauge gained |
 | `skill_teamGaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/TEAM]` | Team gauge gained |
 | `skill_damage_ticks[]` | `skills.BATTLE_SKILL.frames[]` | Same frame format |
 | `link_duration` | `skills.COMBO_SKILL.duration` | Duration struct |
-| `link_cooldown` | `resourceInteractions[COOLDOWN/EXPEND]` | Cooldown |
+| `link_cooldown` | `resourceInteractions[COOLDOWN/CONSUME]` | Cooldown |
 | `link_gaugeGain` | `resourceInteractions[ULTIMATE_ENERGY/RECOVER/SELF]` | Gauge gained |
 | `link_damage_ticks[]` | `skills.COMBO_SKILL.frames[]` | Same frame format |
 | *(not in gamedata)* | `skills.COMBO_SKILL.animation` | Time-stop — must be manually measured |
 | `ultimate_duration` | `skills.ULTIMATE.duration` | Duration struct |
 | `ultimate_animationTime` | `skills.ULTIMATE.animation.duration` | Time-stop animation |
-| `ultimate_gaugeMax` | `resourceInteractions[ULTIMATE_ENERGY/EXPEND]` | Energy cost |
+| `ultimate_gaugeMax` | `resourceInteractions[ULTIMATE_ENERGY/CONSUME]` | Energy cost |
 | `ultimate_damage_ticks[]` | `skills.ULTIMATE.frames[]` | Same frame format |
 | `execution_duration` | Not yet parsed | Finisher animation |
 

@@ -1,0 +1,50 @@
+{
+  "weaponName": "Artzy Tyrannical",
+  "statusEvents": [
+    {
+      "name": "ARTZY_TYRANNICAL_ARTZY_EXAGGERATION",
+      "type": "WEAPON_EFFECT",
+      "originId": "ARTZY_TYRANNICAL",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Artzy Exaggeration",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "CRITICAL_HIT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "CRYO_DAMAGE_BONUS",
+          "valueMin": 0.16,
+          "valueMax": 0.448,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Crit with battle/combo skill"
+    }
+  ]
+}

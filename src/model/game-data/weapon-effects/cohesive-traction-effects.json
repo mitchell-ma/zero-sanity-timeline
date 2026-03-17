@@ -1,0 +1,56 @@
+{
+  "weaponName": "Cohesive Traction",
+  "statusEvents": [
+    {
+      "name": "COHESIVE_TRACTION_CONCENTRIC_CIRCLES",
+      "type": "WEAPON_EFFECT",
+      "originId": "COHESIVE_TRACTION",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Concentric Circles",
+      "stack": {
+        "max": {
+          "P0": 3
+        },
+        "instances": 3,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "PERFORM",
+              "objectType": "COMBO_SKILL"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "COMBO_SKILL_DAMAGE_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28,
+          "perStack": true
+        },
+        {
+          "stat": "ELECTRIC_DAMAGE_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "note": "Electric DMG on next battle skill"
+    }
+  ]
+}

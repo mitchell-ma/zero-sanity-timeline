@@ -1,0 +1,93 @@
+{
+  "weaponName": "Clannibal",
+  "statusEvents": [
+    {
+      "name": "CLANNIBAL_VICIOUS_PURGE",
+      "type": "WEAPON_EFFECT",
+      "originId": "CLANNIBAL",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Vicious Purge",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.336
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 25
+    },
+    {
+      "name": "CLANNIBAL_VICIOUS_PURGE_ENEMY",
+      "type": "WEAPON_EFFECT",
+      "originId": "CLANNIBAL",
+      "target": "ENEMY",
+      "label": "Vicious Purge (Enemy)",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "CONSUME",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.1,
+          "valueMax": 0.28
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 25,
+      "note": "Enemy Arts DMG Taken (Fragility)"
+    }
+  ]
+}

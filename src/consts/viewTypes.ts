@@ -1,4 +1,5 @@
 import { DamageType, ElementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
+import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
 export type SkillType = "basic" | "battle" | "combo" | "ultimate";
@@ -35,6 +36,8 @@ export interface Operator {
   color: string;
   element: string;
   role: string;
+  /** Raw operator class type from game data (e.g. "GUARD", "CASTER"). */
+  operatorClassType?: string;
   rarity: number;
   splash?: string;
   weaponTypes: string[];
@@ -135,6 +138,10 @@ export interface EventFrameMarker {
   statusLabel?: string;
   /** Whether this frame duplicates the source infliction that triggered it. */
   duplicatesSourceInfliction?: boolean;
+  /** DSL v2 clause predicates (conditional + unconditional effect groups). */
+  clauses?: readonly FrameClausePredicate[];
+  /** Inline DEAL DAMAGE data (element + per-level multipliers). */
+  dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
   frameTypes?: EventFrameType[];
   /** Template SP recovery for this frame when it is the final strike (from model data). */
@@ -145,6 +152,8 @@ export interface EventFrameMarker {
   gaugeGain?: number;
   /** Ultimate gauge gained by all team operators on this frame. */
   teamGaugeGain?: number;
+  /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
+  gaugeGainByEnemies?: Record<number, number>;
 }
 
 /** Identifies a specific frame within a sequenced event. */
@@ -175,6 +184,8 @@ export interface EventSegmentData {
   segmentType?: SegmentType;
   /** Per-segment susceptibility override (resolved scalar values). Used for multi-phase statuses like Empowered Focus. */
   susceptibility?: Partial<Record<ElementType, number>>;
+  /** Status effect label for this segment (e.g. "-3.6 Res"). */
+  statusLabel?: string;
 }
 
 export interface TimelineEvent {
@@ -235,6 +246,10 @@ export interface TimelineEvent {
   forcedReaction?: boolean;
   /** Number of infliction stacks consumed to trigger this arts reaction (determines status level). */
   inflictionStacks?: number;
+  /** Inherited reduction floor from a merged corrosion (resistance points). */
+  reductionFloor?: number;
+  /** Source operator's Arts Intensity at time of reaction (for corrosion scaling). */
+  artsIntensity?: number;
   /** Operator potential (0–5) for potential-dependent derived effects. */
   operatorPotential?: number;
   /** SP cost consumed when this battle skill event fires. */
@@ -245,6 +260,8 @@ export interface TimelineEvent {
   warnings?: string[];
   /** Magnitude of a status effect (e.g. 0.15 for 15% amp, 0.30 for 30% link bonus, 0.10 for 10% weaken). */
   statusValue?: number;
+  /** Pending segment overrides from share URL decode (applied by attachDefaultSegments when columns become available). */
+  _pendingSegmentOverrides?: { sg?: number[]; fo?: number[][] };
 }
 
 export interface ContextMenuItem {

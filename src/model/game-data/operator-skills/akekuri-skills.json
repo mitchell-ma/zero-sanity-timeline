@@ -48,10 +48,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -162,10 +163,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -260,10 +262,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -362,10 +365,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -476,10 +480,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -586,10 +591,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 0
                   }
@@ -672,10 +678,11 @@
                 }
               },
               {
-                "verbType": "RECOVER",
+                "verbType": "APPLY",
                 "objectType": "STAGGER",
+                "toObjectType": "ENEMY",
                 "withPreposition": {
-                  "cardinality": {
+                  "value": {
                     "verb": "IS",
                     "value": 17
                   }
@@ -788,10 +795,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 10
               }
@@ -800,7 +808,7 @@
           {
             "verbType": "APPLY",
             "objectType": "INFLICTION",
-            "adjective": "HEAT",
+            "adjectiveType": "HEAT",
             "toObjectType": "ENEMY",
             "withPreposition": {
               "stacks": {
@@ -876,7 +884,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "SKILL_POINT",
         "withPreposition": {
           "cardinality": {
@@ -888,7 +896,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "THIS_OPERATOR",
+        "toObjectDeterminer": "THIS",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -899,7 +908,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "ALL_OPERATORS",
+        "toObjectDeterminer": "ALL",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -970,10 +980,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 5
               }
@@ -1092,10 +1103,11 @@
             }
           },
           {
-            "verbType": "RECOVER",
+            "verbType": "APPLY",
             "objectType": "STAGGER",
+            "toObjectType": "ENEMY",
             "withPreposition": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 5
               }
@@ -1156,7 +1168,7 @@
     ],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "COOLDOWN",
         "withPreposition": {
           "cardinality": {
@@ -1168,7 +1180,8 @@
       {
         "verbType": "RECOVER",
         "objectType": "ULTIMATE_ENERGY",
-        "toObjectType": "THIS_OPERATOR",
+        "toObjectDeterminer": "THIS",
+        "toObjectType": "OPERATOR",
         "withPreposition": {
           "cardinality": {
             "verb": "IS",
@@ -1198,7 +1211,7 @@
     "frames": [],
     "effects": [
       {
-        "verbType": "EXPEND",
+        "verbType": "CONSUME",
         "objectType": "ULTIMATE_ENERGY",
         "withPreposition": {
           "cardinality": {

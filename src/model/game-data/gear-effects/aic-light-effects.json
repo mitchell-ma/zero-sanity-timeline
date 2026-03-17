@@ -1,0 +1,48 @@
+{
+  "gearSetType": "AIC_LIGHT",
+  "label": "AIC Light",
+  "statusEvents": [
+    {
+      "name": "AIC_LIGHT",
+      "type": "GEAR_EFFECT",
+      "originId": "AIC_LIGHT",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "AIC Light",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "DEFEAT",
+              "objectType": "ENEMY"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "BASE_ATTACK",
+          "value": 20
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

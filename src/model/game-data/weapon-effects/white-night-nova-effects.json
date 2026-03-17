@@ -1,0 +1,53 @@
+{
+  "weaponName": "White Night Nova",
+  "statusEvents": [
+    {
+      "name": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
+      "type": "WEAPON_EFFECT",
+      "originId": "WHITE_NIGHT_NOVA",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "White Night Nova",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "REACTION"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ARTS_DAMAGE_BONUS",
+          "valueMin": 0.12,
+          "valueMax": 0.336
+        },
+        {
+          "stat": "ARTS_INTENSITY",
+          "valueMin": 25,
+          "valueMax": 70
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "weaponName": "Thunderberge",
+  "statusEvents": [
+    {
+      "name": "THUNDERBERGE_EYE_OF_TALOS",
+      "type": "WEAPON_EFFECT",
+      "originId": "THUNDERBERGE",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Eye of Talos",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "HP"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "SHIELD",
+          "valueMin": 0.24,
+          "valueMax": 0.672
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      },
+      "cooldownSeconds": 15,
+      "note": "Shield from combo HP treatment; 15s CD"
+    }
+  ]
+}

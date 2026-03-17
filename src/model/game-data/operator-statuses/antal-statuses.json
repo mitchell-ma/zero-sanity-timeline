@@ -1,0 +1,164 @@
+[
+  {
+    "name": "FOCUS",
+    "displayName": "Focus",
+    "target": "ENEMY",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": { "P0": 1, "P1": 1, "P2": 1, "P3": 1, "P4": 1, "P5": 1 },
+      "instances": 1,
+      "verb": "RESET"
+    },
+    "potentialMax": 4,
+    "triggerClause": [],
+    "properties": {
+      "duration": {
+        "value": [60],
+        "unit": "SECOND"
+      }
+    },
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "adjective": "ELECTRIC",
+            "object": "SUSCEPTIBILITY",
+            "to": "TARGET",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "value": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.1]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "adjective": "HEAT",
+            "object": "SUSCEPTIBILITY",
+            "to": "TARGET",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "value": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.1]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "originId": "SPECIFIED_RESEARCH_SUBJECT"
+  },
+  {
+    "name": "FOCUS_EMPOWERED",
+    "displayName": "Focus (Empowered)",
+    "enhancementTypes": ["EMPOWERED"],
+    "target": "ENEMY",
+    "isNamedEvent": true,
+    "isForceApplied": false,
+    "stack": {
+      "max": { "P0": 1, "P1": 1, "P2": 1, "P3": 1, "P4": 1, "P5": 1 },
+      "instances": 1,
+      "verb": "RESET"
+    },
+    "potentialMin": 5,
+    "triggerClause": [],
+    "properties": {
+      "duration": {
+        "value": [60],
+        "unit": "SECOND"
+      }
+    },
+    "segments": [
+      {
+        "name": "Focus",
+        "properties": {
+          "duration": {
+            "value": [20],
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "APPLY",
+                "adjective": "ELECTRIC",
+                "object": "SUSCEPTIBILITY",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.1]
+                  }
+                }
+              },
+              {
+                "verb": "APPLY",
+                "adjective": "HEAT",
+                "object": "SUSCEPTIBILITY",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [0.05, 0.05, 0.06, 0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.1]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Empowered Focus",
+        "properties": {
+          "duration": {
+            "value": [40],
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "APPLY",
+                "adjective": "ELECTRIC",
+                "object": "SUSCEPTIBILITY",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [0.09, 0.09, 0.1, 0.1, 0.11, 0.11, 0.12, 0.12, 0.12, 0.13, 0.13, 0.14]
+                  }
+                }
+              },
+              {
+                "verb": "APPLY",
+                "adjective": "HEAT",
+                "object": "SUSCEPTIBILITY",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [0.09, 0.09, 0.1, 0.1, 0.11, 0.11, 0.12, 0.12, 0.12, 0.13, 0.13, 0.14]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "originId": "SPECIFIED_RESEARCH_SUBJECT"
+  }
+]

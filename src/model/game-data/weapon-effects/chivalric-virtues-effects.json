@@ -1,0 +1,48 @@
+{
+  "weaponName": "Chivalric Virtues",
+  "statusEvents": [
+    {
+      "name": "CHIVALRIC_VIRTUES_BLIGHT_FERVOR",
+      "type": "WEAPON_EFFECT",
+      "originId": "CHIVALRIC_VIRTUES",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Blight Fervor",
+      "stack": {
+        "max": {
+          "P0": 1
+        },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "HP"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.09,
+          "valueMax": 0.252
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

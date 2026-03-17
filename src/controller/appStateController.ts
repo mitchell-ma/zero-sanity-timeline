@@ -4,16 +4,16 @@
  */
 
 import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline } from '../consts/viewTypes';
-import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { LoadoutStats, getDefaultLoadoutStats } from '../view/InformationPane';
+import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
+import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
 import { StatType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
-import { WEAPONS, ARMORS, GLOVES, KITS } from '../utils/loadoutRegistry';
-import { CombatLoadout } from './combat-loadout';
+import { ARMORS, GLOVES, KITS } from '../utils/loadoutRegistry';
 import { filterEventsOnOperatorChange } from './timeline/eventController';
+import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
 import { GearSetType } from '../consts/enums';
 import type { Slot } from './timeline/columnBuilder';
 
@@ -63,7 +63,7 @@ export interface UndoableState {
   enemy: Enemy;
   enemyStats: EnemyStats;
   loadouts: Record<string, OperatorLoadoutState>;
-  loadoutStats: Record<string, LoadoutStats>;
+  loadoutProperties: Record<string, LoadoutProperties>;
   resourceConfigs: Record<string, ResourceConfig>;
 }
 
@@ -115,24 +115,26 @@ export function swapOperator(
     );
   }
 
-  // Clear weapon if incompatible with new operator
-  let nextLoadouts = prev.loadouts;
-  const current = prev.loadouts[slotId];
-  if (current.weaponName !== null) {
-    if (!newOp) {
-      nextLoadouts = { ...prev.loadouts, [slotId]: { ...current, weaponName: null } };
-    } else {
-      const equippedWeapon = WEAPONS.find((w) => w.name === current.weaponName);
-      if (equippedWeapon && !CombatLoadout.isWeaponCompatible(newOp, equippedWeapon)) {
-        nextLoadouts = { ...prev.loadouts, [slotId]: { ...current, weaponName: null } };
-      }
-    }
+  // Reset loadout to empty when operator changes
+  let nextLoadouts = { ...prev.loadouts, [slotId]: EMPTY_LOADOUT };
+  // When operators swap slots, also reset the swapped slot's loadout
+  if (existingIdx >= 0 && existingIdx !== slotIndex) {
+    const swappedSlotId = slotIds[existingIdx];
+    nextLoadouts = { ...nextLoadouts, [swappedSlotId]: EMPTY_LOADOUT };
   }
 
-  // Reset loadout stats to rarity-appropriate defaults
-  let nextLoadoutStats = prev.loadoutStats;
+  // Reset loadout properties to rarity-appropriate defaults
+  let nextLoadoutProperties = prev.loadoutProperties;
   if (newOp) {
-    nextLoadoutStats = { ...prev.loadoutStats, [slotId]: getDefaultLoadoutStats(newOp) };
+    nextLoadoutProperties = { ...prev.loadoutProperties, [slotId]: getDefaultLoadoutProperties(newOp) };
+  }
+  // Also reset swapped slot's loadout properties
+  if (existingIdx >= 0 && existingIdx !== slotIndex) {
+    const swappedOp = prev.operators[slotIndex];
+    const swappedSlotId = slotIds[existingIdx];
+    if (swappedOp) {
+      nextLoadoutProperties = { ...nextLoadoutProperties, [swappedSlotId]: getDefaultLoadoutProperties(swappedOp) };
+    }
   }
 
   return {
@@ -140,7 +142,7 @@ export function swapOperator(
     events: nextEvents,
     operators: nextOperators,
     loadouts: nextLoadouts,
-    loadoutStats: nextLoadoutStats,
+    loadoutProperties: nextLoadoutProperties,
   };
 }
 
@@ -150,21 +152,21 @@ export function swapOperator(
  * Compute the next UndoableState when loadout stats change.
  * Handles: potential-dependent ultimate energy cost update.
  */
-export function updateStatsWithPotential(
+export function updatePropertiesWithPotential(
   prev: UndoableState,
   slotId: string,
-  stats: LoadoutStats,
+  properties: LoadoutProperties,
   slotIds: string[],
 ): UndoableState {
-  const prevStats = prev.loadoutStats[slotId];
+  const prevProperties = prev.loadoutProperties[slotId];
   let nextResourceConfigs = prev.resourceConfigs;
 
-  if (prevStats && prevStats.potential !== stats.potential) {
+  if (prevProperties && prevProperties.operator.potential !== properties.operator.potential) {
     const slotIdx = slotIds.indexOf(slotId);
     const op = slotIdx >= 0 ? prev.operators[slotIdx] : null;
     if (op) {
       const newCost = getUltimateEnergyCostForPotential(
-        op.id, stats.potential as 0 | 1 | 2 | 3 | 4 | 5,
+        op.id, properties.operator.potential as 0 | 1 | 2 | 3 | 4 | 5,
       );
       if (newCost != null) {
         const ultKey = `${slotId}-ultimate`;
@@ -174,7 +176,7 @@ export function updateStatsWithPotential(
         } else if (!existing && newCost !== op.ultimateEnergyCost) {
           nextResourceConfigs = {
             ...prev.resourceConfigs,
-            [ultKey]: { startValue: 0, max: newCost, regenPerSecond: 0 },
+            [ultKey]: { startValue: GENERAL_MECHANICS.ultimateEnergy.startAtMax ? newCost : 0, max: newCost, regenPerSecond: 0 },
           };
         }
       }
@@ -183,7 +185,7 @@ export function updateStatsWithPotential(
 
   return {
     ...prev,
-    loadoutStats: { ...prev.loadoutStats, [slotId]: stats },
+    loadoutProperties: { ...prev.loadoutProperties, [slotId]: properties },
     resourceConfigs: nextResourceConfigs,
   };
 }
@@ -198,7 +200,7 @@ export function computeSlots(
   slotIds: string[],
   operators: (Operator | null)[],
   loadouts: Record<string, OperatorLoadoutState>,
-  loadoutStats: Record<string, LoadoutStats>,
+  loadoutProperties: Record<string, LoadoutProperties>,
 ): Slot[] {
   const allGear = [...ARMORS, ...GLOVES, ...KITS];
   return slotIds.map((slotId, i) => {
@@ -222,11 +224,11 @@ export function computeSlots(
     return {
       slotId,
       operator: op,
-      potential: loadoutStats[slotId]?.potential,
+      potential: loadoutProperties[slotId]?.operator.potential,
       weaponName: lo?.weaponName ?? undefined,
       tacticalName: lo?.tacticalName ?? undefined,
       gearSetType,
-      comboSkillLevel: loadoutStats[slotId]?.comboSkillLevel,
+      comboSkillLevel: loadoutProperties[slotId]?.skills.comboSkillLevel,
     };
   });
 }
@@ -238,7 +240,7 @@ export function computeSlots(
  */
 export function computeDefaultResourceConfig(
   operators: (Operator | null)[],
-  loadoutStats: Record<string, LoadoutStats>,
+  loadoutProperties: Record<string, LoadoutProperties>,
   slotIds: string[],
   colKey: string,
   spKey: string,
@@ -246,7 +248,11 @@ export function computeDefaultResourceConfig(
   staggerMax?: number,
 ): ResourceConfig {
   if (colKey === spKey) {
-    return { startValue: 200, max: 300, regenPerSecond: 8 };
+    return {
+      startValue: GENERAL_MECHANICS.skillPoints.startValue,
+      max: GENERAL_MECHANICS.skillPoints.max,
+      regenPerSecond: GENERAL_MECHANICS.skillPoints.regenPerSecond,
+    };
   }
   if (staggerKey && colKey === staggerKey) {
     return { startValue: 0, max: staggerMax ?? 60, regenPerSecond: 0 };
@@ -255,13 +261,13 @@ export function computeDefaultResourceConfig(
   const slotId = colKey.replace(/-ultimate$/, '');
   const slotIdx = slotIds.indexOf(slotId);
   const op = slotIdx >= 0 ? operators[slotIdx] : null;
-  if (!op) return { startValue: 0, max: 300, regenPerSecond: 0 };
-  const stats = loadoutStats[slotId];
-  const potential = stats?.potential ?? 5;
+  if (!op) return { startValue: 0, max: GENERAL_MECHANICS.skillPoints.max, regenPerSecond: 0 };
+  const props = loadoutProperties[slotId];
+  const potential = props?.operator.potential ?? 5;
   const cost =
     getUltimateEnergyCostForPotential(op.id, potential as 0 | 1 | 2 | 3 | 4 | 5) ??
     op.ultimateEnergyCost;
-  return { startValue: 0, max: cost, regenPerSecond: 0 };
+  return { startValue: GENERAL_MECHANICS.ultimateEnergy.startAtMax ? cost : 0, max: cost, regenPerSecond: 0 };
 }
 
 // ── Event default lookup ─────────────────────────────────────────────────────
@@ -294,17 +300,73 @@ export function findEventDefaults(
 }
 
 /**
- * Attach default segments from column definitions to events that don't have them.
- * Used after loading events from storage (segments are not persisted).
+ * Attach default segments and derivable properties from column definitions.
+ * Also applies any pending segment overrides stashed by decodeEmbed (when columns
+ * were not available at decode time).
  */
 export function attachDefaultSegments(
   events: TimelineEvent[],
   columns: (MiniTimeline | { type: 'placeholder' })[],
 ): TimelineEvent[] {
   return events.map((ev) => {
-    if (ev.segments) return ev;
+    const needsSegments = !ev.segments || ev._pendingSegmentOverrides;
+    const needsDefaults = ev.skillPointCost === undefined || ev.gaugeGain === undefined
+      || ev.animationDuration === undefined || ev.timeInteraction === undefined;
+    if (!needsSegments && !needsDefaults) return ev;
+
     const defaults = findEventDefaults(ev, columns);
-    if (!defaults?.segments) return ev;
-    return { ...ev, segments: defaults.segments };
+
+    // Attach derivable properties from column definition if missing
+    let patched = ev;
+    if (defaults && needsDefaults) {
+      const props: Partial<TimelineEvent> = {};
+      if (ev.skillPointCost === undefined && defaults.skillPointCost != null) props.skillPointCost = defaults.skillPointCost;
+      if (ev.animationDuration === undefined && defaults.animationDuration != null) props.animationDuration = defaults.animationDuration;
+      if (ev.gaugeGain === undefined && (defaults as any).gaugeGain != null) props.gaugeGain = (defaults as any).gaugeGain;
+      if (ev.teamGaugeGain === undefined && (defaults as any).teamGaugeGain != null) props.teamGaugeGain = (defaults as any).teamGaugeGain;
+      if (ev.gaugeGainByEnemies === undefined && (defaults as any).gaugeGainByEnemies != null) props.gaugeGainByEnemies = (defaults as any).gaugeGainByEnemies;
+      if (ev.timeInteraction === undefined && (defaults as any).timeInteraction != null) props.timeInteraction = (defaults as any).timeInteraction;
+      if (ev.isPerfectDodge === undefined && (defaults as any).isPerfectDodge != null) props.isPerfectDodge = (defaults as any).isPerfectDodge;
+      if (ev.timeStop === undefined && (defaults as any).timeStop != null) props.timeStop = (defaults as any).timeStop;
+      if (ev.nonOverlappableRange === undefined && defaults.segments) {
+        const span = defaults.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+        props.nonOverlappableRange = span;
+      }
+      if (Object.keys(props).length > 0) patched = { ...ev, ...props };
+    }
+
+    if (!defaults?.segments) return patched;
+
+    // Start from existing segments or deep-copy defaults
+    // Truncate to sg length if pending overrides specify fewer segments (user removed some)
+    const overrides = ev._pendingSegmentOverrides;
+    const segCount = overrides?.sg ? overrides.sg.length : defaults.segments.length;
+    let segments = ev.segments
+      ? ev.segments
+      : defaults.segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
+
+    // Apply pending overrides from share URL decode
+    if (overrides) {
+      // Deep-copy if we haven't already (when segments came from ev.segments)
+      if (ev.segments) {
+        segments = segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
+      }
+      if (overrides.sg) {
+        for (let si = 0; si < overrides.sg.length && si < segments.length; si++) {
+          segments[si] = { ...segments[si], durationFrames: overrides.sg[si] };
+        }
+      }
+      if (overrides.fo) {
+        for (const [si, fi, offset] of overrides.fo) {
+          if (si < segments.length && segments[si].frames && fi < segments[si].frames!.length) {
+            segments[si].frames![fi] = { ...segments[si].frames![fi], offsetFrame: offset };
+          }
+        }
+      }
+      const { _pendingSegmentOverrides, ...rest } = patched;
+      return { ...rest, segments };
+    }
+
+    return { ...patched, segments };
   });
 }

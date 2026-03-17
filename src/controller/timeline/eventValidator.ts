@@ -5,23 +5,27 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillsType, TimeDependency } from '../../consts/enums';
+import { CombatSkillsType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
-import { SubjectType, VerbType, ObjectType, matchInteraction } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
 import type { Interaction } from '../../consts/semantics';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 
 const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
   ({ subjectType, verbType, objectType, ...extra } as Interaction);
+const _IO = (determiner: DeterminerType, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectDeterminer: determiner, subjectType: SubjectType.OPERATOR, verbType, objectType, ...extra } as Interaction);
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.THIS_OPERATOR),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _I(SubjectType.THIS_OPERATOR, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
+  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
+  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
 ];
 function isAlwaysAvailable(i: Interaction): boolean {
   return ALWAYS_AVAILABLE_INTERACTIONS.some((aa) => matchInteraction(i, aa));
@@ -96,14 +100,24 @@ export function preConsumptionValue(
   const p1 = pts[lastBeforeIdx + 1];
   if (!p1 || p0.frame === p1.frame) return p0.value;
   const t = (frame - p0.frame) / (p1.frame - p0.frame);
-  return p0.value + t * (p1.value - p0.value);
+  const interpolated = p0.value + t * (p1.value - p0.value);
+  // Round to avoid floating-point errors (e.g. 99.9999 instead of 100)
+  return Math.round(interpolated * 100) / 100;
 }
 
 // ── SP-insufficient zones ─────────────────────────────────────────────────────
 
-export type ResourceZone = { start: number; end: number };
+export type { ResourceZone } from './skillPointTimeline';
 
 // ── Resource insufficiency zone helpers ───────────────────────────────────────
+
+/** Tolerance for floating-point comparisons on accumulated resource values. */
+const RESOURCE_EPSILON = 0.01;
+
+/** Returns true if `value` is below `threshold`, accounting for floating-point imprecision. */
+function belowThreshold(value: number, threshold: number) {
+  return value < threshold - RESOURCE_EPSILON;
+}
 
 /**
  * Walks a resource graph and finds frame ranges where the value is below `threshold`.
@@ -115,24 +129,24 @@ function findInsufficientZones(
 ): ResourceZone[] {
   if (pts.length < 2) return [];
   const gaps: ResourceZone[] = [];
-  let insuffStart: number | null = pts[0].value < threshold ? pts[0].frame : null;
+  let insuffStart: number | null = belowThreshold(pts[0].value, threshold) ? pts[0].frame : null;
 
   for (let i = 1; i < pts.length; i++) {
     const prev = pts[i - 1];
     const curr = pts[i];
 
     if (prev.frame === curr.frame) {
-      if (curr.value < threshold && insuffStart === null) {
+      if (belowThreshold(curr.value, threshold) && insuffStart === null) {
         insuffStart = curr.frame;
-      } else if (curr.value >= threshold && insuffStart !== null) {
+      } else if (!belowThreshold(curr.value, threshold) && insuffStart !== null) {
         gaps.push({ start: insuffStart, end: curr.frame });
         insuffStart = null;
       }
       continue;
     }
 
-    const prevBelow = prev.value < threshold;
-    const currBelow = curr.value < threshold;
+    const prevBelow = belowThreshold(prev.value, threshold);
+    const currBelow = belowThreshold(curr.value, threshold);
 
     if (prevBelow && !currBelow) {
       const t = (threshold - prev.value) / (curr.value - prev.value);
@@ -217,8 +231,7 @@ export function computeResourceZonesForDrag(
   for (const ev of events) {
     if (!draggedIds.has(ev.id)) continue;
     if (ev.columnId === SKILL_COLUMNS.BATTLE) {
-      const slot = slots.find((s) => s.slotId === ev.ownerId);
-      const cost = slot?.operator?.skills.battle.skillPointCost ?? 0;
+      const cost = ev.skillPointCost ?? 0;
       if (cost > 0) spExclusions.push({ frame: ev.startFrame, cost });
     }
   }
@@ -372,7 +385,7 @@ export function checkResourceAvailability(
     const graph = resourceGraphs.get(ultKey);
     if (graph) {
       const val = preConsumptionValue(graph, atFrame);
-      if (val !== null && val < graph.max) {
+      if (val !== null && belowThreshold(val, graph.max)) {
         return { sufficient: false, reason: `Not enough ultimate energy (${Math.floor(val)}/${graph.max})` };
       }
     }
@@ -383,7 +396,7 @@ export function checkResourceAvailability(
     const spGraph = resourceGraphs.get(spKey);
     if (spGraph) {
       const val = preConsumptionValue(spGraph, atFrame);
-      if (val !== null && val < spCost) {
+      if (val !== null && belowThreshold(val, spCost)) {
         return { sufficient: false, reason: `Not enough SP (${Math.floor(val)}/${spCost})` };
       }
     }
@@ -746,17 +759,33 @@ export function checkVariantAvailability(
     return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
   }
 
-  // Check Melting Flame stacks for empowered variants
+  // Check operator status stacks for empowered variants (data-driven)
   if (isEmpowered) {
-    const mfActiveCount = events.filter(
-      (ev) =>
-        ev.ownerId === ownerId &&
-        ev.columnId === 'melting-flame' &&
-        ev.startFrame <= atFrame &&
-        ev.startFrame + ev.activationDuration > atFrame,
-    ).length;
-    if (mfActiveCount < 4) {
-      return { disabled: true, reason: `Requires max Melting Flame (${mfActiveCount}/4)` };
+    const slot = slots?.find((s) => s.slotId === ownerId);
+    const opId = slot?.operator?.id;
+    if (opId) {
+      const opJson = getOperatorJson(opId);
+      const statusEvents = opJson?.statusEvents as any[] | undefined;
+      const statusDef = statusEvents?.find(
+        (se: any) => se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS') && se.isNamedEvent && se.stack,
+      );
+      if (statusDef) {
+        const potKey = `P${slot?.potential ?? 0}`;
+        const maxStacks = statusDef.stack.max?.[potKey] ?? statusDef.stack.max?.P0 ?? 4;
+        const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.name]
+          ?? statusDef.name.toLowerCase().replace(/_/g, '-');
+        const statusLabel = STATUS_LABELS[statusDef.name as StatusType] ?? statusDef.name;
+        const activeCount = events.filter(
+          (ev) =>
+            ev.ownerId === ownerId &&
+            ev.columnId === colId &&
+            ev.startFrame <= atFrame &&
+            ev.startFrame + ev.activationDuration > atFrame,
+        ).length;
+        if (activeCount < maxStacks) {
+          return { disabled: true, reason: `Requires max ${statusLabel} (${activeCount}/${maxStacks})` };
+        }
+      }
     }
   }
 
@@ -854,16 +883,15 @@ export function validateResources(
       const graph = resourceGraphs.get(ultKey);
       if (!graph) continue;
       const val = preConsumptionValue(graph, ev.startFrame);
-      if (val !== null && val < graph.max) {
+      if (val !== null && belowThreshold(val, graph.max)) {
         map.set(ev.id, `Not enough ultimate energy (${Math.floor(val)}/${graph.max})`);
       }
     } else if (ev.columnId === SKILL_COLUMNS.BATTLE) {
-      const slot = slots.find((s) => s.slotId === ev.ownerId);
-      const spCost = slot?.operator?.skills.battle.skillPointCost ?? 100;
+      const spCost = ev.skillPointCost ?? 100;
       const spGraph = resourceGraphs.get(spKey);
       if (!spGraph) continue;
       const val = preConsumptionValue(spGraph, ev.startFrame);
-      if (val !== null && val < spCost) {
+      if (val !== null && belowThreshold(val, spCost)) {
         map.set(ev.id, `Not enough SP (${Math.floor(val)}/${spCost})`);
       }
     }

@@ -1,0 +1,48 @@
+{
+  "weaponName": "Rational Farewell",
+  "statusEvents": [
+    {
+      "name": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
+      "type": "WEAPON_EFFECT",
+      "originId": "RATIONAL_FAREWELL",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Aid from the Past",
+      "stack": {
+        "max": { "P0": 1 },
+        "instances": 1,
+        "verbType": "RESET"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "APPLY",
+              "objectType": "ARTS_REACTION"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "subjectType": "ENEMY",
+              "verbType": "IS",
+              "objectType": "COMBUSTED"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        { "stat": "BATTLE_SKILL_DAMAGE_BONUS", "valueMin": 0.10, "valueMax": 0.28 },
+        { "stat": "ATTACK_BONUS", "valueMin": 0.16, "valueMax": 0.448 }
+      ],
+      "properties": {
+        "duration": { "value": [15], "unit": "SECOND" }
+      },
+      "note": "When combo applies Arts Burst/Combustion"
+    }
+  ]
+}

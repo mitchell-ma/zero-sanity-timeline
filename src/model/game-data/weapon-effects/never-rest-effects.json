@@ -1,0 +1,93 @@
+{
+  "weaponName": "Never Rest",
+  "statusEvents": [
+    {
+      "name": "NEVER_REST_REINCARNATION",
+      "type": "WEAPON_EFFECT",
+      "originId": "NEVER_REST",
+      "targetDeterminer": "THIS",
+      "target": "OPERATOR",
+      "label": "Reincarnation",
+      "stack": {
+        "max": {
+          "P0": 5
+        },
+        "instances": 5,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "PHYSICAL_DAMAGE_BONUS",
+          "valueMin": 0.05,
+          "valueMax": 0.1,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      }
+    },
+    {
+      "name": "NEVER_REST_REINCARNATION_TEAM",
+      "type": "WEAPON_EFFECT",
+      "originId": "NEVER_REST",
+      "targetDeterminer": "OTHER",
+      "target": "OPERATOR",
+      "label": "Reincarnation (Team)",
+      "stack": {
+        "max": {
+          "P0": 5
+        },
+        "instances": 5,
+        "verbType": "NONE"
+      },
+      "triggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subjectType": "OPERATOR",
+              "verbType": "RECOVER",
+              "objectType": "SKILL_POINT"
+            }
+          ]
+        }
+      ],
+      "clause": [],
+      "buffs": [
+        {
+          "stat": "ATTACK_BONUS",
+          "valueMin": 0.025,
+          "valueMax": 0.05,
+          "perStack": true
+        }
+      ],
+      "properties": {
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
+        }
+      }
+    }
+  ]
+}

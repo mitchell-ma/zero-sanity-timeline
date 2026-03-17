@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { WeaponType } from '../../consts/enums';
 import type { CustomWeapon, CustomWeaponSkillDef, CustomWeaponNamedEffect } from '../../model/custom/customWeaponTypes';
 import { maxSkillsForRarity } from '../../model/custom/customWeaponTypes';
-import { ObjectType } from '../../consts/semantics';
+import { ObjectType, DeterminerType } from '../../consts/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import IdField from './IdField';
 
@@ -220,7 +220,7 @@ function defaultNamedEffect(): CustomWeaponNamedEffect {
   return {
     name: '',
     triggers: [defaultInteraction()],
-    target: ObjectType.THIS_OPERATOR,
+    target: ObjectType.OPERATOR,
     durationSeconds: 15,
     maxStacks: 1,
     buffs: [],
@@ -240,9 +240,9 @@ function NamedEffectEditor({ effect, onChange }: { effect: CustomWeaponNamedEffe
       <label className="wz-field">
         <span>Target</span>
         <select value={effect.target} onChange={(e) => update({ target: e.target.value })}>
-          <option value={ObjectType.THIS_OPERATOR}>This Operator</option>
-          <option value={ObjectType.ALL_OPERATORS}>All Operators</option>
-          <option value={ObjectType.OTHER_OPERATORS}>Other Operators</option>
+          <option value={ObjectType.OPERATOR}>This Operator</option>
+          <option value={`${DeterminerType.ALL}_${ObjectType.OPERATOR}`}>All Operators</option>
+          <option value={`${DeterminerType.OTHER}_${ObjectType.OPERATOR}`}>Other Operators</option>
           <option value={ObjectType.ENEMY}>Enemy</option>
         </select>
       </label>
