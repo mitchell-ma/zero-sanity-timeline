@@ -1,5 +1,16 @@
 # Devlog
 
+## 2026-03-18
+- **Freeform mode** — new interaction mode lets you manually place inflictions and reactions on the enemy timeline, bypassing the normal skill-driven pipeline
+- Loadout editing moved to the side panel — click the gear icon on any operator header to open a full loadout editor with operator, weapon, gear, consumable, and tactical selectors
+- Operator and item selectors now feature splash art previews, search filtering, and rarity filters
+- Timeline columns now have weighted widths — status columns are wider, dash columns narrower, for better readability
+- Enhanced skill validation now uses the DSL clause system instead of hardcoded ultimate active phase checks
+- Ultimate energy tracking improved — SP return from skills is now simulated with a dual-pool model for more accurate gauge calculations
+- Segment trimming — when status effects get consumed or refreshed early, their visual segments are properly shortened
+- Hover highlight on event segments shows which segment your cursor is over
+- DSL field naming simplified across all operator data files
+
 ## 2026-03-17
 - Under-the-hood cleanup — fixed some edge cases in how status effects get consumed and removed unused code
 - Renamed internal components for clarity (no user-facing changes)

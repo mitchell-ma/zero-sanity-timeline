@@ -62,13 +62,13 @@ const OBJECT_DESC: Partial<Record<string, string>> = {
 };
 
 function describeCondition(c: Interaction): string {
-  const subject = c.subjectType === SubjectType.OPERATOR
+  const subject = c.subject === SubjectType.OPERATOR
     ? (OPERATOR_DET_DESC[c.subjectDeterminer ?? DeterminerType.THIS] ?? 'this operator')
-    : (SUBJECT_DESC[c.subjectType] ?? c.subjectType.toLowerCase().replace(/_/g, ' '));
+    : (SUBJECT_DESC[c.subject] ?? c.subject.toLowerCase().replace(/_/g, ' '));
   const verb = c.negated
     ? `is not`
-    : (VERB_DESC[c.verbType] ?? c.verbType.toLowerCase().replace(/_/g, ' '));
-  const object = OBJECT_DESC[c.objectType] ?? c.objectType.replace(/_/g, ' ');
+    : (VERB_DESC[c.verb] ?? c.verb.toLowerCase().replace(/_/g, ' '));
+  const object = OBJECT_DESC[c.object] ?? c.object.replace(/_/g, ' ');
   const id = c.objectId ? ` (${c.objectId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase())})` : '';
   return `${subject} ${verb} ${object}${id}`;
 }
@@ -85,9 +85,9 @@ function generateComboDescription(triggerClause: Predicate[]): string {
 /** Default interaction for combo triggers — "Enemy IS [state]" rather than generic "This Operator PERFORM Battle Skill". */
 function defaultComboTrigger(): Interaction {
   return {
-    subjectType: SubjectType.ENEMY as any,
-    verbType: VerbType.IS,
-    objectType: ObjectType.COMBUSTED as any,
+    subject: SubjectType.ENEMY as any,
+    verb: VerbType.IS,
+    object: ObjectType.COMBUSTED as any,
   };
 }
 
@@ -162,7 +162,7 @@ function buildSkillOptions(): SkillOption[] {
           cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
           animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
           resourceInteractions: skill.skillPointCost
-            ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }]
+            ? [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: skill.skillPointCost }]
             : undefined,
         },
       });

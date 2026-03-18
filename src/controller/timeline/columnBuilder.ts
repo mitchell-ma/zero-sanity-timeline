@@ -1,6 +1,6 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { TACTICALS } from '../../utils/loadoutRegistry';
@@ -551,37 +551,47 @@ export function buildColumns(
               segments: [...seg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }],
             };
           }
-          // Generic ultimate: build Animation / Statis / Active / Cooldown segments
+          // Generic ultimate: build segments from JSON data or fall back to manual construction
           if (skillType === SKILL_COLUMNS.ULTIMATE) {
-            const animDur = col.defaultEvent!.animationDuration ?? 0;
-            const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
-            const statisDur = Math.max(0, activationDur - animDur);
-            const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
-            const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
-
-            // Build active-phase segment from frame data if available
             const ultName = op?.skills.ultimate?.name;
             const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
-            let activeSegment: import('../../consts/viewTypes').EventSegmentData;
-            if (ultSeqs?.length) {
+            // Use data-driven segments when the JSON has explicit segmentType metadata
+            const hasTypedSegments = ultSeqs?.length && ultSeqs.some(s => 'segmentType' in s && (s as any).segmentType);
+            if (hasTypedSegments) {
               const ultLabels = getSegmentLabels(op!.id, ultName!);
-              const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
-              activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active', segmentType: SegmentType.ACTIVE };
+              const seg = SkillSegmentBuilder.buildSegments(ultSeqs!, { labels: ultLabels });
+              col.defaultEvent = {
+                ...col.defaultEvent!,
+                segments: seg.segments,
+              };
             } else {
-              activeSegment = { durationFrames: activeDur, label: 'Active', segmentType: SegmentType.ACTIVE };
+              const animDur = col.defaultEvent!.animationDuration ?? 0;
+              const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
+              const statisDur = Math.max(0, activationDur - animDur);
+              const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
+              const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
+
+              let activeSegment: import('../../consts/viewTypes').EventSegmentData;
+              if (ultSeqs?.length) {
+                const ultLabels = getSegmentLabels(op!.id, ultName!);
+                const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
+                activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active', segmentType: SegmentType.ACTIVE };
+              } else {
+                activeSegment = { durationFrames: activeDur, label: 'Active', segmentType: SegmentType.ACTIVE };
+              }
+
+              const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
+                { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.ANIMATION },
+                { durationFrames: statisDur, label: 'Statis', segmentType: SegmentType.NORMAL },
+                activeSegment,
+                { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN },
+              ];
+
+              col.defaultEvent = {
+                ...col.defaultEvent!,
+                segments: ultSegments,
+              };
             }
-
-            const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
-              { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.ANIMATION },
-              { durationFrames: statisDur, label: 'Statis', segmentType: SegmentType.NORMAL },
-              activeSegment,
-              { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN },
-            ];
-
-            col.defaultEvent = {
-              ...col.defaultEvent!,
-              segments: ultSegments,
-            };
           }
           // ── Append linked custom skills as event variants ──
           if (op) {
@@ -612,29 +622,7 @@ export function buildColumns(
         }
       }
     }
-    // ── OTHER column — uncategorized operator damage ──────────────────────────
-    let otherColCount = 0;
-    if (op) {
-      const OTHER_DEFAULT_FRAMES = Math.round(1 * FPS); // 1 second at 120fps
-      columns.push({
-        key: `${slot.slotId}-${OPERATOR_COLUMNS.OTHER}`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.OTHER,
-        label: ColumnLabel.OTHER,
-        color: op.color,
-        headerVariant: 'skill',
-        defaultEvent: {
-          name: 'Other',
-          defaultActivationDuration: OTHER_DEFAULT_FRAMES,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
-        },
-      });
-      otherColCount++;
-      slotHasCols = true;
-    }
+    // OTHER column is sheet-only (damageTableBuilder) — not shown in the timeline.
 
     // ── Tactical subtimeline column ───────────────────────────────────────────
     let tacticalColCount = 0;
@@ -735,7 +723,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + otherColCount + tacticalColCount + statusColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + tacticalColCount + statusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,
@@ -774,24 +762,56 @@ export function buildColumns(
       id: s.id,
       label: s.label,
       color: s.color,
+      defaultEvent: {
+        name: s.id,
+        defaultActivationDuration: 120,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
     })),
     // Arts reactions
     ...REACTION_MICRO_COLUMNS.map((mc) => ({
       id: mc.id,
       label: mc.label,
       color: mc.color,
+      defaultEvent: {
+        name: mc.id,
+        defaultActivationDuration: 600, // 5s
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
     })),
     // Physical inflictions
     {
       id: 'vulnerableInfliction',
       label: 'VULN',
       color: '#c0c8d0',
+      defaultEvent: {
+        name: 'vulnerableInfliction',
+        defaultActivationDuration: 120,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
     },
     // Physical statuses
     {
       id: 'breach',
       label: 'BREACH',
       color: '#c0c8d0',
+      defaultEvent: {
+        name: 'breach',
+        defaultActivationDuration: 1800,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
     },
     // Debuffs
     {
@@ -803,8 +823,8 @@ export function buildColumns(
         defaultActivationDuration: 7200, // 60s at 120fps (Focus duration)
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        sourceOwnerId: DEBUGGER_OWNER_ID,
-        sourceSkillName: 'Debug',
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
       },
     },
     {
@@ -816,8 +836,8 @@ export function buildColumns(
         defaultActivationDuration: 1800, // 15s at 120fps
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        sourceOwnerId: DEBUGGER_OWNER_ID,
-        sourceSkillName: 'Debug',
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
       },
     },
     {
@@ -829,8 +849,8 @@ export function buildColumns(
         defaultActivationDuration: 1800, // 15s at 120fps
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        sourceOwnerId: DEBUGGER_OWNER_ID,
-        sourceSkillName: 'Debug',
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
       },
     },
     // Data-driven enemy status entries from operator statusEvents (deduped by id)

@@ -14,14 +14,14 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     {
       name: 'FOCUS',
       target: 'ENEMY',
-      stack: { max: { P0: 1 }, instances: 1, verbType: 'NONE' },
+      stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
       triggerClause: [],
       properties: { duration: { value: [60], unit: 'SECOND' } },
     },
     {
       name: 'FOCUS_EMPOWERED',
       target: 'ENEMY',
-      stack: { max: { P0: 1 }, instances: 1, verbType: 'NONE' },
+      stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
       triggerClause: [],
       properties: { duration: { value: [60], unit: 'SECOND' } },
     },
@@ -110,11 +110,11 @@ describe('EXTEND UNTIL END', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.EXTEND,
-      objectType: NounType.STATUS,
+      verb: VerbType.EXTEND,
+      object: NounType.STATUS,
       objectId: 'LIFT',
-      onObjectType: NounType.ENEMY,
-      untilPreposition: DURATION_END,
+      onObject: NounType.ENEMY,
+      until: DURATION_END,
     };
 
     const ctx = makeCtx({
@@ -146,11 +146,11 @@ describe('EXTEND UNTIL END', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.EXTEND,
-      objectType: NounType.STATUS,
+      verb: VerbType.EXTEND,
+      object: NounType.STATUS,
       objectId: 'LIFT',
-      onObjectType: NounType.ENEMY,
-      untilPreposition: DURATION_END,
+      onObject: NounType.ENEMY,
+      until: DURATION_END,
     };
 
     const ctx = makeCtx({
@@ -179,11 +179,11 @@ describe('EXTEND UNTIL END', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.EXTEND,
-      objectType: NounType.STATUS,
+      verb: VerbType.EXTEND,
+      object: NounType.STATUS,
       objectId: 'LIFT',
-      onObjectType: NounType.ENEMY,
-      untilPreposition: DURATION_END,
+      onObject: NounType.ENEMY,
+      until: DURATION_END,
     };
 
     const ctx = makeCtx({
@@ -209,11 +209,11 @@ describe('EXTEND UNTIL END', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.EXTEND,
-      objectType: NounType.STATUS,
+      verb: VerbType.EXTEND,
+      object: NounType.STATUS,
       objectId: 'LIFT',
-      onObjectType: NounType.ENEMY,
-      untilPreposition: DURATION_END,
+      onObject: NounType.ENEMY,
+      until: DURATION_END,
     };
 
     const ctx = makeCtx({
@@ -245,9 +245,9 @@ describe('RECEIVE condition', () => {
     });
 
     const cond: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.RECEIVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.RECEIVE,
+      object: NounType.STATUS,
       objectId: 'LIFT',
     };
 
@@ -266,9 +266,9 @@ describe('RECEIVE condition', () => {
     });
 
     const cond: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.RECEIVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.RECEIVE,
+      object: NounType.STATUS,
       objectId: 'LIFT',
     };
 
@@ -278,9 +278,9 @@ describe('RECEIVE condition', () => {
 
   test('does not fire when no matching events exist', () => {
     const cond: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.RECEIVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.RECEIVE,
+      object: NounType.STATUS,
       objectId: 'LIFT',
     };
 
@@ -307,9 +307,9 @@ describe('RECEIVE condition', () => {
     });
 
     const cond: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.RECEIVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.RECEIVE,
+      object: NounType.STATUS,
       objectId: 'LIFT',
     };
 
@@ -328,9 +328,9 @@ describe('RECEIVE condition', () => {
     });
 
     const cond: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.RECEIVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.RECEIVE,
+      object: NounType.STATUS,
       objectId: 'LIFT',
     };
 

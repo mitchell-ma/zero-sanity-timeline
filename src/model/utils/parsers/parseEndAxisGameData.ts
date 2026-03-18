@@ -24,12 +24,12 @@ interface Duration {
 }
 
 interface Effect {
-  verbType: string;
-  objectType: string;
+  verb: string;
+  object: string;
   adjective?: string | string[];
-  toObjectDeterminer?: string;
-  toObjectType?: string;
-  withPreposition?: {
+  toDeterminer?: string;
+  toObject?: string;
+  with?: {
     cardinality?: { verb: string; value: number };
     stacks?: { verb: string; value: number };
     statusLevel?: { verb: string; value: number };
@@ -181,8 +181,8 @@ const GAMEDATA_ID_TO_OPERATOR: Record<string, string> = {
 // ── Anomaly type mapping ─────────────────────────────────────────────────────
 
 interface AnomalyMapping {
-  verbType: string;
-  objectType: string;
+  verb: string;
+  object: string;
   adjective?: string | string[];
   isForced?: boolean;
   statusLevel?: number;
@@ -190,18 +190,18 @@ interface AnomalyMapping {
 }
 
 const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
-  blaze_attach:   { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'HEAT' },
-  cold_attach:    { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'CRYO' },
-  emag_attach:    { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'ELECTRIC' },
-  nature_attach:  { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'NATURE' },
-  magma_0:        { verbType: 'APPLY', objectType: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, statusLevel: 1 },
-  magma_1:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_2:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_3:        { verbType: 'APPLY', objectType: 'INFLICTION', adjective: 'MELTING_FLAME' },
-  magma_4:        { verbType: 'CONSUME', objectType: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
-  blaze_burst:    { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
-  burning:        { verbType: 'APPLY', objectType: 'REACTION', adjective: 'COMBUSTION' },
-  corrosion:      { verbType: 'APPLY', objectType: 'REACTION', adjective: 'CORROSION', isForced: true },
+  blaze_attach:   { verb: 'APPLY', object: 'INFLICTION', adjective: 'HEAT' },
+  cold_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'CRYO' },
+  emag_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'ELECTRIC' },
+  nature_attach:  { verb: 'APPLY', object: 'INFLICTION', adjective: 'NATURE' },
+  magma_0:        { verb: 'APPLY', object: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, statusLevel: 1 },
+  magma_1:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_2:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_3:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
+  magma_4:        { verb: 'CONSUME', object: 'INFLICTION', adjective: 'HEAT', conversion: { statusType: 'MELTING_FLAME', ratio: '1:1' } },
+  blaze_burst:    { verb: 'APPLY', object: 'REACTION', adjective: 'COMBUSTION' },
+  burning:        { verb: 'APPLY', object: 'REACTION', adjective: 'COMBUSTION' },
+  corrosion:      { verb: 'APPLY', object: 'REACTION', adjective: 'CORROSION', isForced: true },
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -239,18 +239,18 @@ function convertTick(
 
   // SP recovery
   effects.push({
-    verbType: 'RECOVER',
-    objectType: 'SKILL_POINT',
-    withPreposition: {
+    verb: 'RECOVER',
+    object: 'SKILL_POINT',
+    with: {
       cardinality: { verb: 'IS', value: tick.sp },
     },
   });
 
   // Stagger
   effects.push({
-    verbType: 'RECOVER',
-    objectType: 'STAGGER',
-    withPreposition: {
+    verb: 'RECOVER',
+    object: 'STAGGER',
+    with: {
       cardinality: { verb: 'IS', value: tick.stagger },
     },
   });
@@ -262,18 +262,18 @@ function convertTick(
 
     const { mapping, anomaly } = entry;
     const effect: Effect = {
-      verbType: mapping.verbType,
-      objectType: mapping.objectType,
+      verb: mapping.verb,
+      object: mapping.object,
       adjective: mapping.adjective,
-      toObjectType: 'ENEMY',
+      toObject: 'ENEMY',
     };
 
-    const withPrep: Effect['withPreposition'] = {};
+    const withPrep: Effect['with'] = {};
     if (anomaly.stacks > 0) withPrep.stacks = { verb: 'IS', value: anomaly.stacks };
     if (mapping.statusLevel !== undefined) withPrep.statusLevel = { verb: 'IS', value: mapping.statusLevel };
     if (anomaly.duration > 0) withPrep.duration = { verb: 'IS', value: anomaly.duration };
 
-    if (Object.keys(withPrep).length > 0) effect.withPreposition = withPrep;
+    if (Object.keys(withPrep).length > 0) effect.with = withPrep;
     if (mapping.conversion) effect.conversion = mapping.conversion;
 
     effects.push(effect);
@@ -300,20 +300,20 @@ function buildResourceEffect(
   target?: string,
 ): Effect {
   const effect: Effect = {
-    verbType: interactionType,
-    objectType: resourceType,
-    withPreposition: {
+    verb: interactionType,
+    object: resourceType,
+    with: {
       cardinality: { verb: 'IS', value },
     },
   };
 
   if (resourceType === 'ULTIMATE_ENERGY' && interactionType === 'RECOVER') {
     if (target === 'SELF') {
-      effect.toObjectDeterminer = 'THIS';
-      effect.toObjectType = 'OPERATOR';
+      effect.toDeterminer = 'THIS';
+      effect.toObject = 'OPERATOR';
     } else if (target === 'TEAM') {
-      effect.toObjectDeterminer = 'ALL';
-      effect.toObjectType = 'OPERATOR';
+      effect.toDeterminer = 'ALL';
+      effect.toObject = 'OPERATOR';
     }
   }
 

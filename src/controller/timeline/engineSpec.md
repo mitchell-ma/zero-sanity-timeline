@@ -17,7 +17,7 @@ A chain-of-action search is fine. Some frames need to resolve to the source fram
 | Component | File | Role |
 |-----------|------|------|
 | `DerivedEventController` | `derivedEventController.ts` | Owns all derived events. Domain controllers handle creation/consumption logic. Registration, time-stop discovery, duration extension, combo chaining, validation, frame position caching. Single source of truth. |
-| `EventInterpretor` | `eventInterpretor.ts` | DSL interpreter — dispatches verb+objectType to DerivedEventController domain methods. Implements canDo/do pattern for ALL loop semantics. Validates against VERB_OBJECTS grammar. |
+| `EventInterpretor` | `eventInterpretor.ts` | DSL interpreter — dispatches verb+object to DerivedEventController domain methods. Implements canDo/do pattern for ALL loop semantics. Validates against VERB_OBJECTS grammar. |
 | `EventInterpretor` | `eventInterpretor.ts` | DSL interpreter + queue frame processor. Interprets Effect trees and processes QueueFrame entries, routing both through DerivedEventController domain methods. |
 | `InputEventController` | `eventQueue.ts` | Receives raw user-placed events, extracts frame markers, seeds the queue, runs the interpreter. Pipeline orchestrator. |
 | `EventsQueryService` | `eventsQueryService.ts` | Read-only query interface backed by DerivedEventController. Provides domain-specific lookups (susceptibility, fragility, link, amp, corrosion) for the damage calculation layer. |

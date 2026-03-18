@@ -46,7 +46,6 @@ export interface QueueFrame {
     exchangeStatus: string;
     exchangeColumnId: string;
     maxAbsorb: number;
-    exchangeMaxStacks: number;
     eventId: string;
     segmentIndex: number;
     frameIndex: number;

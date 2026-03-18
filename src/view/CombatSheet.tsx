@@ -53,6 +53,7 @@ interface CombatSheetProps {
   loadouts?: Record<string, OperatorLoadoutState>;
   zoom: number;
   loadoutRowHeight: number;
+  headerRowHeight?: number;
   selectedFrames?: SelectedFrame[];
   hoverFrame?: number | null;
   onScrollRef?: (el: HTMLDivElement | null) => void;
@@ -70,7 +71,7 @@ interface CombatSheetProps {
 }
 
 export default function CombatSheet({
-  slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight,
+  slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
   critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden,
@@ -83,7 +84,7 @@ export default function CombatSheet({
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
 
   // Collapsed mode: one column per operator
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const collapsedColumns = useMemo(
     () => buildCollapsedColumns(tableColumns, slots),
     [tableColumns, slots],
@@ -451,7 +452,7 @@ export default function CombatSheet({
       </div>
 
       {/* Column headers */}
-      <div className="dmg-header">
+      <div className="dmg-header" style={headerRowHeight ? { height: headerRowHeight } : undefined}>
         <div className="dmg-header-time">Time</div>
         {collapsed ? (
           collapsedColumns.map((cc) => {

@@ -9,7 +9,6 @@
  */
 import {
   Effect,
-  Predicate,
   VerbType,
   NounType,
   DeterminerType,
@@ -20,7 +19,7 @@ import {
 } from '../../consts/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { CombatSkillsType, ElementType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_COLUMN_IDS, EXCHANGE_STATUS_MAX_SLOTS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
@@ -69,17 +68,17 @@ const NOOP_VERBS = new Set<string>([
   VerbType.EXPERIENCE, VerbType.MERGE, VerbType.RESET,
 ]);
 
-function validateVerbObject(verbType: VerbType, objectType?: string) {
-  if (verbType === VerbType.ALL || verbType === VerbType.ANY) return true;
-  if (NOOP_VERBS.has(verbType)) return true;
-  const validObjects = VERB_OBJECTS[verbType];
+function validateVerbObject(verb: VerbType, object?: string) {
+  if (verb === VerbType.ALL || verb === VerbType.ANY) return true;
+  if (NOOP_VERBS.has(verb)) return true;
+  const validObjects = VERB_OBJECTS[verb];
   if (!validObjects) return true;
-  if (!objectType) {
-    console.warn(`[EventInterpretor] ${verbType} missing objectType`);
+  if (!object) {
+    console.warn(`[EventInterpretor] ${verb} missing object`);
     return false;
   }
-  if (!validObjects.includes(objectType)) {
-    console.warn(`[EventInterpretor] Invalid verb+object: ${verbType} ${objectType}. Valid: ${validObjects.join(', ')}`);
+  if (!validObjects.includes(object)) {
+    console.warn(`[EventInterpretor] Invalid verb+object: ${verb} ${object}. Valid: ${validObjects.join(', ')}`);
     return false;
   }
   return true;
@@ -138,9 +137,9 @@ export class EventInterpretor {
   // ── DSL Effect interpretation ──────────────────────────────────────────
 
   interpret(effect: Effect, ctx: InterpretContext): boolean {
-    if (!validateVerbObject(effect.verbType, effect.objectType as string)) return false;
+    if (!validateVerbObject(effect.verb, effect.object as string)) return false;
 
-    switch (effect.verbType) {
+    switch (effect.verb) {
       case VerbType.ALL:     return this.doAll(effect, ctx);
       case VerbType.ANY:     return this.doAny(effect, ctx);
       case VerbType.APPLY:   return this.doApply(effect, ctx);
@@ -155,7 +154,7 @@ export class EventInterpretor {
         return true;
 
       default:
-        console.warn(`[EventInterpretor] Unknown verb: ${effect.verbType}`);
+        console.warn(`[EventInterpretor] Unknown verb: ${effect.verb}`);
         return false;
     }
   }
@@ -199,36 +198,35 @@ export class EventInterpretor {
 
   private canDo(effect: Effect, ctx: InterpretContext) {
     const ownerId = this.resolveOwnerId(
-      effect.toObjectType as string ?? effect.fromObjectType as string,
-      ctx, effect.toObjectDeterminer ?? effect.fromObjectDeterminer,
+      effect.toObject as string ?? effect.fromObject as string,
+      ctx, effect.toDeterminer ?? effect.fromDeterminer,
     );
 
-    switch (effect.verbType) {
+    switch (effect.verb) {
       case VerbType.APPLY:
-        if (effect.objectType === 'INFLICTION') {
+        if (effect.object === 'INFLICTION') {
           const col = resolveInflictionColumnId(effect.adjective);
           return col ? this.controller.canApplyInfliction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.objectType === 'STATUS') {
+        if (effect.object === 'STATUS') {
           const col = resolveStatusColumnId(effect.objectId);
-          const maxSlots = effect.objectId ? EXCHANGE_STATUS_MAX_SLOTS[effect.objectId] : undefined;
-          return this.controller.canApplyStatus(col, ownerId, ctx.frame, maxSlots);
+          return this.controller.canApplyStatus(col, ownerId, ctx.frame);
         }
-        if (effect.objectType === 'REACTION') {
+        if (effect.object === 'REACTION') {
           const col = resolveReactionColumnId(effect.adjective);
           return col ? this.controller.canApplyReaction(col, ownerId, ctx.frame) : false;
         }
         return true;
       case VerbType.CONSUME:
-        if (effect.objectType === 'INFLICTION') {
+        if (effect.object === 'INFLICTION') {
           const col = resolveInflictionColumnId(effect.adjective);
           return col ? this.controller.canConsumeInfliction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.objectType === 'REACTION') {
+        if (effect.object === 'REACTION') {
           const col = resolveReactionColumnId(effect.adjective);
           return col ? this.controller.canConsumeReaction(col, ownerId, ctx.frame) : false;
         }
-        if (effect.objectType === 'STATUS') {
+        if (effect.object === 'STATUS') {
           const col = resolveStatusColumnId(effect.objectId);
           return this.controller.canConsumeStatus(col, ownerId, ctx.frame);
         }
@@ -239,66 +237,65 @@ export class EventInterpretor {
   }
 
   private doApply(effect: Effect, ctx: InterpretContext) {
-    const ownerId = this.resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+    const ownerId = this.resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
-    if (effect.objectType === 'INFLICTION') {
+    if (effect.object === 'INFLICTION') {
       const columnId = resolveInflictionColumnId(effect.adjective);
       if (!columnId) return false;
-      const dv = effect.withPreposition?.duration?.value;
+      const dv = effect.with?.duration?.value;
       this.controller.createInfliction(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 120, source);
       return true;
     }
-    if (effect.objectType === 'STATUS') {
+    if (effect.object === 'STATUS') {
       const columnId = resolveStatusColumnId(effect.objectId);
-      const dv = effect.withPreposition?.duration?.value;
+      const dv = effect.with?.duration?.value;
       this.controller.createStatus(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 2400, source, {
         statusName: effect.objectId,
-        maxStacks: effect.objectId ? EXCHANGE_STATUS_MAX_SLOTS[effect.objectId] : undefined,
       });
       return true;
     }
-    if (effect.objectType === 'REACTION') {
+    if (effect.object === 'REACTION') {
       const columnId = resolveReactionColumnId(effect.adjective);
       if (!columnId) return false;
-      const dv = effect.withPreposition?.duration?.value;
-      const sl = effect.withPreposition?.statusLevel?.value;
+      const dv = effect.with?.duration?.value;
+      const sl = effect.with?.statusLevel?.value;
       this.controller.createReaction(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 2400, source, {
         statusLevel: typeof sl === 'number' ? sl : undefined,
       });
       return true;
     }
-    if (effect.objectType === 'STAGGER') {
-      const v = effect.withPreposition?.staggerValue?.value;
+    if (effect.object === 'STAGGER') {
+      const v = effect.with?.staggerValue?.value;
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
     }
-    console.warn(`[EventInterpretor] APPLY: unsupported objectType ${effect.objectType}`);
+    console.warn(`[EventInterpretor] APPLY: unsupported object ${effect.object}`);
     return false;
   }
 
   private doConsume(effect: Effect, ctx: InterpretContext) {
     const ownerId = this.resolveOwnerId(
-      effect.fromObjectType as string ?? effect.toObjectType as string,
-      ctx, effect.fromObjectDeterminer ?? effect.toObjectDeterminer,
+      effect.fromObject as string ?? effect.toObject as string,
+      ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
-    const sv = effect.withPreposition?.stacks?.value;
+    const sv = effect.with?.stacks?.value;
     const count = typeof sv === 'number' ? sv : 1;
     if (sv == null) console.warn(`[EventInterpretor] CONSUME: implicit cardinality 1 — configs should be explicit`);
 
-    if (effect.objectType === 'INFLICTION') {
+    if (effect.object === 'INFLICTION') {
       const col = resolveInflictionColumnId(effect.adjective);
       if (!col) return false;
       return this.controller.consumeInfliction(col, ownerId, ctx.frame, count, source) > 0;
     }
-    if (effect.objectType === 'REACTION') {
+    if (effect.object === 'REACTION') {
       const col = resolveReactionColumnId(effect.adjective);
       if (!col) return false;
       this.controller.consumeReaction(col, ownerId, ctx.frame, source);
       return true;
     }
-    if (effect.objectType === 'STATUS') {
+    if (effect.object === 'STATUS') {
       this.controller.consumeStatus(resolveStatusColumnId(effect.objectId), ownerId, ctx.frame, source);
       return true;
     }
@@ -306,11 +303,11 @@ export class EventInterpretor {
   }
 
   private doRefresh(effect: Effect, ctx: InterpretContext) {
-    const ownerId = this.resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+    const ownerId = this.resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
-    const columnId = effect.objectType === 'INFLICTION'
+    const columnId = effect.object === 'INFLICTION'
       ? resolveInflictionColumnId(effect.adjective)
-      : effect.objectType === 'REACTION'
+      : effect.object === 'REACTION'
         ? resolveReactionColumnId(effect.adjective)
         : resolveStatusColumnId(effect.objectId);
     if (!columnId) return false;
@@ -320,10 +317,10 @@ export class EventInterpretor {
 
   private doExtend(effect: Effect, ctx: InterpretContext) {
     const ownerId = this.resolveOwnerId(
-      effect.onObjectType as string ?? effect.toObjectType as string,
-      ctx, effect.onObjectDeterminer ?? effect.toObjectDeterminer,
+      effect.onObject as string ?? effect.toObject as string,
+      ctx, effect.onDeterminer ?? effect.toDeterminer,
     );
-    const columnId = effect.objectType === 'INFLICTION'
+    const columnId = effect.object === 'INFLICTION'
       ? resolveInflictionColumnId(effect.adjective)
       : resolveStatusColumnId(effect.objectId);
     if (!columnId) return false;
@@ -331,7 +328,7 @@ export class EventInterpretor {
     const active = this.controller.getActiveEvents(columnId, ownerId, ctx.frame);
     if (active.length === 0) return false;
 
-    if (effect.untilPreposition === DURATION_END && ctx.parentEventEndFrame != null) {
+    if (effect.until === DURATION_END && ctx.parentEventEndFrame != null) {
       for (const ev of active) {
         if (ev.eventStatus === EventStatusType.CONSUMED) continue;
         const d = ctx.parentEventEndFrame - ev.startFrame;
@@ -345,7 +342,7 @@ export class EventInterpretor {
       return true;
     }
 
-    const ev2 = effect.withPreposition?.duration?.value;
+    const ev2 = effect.with?.duration?.value;
     const frames = typeof ev2 === 'number' ? Math.round(ev2 * 120) : 0;
     for (const ev of active) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
@@ -359,20 +356,17 @@ export class EventInterpretor {
 
   private doAll(effect: Effect, ctx: InterpretContext) {
     const maxIter = Math.min(
-      effect.forPreposition ? resolveCardinality(effect.forPreposition.cardinality, ctx.potential ?? 0) : 1, 10,
+      effect.for ? resolveCardinality(effect.for.cardinality, ctx.potential ?? 0) : 1, 10,
     );
     const preds = effect.predicates ?? [];
-    const effective: Predicate[] = preds.length > 0
-      ? preds
-      : effect.effects ? [{ conditions: [], effects: effect.effects }] : [];
-    if (effective.length === 0) return true;
+    if (preds.length === 0) return true;
 
     for (let i = 0; i < maxIter; i++) {
       let ran = false;
-      for (const pred of effective) {
+      for (const pred of preds) {
         const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId };
         if (!evaluateConditions(pred.conditions, condCtx)) continue;
-        if (!pred.effects.every(e => e.verbType === VerbType.ALL || e.verbType === VerbType.ANY || this.canDo(e, ctx))) continue;
+        if (!pred.effects.every(e => e.verb === VerbType.ALL || e.verb === VerbType.ANY || this.canDo(e, ctx))) continue;
         for (const child of pred.effects) this.interpret(child, ctx);
         ran = true;
       }
@@ -383,11 +377,8 @@ export class EventInterpretor {
 
   private doAny(effect: Effect, ctx: InterpretContext) {
     const preds = effect.predicates ?? [];
-    const effective: Predicate[] = preds.length > 0
-      ? preds
-      : (effect.effects ?? []).map(e => ({ conditions: [], effects: [e] }));
     const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId };
-    for (const pred of effective) {
+    for (const pred of preds) {
       if (!evaluateConditions(pred.conditions, condCtx)) continue;
       for (const child of pred.effects) this.interpret(child, ctx);
       return true;
@@ -403,7 +394,7 @@ export class EventInterpretor {
 
     if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
       this.controller.createReaction(ev.columnId, ev.ownerId, entry.frame, ev.activationDuration, source, {
-        statusLevel: ev.statusLevel, inflictionStacks: ev.inflictionStacks, forcedReaction: ev.forcedReaction, id: ev.id,
+        statusLevel: ev.statusLevel, inflictionStacks: ev.inflictionStacks, forcedReaction: ev.forcedReaction || ev.isForced, id: ev.id,
       });
     } else {
       this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, ev.activationDuration, source, {
@@ -438,7 +429,8 @@ export class EventInterpretor {
   private handleInflictionCreate(entry: QueueFrame): QueueFrame[] {
     this.controller.createInfliction(
       entry.columnId, entry.ownerId, entry.frame, entry.durationFrames,
-      { ownerId: entry.sourceOwnerId, skillName: entry.sourceSkillName }, { id: entry.id },
+      { ownerId: entry.sourceOwnerId, skillName: entry.sourceSkillName },
+      { id: entry.id },
     );
     return [];
   }
@@ -498,24 +490,22 @@ export class EventInterpretor {
 
     if (entry.absorptionMarker) {
       const m = entry.absorptionMarker;
-      const maxAbsorb = Math.min(m.maxAbsorb, m.exchangeMaxStacks - this.controller.activeCount(m.exchangeColumnId, entry.ownerId, entry.frame));
-      if (maxAbsorb <= 0) return [];
       let absorbed = 0;
-      for (let i = 0; i < maxAbsorb; i++) {
+      for (let i = 0; i < m.maxAbsorb; i++) {
         if (!this.controller.canConsumeInfliction(m.inflictionColumnId, ENEMY_OWNER_ID, entry.frame)) break;
-        if (!this.controller.canApplyStatus(m.exchangeColumnId, entry.ownerId, entry.frame, m.exchangeMaxStacks)) break;
         this.controller.consumeInfliction(m.inflictionColumnId, ENEMY_OWNER_ID, entry.frame, 1, source);
         this.controller.createStatus(m.exchangeColumnId, entry.ownerId, entry.frame, EXCHANGE_EVENT_DURATION, source, {
-          statusName: m.exchangeStatus, id: `${m.eventId}-absorb-${m.segmentIndex}-${m.frameIndex}-${i}`, maxStacks: m.exchangeMaxStacks,
+          statusName: m.exchangeStatus, id: `${m.eventId}-absorb-${m.segmentIndex}-${m.frameIndex}-${i}`,
         });
         absorbed++;
       }
       if (absorbed > 0) this.checkThreshold(m.exchangeColumnId, entry.ownerId, entry.frame);
     } else {
       for (const actx of this.absorptionContexts) {
-        const slots = actx.exchangeMaxStacks - this.controller.activeCount(actx.exchangeColumnId, actx.exchangeOwnerId, entry.frame);
-        if (slots <= 0) continue;
         let absorbed = 0;
+        const maxAbsorb = actx.exchangeMaxStacks ?? Infinity;
+        const slots = maxAbsorb - this.controller.activeCount(actx.exchangeColumnId, actx.exchangeOwnerId, entry.frame);
+        if (slots <= 0) continue;
         for (let i = 0; i < slots; i++) {
           if (!this.controller.canConsumeInfliction(actx.inflictionColumnId, ENEMY_OWNER_ID, entry.frame)) break;
           this.controller.consumeInfliction(actx.inflictionColumnId, ENEMY_OWNER_ID, entry.frame, 1, source);

@@ -403,11 +403,11 @@ export function resolveActiveModifiers(
 /** Human-readable text for an Interaction (condition). */
 export function interactionToText(i: Interaction): string {
   const parts: string[] = [];
-  parts.push(i.subjectType.replace(/_/g, ' '));
+  parts.push(i.subject.replace(/_/g, ' '));
   if (i.subjectProperty) parts.push(`'s ${String(i.subjectProperty).replace(/_/g, ' ')}`);
   if (i.negated) parts.push('NOT');
-  parts.push(i.verbType.replace(/_/g, ' '));
-  parts.push(i.objectType.replace(/_/g, ' '));
+  parts.push(i.verb.replace(/_/g, ' '));
+  parts.push(i.object.replace(/_/g, ' '));
   if (i.objectId) parts.push(`(${i.objectId})`);
   if (i.cardinalityConstraint && i.cardinality != null) {
     parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${i.cardinality}`);
@@ -419,25 +419,25 @@ export function interactionToText(i: Interaction): string {
 /** Human-readable text for an Effect. */
 export function effectToText(e: Effect): string {
   const parts: string[] = [];
-  parts.push(e.verbType.replace(/_/g, ' '));
+  parts.push(e.verb.replace(/_/g, ' '));
   if (e.cardinality != null) parts.push(String(e.cardinality));
   if (e.adjective) {
     const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
   }
-  if (e.objectType) parts.push(String(e.objectType).replace(/_/g, ' '));
+  if (e.object) parts.push(String(e.object).replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);
-  if (e.toObjectType) parts.push(`TO ${String(e.toObjectType).replace(/_/g, ' ')}`);
-  if (e.fromObjectType) parts.push(`FROM ${String(e.fromObjectType).replace(/_/g, ' ')}`);
-  if (e.onObjectType) parts.push(`ON ${String(e.onObjectType).replace(/_/g, ' ')}`);
-  if (e.forPreposition) {
-    parts.push(`FOR ${e.forPreposition.cardinalityConstraint.replace(/_/g, ' ')} ${e.forPreposition.cardinality}`);
+  if (e.toObject) parts.push(`TO ${String(e.toObject).replace(/_/g, ' ')}`);
+  if (e.fromObject) parts.push(`FROM ${String(e.fromObject).replace(/_/g, ' ')}`);
+  if (e.onObject) parts.push(`ON ${String(e.onObject).replace(/_/g, ' ')}`);
+  if (e.for) {
+    parts.push(`FOR ${e.for.cardinalityConstraint.replace(/_/g, ' ')} ${e.for.cardinality}`);
   } else if (e.cardinalityConstraint) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
   }
-  if (e.withPreposition) {
+  if (e.with) {
     const wpParts: string[] = [];
-    for (const [k, v] of Object.entries(e.withPreposition)) {
+    for (const [k, v] of Object.entries(e.with)) {
       const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}${(v.value as number[]).length > 3 ? '...' : ''}]`;
       wpParts.push(`${k.replace(/_/g, ' ').toUpperCase()} ${val}`);
     }
@@ -473,18 +473,18 @@ export interface EventDslData {
  * (SP cost) or are zero-value noise. Filter these from DSL display.
  */
 function isRedundantEffect(e: any): boolean {
-  const obj = e.objectType;
-  const verb = e.verbType;
+  const obj = e.object;
+  const verb = e.verb;
   // SP cost / ultimate energy cost shown in dedicated SP/Skill sections
   if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
   // Zero-value recoveries are noise
   if (verb === 'RECOVER' && (obj === 'SKILL_POINT' || obj === 'STAGGER')) {
-    const val = e.withPreposition?.cardinality?.value ?? e.withPreposition?.value?.value;
+    const val = e.with?.cardinality?.value ?? e.with?.value?.value;
     if (val === 0) return true;
   }
   // Zero-value stagger applications are noise
   if (verb === 'APPLY' && obj === 'STAGGER') {
-    const val = e.withPreposition?.value?.value;
+    const val = e.with?.value?.value;
     if (val === 0) return true;
   }
   return false;

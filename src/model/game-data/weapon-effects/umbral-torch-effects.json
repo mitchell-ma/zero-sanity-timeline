@@ -11,24 +11,24 @@
       "stack": {
         "max": { "P0": 2 },
         "instances": 2,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "IS",
-              "objectType": "COMBUSTED"
+              "subject": "ENEMY",
+              "verb": "IS",
+              "object": "COMBUSTED"
             }
           ]
         },
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "IS",
-              "objectType": "CORRODED"
+              "subject": "ENEMY",
+              "verb": "IS",
+              "object": "CORRODED"
             }
           ]
         }

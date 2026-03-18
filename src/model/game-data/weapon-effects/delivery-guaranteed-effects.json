@@ -13,16 +13,16 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "APPLY",
-              "objectType": "STATUS",
+              "subject": "OPERATOR",
+              "verb": "APPLY",
+              "object": "STATUS",
               "objectId": "LIFTED"
             }
           ]

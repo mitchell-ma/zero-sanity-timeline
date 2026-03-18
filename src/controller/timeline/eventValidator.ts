@@ -17,10 +17,10 @@ import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 
-const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectType, verbType, objectType, ...extra } as Interaction);
-const _IO = (determiner: DeterminerType, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectDeterminer: determiner, subjectType: SubjectType.OPERATOR, verbType, objectType, ...extra } as Interaction);
+const _I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subject, verb, object, ...extra } as Interaction);
+const _IO = (determiner: DeterminerType, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectDeterminer: determiner, subject: SubjectType.OPERATOR, verb, object, ...extra } as Interaction);
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
   _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
   _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
@@ -38,21 +38,38 @@ export type TimeStopRegion = {
   sourceColumnId: string;
 };
 
-/** Extract the active-phase window from an ultimate event using segments. */
-export function getUltimateActiveWindow(ult: TimelineEvent): { start: number; end: number } | null {
-  if (ult.segments && ult.segments.length > 0) {
-    let cursor = ult.startFrame;
-    for (const seg of ult.segments) {
-      if (seg.label === 'Active') {
-        return { start: cursor, end: cursor + seg.durationFrames };
+/** Map column IDs to DSL ENHANCE object types. */
+const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
+  basic: 'BASIC_ATTACK',
+  battle: 'BATTLE_SKILL',
+  combo: 'COMBO_SKILL',
+  ultimate: 'ULTIMATE',
+};
+
+/**
+ * Check if any overlapping segment across all events for a given owner
+ * has an ENHANCE clause for the specified skill object type at the given frame.
+ */
+export function hasEnhanceClauseAtFrame(
+  events: readonly TimelineEvent[],
+  ownerId: string,
+  enhanceObject: string,
+  atFrame: number,
+): boolean {
+  for (const ev of events) {
+    if (ev.ownerId !== ownerId || !ev.segments) continue;
+    let cursor = ev.startFrame;
+    for (const seg of ev.segments) {
+      const segEnd = cursor + seg.durationFrames;
+      if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
+        if (seg.clause.some(c => c.effects.some(e => e.verb === 'ENHANCE' && e.object === enhanceObject))) {
+          return true;
+        }
       }
-      cursor += seg.durationFrames;
+      cursor = segEnd;
     }
-    return null;
   }
-  // Fallback for non-segmented events
-  const start = ult.startFrame + ult.activationDuration;
-  return { start, end: start + ult.activeDuration };
+  return false;
 }
 
 // ── Time-stop regions ─────────────────────────────────────────────────────────
@@ -723,40 +740,36 @@ export function checkVariantAvailability(
   const isEnhanced = variantName.includes('ENHANCED');
   const isEmpowered = variantName.includes('EMPOWERED');
 
-  // Enhanced/non-enhanced checks only apply to battle and combo skills
+  // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
+  const enhanceObject = columnId ? COLUMN_TO_ENHANCE_OBJECT[columnId] : undefined;
 
-  // Check if the ultimate is active at this frame
-  const ultActive = events.some((ev) => {
-    if (ev.ownerId !== ownerId || ev.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
-    const w = getUltimateActiveWindow(ev);
-    return w != null && atFrame >= w.start && atFrame < w.end;
-  });
-
-  // Evaluate segment clause (e.g. Finisher blocked during ultimate)
+  // Evaluate segment clause conditions (e.g. Finisher blocked during ultimate)
   {
     const slot = slots?.find((s) => s.slotId === ownerId);
     if (slot?.operator) {
       const clause = getVariantClause(slot.operator.id, variantName);
       if (clause) {
-        const result = evaluateClause(clause, { ultActive });
+        const enhanceActive = enhanceObject ? hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame) : false;
+        const result = evaluateClause(clause, { enhanceActive });
         if (!result.pass) return { disabled: true, reason: result.reason };
       }
     }
   }
 
-  // Regular basic attack blocked during ultimate active phase (use enhanced variant)
-  if (columnId === SKILL_COLUMNS.BASIC && !isEnhanced && !isEmpowered
-    && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE
-    && ultActive) {
-    return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
+  // Enhanced variant: requires an active ENHANCE clause for this skill type
+  if (isEnhanced && enhanceObject && hasEnhancedVariants) {
+    if (!hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame)) {
+      return { disabled: true, reason: 'No active ENHANCE effect' };
+    }
   }
 
-  if (hasEnhancedVariants && isEnhanced && !ultActive) {
-    return { disabled: true, reason: 'No ultimate active' };
-  }
-  if (hasEnhancedVariants && !isEnhanced && ultActive) {
-    return { disabled: true, reason: 'Ultimate is active (use enhanced variant)' };
+  // Regular variant blocked when ENHANCE clause is active (use enhanced variant)
+  if (!isEnhanced && !isEmpowered && enhanceObject && hasEnhancedVariants
+    && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE) {
+    if (hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame)) {
+      return { disabled: true, reason: 'Enhanced variant active (use enhanced)' };
+    }
   }
 
   // Check operator status stacks for empowered variants (data-driven)
@@ -927,6 +940,9 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
     if (!ev.name?.includes('ENHANCED') || ev.name?.includes('EMPOWERED')) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
 
+    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
+    if (!enhanceObject) continue;
+
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
     if (ev.segments && ev.segments.length > 0) {
@@ -939,16 +955,10 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
       segStarts.push(ev.startFrame);
     }
 
-    // Every segment start must fall within an ultimate active phase
+    // Every segment start must fall within an active ENHANCE clause
     for (const frame of segStarts) {
-      const inUlt = events.some((u) => {
-        if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
-        const activeWindow = getUltimateActiveWindow(u);
-        if (!activeWindow) return false;
-        return frame >= activeWindow.start && frame < activeWindow.end;
-      });
-      if (!inUlt) {
-        map.set(ev.id, 'Enhanced skill segments must start within ultimate active phase');
+      if (!hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
+        map.set(ev.id, 'Enhanced skill must be within an active ENHANCE effect');
         break;
       }
     }
@@ -969,6 +979,9 @@ export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map
     if (!ev.name || ev.name.includes('ENHANCED') || ev.name.includes('EMPOWERED')) continue;
     if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
 
+    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
+    if (!enhanceObject) continue;
+
     // Collect all segment start frames
     const segStarts: number[] = [];
     if (ev.segments && ev.segments.length > 0) {
@@ -982,14 +995,8 @@ export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map
     }
 
     for (const frame of segStarts) {
-      const inUlt = events.some((u) => {
-        if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
-        const activeWindow = getUltimateActiveWindow(u);
-        if (!activeWindow) return false;
-        return frame >= activeWindow.start && frame < activeWindow.end;
-      });
-      if (inUlt) {
-        map.set(ev.id, 'Basic attack segments cannot start during ultimate active phase (use enhanced variant)');
+      if (hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
+        map.set(ev.id, 'Regular basic attack cannot be used during ENHANCE effect (use enhanced variant)');
         break;
       }
     }
@@ -1019,15 +1026,16 @@ function getVariantClause(operatorId: string, variantName: string): any[] | null
 }
 
 interface ClauseContext {
-  ultActive: boolean;
+  enhanceActive: boolean;
 }
 
 /** Evaluate a single interaction condition against the current state. */
 function evaluateCondition(cond: any, ctx: ClauseContext): boolean {
   let result = true;
-  if (cond.verbType === 'IS' && cond.objectType === 'ACTIVE') {
+  if (cond.verb === 'IS' && cond.object === 'ACTIVE') {
     if (cond.subjectProperty === 'ULTIMATE') {
-      result = ctx.ultActive;
+      // "ULTIMATE IS ACTIVE" is equivalent to an active ENHANCE clause
+      result = ctx.enhanceActive;
     }
   }
   return cond.negated ? !result : result;
@@ -1046,7 +1054,7 @@ function evaluateClause(clause: any[], ctx: ClauseContext): { pass: boolean; rea
   }
   // Build reason from first predicate's failed conditions
   const firstCond = clause[0]?.conditions?.[0];
-  if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.objectType === 'ACTIVE' && firstCond?.negated) {
+  if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.object === 'ACTIVE' && firstCond?.negated) {
     return { pass: false, reason: 'Cannot be used while ultimate is active' };
   }
   return { pass: false, reason: 'Activation condition not met' };
@@ -1072,13 +1080,10 @@ export function validateVariantClauses(
     const clause = getVariantClause(operatorId, ev.name);
     if (!clause) continue;
 
-    const ultActive = events.some((u) => {
-      if (u.ownerId !== ev.ownerId || u.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
-      const w = getUltimateActiveWindow(u);
-      return w != null && ev.startFrame >= w.start && ev.startFrame < w.end;
-    });
+    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
+    const enhanceActive = enhanceObject ? hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, ev.startFrame) : false;
 
-    const result = evaluateClause(clause, { ultActive });
+    const result = evaluateClause(clause, { enhanceActive });
     if (!result.pass) {
       map.set(ev.id, result.reason ?? 'Activation condition not met');
     }
@@ -1166,7 +1171,12 @@ export function validateTimeStops(
   const ultStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.ULTIMATE);
   const comboStops = timeStopRegions.filter((s) => s.sourceColumnId === SKILL_COLUMNS.COMBO);
   for (const ev of events) {
-    if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
+    // Only validate player-input skill columns — status/infliction/reaction events
+    // are derived and can legitimately start at the same frame as a timestop
+    const isBasic = ev.columnId === SKILL_COLUMNS.BASIC;
+    const isBattle = ev.columnId === SKILL_COLUMNS.BATTLE;
+    const isCombo = ev.columnId === SKILL_COLUMNS.COMBO;
+    if (!isBasic && !isBattle && !isCombo) continue;
     for (const stop of ultStops) {
       if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
         const skillType = ev.columnId.charAt(0).toUpperCase() + ev.columnId.slice(1) + ' skill';
@@ -1174,7 +1184,7 @@ export function validateTimeStops(
         break;
       }
     }
-    if ((ev.columnId === SKILL_COLUMNS.BATTLE || ev.columnId === SKILL_COLUMNS.BASIC) && !map.has(ev.id)) {
+    if ((isBattle || isBasic) && !map.has(ev.id)) {
       for (const stop of comboStops) {
         if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
           const label = ev.columnId === SKILL_COLUMNS.BASIC ? 'Basic attack' : 'Battle skill';

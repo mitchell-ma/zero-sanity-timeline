@@ -4,7 +4,7 @@
  * ultimate energy gain efficiency stat from their loadout.
  */
 
-import { StatType } from '../../consts/enums';
+import { SegmentType, StatType } from '../../consts/enums';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../../view/InformationPane';
 import { Operator, TimelineEvent } from '../../consts/viewTypes';
@@ -13,7 +13,8 @@ import { UltEnergyEvent } from './ultimateEnergyTimeline';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { NATURAL_SP_TO_ULTIMATE_RATIO } from '../../consts/stats';
-import { SkillPointConsumptionHistory } from './skillPointTimeline';
+import { FPS } from '../../utils/timeline';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
 /** A raw gauge gain event before efficiency is applied. */
 export interface RawGaugeGainEvent {
@@ -186,12 +187,12 @@ export function resolveMessengersSongBonuses(
   for (const clause of msDef.clause) {
     if (clause.conditions?.length) continue;
     for (const effect of clause.effects ?? []) {
-      const verb = effect.verb ?? effect.verbType;
-      const object = effect.object ?? effect.objectType;
+      const verb = effect.verb ?? effect.verb;
+      const object = effect.object ?? effect.object;
       if (verb !== 'APPLY' || object !== 'ENERGY_GAIN_EFFICIENCY') continue;
 
       const targetClass = effect.to as string;
-      const wp = (effect.with ?? effect.withPreposition)?.value;
+      const wp = (effect.with ?? effect.with)?.value;
       if (!wp || !targetClass) continue;
 
       const value = resolveBasedOnValue(wp, { potential, talentLevel });
@@ -212,18 +213,85 @@ export function resolveMessengersSongBonuses(
 }
 
 /**
+ * Simulate dual-pool SP tracking to determine natural vs returned SP consumption
+ * per battle skill. Returns a map of eventId → naturalConsumed.
+ *
+ * Two pools: natural (regens over time) and returned (from skill SP recovery).
+ * Cost events consume returned first, then natural.
+ * Only natural SP consumed converts to ultimate energy.
+ */
+function computeNaturalSpConsumption(events: TimelineEvent[]): Map<string, number> {
+  const SP_MAX = GENERAL_MECHANICS.skillPoints.max;
+  const SP_START = GENERAL_MECHANICS.skillPoints.startValue;
+  const SP_REGEN_PER_FRAME = GENERAL_MECHANICS.skillPoints.regenPerSecond / FPS;
+
+  // Build sorted SP event list: costs + returns from all battle skill events
+  type SpEvent = { frame: number; type: 'cost' | 'return'; amount: number; eventId: string };
+  const spEvents: SpEvent[] = [];
+
+  for (const ev of events) {
+    if (ev.columnId !== SKILL_COLUMNS.BATTLE || !ev.skillPointCost) continue;
+    spEvents.push({ frame: ev.startFrame, type: 'cost', amount: ev.skillPointCost, eventId: ev.id });
+
+    // SP returns from frame-level skillPointRecovery
+    if (ev.segments) {
+      const animOffset = ev.animationDuration ?? 0;
+      let segOffset = 0;
+      for (const seg of ev.segments) {
+        if (seg.frames) {
+          for (const f of seg.frames) {
+            if (f.skillPointRecovery && f.skillPointRecovery > 0) {
+              const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
+              spEvents.push({ frame, type: 'return', amount: f.skillPointRecovery, eventId: ev.id });
+            }
+          }
+        }
+        segOffset += seg.durationFrames;
+      }
+    }
+  }
+  // Sort: costs before returns at same frame (matches SP timeline behavior)
+  spEvents.sort((a, b) => a.frame - b.frame || (a.type === 'cost' ? -1 : 1));
+
+  // Simulate dual pools
+  let naturalPool = SP_START;
+  let returnedPool = 0;
+  let lastFrame = 0;
+  const result = new Map<string, number>();
+
+  for (const spe of spEvents) {
+    // Regen natural pool
+    const regenFrames = spe.frame - lastFrame;
+    const regenAmount = regenFrames * SP_REGEN_PER_FRAME;
+    const headroom = Math.max(0, SP_MAX - naturalPool - returnedPool);
+    naturalPool += Math.min(regenAmount, headroom);
+
+    if (spe.type === 'return') {
+      const returnHeadroom = Math.max(0, SP_MAX - naturalPool - returnedPool);
+      returnedPool += Math.min(spe.amount, returnHeadroom);
+    } else {
+      // Cost: consume returned first, then natural
+      const fromReturned = Math.min(returnedPool, spe.amount);
+      const fromNatural = Math.min(naturalPool, spe.amount - fromReturned);
+      returnedPool -= fromReturned;
+      naturalPool -= fromNatural;
+      result.set(spe.eventId, fromNatural);
+    }
+    lastFrame = spe.frame;
+  }
+
+  return result;
+}
+
+/**
  * Collects raw gauge gain events from timeline events.
  * Battle skills gain gauge on their first frame; combo skills gain on first frame too.
- * Battle skills also derive gauge from natural SP consumed.
+ * Battle skills derive gauge from natural SP consumed (computed inline via dual-pool simulation).
  */
 export function collectRawGaugeGains(
   events: TimelineEvent[],
-  consumptionHistory: SkillPointConsumptionHistory[],
 ): RawGaugeGainEvent[] {
-  const consumptionByEventId = new Map<string, SkillPointConsumptionHistory>();
-  for (const rec of consumptionHistory) {
-    consumptionByEventId.set(rec.eventId, rec);
-  }
+  const naturalSpMap = computeNaturalSpConsumption(events);
 
   const gaugeEvents: RawGaugeGainEvent[] = [];
   for (const ev of events) {
@@ -231,26 +299,28 @@ export function collectRawGaugeGains(
       // Battle skills: gauge gain happens on the first frame of the event
       const firstFrame = ev.segments?.[0]?.frames?.[0];
       const gainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
-      const rec = consumptionByEventId.get(ev.id);
-      if (rec) {
-        const gain = rec.naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
-        if (gain > 0) {
-          gaugeEvents.push({
-            frame: gainFrame,
-            sourceSlotId: ev.ownerId,
-            selfGain: gain,
-            teamGain: gain,
-          });
-        }
-      }
-      // Additional frame-level gauge gains (e.g. empowered battle skill extra ultimate recovery)
-      if (firstFrame?.gaugeGain && firstFrame.gaugeGain > 0) {
+      const naturalConsumed = naturalSpMap.get(ev.id) ?? 0;
+      if (naturalConsumed > 0) {
+        const gain = naturalConsumed * NATURAL_SP_TO_ULTIMATE_RATIO;
         gaugeEvents.push({
           frame: gainFrame,
           sourceSlotId: ev.ownerId,
-          selfGain: firstFrame.gaugeGain,
-          teamGain: 0,
+          selfGain: gain,
+          teamGain: gain,
         });
+      }
+      // Additional frame-level gauge gains (e.g. empowered battle skill extra ultimate recovery)
+      for (const seg of ev.segments ?? []) {
+        for (const f of seg.frames ?? []) {
+          if (f.gaugeGain && f.gaugeGain > 0) {
+            gaugeEvents.push({
+              frame: f.absoluteFrame ?? ev.startFrame,
+              sourceSlotId: ev.ownerId,
+              selfGain: f.gaugeGain,
+              teamGain: 0,
+            });
+          }
+        }
       }
     } else if (ev.columnId === SKILL_COLUMNS.COMBO) {
       // Combo skills: gauge gain from the first frame
@@ -294,8 +364,9 @@ export function applyGainEfficiency(
   const gains: UltEnergyEvent[] = [];
 
   for (const ge of gaugeEvents) {
-    // Skip gains during ultimate active phase
-    if (ultActiveWindows.some(w => ge.frame >= w.start && ge.frame < w.end)) continue;
+    // Skip gains during no-gain windows (active phase, IGNORE ULTIMATE_ENERGY segments).
+    // Exclusive start: gains at the boundary frame happen before the window opens.
+    if (ultActiveWindows.some(w => ge.frame > w.start && ge.frame < w.end)) continue;
 
     const rawGain = (ge.sourceSlotId === slotId ? ge.selfGain : 0) + ge.teamGain;
     if (rawGain > 0) {
@@ -308,4 +379,38 @@ export function applyGainEfficiency(
   }
 
   return gains;
+}
+
+/**
+ * Collects frame windows during which an operator cannot gain ultimate energy.
+ * Scans all ultimate segments for:
+ * - ACTIVE phase (universal: no energy gain during own ultimate)
+ * - Segments with IGNORE ULTIMATE_ENERGY clause (e.g. Laevatain animation)
+ */
+export function collectNoGainWindows(
+  events: readonly TimelineEvent[],
+  slotId: string,
+): { start: number; end: number }[] {
+  const windows: { start: number; end: number }[] = [];
+  for (const ev of events) {
+    if (ev.ownerId !== slotId || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+    if (ev.segments) {
+      let cursor = ev.startFrame;
+      for (const seg of ev.segments) {
+        const isActive = seg.segmentType === SegmentType.ACTIVE;
+        const ignoresUlt = seg.clause?.some(c =>
+          c.effects.some(e => e.verb === 'IGNORE' && e.object === 'ULTIMATE_ENERGY')
+        );
+        if (isActive || ignoresUlt) {
+          windows.push({ start: cursor, end: cursor + seg.durationFrames });
+        }
+        cursor += seg.durationFrames;
+      }
+    } else {
+      // Fallback for non-segmented events
+      const start = ev.startFrame + ev.activationDuration;
+      windows.push({ start, end: start + ev.activeDuration });
+    }
+  }
+  return windows;
 }

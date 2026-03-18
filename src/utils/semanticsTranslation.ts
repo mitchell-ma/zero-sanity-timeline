@@ -57,6 +57,7 @@ const VERB_LABELS: Record<string, string> = {
   RESET: 'Reset',
   // Stat
   IGNORE: 'Ignore',
+  ENHANCE: 'Enhance',
   // Time
   EXPERIENCE: 'Experience',
   // Condition-only
@@ -133,14 +134,14 @@ function formatObject(e: Effect): string {
     ? adjs.map((a) => titleCase(a)).join(' ') + ' '
     : '';
 
-  const objLabel = e.objectType
-    ? (OBJECT_LABELS[String(e.objectType)] ?? titleCase(String(e.objectType)))
+  const objLabel = e.object
+    ? (OBJECT_LABELS[String(e.object)] ?? titleCase(String(e.object)))
     : '';
 
   // For STATUS/INFLICTION/REACTION with an objectId, use objectId as the name
   // e.g. APPLY STATUS (FOCUS) → "Apply Focus status"
   // e.g. APPLY STATUS (Empowered Focus) → "Apply Empowered Focus status"
-  if (e.objectId && (e.objectType === 'STATUS' || e.objectType === 'INFLICTION' || e.objectType === 'REACTION')) {
+  if (e.objectId && (e.object === 'STATUS' || e.object === 'INFLICTION' || e.object === 'REACTION')) {
     const name = titleCase(e.objectId);
     return `${adjStr}${name} ${objLabel}`;
   }
@@ -165,16 +166,16 @@ const INLINE_VALUE_OBJECTS = new Set(['STAGGER', 'SKILL_POINT', 'ULTIMATE_ENERGY
 
 export function translateEffect(e: Effect): TranslatedEffect {
   // Verb
-  const verb = VERB_LABELS[e.verbType] ?? titleCase(e.verbType);
+  const verb = VERB_LABELS[e.verb] ?? titleCase(e.verb);
 
   // Handle PERFORM DAMAGE specially → "Deal"
-  const displayVerb = e.verbType === 'PERFORM' && e.objectType === 'DAMAGE' ? 'Deal' : verb;
+  const displayVerb = e.verb === 'PERFORM' && e.object === 'DAMAGE' ? 'Deal' : verb;
 
   // Inline simple WITH value/cardinality for resource-like objects
   // e.g. APPLY STAGGER TO ENEMY WITH value IS 18 → "Apply 18 stagger to the enemy"
   let inlinedValue = '';
-  if (e.withPreposition && INLINE_VALUE_OBJECTS.has(String(e.objectType ?? ''))) {
-    const vw = e.withPreposition.value ?? e.withPreposition.cardinality;
+  if (e.with && INLINE_VALUE_OBJECTS.has(String(e.object ?? ''))) {
+    const vw = e.with.value ?? e.with.cardinality;
     if (vw && vw.verb === 'IS' && typeof vw.value === 'number') {
       inlinedValue = `${vw.value} `;
     }
@@ -192,17 +193,17 @@ export function translateEffect(e: Effect): TranslatedEffect {
   const parts: string[] = [`${displayVerb} ${inlinedValue}${card}${obj}`.replace(/\s+/g, ' ').trim()];
 
   // TO
-  if (e.toObjectType) parts.push(`to ${formatTarget(String(e.toObjectType), e.toObjectDeterminer)}`);
+  if (e.toObject) parts.push(`to ${formatTarget(String(e.toObject), e.toDeterminer)}`);
   // FROM
-  if (e.fromObjectType) parts.push(`from ${formatTarget(String(e.fromObjectType), e.fromObjectDeterminer)}`);
+  if (e.fromObject) parts.push(`from ${formatTarget(String(e.fromObject), e.fromDeterminer)}`);
   // ON
-  if (e.onObjectType) parts.push(`on ${formatTarget(String(e.onObjectType), e.onObjectDeterminer)}`);
+  if (e.onObject) parts.push(`on ${formatTarget(String(e.onObject), e.onDeterminer)}`);
   // UNTIL
-  if (e.untilPreposition) parts.push(`until ${e.untilPreposition.toLowerCase()}`);
+  if (e.until) parts.push(`until ${e.until.toLowerCase()}`);
   // FOR
-  if (e.forPreposition) {
-    const fc = e.forPreposition.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();
-    parts.push(`for ${fc} ${e.forPreposition.cardinality}`);
+  if (e.for) {
+    const fc = e.for.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();
+    parts.push(`for ${fc} ${e.for.cardinality}`);
   } else if (e.cardinalityConstraint && e.cardinality == null) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' ').toLowerCase());
   }
@@ -211,8 +212,8 @@ export function translateEffect(e: Effect): TranslatedEffect {
 
   // Properties from WITH preposition (skip inlined value/cardinality)
   const properties: string[] = [];
-  if (e.withPreposition) {
-    for (const [k, wv] of Object.entries(e.withPreposition)) {
+  if (e.with) {
+    for (const [k, wv] of Object.entries(e.with)) {
       if (inlinedValue && (k === 'value' || k === 'cardinality')) continue;
       properties.push(formatWithValue(k, wv));
     }
@@ -293,12 +294,12 @@ export function formatSkillDisplayName(baseName: string, enhancementTypes?: stri
  */
 export function interactionToJson(i: Interaction): Record<string, any> {
   const out: Record<string, any> = {};
-  if (i.subjectDeterminer) out.subjectDet = i.subjectDeterminer;
-  out.subject = i.subjectType;
+  if (i.subjectDeterminer) out.subjectDeterminer = i.subjectDeterminer;
+  out.subject = i.subject;
   if (i.subjectProperty) out.subjectProperty = i.subjectProperty;
   if (i.negated) out.negated = i.negated;
-  out.verb = i.verbType;
-  out.object = i.objectType;
+  out.verb = i.verb;
+  out.object = i.object;
   if (i.objectId) out.objectId = i.objectId;
   if (i.element) out.element = i.element;
   if (i.cardinalityConstraint) out.cardinalityConstraint = i.cardinalityConstraint;
@@ -313,22 +314,22 @@ export function interactionToJson(i: Interaction): Record<string, any> {
  */
 export function effectToJson(e: Effect): Record<string, any> {
   const out: Record<string, any> = {};
-  out.verb = e.verbType;
+  out.verb = e.verb;
   if (e.adjective) out.adjective = e.adjective;
-  if (e.objectType) out.object = e.objectType;
+  if (e.object) out.object = e.object;
   if (e.objectId) out.objectId = e.objectId;
   if (e.cardinalityConstraint) out.cardinalityConstraint = e.cardinalityConstraint;
   if (e.cardinality != null) out.cardinality = e.cardinality;
-  if (e.toObjectDeterminer) out.toDet = e.toObjectDeterminer;
-  if (e.toObjectType) out.to = e.toObjectType;
+  if (e.toDeterminer) out.toDeterminer = e.toDeterminer;
+  if (e.toObject) out.to = e.toObject;
   if (e.toObjectClassFilter) out.toClassFilter = e.toObjectClassFilter;
-  if (e.fromObjectDeterminer) out.fromDet = e.fromObjectDeterminer;
-  if (e.fromObjectType) out.from = e.fromObjectType;
-  if (e.onObjectDeterminer) out.onDet = e.onObjectDeterminer;
-  if (e.onObjectType) out.on = e.onObjectType;
-  if (e.withPreposition) out.with = withPrepositionToJson(e.withPreposition);
-  if (e.forPreposition) out.for = e.forPreposition;
-  if (e.untilPreposition) out.until = e.untilPreposition;
+  if (e.fromDeterminer) out.fromDeterminer = e.fromDeterminer;
+  if (e.fromObject) out.from = e.fromObject;
+  if (e.onDeterminer) out.onDeterminer = e.onDeterminer;
+  if (e.onObject) out.on = e.onObject;
+  if (e.with) out.with = withPrepositionToJson(e.with);
+  if (e.for) out.for = e.for;
+  if (e.until) out.until = e.until;
   if (e.predicates) out.predicates = e.predicates.map(predicateToJson);
   if (e.effects) out.effects = e.effects.map(effectToJson);
   return out;

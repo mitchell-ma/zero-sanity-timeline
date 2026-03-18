@@ -82,7 +82,7 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
-import { StatType } from '../consts/enums';
+import { StatType, InteractionModeType } from '../consts/enums';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, STAGGER_FRAILTY_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -208,11 +208,18 @@ export function useApp() {
   const preDragSplitRef = useRef(65);
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
-  const [debugMode,        setDebugMode]        = useState(() => {
-    try { return localStorage.getItem('zst-debug-mode') === 'true'; } catch { return false; }
+  const [interactionMode, setInteractionMode] = useState<InteractionModeType>(() => {
+    try {
+      const stored = localStorage.getItem('zst-interaction-mode');
+      if (stored && Object.values(InteractionModeType).includes(stored as InteractionModeType)) return stored as InteractionModeType;
+      // Migrate legacy debug mode setting
+      if (localStorage.getItem('zst-debug-mode') === 'true') return InteractionModeType.FREEFORM;
+    } catch { /* ignore */ }
+    return InteractionModeType.STRICT;
   });
   const [warningMessage,   setWarningMessage]   = useState<string | null>(initialLoad.error);
   const [loadoutRowHeight, setLoadoutRowHeight] = useState(LOADOUT_ROW_HEIGHT);
+  const [headerRowHeight, setHeaderRowHeight] = useState(0);
   const [selectEventIds,   setSelectEventIds]   = useState<Set<string> | undefined>(undefined);
   const [exportModalOpen,  setExportModalOpen]  = useState(false);
   const [saveFlash,        setSaveFlash]        = useState(false);
@@ -225,11 +232,11 @@ export function useApp() {
     setOrientation((prev) => prev === 'vertical' ? 'horizontal' : 'vertical');
   }, []);
 
-  const debugModeRef = useRef(false);
-  debugModeRef.current = debugMode;
+  const interactionModeRef = useRef(InteractionModeType.STRICT);
+  interactionModeRef.current = interactionMode;
   useEffect(() => {
-    try { localStorage.setItem('zst-debug-mode', String(debugMode)); } catch { /* ignore */ }
-  }, [debugMode]);
+    try { localStorage.setItem('zst-interaction-mode', interactionMode); } catch { /* ignore */ }
+  }, [interactionMode]);
 
   const [lightMode, setLightMode] = useState(() => {
     try { return localStorage.getItem('zst-light-mode') === 'true'; } catch { return false; }
@@ -252,7 +259,7 @@ export function useApp() {
       const v = localStorage.getItem('zst-crit-mode');
       if (v === 'NONE' || v === 'ALWAYS') return v as import('../consts/enums').CritMode;
     } catch { /* ignore */ }
-    return 'EXPECTED' as import('../consts/enums').CritMode;
+    return 'NONE' as import('../consts/enums').CritMode;
   });
   useEffect(() => {
     try { localStorage.setItem('zst-crit-mode', critMode); } catch { /* ignore */ }
@@ -959,7 +966,7 @@ export function useApp() {
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
-      if (!debugModeRef.current) {
+      if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
         if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
@@ -1002,7 +1009,7 @@ export function useApp() {
         });
         return prev;
       }
-      const processed = debugModeRef.current ? null : processedEventsRef.current;
+      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
       const merged = validateUpdate(prev, target, updates, processed);
       if (!merged) return prev;
       return prev.map((ev) => (ev.id === id ? merged : ev));
@@ -1013,24 +1020,26 @@ export function useApp() {
 
   const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === id);
-      if (!target) {
-        // Derived event — store startFrame override (debug mode drag)
-        if (debugModeRef.current) {
-          queueMicrotask(() => {
-            setDerivedEventOverrides((overrides) => ({
-              ...overrides,
-              [id]: { ...overrides[id], startFrame: Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame)) },
-            }));
-          });
-        }
-        return prev;
+      let target = prev.find((ev) => ev.id === id);
+      if (!target && interactionModeRef.current !== InteractionModeType.STRICT) {
+        // Derived event drag — redirect to source infliction if this is a freeform reaction
+        const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
+        if (sourceId) target = prev.find((ev) => ev.id === sourceId);
       }
-      const processed = debugModeRef.current ? null : processedEventsRef.current;
-      const clamped = validateMove(prev, target, newStartFrame, processed);
+      if (!target) return prev;
+      // When redirected from a reaction, compute delta from the reaction's position
+      const isRedirected = target.id !== id;
+      let adjustedFrame = newStartFrame;
+      if (isRedirected) {
+        const reaction = processedEventsRef.current?.find((ev) => ev.id === id);
+        if (reaction) adjustedFrame = target.startFrame + (newStartFrame - reaction.startFrame);
+      }
+      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
+      const clamped = validateMove(prev, target, adjustedFrame, processed);
       if (clamped === target.startFrame) return prev;
+      const targetId = target.id;
       const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
-      return prev.map((ev) => (ev.id === id ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
+      return prev.map((ev) => (ev.id === targetId ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1038,28 +1047,19 @@ export function useApp() {
   const handleMoveEvents = useCallback((ids: string[], delta: number) => {
     if (delta === 0) return;
     setEvents((prev) => {
-      const processed = debugModeRef.current ? null : processedEventsRef.current;
-      const idSet = new Set(ids);
-      // Separate raw vs derived event IDs
-      const rawIds = ids.filter((id) => prev.some((ev) => ev.id === id));
-      const derivedIds = debugModeRef.current ? ids.filter((id) => !prev.some((ev) => ev.id === id)) : [];
-      // Move derived events via overrides
-      if (derivedIds.length > 0) {
-        const clampedD = Math.max(-TOTAL_FRAMES, Math.min(TOTAL_FRAMES, delta));
-        queueMicrotask(() => {
-          setDerivedEventOverrides((overrides) => {
-            const next = { ...overrides };
-            const allEvents = processedEventsRef.current ?? prev;
-            for (const id of derivedIds) {
-              const ev = allEvents.find((e) => e.id === id);
-              if (!ev) continue;
-              const curFrame = overrides[id]?.startFrame ?? ev.startFrame;
-              next[id] = { ...next[id], startFrame: Math.max(0, Math.min(TOTAL_FRAMES - 1, curFrame + clampedD)) };
-            }
-            return next;
-          });
+      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
+      // Resolve derived reaction IDs to their source infliction IDs
+      let resolvedIds = ids;
+      if (interactionModeRef.current !== InteractionModeType.STRICT) {
+        resolvedIds = ids.map((id) => {
+          if (prev.some((ev) => ev.id === id)) return id;
+          const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
+          if (sourceId && prev.some((ev) => ev.id === sourceId)) return sourceId;
+          return id;
         });
       }
+      const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.id === id));
+      const idSet = new Set(rawIds);
       if (rawIds.length === 0) return prev;
       const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed);
       if (clampedDelta === 0) return prev;
@@ -1792,8 +1792,8 @@ export function useApp() {
     editingSlot, editingEnemyOpen, editingResourceCol, editingResourceConfig, editingResourceKey,
     editingDamageRow,
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
-    scrollSynced, showRealTime, splitPct, debugMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
-    loadoutRowHeight, selectEventIds,
+    scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
+    loadoutRowHeight, headerRowHeight, selectEventIds,
     devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
@@ -1828,9 +1828,9 @@ export function useApp() {
     handleDmgScrollRef, handleTlScrollRef,
 
     // Setters for simple inline handlers
-    setContextMenu, setSelectedFrames, setLoadoutRowHeight,
+    setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setDebugMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 

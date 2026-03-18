@@ -32,8 +32,8 @@ interface SlotWiring {
  * Maps derived enemy event columnIds to the trigger conditions they represent.
  * Used to generate combo windows from derived events at their actual frame timing.
  */
-const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+const _I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subject, verb, object, ...extra } as Interaction);
 
 const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
   heatInfliction:       [_I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
@@ -69,7 +69,7 @@ function isDerivedInteraction(i: Interaction): boolean {
 }
 
 function isFinalStrike(i: Interaction): boolean {
-  return i.verbType === VerbType.PERFORM && i.objectType === ObjectType.FINAL_STRIKE;
+  return i.verb === VerbType.PERFORM && i.object === ObjectType.FINAL_STRIKE;
 }
 
 export class CombatLoadout {

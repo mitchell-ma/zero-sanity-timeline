@@ -329,7 +329,7 @@ export function buildDamageTableRows(
                   multiplier = getSkillMultiplier(
                     operatorId,
                     ev.name as CombatSkillsType,
-                    seg.label,
+                    si,
                     skillLevel,
                     potential,
                   );

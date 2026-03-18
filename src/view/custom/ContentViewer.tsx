@@ -26,11 +26,11 @@ type NavigateFn = (sel: ContentSelection) => void;
 
 function interactionToText(i: Interaction): string {
   const parts: string[] = [];
-  parts.push(i.subjectType.replace(/_/g, ' '));
+  parts.push(i.subject.replace(/_/g, ' '));
   if (i.subjectProperty) parts.push(`'s ${i.subjectProperty.replace(/_/g, ' ')}`);
   if (i.negated) parts.push('NOT');
-  parts.push(i.verbType.replace(/_/g, ' '));
-  parts.push(i.objectType.replace(/_/g, ' '));
+  parts.push(i.verb.replace(/_/g, ' '));
+  parts.push(i.object.replace(/_/g, ' '));
   if (i.objectId) parts.push(`(${i.objectId})`);
   if (i.cardinalityConstraint && i.cardinality != null) {
     parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${i.cardinality}`);
@@ -41,20 +41,20 @@ function interactionToText(i: Interaction): string {
 
 function effectToText(e: Effect): string {
   const parts: string[] = [];
-  parts.push(e.verbType.replace(/_/g, ' '));
+  parts.push(e.verb.replace(/_/g, ' '));
   if (e.cardinality != null) parts.push(String(e.cardinality));
   if (e.adjective) {
     const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
   }
-  if (e.objectType) parts.push(e.objectType.replace(/_/g, ' '));
+  if (e.object) parts.push(e.object.replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);
-  if (e.toObjectType) parts.push(`TO ${String(e.toObjectType).replace(/_/g, ' ')}`);
-  if (e.fromObjectType) parts.push(`FROM ${String(e.fromObjectType).replace(/_/g, ' ')}`);
-  if (e.onObjectType) parts.push(`ON ${String(e.onObjectType).replace(/_/g, ' ')}`);
+  if (e.toObject) parts.push(`TO ${String(e.toObject).replace(/_/g, ' ')}`);
+  if (e.fromObject) parts.push(`FROM ${String(e.fromObject).replace(/_/g, ' ')}`);
+  if (e.onObject) parts.push(`ON ${String(e.onObject).replace(/_/g, ' ')}`);
   if (e.cardinalityConstraint) parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
-  if (e.withPreposition) {
-    const wp = e.withPreposition;
+  if (e.with) {
+    const wp = e.with;
     const wpParts: string[] = [];
     for (const [k, v] of Object.entries(wp)) {
       const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}${(v.value as number[]).length > 3 ? '...' : ''}]`;
@@ -946,7 +946,7 @@ function StatusEventView({ data }: { data: Record<string, any> }) {
         {durStr && <Field label="Duration" value={durStr} />}
       </div>
       <div className="cv-field-grid">
-        <Field label="Stack Type" value={String(stack.verbType ?? stack.interactionType ?? 'NONE')} />
+        <Field label="Stack Type" value={String(stack.verb ?? stack.interactionType ?? 'NONE')} />
         <Field label="Max Stacks" value={maxStr} />
         <Field label="Instances" value={String(stack.instances ?? 1)} />
       </div>

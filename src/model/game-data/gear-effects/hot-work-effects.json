@@ -14,15 +14,15 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "IS",
-              "objectType": "COMBUSTED"
+              "subject": "ENEMY",
+              "verb": "IS",
+              "object": "COMBUSTED"
             }
           ]
         }
@@ -55,15 +55,15 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "IS",
-              "objectType": "CORRODED"
+              "subject": "ENEMY",
+              "verb": "IS",
+              "object": "CORRODED"
             }
           ]
         }

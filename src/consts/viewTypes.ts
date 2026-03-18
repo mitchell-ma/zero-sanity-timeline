@@ -186,6 +186,8 @@ export interface EventSegmentData {
   susceptibility?: Partial<Record<ElementType, number>>;
   /** Status effect label for this segment (e.g. "-3.6 Res"). */
   statusLabel?: string;
+  /** Clause effects active during this segment (from JSON clause data). */
+  clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
 }
 
 export interface TimelineEvent {
@@ -401,7 +403,7 @@ export type MiniTimeline = {
   noAdd?: boolean;
   /** If true, events in this column are derived/computed and cannot be added, dragged, or edited. */
   derived?: boolean;
-  /** Max events allowed (e.g. MF has max 4). */
+  /** Max events allowed (optional data-driven limit). */
   maxEvents?: number;
   /** Events must be added in monotonically increasing start-frame order. */
   requiresMonotonicOrder?: boolean;

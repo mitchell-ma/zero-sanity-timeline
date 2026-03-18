@@ -94,7 +94,7 @@ function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): any[] {
       stack: {
         max: { P0: ne.maxStacks },
         instances: ne.maxStacks,
-        verbType: ne.maxStacks > 1 ? 'NONE' : 'RESET',
+        verb: ne.maxStacks > 1 ? 'NONE' : 'RESET',
       },
       triggerClause: ne.triggers.map((t: any) => ({ conditions: [t] })),
       clause: [],

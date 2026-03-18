@@ -13,15 +13,15 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "HIT",
-              "objectType": "OPERATOR"
+              "subject": "ENEMY",
+              "verb": "HIT",
+              "object": "OPERATOR"
             }
           ]
         }

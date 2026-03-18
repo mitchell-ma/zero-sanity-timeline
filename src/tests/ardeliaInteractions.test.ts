@@ -150,13 +150,13 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
     const spEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT'
+      (e: any) => e.object === 'SKILL_POINT'
     );
     const staggerEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.objectType === 'STAGGER'
+      (e: any) => e.object === 'STAGGER'
     );
-    expect(spEffect.withPreposition.cardinality.value).toBe(18);
-    expect(staggerEffect.withPreposition.value.value).toBe(18);
+    expect(spEffect.with.cardinality.value).toBe(18);
+    expect(staggerEffect.with.value.value).toBe(18);
   });
 
   test('A4: Earlier segments recover 0 SP', () => {
@@ -214,30 +214,30 @@ describe('B. Battle Skill (Dolly Rush)', () => {
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
     const spCost = battleSkill.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
-    expect(spCost.withPreposition.cardinality.value).toBe(100);
+    expect(spCost.with.cardinality.value).toBe(100);
   });
 
   test('B3: Battle skill has SP cost + 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
     const spCost = battleSkill.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     const selfEnergy = battleSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'THIS' && e.toObjectType === 'OPERATOR'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+        e.verb === 'RECOVER' && e.toDeterminer === 'THIS' && e.toObject === 'OPERATOR'
     );
     const allEnergy = battleSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'ALL' && e.toObjectType === 'OPERATOR'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+        e.verb === 'RECOVER' && e.toDeterminer === 'ALL' && e.toObject === 'OPERATOR'
     );
     expect(selfEnergy).toBeDefined();
-    expect(selfEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(selfEnergy.with.cardinality.value).toBe(6.5);
     expect(allEnergy).toBeDefined();
-    expect(allEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(allEnergy.with.cardinality.value).toBe(6.5);
   });
 
   test('B4: Stagger recovery is 10', () => {
@@ -294,15 +294,15 @@ describe('C. Combo Skill (Eruption Column)', () => {
     // 1 trigger condition + 5 negated forbid conditions
     expect(conditions.length).toBe(6);
     expect(conditions[0].subjectDeterminer).toBe('ANY');
-    expect(conditions[0].subjectType).toBe('OPERATOR');
-    expect(conditions[0].verbType).toBe('PERFORM');
-    expect(conditions[0].objectType).toBe('FINAL_STRIKE');
+    expect(conditions[0].subject).toBe('OPERATOR');
+    expect(conditions[0].verb).toBe('PERFORM');
+    expect(conditions[0].object).toBe('FINAL_STRIKE');
     const negated = conditions.filter((c: any) => c.negated);
     expect(negated.length).toBe(5);
     for (const n of negated) {
-      expect(n.subjectType).toBe('ENEMY');
-      expect(n.verbType).toBe('HAVE');
-      expect(n.objectType).toBe('STATUS');
+      expect(n.subject).toBe('ENEMY');
+      expect(n.verb).toBe('HAVE');
+      expect(n.object).toBe('STATUS');
     }
   });
 
@@ -314,10 +314,10 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C3: Combo cooldown is 18 seconds', () => {
     const effects = mockJson.skills.COMBO_SKILL.effects;
     const cooldown = effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
-    expect(cooldown.withPreposition.cardinality.value).toBe(18);
+    expect(cooldown.with.cardinality.value).toBe(18);
   });
 
   test('C4: Combo has 2 frames', () => {
@@ -327,13 +327,13 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C5: Combo frame 2 applies forced Corrosion reaction to enemy', () => {
     const frame1 = mockJson.skills.COMBO_SKILL.frames[1];
     const reaction = frame1.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.objectType === 'REACTION'
+      (e: any) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
     expect(reaction).toBeDefined();
-    expect(reaction.adjectiveType).toEqual(['FORCED', 'CORROSION']);
-    expect(reaction.toObjectType).toBe('ENEMY');
-    expect(reaction.withPreposition.stacks.value).toBe(1);
-    expect(reaction.withPreposition.duration.value).toBe(7);
+    expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
+    expect(reaction.toObject).toBe('ENEMY');
+    expect(reaction.with.stacks.value).toBe(1);
+    expect(reaction.with.duration.value).toBe(7);
   });
 
   test('C5b: Combo frame 2 is GUARANTEED_HIT and PASSIVE', () => {
@@ -344,9 +344,9 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C6: Combo frame 2 recovers 10 stagger', () => {
     const frame1 = mockJson.skills.COMBO_SKILL.frames[1];
     const stagger = frame1.effects.find(
-      (e: any) => e.objectType === 'STAGGER'
+      (e: any) => e.object === 'STAGGER'
     );
-    expect(stagger.withPreposition.value.value).toBe(10);
+    expect(stagger.with.value.value).toBe(10);
   });
 
   test('C7: Combo animation is TIME_STOP (0.729s)', () => {
@@ -362,12 +362,12 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C9: Combo recovers 10 ultimate energy to self', () => {
     const effects = mockJson.skills.COMBO_SKILL.effects;
     const energy = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'RECOVER'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
     );
     expect(energy).toBeDefined();
-    expect(energy.toObjectDeterminer).toBe('THIS');
-    expect(energy.toObjectType).toBe('OPERATOR');
-    expect(energy.withPreposition.cardinality.value).toBe(10);
+    expect(energy.toDeterminer).toBe('THIS');
+    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.with.cardinality.value).toBe(10);
   });
 
   test('C10: Combo damage multiplier: 0.45 (lv1) → 1.0 (lv12)', () => {
@@ -389,10 +389,10 @@ describe('D. Ultimate (Wooly Party)', () => {
   test('D1: Ultimate energy cost is 90', () => {
     const effects = mockJson.skills.ULTIMATE.effects;
     const energyCost = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.withPreposition.cardinality.value).toBe(90);
+    expect(energyCost.with.cardinality.value).toBe(90);
   });
 
   test('D2: Ultimate active duration is 3 seconds', () => {
@@ -637,23 +637,23 @@ describe('I. Cooldown Interactions', () => {
     const ba = mockJson.skills.BASIC_ATTACK;
     const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
       .flatMap((f: any) => f.effects ?? [])
-      .find((e: any) => e.objectType === 'COOLDOWN');
+      .find((e: any) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Battle skill (Dolly Rush) has no COOLDOWN effect', () => {
     const cooldown = mockJson.skills.BATTLE_SKILL.effects?.find(
-      (e: any) => e.objectType === 'COOLDOWN'
+      (e: any) => e.object === 'COOLDOWN'
     );
     expect(cooldown).toBeUndefined();
   });
 
   test('H3: Combo skill (Eruption Column) has 18s cooldown', () => {
     const cooldown = mockJson.skills.COMBO_SKILL.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
-    expect(cooldown.withPreposition.cardinality.value).toBe(18);
+    expect(cooldown.with.cardinality.value).toBe(18);
   });
 
   test('H4: Ultimate (Wooly Party) has 0s cooldown from operator JSON', () => {
@@ -705,11 +705,11 @@ describe('J. Combo Activation Window Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
         },
         comboRequires: [
-          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
         ],
         comboDescription: 'Any operator Final Strike while enemy has no inflictions',
         comboWindowFrames: 720,
@@ -724,7 +724,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
         },
         comboRequires: [],

@@ -56,7 +56,7 @@ export interface CustomCombatSkillDef {
 /** A resource interaction within a skill or frame. */
 export interface CustomResourceInteraction {
   resourceType: string;
-  verbType: string;
+  verb: string;
   value: number;
   target?: string;
 }

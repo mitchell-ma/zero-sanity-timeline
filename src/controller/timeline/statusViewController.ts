@@ -16,6 +16,9 @@ import { TimelineEvent, Column } from '../../consts/viewTypes';
 import { INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { formatSegmentShortName } from '../../utils/semanticsTranslation';
 import { getOperatorJson, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
+import { REACTION_COLUMNS } from '../../model/channels';
+
+const REACTION_COLUMN_IDS: Set<string> = new Set(Object.values(REACTION_COLUMNS));
 
 const MAX_ROMAN = 9;
 
@@ -44,7 +47,7 @@ function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
       for (const se of statusEvents) {
         if (statusStackCache.has(se.name)) continue;
         const instances = se.stack?.instances ?? 1;
-        const verb = se.stack?.verb ?? se.stack?.verbType ?? 'NONE';
+        const verb = se.stack?.verb ?? se.stack?.verb ?? 'NONE';
         statusStackCache.set(se.name, { instances, verb });
       }
     }
@@ -57,6 +60,12 @@ function isSingleInstanceStatus(statusName: string): boolean {
   const info = getStatusStackInfo(statusName);
   if (!info) return false;
   return info.instances <= 1 && (info.verb === 'NONE' || info.verb === 'RESET');
+}
+
+/** Returns true if this status is stackable (more than 1 instance). */
+function isStackableStatus(statusName: string): boolean {
+  const info = getStatusStackInfo(statusName);
+  return !!info && info.instances > 1;
 }
 
 export interface StatusViewOverride {
@@ -100,13 +109,19 @@ export function computeStatusViewOverrides(
     }
 
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
-      if (typeEvents.length <= 1) continue;
+      // Reaction columns get their level from segment labels (based on inflictionStacks),
+      // not positional numerals — skip them here.
+      if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
       const sorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
       const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[sorted[0].name] ?? sorted[0].name;
 
       // Check if this status type is single-instance (no stacking numerals needed)
       const singleInstance = isSingleInstanceStatus(sorted[0].name);
+      const stackable = isStackableStatus(sorted[0].name);
+
+      // Skip single events that don't need any override from the status view layer
+      if (typeEvents.length <= 1 && !stackable) continue;
 
       for (let i = 0; i < sorted.length; i++) {
         const ev = sorted[i];
@@ -118,6 +133,7 @@ export function computeStatusViewOverrides(
           if (prevEnd > ev.startFrame) activeEarlier++;
         }
         const position = activeEarlier + 1;
+
         const override: StatusViewOverride = {
           label: singleInstance ? baseName : `${baseName} ${stackLabel(position)}`,
         };

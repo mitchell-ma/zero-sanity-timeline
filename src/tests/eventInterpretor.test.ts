@@ -99,10 +99,10 @@ describe('EventInterpretor: APPLY', () => {
     const ctx = makeCtx(interp);
 
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: ObjectType.INFLICTION,
+      verb: VerbType.APPLY,
+      object: ObjectType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      toObjectType: NounType.ENEMY,
+      toObject: NounType.ENEMY,
     };
 
     const result = interp.interpret(effect, ctx);
@@ -118,11 +118,11 @@ describe('EventInterpretor: APPLY', () => {
     const ctx = makeCtx(interp);
 
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: ObjectType.STATUS,
+      verb: VerbType.APPLY,
+      object: ObjectType.STATUS,
       objectId: 'FOCUS',
-      toObjectType: NounType.OPERATOR,
-      withPreposition: {
+      toObject: NounType.OPERATOR,
+      with: {
         duration: { verb: 'IS' as any, value: 10 },
       },
     };
@@ -140,11 +140,11 @@ describe('EventInterpretor: APPLY', () => {
     const ctx = makeCtx(interp);
 
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: ObjectType.REACTION,
+      verb: VerbType.APPLY,
+      object: ObjectType.REACTION,
       adjective: AdjectiveType.COMBUSTION,
-      toObjectType: NounType.ENEMY,
-      withPreposition: {
+      toObject: NounType.ENEMY,
+      with: {
         statusLevel: { verb: 'IS' as any, value: 2 },
       },
     };
@@ -156,14 +156,14 @@ describe('EventInterpretor: APPLY', () => {
     expect(interp.controller.output[0].statusLevel).toBe(2);
   });
 
-  test('APPLY with invalid objectType returns false', () => {
+  test('APPLY with invalid object returns false', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp);
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: ObjectType.DAMAGE,
+      verb: VerbType.APPLY,
+      object: ObjectType.DAMAGE,
     };
 
     const result = interp.interpret(effect, ctx);
@@ -185,11 +185,11 @@ describe('EventInterpretor: CONSUME', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: ObjectType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: ObjectType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
-      withPreposition: {
+      fromObject: NounType.ENEMY,
+      with: {
         stacks: { verb: 'IS' as any, value: 1 },
       },
     };
@@ -206,11 +206,11 @@ describe('EventInterpretor: CONSUME', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: ObjectType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: ObjectType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
-      withPreposition: {
+      fromObject: NounType.ENEMY,
+      with: {
         stacks: { verb: 'IS' as any, value: 1 },
       },
     };
@@ -229,11 +229,11 @@ describe('EventInterpretor: CONSUME', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: ObjectType.STATUS,
+      verb: VerbType.CONSUME,
+      object: ObjectType.STATUS,
       objectId: 'MELTING_FLAME',
-      fromObjectType: NounType.OPERATOR,
-      withPreposition: {
+      fromObject: NounType.OPERATOR,
+      with: {
         stacks: { verb: 'IS' as any, value: 1 },
       },
     };
@@ -254,11 +254,11 @@ describe('EventInterpretor: CONSUME', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: ObjectType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: ObjectType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
-      // No withPreposition.stacks — should warn
+      fromObject: NounType.ENEMY,
+      // No with.stacks — should warn
     };
 
     interp.interpret(effect, ctx);
@@ -282,26 +282,29 @@ describe('EventInterpretor: ALL', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.ALL,
-      forPreposition: {
+      verb: VerbType.ALL,
+      for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
         cardinality: 4,
       },
-      effects: [
-        {
-          verbType: VerbType.CONSUME,
-          objectType: ObjectType.INFLICTION,
-          adjective: AdjectiveType.HEAT,
-          fromObjectType: NounType.ENEMY,
-          withPreposition: { stacks: { verb: 'IS' as any, value: 1 } },
-        },
-        {
-          verbType: VerbType.APPLY,
-          objectType: ObjectType.STATUS,
-          objectId: 'MELTING_FLAME',
-          toObjectType: NounType.OPERATOR,
-        },
-      ],
+      predicates: [{
+        conditions: [],
+        effects: [
+          {
+            verb: VerbType.CONSUME,
+            object: ObjectType.INFLICTION,
+            adjective: AdjectiveType.HEAT,
+            fromObject: NounType.ENEMY,
+            with: { stacks: { verb: 'IS' as any, value: 1 } },
+          },
+          {
+            verb: VerbType.APPLY,
+            object: ObjectType.STATUS,
+            objectId: 'MELTING_FLAME',
+            toObject: NounType.OPERATOR,
+          },
+        ],
+      }],
     };
 
     const result = interp.interpret(effect, ctx);
@@ -330,17 +333,20 @@ describe('EventInterpretor: ALL', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.ALL,
-      // No forPreposition → single iteration
-      effects: [
-        {
-          verbType: VerbType.CONSUME,
-          objectType: ObjectType.INFLICTION,
-          adjective: AdjectiveType.HEAT,
-          fromObjectType: NounType.ENEMY,
-          withPreposition: { stacks: { verb: 'IS' as any, value: 1 } },
-        },
-      ],
+      verb: VerbType.ALL,
+      // No for → single iteration
+      predicates: [{
+        conditions: [],
+        effects: [
+          {
+            verb: VerbType.CONSUME,
+            object: ObjectType.INFLICTION,
+            adjective: AdjectiveType.HEAT,
+            fromObject: NounType.ENEMY,
+            with: { stacks: { verb: 'IS' as any, value: 1 } },
+          },
+        ],
+      }],
     };
 
     interp.interpret(effect, ctx);
@@ -362,26 +368,29 @@ describe('EventInterpretor: ALL', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.ALL,
-      forPreposition: {
+      verb: VerbType.ALL,
+      for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
         cardinality: 4,
       },
-      effects: [
-        {
-          verbType: VerbType.CONSUME,
-          objectType: ObjectType.INFLICTION,
-          adjective: AdjectiveType.HEAT,
-          fromObjectType: NounType.ENEMY,
-          withPreposition: { stacks: { verb: 'IS' as any, value: 1 } },
-        },
-        {
-          verbType: VerbType.APPLY,
-          objectType: ObjectType.STATUS,
-          objectId: 'MELTING_FLAME',
-          toObjectType: NounType.OPERATOR,
-        },
-      ],
+      predicates: [{
+        conditions: [],
+        effects: [
+          {
+            verb: VerbType.CONSUME,
+            object: ObjectType.INFLICTION,
+            adjective: AdjectiveType.HEAT,
+            fromObject: NounType.ENEMY,
+            with: { stacks: { verb: 'IS' as any, value: 1 } },
+          },
+          {
+            verb: VerbType.APPLY,
+            object: ObjectType.STATUS,
+            objectId: 'MELTING_FLAME',
+            toObject: NounType.OPERATOR,
+          },
+        ],
+      }],
     };
 
     interp.interpret(effect, ctx);
@@ -405,34 +414,34 @@ describe('EventInterpretor: ANY', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.ANY,
+      verb: VerbType.ANY,
       predicates: [
         {
           conditions: [{
-            subjectType: NounType.ENEMY,
-            verbType: VerbType.HAVE,
-            objectType: ObjectType.INFLICTION,
+            subject: NounType.ENEMY,
+            verb: VerbType.HAVE,
+            object: ObjectType.INFLICTION,
             element: 'HEAT',
           }],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: ObjectType.STATUS,
+            verb: VerbType.APPLY,
+            object: ObjectType.STATUS,
             objectId: 'HEAT_STATUS',
-            toObjectType: NounType.OPERATOR,
+            toObject: NounType.OPERATOR,
           }],
         },
         {
           conditions: [{
-            subjectType: NounType.ENEMY,
-            verbType: VerbType.HAVE,
-            objectType: ObjectType.INFLICTION,
+            subject: NounType.ENEMY,
+            verb: VerbType.HAVE,
+            object: ObjectType.INFLICTION,
             element: 'CRYO',
           }],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: ObjectType.STATUS,
+            verb: VerbType.APPLY,
+            object: ObjectType.STATUS,
             objectId: 'CRYO_STATUS',
-            toObjectType: NounType.OPERATOR,
+            toObject: NounType.OPERATOR,
           }],
         },
       ],
@@ -453,20 +462,20 @@ describe('EventInterpretor: ANY', () => {
     const ctx = makeCtx(interp);
 
     const effect: Effect = {
-      verbType: VerbType.ANY,
+      verb: VerbType.ANY,
       predicates: [
         {
           conditions: [{
-            subjectType: NounType.ENEMY,
-            verbType: VerbType.HAVE,
-            objectType: ObjectType.INFLICTION,
+            subject: NounType.ENEMY,
+            verb: VerbType.HAVE,
+            object: ObjectType.INFLICTION,
             element: 'HEAT',
           }],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: ObjectType.STATUS,
+            verb: VerbType.APPLY,
+            object: ObjectType.STATUS,
             objectId: 'HEAT_STATUS',
-            toObjectType: NounType.OPERATOR,
+            toObject: NounType.OPERATOR,
           }],
         },
       ],
@@ -487,8 +496,8 @@ describe('EventInterpretor: Validation', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: ObjectType.DAMAGE, // APPLY cannot target DAMAGE
+      verb: VerbType.APPLY,
+      object: ObjectType.DAMAGE, // APPLY cannot target DAMAGE
     };
 
     const result = interp.interpret(effect, ctx);
@@ -513,7 +522,7 @@ describe('EventInterpretor: Resource verbs', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp);
 
-    const effect: Effect = { verbType: verb };
+    const effect: Effect = { verb: verb };
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
     expect(interp.controller.output.length).toBe(0);
@@ -529,16 +538,16 @@ describe('EventInterpretor: interpretEffects', () => {
 
     const effects: Effect[] = [
       {
-        verbType: VerbType.APPLY,
-        objectType: ObjectType.INFLICTION,
+        verb: VerbType.APPLY,
+        object: ObjectType.INFLICTION,
         adjective: AdjectiveType.HEAT,
-        toObjectType: NounType.ENEMY,
+        toObject: NounType.ENEMY,
       },
       {
-        verbType: VerbType.APPLY,
-        objectType: ObjectType.INFLICTION,
+        verb: VerbType.APPLY,
+        object: ObjectType.INFLICTION,
         adjective: AdjectiveType.HEAT,
-        toObjectType: NounType.ENEMY,
+        toObject: NounType.ENEMY,
       },
     ];
 

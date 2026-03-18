@@ -45,6 +45,10 @@ import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../m
 import { StatusLevel } from '../consts/types';
 // eslint-disable-next-line import/first
 import { extendByTimeStops, TimeStopRegion } from '../controller/timeline/processTimeStop';
+// eslint-disable-next-line import/first
+import { DerivedEventController } from '../controller/timeline/derivedEventController';
+// eslint-disable-next-line import/first
+import { USER_ID } from '../model/channels';
 
 const FPS = 120;
 
@@ -142,7 +146,7 @@ describe('corrosion segments', () => {
     const ev = corrosionEvent('c1', 0, 3 * FPS, { inflictionStacks: 2 });
     const [result] = attachReactionFrames([ev]);
 
-    expect(result.segments![0].label).toBe('Corrosion (II)');
+    expect(result.segments![0].label).toBe('Corrosion II');
     // Other segments have no visual label
     expect(result.segments![1].label).toBeUndefined();
     expect(result.segments![2].label).toBeUndefined();
@@ -439,5 +443,45 @@ describe('corrosion time stop interaction', () => {
     expect(result.segments![0].frames).toBeDefined();
     expect(result.segments![0].frames!.length).toBe(1);
     expect(result.segments![0].frames![0].offsetFrame).toBe(0);
+  });
+
+  // ── Freeform corrosion (user-placed) ──────────────────────────────────
+
+  it('freeform corrosion I gets segments with correct resistance shred via registerEvents', () => {
+    const freeformCorrosion: TimelineEvent = {
+      id: 'freeform-corr-1',
+      name: REACTION_COLUMNS.CORROSION,
+      ownerId: ENEMY_OWNER_ID,
+      columnId: REACTION_COLUMNS.CORROSION,
+      startFrame: 0,
+      activationDuration: 5 * FPS,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      sourceOwnerId: USER_ID,
+      sourceSkillName: 'Freeform',
+      // No inflictionStacks — freeform events don't set this
+    };
+
+    const controller = new DerivedEventController();
+    controller.registerEvents([freeformCorrosion]);
+    const registered = controller.getRegisteredEvents();
+    const result = registered.find(ev => ev.id === 'freeform-corr-1')!;
+
+    // Should have segments built
+    expect(result.segments).toBeDefined();
+    expect(result.segments!.length).toBe(5);
+
+    // First segment should have resistance reduction for status level 1
+    const seg0 = result.segments![0];
+    const expectedReduction = getCorrosionBaseReduction(1 as StatusLevel, 1);
+    expect(seg0.statusLabel).toBe(`-${expectedReduction.toFixed(1)} Res`);
+
+    // First segment should have the label "Corrosion I"
+    expect(seg0.label).toBe('Corrosion I');
+
+    // First segment should have an initial damage frame
+    expect(seg0.frames).toBeDefined();
+    expect(seg0.frames!.length).toBe(1);
+    expect(seg0.frames![0].offsetFrame).toBe(0);
   });
 });

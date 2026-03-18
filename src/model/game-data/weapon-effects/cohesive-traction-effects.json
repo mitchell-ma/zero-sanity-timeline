@@ -13,16 +13,16 @@
           "P0": 3
         },
         "instances": 3,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "COMBO_SKILL"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "COMBO_SKILL"
             }
           ]
         }

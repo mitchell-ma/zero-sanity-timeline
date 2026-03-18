@@ -12,16 +12,16 @@ type LegacyTarget = 'wielder' | 'team' | 'enemy';
 
 /** Result of converting a legacy target — noun type plus optional determiner. */
 export interface LegacyTargetResult {
-  objectType: ObjectType;
+  object: ObjectType;
   objectDeterminer?: DeterminerType;
 }
 
 /** Convert legacy target to SVO ObjectType + optional DeterminerType. */
 export function legacyTargetToObjectType(target: LegacyTarget): LegacyTargetResult {
   switch (target) {
-    case 'enemy': return { objectType: ObjectType.ENEMY };
-    case 'team': return { objectType: ObjectType.OPERATOR, objectDeterminer: DeterminerType.ALL };
-    default: return { objectType: ObjectType.OPERATOR, objectDeterminer: DeterminerType.THIS };
+    case 'enemy': return { object: ObjectType.ENEMY };
+    case 'team': return { object: ObjectType.OPERATOR, objectDeterminer: DeterminerType.ALL };
+    default: return { object: ObjectType.OPERATOR, objectDeterminer: DeterminerType.THIS };
   }
 }
 
@@ -30,11 +30,11 @@ export function legacyTargetToObjectType(target: LegacyTarget): LegacyTargetResu
  * OPERATOR targets are encoded as "<DETERMINER>_OPERATOR" (e.g. "THIS_OPERATOR").
  */
 export function encodeLegacyTarget(result: LegacyTargetResult): string {
-  if (result.objectType === ObjectType.OPERATOR) {
+  if (result.object === ObjectType.OPERATOR) {
     const det = result.objectDeterminer ?? DeterminerType.THIS;
     return `${det}_OPERATOR`;
   }
-  return result.objectType;
+  return result.object;
 }
 
 /** Convert a stored target string back to a legacy target string. */

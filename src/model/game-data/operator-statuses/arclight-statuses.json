@@ -22,7 +22,7 @@
       {
         "conditions": [
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "BATTLE_SKILL"
@@ -52,7 +52,7 @@
             "verb": "APPLY",
             "object": "STATUS",
             "objectId": "WILDLAND_TREKKER_BUFF",
-            "toDet": "ALL",
+            "toDeterminer": "ALL",
             "to": "OPERATOR"
           }
         ]
@@ -151,7 +151,7 @@
       {
         "conditions": [
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "ULTIMATE"

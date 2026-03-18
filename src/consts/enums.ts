@@ -388,6 +388,7 @@ export enum TimeDependency {
 /** The phase type of an event segment. */
 export enum SegmentType {
   ANIMATION = "ANIMATION",
+  STASIS = "STASIS",
   NORMAL = "NORMAL",
   ACTIVE = "ACTIVE",
   COOLDOWN = "COOLDOWN",
@@ -401,7 +402,13 @@ export enum TimelineSourceType {
   ENEMY = "ENEMY",
   COMMON = "COMMON",
   TACTICAL = "TACTICAL",
-  DEBUGGER = "DEBUGGER",
+  FREEFORM = "FREEFORM",
+}
+
+export enum InteractionModeType {
+  STRICT = "STRICT",
+  FREEFORM = "FREEFORM",
+  DEBUG = "DEBUG",
 }
 
 export enum TargetType {

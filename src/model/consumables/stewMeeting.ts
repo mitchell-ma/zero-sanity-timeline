@@ -13,9 +13,9 @@ export class StewMeeting extends Tactical {
       durationSeconds: 0,
       triggerCondition: {
         subjectDeterminer: DeterminerType.THIS,
-        subjectType: SubjectType.OPERATOR,
-        verbType: VerbType.HAVE,
-        objectType: ObjectType.ULTIMATE_ENERGY,
+        subject: SubjectType.OPERATOR,
+        verb: VerbType.HAVE,
+        object: ObjectType.ULTIMATE_ENERGY,
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
       },
       maxUses: 3,

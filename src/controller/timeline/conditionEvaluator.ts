@@ -67,16 +67,16 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
 
 // ── Column resolution for status/infliction objectId ─────────────────────
 
-function resolveColumnId(objectType: string, objectId?: string, element?: string): string | undefined {
-  if (objectType === 'STATUS' && objectId) {
+function resolveColumnId(object: string, objectId?: string, element?: string): string | undefined {
+  if (object === 'STATUS' && objectId) {
     return REACTION_TO_COLUMN[objectId]
       ?? objectId.toLowerCase().replace(/_/g, '-');
   }
-  if (objectType === 'INFLICTION') {
+  if (object === 'INFLICTION') {
     const el = objectId ?? element;
     if (el) return ELEMENT_TO_INFLICTION_COLUMN[el];
   }
-  if (objectType === 'REACTION' && objectId) {
+  if (object === 'REACTION' && objectId) {
     return REACTION_TO_COLUMN[objectId];
   }
   return undefined;
@@ -85,10 +85,10 @@ function resolveColumnId(objectType: string, objectId?: string, element?: string
 // ── Evaluators ───────────────────────────────────────────────────────────
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
-  const columnId = resolveColumnId(cond.objectType, cond.objectId, cond.element);
+  const columnId = resolveColumnId(cond.object, cond.objectId, cond.element);
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subjectType, ctx, cond.subjectDeterminer);
+  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   const count = activeCountAtFrame(ctx.events, columnId, ownerId, ctx.frame);
 
   if (count === 0) return false;
@@ -118,19 +118,19 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     CRUSHED: 'crush',
   };
 
-  if (cond.objectType === 'ACTIVE') {
+  if (cond.object === 'ACTIVE') {
     // Check if the subject has any active skill events at this frame
-    const ownerId = resolveOwnerId(cond.subjectType, ctx, cond.subjectDeterminer);
+    const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
     for (const col of Object.values(SKILL_COLUMNS)) {
       if (activeCountAtFrame(ctx.events, col, ownerId, ctx.frame) > 0) return true;
     }
     return false;
   }
 
-  const columnId = stateToColumn[cond.objectType];
+  const columnId = stateToColumn[cond.object];
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subjectType, ctx, cond.subjectDeterminer);
+  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   const active = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame);
   const result = active.length > 0;
   return cond.negated ? !result : result;
@@ -138,10 +138,10 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 
 function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
   // RECEIVE: check if a matching status/infliction/reaction event starts at exactly this frame.
-  const columnId = resolveColumnId(cond.objectType, cond.objectId, cond.element);
+  const columnId = resolveColumnId(cond.object, cond.objectId, cond.element);
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subjectType, ctx, cond.subjectDeterminer);
+  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>
     ev.columnId === columnId &&
     (ownerId == null || ev.ownerId === ownerId) &&
@@ -152,10 +152,10 @@ function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
 function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
   // PERFORM conditions check if a skill event exists at/before this frame.
   // This is primarily used for trigger matching, not condition evaluation.
-  const columnId = SKILL_TYPE_TO_COLUMN[cond.objectType];
+  const columnId = SKILL_TYPE_TO_COLUMN[cond.object];
   if (!columnId) return false;
 
-  const ownerId = resolveOwnerId(cond.subjectType, ctx, cond.subjectDeterminer);
+  const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>
     ev.columnId === columnId &&
     (ownerId == null || ev.ownerId === ownerId) &&
@@ -171,7 +171,7 @@ function evaluatePerform(cond: Interaction, ctx: ConditionContext): boolean {
 export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): boolean {
   let result: boolean;
 
-  const verb = cond.verbType as string;
+  const verb = cond.verb as string;
   switch (verb) {
     case 'HAVE': result = evaluateHave(cond, ctx); break;
     case 'IS': result = evaluateIs(cond, ctx); break;
@@ -182,7 +182,7 @@ export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): b
   }
 
   // Apply negation (IS handles its own negation for state checks)
-  if (cond.negated && cond.verbType !== 'IS') return !result;
+  if (cond.negated && cond.verb !== 'IS') return !result;
   return result;
 }
 

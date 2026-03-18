@@ -453,6 +453,40 @@ function assignMultipliersToFrames(
       }
     }
   }
+
+  // Convert extra_usp multiplier to RECOVER ULTIMATE_ENERGY effect on the last frame
+  const extraUsp = sampleBb['extra_usp'];
+  if (extraUsp !== undefined && extraUsp > 0 && frames.length > 0) {
+    const lastFrame = frames[frames.length - 1];
+    if (!lastFrame.effects) lastFrame.effects = [];
+    const hasUltEffect = (lastFrame.effects as any[]).some((e: any) =>
+      e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
+    );
+    if (!hasUltEffect) {
+      (lastFrame.effects as any[]).push({
+        verb: 'RECOVER',
+        object: 'ULTIMATE_ENERGY',
+        with: { cardinality: { verb: 'IS', value: extraUsp } },
+      });
+    }
+  }
+
+  // Convert usp_1_display to RECOVER ULTIMATE_ENERGY effect on the first frame
+  const uspDisplay = sampleBb['usp_1_display'];
+  if (uspDisplay !== undefined && uspDisplay > 0 && frames.length > 0) {
+    const firstFrame = frames[0];
+    if (!firstFrame.effects) firstFrame.effects = [];
+    const hasUltEffect = (firstFrame.effects as any[]).some((e: any) =>
+      e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
+    );
+    if (!hasUltEffect) {
+      (firstFrame.effects as any[]).push({
+        verb: 'RECOVER',
+        object: 'ULTIMATE_ENERGY',
+        with: { cardinality: { verb: 'IS', value: uspDisplay } },
+      });
+    }
+  }
 }
 
 // ── Import parsers dynamically to avoid circular deps ────────────────────────

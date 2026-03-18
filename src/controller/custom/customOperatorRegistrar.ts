@@ -71,8 +71,8 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
           : {}),
         ...(skills.battleSkill.resourceInteractions?.length
           ? { effects: skills.battleSkill.resourceInteractions.map(r => ({
-            prepositionType: 'TO', toObjectDeterminer: 'THIS', toObjectType: 'OPERATOR',
-            verbType: r.verbType, objectType: r.resourceType, cardinality: r.value,
+            toDeterminer: 'THIS', toObject: 'OPERATOR',
+            verb: r.verb, object: r.resourceType, cardinality: r.value,
           })) }
           : {}),
       },
@@ -80,7 +80,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
         id: skills.comboSkill.name,
         duration: { value: skills.comboSkill.durationSeconds, unit: 'SECOND' },
         ...(skills.comboSkill.cooldownSeconds
-          ? { effects: [{ prepositionType: 'TO', toObjectDeterminer: 'THIS', toObjectType: 'OPERATOR', verbType: 'CONSUME', objectType: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
+          ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
           : {}),
         ...(skills.comboSkill.animationSeconds
           ? { animation: { duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' } } }
@@ -101,7 +101,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
           ? { animation: { duration: { value: skills.ultimate.animationSeconds, unit: 'SECOND' } } }
           : {}),
         effects: [
-          { prepositionType: 'TO', toObjectDeterminer: 'THIS', toObjectType: 'OPERATOR', verbType: 'CONSUME', objectType: 'ULTIMATE_ENERGY', cardinality: 300 },
+          { toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', cardinality: 300 },
         ],
       },
     },

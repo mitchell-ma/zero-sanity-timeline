@@ -32,13 +32,13 @@
       {
         "conditions": [
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "BATTLE_SKILL"
           },
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "HAVE",
             "object": "STATUS",

@@ -4,7 +4,7 @@ import { CombatSkillsType, ElementType, EventFrameType, EventStatusType, StatusT
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS, EXCHANGE_STATUS_MAX_SLOTS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
@@ -584,8 +584,6 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
     const { absoluteFrame, ownerId, marker } = absorption;
     const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
     const exchangeColumnId = EXCHANGE_STATUS_COLUMN[marker.exchangeStatus];
-    const maxSlots = EXCHANGE_STATUS_MAX_SLOTS[marker.exchangeStatus] ?? 4;
-
     if (!inflictionColumnId || !exchangeColumnId) continue;
 
     // Find active enemy infliction events of the matching element at this frame.
@@ -607,32 +605,7 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
 
     if (activeInflictions.length === 0) continue;
 
-    // Count active exchange status events for this operator at this frame.
-    // Use exchangeClampMap to account for exchange events consumed by skills
-    // (e.g. Smouldering Fire consuming Melting Flame) that fire before this frame.
-    let activeExchangeCount = 0;
-    for (const ev of [...events, ...generated]) {
-      if (ev.ownerId !== ownerId || ev.columnId !== exchangeColumnId) continue;
-      if (removedIds.has(ev.id)) continue;
-
-      const exchClamp = exchangeClampMap.get(ev.id);
-      const inflClamp = clampMap.get(ev.id);
-      const endFrame = exchClamp !== undefined
-        ? exchClamp
-        : inflClamp !== undefined
-          ? inflClamp.frame
-          : ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
-
-      if (ev.startFrame <= absoluteFrame && endFrame > absoluteFrame) {
-        activeExchangeCount++;
-      }
-    }
-
-    let availableSlots = maxSlots - activeExchangeCount;
-
-    if (availableSlots <= 0) continue;
-
-    const stacksToConsume = Math.min(activeInflictions.length, availableSlots, marker.stacks);
+    const stacksToConsume = Math.min(activeInflictions.length, marker.stacks);
     if (stacksToConsume <= 0) continue;
 
     // Sort active inflictions by startFrame (consume oldest first)
@@ -859,7 +832,8 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
 export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
   const reactionsByType = new Map<string, TimelineEvent[]>();
   for (const ev of events) {
-    if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
+    if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)
+      && !ev.eventStatus) { // Skip already-processed (refreshed/consumed) events
       const group = reactionsByType.get(ev.columnId) ?? [];
       group.push(ev);
       reactionsByType.set(ev.columnId, group);
@@ -916,19 +890,32 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         });
       }
     } else {
-      // Other reactions: refresh semantics (clamp older when newer outlasts it)
+      // Other reactions: refresh semantics — clamp older, newer inherits max statusLevel
       for (let i = 0; i < sorted.length - 1; i++) {
         const current = sorted[i];
-        const currentEnd = current.startFrame + (clampMap.get(current.id)?.duration ?? current.activationDuration);
+        const currentDur = mergeMap.get(current.id)?.activationDuration ?? current.activationDuration;
+        const currentEnd = current.startFrame + currentDur;
         const next = sorted[i + 1];
-        const nextEnd = next.startFrame + next.activationDuration;
 
-        if (next.startFrame < currentEnd && nextEnd >= currentEnd) {
-          clampMap.set(current.id, {
-            duration: Math.max(0, next.startFrame - current.startFrame),
-            source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
-          });
-        }
+        if (next.startFrame >= currentEnd) continue;
+
+        // Clamp older event at the point the newer starts
+        clampMap.set(current.id, {
+          duration: Math.max(0, next.startFrame - current.startFrame),
+          source: { ownerId: next.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: next.sourceSkillName },
+        });
+
+        // Newer inherits max statusLevel and stacks
+        const currentStatusLevel = mergeMap.get(current.id)?.statusLevel ?? current.statusLevel ?? current.inflictionStacks ?? 1;
+        const nextStatusLevel = next.statusLevel ?? next.inflictionStacks ?? 1;
+        const currentStacks = mergeMap.get(current.id)?.inflictionStacks ?? current.inflictionStacks ?? 1;
+        const nextStacks = next.inflictionStacks ?? 1;
+
+        mergeMap.set(next.id, {
+          activationDuration: next.activationDuration,
+          statusLevel: Math.max(currentStatusLevel, nextStatusLevel),
+          inflictionStacks: Math.max(currentStacks, nextStacks),
+        });
       }
     }
   });
@@ -952,7 +939,7 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
       };
     }
     if (merge !== undefined) {
-      // Rebuild segments with new stats (triggers buildCorrosionSegments via attachReactionFrames)
+      // Rebuild segments with merged stats (inherited max statusLevel/stacks)
       const merged = {
         ...ev,
         activationDuration: merge.activationDuration,
@@ -961,7 +948,6 @@ export function mergeReactions(events: TimelineEvent[]): TimelineEvent[] {
         reductionFloor: merge.reductionFloor,
         segments: undefined as EventSegmentData[] | undefined,
       };
-      // Rebuild corrosion segments with updated stats
       const [rebuilt] = attachReactionFrames([merged]);
       return rebuilt;
     }
@@ -1208,9 +1194,13 @@ export function buildReactionSegment(ev: TimelineEvent): { durationFrames: numbe
   // Corrosion is handled separately in buildCorrosionSegments
   // Electrification: initial hit only (no additional frames)
 
+  const baseName = REACTION_SEGMENT_LABEL[ev.columnId] ?? ev.columnId;
+  const level = ev.statusLevel ?? ev.inflictionStacks ?? 1;
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level - 1] ?? `${level}`;
+
   return {
     durationFrames: ev.activationDuration,
-    label: REACTION_SEGMENT_LABEL[ev.columnId] ?? ev.columnId,
+    label: `${baseName} ${roman}`,
     frames,
   };
 }
@@ -1249,7 +1239,7 @@ export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | 
     segments.push({
       name: i === 0 ? 'Corrosion 1' : `Tick ${i}`,
       durationFrames: segDuration,
-      label: i === 0 ? `Corrosion (${['I', 'II', 'III', 'IV'][statusLevel - 1]})` : undefined,
+      label: i === 0 ? `Corrosion ${['I', 'II', 'III', 'IV'][statusLevel - 1]}` : undefined,
       statusLabel: `-${reduction.toFixed(1)} Res`,
       frames,
     });

@@ -19,7 +19,7 @@ import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillsType, EventStatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { REACTION_DURATION, buildReactionSegment, buildCorrosionSegments } from './processInfliction';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
@@ -77,6 +77,17 @@ export class DerivedEventController {
       // Combo chaining: truncate overlapping combo animations
       if (ev.columnId === SKILL_COLUMNS.COMBO && (ev.animationDuration ?? 0) > 0) {
         ev = this.handleComboChaining(ev);
+      }
+
+      // Auto-build reaction segments for freeform reaction events
+      if (!ev.segments && REACTION_COLUMN_IDS.has(ev.columnId)) {
+        if (ev.columnId === REACTION_COLUMNS.CORROSION) {
+          const segs = buildCorrosionSegments(ev);
+          if (segs) ev = { ...ev, segments: segs };
+        } else {
+          const seg = buildReactionSegment(ev);
+          if (seg) ev = { ...ev, segments: [seg] };
+        }
       }
 
       this.maybeRegisterStop(ev);
@@ -270,18 +281,12 @@ export class DerivedEventController {
     // consume it and create a reaction instead.
     if (INFLICTION_COLUMN_IDS.has(columnId)) {
       const otherActive: TimelineEvent[] = [];
-      this.stacks.forEach((events, key) => {
-        const colId = key.split(':')[0];
-        if (colId === columnId) return;
-        if (!INFLICTION_COLUMN_IDS.has(colId)) return;
-        for (const ev of events) {
-          if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-          const end = ev.startFrame + ev.activationDuration;
-          if (ev.startFrame <= frame && frame < end) {
-            otherActive.push(ev);
-          }
+      for (const otherCol of Array.from(INFLICTION_COLUMN_IDS)) {
+        if (otherCol === columnId) continue;
+        for (const ev of this.activeEventsIn(otherCol, ownerId, frame)) {
+          otherActive.push(ev);
         }
-      });
+      }
 
       if (otherActive.length > 0) {
         const reactionColumnId = INFLICTION_TO_REACTION[columnId];
@@ -291,11 +296,30 @@ export class DerivedEventController {
             consumed.eventStatus = EventStatusType.CONSUMED;
             consumed.eventStatusOwnerId = source.ownerId;
             consumed.eventStatusSkillName = source.skillName;
+            trimSegments(consumed);
           }
           this.createReaction(reactionColumnId, ENEMY_OWNER_ID, frame, REACTION_DURATION, source, {
             id: `${options?.id ?? columnId}-reaction`,
             inflictionStacks: otherActive.length,
           });
+          // Emit a consumed copy of the incoming infliction so freeform raw
+          // events can be replaced with their reacted state.
+          const consumed: TimelineEvent = {
+            id: options?.id ?? `${columnId}-q-${this.idCounter++}`,
+            name: columnId,
+            ownerId,
+            columnId,
+            startFrame: frame,
+            activationDuration: 0,
+            activeDuration: 0,
+            cooldownDuration: 0,
+            sourceOwnerId: source.ownerId,
+            sourceSkillName: source.skillName,
+            eventStatus: EventStatusType.CONSUMED,
+            eventStatusOwnerId: source.ownerId,
+            eventStatusSkillName: source.skillName,
+          };
+          this.output.push(consumed);
           return;
         }
       }
@@ -312,6 +336,7 @@ export class DerivedEventController {
       oldest.eventStatus = EventStatusType.CONSUMED;
       oldest.eventStatusOwnerId = source.ownerId;
       oldest.eventStatusSkillName = source.skillName;
+      trimSegments(oldest);
     }
 
     const rawDur = durationFrames;
@@ -394,6 +419,7 @@ export class DerivedEventController {
         prev.eventStatus = EventStatusType.REFRESHED;
         prev.eventStatusOwnerId = source.ownerId;
         prev.eventStatusSkillName = source.skillName;
+        trimSegments(prev);
 
         const prevStatusLevel = prev.statusLevel ?? 1;
         const prevStacks = prev.inflictionStacks ?? 1;
@@ -418,6 +444,7 @@ export class DerivedEventController {
           prev.eventStatus = EventStatusType.REFRESHED;
           prev.eventStatusOwnerId = source.ownerId;
           prev.eventStatusSkillName = source.skillName;
+          trimSegments(prev);
         }
       }
     }
@@ -481,6 +508,7 @@ export class DerivedEventController {
         act.eventStatus = EventStatusType.CONSUMED;
         act.eventStatusOwnerId = source.ownerId;
         act.eventStatusSkillName = source.skillName;
+        trimSegments(act);
       }
     }
 
@@ -508,6 +536,7 @@ export class DerivedEventController {
       ev.eventStatus = EventStatusType.CONSUMED;
       ev.eventStatusOwnerId = source.ownerId;
       ev.eventStatusSkillName = source.skillName;
+      trimSegments(ev);
     }
     return toAbsorb.length;
   }
@@ -814,7 +843,44 @@ export class DerivedEventController {
         ev.eventStatus = status;
         ev.eventStatusOwnerId = source.ownerId;
         ev.eventStatusSkillName = source.skillName;
+        trimSegments(ev);
       }
     }
   }
+}
+
+/** Trim segments and frames that extend beyond the event's activationDuration. */
+function trimSegments(ev: TimelineEvent) {
+  if (!ev.segments) return;
+  let cumOffset = 0;
+  const trimmed = [];
+  for (const seg of ev.segments) {
+    if (cumOffset >= ev.activationDuration) break;
+    const remaining = ev.activationDuration - cumOffset;
+    if (seg.durationFrames <= remaining) {
+      // Segment fits entirely — but trim frames beyond activationDuration
+      if (seg.frames) {
+        const segStart = cumOffset;
+        const validFrames = seg.frames.filter(f => segStart + f.offsetFrame <= ev.activationDuration);
+        if (validFrames.length !== seg.frames.length) {
+          trimmed.push({ ...seg, frames: validFrames.length > 0 ? validFrames : undefined });
+        } else {
+          trimmed.push(seg);
+        }
+      } else {
+        trimmed.push(seg);
+      }
+      cumOffset += seg.durationFrames;
+    } else {
+      // Segment partially fits — clamp duration and trim frames
+      const clampedSeg = { ...seg, durationFrames: remaining };
+      if (seg.frames) {
+        clampedSeg.frames = seg.frames.filter(f => f.offsetFrame <= remaining);
+        if (clampedSeg.frames.length === 0) clampedSeg.frames = undefined;
+      }
+      trimmed.push(clampedSeg);
+      cumOffset += remaining;
+    }
+  }
+  ev.segments = trimmed.length > 0 ? trimmed : undefined;
 }

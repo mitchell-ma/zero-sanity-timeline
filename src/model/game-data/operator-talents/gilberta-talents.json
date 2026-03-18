@@ -19,7 +19,7 @@
                     "P5": 1
                 },
                 "instances": 1,
-                "verbType": "NONE"
+                "verb": "NONE"
             },
             "triggerClause": [],
             "clause": [
@@ -29,7 +29,7 @@
                         {
                             "verb": "APPLY",
                             "object": "ENERGY_GAIN_EFFICIENCY",
-                            "toDet": "ALL",
+                            "toDeterminer": "ALL",
                             "to": "GUARD",
                             "with": {
                                 "value": {
@@ -49,7 +49,7 @@
                         {
                             "verb": "APPLY",
                             "object": "ENERGY_GAIN_EFFICIENCY",
-                            "toDet": "ALL",
+                            "toDeterminer": "ALL",
                             "to": "CASTER",
                             "with": {
                                 "value": {
@@ -69,7 +69,7 @@
                         {
                             "verb": "APPLY",
                             "object": "ENERGY_GAIN_EFFICIENCY",
-                            "toDet": "ALL",
+                            "toDeterminer": "ALL",
                             "to": "SUPPORTER",
                             "with": {
                                 "value": {

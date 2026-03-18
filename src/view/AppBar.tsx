@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { IS_DEV } from '../consts/devFlags';
+import { InteractionModeType } from '../consts/enums';
 
 interface AppBarProps {
   activeLoadoutName: string;
@@ -12,8 +13,8 @@ interface AppBarProps {
   onDevlog: () => void;
   onKeys: () => void;
   onCustomContent: () => void;
-  debugMode?: boolean;
-  onToggleDebug?: () => void;
+  interactionMode?: InteractionModeType;
+  onToggleInteractionMode?: () => void;
   lightMode?: boolean;
   onToggleTheme?: () => void;
 }
@@ -22,7 +23,7 @@ export default function AppBar({
   activeLoadoutName, onRenameLoadout,
   onClearLoadout, onClearAll,
   onExport, onImport, onShare, onDevlog, onKeys, onCustomContent,
-  debugMode, onToggleDebug,
+  interactionMode, onToggleInteractionMode,
   lightMode, onToggleTheme,
 }: AppBarProps) {
   const [renaming, setRenaming] = useState(false);
@@ -146,11 +147,11 @@ export default function AppBar({
           )}
         </button>
         <button
-          className={`btn-debug${debugMode ? ' btn-debug--active' : ''}`}
-          onClick={onToggleDebug}
-          title="Debug mode: bypass all validation"
+          className={`btn-debug${interactionMode !== InteractionModeType.STRICT ? ' btn-debug--active' : ''}`}
+          onClick={onToggleInteractionMode}
+          title="Freeform mode: bypass all validation"
         >
-          DEBUG
+          FREEFORM
         </button>
         {!IS_DEV && <span className="wip-badge">WIP</span>}
         <button className="btn-devlog" onClick={onDevlog}>

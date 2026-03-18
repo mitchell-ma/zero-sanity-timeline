@@ -38,9 +38,9 @@
             },
             "effects": [
               {
-                "verbType": "RECOVER",
-                "objectType": "SKILL_POINT",
-                "withPreposition": {
+                "verb": "RECOVER",
+                "object": "SKILL_POINT",
+                "with": {
                   "cardinality": {
                     "verb": "IS",
                     "value": 0
@@ -48,10 +48,10 @@
                 }
               },
               {
-                "verbType": "APPLY",
-                "objectType": "STAGGER",
-                "toObjectType": "ENEMY",
-                "withPreposition": {
+                "verb": "APPLY",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
                   "value": {
                     "verb": "IS",
                     "value": 0
@@ -153,9 +153,9 @@
             },
             "effects": [
               {
-                "verbType": "RECOVER",
-                "objectType": "SKILL_POINT",
-                "withPreposition": {
+                "verb": "RECOVER",
+                "object": "SKILL_POINT",
+                "with": {
                   "cardinality": {
                     "verb": "IS",
                     "value": 0
@@ -163,10 +163,10 @@
                 }
               },
               {
-                "verbType": "APPLY",
-                "objectType": "STAGGER",
-                "toObjectType": "ENEMY",
-                "withPreposition": {
+                "verb": "APPLY",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
                   "value": {
                     "verb": "IS",
                     "value": 0
@@ -268,9 +268,9 @@
             },
             "effects": [
               {
-                "verbType": "RECOVER",
-                "objectType": "SKILL_POINT",
-                "withPreposition": {
+                "verb": "RECOVER",
+                "object": "SKILL_POINT",
+                "with": {
                   "cardinality": {
                     "verb": "IS",
                     "value": 0
@@ -278,10 +278,10 @@
                 }
               },
               {
-                "verbType": "APPLY",
-                "objectType": "STAGGER",
-                "toObjectType": "ENEMY",
-                "withPreposition": {
+                "verb": "APPLY",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
                   "value": {
                     "verb": "IS",
                     "value": 0
@@ -367,9 +367,9 @@
             },
             "effects": [
               {
-                "verbType": "RECOVER",
-                "objectType": "SKILL_POINT",
-                "withPreposition": {
+                "verb": "RECOVER",
+                "object": "SKILL_POINT",
+                "with": {
                   "cardinality": {
                     "verb": "IS",
                     "value": 0
@@ -377,10 +377,10 @@
                 }
               },
               {
-                "verbType": "APPLY",
-                "objectType": "STAGGER",
-                "toObjectType": "ENEMY",
-                "withPreposition": {
+                "verb": "APPLY",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
                   "value": {
                     "verb": "IS",
                     "value": 0
@@ -470,9 +470,9 @@
             },
             "effects": [
               {
-                "verbType": "RECOVER",
-                "objectType": "SKILL_POINT",
-                "withPreposition": {
+                "verb": "RECOVER",
+                "object": "SKILL_POINT",
+                "with": {
                   "cardinality": {
                     "verb": "IS",
                     "value": 15
@@ -480,10 +480,10 @@
                 }
               },
               {
-                "verbType": "APPLY",
-                "objectType": "STAGGER",
-                "toObjectType": "ENEMY",
-                "withPreposition": {
+                "verb": "APPLY",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
                   "value": {
                     "verb": "IS",
                     "value": 15
@@ -611,9 +611,9 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
+            "verb": "RECOVER",
+            "object": "SKILL_POINT",
+            "with": {
               "cardinality": {
                 "verb": "IS",
                 "value": 0
@@ -621,10 +621,10 @@
             }
           },
           {
-            "verbType": "APPLY",
-            "objectType": "STAGGER",
-            "toObjectType": "ENEMY",
-            "withPreposition": {
+            "verb": "APPLY",
+            "object": "STAGGER",
+            "toObject": "ENEMY",
+            "with": {
               "value": {
                 "verb": "IS",
                 "value": 0
@@ -632,14 +632,14 @@
             }
           },
           {
-            "verbType": "APPLY",
-            "objectType": "STATUS",
+            "verb": "APPLY",
+            "object": "STATUS",
             "objectId": "FOCUS",
-            "toObjectType": "ENEMY",
+            "toObject": "ENEMY",
             "eventName": "Focus",
             "stackingInteraction": "RESET",
             "potentialMax": 4,
-            "withPreposition": {
+            "with": {
               "duration": {
                 "verb": "IS",
                 "value": 60
@@ -677,14 +677,14 @@
             }
           },
           {
-            "verbType": "APPLY",
-            "objectType": "STATUS",
+            "verb": "APPLY",
+            "object": "STATUS",
             "objectId": "FOCUS",
-            "toObjectType": "ENEMY",
+            "toObject": "ENEMY",
             "eventName": "Empowered Focus",
             "stackingInteraction": "RESET",
             "potentialMin": 5,
-            "withPreposition": {
+            "with": {
               "duration": {
                 "verb": "IS",
                 "value": 60
@@ -840,9 +840,9 @@
     ],
     "effects": [
       {
-        "verbType": "CONSUME",
-        "objectType": "SKILL_POINT",
-        "withPreposition": {
+        "verb": "CONSUME",
+        "object": "SKILL_POINT",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 100
@@ -850,11 +850,11 @@
         }
       },
       {
-        "verbType": "RECOVER",
-        "objectType": "ULTIMATE_ENERGY",
-        "toObjectDeterminer": "THIS",
-        "toObjectType": "OPERATOR",
-        "withPreposition": {
+        "verb": "RECOVER",
+        "object": "ULTIMATE_ENERGY",
+        "toDeterminer": "THIS",
+        "toObject": "OPERATOR",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 6.5
@@ -862,11 +862,11 @@
         }
       },
       {
-        "verbType": "RECOVER",
-        "objectType": "ULTIMATE_ENERGY",
-        "toObjectDeterminer": "ALL",
-        "toObjectType": "OPERATOR",
-        "withPreposition": {
+        "verb": "RECOVER",
+        "object": "ULTIMATE_ENERGY",
+        "toDeterminer": "ALL",
+        "toObject": "OPERATOR",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 6.5
@@ -897,15 +897,15 @@
             "conditions": [
               {
                 "subjectDeterminer": "ANY",
-                "subjectType": "OPERATOR",
-                "verbType": "APPLY",
-                "objectType": "STATUS",
+                "subject": "OPERATOR",
+                "verb": "APPLY",
+                "object": "STATUS",
                 "objectId": "PHYSICAL"
               },
               {
-                "subjectType": "ENEMY",
-                "verbType": "HAVE",
-                "objectType": "STATUS",
+                "subject": "ENEMY",
+                "verb": "HAVE",
+                "object": "STATUS",
                 "objectId": "FOCUS"
               }
             ]
@@ -914,14 +914,14 @@
             "conditions": [
               {
                 "subjectDeterminer": "ANY",
-                "subjectType": "OPERATOR",
-                "verbType": "APPLY",
-                "objectType": "INFLICTION"
+                "subject": "OPERATOR",
+                "verb": "APPLY",
+                "object": "INFLICTION"
               },
               {
-                "subjectType": "ENEMY",
-                "verbType": "HAVE",
-                "objectType": "STATUS",
+                "subject": "ENEMY",
+                "verb": "HAVE",
+                "object": "STATUS",
                 "objectId": "FOCUS"
               }
             ]
@@ -947,9 +947,9 @@
         },
         "effects": [
           {
-            "verbType": "RECOVER",
-            "objectType": "SKILL_POINT",
-            "withPreposition": {
+            "verb": "RECOVER",
+            "object": "SKILL_POINT",
+            "with": {
               "cardinality": {
                 "verb": "IS",
                 "value": 0
@@ -957,10 +957,10 @@
             }
           },
           {
-            "verbType": "APPLY",
-            "objectType": "STAGGER",
-            "toObjectType": "ENEMY",
-            "withPreposition": {
+            "verb": "APPLY",
+            "object": "STAGGER",
+            "toObject": "ENEMY",
+            "with": {
               "value": {
                 "verb": "IS",
                 "value": 10
@@ -968,16 +968,16 @@
             }
           },
           {
-            "verbType": "APPLY",
-            "adjectiveType": "SOURCE",
-            "objectType": "INFLICTION",
-            "toObjectType": "ENEMY"
+            "verb": "APPLY",
+            "adjective": "SOURCE",
+            "object": "INFLICTION",
+            "toObject": "ENEMY"
           },
           {
-            "verbType": "APPLY",
-            "adjectiveType": "SOURCE",
-            "objectType": "STATUS",
-            "toObjectType": "ENEMY"
+            "verb": "APPLY",
+            "adjective": "SOURCE",
+            "object": "STATUS",
+            "toObject": "ENEMY"
           }
         ],
         "multipliers": [
@@ -1058,9 +1058,9 @@
     ],
     "effects": [
       {
-        "verbType": "CONSUME",
-        "objectType": "COOLDOWN",
-        "withPreposition": {
+        "verb": "CONSUME",
+        "object": "COOLDOWN",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 15
@@ -1068,11 +1068,11 @@
         }
       },
       {
-        "verbType": "RECOVER",
-        "objectType": "ULTIMATE_ENERGY",
-        "toObjectDeterminer": "THIS",
-        "toObjectType": "OPERATOR",
-        "withPreposition": {
+        "verb": "RECOVER",
+        "object": "ULTIMATE_ENERGY",
+        "toDeterminer": "THIS",
+        "toObject": "OPERATOR",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 10
@@ -1101,9 +1101,9 @@
     "frames": [],
     "effects": [
       {
-        "verbType": "CONSUME",
-        "objectType": "ULTIMATE_ENERGY",
-        "withPreposition": {
+        "verb": "CONSUME",
+        "object": "ULTIMATE_ENERGY",
+        "with": {
           "cardinality": {
             "verb": "IS",
             "value": 90

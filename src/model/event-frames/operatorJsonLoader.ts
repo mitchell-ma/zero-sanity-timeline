@@ -50,12 +50,11 @@ for (const key of statusContext.keys()) {
 
 /** Key mappings: short (operator-statuses) → long (engine-expected). */
 const KEY_EXPAND: Record<string, string> = {
-  verb: 'verbType', object: 'objectType', subject: 'subjectType',
-  subjectDet: 'subjectDeterminer',
-  to: 'toObjectType', toDet: 'toObjectDeterminer',
-  from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
-  on: 'onObjectType', onDet: 'onObjectDeterminer',
-  with: 'withPreposition', for: 'forPreposition',
+  verb: 'verb', object: 'object', subject: 'subject',
+  to: 'toObject',
+  from: 'fromObject',
+  on: 'onObject',
+  with: 'with', for: 'for',
 };
 
 /** Recursively expand short keys in a JSON value. */

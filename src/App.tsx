@@ -15,6 +15,7 @@ import { createCustomOperator, getDefaultCustomOperator, updateCustomOperator, g
 import { createCustomSkill, getDefaultCustomSkill, updateCustomSkill, getCustomSkills } from './controller/custom/customSkillController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
 import { clearAllCustomContent } from './utils/customContentStorage';
+import { InteractionModeType } from './consts/enums';
 import type { GearSetType } from './consts/enums';
 import ContextMenu from './view/ContextMenu';
 import WarningModal from './view/WarningModal';
@@ -129,7 +130,7 @@ export default function App() {
           cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
           animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
           description: skill.description,
-          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }] : undefined,
+          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: skill.skillPointCost }] : undefined,
         };
         targetCategory = ContentCategory.SKILLS;
       }
@@ -211,8 +212,8 @@ export default function App() {
           setCustomPageActive(true);
           setSidebarMode('custom');
         }}
-        debugMode={app.debugMode}
-        onToggleDebug={() => app.setDebugMode((v) => !v)}
+        interactionMode={app.interactionMode}
+        onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
         onToggleTheme={app.handleToggleTheme}
       />
@@ -397,7 +398,7 @@ export default function App() {
                         cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
                         animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
                         description: skill.description,
-                        resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verbType: 'CONSUME', value: skill.skillPointCost }] : undefined,
+                        resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: skill.skillPointCost }] : undefined,
                       };
                       targetCategory = ContentCategory.SKILLS;
                     }
@@ -461,6 +462,7 @@ export default function App() {
                     selectedFrames={app.selectedFrames}
                     onSelectedFramesChange={app.setSelectedFrames}
                     onLoadoutRowHeight={app.setLoadoutRowHeight}
+                    onHeaderRowHeight={app.setHeaderRowHeight}
                     onScrollRef={app.handleTlScrollRef}
                     onScroll={app.handleTimelineScroll}
                     onHoverFrame={app.setHoverFrame}
@@ -470,7 +472,7 @@ export default function App() {
                     onSelectEventIdsConsumed={() => app.setSelectEventIds(undefined)}
                     showRealTime={app.showRealTime}
                     onToggleRealTime={() => app.setShowRealTime((v) => !v)}
-                    debugMode={app.debugMode}
+                    interactionMode={app.interactionMode}
                     staggerBreaks={app.staggerBreaks}
                     contentFrames={app.contentFrames}
                     spInsufficiencyZones={app.spInsufficiencyZones}
@@ -555,6 +557,7 @@ export default function App() {
                     staggerBreaks={app.staggerBreaks}
                     zoom={app.zoom}
                     loadoutRowHeight={app.loadoutRowHeight}
+                    headerRowHeight={app.headerRowHeight}
                     selectedFrames={app.selectedFrames}
                     hoverFrame={app.hoverFrame}
                     onScrollRef={app.handleDmgScrollRef}
@@ -618,7 +621,7 @@ export default function App() {
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
             onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
-            debugMode={app.debugMode}
+            interactionMode={app.interactionMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
             loadoutProperties={app.loadoutProperties}
@@ -642,6 +645,9 @@ export default function App() {
             verbose={app.infoPaneVerbose}
             onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
             allProcessedEvents={app.allProcessedEvents}
+            allOperators={app.allOperators}
+            onSelectOperator={(opId) => app.handleSwapOperator(app.editingSlot!.slotId, opId)}
+            onLoadoutChange={(lo) => app.handleLoadoutChange(app.editingSlot!.slotId, lo)}
           />
         ) : app.editingEnemyOpen ? (
           <InformationPane

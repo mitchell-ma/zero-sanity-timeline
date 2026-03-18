@@ -6,7 +6,7 @@
  * closures, allowing the view to map actionIds to callbacks.
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem } from '../../consts/viewTypes';
-import { CombatSkillsType } from '../../consts/enums';
+import { CombatSkillsType, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { MicroColumnController } from './microColumnController';
@@ -33,7 +33,7 @@ export interface ColumnContextMenuContext {
   timeStopRegions: TimeStopRegion[];
   staggerBreaks?: readonly StaggerBreak[];
   columnPositions: Map<string, { left: number; right: number }>;
-  debugMode?: boolean;
+  interactionMode?: InteractionModeType;
 }
 
 /**
@@ -47,9 +47,9 @@ export function buildColumnContextMenu(
   ctx: ColumnContextMenuContext,
 ): ContextMenuItem[] | null {
   if (col.type !== 'mini-timeline') return null;
-  if (col.derived && !ctx.debugMode) return null;
+  if (col.derived && ctx.interactionMode === InteractionModeType.STRICT) return null;
 
-  const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, debugMode } = ctx;
+  const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, interactionMode } = ctx;
 
   // Resource columns: show "Edit Resource" only
   if (col.noAdd && resourceGraphs?.has(col.key)) {
@@ -58,7 +58,7 @@ export function buildColumnContextMenu(
       { label: 'Edit Resource', actionId: 'editResource', actionPayload: col.key },
     ];
   }
-  if (col.noAdd && !debugMode) return null;
+  if (col.noAdd && interactionMode === InteractionModeType.STRICT) return null;
 
   const headerItem: ContextMenuItem = { label: `Add @ ${frameToDetailLabel(atFrame)}`, header: true };
 
@@ -93,7 +93,7 @@ export function buildColumnContextMenu(
       {
         label: mc.label,
         actionId: 'addEvent',
-        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: col.defaultEvent ?? null },
+        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
         disabled: inTimeStop,
         disabledReason: inTimeStop ? timeStopReason : undefined,
       },
@@ -119,9 +119,9 @@ export function buildColumnContextMenu(
             ownerId: col.ownerId,
             columnId: mc.id,
             atFrame,
-            defaultSkill: col.defaultEvent
+            defaultSkill: mc.defaultEvent ?? (col.defaultEvent
               ? { ...col.defaultEvent, name: INFLICTION_EVENT_LABELS[mc.id] ?? mc.id }
-              : null,
+              : null),
           },
           disabled: inTimeStop,
           disabledReason: inTimeStop ? timeStopReason : undefined,
@@ -130,7 +130,7 @@ export function buildColumnContextMenu(
     }
 
     // Single-column stacking (MF)
-    const disabled = !debugMode && (inTimeStop || full || beforePrev);
+    const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || full || beforePrev);
     const rawName = col.defaultEvent?.name ?? col.label;
     const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
     const disabledReason = inTimeStop
@@ -159,7 +159,7 @@ export function buildColumnContextMenu(
   if (col.columnId === SKILL_COLUMNS.COMBO) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
     const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(col.defaultEvent ?? null, atFrame, timeStopRegions));
-    const disabled = !debugMode && (inTimeStop || !comboAvail.available || overlap);
+    const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || overlap);
     const reason = inTimeStop ? timeStopReason
       : !comboAvail.available ? comboAvail.reason
       : overlap ? 'Would overlap another event' : undefined;
@@ -206,7 +206,7 @@ export function buildColumnContextMenu(
             if (existing) finisherBlock = 'Only one Finisher allowed per stagger break';
           }
         }
-        const disabled = !debugMode && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
+        const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
         const displayName = v.isPerfectDodge ? 'Dodge'
           : col.columnId === 'dash' ? 'Dash'
           : v.displayName ?? COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
@@ -252,7 +252,7 @@ export function buildColumnContextMenu(
   const resAvail = resourceGraphs
     ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots)
     : { sufficient: true };
-  const disabled = !debugMode && (inTimeStop || overlap || !resAvail.sufficient);
+  const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || overlap || !resAvail.sufficient);
   const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resAvail.reason;
   return [
     headerItem,
@@ -280,7 +280,7 @@ export function buildEventAddItems(
   atFrame: number,
   label: string,
   onAddEventActionId: string,
-  debugMode?: boolean,
+  interactionMode?: InteractionModeType,
 ): ContextMenuItem[] {
   const col = columns.find((c) => {
     if (c.type !== 'mini-timeline' || !c.microColumns || c.microColumnAssignment !== 'by-order') return false;
@@ -301,7 +301,7 @@ export function buildEventAddItems(
   // Single-column stacking (MF)
   const full = MicroColumnController.isColumnFull(col, events, atFrame);
   const beforePrev = MicroColumnController.isBeforeLastEvent(col, events, atFrame);
-  const disabled = !debugMode && (full || beforePrev);
+  const disabled = interactionMode === InteractionModeType.STRICT && (full || beforePrev);
   const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
   const existing = events.filter(
     (ev) => ev.ownerId === col.ownerId &&
@@ -331,7 +331,7 @@ export function buildSegmentAddItems(
   eventId: string,
   events: TimelineEvent[],
   columns: Column[],
-  debugMode?: boolean,
+  interactionMode?: InteractionModeType,
 ): ContextMenuItem[] {
   const ev = events.find((e) => e.id === eventId);
   if (!ev?.segments) return [];
@@ -347,8 +347,8 @@ export function buildSegmentAddItems(
       label: `Add Sequence ${s.label}`,
       actionId: 'addSegment',
       actionPayload: { eventId, segmentLabel: s.label! },
-      disabled: !debugMode && wouldOverlap,
-      disabledReason: !debugMode && wouldOverlap ? 'Would overlap another event' : undefined,
+      disabled: interactionMode === InteractionModeType.STRICT && wouldOverlap,
+      disabledReason: interactionMode === InteractionModeType.STRICT && wouldOverlap ? 'Would overlap another event' : undefined,
     };
   });
 }

@@ -27,6 +27,7 @@ const VERB_LABELS: Record<VerbType, string> = {
   [VerbType.BECOME]: 'Become',
   [VerbType.RECEIVE]: 'Receive',
   [VerbType.IGNORE]: 'Ignore',
+  [VerbType.ENHANCE]: 'Enhance',
   [VerbType.EXPERIENCE]: 'Experience',
   [VerbType.DEAL]: 'Deal',
 };
@@ -104,7 +105,7 @@ const DETERMINER_LABELS: Record<DeterminerType, string> = {
 const EFFECT_VERBS = [
   VerbType.APPLY, VerbType.CONSUME,
   VerbType.RECOVER, VerbType.RETURN,
-  VerbType.REFRESH, VerbType.EXTEND, VerbType.MERGE, VerbType.RESET, VerbType.IGNORE,
+  VerbType.REFRESH, VerbType.EXTEND, VerbType.MERGE, VerbType.RESET, VerbType.IGNORE, VerbType.ENHANCE,
   VerbType.PERFORM, VerbType.DEAL,
   VerbType.ALL, VerbType.ANY,
 ];
@@ -119,7 +120,8 @@ function getObjectsForEffectVerb(verb: VerbType): ObjectType[] {
     case VerbType.EXTEND:
     case VerbType.MERGE:
     case VerbType.RESET: return [ObjectType.STACKS, ObjectType.COOLDOWN, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION];
-    case VerbType.IGNORE: return [ObjectType.STATUS];
+    case VerbType.IGNORE: return [ObjectType.STATUS, ObjectType.ULTIMATE_ENERGY];
+    case VerbType.ENHANCE: return [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE];
     case VerbType.PERFORM: return [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.NORMAL_ATTACK];
     case VerbType.DEAL: return [ObjectType.DAMAGE];
     default: return Object.values(ObjectType);
@@ -147,16 +149,16 @@ interface EffectBuilderProps {
 }
 
 export default function EffectBuilder({ value, onChange, onRemove, compact }: EffectBuilderProps) {
-  const objects = getObjectsForEffectVerb(value.verbType);
-  const adjectives = value.objectType ? (OBJECT_ADJECTIVES[value.objectType] ?? []) : [];
+  const objects = getObjectsForEffectVerb(value.verb);
+  const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
   const showAdjective = adjectives.length > 0;
-  const showObjectId = NEEDS_ID.has(value.objectType ?? ObjectType.STATUS);
-  const showTo = NEEDS_TO.has(value.verbType);
-  const showFrom = NEEDS_FROM.has(value.verbType);
-  const showOn = NEEDS_ON.has(value.verbType);
-  const showCardinality = NEEDS_CARDINALITY.has(value.verbType);
-  const showDuration = NEEDS_DURATION.has(value.verbType) && value.objectType === ObjectType.TIME_STOP;
-  const showUntilEnd = value.verbType === VerbType.EXTEND;
+  const showObjectId = NEEDS_ID.has(value.object ?? ObjectType.STATUS);
+  const showTo = NEEDS_TO.has(value.verb);
+  const showFrom = NEEDS_FROM.has(value.verb);
+  const showOn = NEEDS_ON.has(value.verb);
+  const showCardinality = NEEDS_CARDINALITY.has(value.verb);
+  const showDuration = NEEDS_DURATION.has(value.verb) && value.object === ObjectType.TIME_STOP;
+  const showUntilEnd = value.verb === VerbType.EXTEND;
   const isMax = value.cardinality === THRESHOLD_MAX;
   const showQualifierRow = showTo || showFrom || showOn || showDuration || showUntilEnd;
 
@@ -168,12 +170,12 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         {/* Verb — always visible */}
         <select
           className="ib-select ib-verb"
-          value={value.verbType}
+          value={value.verb}
           onChange={(e) => {
             const newVerb = e.target.value as VerbType;
             const newObjects = getObjectsForEffectVerb(newVerb);
-            const newObj = newObjects.includes(value.objectType ?? ObjectType.STATUS) ? value.objectType : newObjects[0];
-            update({ verbType: newVerb, objectType: newObj });
+            const newObj = newObjects.includes(value.object ?? ObjectType.STATUS) ? value.object : newObjects[0];
+            update({ verb: newVerb, object: newObj });
           }}
         >
           {EFFECT_VERBS.map((v) => (
@@ -217,8 +219,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         {/* Object — always visible */}
         <select
           className="ib-select ib-object"
-          value={value.objectType ?? ''}
-          onChange={(e) => update({ objectType: e.target.value as ObjectType })}
+          value={value.object ?? ''}
+          onChange={(e) => update({ object: e.target.value as ObjectType })}
         >
           {objects.map((o) => (
             <option key={o} value={o}>{OBJECT_LABELS[o] ?? o}</option>
@@ -246,11 +248,11 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         <div className="interaction-row interaction-row--qualifier">
           <SentenceSlot active={showTo}>
             <span className="ib-label">TO</span>
-            <SentenceSlot active={value.toObjectType === SubjectType.OPERATOR}>
+            <SentenceSlot active={value.toObject === SubjectType.OPERATOR}>
               <select
                 className="ib-select ib-determiner"
-                value={value.toObjectDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ toObjectDeterminer: e.target.value as DeterminerType })}
+                value={value.toDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ toDeterminer: e.target.value as DeterminerType })}
               >
                 {Object.values(DeterminerType).map((d) => (
                   <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
@@ -259,8 +261,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             </SentenceSlot>
             <select
               className="ib-select"
-              value={value.toObjectType ?? ''}
-              onChange={(e) => update({ toObjectType: e.target.value || undefined })}
+              value={value.toObject ?? ''}
+              onChange={(e) => update({ toObject: e.target.value || undefined })}
             >
               <option value="">—</option>
               {Object.entries(TARGET_LABELS).map(([k, label]) => (
@@ -270,11 +272,11 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           </SentenceSlot>
           <SentenceSlot active={showFrom}>
             <span className="ib-label">FROM</span>
-            <SentenceSlot active={value.fromObjectType === SubjectType.OPERATOR}>
+            <SentenceSlot active={value.fromObject === SubjectType.OPERATOR}>
               <select
                 className="ib-select ib-determiner"
-                value={value.fromObjectDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ fromObjectDeterminer: e.target.value as DeterminerType })}
+                value={value.fromDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ fromDeterminer: e.target.value as DeterminerType })}
               >
                 {Object.values(DeterminerType).map((d) => (
                   <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
@@ -283,8 +285,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             </SentenceSlot>
             <select
               className="ib-select"
-              value={value.fromObjectType ?? ''}
-              onChange={(e) => update({ fromObjectType: e.target.value || undefined })}
+              value={value.fromObject ?? ''}
+              onChange={(e) => update({ fromObject: e.target.value || undefined })}
             >
               <option value="">—</option>
               {Object.entries(TARGET_LABELS).map(([k, label]) => (
@@ -294,11 +296,11 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           </SentenceSlot>
           <SentenceSlot active={showOn}>
             <span className="ib-label">ON</span>
-            <SentenceSlot active={value.onObjectType === SubjectType.OPERATOR}>
+            <SentenceSlot active={value.onObject === SubjectType.OPERATOR}>
               <select
                 className="ib-select ib-determiner"
-                value={value.onObjectDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ onObjectDeterminer: e.target.value as DeterminerType })}
+                value={value.onDeterminer ?? DeterminerType.THIS}
+                onChange={(e) => update({ onDeterminer: e.target.value as DeterminerType })}
               >
                 {Object.values(DeterminerType).map((d) => (
                   <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
@@ -307,8 +309,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             </SentenceSlot>
             <select
               className="ib-select"
-              value={value.onObjectType ?? ''}
-              onChange={(e) => update({ onObjectType: e.target.value || undefined })}
+              value={value.onObject ?? ''}
+              onChange={(e) => update({ onObject: e.target.value || undefined })}
             >
               <option value="">—</option>
               {Object.entries(TARGET_LABELS).map(([k, label]) => (
@@ -320,8 +322,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             <label className="ib-checkbox">
               <input
                 type="checkbox"
-                checked={value.untilPreposition === DURATION_END}
-                onChange={(e) => update({ untilPreposition: e.target.checked ? DURATION_END : undefined })}
+                checked={value.until === DURATION_END}
+                onChange={(e) => update({ until: e.target.checked ? DURATION_END : undefined })}
               />
               UNTIL END
             </label>
@@ -333,10 +335,10 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               type="number"
               step="any"
               min={0}
-              value={(value.withPreposition?.duration?.value as number) ?? 0}
+              value={(value.with?.duration?.value as number) ?? 0}
               onChange={(e) => {
                 const dur = Number(e.target.value) || undefined;
-                update({ withPreposition: dur != null ? { ...value.withPreposition, duration: { verb: 'IS' as any, value: dur } } : value.withPreposition });
+                update({ with: dur != null ? { ...value.with, duration: { verb: 'IS' as any, value: dur } } : value.with });
               }}
             />
             <span className="ib-label">s</span>
@@ -350,10 +352,10 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
 /** Helper to create a default Effect. */
 export function defaultEffect(): Effect {
   return {
-    verbType: VerbType.APPLY,
-    objectType: ObjectType.STATUS,
+    verb: VerbType.APPLY,
+    object: ObjectType.STATUS,
     objectId: '',
-    toObjectDeterminer: DeterminerType.THIS,
-    toObjectType: SubjectType.OPERATOR,
+    toDeterminer: DeterminerType.THIS,
+    toObject: SubjectType.OPERATOR,
   };
 }

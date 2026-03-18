@@ -5,6 +5,7 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { processEventQueue } from './eventQueue';
+import { mergeReactions, attachReactionFrames } from './processInfliction';
 
 // Re-export commonly used types and constants from sub-modules
 export type { TimeStopRegion } from './processTimeStop';
@@ -28,8 +29,12 @@ export function processInflictionEvents(
   /** Slot ID → gear set type mapping for gear effect derivation. */
   slotGearSets?: Record<string, string | undefined>,
 ): TimelineEvent[] {
-  return processEventQueue(
+  let events = processEventQueue(
     rawEvents, loadoutProperties, slotWeapons, slotWirings,
     slotOperatorMap, slotGearSets,
   );
+  // Merge overlapping same-type reactions (refresh + inherit max statusLevel),
+  // then rebuild their segments with the merged stats.
+  events = attachReactionFrames(mergeReactions(events));
+  return events;
 }

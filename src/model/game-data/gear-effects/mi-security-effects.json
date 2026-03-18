@@ -14,16 +14,16 @@
           "P0": 5
         },
         "instances": 5,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "CRITICAL_HIT"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "CRITICAL_HIT"
             }
           ]
         }
@@ -57,16 +57,16 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "CRITICAL_HIT"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "CRITICAL_HIT"
             }
           ]
         }

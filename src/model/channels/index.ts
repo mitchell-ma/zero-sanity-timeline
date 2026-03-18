@@ -13,7 +13,7 @@ import { SkillType } from '../../consts/viewTypes';
 // ── Owner IDs ─────────────────────────────────────────────────────────────
 
 export const ENEMY_OWNER_ID = 'enemy';
-export const DEBUGGER_OWNER_ID = 'debugger';
+export const USER_ID = 'user';
 
 // ── Skill columns ──────────────────────────────────────────────────────────
 
@@ -94,11 +94,6 @@ export const OPERATOR_COLUMNS = {
   OTHER:          'other',
 } as const;
 
-/** Max micro-column slots for exchange statuses (hard cap — excess is dropped). */
-export const EXCHANGE_STATUS_MAX_SLOTS: Record<string, number> = {
-  MELTING_FLAME: 4,
-  THUNDERLANCE: 4,
-};
 
 // ── Weapon fragility columns ──────────────────────────────────────────────
 

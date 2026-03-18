@@ -6,11 +6,12 @@
  * call to computeEventPresentation().
  */
 import { TimelineEvent, Column, EventSegmentData } from '../../consts/viewTypes';
-import { TimelineSourceType, ELEMENT_COLORS, ElementType } from '../../consts/enums';
+import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { COMBO_WINDOW_COLUMN_ID } from './processInteractions';
+
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';
 import { aggregateEventWarnings } from './eventValidationController';
@@ -84,14 +85,14 @@ export function computeEventPresentation(
     alwaysAvailableComboSlots: Set<string>;
     autoFinisherIds: Set<string>;
     validationMaps: ValidationMaps;
-    debugMode?: boolean;
+    interactionMode?: InteractionModeType;
     statusViewOverrides?: Map<string, StatusViewOverride>;
   },
 ): EventPresentation {
-  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, debugMode, statusViewOverrides } = options;
+  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides } = options;
   const isSequenced = ev.segments && ev.segments.length > 0;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
-  const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && !debugMode;
+  const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
 
   const variant = (col.type === 'mini-timeline' && col.columnId === SKILL_COLUMNS.ULTIMATE
@@ -114,7 +115,7 @@ export function computeEventPresentation(
     && !alwaysAvailableComboSlots.has(col.ownerId);
 
   const passive = isWindow;
-  const notDraggable = isEnemy || isWindow || isDerivedCol;
+  const notDraggable = isWindow || isDerivedCol || (isEnemy && interactionMode === InteractionModeType.STRICT);
   const derived = isDerivedCol;
   const isAutoFinisher = autoFinisherIds.has(ev.id);
 

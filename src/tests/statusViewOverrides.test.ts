@@ -175,14 +175,15 @@ describe('computeStatusViewOverrides', () => {
   });
 
   describe('single events are not overridden', () => {
-    it('no overrides for a single status event', () => {
+    it('single stackable status event still gets roman numeral', () => {
       const col = statusColumn('slot1', ['melting-flame', 'MELTING_FLAME']);
       const events = [
         statusEvent('mf1', 'melting-flame', 'MELTING_FLAME', 'slot1', 0, 10 * FPS),
       ];
       const overrides = computeStatusViewOverrides(events, [col]);
 
-      expect(overrides.size).toBe(0);
+      expect(overrides.size).toBe(1);
+      expect(overrides.get('mf1')?.label).toMatch(/I$/);
     });
 
     it('no overrides for a single RESET status event', () => {

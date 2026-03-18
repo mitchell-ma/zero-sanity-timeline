@@ -13,16 +13,16 @@
           "P0": 2
         },
         "instances": 2,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "RECOVER",
-              "objectType": "SKILL_POINT"
+              "subject": "OPERATOR",
+              "verb": "RECOVER",
+              "object": "SKILL_POINT"
             }
           ]
         }
@@ -57,16 +57,16 @@
           "P0": 2
         },
         "instances": 2,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "RECOVER",
-              "objectType": "SKILL_POINT"
+              "subject": "OPERATOR",
+              "verb": "RECOVER",
+              "object": "SKILL_POINT"
             }
           ]
         }

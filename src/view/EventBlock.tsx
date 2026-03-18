@@ -144,6 +144,12 @@ function EventBlock({
     return Math.abs((hoverFrameProp - frameAbsReal) * ppf) <= 4;
   };
 
+  /** Check if the hover line falls within a segment's absolute frame range. */
+  const isSegmentHovered = (segStartFrame: number, segDuration: number): boolean => {
+    if (hoverFrameProp == null) return false;
+    return hoverFrameProp >= segStartFrame && hoverFrameProp < segStartFrame + segDuration;
+  };
+
   // ── Sequenced variant (multi-sequence with frame diamonds) ──────────────
   if (variant === 'sequenced' && segments && segments.length > 0) {
     const topPx = layout
@@ -195,10 +201,16 @@ function EventBlock({
       const alpha = passive ? 0.15 : isCooldown ? 0.15 : 0.55 + (i % 2) * 0.15;
       const borderRadius = segmentRadius(axis, isFirst, isLast);
 
+      const segAbsStart = segLayout
+        ? layout!.realStartFrame + segLayout.realOffset
+        : startFrame + segOffset;
+      const segAbsDur = segLayout ? segLayout.realDuration : seg.durationFrames;
+      const segHover = !passive && isSegmentHovered(segAbsStart, segAbsDur);
+
       segmentElements.push(
         <div
           key={`seg-${i}`}
-          className="event-segment event-segment--sequenced"
+          className={`event-segment event-segment--sequenced${segHover ? ' event-segment--hover-hit' : ''}`}
           style={{
             [axis.framePos]: segTopPx,
             [axis.frameSize]: segH,
@@ -328,7 +340,26 @@ function EventBlock({
 
   const wrapClass = `event-wrap${passive ? ' event-wrap--passive' : notDraggable ? ' event-wrap--static' : ''}${!passive && selected ? ' event-wrap--selected' : ''}${!passive && hovered && !selected ? ' event-wrap--hovered' : ''}`;
 
+  // Compute absolute frame ranges for phase hover highlighting
+  const realStart = layout ? layout.realStartFrame : startFrame;
+  const animDur = ultSegs
+    ? ultSegs[0].durationFrames
+    : (hasAnimation ? (phases?.realAnimationDuration ?? animationDuration!) : 0);
+  const activationDur = ultSegs
+    ? ultSegs[0].durationFrames + ultSegs[1].durationFrames
+    : (phases ? phases.realActivationDuration : Math.min(activationDuration, TOTAL_FRAMES - startFrame));
+  const activeDur = hasActive
+    ? (ultSegs ? ultSegs[2].durationFrames : (phases ? phases.realActiveDuration : activeDuration))
+    : 0;
+  const coolDur = hasCooldown
+    ? (ultSegs ? ultSegs[3].durationFrames : (phases?.realCooldownDuration ?? cooldownDuration))
+    : 0;
 
+  const animSegHover = !passive && hasAnimation && isSegmentHovered(realStart, animDur);
+  const statisSegHover = !passive && hasAnimation && isSegmentHovered(realStart + animDur, activationDur - animDur);
+  const activationSegHover = !passive && !hasAnimation && isSegmentHovered(realStart, activationDur);
+  const activeSegHover = !passive && hasActive && isSegmentHovered(realStart + activationDur, activeDur);
+  const coolSegHover = !passive && hasCooldown && isSegmentHovered(realStart + activationDur + activeDur, coolDur);
 
   return (
     <div
@@ -353,7 +384,7 @@ function EventBlock({
         <>
           {/* Animation sub-phase (TIME_STOP) — starts at top of activation */}
           <div
-            className="event-segment"
+            className={`event-segment${animSegHover ? ' event-segment--hover-hit' : ''}`}
             style={{
               [axis.framePos]: 0,
               [axis.frameSize]: animH,
@@ -370,7 +401,7 @@ function EventBlock({
           </div>
           {/* Statis sub-phase (post-animation) */}
           <div
-            className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
+            className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}${statisSegHover ? ' event-segment--hover-hit' : ''}`}
             style={{
               [axis.framePos]: animH,
               [axis.frameSize]: postAnimH,
@@ -414,7 +445,7 @@ function EventBlock({
         const actFrames = variant === SKILL_COLUMNS.ULTIMATE && !hasActive && segments && segments.length > 1 ? segments[1].frames : undefined;
         return (
         <div
-          className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}`}
+          className={`event-segment${actFrames ? ' event-segment--sequenced' : ''}${activationSegHover ? ' event-segment--hover-hit' : ''}`}
           style={variant === SKILL_COLUMNS.ULTIMATE ? {
             [axis.framePos]: 0,
             [axis.frameSize]: activationH,
@@ -466,7 +497,7 @@ function EventBlock({
         const ultFrames = variant === SKILL_COLUMNS.ULTIMATE && segments && segments.length > 2 ? segments[2].frames : undefined;
         return (
         <div
-          className={`event-segment${ultFrames ? ' event-segment--sequenced' : ''}`}
+          className={`event-segment${ultFrames ? ' event-segment--sequenced' : ''}${activeSegHover ? ' event-segment--hover-hit' : ''}`}
           style={variant === SKILL_COLUMNS.ULTIMATE ? {
             [axis.framePos]: activationH,
             [axis.frameSize]: activePhaseH,
@@ -519,7 +550,7 @@ function EventBlock({
       {/* Cooldown segment */}
       {hasCooldown && coolH > 0 && (
         <div
-          className="event-segment"
+          className={`event-segment${coolSegHover ? ' event-segment--hover-hit' : ''}`}
           style={{
             [axis.framePos]: activationH + activePhaseH,
             [axis.frameSize]: coolH,

@@ -281,12 +281,12 @@ function neutralParams() {
 
 describe('Laevatain damage calculation — Flaming Cinders (basic attack)', () => {
   // Expected per-frame damage for each segment (non-crit, vs Rhodagn DEF 100)
-  const EXPECTED: [string, number, number[]][] = [
-    ['1', 1, [1952]],
-    ['2', 2, [1464, 1464]],
-    ['3', 1, [3037]],
-    ['4', 3, [1573, 1573, 1573]],
-    ['5', 2, [3254, 3254]],
+  const EXPECTED: [number, number, number[]][] = [
+    [0, 1, [1952]],
+    [1, 2, [1464, 1464]],
+    [2, 1, [3037]],
+    [3, 3, [1573, 1573, 1573]],
+    [4, 2, [3254, 3254]],
   ];
 
   let totalAttack: number;
@@ -307,15 +307,15 @@ describe('Laevatain damage calculation — Flaming Cinders (basic attack)', () =
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  const cases = EXPECTED.flatMap(([segLabel, maxFrames, frames]) =>
+  const cases = EXPECTED.flatMap(([segIndex, maxFrames, frames]) =>
     frames.map((expected, fi) => ({
-      label: `segment ${segLabel} frame ${fi + 1} → ${expected}`,
-      segLabel, maxFrames, expected,
+      label: `segment ${segIndex + 1} frame ${fi + 1} → ${expected}`,
+      segIndex, maxFrames, expected,
     })),
   );
 
-  test.each(cases)('$label', ({ segLabel, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segLabel, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;
@@ -409,11 +409,11 @@ describe('Laevatain damage calculation — Seethe (combo skill)', () => {
 describe('Laevatain damage calculation — Enhanced basic attack (during ultimate, full loadout)', () => {
   // Twilight Blazing Wail adds +2.1 BASIC_ATTACK_DAMAGE_BONUS during ultimate.
   // P4 Proof of Existence ×1.2 special multiplier on FLAMING_CINDERS_ENHANCED.
-  const EXPECTED: [string, number, number[]][] = [
-    ['1', 1, [20304]],
-    ['2', 2, [12655, 12655]],
-    ['3', 1, [36157]],
-    ['4', 2, [31707, 31707]],
+  const EXPECTED: [number, number, number[]][] = [
+    [0, 1, [20304]],
+    [1, 2, [12655, 12655]],
+    [2, 1, [36157]],
+    [3, 2, [31707, 31707]],
   ];
 
   let totalAttack: number;
@@ -434,15 +434,15 @@ describe('Laevatain damage calculation — Enhanced basic attack (during ultimat
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  const cases = EXPECTED.flatMap(([segLabel, maxFrames, frames]) =>
+  const cases = EXPECTED.flatMap(([segIndex, maxFrames, frames]) =>
     frames.map((expected, fi) => ({
-      label: `segment ${segLabel} frame ${fi + 1} → ${expected}`,
-      segLabel, maxFrames, expected,
+      label: `segment ${segIndex + 1} frame ${fi + 1} → ${expected}`,
+      segIndex, maxFrames, expected,
     })),
   );
 
-  test.each(cases)('$label', ({ segLabel, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS_ENHANCED', segLabel, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS_ENHANCED', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;
@@ -461,12 +461,12 @@ describe('Laevatain damage calculation — Enhanced basic attack (during ultimat
 });
 
 describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)', () => {
-  const EXPECTED: [string, number, number[]][] = [
-    ['1', 1, [195]],
-    ['2', 2, [147, 147]],
-    ['3', 1, [304]],
-    ['4', 3, [157, 157, 157]],
-    ['5', 2, [326, 326]],
+  const EXPECTED: [number, number, number[]][] = [
+    [0, 1, [195]],
+    [1, 2, [147, 147]],
+    [2, 1, [304]],
+    [3, 3, [157, 157, 157]],
+    [4, 2, [326, 326]],
   ];
 
   let totalAttack: number;
@@ -494,15 +494,15 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     expect(Math.floor(effectiveATK)).toBe(943);
   });
 
-  const cases = EXPECTED.flatMap(([segLabel, maxFrames, frames]) =>
+  const cases = EXPECTED.flatMap(([segIndex, maxFrames, frames]) =>
     frames.map((expected, fi) => ({
-      label: `segment ${segLabel} frame ${fi + 1} → ${expected}`,
-      segLabel, maxFrames, expected,
+      label: `segment ${segIndex + 1} frame ${fi + 1} → ${expected}`,
+      segIndex, maxFrames, expected,
     })),
   );
 
-  test.each(cases)('$label', ({ segLabel, maxFrames, expected }) => {
-    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segLabel, SKILL_LEVEL, POTENTIAL);
+  test.each(cases)('$label', ({ segIndex, maxFrames, expected }) => {
+    const segMult = getSkillMultiplier(OPERATOR_ID, 'FLAMING_CINDERS', segIndex, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
     const perFrameMult = segMult! / maxFrames;

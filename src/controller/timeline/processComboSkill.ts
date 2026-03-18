@@ -110,11 +110,11 @@ export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
  * Maps derived enemy event columnIds to the trigger conditions they represent.
  * Used to generate combo windows from derived events at their actual frame timing.
  */
-const _I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+const _I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subject, verb, object, ...extra } as Interaction);
 
-const _IO = (determiner: DeterminerType, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectDeterminer: determiner, subjectType: SubjectType.OPERATOR, verbType, objectType, ...extra } as Interaction);
+const _IO = (determiner: DeterminerType, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subjectDeterminer: determiner, subject: SubjectType.OPERATOR, verb, object, ...extra } as Interaction);
 
 export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
   heatInfliction:       [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
@@ -127,6 +127,7 @@ export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
   electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
   vulnerableInfliction: [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
   breach:               [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
+  'stagger-frailty':    [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.NODE_STAGGERED), _I(SubjectType.ENEMY, VerbType.IS, ObjectType.FULL_STAGGERED)],
 };
 
 const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
@@ -150,7 +151,7 @@ export function isDerivedInteraction(i: Interaction): boolean {
 }
 
 function isFinalStrike(i: Interaction): boolean {
-  return i.verbType === VerbType.PERFORM && i.objectType === ObjectType.FINAL_STRIKE;
+  return i.verb === VerbType.PERFORM && i.object === ObjectType.FINAL_STRIKE;
 }
 
 /** Slot-level trigger wiring for the pipeline. */

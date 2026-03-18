@@ -142,13 +142,13 @@ describe('A. Basic Attack (Exchange Current)', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
     const spEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT'
+      (e: any) => e.object === 'SKILL_POINT'
     );
     const staggerEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.objectType === 'STAGGER'
+      (e: any) => e.object === 'STAGGER'
     );
-    expect(spEffect.withPreposition.cardinality.value).toBe(15);
-    expect(staggerEffect.withPreposition.value.value).toBe(15);
+    expect(spEffect.with.cardinality.value).toBe(15);
+    expect(staggerEffect.with.value.value).toBe(15);
   });
 
   test('A4: Earlier segments have SP and Stagger effects with value 0', () => {
@@ -156,15 +156,15 @@ describe('A. Basic Attack (Exchange Current)', () => {
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
       const spEffect = frame.effects.find(
-        (e: any) => e.objectType === 'SKILL_POINT'
+        (e: any) => e.object === 'SKILL_POINT'
       );
       const staggerEffect = frame.effects.find(
-        (e: any) => e.objectType === 'STAGGER'
+        (e: any) => e.object === 'STAGGER'
       );
       expect(spEffect).toBeDefined();
-      expect(spEffect.withPreposition.cardinality.value).toBe(0);
+      expect(spEffect.with.cardinality.value).toBe(0);
       expect(staggerEffect).toBeDefined();
-      expect(staggerEffect.withPreposition.value.value).toBe(0);
+      expect(staggerEffect.with.value.value).toBe(0);
     }
   });
 
@@ -213,26 +213,26 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const spCost = battleSkill.effects.find(
-      (e: any) => e.objectType === 'SKILL_POINT' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
-    expect(spCost.withPreposition.cardinality.value).toBe(100);
+    expect(spCost.with.cardinality.value).toBe(100);
   });
 
   test('B3: Battle skill includes 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
     const selfEnergy = battleSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'THIS' && e.toObjectType === 'OPERATOR'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+        e.verb === 'RECOVER' && e.toDeterminer === 'THIS' && e.toObject === 'OPERATOR'
     );
     const allEnergy = battleSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' &&
-        e.verbType === 'RECOVER' && e.toObjectDeterminer === 'ALL' && e.toObjectType === 'OPERATOR'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+        e.verb === 'RECOVER' && e.toDeterminer === 'ALL' && e.toObject === 'OPERATOR'
     );
     expect(selfEnergy).toBeDefined();
-    expect(selfEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(selfEnergy.with.cardinality.value).toBe(6.5);
     expect(allEnergy).toBeDefined();
-    expect(allEnergy.withPreposition.cardinality.value).toBe(6.5);
+    expect(allEnergy.with.cardinality.value).toBe(6.5);
   });
 
   test('B4: Focus duration is 60s at all skill levels', () => {
@@ -281,15 +281,15 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 
     // Condition 1: any operator applies physical status
     expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
-    expect(clause.conditions[0].subjectType).toBe('OPERATOR');
-    expect(clause.conditions[0].verbType).toBe('APPLY');
-    expect(clause.conditions[0].objectType).toBe('STATUS');
+    expect(clause.conditions[0].subject).toBe('OPERATOR');
+    expect(clause.conditions[0].verb).toBe('APPLY');
+    expect(clause.conditions[0].object).toBe('STATUS');
     expect(clause.conditions[0].objectId).toBe('PHYSICAL');
 
     // Condition 2: enemy has Focus
-    expect(clause.conditions[1].subjectType).toBe('ENEMY');
-    expect(clause.conditions[1].verbType).toBe('HAVE');
-    expect(clause.conditions[1].objectType).toBe('STATUS');
+    expect(clause.conditions[1].subject).toBe('ENEMY');
+    expect(clause.conditions[1].verb).toBe('HAVE');
+    expect(clause.conditions[1].object).toBe('STATUS');
     expect(clause.conditions[1].objectId).toBe('FOCUS');
   });
 
@@ -299,14 +299,14 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 
     // Condition 1: any operator applies arts infliction
     expect(clause.conditions[0].subjectDeterminer).toBe('ANY');
-    expect(clause.conditions[0].subjectType).toBe('OPERATOR');
-    expect(clause.conditions[0].verbType).toBe('APPLY');
-    expect(clause.conditions[0].objectType).toBe('INFLICTION');
+    expect(clause.conditions[0].subject).toBe('OPERATOR');
+    expect(clause.conditions[0].verb).toBe('APPLY');
+    expect(clause.conditions[0].object).toBe('INFLICTION');
 
     // Condition 2: enemy has Focus
-    expect(clause.conditions[1].subjectType).toBe('ENEMY');
-    expect(clause.conditions[1].verbType).toBe('HAVE');
-    expect(clause.conditions[1].objectType).toBe('STATUS');
+    expect(clause.conditions[1].subject).toBe('ENEMY');
+    expect(clause.conditions[1].verb).toBe('HAVE');
+    expect(clause.conditions[1].object).toBe('STATUS');
     expect(clause.conditions[1].objectId).toBe('FOCUS');
   });
 
@@ -318,10 +318,10 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   test('C5: Combo cooldown is 15 seconds', () => {
     const effects = mockAntalJson.skills.COMBO_SKILL.effects;
     const cooldown = effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
-    expect(cooldown.withPreposition.cardinality.value).toBe(15);
+    expect(cooldown.with.cardinality.value).toBe(15);
   });
 
   test('C6: Combo stagger recovery is 10', () => {
@@ -341,12 +341,12 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   test('C8: Combo recovers 10 ultimate energy to self', () => {
     const effects = mockAntalJson.skills.COMBO_SKILL.effects;
     const energy = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'RECOVER'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
     );
     expect(energy).toBeDefined();
-    expect(energy.toObjectDeterminer).toBe('THIS');
-    expect(energy.toObjectType).toBe('OPERATOR');
-    expect(energy.withPreposition.cardinality.value).toBe(10);
+    expect(energy.toDeterminer).toBe('THIS');
+    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.with.cardinality.value).toBe(10);
   });
 
   test('C9: Combo damage multiplier: 1.51 (lv1) → 3.4 (lv12)', () => {
@@ -368,19 +368,19 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
   test('C2.1: Combo frame has APPLY SOURCE INFLICTION DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
     const sourceInfliction = comboFrame.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.adjectiveType === 'SOURCE' && e.objectType === 'INFLICTION'
+      (e: any) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
-    expect(sourceInfliction.toObjectType).toBe('ENEMY');
+    expect(sourceInfliction.toObject).toBe('ENEMY');
   });
 
   test('C2.2: Combo frame has APPLY SOURCE STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
     const sourceStatus = comboFrame.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.adjectiveType === 'SOURCE' && e.objectType === 'STATUS'
+      (e: any) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'STATUS'
     );
     expect(sourceStatus).toBeDefined();
-    expect(sourceStatus.toObjectType).toBe('ENEMY');
+    expect(sourceStatus.toObject).toBe('ENEMY');
   });
 
   test('C2.3: Frame class reports getDuplicatesSourceInfliction() as true from DSL', () => {
@@ -422,10 +422,10 @@ describe('D. Ultimate (Overclocked Moment)', () => {
   test('D1: Ultimate energy cost is 90', () => {
     const effects = mockAntalJson.skills.ULTIMATE.effects;
     const energyCost = effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.withPreposition.cardinality.value).toBe(90);
+    expect(energyCost.with.cardinality.value).toBe(90);
   });
 
   test('D2: Ultimate active duration is 12 seconds', () => {
@@ -637,14 +637,14 @@ describe('H. Cooldown Interactions', () => {
     // Basic attacks are segment-based with no COOLDOWN effect
     const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
       .flatMap((f: any) => f.effects ?? [])
-      .find((e: any) => e.objectType === 'COOLDOWN');
+      .find((e: any) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
     const bs = mockAntalJson.skills.BATTLE_SKILL;
     const cooldown = bs.effects?.find(
-      (e: any) => e.objectType === 'COOLDOWN'
+      (e: any) => e.object === 'COOLDOWN'
     );
     expect(cooldown).toBeUndefined();
   });
@@ -652,10 +652,10 @@ describe('H. Cooldown Interactions', () => {
   test('H3: Combo skill (EMP Test Site) has 15s cooldown', () => {
     const cs = mockAntalJson.skills.COMBO_SKILL;
     const cooldown = cs.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
-    expect(cooldown.withPreposition.cardinality.value).toBe(15);
+    expect(cooldown.with.cardinality.value).toBe(15);
   });
 
   test('H4: Ultimate has no cooldown duration in split JSON', () => {
@@ -724,15 +724,15 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
           ],
         },
         comboRequires: [
-          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+          { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
         ],
         comboDescription: 'any infliction with Focus',
         comboWindowFrames: 720,
@@ -748,11 +748,11 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -833,8 +833,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
           ],
         },
         comboRequires: [],
@@ -903,8 +903,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -959,8 +959,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -1042,8 +1042,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -1080,8 +1080,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -1152,8 +1152,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -1234,8 +1234,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -1310,8 +1310,8 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],

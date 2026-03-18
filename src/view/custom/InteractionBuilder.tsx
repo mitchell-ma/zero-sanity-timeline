@@ -47,6 +47,7 @@ const VERB_LABELS: Record<VerbType, string> = {
   [VerbType.BECOME]: 'Become',
   [VerbType.RECEIVE]: 'Receive',
   [VerbType.IGNORE]: 'Ignore',
+  [VerbType.ENHANCE]: 'Enhance',
   [VerbType.EXPERIENCE]: 'Experience',
   [VerbType.DEAL]: 'Deal',
 };
@@ -84,6 +85,7 @@ function getObjectsForVerb(verb: VerbType): ObjectType[] {
     case VerbType.EXTEND:
     case VerbType.MERGE:
     case VerbType.RESET: return [...STATUS_OBJECTS, ObjectType.STACKS, ObjectType.COOLDOWN];
+    case VerbType.ENHANCE: return PERFORM_OBJECTS;
     default: return Object.values(ObjectType);
   }
 }
@@ -140,11 +142,11 @@ interface InteractionBuilderProps {
 }
 
 export default function InteractionBuilder({ value, onChange, onRemove, compact }: InteractionBuilderProps) {
-  const objects = getObjectsForVerb(value.verbType);
-  const showCardinality = CARDINALITY_VERBS.has(value.verbType);
-  const showProperty = PROPERTY_VERBS.has(value.verbType);
-  const showObjectId = NEEDS_OBJECT_ID.has(value.objectType);
-  const showNegated = value.verbType === VerbType.IS || value.verbType === VerbType.BECOME;
+  const objects = getObjectsForVerb(value.verb);
+  const showCardinality = CARDINALITY_VERBS.has(value.verb);
+  const showProperty = PROPERTY_VERBS.has(value.verb);
+  const showObjectId = NEEDS_OBJECT_ID.has(value.object);
+  const showNegated = value.verb === VerbType.IS || value.verb === VerbType.BECOME;
 
   const update = (patch: Partial<InteractionOrEffect>) => onChange({ ...value, ...patch });
 
@@ -152,7 +154,7 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
     <div className={`interaction-builder${compact ? ' interaction-builder--compact' : ''}`}>
       <div className="interaction-row">
         {/* Determiner — visible when subject is OPERATOR */}
-        <SentenceSlot active={value.subjectType === SubjectType.OPERATOR}>
+        <SentenceSlot active={value.subject === SubjectType.OPERATOR}>
           <select
             className="ib-select ib-determiner"
             value={value.subjectDeterminer ?? DeterminerType.THIS}
@@ -167,8 +169,8 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
         {/* Subject — always visible */}
         <select
           className="ib-select ib-subject"
-          value={value.subjectType}
-          onChange={(e) => update({ subjectType: e.target.value as SubjectType })}
+          value={value.subject}
+          onChange={(e) => update({ subject: e.target.value as SubjectType })}
         >
           {SUBJECT_OPTIONS.map((s) => (
             <option key={s} value={s}>{SUBJECT_LABELS[s]}</option>
@@ -193,12 +195,12 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
         {/* Verb — always visible */}
         <select
           className="ib-select ib-verb"
-          value={value.verbType}
+          value={value.verb}
           onChange={(e) => {
             const newVerb = e.target.value as VerbType;
             const newObjects = getObjectsForVerb(newVerb);
-            const newObj = newObjects.includes(value.objectType) ? value.objectType : newObjects[0];
-            update({ verbType: newVerb, objectType: newObj });
+            const newObj = newObjects.includes(value.object) ? value.object : newObjects[0];
+            update({ verb: newVerb, object: newObj });
           }}
         >
           {Object.values(VerbType).map((v) => (
@@ -221,8 +223,8 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
         {/* Object — always visible */}
         <select
           className="ib-select ib-object"
-          value={value.objectType}
-          onChange={(e) => update({ objectType: e.target.value as ObjectType })}
+          value={value.object}
+          onChange={(e) => update({ object: e.target.value as ObjectType })}
         >
           {objects.map((o) => (
             <option key={o} value={o}>{OBJECT_LABELS[o] ?? o}</option>
@@ -277,8 +279,8 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
 export function defaultInteraction(): Interaction {
   return {
     subjectDeterminer: DeterminerType.THIS,
-    subjectType: SubjectType.OPERATOR,
-    verbType: VerbType.PERFORM,
-    objectType: ObjectType.BATTLE_SKILL,
+    subject: SubjectType.OPERATOR,
+    verb: VerbType.PERFORM,
+    object: ObjectType.BATTLE_SKILL,
   };
 }

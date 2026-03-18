@@ -30,7 +30,7 @@ export interface CustomSkill {
 
 export interface CustomSkillResourceInteraction {
   resourceType: string;
-  verbType: string;
+  verb: string;
   value: number;
   target?: string;
 }

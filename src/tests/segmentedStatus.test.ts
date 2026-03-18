@@ -49,12 +49,12 @@ describe('OTHER/ANY target resolution', () => {
   describe('effectExecutor resolveOwnerId', () => {
     test('OTHER OPERATOR uses targetOwnerId when present', () => {
       const effect: Effect = {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObjectType: NounType.OPERATOR,
-        toObjectDeterminer: DeterminerType.OTHER,
-        withPreposition: {
+        toObject: NounType.OPERATOR,
+        toDeterminer: DeterminerType.OTHER,
+        with: {
           duration: { verb: WithValueVerb.IS, value: 10 },
         },
       };
@@ -68,12 +68,12 @@ describe('OTHER/ANY target resolution', () => {
 
     test('OTHER OPERATOR falls back to sourceOwnerId when no targetOwnerId', () => {
       const effect: Effect = {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObjectType: NounType.OPERATOR,
-        toObjectDeterminer: DeterminerType.OTHER,
-        withPreposition: {
+        toObject: NounType.OPERATOR,
+        toDeterminer: DeterminerType.OTHER,
+        with: {
           duration: { verb: WithValueVerb.IS, value: 10 },
         },
       };
@@ -87,12 +87,12 @@ describe('OTHER/ANY target resolution', () => {
 
     test('ANY OPERATOR uses targetOwnerId when present', () => {
       const effect: Effect = {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObjectType: NounType.OPERATOR,
-        toObjectDeterminer: DeterminerType.ANY,
-        withPreposition: {
+        toObject: NounType.OPERATOR,
+        toDeterminer: DeterminerType.ANY,
+        with: {
           duration: { verb: WithValueVerb.IS, value: 5 },
         },
       };
@@ -114,10 +114,10 @@ describe('OTHER/ANY target resolution', () => {
         name: 'TEST_BUFF',
       });
       const conditions: Interaction[] = [{
-        subjectType: NounType.OPERATOR,
+        subject: NounType.OPERATOR,
         subjectDeterminer: DeterminerType.OTHER,
-        verbType: VerbType.HAVE,
-        objectType: NounType.STATUS,
+        verb: VerbType.HAVE,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
       }];
       const ctx = makeCondCtx({
@@ -138,10 +138,10 @@ describe('OTHER/ANY target resolution', () => {
         name: 'TEST_BUFF',
       });
       const conditions: Interaction[] = [{
-        subjectType: NounType.OPERATOR,
+        subject: NounType.OPERATOR,
         subjectDeterminer: DeterminerType.OTHER,
-        verbType: VerbType.HAVE,
-        objectType: NounType.STATUS,
+        verb: VerbType.HAVE,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
       }];
       const ctx = makeCondCtx({
@@ -160,10 +160,10 @@ describe('OTHER/ANY target resolution', () => {
         name: 'TEST_BUFF',
       });
       const conditions: Interaction[] = [{
-        subjectType: NounType.OPERATOR,
+        subject: NounType.OPERATOR,
         subjectDeterminer: DeterminerType.ANY,
-        verbType: VerbType.HAVE,
-        objectType: NounType.STATUS,
+        verb: VerbType.HAVE,
+        object: NounType.STATUS,
         objectId: 'TEST_BUFF',
       }];
       const ctx = makeCondCtx({

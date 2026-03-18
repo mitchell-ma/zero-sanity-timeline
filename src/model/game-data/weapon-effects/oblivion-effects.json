@@ -11,16 +11,16 @@
       "stack": {
         "max": { "P0": 1 },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "ULTIMATE"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "ULTIMATE"
             }
           ]
         },
@@ -28,9 +28,9 @@
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "COMBO_SKILL"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "COMBO_SKILL"
             }
           ]
         }

@@ -70,7 +70,7 @@ function antalCapability(): TriggerCapability {
   return {
     publishesTriggers: {},
     comboRequires: [
-      { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+      { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
     ],
     comboDescription: 'any infliction',
     comboWindowFrames: 720,
@@ -83,7 +83,7 @@ function laevCapability(): TriggerCapability {
   return {
     publishesTriggers: {
       [SKILL_COLUMNS.BATTLE]: [
-        { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+        { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
       ],
     },
     comboRequires: [],
@@ -370,16 +370,16 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
     return {
       publishesTriggers: {
         [SKILL_COLUMNS.BASIC]: [
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
         ],
         [SKILL_COLUMNS.BATTLE]: [
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-          { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.COMBUSTED },
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+          { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.COMBUSTED },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
         ],
       },
       comboRequires: [
-        { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.COMBUSTED },
+        { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.COMBUSTED },
       ],
       comboDescription: 'Enemy is Combusted',
       comboWindowFrames: 720,
@@ -391,17 +391,17 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
     return {
       publishesTriggers: {
         [SKILL_COLUMNS.BASIC]: [
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
         ],
         [SKILL_COLUMNS.BATTLE]: [
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-          { subjectType: SubjectType.ENEMY, verbType: VerbType.IS, objectType: ObjectType.ELECTRIFIED },
-          { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+          { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.ELECTRIFIED },
+          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
         ],
       },
       comboRequires: [
-        { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.STATUS, objectId: 'PHYSICAL' },
-        { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+        { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.STATUS, objectId: 'PHYSICAL' },
+        { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
       ],
       comboDescription: 'Enemy with Focus suffers Physical Status or Arts Infliction',
       comboWindowFrames: 720,

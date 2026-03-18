@@ -87,7 +87,7 @@ function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: stri
       stack: {
         max: { P0: effect.maxStacks },
         instances: effect.maxStacks,
-        verbType: effect.maxStacks > 1 ? 'NONE' : 'RESET',
+        verb: effect.maxStacks > 1 ? 'NONE' : 'RESET',
       },
       triggerClause: effect.triggers.map((t: any) => ({ conditions: [t] })),
       clause: [],

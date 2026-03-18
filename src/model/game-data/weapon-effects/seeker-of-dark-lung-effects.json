@@ -13,16 +13,16 @@
           "P0": 3
         },
         "instances": 3,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "APPLY",
-              "objectType": "ARTS_REACTION"
+              "subject": "OPERATOR",
+              "verb": "APPLY",
+              "object": "ARTS_REACTION"
             }
           ]
         }

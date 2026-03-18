@@ -211,7 +211,7 @@ Event (skill activation — e.g., one use of Battle Skill)
 ```
 
 - **Event**: The top-level skill activation. Each skill category is one event type.
-- **Segment**: A phase within an event. Basic attacks have explicit segments (one per sequence in the attack chain). All other skills are **single-segment events by default** — their flat `duration` + `frames[]` structure is shorthand for one implicit segment containing all frames.
+- **Segment**: A phase within an event. Basic attacks have explicit segments (one per sequence in the attack chain). Ultimates have explicit segments for each phase (Animation, Stasis, Active, Cooldown). All other skills are **single-segment events by default** — their flat `duration` + `frames[]` structure is shorthand for one implicit segment containing all frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation).
 - **Frame**: A single hit or tick within a segment. Frames carry timing (`offset`), resource interactions (SP, stagger), status interactions (inflictions), and per-level multipliers.
 
 Warfarin multiplier data is scoped to the **segment level** — each Warfarin skill ID (e.g., `attack1`, `attack2`, `normal_skill`) corresponds to one segment. Within a segment, `atk_scale` is the per-frame multiplier, and `display_atk_scale` is the approximate total across all frames in that segment.
@@ -615,7 +615,7 @@ At runtime, this chain allows a status to resolve skill-level-dependent values b
   "stack": {
     "max": { "P0": 1, "P1": 1, "P2": 1, "P3": 1, "P4": 1, "P5": 1 },
     "instances": 1,
-    "verbType": "RESET"
+    "verb": "RESET"
   },
   "triggerClause": [],
   "properties": {
@@ -651,7 +651,7 @@ At runtime, this chain allows a status to resolve skill-level-dependent values b
 {
   "max": { "P0": 4, "P1": 4, "P2": 4, "P3": 4, "P4": 4, "P5": 4 },
   "instances": 4,
-  "verbType": "RESET"
+  "verb": "RESET"
 }
 ```
 
@@ -659,7 +659,7 @@ At runtime, this chain allows a status to resolve skill-level-dependent values b
 |-------|------|-------------|
 | `max` | Record<string, number> | Max stacks per potential level (`P0`–`P5`) |
 | `instances` | number | Max concurrent status event instances |
-| `verbType` | `StackInteraction` | `NONE` (independent stacks), `RESET` (refresh duration on reapply) |
+| `verb` | `StackInteraction` | `NONE` (independent stacks), `RESET` (refresh duration on reapply) |
 
 ### Status Clauses
 
@@ -674,11 +674,11 @@ Clauses define effects that are active while the status is alive. Each clause ha
       "conditions": [],
       "effects": [
         {
-          "verbType": "APPLY",
-          "objectType": "SUSCEPTIBILITY",
+          "verb": "APPLY",
+          "object": "SUSCEPTIBILITY",
           "adjective": "ELECTRIC",
-          "toObjectType": "TARGET",
-          "withPreposition": {
+          "toObject": "TARGET",
+          "with": {
             "value": { "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.05, 0.06, ...] }
           }
         }
@@ -690,17 +690,18 @@ Clauses define effects that are active while the status is alive. Each clause ha
 
 #### Clause Effect Types (damage calculation bucket)
 
-| verbType | objectType | Description | Example |
+| verb | object | Description | Example |
 |----------|-----------|-------------|---------|
 | `APPLY` | `SUSCEPTIBILITY` | Adds to susceptibility multiplier bucket | Focus: ELECTRIC susceptibility |
 | `APPLY` | `DAMAGE_BONUS` | Adds to damage bonus multiplier bucket | Wildland Trekker: ELECTRIC damage bonus |
 | `IGNORE` | `RESISTANCE` | Ignores target resistance | Scorching Heart: HEAT resistance ignore |
+| `IGNORE` | `ULTIMATE_ENERGY` | Blocks ultimate energy gain for target | Laevatain ult Animation segment |
 | `APPLY` | `STATUS` | Applies a derived status | Melting Flame → Scorching Heart |
 | `CONSUME` | `ALL_STACKS` | Consumes all active stacks | Melting Flame consumed on battle skill |
 
 #### Value Resolution
 
-Effect values use `withPreposition.value` with a `verb` indicating how to resolve:
+Effect values use `with.value` with a `verb` indicating how to resolve:
 
 | verb | object | Description |
 |------|--------|-------------|

@@ -34,7 +34,7 @@
             "verb": "APPLY",
             "object": "STATUS",
             "objectId": "SCORCHING_HEART_EFFECT",
-            "toDet": "THIS",
+            "toDeterminer": "THIS",
             "to": "OPERATOR"
           }
         ]
@@ -44,7 +44,7 @@
       {
         "conditions": [
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "BATTLE_SKILL"
@@ -54,7 +54,7 @@
       {
         "conditions": [
           {
-            "subjectDet": "THIS",
+            "subjectDeterminer": "THIS",
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "COMBO_SKILL"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
@@ -186,11 +186,11 @@ function InteractionLine({ interaction }: { interaction: Interaction }) {
   const fmt = (s: string) => s.replace(/_/g, ' ');
   return (
     <div style={{ ...DETAIL_MONO, paddingLeft: 8 }}>
-      <span style={{ color: '#dd8844' }}>{fmt(interaction.subjectType)}</span>
+      <span style={{ color: '#dd8844' }}>{fmt(interaction.subject)}</span>
       {interaction.subjectProperty && <span style={{ color: 'var(--text-muted)' }}>.{fmt(String(interaction.subjectProperty))}</span>}
       {interaction.negated && <span style={{ color: '#ff5555' }}> NOT</span>}
-      <span style={{ color: 'var(--gold)' }}> {fmt(interaction.verbType)}</span>
-      <span style={{ color: '#55aadd' }}> {fmt(interaction.objectType)}</span>
+      <span style={{ color: 'var(--gold)' }}> {fmt(interaction.verb)}</span>
+      <span style={{ color: '#55aadd' }}> {fmt(interaction.object)}</span>
       {interaction.objectId && <span style={{ color: 'var(--text-muted)' }}> ({interaction.objectId})</span>}
       {interaction.cardinalityConstraint && <span style={{ color: '#88cc44' }}> {fmt(interaction.cardinalityConstraint)} {interaction.cardinality}</span>}
       {interaction.element && <span style={{ color: ELEMENT_COLORS[interaction.element.toUpperCase() as ElementType] ?? '#aaa' }}> [{interaction.element}]</span>}
@@ -207,24 +207,24 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
   return (
     <div style={{ paddingLeft: 8 + depth * 10 }}>
       <div style={DETAIL_MONO}>
-        <span style={{ color: 'var(--gold)' }}>{fmt(effect.verbType)}</span>
+        <span style={{ color: 'var(--gold)' }}>{fmt(effect.verb)}</span>
         {effect.cardinality != null && <span style={{ color: '#88cc44' }}> {String(effect.cardinality)}</span>}
         {adjs.length > 0 && <span style={{ color: '#dd8844' }}> {adjs.map(a => fmt(a)).join(' ')}</span>}
-        {effect.objectType && <span style={{ color: '#55aadd' }}> {fmt(String(effect.objectType))}</span>}
+        {effect.object && <span style={{ color: '#55aadd' }}> {fmt(String(effect.object))}</span>}
         {effect.objectId && <span style={{ color: 'var(--text-muted)' }}> ({effect.objectId})</span>}
-        {effect.toObjectType && <span style={{ color: '#cc88dd' }}> TO {fmt(String(effect.toObjectType))}</span>}
-        {effect.fromObjectType && <span style={{ color: '#cc88dd' }}> FROM {fmt(String(effect.fromObjectType))}</span>}
-        {effect.onObjectType && <span style={{ color: '#cc88dd' }}> ON {fmt(String(effect.onObjectType))}</span>}
-        {effect.forPreposition && (
-          <span style={{ color: '#88cc44' }}> FOR {fmt(effect.forPreposition.cardinalityConstraint)} {effect.forPreposition.cardinality}</span>
+        {effect.toObject && <span style={{ color: '#cc88dd' }}> TO {fmt(String(effect.toObject))}</span>}
+        {effect.fromObject && <span style={{ color: '#cc88dd' }}> FROM {fmt(String(effect.fromObject))}</span>}
+        {effect.onObject && <span style={{ color: '#cc88dd' }}> ON {fmt(String(effect.onObject))}</span>}
+        {effect.for && (
+          <span style={{ color: '#88cc44' }}> FOR {fmt(effect.for.cardinalityConstraint)} {effect.for.cardinality}</span>
         )}
-        {effect.cardinalityConstraint && !effect.forPreposition && (
+        {effect.cardinalityConstraint && !effect.for && (
           <span style={{ color: '#88cc44' }}> {fmt(effect.cardinalityConstraint)}</span>
         )}
       </div>
-      {effect.withPreposition && (
+      {effect.with && (
         <div style={{ ...DETAIL_MONO, paddingLeft: 16 + depth * 10, color: 'var(--text-muted)' }}>
-          {Object.entries(effect.withPreposition).map(([k, v]) => {
+          {Object.entries(effect.with).map(([k, v]) => {
             const val = typeof v.value === 'number' ? String(v.value)
               : `[${(v.value as number[]).slice(0, 4).join(', ')}${(v.value as number[]).length > 4 ? ` ...+${(v.value as number[]).length - 4}` : ''}]`;
             return (
@@ -487,7 +487,7 @@ interface EventPaneProps {
   readOnly?: boolean;
   isDerived?: boolean;
   editContext?: string | null;
-  debugMode?: boolean;
+  interactionMode?: InteractionModeType;
   rawEvents?: readonly TimelineEvent[];
   allProcessedEvents?: readonly TimelineEvent[];
   loadoutProperties?: Record<string, LoadoutProperties>;
@@ -511,7 +511,7 @@ function EventPane({
   readOnly,
   isDerived,
   editContext,
-  debugMode,
+  interactionMode,
   rawEvents,
   allProcessedEvents,
   loadoutProperties,
@@ -544,6 +544,11 @@ function EventPane({
     sourceName, sourceColor, sourceSkillLabel,
   } = resolveEventIdentity(event, slots, enemy);
 
+  // Use processed segments for events that only get segments during processing
+  // (e.g. freeform reaction events). The raw event from undo history has none.
+  if (!event.segments && processedEvent?.segments) {
+    event = { ...event, segments: processedEvent.segments };
+  }
   const isSequenced = event.segments && event.segments.length > 0;
 
   // Resolve DSL semantic data for this event's skill
@@ -728,7 +733,7 @@ function EventPane({
       </div>
 
       <div className="edit-panel-body" onFocus={handleFocus}>
-        {debugMode && processedEvent && (
+        {interactionMode && interactionMode !== InteractionModeType.STRICT && processedEvent && (
           <DebugPane event={event} processedEvent={processedEvent} rawEvents={rawEvents} allProcessedEvents={allProcessedEvents} />
         )}
 
@@ -1022,7 +1027,7 @@ function EventPane({
                 const m = getSkillMultiplier(
                   operatorId,
                   event.name as CombatSkillsType,
-                  seg.label,
+                  si,
                   skillLevel as any,
                   (stats?.operator.potential ?? 0) as any,
                 );
@@ -1396,6 +1401,14 @@ function EventPane({
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
+                          {verbose >= 1 && (() => {
+                            const absFrame = event.startFrame + event.activationDuration + f.offsetFrame;
+                            return (
+                              <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
+                                @ {frameToDetailLabel(absFrame)} (F{absFrame})
+                              </div>
+                            );
+                          })()}
                           {/* Properties */}
                           <div className="edit-info-text" style={TREE_LINE_2}>
                             <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
@@ -1491,6 +1504,14 @@ function EventPane({
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
+                          {verbose >= 1 && (() => {
+                            const absFrame = event.startFrame + event.activationDuration + f.offsetFrame;
+                            return (
+                              <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
+                                @ {frameToDetailLabel(absFrame)} (F{absFrame})
+                              </div>
+                            );
+                          })()}
                           <div style={TREE_LINE_2}>
                             <FrameOffsetField
                               eventId={event.id}
@@ -1591,6 +1612,12 @@ function EventPane({
                 <div key={si} className="edit-panel-section">
                   <span className="edit-section-label">{segLabel}</span>
                   <div style={{ padding: '4px 6px' }}>
+                    {verbose >= 1 && (
+                      <div className="edit-info-text" style={{ marginBottom: 2 }}>
+                        <div>@ {frameToDetailLabel(segStartFrame)} — {frameToDetailLabel(segStartFrame + seg.durationFrames)}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>F{segStartFrame}–F{segStartFrame + seg.durationFrames}</div>
+                      </div>
+                    )}
                     {(readOnly || isDerived) ? (
                       <div className="edit-info-text">
                         {dualDuration(segStartFrame, seg.durationFrames, 'Duration', pSeg?.durationFrames)}
@@ -1664,6 +1691,11 @@ function EventPane({
                             }}
                           >
                             <span className="edit-field-label">Frame {fi + 1}</span>
+                            {verbose >= 1 && (
+                              <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
+                                @ {frameToDetailLabel(segStartFrame + f.offsetFrame)} (F{segStartFrame + f.offsetFrame})
+                              </div>
+                            )}
                             {(readOnly || isDerived) ? (
                               <div className="edit-info-text" style={TREE_LINE_2}>
                                 <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>

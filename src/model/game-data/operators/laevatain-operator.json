@@ -1851,8 +1851,6 @@
     }
   },
   "basicAttackDefaultDuration": 0.25,
-  "ultimateActiveDuration": 15,
-  "ultimateCooldownDuration": 10,
   "dataSources": [
     "WARFARIN"
   ]

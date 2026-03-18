@@ -44,7 +44,7 @@ export interface StatusEventDef {
   element?: string;
   isNamedEvent?: boolean;
   stack: {
-    verbType: string;
+    verb: string;
     max: Record<string, number>;
     instances: number;
   };
@@ -75,37 +75,36 @@ interface EffectClause {
 }
 
 interface Predicate {
-  subjectType: string;
-  verbType: string;
-  objectType?: string;
+  subject: string;
+  verb: string;
+  object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
   cardinality?: number | string;
 }
 
 interface Effect {
-  verbType: string;
-  objectType: string;
+  verb: string;
+  object: string;
   objectId?: string;
-  prepositionType?: string;
-  toObjectType?: string;
+  toObject?: string;
 }
 
 interface TriggerEffect {
-  verbType: string;
+  verb: string;
   cardinalityConstraint?: string;
   cardinality?: number | string;
   effects?: TriggerSubEffect[];
 }
 
 interface TriggerSubEffect {
-  verbType: string;
+  verb: string;
   cardinality?: number;
-  objectType?: string;
+  object?: string;
   objectId?: string;
   element?: string;
-  fromObjectType?: string;
-  toObjectType?: string;
+  fromObject?: string;
+  toObject?: string;
 }
 
 // ── Multi-dimensional BASED_ON resolver ──────────────────────────────────────
@@ -161,7 +160,7 @@ function resolveClauseDimensionKey(
 /**
  * Resolve clause effects from a raw clauses array into timeline event properties.
  * Reads SUSCEPTIBILITY, DAMAGE_BONUS, and RESISTANCE effects from the clause structure.
- * Supports both short keys (verb, object, with) and legacy keys (verbType, objectType, withPreposition).
+ * Supports short keys (verb, object, with) from operator-statuses JSONs.
  *
  * When `skipConditional` is false, evaluates non-THIS_EVENT conditions and applies matching effects.
  */
@@ -177,7 +176,7 @@ function resolveClauseEffectsFromClauses(
       if (skipConditional) {
         // Check if all conditions reference THIS_EVENT — those are threshold conditions
         // handled by evaluateThresholdClauses, so skip them here.
-        const hasThisEvent = clause.conditions.some((c: any) => c.subjectType === 'THIS_EVENT');
+        const hasThisEvent = clause.conditions.some((c: any) => c.subject === 'THIS_EVENT');
         if (hasThisEvent) continue;
 
         // Non-THIS_EVENT conditions: evaluate them now
@@ -194,10 +193,10 @@ function resolveClauseEffectsFromClauses(
     if (!clause.effects) continue;
 
     for (const effect of clause.effects) {
-      const verb = effect.verb ?? effect.verbType;
-      const object = effect.object ?? effect.objectType;
+      const verb = effect.verb ?? effect.verb;
+      const object = effect.object ?? effect.object;
       const adjective = effect.adjective;
-      const withBlock = effect.with ?? effect.withPreposition;
+      const withBlock = effect.with ?? effect.with;
       const wp = withBlock?.value;
       if (!wp) continue;
 
@@ -428,13 +427,13 @@ function findTriggerMatches(
 
   for (const clause of def.triggerClause) {
     // Classify conditions
-    const performConds = clause.conditions.filter(c => c.verbType === 'PERFORM');
-    const haveConds = clause.conditions.filter(c => c.verbType === 'HAVE');
+    const performConds = clause.conditions.filter(c => c.verb === 'PERFORM');
+    const haveConds = clause.conditions.filter(c => c.verb === 'HAVE');
 
     if (performConds.length > 0) {
       const performCond = performConds[0];
-      const isAnyOperator = (performCond.subjectType === 'OPERATOR' && (performCond as any).subjectDeterminer === 'ANY');
-      const isFinalStrike = performCond.objectType === 'FINAL_STRIKE';
+      const isAnyOperator = (performCond.subject === 'OPERATOR' && (performCond as any).subjectDeterminer === 'ANY');
+      const isFinalStrike = performCond.object === 'FINAL_STRIKE';
 
       if (isFinalStrike) {
         // FINAL_STRIKE: scan basic attack events for Final Strike frames
@@ -461,11 +460,11 @@ function findTriggerMatches(
           });
         }
       } else {
-        // Standard PERFORM trigger: find skill casts matching the objectType
-        const matchingSkillColumn = performCond.objectType === 'BATTLE_SKILL' ? 'battle'
-          : performCond.objectType === 'COMBO_SKILL' ? 'combo'
-          : performCond.objectType === 'ULTIMATE' ? 'ultimate'
-          : performCond.objectType;
+        // Standard PERFORM trigger: find skill casts matching the object
+        const matchingSkillColumn = performCond.object === 'BATTLE_SKILL' ? 'battle'
+          : performCond.object === 'COMBO_SKILL' ? 'combo'
+          : performCond.object === 'ULTIMATE' ? 'ultimate'
+          : performCond.object;
 
         for (const ev of events) {
           if (!isAnyOperator && ev.ownerId !== operatorSlotId) continue;
@@ -493,11 +492,11 @@ function findTriggerMatches(
       // Pure HAVE trigger (e.g. ENEMY HAVE COMBUSTION, or THIS_OPERATOR HAVE STATUS X EXACTLY N):
       // trigger on each matching status event start, but only if cardinality is satisfied.
       const haveCond = haveConds[0];
-      if (haveCond.objectType === 'STATUS' && haveCond.objectId) {
+      if (haveCond.object === 'STATUS' && haveCond.objectId) {
         const colId = statusNameToColumnId(haveCond.objectId);
         for (const ev of events) {
           if (ev.columnId !== colId) continue;
-          if (haveCond.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+          if (haveCond.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
 
           // Check cardinality constraint if specified
           if (haveCond.cardinality != null) {
@@ -514,14 +513,14 @@ function findTriggerMatches(
       }
     } else {
       // Classify other condition types
-      const recoverConds = clause.conditions.filter(c => c.verbType === 'RECOVER');
-      const isConds = clause.conditions.filter(c => c.verbType === 'IS');
+      const recoverConds = clause.conditions.filter(c => c.verb === 'RECOVER');
+      const isConds = clause.conditions.filter(c => c.verb === 'IS');
 
       if (recoverConds.length > 0) {
         // RECOVER trigger (e.g. RECOVER SKILL_POINT): scan event segments for recovery frames
         const recoverCond = recoverConds[0];
         const isThisOperator = (recoverCond as any).subjectDeterminer === 'THIS';
-        const isSpRecovery = recoverCond.objectType === 'SKILL_POINT';
+        const isSpRecovery = recoverCond.object === 'SKILL_POINT';
 
         if (isSpRecovery) {
           for (const ev of events) {
@@ -553,11 +552,11 @@ function findTriggerMatches(
           COMBUSTED: 'combustion', SOLIDIFIED: 'solidification',
           CORRODED: 'corrosion', ELECTRIFIED: 'electrification',
         };
-        const colId = reactionMap[isCond.objectType ?? ''];
+        const colId = reactionMap[isCond.object ?? ''];
         if (colId) {
           for (const ev of events) {
             if (ev.columnId !== colId) continue;
-            if (isCond.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+            if (isCond.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
             matches.push({
               frame: ev.startFrame,
               sourceOwnerId: ev.ownerId,
@@ -606,9 +605,9 @@ function deriveStatusEvents(
   // Check if ALL effects redirect output to a different status (e.g. talent triggers that produce MF)
   const applySubEffect = def.triggerClause
     .flatMap(c => c.effects ?? [])
-    .filter(e => e.verbType === 'ALL')
+    .filter(e => e.verb === 'ALL')
     .flatMap(e => e.effects ?? [])
-    .find(e => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId);
+    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
   let outputDef = def;
   if (applySubEffect?.objectId) {
     const json = getOperatorJson(ctx.operatorId);
@@ -655,8 +654,8 @@ function deriveStatusEvents(
 
     // Determine how many events to create: 1 normally, N for ALL with CONSUME infliction
     let createCount = 1;
-    const allEffect = trigger.effects?.find(e => e.verbType === 'ALL');
-    const absorbSubEffect = allEffect?.effects?.find(e => e.verbType === 'CONSUME' && e.objectType === 'INFLICTION');
+    const allEffect = trigger.effects?.find(e => e.verb === 'ALL');
+    const absorbSubEffect = allEffect?.effects?.find(e => e.verb === 'CONSUME' && e.object === 'INFLICTION');
     let inflictionsToAbsorb: TimelineEvent[] = [];
 
     if (absorbSubEffect?.element) {
@@ -680,7 +679,7 @@ function deriveStatusEvents(
       const evId = `${outputDef.name.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
 
       // For RESET stacks: clamp previous instances
-      if (outputDef.stack.verbType === 'RESET' && derived.length > 0) {
+      if (outputDef.stack.verb === 'RESET' && derived.length > 0) {
         const prev = derived[derived.length - 1];
         const prevEnd = prev.startFrame + prev.activationDuration;
         if (trigger.frame < prevEnd) {
@@ -793,7 +792,7 @@ function deriveStatusEvents(
         }
         for (const teamSlotId of Array.from(teamSlots)) {
           // RESET: clamp previous team copy
-          if (outputDef.stack.verbType === 'RESET') {
+          if (outputDef.stack.verb === 'RESET') {
             const prev = derived.filter(d => d.ownerId === teamSlotId);
             const last = prev[prev.length - 1];
             if (last && trigger.frame < last.startFrame + last.activationDuration) {
@@ -843,7 +842,7 @@ function evaluateThresholdClauses(
   for (const clause of def.clause) {
     // Check for HAVE STACKS EXACTLY MAX condition
     const stackCond = clause.conditions.find(c =>
-      c.subjectType === 'THIS_EVENT' && c.verbType === 'HAVE' && c.objectType === 'STACKS'
+      c.subject === 'THIS_EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
     );
     if (!stackCond) continue;
 
@@ -871,7 +870,7 @@ function evaluateThresholdClauses(
 
       // Execute clause effects
       for (const effect of clause.effects) {
-        if (effect.verbType === 'APPLY' && effect.objectType === 'STATUS' && effect.objectId) {
+        if (effect.verb === 'APPLY' && effect.object === 'STATUS' && effect.objectId) {
           // Find the target status definition to get its properties
           const targetStatusName = effect.objectId;
 
@@ -881,9 +880,9 @@ function evaluateThresholdClauses(
             .find(d => d.name === targetStatusName);
 
           // Resolve owner from the target def's own target field (authoritative),
-          // falling back to the clause's toObjectType
-          const targetField = targetDef?.target ?? effect.toObjectType;
-          const targetDet = targetDef?.targetDeterminer ?? (effect as any).toObjectDeterminer;
+          // falling back to the clause's toObject
+          const targetField = targetDef?.target ?? effect.toObject;
+          const targetDet = targetDef?.targetDeterminer ?? (effect as any).toDeterminer;
           const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, ctx.operatorSlotMap, targetDet ?? 'THIS');
 
           const targetDuration = targetDef
@@ -974,7 +973,7 @@ function evaluateLifecycleForEvent(
   if (def.reactiveTriggerClause) {
     for (const clause of def.reactiveTriggerClause) {
       const receiveConds = clause.conditions.filter(
-        (c: Predicate) => c.verbType === 'RECEIVE'
+        (c: Predicate) => c.verb === 'RECEIVE'
       );
       if (receiveConds.length === 0) continue;
 
@@ -1044,7 +1043,7 @@ function evaluateLifecycleClauses(
 
 /** Resolve a RECEIVE condition's target column ID. */
 function resolveReceiveColumnId(cond: Predicate): string | undefined {
-  if (cond.objectType === 'STATUS' && cond.objectId) {
+  if (cond.object === 'STATUS' && cond.objectId) {
     return REACTION_STATUS_TO_COLUMN[cond.objectId]
       ?? cond.objectId.toLowerCase().replace(/_/g, '-');
   }
@@ -1354,7 +1353,7 @@ export function evaluateThresholdForExchange(
 
   for (const clause of def.clause) {
     const stackCond = clause.conditions.find(c =>
-      c.subjectType === 'THIS_EVENT' && c.verbType === 'HAVE' && c.objectType === 'STACKS'
+      c.subject === 'THIS_EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
     );
     if (!stackCond) continue;
 
@@ -1362,16 +1361,16 @@ export function evaluateThresholdForExchange(
     if (targetCount !== maxStacks) continue; // only fire at the configured threshold
 
     for (const effect of clause.effects) {
-      if (effect.verbType !== 'APPLY' || effect.objectType !== 'STATUS' || !effect.objectId) continue;
+      if (effect.verb !== 'APPLY' || effect.object !== 'STATUS' || !effect.objectId) continue;
       const targetStatusName = effect.objectId;
 
       const json = getOperatorJson(ctx.operatorId);
       const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
         .find(d => d.name === targetStatusName);
 
-      const targetField = targetDef?.target ?? effect.toObjectType;
+      const targetField = targetDef?.target ?? effect.toObject;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const targetDet = targetDef?.targetDeterminer ?? (effect as any).toObjectDeterminer;
+      const targetDet = targetDef?.targetDeterminer ?? (effect as any).toDeterminer;
       const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, operatorSlotMap, targetDet ?? 'THIS');
 
       const targetDuration = targetDef
@@ -1472,21 +1471,21 @@ export function collectAbsorptionContexts(
       }
 
       for (const clause of def.triggerClause) {
-        const performConds = clause.conditions.filter((c: Predicate) => c.verbType === 'PERFORM');
-        const haveConds = clause.conditions.filter((c: Predicate) => c.verbType === 'HAVE');
+        const performConds = clause.conditions.filter((c: Predicate) => c.verb === 'PERFORM');
+        const haveConds = clause.conditions.filter((c: Predicate) => c.verb === 'HAVE');
         if (performConds.length === 0 || haveConds.length === 0) continue;
 
-        const isFinalStrike = performConds[0].objectType === 'FINAL_STRIKE';
+        const isFinalStrike = performConds[0].object === 'FINAL_STRIKE';
         if (!isFinalStrike) continue;
 
-        const haveInfliction = haveConds.find((c: Predicate) => c.objectType === 'INFLICTION');
+        const haveInfliction = haveConds.find((c: Predicate) => c.object === 'INFLICTION');
         if (!haveInfliction?.objectId) continue;
         const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[haveInfliction.objectId];
         if (!inflictionColumnId) continue;
 
-        const allEffect = (clause.effects ?? []).find((e: TriggerEffect) => e.verbType === 'ALL');
+        const allEffect = (clause.effects ?? []).find((e: TriggerEffect) => e.verb === 'ALL');
         const applyEffect = (allEffect?.effects ?? []).find(
-          (e: TriggerSubEffect) => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId
+          (e: TriggerSubEffect) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId
         );
         if (!applyEffect?.objectId) continue;
 
@@ -1572,6 +1571,12 @@ export function collectEngineTriggerEntries(
     for (const def of defs) {
       if (skipDefNames?.has(def.name)) continue;
 
+      // Skip defs with FINAL_STRIKE triggers — handled by collectAbsorptionContexts
+      const hasFinalStrikeTrigger = def.triggerClause?.some(c =>
+        c.conditions.some((p: any) => (p.verb ?? p.verb) === 'PERFORM' && (p.object ?? p.object) === 'FINAL_STRIKE')
+      );
+      if (hasFinalStrikeTrigger) continue;
+
       if (def.minTalentLevel) {
         const talentLevel = def.minTalentLevel.talent === 1
           ? (props?.operator.talentOneLevel ?? 0)
@@ -1604,10 +1609,10 @@ export function collectEngineTriggerEntries(
       if (!def.triggerClause || def.triggerClause.length === 0) continue;
 
       for (const clause of def.triggerClause) {
-        const performConds = clause.conditions.filter(c => c.verbType === 'PERFORM');
-        const haveConds = clause.conditions.filter(c => c.verbType === 'HAVE');
-        const recoverConds = clause.conditions.filter(c => c.verbType === 'RECOVER');
-        const isConds = clause.conditions.filter(c => c.verbType === 'IS');
+        const performConds = clause.conditions.filter(c => c.verb === 'PERFORM');
+        const haveConds = clause.conditions.filter(c => c.verb === 'HAVE');
+        const recoverConds = clause.conditions.filter(c => c.verb === 'RECOVER');
+        const isConds = clause.conditions.filter(c => c.verb === 'IS');
 
         const triggerCtx: EngineTriggerContext = {
           def, operatorId, operatorSlotId: slotId, potential, operatorSlotMap,
@@ -1617,9 +1622,9 @@ export function collectEngineTriggerEntries(
         if (performConds.length > 0) {
           const pc = performConds[0];
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const isAny = pc.subjectType === 'OPERATOR' && (pc as any).subjectDeterminer === 'ANY';
+          const isAny = pc.subject === 'OPERATOR' && (pc as any).subjectDeterminer === 'ANY';
 
-          if (pc.objectType === 'FINAL_STRIKE') {
+          if (pc.object === 'FINAL_STRIKE') {
             for (const ev of events) {
               if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
               if (!isAny && ev.ownerId !== slotId) continue;
@@ -1629,9 +1634,9 @@ export function collectEngineTriggerEntries(
               if (f != null) entries.push({ frame: f, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
             }
           } else {
-            const col = pc.objectType === 'BATTLE_SKILL' ? 'battle'
-              : pc.objectType === 'COMBO_SKILL' ? 'combo'
-              : pc.objectType === 'ULTIMATE' ? 'ultimate' : pc.objectType;
+            const col = pc.object === 'BATTLE_SKILL' ? 'battle'
+              : pc.object === 'COMBO_SKILL' ? 'combo'
+              : pc.object === 'ULTIMATE' ? 'ultimate' : pc.object;
             for (const ev of events) {
               if (!isAny && ev.ownerId !== slotId) continue;
               if (isAny && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
@@ -1642,11 +1647,11 @@ export function collectEngineTriggerEntries(
         } else if (haveConds.length > 0 && recoverConds.length === 0 && isConds.length === 0) {
           // Pure HAVE: create entries from matching status events in base events
           const hc = haveConds[0];
-          if (hc.objectType === 'STATUS' && hc.objectId) {
+          if (hc.object === 'STATUS' && hc.objectId) {
             const colId = statusNameToColumnId(hc.objectId);
             for (const ev of events) {
               if (ev.columnId !== colId) continue;
-              if (hc.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+              if (hc.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
               entries.push({ frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
             }
           }
@@ -1654,7 +1659,7 @@ export function collectEngineTriggerEntries(
           const rc = recoverConds[0];
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const isThis = (rc as any).subjectDeterminer === 'THIS';
-          if (rc.objectType === 'SKILL_POINT') {
+          if (rc.object === 'SKILL_POINT') {
             for (const ev of events) {
               if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
               if (isThis && ev.ownerId !== slotId) continue;
@@ -1675,11 +1680,11 @@ export function collectEngineTriggerEntries(
         } else if (isConds.length > 0) {
           const ic = isConds[0];
           const rm: Record<string, string> = { COMBUSTED: 'combustion', SOLIDIFIED: 'solidification', CORRODED: 'corrosion', ELECTRIFIED: 'electrification' };
-          const colId = rm[ic.objectType ?? ''];
+          const colId = rm[ic.object ?? ''];
           if (colId) {
             for (const ev of events) {
               if (ev.columnId !== colId) continue;
-              if (ic.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+              if (ic.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
               entries.push({ frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
             }
           }
@@ -1744,9 +1749,9 @@ export function evaluateEngineTrigger(
 
   // Resolve output def (follows ALL APPLY STATUS redirects)
   const applySubEffect = (ctx.triggerEffects ?? [])
-    .filter(e => e.verbType === 'ALL')
+    .filter(e => e.verb === 'ALL')
     .flatMap(e => e.effects ?? [])
-    .find(e => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId);
+    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
   let outputDef = def;
   if (applySubEffect?.objectId) {
     const json = getOperatorJson(ctx.operatorId);

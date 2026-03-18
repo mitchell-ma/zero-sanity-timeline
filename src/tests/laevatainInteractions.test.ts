@@ -66,7 +66,7 @@
  *
  * - Scorching Heart Part 1 (absorption): Any operator's Final Strike absorbs
  *   Heat Infliction from enemy → MF on Laevatain. Requires frame-effect-driven
- *   derivation engine (toObjectType operator ID resolution implemented, but
+ *   derivation engine (toObject operator ID resolution implemented, but
  *   cross-operator frame scanning not yet wired).
  * - Cooldowns & SP costs: resource validation tests (spec groups H, I)
  * - Full rotation chain test (spec I5): ultimate → enhanced variants → MF →
@@ -77,7 +77,7 @@
  */
 import { TimelineEvent } from '../consts/viewTypes';
 import { EventStatusType } from '../consts/enums';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS } from '../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../model/channels';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
@@ -95,12 +95,11 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
 
   // Expand short keys in status JSONs (same as operatorJsonLoader.ts expandKeys)
   const KEY_EXPAND: Record<string, string> = {
-    verb: 'verbType', object: 'objectType', subject: 'subjectType',
-    subjectDet: 'subjectDeterminer',
-    to: 'toObjectType', toDet: 'toObjectDeterminer',
-    from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
-    on: 'onObjectType', onDet: 'onObjectDeterminer',
-    with: 'withPreposition', for: 'forPreposition',
+    verb: 'verb', object: 'object', subject: 'subject',
+    to: 'toObject',
+    from: 'fromObject',
+    on: 'onObject',
+    with: 'with', for: 'for',
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const expandKeys = (val: any): any => {
@@ -202,12 +201,11 @@ const laevatainTalentJson = require('../model/game-data/operator-talents/laevata
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
 const _KEY_EXPAND: Record<string, string> = {
-  verb: 'verbType', object: 'objectType', subject: 'subjectType',
-  subjectDet: 'subjectDeterminer',
-  to: 'toObjectType', toDet: 'toObjectDeterminer',
-  from: 'fromObjectType', fromDet: 'fromObjectDeterminer',
-  on: 'onObjectType', onDet: 'onObjectDeterminer',
-  with: 'withPreposition', for: 'forPreposition',
+  verb: 'verb', object: 'object', subject: 'subject',
+  to: 'toObject',
+  from: 'fromObject',
+  on: 'onObject',
+  with: 'with', for: 'for',
 };
 function _expandKeys(val: any): any {
   if (val == null || typeof val !== 'object') return val;
@@ -311,11 +309,11 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const battleFrames = rawSkills.BATTLE_SKILL.frames;
     const firstFrameEffects = battleFrames[0].effects;
     const mfEffect = firstFrameEffects.find(
-      (e: any) => e.verbType === 'APPLY' && e.objectId === 'MELTING_FLAME'
+      (e: any) => e.verb === 'APPLY' && e.objectId === 'MELTING_FLAME'
     );
     expect(mfEffect).toBeDefined();
-    expect(mfEffect.objectType).toBe('STATUS');
-    expect(mfEffect.toObjectType).toBe('LAEVATAIN');
+    expect(mfEffect.object).toBe('STATUS');
+    expect(mfEffect.toObject).toBe('LAEVATAIN');
   });
 
   test('C4: Empowered battle skill forced Combustion has 5s duration in multipliers', () => {
@@ -339,12 +337,12 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
     expect(trigger.triggerClause.length).toBe(2);
 
     // First clause: enemy is combusted
-    expect(trigger.triggerClause[0].conditions[0].subjectType).toBe('ENEMY');
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
+    expect(trigger.triggerClause[0].conditions[0].subject).toBe('ENEMY');
+    expect(trigger.triggerClause[0].conditions[0].object).toBe('COMBUSTED');
 
     // Second clause: enemy is corroded
-    expect(trigger.triggerClause[1].conditions[0].subjectType).toBe('ENEMY');
-    expect(trigger.triggerClause[1].conditions[0].objectType).toBe('CORRODED');
+    expect(trigger.triggerClause[1].conditions[0].subject).toBe('ENEMY');
+    expect(trigger.triggerClause[1].conditions[0].object).toBe('CORRODED');
   });
 
   test('D2: Combo activation window is 720 frames (6 seconds)', () => {
@@ -404,17 +402,20 @@ describe('E. Ultimate & Enhanced Variants', () => {
     }
   });
 
-  test('E6: Ultimate active duration is 15 seconds', () => {
-    expect(mockLaevatainJson.ultimateActiveDuration).toBe(15);
+  test('E6: Ultimate active duration is 15 seconds (from skill segments)', () => {
+    const ultSkill = mockLaevatainJson.skills.TWILIGHT;
+    const activeSeg = ultSkill.segments.find((s: any) => s.metadata?.segmentType === 'ACTIVE');
+    expect(activeSeg).toBeDefined();
+    expect(activeSeg.properties.duration.value).toBe(15);
   });
 
   test('E7: Ultimate energy cost is 300', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.effects.find(
-      (e: any) => e.objectType === 'ULTIMATE_ENERGY' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
-    expect(energyCost.withPreposition.cardinality.value).toBe(300);
+    expect(energyCost.with.cardinality.value).toBe(300);
   });
 
   test('E8: SMOULDERING_FIRE has 11 frames and second frame has no RECOVER ULTIMATE_ENERGY', () => {
@@ -525,21 +526,24 @@ describe('H. Cooldown Interactions', () => {
 
   test('H1: Battle skill (Smouldering Fire) has no COOLDOWN effect', () => {
     const bs = mockLaevatainJson.skills.BATTLE_SKILL;
-    const cooldown = bs.effects?.find((e: any) => e.objectType === 'COOLDOWN');
+    const cooldown = bs.effects?.find((e: any) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
     const cooldown = cs.effects.find(
-      (e: any) => e.objectType === 'COOLDOWN' && e.verbType === 'CONSUME'
+      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
-    expect(cooldown.withPreposition.cardinality.value).toBe(10);
+    expect(cooldown.with.cardinality.value).toBe(10);
   });
 
-  test('H3: Ultimate (Twilight) has 10s cooldown from operator JSON', () => {
-    expect(mockLaevatainJson.ultimateCooldownDuration).toBe(10);
+  test('H3: Ultimate (Twilight) has 10s cooldown from skill segments', () => {
+    const ultSkill = mockLaevatainJson.skills.TWILIGHT;
+    const cdSeg = ultSkill.segments.find((s: any) => s.metadata?.segmentType === 'COOLDOWN');
+    expect(cdSeg).toBeDefined();
+    expect(cdSeg.properties.duration.value).toBe(10);
   });
 
   test('H4: Combo placement during 10s cooldown is blocked', () => {
@@ -604,11 +608,11 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -624,15 +628,15 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'ELECTRIC' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
           ],
         },
         comboRequires: [
-          { subjectDeterminer: DeterminerType.ANY, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION },
+          { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
         ],
         comboDescription: 'any infliction with Focus',
         comboWindowFrames: 720,
@@ -647,11 +651,11 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       capability: {
         publishesTriggers: {
           [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.FINAL_STRIKE },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
           ],
           [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
           ],
         },
         comboRequires: [],
@@ -726,6 +730,69 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     );
     expect(preExistingHeat.length).toBe(1);
     expect(preExistingHeat[0].eventStatus).toBe(EventStatusType.CONSUMED);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// L. Freeform heat infliction + basic attack → exactly 1 MF
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('L. Freeform infliction + Final Strike absorption', () => {
+  const LAEV_SLOT = 'slot-0';
+
+  test('L1: Single freeform heat infliction + basic attack produces exactly 1 MF stack', () => {
+    const wirings: SlotTriggerWiring[] = [{
+      slotId: LAEV_SLOT,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BASIC]: [
+            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    }];
+    const loadoutProps: Record<string, any> = {
+      [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
+    };
+
+    const heat: TimelineEvent = {
+      id: 'freeform-heat-l1',
+      name: INFLICTION_COLUMNS.HEAT,
+      ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT,
+      startFrame: 0,
+      activationDuration: 4800,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      sourceOwnerId: USER_ID,
+      sourceSkillName: 'Freeform',
+    };
+
+    const basic: TimelineEvent = {
+      id: 'laev-basic-l1',
+      name: 'FLAMING_CINDERS',
+      ownerId: LAEV_SLOT,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 100,
+      activationDuration: 360,
+      activeDuration: 0,
+      cooldownDuration: 0,
+      segments: [
+        { durationFrames: 120, label: '1' },
+        { durationFrames: 120, label: '2' },
+        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+      ],
+    };
+
+    const processed = processInflictionEvents(
+      [heat, basic], loadoutProps, undefined, wirings,
+    );
+
+    const mfEvents = processed.filter(ev => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME);
+    expect(mfEvents.length).toBe(1);
   });
 });
 

@@ -5,7 +5,6 @@
  * Reads multiplier data directly from operator JSON frames, applying
  * potential-dependent modifiers from the potentials section.
  */
-import { BasicAttackType } from '../../consts/enums';
 import { Potential, SkillLevel } from '../../consts/types';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 
@@ -46,19 +45,6 @@ interface JsonPotential {
   effects: JsonPotentialEffect[];
 }
 
-// ── Segment label → BasicAttackType mapping ──────────────────────────────────
-
-const SEGMENT_LABEL_TO_ATTACK_TYPE: Record<string, BasicAttackType> = {
-  '1': BasicAttackType.SEQUENCE_1,
-  '2': BasicAttackType.SEQUENCE_2,
-  '3': BasicAttackType.SEQUENCE_3,
-  '4': BasicAttackType.SEQUENCE_4,
-  '5': BasicAttackType.SEQUENCE_5,
-  'Finisher': BasicAttackType.FINISHER,
-  'Dive': BasicAttackType.DIVE,
-  'Final': BasicAttackType.FINAL_STRIKE,
-};
-
 // ── Cache ────────────────────────────────────────────────────────────────────
 
 /**
@@ -71,7 +57,6 @@ interface CategoryMultiplierCache {
   perFrameMultipliers: number[][][];
   /** For ramping skills: DAMAGE_MULTIPLIER_INCREMENT per frame (the per-tick increment). */
   perFrameScale2?: number[][][];
-  segmentLabels?: (string | undefined)[];
 }
 
 const cache = new Map<string, CategoryMultiplierCache>();
@@ -113,7 +98,6 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   const segmentMultipliers: number[][] = [];
   const perFrameMultipliers: number[][][] = [];
   const perFrameScale2: number[][][] = [];
-  const segmentLabels: (string | undefined)[] = [];
   let hasScale2 = false;
 
   for (const seg of segments) {
@@ -140,7 +124,6 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
     segmentMultipliers.push(segMults);
     perFrameMultipliers.push(frameMults);
     perFrameScale2.push(frameScale2);
-    segmentLabels.push(seg.label);
   }
 
   // If no frames had any multiplier data, treat as no data (allows empowered fallback)
@@ -150,7 +133,6 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   return {
     segmentMultipliers,
     perFrameMultipliers,
-    segmentLabels,
     ...(hasScale2 && { perFrameScale2 }),
   };
 }
@@ -234,37 +216,6 @@ function resolveSkillKey(operatorId: string, skillName: string): string | null {
   return null;
 }
 
-// ── Segment index resolution ────────────────────────────────────────────────
-
-function resolveSegmentIndex(
-  data: CategoryMultiplierCache,
-  segmentLabel: string | undefined,
-): number {
-  if (data.segmentMultipliers.length === 1) return 0;
-  if (!segmentLabel) return 0;
-
-  // First: try matching by segment name (handles Finisher, Dive, Final)
-  if (data.segmentLabels) {
-    const idx = data.segmentLabels.indexOf(segmentLabel);
-    if (idx >= 0) return idx;
-  }
-
-  // Second: map segment label to sequence index (1-based → 0-based)
-  const attackType = SEGMENT_LABEL_TO_ATTACK_TYPE[segmentLabel];
-  if (attackType != null) {
-    switch (attackType) {
-      case BasicAttackType.SEQUENCE_1: return 0;
-      case BasicAttackType.SEQUENCE_2: return 1;
-      case BasicAttackType.SEQUENCE_3: return 2;
-      case BasicAttackType.SEQUENCE_4: return 3;
-      case BasicAttackType.SEQUENCE_5: return 4;
-      default: return 0;
-    }
-  }
-
-  return 0;
-}
-
 // ── Public API ──────────────────────────────────────────────────────────────
 
 /**
@@ -277,7 +228,7 @@ function resolveSegmentIndex(
 export function getSkillMultiplier(
   operatorId: string,
   skillName: string,
-  segmentLabel: string | undefined,
+  segmentIndex: number | undefined,
   level: SkillLevel,
   potential: Potential,
 ): number | null {
@@ -287,7 +238,7 @@ export function getSkillMultiplier(
   const data = getCategoryCache(operatorId, category);
   if (!data) return null;
 
-  const segIdx = resolveSegmentIndex(data, segmentLabel);
+  const segIdx = segmentIndex ?? 0;
   if (segIdx >= data.segmentMultipliers.length) return null;
 
   const baseMult = data.segmentMultipliers[segIdx][level - 1];

@@ -12,15 +12,15 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
-              "subjectType": "ENEMY",
-              "verbType": "IS",
-              "objectType": "SOLIDIFIED"
+              "subject": "ENEMY",
+              "verb": "IS",
+              "object": "SOLIDIFIED"
             }
           ]
         }

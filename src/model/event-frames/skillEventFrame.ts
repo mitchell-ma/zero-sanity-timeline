@@ -65,10 +65,10 @@ export interface FrameApplyStatus {
 
 /** A condition within a frame clause predicate. */
 export interface FrameCondition {
-  subjectType: string;
-  verbType: string;
+  subject: string;
+  verb: string;
   negated?: boolean;
-  objectType?: string;
+  object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
   cardinality?: number;

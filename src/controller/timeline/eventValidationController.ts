@@ -6,6 +6,7 @@
  * instead of 10+ separate useMemos.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
+import type { InteractionModeType } from '../../consts/enums';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import type { StaggerBreak } from './staggerTimeline';
@@ -52,7 +53,7 @@ export function computeAllValidations(
   resourceGraphs: Map<string, ResourceGraphData> | undefined,
   staggerBreaks: readonly StaggerBreak[] | undefined,
   draggingIds: Set<string> | null,
-  debugMode?: boolean,
+  interactionMode?: InteractionModeType,
 ): ValidationResult {
   const timeStopRegions = computeTimeStopRegions(events);
 

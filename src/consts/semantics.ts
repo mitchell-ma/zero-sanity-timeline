@@ -155,6 +155,8 @@ export enum VerbType {
   // ── Stat ────────────────────────────────────────────────────────────────
   /** Ignore a resistance/stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   IGNORE = "IGNORE",
+  /** Enhance a skill type for a target operator (e.g. ENHANCE BASIC_ATTACK TO THIS OPERATOR). */
+  ENHANCE = "ENHANCE",
 
   // ── Time ────────────────────────────────────────────────────────────────
   /** Segment time interaction (GAME_TIME, REAL_TIME). */
@@ -196,7 +198,8 @@ export const VERB_OBJECTS: Partial<Record<VerbType, string[]>> = {
   [VerbType.EXTEND]:     ['STATUS', 'INFLICTION', 'REACTION'],
   [VerbType.MERGE]:      ['STATUS', 'INFLICTION'],
   [VerbType.RESET]:      ['COOLDOWN', 'STACKS'],
-  [VerbType.IGNORE]:     ['STATUS'],
+  [VerbType.IGNORE]:     ['STATUS', 'ULTIMATE_ENERGY'],
+  [VerbType.ENHANCE]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE'],
   [VerbType.EXPERIENCE]: ['GAME_TIME', 'REAL_TIME'],
   [VerbType.HAVE]:       ['STATUS', 'INFLICTION', 'REACTION', 'STACKS', 'SKILL_POINT', 'ULTIMATE_ENERGY'],
   [VerbType.IS]:         ['ACTIVE', 'LIFTED', 'KNOCKED_DOWN', 'CRUSHED', 'BREACHED', 'COMBUSTED', 'CORRODED', 'ELECTRIFIED', 'SOLIDIFIED', 'NODE_STAGGERED', 'FULL_STAGGERED'],
@@ -338,13 +341,13 @@ export enum CardinalityConstraintType {
 export interface Interaction {
   /** Determiner for OPERATOR subjects (THIS, OTHER, ALL, ANY). Defaults to THIS. */
   subjectDeterminer?: DeterminerType;
-  subjectType: SubjectType;
+  subject: SubjectType;
   /** Possessive — "This Operator's ULTIMATE". Used with IS and OVERHEAL. */
   subjectProperty?: ObjectType;
-  verbType: VerbType;
+  verb: VerbType;
   /** NOT — "IS NOT ACTIVE". */
   negated?: boolean;
-  objectType: ObjectType;
+  object: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
   /** Constraint type for cardinality assertions (EXACTLY, AT_LEAST, AT_MOST). */
@@ -438,8 +441,8 @@ export type WithPreposition = Record<string, WithValue>;
  *       APPLY MELTING_FLAME STATUS TO THIS_OPERATOR WITH STACKS IS 1
  */
 export interface Effect {
-  verbType: VerbType;
-  objectType?: ObjectType;
+  verb: VerbType;
+  object?: ObjectType;
   /** Specific identifier (StatusType, skill name, etc.). */
   objectId?: string;
   /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
@@ -449,25 +452,25 @@ export interface Effect {
   /** Cardinality for compound constraints (e.g. ALL AT_MOST MAX). */
   cardinality?: number | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
-  toObjectType?: SubjectType | string;
+  toObject?: SubjectType | string;
   /** Determiner for TO target (THIS, OTHER, ALL, ANY). */
-  toObjectDeterminer?: DeterminerType;
+  toDeterminer?: DeterminerType;
   /** Class filter for TO target (e.g. "GUARD"). */
   toObjectClassFilter?: string;
   /** FROM — source. */
-  fromObjectType?: SubjectType | string;
+  fromObject?: SubjectType | string;
   /** Determiner for FROM source (THIS, OTHER, ALL, ANY). */
-  fromObjectDeterminer?: DeterminerType;
+  fromDeterminer?: DeterminerType;
   /** ON — stat target entity (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
-  onObjectType?: SubjectType | string;
+  onObject?: SubjectType | string;
   /** Determiner for ON target (THIS, OTHER, ALL, ANY). */
-  onObjectDeterminer?: DeterminerType;
+  onDeterminer?: DeterminerType;
   /** WITH — properties/cardinalities of this effect (duration, stacks, multiplier, etc.). */
-  withPreposition?: WithPreposition;
+  with?: WithPreposition;
   /** FOR — cardinality limit on compound actions: "ALL FOR AT_MOST 4". */
-  forPreposition?: { cardinalityConstraint: CardinalityConstraintType; cardinality: number | typeof THRESHOLD_MAX };
+  for?: { cardinalityConstraint: CardinalityConstraintType; cardinality: number | typeof THRESHOLD_MAX };
   /** UNTIL — duration cap: "EXTEND STATUS UNTIL END". */
-  untilPreposition?: typeof DURATION_END;
+  until?: typeof DURATION_END;
 
   /**
    * Nested predicates for ALL/ANY compound effects.
@@ -526,18 +529,18 @@ export type Clause = Predicate[];
  */
 export function matchInteraction(published: Interaction, required: Interaction): boolean {
   // Subject: ANY determiner on OPERATOR matches any operator subject
-  const reqIsAnyOperator = required.subjectType === NounType.OPERATOR && (required.subjectDeterminer as string) === DeterminerType.ANY;
-  if (!reqIsAnyOperator && published.subjectType !== required.subjectType) return false;
+  const reqIsAnyOperator = required.subject === NounType.OPERATOR && (required.subjectDeterminer as string) === DeterminerType.ANY;
+  if (!reqIsAnyOperator && published.subject !== required.subject) return false;
   // When both are OPERATOR, check determiner match (unless required is ANY)
-  if (!reqIsAnyOperator && published.subjectType === NounType.OPERATOR && required.subjectType === NounType.OPERATOR) {
+  if (!reqIsAnyOperator && published.subject === NounType.OPERATOR && required.subject === NounType.OPERATOR) {
     const pubDet = published.subjectDeterminer ?? DeterminerType.THIS;
     const reqDet = required.subjectDeterminer ?? DeterminerType.THIS;
     if (pubDet !== reqDet) return false;
   }
   // Verb
-  if (published.verbType !== required.verbType) return false;
+  if (published.verb !== required.verb) return false;
   // Object
-  if (published.objectType !== required.objectType) return false;
+  if (published.object !== required.object) return false;
   // ObjectId: required specifies → must match; required omits → wildcard
   if (required.objectId != null && published.objectId !== required.objectId) return false;
   // Element: same wildcard logic
@@ -556,15 +559,15 @@ export function interactionToLabel(i: Interaction): string {
   const fmt = (s: string) => s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
   let subject: string;
-  if (i.subjectType === NounType.OPERATOR) {
+  if (i.subject === NounType.OPERATOR) {
     const det = i.subjectDeterminer ?? DeterminerType.THIS;
     subject = det === DeterminerType.THIS ? '' : `${fmt(det)} Operator `;
   } else {
-    subject = fmt(i.subjectType) + ' ';
+    subject = fmt(i.subject) + ' ';
   }
 
-  const verb = fmt(i.verbType);
-  const obj = fmt(i.objectType);
+  const verb = fmt(i.verb);
+  const obj = fmt(i.object);
   const id = i.objectId ? ` (${fmt(i.objectId)})` : '';
   const el = i.element ? ` [${fmt(i.element)}]` : '';
   const neg = i.negated ? 'Not ' : '';

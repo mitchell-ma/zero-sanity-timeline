@@ -10,7 +10,6 @@
  */
 import {
   Effect,
-  Predicate,
   VerbType,
   THRESHOLD_MAX,
   NounType,
@@ -20,7 +19,7 @@ import {
 } from '../../consts/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, EXCHANGE_STATUS_MAX_SLOTS } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
@@ -157,13 +156,13 @@ function resolveReactionColumnId(adjective?: AdjectiveType | AdjectiveType[]): s
 
 function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
 
-  if (effect.objectType === 'INFLICTION') {
+  if (effect.object === 'INFLICTION') {
     const columnId = resolveInflictionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = effect.withPreposition?.duration?.value;
+    const durationValue = effect.with?.duration?.value;
     const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 120;
 
     const ev: TimelineEvent = {
@@ -182,18 +181,10 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.objectType === 'STATUS') {
+  if (effect.object === 'STATUS') {
     const columnId = resolveStatusColumnId(effect.objectId);
 
-    // Enforce exchange status stack cap (e.g. MELTING_FLAME max 4)
-    const maxSlots = effect.objectId ? EXCHANGE_STATUS_MAX_SLOTS[effect.objectId] : undefined;
-    if (maxSlots !== undefined) {
-      const activeCount = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-        .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED).length;
-      if (activeCount >= maxSlots) { return result; }
-    }
-
-    const durationValue = effect.withPreposition?.duration?.value;
+    const durationValue = effect.with?.duration?.value;
     const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 2400;
 
     const ev: TimelineEvent = {
@@ -212,13 +203,13 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.objectType === 'REACTION') {
+  if (effect.object === 'REACTION') {
     const columnId = resolveReactionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = effect.withPreposition?.duration?.value;
+    const durationValue = effect.with?.duration?.value;
     const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 2400;
-    const statusLevel = effect.withPreposition?.statusLevel?.value;
+    const statusLevel = effect.with?.statusLevel?.value;
 
     const ev: TimelineEvent = {
       id: `reaction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
@@ -244,9 +235,9 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.fromObjectType as string ?? effect.toObjectType as string, ctx, effect.fromObjectDeterminer ?? effect.toObjectDeterminer);
+  const ownerId = resolveOwnerId(effect.fromObject as string ?? effect.toObject as string, ctx, effect.fromDeterminer ?? effect.toDeterminer);
 
-  if (effect.objectType === 'INFLICTION') {
+  if (effect.object === 'INFLICTION') {
     const columnId = resolveInflictionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
@@ -264,7 +255,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.objectType === 'STATUS') {
+  if (effect.object === 'STATUS') {
     const columnId = resolveStatusColumnId(effect.objectId);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -282,7 +273,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     return result;
   }
 
-  if (effect.objectType === 'REACTION') {
+  if (effect.object === 'REACTION') {
     const columnId = resolveReactionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
@@ -308,11 +299,11 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeRefresh(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
 
-  const columnId = effect.objectType === 'INFLICTION'
+  const columnId = effect.object === 'INFLICTION'
     ? resolveInflictionColumnId(effect.adjective)
-    : effect.objectType === 'REACTION'
+    : effect.object === 'REACTION'
       ? resolveReactionColumnId(effect.adjective)
       : resolveStatusColumnId(effect.objectId);
 
@@ -334,9 +325,9 @@ function executeRefresh(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.onObjectType as string ?? effect.toObjectType as string, ctx, effect.onObjectDeterminer ?? effect.toObjectDeterminer);
+  const ownerId = resolveOwnerId(effect.onObject as string ?? effect.toObject as string, ctx, effect.onDeterminer ?? effect.toDeterminer);
 
-  const columnId = effect.objectType === 'INFLICTION'
+  const columnId = effect.object === 'INFLICTION'
     ? resolveInflictionColumnId(effect.adjective)
     : resolveStatusColumnId(effect.objectId);
 
@@ -346,7 +337,7 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
     .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
 
   // UNTIL END: extend target to the parent event's end frame (never shorten)
-  if (effect.untilPreposition === DURATION_END && ctx.parentEventEndFrame != null) {
+  if (effect.until === DURATION_END && ctx.parentEventEndFrame != null) {
     for (const target of targets) {
       const untilDuration = ctx.parentEventEndFrame - target.startFrame;
       if (untilDuration <= target.activationDuration) continue; // don't shorten
@@ -361,7 +352,7 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   // Standard EXTEND: add duration frames
-  const extensionValue = effect.withPreposition?.duration?.value;
+  const extensionValue = effect.with?.duration?.value;
   const extensionFrames = typeof extensionValue === 'number' ? Math.round(extensionValue * 120) : 0;
 
   for (const target of targets) {
@@ -377,9 +368,9 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeMerge(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
 
-  const columnId = effect.objectType === 'INFLICTION'
+  const columnId = effect.object === 'INFLICTION'
     ? resolveInflictionColumnId(effect.adjective)
     : resolveStatusColumnId(effect.objectId);
 
@@ -406,9 +397,9 @@ function executeMerge(effect: Effect, ctx: ExecutionContext): MutationSet {
 function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
-  if (effect.objectType === 'STACKS' && effect.objectId) {
+  if (effect.object === 'STACKS' && effect.objectId) {
     const columnId = resolveStatusColumnId(effect.objectId);
-    const ownerId = resolveOwnerId(effect.toObjectType as string, ctx, effect.toObjectDeterminer);
+    const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
 
@@ -431,19 +422,14 @@ function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
   // Only iterate multiple times when an explicit FOR cardinality is set (e.g. ALL FOR AT_MOST MAX).
   // Without it, ALL executes its predicates once (single pass). Hard cap at 10 for safety.
   const maxIterations = Math.min(
-    effect.forPreposition
-      ? resolveCardinality(effect.forPreposition.cardinality, ctx.potential ?? 0)
+    effect.for
+      ? resolveCardinality(effect.for.cardinality, ctx.potential ?? 0)
       : 1,
     10,
   );
 
   const predicates = effect.predicates ?? [];
-  // Legacy: if no predicates but has effects, treat as a single unconditional predicate
-  const effectivePredicates: Predicate[] = predicates.length > 0
-    ? predicates
-    : effect.effects
-      ? [{ conditions: [], effects: effect.effects }]
-      : [];
+  if (predicates.length === 0) return result;
 
   // Track evolving event state across iterations so that consumed/clamped
   // events from earlier iterations are reflected in later ones.
@@ -453,7 +439,7 @@ function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
     let iterationProduced = false;
     const iterCtx = { ...ctx, events: iterationEvents };
 
-    for (const pred of effectivePredicates) {
+    for (const pred of predicates) {
       const condCtx: ConditionContext = {
         events: iterationEvents,
         frame: ctx.frame,
@@ -492,10 +478,6 @@ function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
   const predicates = effect.predicates ?? [];
-  // Legacy: if no predicates but has effects, treat each effect as an unconditional predicate
-  const effectivePredicates: Predicate[] = predicates.length > 0
-    ? predicates
-    : (effect.effects ?? []).map(e => ({ conditions: [], effects: [e] }));
 
   const condCtx: ConditionContext = {
     events: ctx.events,
@@ -505,7 +487,7 @@ function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
     targetOwnerId: ctx.targetOwnerId,
   };
 
-  for (const pred of effectivePredicates) {
+  for (const pred of predicates) {
     if (!evaluateConditions(pred.conditions, condCtx)) continue;
 
     // Execute all effects in this predicate
@@ -535,7 +517,7 @@ function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
  * Recurses for ALL/ANY compound effects.
  */
 export function executeEffect(effect: Effect, ctx: ExecutionContext): MutationSet {
-  switch (effect.verbType) {
+  switch (effect.verb) {
     case VerbType.ALL:    return executeAll(effect, ctx);
     case VerbType.ANY:    return executeAny(effect, ctx);
     case VerbType.APPLY:  return executeApply(effect, ctx);

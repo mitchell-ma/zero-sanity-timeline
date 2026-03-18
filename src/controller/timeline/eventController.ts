@@ -10,7 +10,7 @@ import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan } from '
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
-import { getUltimateActiveWindow } from './eventValidator';
+import { hasEnhanceClauseAtFrame } from './eventValidator';
 import type { CombatLoadout } from '../combat-loadout/combatLoadout';
 
 // ── ID generation ───────────────────────────────────────────────────────────
@@ -276,47 +276,33 @@ function clampToComboEdge(
   return result;
 }
 
-// ── Enhanced → ultimate active phase constraint ─────────────────────────────
+// ── Enhanced → ENHANCE clause constraint ─────────────────────────────────
+
+/** Map column IDs to DSL ENHANCE object types. */
+const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
+  basic: 'BASIC_ATTACK',
+  battle: 'BATTLE_SKILL',
+  combo: 'COMBO_SKILL',
+  ultimate: 'ULTIMATE',
+};
 
 /**
- * Clamp enhanced events so that all segment start frames remain within the
- * owning operator's ultimate active phase.
+ * Clamp enhanced events so that all segment start frames remain within
+ * an active ENHANCE clause window.
  */
-function clampToUltimateActivePhase(
+function clampToEnhanceWindow(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   desiredFrame: number,
 ): number {
-  // Find the owning operator's ultimate event
-  const ult = allEvents.find(
-    (ev) => ev.ownerId === target.ownerId && ev.columnId === SKILL_COLUMNS.ULTIMATE && ev.id !== target.id,
-  );
-  if (!ult) return target.startFrame; // no ult → don't allow drag
+  const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[target.columnId];
+  if (!enhanceObject) return target.startFrame;
 
-  const activeWindow = getUltimateActiveWindow(ult);
-  if (!activeWindow) return target.startFrame;
-
-  const phaseStart = activeWindow.start;
-  const phaseEnd = activeWindow.end;
-
-  // Earliest: first segment start >= phaseStart → desiredFrame >= phaseStart
-  // Latest: last segment must start before phaseEnd
-  //   but we need ALL segment starts inside, so the last segment start < phaseEnd
-  let lastSegStart = 0;
-  if (target.segments && target.segments.length > 0) {
-    let offset = 0;
-    for (const seg of target.segments) {
-      lastSegStart = offset;
-      offset += seg.durationFrames;
-    }
+  // Find the ENHANCE window by scanning for a frame that has the clause
+  if (!hasEnhanceClauseAtFrame(allEvents, target.ownerId, enhanceObject, desiredFrame)) {
+    return target.startFrame; // desired frame outside ENHANCE window
   }
-
-  const minFrame = phaseStart;
-  const maxFrame = phaseEnd - lastSegStart - 1;
-
-  if (maxFrame < minFrame) return target.startFrame; // can't fit
-
-  return Math.max(minFrame, Math.min(maxFrame, desiredFrame));
+  return desiredFrame;
 }
 
 // ── Event validation ────────────────────────────────────────────────────────
@@ -425,9 +411,9 @@ export function validateMove(
   if (target.columnId === SKILL_COLUMNS.BATTLE || target.columnId === SKILL_COLUMNS.BASIC) {
     clamped = clampToComboEdge(allEvents, target, clamped);
   }
-  // Clamp enhanced events within the ultimate active phase
+  // Clamp enhanced events within the ENHANCE clause window
   if (target.name?.includes('ENHANCED') && !target.name?.includes('EMPOWERED')) {
-    clamped = clampToUltimateActivePhase(allEvents, target, clamped);
+    clamped = clampToEnhanceWindow(allEvents, target, clamped);
   }
   return clamped;
 }

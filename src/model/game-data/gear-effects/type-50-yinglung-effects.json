@@ -14,16 +14,16 @@
           "P0": 3
         },
         "instances": 3,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "ANY",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "BATTLE_SKILL"
             }
           ]
         }

@@ -73,24 +73,17 @@ Who is performing the action or being checked.
 
 ```ts
 interface Interaction {
-  subjectType: SubjectType;
-  subjectProperty?: ObjectType;     // possessive — "This Operator's ULTIMATE"
-  verbType: VerbType;
-  negated?: boolean;                // NOT — "IS NOT ACTIVE"
-  objectType: ObjectType;
-  objectId?: string;                // specific identifier (StatusType, skill name, etc.)
+  subjectDeterminer?: DeterminerType;  // THIS, OTHER, ALL, ANY
+  subject: SubjectType;
+  subjectProperty?: ObjectType;        // possessive — "This Operator's ULTIMATE"
+  verb: VerbType;
+  negated?: boolean;                   // NOT — "IS NOT ACTIVE"
+  object: ObjectType;
+  objectId?: string;                   // specific identifier (StatusType, skill name, etc.)
   cardinalityConstraint?: CardinalityConstraintType;  // EXACTLY, AT_LEAST, AT_MOST
-  cardinality?: number;             // the count N in a cardinality assertion
-  stacks?: number;                  // stacks to apply/consume
-  isForced?: boolean;               // forced application (no initial damage)
-  element?: ElementType;            // element filter
-
-  // For ABSORB — what the absorbed stacks convert into.
-  // Quantity = min(source available, target max - target current).
-  conversion?: {
-    objectType: ObjectType;
-    objectId?: string;
-  };
+  cardinality?: number;                // the count N in a cardinality assertion
+  stacks?: number;                     // stacks to apply/consume
+  element?: string;                    // element filter
 }
 ```
 
@@ -214,14 +207,18 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 
 ```ts
 {
-  "verbType": VerbType,
-  "objectType"?: ObjectType,
+  "verb": VerbType,
+  "object"?: ObjectType,
   "objectId"?: string,                      // specific identifier (StatusType, skill name)
   "adjective"?: string | string[],          // e.g. "HEAT", ["FORCED", "COMBUSTION"]
-  "toObjectType"?: string,                  // TO preposition — target/recipient
-  "fromObjectType"?: string,                // FROM preposition — source
-  "onObjectType"?: string,                  // ON preposition — stat target entity
-  "withPreposition"?: {                     // WITH preposition — properties/cardinalities
+  "toDeterminer"?: DeterminerType,      // THIS, OTHER, ALL, ANY — which target
+  "toObject"?: string,                  // TO preposition — target/recipient
+  "toObjectClassFilter"?: string,       // class filter for TO target (e.g. "GUARD")
+  "fromDeterminer"?: DeterminerType,
+  "fromObject"?: string,                // FROM preposition — source
+  "onDeterminer"?: DeterminerType,
+  "onObject"?: string,                  // ON preposition — stat target entity
+  "with"?: {                                // WITH — properties/cardinalities
     [key: string]: {
       "verb": "IS" | "BASED_ON",
       "object"?: string,                    // dependency target for BASED_ON (e.g. "SKILL_LEVEL")
@@ -267,8 +264,8 @@ Antal's combo triggers when an enemy with Focus suffers a Physical Status or Art
 ```json
 {
   "effects": [
-    { "verbType": "APPLY", "adjective": "SOURCE", "objectType": "INFLICTION", "toObjectType": "ENEMY" },
-    { "verbType": "APPLY", "adjective": "SOURCE", "objectType": "STATUS", "toObjectType": "ENEMY" }
+    { "verb": "APPLY", "adjective": "SOURCE", "object": "INFLICTION", "toObject": "ENEMY" },
+    { "verb": "APPLY", "adjective": "SOURCE", "object": "STATUS", "toObject": "ENEMY" }
   ]
 }
 ```
@@ -284,7 +281,7 @@ Event
 └── Segment[]
     └── Frame[]
         └── Effect[]
-            └── withPreposition{}
+            └── with{}
 ```
 
 An Event owns Segments. A Segment owns Frames. Frames contain Effects. Effects carry their properties via the WITH preposition.
@@ -398,9 +395,9 @@ Defines what happens when a new instance is applied while at max stacks.
 
 ```ts
 {
-  "subjectType": SubjectType,              // who initiates (THIS_OPERATOR, SYSTEM)
-  "verbType": VerbType,                    // CONSUME, RECOVER, RETURN
-  "objectType": ObjectType,               // SKILL_POINT, ULTIMATE_ENERGY, STAGGER, COOLDOWN, HP
+  "subject": SubjectType,              // who initiates (THIS_OPERATOR, SYSTEM)
+  "verb": VerbType,                    // CONSUME, RECOVER, RETURN
+  "object": ObjectType,               // SKILL_POINT, ULTIMATE_ENERGY, STAGGER, COOLDOWN, HP
   "cardinality": number,
   "target"?: ObjectType,                   // who receives (THIS_OPERATOR, ALL_OPERATORS, ENEMY)
   "conditions"?: {
@@ -450,20 +447,20 @@ At max stacks, the threshold clause applies SCORCHING_HEART_EFFECT to the operat
   "target": "THIS_OPERATOR",
   "element": "HEAT",
   "isNamedEvent": true,
-  "stack": { "max": { "P0": 4, ... }, "instances": 4, "verbType": "NONE" },
+  "stack": { "max": { "P0": 4, ... }, "instances": 4, "verb": "NONE" },
   "clause": [
     {
       "conditions": [
-        { "subjectType": "THIS_EVENT", "verbType": "HAVE", "objectType": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
+        { "subject": "THIS_EVENT", "verb": "HAVE", "object": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
       ],
       "effects": [
-        { "verbType": "APPLY", "objectType": "STATUS", "objectId": "SCORCHING_HEART_EFFECT", "toObjectType": "THIS_OPERATOR" }
+        { "verb": "APPLY", "object": "STATUS", "objectId": "SCORCHING_HEART_EFFECT", "toObject": "THIS_OPERATOR" }
       ]
     }
   ],
   "triggerClause": [
-    { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "BATTLE_SKILL" }] },
-    { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "COMBO_SKILL" }] }
+    { "conditions": [{ "subject": "THIS_OPERATOR", "verb": "PERFORM", "object": "BATTLE_SKILL" }] },
+    { "conditions": [{ "subject": "THIS_OPERATOR", "verb": "PERFORM", "object": "COMBO_SKILL" }] }
   ],
   "properties": { "duration": { "value": [-1], "unit": "SECOND" } }
 }
@@ -482,21 +479,21 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
   "originId": "laevatain",
   "target": "THIS_OPERATOR",
   "element": "HEAT",
-  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verbType": "NONE" },
+  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verb": "NONE" },
   "triggerClause": [
     {
       "conditions": [
-        { "subjectType": "ANY_OPERATOR", "verbType": "PERFORM", "objectType": "FINAL_STRIKE" },
-        { "subjectType": "ENEMY", "verbType": "HAVE", "objectType": "INFLICTION", "objectId": "HEAT" }
+        { "subject": "ANY_OPERATOR", "verb": "PERFORM", "object": "FINAL_STRIKE" },
+        { "subject": "ENEMY", "verb": "HAVE", "object": "INFLICTION", "objectId": "HEAT" }
       ],
       "effects": [
         {
-          "verbType": "PERFORM_ALL",
+          "verb": "PERFORM_ALL",
           "cardinalityConstraint": "AT_MOST",
           "cardinality": "MAX",
           "effects": [
-            { "verbType": "ABSORB", "cardinality": 1, "objectType": "INFLICTION", "element": "HEAT", "fromObjectType": "ENEMY" },
-            { "verbType": "APPLY", "cardinality": 1, "objectType": "STATUS", "objectId": "MELTING_FLAME", "toObjectType": "THIS_OPERATOR" }
+            { "verb": "ABSORB", "cardinality": 1, "object": "INFLICTION", "element": "HEAT", "fromObject": "ENEMY" },
+            { "verb": "APPLY", "cardinality": 1, "object": "STATUS", "objectId": "MELTING_FLAME", "toObject": "THIS_OPERATOR" }
           ]
         }
       ]
@@ -518,7 +515,7 @@ Provides Heat Resistance Ignore scaling by talent level.
   "target": "THIS_OPERATOR",
   "element": "HEAT",
   "isNamedEvent": true,
-  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verbType": "RESET" },
+  "stack": { "max": { "P0": 1, ... }, "instances": 1, "verb": "RESET" },
   "triggerClause": [],
   "stats": [{ "statType": "HEAT_RESISTANCE_IGNORE", "value": [10, 15, 20] }],
   "properties": { "duration": { "value": [20], "unit": "SECOND" } }
@@ -551,9 +548,9 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "ENEMY",
-          "verbType": "HAVE",
-          "objectType": "INFLICTION",
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
           "objectId": "ELECTRIC",
           "cardinalityConstraint": "AT_LEAST",
           "cardinality": 2
@@ -611,9 +608,9 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "ENEMY",
-          "verbType": "HAVE",
-          "objectType": "INFLICTION",
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
           "objectId": "NATURE",
           "cardinalityConstraint": "AT_LEAST",
           "cardinality": 2
@@ -709,9 +706,9 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "ENEMY",
-          "verbType": "HAVE",
-          "objectType": "INFLICTION",
+          "subject": "ENEMY",
+          "verb": "HAVE",
+          "object": "INFLICTION",
           "objectId": "HEAT",
           "cardinalityConstraint": "AT_LEAST",
           "cardinality": 2
@@ -825,15 +822,15 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "OTHER_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "BATTLE_SKILL"
+          "subject": "OTHER_OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
         }
       ],
       "effects": [
         {
-          "verbType": "CONSUME",
-          "objectType": "STACKS",
+          "verb": "CONSUME",
+          "object": "STACKS",
           "cardinality": 1
         }
       ]
@@ -843,9 +840,9 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "BATTLE_SKILL"
+          "subject": "THIS_OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
         }
       ],
       "effects": []
@@ -900,9 +897,9 @@ Provides Heat Resistance Ignore scaling by talent level.
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
+          "subject": "THIS_OPERATOR",
           "subjectProperty": "HP",
-          "verbType": "OVERHEAL"
+          "verb": "OVERHEAL"
         }
       ],
       "effects": []
@@ -962,19 +959,19 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subjectType": "THIS_EVENT",
-          "verbType": "HAVE",
-          "objectType": "STACKS",
+          "subject": "THIS_EVENT",
+          "verb": "HAVE",
+          "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
           "cardinality": "MAX"
         }
       ],
       "effects": [
         {
-          "verbType": "APPLY",
-          "objectType": "STATUS",
+          "verb": "APPLY",
+          "object": "STATUS",
           "objectId": "WILDLAND_TREKKER_BUFF",
-          "toObjectType": "THIS_OPERATOR"
+          "toObject": "THIS_OPERATOR"
         }
       ]
     }
@@ -983,9 +980,9 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "BATTLE_SKILL"
+          "subject": "THIS_OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
         }
       ],
       "effects": []
@@ -1029,9 +1026,9 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "HAVE",
-          "objectType": "STATUS",
+          "subject": "THIS_OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
           "objectId": "WILDLAND_TREKKER_TRIGGER",
           "cardinalityConstraint": "EXACTLY",
           "cardinality": "MAX"
@@ -1076,23 +1073,23 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subjectType": "THIS_EVENT",
-          "verbType": "HAVE",
-          "objectType": "STACKS",
+          "subject": "THIS_EVENT",
+          "verb": "HAVE",
+          "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
           "cardinality": "MAX"
         }
       ],
       "effects": [
         {
-          "verbType": "APPLY",
-          "objectType": "STATUS",
+          "verb": "APPLY",
+          "object": "STATUS",
           "objectId": "MI_SECURITY_CRIT_BONUS",
-          "toObjectType": "THIS_OPERATOR"
+          "toObject": "THIS_OPERATOR"
         },
         {
-          "verbType": "RESET",
-          "objectType": "STACKS"
+          "verb": "RESET",
+          "object": "STACKS"
         }
       ]
     }
@@ -1101,9 +1098,9 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "CRITICAL_HIT"
+          "subject": "THIS_OPERATOR",
+          "verb": "PERFORM",
+          "object": "CRITICAL_HIT"
         }
       ],
       "effects": []
@@ -1146,23 +1143,23 @@ Reads as: "Perform all at most MAX times: absorb 1 heat infliction from enemy, a
 {
   "effects": [
     {
-      "verbType": "PERFORM_ALL",
+      "verb": "PERFORM_ALL",
       "cardinalityConstraint": "AT_MOST",
       "cardinality": "MAX",
       "effects": [
         {
-          "verbType": "ABSORB",
+          "verb": "ABSORB",
           "cardinality": 1,
-          "objectType": "INFLICTION",
+          "object": "INFLICTION",
           "element": "HEAT",
-          "fromObjectType": "ENEMY"
+          "fromObject": "ENEMY"
         },
         {
-          "verbType": "APPLY",
+          "verb": "APPLY",
           "cardinality": 1,
-          "objectType": "STATUS",
+          "object": "STATUS",
           "objectId": "MELTING_FLAME",
-          "toObjectType": "THIS_OPERATOR"
+          "toObject": "THIS_OPERATOR"
         }
       ]
     }
@@ -1193,8 +1190,8 @@ Combo skills can only be used during a combo window. The combo window is a deriv
 {
   "name": "COMBO_WINDOW",
   "clause": [
-    { "conditions": [{ "subjectType": "ENEMY", "verbType": "BECOME", "objectType": "COMBUSTED" }] },
-    { "conditions": [{ "subjectType": "ENEMY", "verbType": "BECOME", "objectType": "CORRODED" }] }
+    { "conditions": [{ "subject": "ENEMY", "verb": "BECOME", "object": "COMBUSTED" }] },
+    { "conditions": [{ "subject": "ENEMY", "verb": "BECOME", "object": "CORRODED" }] }
   ],
   "segments": [
     { "name": "WINDOW", "duration": { "value": [6.0], "unit": "SECOND" } }
@@ -1228,10 +1225,10 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
+          "subject": "THIS_OPERATOR",
           "subjectProperty": "ULTIMATE",
-          "verbType": "IS",
-          "objectType": "ACTIVE"
+          "verb": "IS",
+          "object": "ACTIVE"
         }
       ],
       "effects": []
@@ -1248,9 +1245,9 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "HAVE",
-          "objectType": "STATUS",
+          "subject": "THIS_OPERATOR",
+          "verb": "HAVE",
+          "object": "STATUS",
           "objectId": "MELTING_FLAME",
           "cardinalityConstraint": "AT_LEAST",
           "cardinality": 4
@@ -1268,9 +1265,9 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
 {
   "resourceInteractions": [
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "RECOVER",
-      "objectType": "SKILL_POINT",
+      "subject": "THIS_OPERATOR",
+      "verb": "RECOVER",
+      "object": "SKILL_POINT",
       "cardinality": 25,
       "conditions": {
         "enemiesHit": {
@@ -1280,9 +1277,9 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       }
     },
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "RECOVER",
-      "objectType": "SKILL_POINT",
+      "subject": "THIS_OPERATOR",
+      "verb": "RECOVER",
+      "object": "SKILL_POINT",
       "cardinality": 30,
       "conditions": {
         "enemiesHit": {
@@ -1292,9 +1289,9 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       }
     },
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "RECOVER",
-      "objectType": "SKILL_POINT",
+      "subject": "THIS_OPERATOR",
+      "verb": "RECOVER",
+      "object": "SKILL_POINT",
       "cardinality": 35,
       "conditions": {
         "enemiesHit": {
@@ -1315,15 +1312,15 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
     {
       "conditions": [
         {
-          "subjectType": "THIS_OPERATOR",
-          "verbType": "PERFORM",
-          "objectType": "ULTIMATE"
+          "subject": "THIS_OPERATOR",
+          "verb": "PERFORM",
+          "object": "ULTIMATE"
         }
       ],
       "effects": [
         {
-          "verbType": "RESET",
-          "objectType": "COOLDOWN",
+          "verb": "RESET",
+          "object": "COOLDOWN",
           "objectId": "COMBO_SKILL"
         }
       ]
@@ -1352,22 +1349,22 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
   },
   "resourceInteractions": [
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "CONSUME",
-      "objectType": "SKILL_POINT",
+      "subject": "THIS_OPERATOR",
+      "verb": "CONSUME",
+      "object": "SKILL_POINT",
       "cardinality": 100
     },
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "RECOVER",
-      "objectType": "ULTIMATE_ENERGY",
+      "subject": "THIS_OPERATOR",
+      "verb": "RECOVER",
+      "object": "ULTIMATE_ENERGY",
       "cardinality": 6.5,
       "target": "THIS_OPERATOR"
     },
     {
-      "subjectType": "THIS_OPERATOR",
-      "verbType": "RECOVER",
-      "objectType": "ULTIMATE_ENERGY",
+      "subject": "THIS_OPERATOR",
+      "verb": "RECOVER",
+      "object": "ULTIMATE_ENERGY",
       "cardinality": 6.5,
       "target": "ALL_OPERATORS"
     }
@@ -1388,23 +1385,23 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
           },
           "resourceInteractions": [
             {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "RECOVER",
-              "objectType": "SKILL_POINT",
+              "subject": "THIS_OPERATOR",
+              "verb": "RECOVER",
+              "object": "SKILL_POINT",
               "cardinality": 20
             },
             {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "RECOVER",
-              "objectType": "STAGGER",
+              "subject": "THIS_OPERATOR",
+              "verb": "RECOVER",
+              "object": "STAGGER",
               "cardinality": 10
             }
           ],
           "statusInteractions": [
             {
-              "subjectType": "THIS_OPERATOR",
-              "verbType": "APPLY",
-              "objectType": "STATUS",
+              "subject": "THIS_OPERATOR",
+              "verb": "APPLY",
+              "object": "STATUS",
               "objectId": "MELTING_FLAME",
               "stacks": 1
             }
@@ -1429,8 +1426,8 @@ The adjective (`COMBO`, `DODGE`, `ANIMATION`) determines the chaining rules the 
       "name": "ANIMATION",
       "duration": { "value": [2.07], "unit": "SECOND" },
       "effects": [
-        { "verbType": "APPLY", "objectType": "TIME_STOP", "asAdjective": "ANIMATION" },
-        { "verbType": "CONSUME", "cardinality": 300, "objectType": "ULTIMATE_ENERGY" }
+        { "verb": "APPLY", "object": "TIME_STOP", "asAdjective": "ANIMATION" },
+        { "verb": "CONSUME", "cardinality": 300, "object": "ULTIMATE_ENERGY" }
       ]
     },
     {

@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef, useMemo } from 'react';
 import {
   WEAPONS,
   ARMORS,
@@ -9,7 +8,6 @@ import {
   TACTICALS,
   RegistryEntry,
 } from '../utils/loadoutRegistry';
-import { getStarredOperators, toggleStarredOperator } from '../utils/starredOperators';
 
 export interface OperatorLoadoutState {
   weaponName:     string | null;
@@ -31,24 +29,13 @@ export const EMPTY_LOADOUT: OperatorLoadoutState = {
   tacticalName:   null,
 };
 
-interface OperatorOption {
-  id: string;
-  name: string;
-  color: string;
-  rarity: number;
-  splash?: string;
-}
-
 interface OperatorLoadoutHeaderProps {
   operatorName: string;
   operatorColor: string;
   operatorWeaponTypes: string[];
   splash?: string;
   state: OperatorLoadoutState;
-  onChange: (state: OperatorLoadoutState) => void;
   onEdit: () => void;
-  allOperators?: OperatorOption[];
-  onSelectOperator?: (operatorId: string | null) => void;
 }
 
 /* ─── Shared filter bar for dropdown menus ────────────────────────────── */
@@ -142,152 +129,22 @@ function DropdownTierBar({
 }
 
 export { DropdownFilterBar, DropdownTierBar };
-export type { OperatorOption };
 
-/* ─── Custom dropdown with icon + name rows ─────────────────────────────── */
+/* ─── Static icon display ────────────────────────────────────────────── */
 
-function IconDropdown<T>({
-  label,
-  title: titleProp,
-  entries,
-  selectedIdx,
-  onChange,
-}: {
-  label: string;
-  title?: string;
-  entries: RegistryEntry<T>[];
-  selectedIdx: number | null;
-  onChange: (idx: number | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
-  const [search, setSearch] = useState('');
-  const [activeRarities, setActiveRarities] = useState<Set<number>>(new Set());
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const selected = selectedIdx !== null ? entries[selectedIdx] : null;
-
-  // Compute available rarities from entries (stable string key for comparison)
-  const raritiesKey = useMemo(() => {
-    const s = new Set<number>();
-    entries.forEach((e) => s.add(e.rarity));
-    return Array.from(s).sort((a, b) => a - b).join(',');
-  }, [entries]);
-
-  const rarities = useMemo(() => raritiesKey.split(',').filter(Boolean).map(Number), [raritiesKey]);
-
-  // Initialize activeRarities only when the set of rarities actually changes
-  useEffect(() => {
-    setActiveRarities(new Set(rarities));
-  }, [raritiesKey]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Filter & sort entries
-  const filtered = useMemo(() => {
-    const lc = search.toLowerCase();
-    const items: { entry: RegistryEntry<T>; origIdx: number }[] = [];
-    entries.forEach((e, i) => {
-      if (lc && !e.name.toLowerCase().includes(lc)) return;
-      if (!activeRarities.has(e.rarity)) return;
-      items.push({ entry: e, origIdx: i });
-    });
-    items.sort((a, b) => a.entry.name.localeCompare(b.entry.name));
-    return items;
-  }, [entries, search, activeRarities]);
-
-  const toggleRarity = useCallback((r: number) => {
-    setActiveRarities((prev) => {
-      const next = new Set(prev);
-      if (next.has(r)) next.delete(r); else next.add(r);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const handle = (e: MouseEvent | TouchEvent) => {
-      if (
-        triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
-        menuRef.current && !menuRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    document.addEventListener('touchstart', handle);
-    return () => {
-      document.removeEventListener('mousedown', handle);
-      document.removeEventListener('touchstart', handle);
-    };
-  }, [open]);
-
-  const handleOpen = useCallback(() => {
-    if (open) { setOpen(false); return; }
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 2, left: rect.left });
-    }
-    setSearch('');
-    setActiveRarities(new Set(rarities));
-    setOpen(true);
-  }, [open, rarities]);
-
-  const pick = useCallback((idx: number | null) => {
-    onChange(idx);
-    setOpen(false);
-  }, [onChange]);
-
+function StaticIcon({ label, entry }: { label: string; entry: RegistryEntry<any> | null }) {
   return (
     <div className="lo-dropdown">
-      <button
-        ref={triggerRef}
+      <div
         className="lo-dropdown-trigger"
-        onClick={handleOpen}
-        title={selected?.name ?? titleProp ?? label}
+        title={entry?.name ?? label}
       >
-        {selected?.icon ? (
-          <img className="lo-dropdown-icon" src={selected.icon} alt={selected.name} />
+        {entry?.icon ? (
+          <img className="lo-dropdown-icon" src={entry.icon} alt={entry.name} />
         ) : (
           <span className="lo-dropdown-placeholder">{label}</span>
         )}
-      </button>
-
-      {open && menuPos && createPortal(
-        <div
-          ref={menuRef}
-          className="lo-dropdown-menu"
-          style={{ top: menuPos.top, left: menuPos.left }}
-          onMouseMove={(e) => e.stopPropagation()}
-        >
-          <DropdownFilterBar
-            search={search}
-            onSearch={setSearch}
-            rarities={rarities}
-            activeRarities={activeRarities}
-            onToggleRarity={toggleRarity}
-          />
-          <div className="lo-dropdown-scroll">
-            <button className="lo-dropdown-option" onClick={() => pick(null)}>
-              <span className="lo-dropdown-option-empty" />
-              <span className="lo-dropdown-option-name">None</span>
-            </button>
-            {filtered.map(({ entry, origIdx }) => (
-              <button
-                key={origIdx}
-                className={`lo-dropdown-option${origIdx === selectedIdx ? ' selected' : ''}`}
-                onClick={() => pick(origIdx)}
-              >
-                {entry.icon ? (
-                  <img className="lo-dropdown-option-icon" src={entry.icon} alt={entry.name} />
-                ) : (
-                  <span className="lo-dropdown-option-empty" />
-                )}
-                <span className="lo-dropdown-option-name">{entry.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body,
-      )}
+      </div>
     </div>
   );
 }
@@ -297,18 +154,12 @@ function IconDropdown<T>({
 interface EquipmentSlotsProps {
   operatorWeaponTypes: string[];
   state: OperatorLoadoutState;
-  onChange: (state: OperatorLoadoutState) => void;
 }
 
-export function EquipmentSlots({ operatorWeaponTypes, state, onChange }: EquipmentSlotsProps) {
-  const nameSet = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]) => (idx: number | null) =>
-    onChange({ ...state, [key]: idx !== null ? entries[idx]?.name ?? null : null });
-
-  const nameIdx = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]): number | null => {
-    const name = state[key];
+export function EquipmentSlots({ operatorWeaponTypes, state }: EquipmentSlotsProps) {
+  const findEntry = (name: string | null, entries: RegistryEntry<any>[]): RegistryEntry<any> | null => {
     if (name === null) return null;
-    const idx = entries.findIndex((e) => e.name === name);
-    return idx >= 0 ? idx : null;
+    return entries.find((e) => e.name === name) ?? null;
   };
 
   const compatibleWeapons = useMemo(
@@ -316,26 +167,19 @@ export function EquipmentSlots({ operatorWeaponTypes, state, onChange }: Equipme
     [operatorWeaponTypes],
   );
 
-  const wpnIdx = state.weaponName !== null ? compatibleWeapons.findIndex((w) => w.name === state.weaponName) : -1;
-  const filteredSelectedIdx = wpnIdx >= 0 ? wpnIdx : null;
-
-  const handleWeaponChange = useCallback((filteredIdx: number | null) => {
-    onChange({ ...state, weaponName: filteredIdx !== null ? compatibleWeapons[filteredIdx]?.name ?? null : null });
-  }, [compatibleWeapons, state, onChange]);
-
   return (
     <>
       <div className="lo-slots lo-slots-left">
-        <IconDropdown label="WPN"  title="Weapon"      entries={compatibleWeapons} selectedIdx={filteredSelectedIdx} onChange={handleWeaponChange} />
+        <StaticIcon label="WPN" entry={findEntry(state.weaponName, compatibleWeapons)} />
         <div className="lo-slots-spacer" />
-        <IconDropdown label="CSM"  title="Consumable"  entries={CONSUMABLES}       selectedIdx={nameIdx('consumableName', CONSUMABLES)} onChange={nameSet('consumableName', CONSUMABLES)} />
-        <IconDropdown label="TAC"  title="Tactical"    entries={TACTICALS}         selectedIdx={nameIdx('tacticalName', TACTICALS)}     onChange={nameSet('tacticalName', TACTICALS)} />
+        <StaticIcon label="CSM" entry={findEntry(state.consumableName, CONSUMABLES)} />
+        <StaticIcon label="TAC" entry={findEntry(state.tacticalName, TACTICALS)} />
       </div>
       <div className="lo-slots lo-slots-right">
-        <IconDropdown label="ARM"  title="Armor"       entries={ARMORS}  selectedIdx={nameIdx('armorName', ARMORS)}   onChange={nameSet('armorName', ARMORS)} />
-        <IconDropdown label="GLV"  title="Gloves"      entries={GLOVES}  selectedIdx={nameIdx('glovesName', GLOVES)} onChange={nameSet('glovesName', GLOVES)} />
-        <IconDropdown label="K1"   title="Kit 1"       entries={KITS}    selectedIdx={nameIdx('kit1Name', KITS)}     onChange={nameSet('kit1Name', KITS)} />
-        <IconDropdown label="K2"   title="Kit 2"       entries={KITS}    selectedIdx={nameIdx('kit2Name', KITS)}     onChange={nameSet('kit2Name', KITS)} />
+        <StaticIcon label="ARM" entry={findEntry(state.armorName, ARMORS)} />
+        <StaticIcon label="GLV" entry={findEntry(state.glovesName, GLOVES)} />
+        <StaticIcon label="K1"  entry={findEntry(state.kit1Name, KITS)} />
+        <StaticIcon label="K2"  entry={findEntry(state.kit2Name, KITS)} />
       </div>
     </>
   );
@@ -349,98 +193,13 @@ export default function OperatorLoadoutHeader({
   operatorWeaponTypes,
   splash,
   state,
-  onChange,
   onEdit,
-  allOperators,
-  onSelectOperator,
 }: OperatorLoadoutHeaderProps) {
-  const [opMenuOpen, setOpMenuOpen] = useState(false);
-  const [opMenuPos, setOpMenuPos] = useState<{ top: number; left: number } | null>(null);
-  const [opSearch, setOpSearch] = useState('');
-  const [opActiveRarities, setOpActiveRarities] = useState<Set<number>>(new Set());
-  const [starred, setStarred] = useState<Set<string>>(() => getStarredOperators());
-  const splashRef = useRef<HTMLDivElement>(null);
-  const opMenuRef = useRef<HTMLDivElement>(null);
-
-  const opRarities = useMemo(() => {
-    if (!allOperators) return [];
-    const s = new Set<number>();
-    allOperators.forEach((op) => s.add(op.rarity));
-    return Array.from(s).sort((a, b) => a - b);
-  }, [allOperators]);
-
-  const filteredOperators = useMemo(() => {
-    if (!allOperators) return [];
-    const lc = opSearch.toLowerCase();
-    return allOperators
-      .filter((op) => {
-        if (lc && !op.name.toLowerCase().includes(lc)) return false;
-        if (!opActiveRarities.has(op.rarity)) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const aStarred = starred.has(a.id);
-        const bStarred = starred.has(b.id);
-        if (aStarred !== bStarred) return aStarred ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      });
-  }, [allOperators, opSearch, opActiveRarities, starred]);
-
-  const toggleOpRarity = useCallback((r: number) => {
-    setOpActiveRarities((prev) => {
-      const next = new Set(prev);
-      if (next.has(r)) next.delete(r); else next.add(r);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!opMenuOpen) return;
-    const handle = (e: MouseEvent | TouchEvent) => {
-      if (
-        splashRef.current && !splashRef.current.contains(e.target as Node) &&
-        opMenuRef.current && !opMenuRef.current.contains(e.target as Node)
-      ) {
-        setOpMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    document.addEventListener('touchstart', handle);
-    return () => {
-      document.removeEventListener('mousedown', handle);
-      document.removeEventListener('touchstart', handle);
-    };
-  }, [opMenuOpen]);
-
-  const handleSplashClick = useCallback(() => {
-    if (!allOperators || !onSelectOperator) return;
-    if (opMenuOpen) { setOpMenuOpen(false); return; }
-    if (splashRef.current) {
-      const rect = splashRef.current.getBoundingClientRect();
-      setOpMenuPos({ top: rect.bottom + 2, left: rect.left });
-    }
-    setOpSearch('');
-    setOpActiveRarities(new Set(opRarities));
-    setOpMenuOpen(true);
-  }, [opMenuOpen, allOperators, onSelectOperator, opRarities]);
-
-  const pickOperator = useCallback((id: string | null) => {
-    onSelectOperator?.(id);
-    setOpMenuOpen(false);
-  }, [onSelectOperator]);
-
-  const handleToggleStar = useCallback((e: React.MouseEvent, opId: string) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setStarred(toggleStarredOperator(opId));
-  }, []);
-
   return (
     <div
-      ref={splashRef}
-      className={`lo-cell${allOperators ? ' lo-splash--clickable' : ''}`}
+      className="lo-cell lo-splash--clickable"
       style={{ '--op-color': operatorColor } as React.CSSProperties}
-      onClick={handleSplashClick}
+      onClick={onEdit}
     >
       {/* Splash art — background layer */}
       {splash ? (
@@ -450,71 +209,16 @@ export default function OperatorLoadoutHeader({
       )}
       <div className="lo-splash-fade" />
 
-      {/* Equipment icons — split left/right */}
+      {/* Equipment icons — static display */}
       <EquipmentSlots
         operatorWeaponTypes={operatorWeaponTypes}
         state={state}
-        onChange={onChange}
       />
 
       {/* Operator name */}
       <div className="lo-name-row">
         <span className="lo-name">{operatorName}</span>
       </div>
-
-      {/* Operator selection dropdown */}
-      {opMenuOpen && opMenuPos && allOperators && createPortal(
-        <div
-          ref={opMenuRef}
-          className="lo-dropdown-menu lo-op-menu"
-          style={{ top: opMenuPos.top, left: opMenuPos.left }}
-          onMouseMove={(e) => e.stopPropagation()}
-        >
-          <DropdownFilterBar
-            search={opSearch}
-            onSearch={setOpSearch}
-            rarities={opRarities}
-            activeRarities={opActiveRarities}
-            onToggleRarity={toggleOpRarity}
-          />
-          <div className="lo-dropdown-scroll">
-            <button className="lo-dropdown-option" onClick={() => pickOperator(null)}>
-              <span className="lo-dropdown-option-empty" />
-              <span className="lo-dropdown-option-name">None</span>
-            </button>
-            {filteredOperators.map((op) => (
-              <button
-                key={op.id}
-                className={`lo-dropdown-option${op.name === operatorName ? ' selected' : ''}`}
-                onClick={() => pickOperator(op.id)}
-              >
-                <span
-                  className={`lo-star${starred.has(op.id) ? ' lo-star--active' : ''}`}
-                  onMouseDown={(e) => handleToggleStar(e, op.id)}
-                >
-                  {starred.has(op.id) ? '\u2605' : '\u2606'}
-                </span>
-                {op.splash ? (
-                  <img className="lo-op-menu-splash" src={op.splash} alt={op.name} />
-                ) : (
-                  <span className="lo-dropdown-option-empty" />
-                )}
-                <span className="lo-dropdown-option-name" style={{ color: op.color }}>
-                  {op.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body,
-      )}
-
-      {/* Edit button (top-right) */}
-      <button className="lo-edit-btn" onClick={onEdit} title="Edit stats">
-        <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor">
-          <path d="M7.5.8 9.2 2.5 3.2 8.5.5 9.5l1-2.7z"/>
-        </svg>
-      </button>
     </div>
   );
 }

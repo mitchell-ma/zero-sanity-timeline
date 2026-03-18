@@ -1,5 +1,5 @@
 import { SkillEventSequence } from "../../model/event-frames/skillEventSequence";
-import { EventFrameType } from "../../consts/enums";
+import { EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 import { formatSegmentShortName } from "../../utils/semanticsTranslation";
@@ -113,22 +113,34 @@ export class SkillSegmentBuilder {
         if (options?.gaugeGainByEnemies) frames[0].gaugeGainByEnemies = options.gaugeGainByEnemies;
       }
 
-      const label = customLabels
-        ? customLabels[i]
-        : isMulti
-          ? formatSegmentShortName(undefined, i)
-          : undefined;
+      const seqName = 'segmentName' in seq ? (seq as any).segmentName as string | undefined : undefined;
+      const label = seqName
+        ?? (customLabels
+          ? customLabels[i]
+          : isMulti
+            ? formatSegmentShortName(undefined, i)
+            : undefined);
 
       // Split out-of-bound frames into an implied trailing segment.
       // Some skills (e.g. delayed explosions) have frames beyond the segment duration.
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
       const outOfBound = frames.filter(f => f.offsetFrame > durationFrames);
 
-      segments.push({
+      const segData: EventSegmentData = {
         durationFrames,
         label,
         frames: inBound.length > 0 ? inBound : undefined,
-      });
+      };
+      if ('segmentType' in seq && (seq as any).segmentType) {
+        segData.segmentType = (seq as any).segmentType as SegmentType;
+      }
+      if ('timeDependency' in seq && (seq as any).timeDependency) {
+        segData.timeDependency = (seq as any).timeDependency as TimeDependency;
+      }
+      if ('clause' in seq && (seq as any).clause) {
+        segData.clause = (seq as any).clause;
+      }
+      segments.push(segData);
       totalDurationFrames += durationFrames;
 
       if (outOfBound.length > 0) {

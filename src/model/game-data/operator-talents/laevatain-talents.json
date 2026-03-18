@@ -18,44 +18,44 @@
           "P5": 1
         },
         "instances": 1,
-        "verbType": "NONE"
+        "verb": "NONE"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "ANY",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "FINAL_STRIKE"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "FINAL_STRIKE"
             },
             {
-              "subjectType": "ENEMY",
-              "verbType": "HAVE",
-              "objectType": "INFLICTION",
+              "subject": "ENEMY",
+              "verb": "HAVE",
+              "object": "INFLICTION",
               "objectId": "HEAT"
             }
           ],
           "effects": [
             {
-              "verbType": "ALL",
+              "verb": "ALL",
               "cardinalityConstraint": "AT_MOST",
               "cardinality": "MAX",
               "effects": [
                 {
-                  "verbType": "CONSUME",
+                  "verb": "CONSUME",
                   "cardinality": 1,
-                  "objectType": "INFLICTION",
+                  "object": "INFLICTION",
                   "element": "HEAT",
-                  "fromObjectType": "ENEMY"
+                  "fromObject": "ENEMY"
                 },
                 {
-                  "verbType": "APPLY",
+                  "verb": "APPLY",
                   "cardinality": 1,
-                  "objectType": "STATUS",
+                  "object": "STATUS",
                   "objectId": "MELTING_FLAME",
-                  "toObjectDeterminer": "THIS",
-                  "toObjectType": "OPERATOR"
+                  "toDeterminer": "THIS",
+                  "toObject": "OPERATOR"
                 }
               ]
             }

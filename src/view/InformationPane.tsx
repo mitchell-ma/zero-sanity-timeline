@@ -3,6 +3,7 @@ import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column }
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
+import type { InteractionModeType } from '../consts/enums';
 import EventPane from './info-pane/EventPane';
 import LoadoutPane from './info-pane/LoadoutPane';
 import EnemyPane from './info-pane/EnemyPane';
@@ -101,7 +102,7 @@ type InformationPaneProps = {
   verbose?: 0 | 1 | 2;
   onToggleVerbose?: () => void;
   triggerClose?: boolean;
-  debugMode?: boolean;
+  interactionMode?: InteractionModeType;
 } & (
   | {
       mode: 'event';
@@ -135,6 +136,9 @@ type InformationPaneProps = {
       onStatsChange: (stats: LoadoutProperties) => void;
       onClose: () => void;
       allProcessedEvents?: readonly TimelineEvent[];
+      allOperators?: Operator[];
+      onSelectOperator?: (operatorId: string | null) => void;
+      onLoadoutChange?: (loadout: OperatorLoadoutState) => void;
     }
   | {
       mode: 'enemy';
@@ -236,7 +240,7 @@ export default function InformationPane(props: InformationPaneProps) {
           readOnly={props.readOnly}
           isDerived={props.isDerived}
           editContext={props.editContext}
-          debugMode={props.debugMode}
+          interactionMode={props.interactionMode}
           rawEvents={props.rawEvents}
           allProcessedEvents={props.allProcessedEvents}
           loadoutProperties={props.loadoutProperties}
@@ -256,6 +260,9 @@ export default function InformationPane(props: InformationPaneProps) {
           onClose={handleClose}
           allProcessedEvents={props.allProcessedEvents}
           verbose={verbose}
+          allOperators={props.allOperators}
+          onSelectOperator={props.onSelectOperator}
+          onLoadoutChange={props.onLoadoutChange}
         />
       ) : props.mode === 'enemy' ? (
         <EnemyPane

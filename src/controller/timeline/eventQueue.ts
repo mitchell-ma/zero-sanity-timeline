@@ -37,8 +37,8 @@ import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretor } from './eventInterpretor';
 import { PriorityQueue } from './priorityQueue';
 import {
-  ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS,
-  OPERATOR_COLUMNS, EXCHANGE_STATUS_MAX_SLOTS, SKILL_COLUMNS,
+  ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS,
+  OPERATOR_COLUMNS, SKILL_COLUMNS, REACTION_COLUMN_IDS,
 } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
@@ -249,14 +249,48 @@ function collectFrameEffectEntries(
 
 // ── Infliction collection ───────────────────────────────────────────────────
 
-/** Collect infliction creation entries from applyArtsInfliction markers and combo triggers. */
+/**
+ * Collect all INFLICTION_CREATE entries:
+ * 1. From applyArtsInfliction frame markers on skill events
+ * 2. From combo trigger ticks
+ * 3. From freeform-placed infliction events (sourceOwnerId === USER_ID)
+ *
+ * All three sources produce the same entry type and go through the same
+ * createInfliction pipeline (deque stacking, cross-element reactions, etc.).
+ *
+ * Freeform entries are also tracked in `freeformInflictionIds` so the caller
+ * can exclude them from the queue controller's base events (the raw events
+ * stay in `state` for undo/drag).
+ */
 function collectInflictionEntries(
   events: TimelineEvent[],
   stops: readonly TimeStopRegion[],
+  freeformInflictionIds: Set<string>,
 ): QueueFrame[] {
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
+    // Freeform inflictions: enemy-owned, infliction column, placed by user
+    if (event.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(event.columnId) && event.sourceOwnerId === USER_ID) {
+      freeformInflictionIds.add(event.id);
+      entries.push({
+        frame: event.startFrame,
+        priority: PRIORITY.INFLICTION_CREATE,
+        type: 'INFLICTION_CREATE',
+        id: event.id,
+        statusName: event.columnId,
+        columnId: event.columnId,
+        ownerId: event.ownerId,
+        sourceOwnerId: event.sourceOwnerId ?? event.ownerId,
+        sourceSkillName: event.sourceSkillName ?? event.name,
+        maxStacks: MAX_INFLICTION_STACKS,
+        durationFrames: event.activationDuration,
+        operatorSlotId: event.ownerId,
+      });
+      continue;
+    }
+
+    // Skill events: scan frame markers
     if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
@@ -328,6 +362,42 @@ function collectInflictionEntries(
     }
   }
 
+  return entries;
+}
+
+/**
+ * Collect FRAME_EFFECT entries for freeform-placed reaction events.
+ * Same pattern as freeform inflictions: raw events stay in `state` for undo/drag,
+ * queue entries create derived copies that go through createReaction (merge logic).
+ */
+function collectFreeformReactionEntries(
+  events: TimelineEvent[],
+  freeformReactionIds: Set<string>,
+): QueueFrame[] {
+  const entries: QueueFrame[] = [];
+  for (const ev of events) {
+    if (ev.ownerId !== ENEMY_OWNER_ID) continue;
+    if (!REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+    if (ev.sourceOwnerId !== USER_ID) continue;
+    freeformReactionIds.add(ev.id);
+    entries.push({
+      frame: ev.startFrame,
+      priority: PRIORITY.FRAME_EFFECT,
+      type: 'FRAME_EFFECT',
+      statusName: ev.columnId,
+      columnId: ev.columnId,
+      ownerId: ev.ownerId,
+      sourceOwnerId: ev.sourceOwnerId,
+      sourceSkillName: ev.sourceSkillName ?? ev.name,
+      maxStacks: 0,
+      durationFrames: ev.activationDuration,
+      operatorSlotId: ev.ownerId,
+      derivedEvent: {
+        ...ev,
+        segments: undefined, // let createReaction build fresh segments
+      },
+    });
+  }
   return entries;
 }
 
@@ -479,7 +549,6 @@ function collectAbsorptionFrameEntries(
                   exchangeStatus: marker.exchangeStatus,
                   exchangeColumnId,
                   maxAbsorb: marker.stacks,
-                  exchangeMaxStacks: EXCHANGE_STATUS_MAX_SLOTS[marker.exchangeStatus] ?? 4,
                   eventId: event.id,
                   segmentIndex: si,
                   frameIndex: fi,
@@ -700,18 +769,29 @@ export function processEventQueue(
   );
 
   // ── Phase 6: Seed and run the priority queue ─────────────────────────────
-  const queueState = new DerivedEventController(extLate);
-  const interpretor = new EventInterpretor(queueState, extLate, {
-    exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings,
-  });
   const queue = new PriorityQueue<QueueFrame>((a, b) =>
     a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority
   );
-
   const seed = (entries: QueueFrame[]) => { for (const e of entries) queue.insert(e); };
 
+  // Collect freeform events (inflictions + reactions). Their IDs are tracked so
+  // they can be excluded from the queue controller's base events (the raw events
+  // stay in `state` for undo/drag) and re-derived via the queue.
+  const freeformInflictionIds = new Set<string>();
+  const freeformReactionIds = new Set<string>();
+  seed(collectInflictionEntries(extLate, stops, freeformInflictionIds));
+  seed(collectFreeformReactionEntries(extLate, freeformReactionIds));
+
+  const freeformIds = new Set([...Array.from(freeformInflictionIds), ...Array.from(freeformReactionIds)]);
+  const queueBaseEvents = freeformIds.size > 0
+    ? extLate.filter(ev => !freeformIds.has(ev.id))
+    : extLate;
+  const queueState = new DerivedEventController(queueBaseEvents);
+  const interpretor = new EventInterpretor(queueState, extLate, {
+    exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings,
+  });
+
   seed(collectFrameEffectEntries(extLate, loadoutProperties, stops));
-  seed(collectInflictionEntries(extLate, stops));
   for (const ev of extLate) {
     if (ev.columnId === SKILL_COLUMNS.COMBO && !ev.comboTriggerColumnId && ev.segments) {
       seed([{
@@ -783,8 +863,26 @@ export function processEventQueue(
     ? deriveComboActivationWindows(allEvents, slotWirings, stops)
     : [];
 
-  // Register queue-created events + combo windows so DerivedEventController owns all events
-  state.registerEvents([...queueEvents, ...comboWindows]);
+  // Propagate queue-side mutations back to state. The queue controller operates on
+  // copies of registered events — any clamps (consumption, refresh, merge) happen there
+  // and need to be reflected in state. Freeform inflictions are replaced with their
+  // derived copies. Other events get status + segment updates if they were clamped.
+  // Never mutate the originals — they belong to the undo history.
+  const queueRegistered = interpretor.controller.getRegisteredEvents();
+  const queueById = new Map<string, TimelineEvent>();
+  for (const ev of queueRegistered) {
+    if (ev.eventStatus) queueById.set(ev.id, ev);
+  }
+  for (const ev of queueEvents) {
+    if (freeformIds.has(ev.id)) queueById.set(ev.id, ev);
+  }
+  if (queueById.size > 0) {
+    state.replaceEvents(state.getRegisteredEvents().map(ev =>
+      queueById.get(ev.id) ?? ev
+    ));
+  }
+  const queueEventsToRegister = queueEvents.filter(ev => !freeformIds.has(ev.id));
+  state.registerEvents([...queueEventsToRegister, ...comboWindows]);
 
   // ── Phase 8: Resolve frame positions & validate ─────────────────────────
   state.cacheFramePositions();

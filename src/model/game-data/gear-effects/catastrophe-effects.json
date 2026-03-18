@@ -14,16 +14,16 @@
           "P0": 1
         },
         "instances": 1,
-        "verbType": "RESET"
+        "verb": "RESET"
       },
       "triggerClause": [
         {
           "conditions": [
             {
               "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
+              "subject": "OPERATOR",
+              "verb": "PERFORM",
+              "object": "BATTLE_SKILL"
             }
           ]
         }

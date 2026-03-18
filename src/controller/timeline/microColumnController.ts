@@ -225,12 +225,24 @@ export class MicroColumnController {
         col.microColumns!.forEach((mc, idx) => typeOrder.set(mc.id, idx));
         const mcById = new Map(col.microColumns!.map((mc) => [mc.id, mc]));
 
+        // Collect all active types and assign stable indices by type order
+        const activeTypes = new Set<string>();
+        for (const ev of colEvents) activeTypes.add(ev.columnId);
+        const sortedTypes = Array.from(activeTypes).sort((a, b) => {
+          const oa = typeOrder.get(a) ?? 999;
+          const ob = typeOrder.get(b) ?? 999;
+          return oa - ob || a.localeCompare(b);
+        });
+        const typeIndex = new Map<string, number>();
+        sortedTypes.forEach((t, i) => typeIndex.set(t, i));
+        const totalTypes = sortedTypes.length || 1;
+        const dynW = colWidth / totalTypes;
+
         for (const ev of colEvents) {
-          const { count, index } = MicroColumnController.dynamicSplitPosition(ev, colEvents, typeOrder);
-          const dynW = colWidth / count;
+          const idx = typeIndex.get(ev.columnId) ?? 0;
           positions.set(ev.id, {
-            left: colPos.left + index * dynW,
-            right: colPos.left + (index + 1) * dynW,
+            left: colPos.left + idx * dynW,
+            right: colPos.left + (idx + 1) * dynW,
             color: mcById.get(ev.columnId)?.color ?? col.color,
           });
         }

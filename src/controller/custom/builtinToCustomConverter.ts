@@ -145,15 +145,15 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
         // Fold column constraints into each predicate
         for (const col of comboRequiresActive) {
           const statusId = col.replace('enemy-', '').toUpperCase();
-          conditions.push({ subjectType: SubjectType.ENEMY, verbType: VerbType.HAVE, objectType: ObjectType.STATUS, objectId: statusId });
+          conditions.push({ subject: SubjectType.ENEMY, verb: VerbType.HAVE, object: ObjectType.STATUS, objectId: statusId });
         }
         for (const col of comboForbids) {
           const statusId = col.replace('enemy-', '').toUpperCase();
-          conditions.push({ subjectType: SubjectType.ENEMY, verbType: VerbType.HAVE, objectType: ObjectType.STATUS, objectId: statusId, negated: true });
+          conditions.push({ subject: SubjectType.ENEMY, verb: VerbType.HAVE, object: ObjectType.STATUS, objectId: statusId, negated: true });
         }
         return { conditions, effects: [] };
       })
-    : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL }], effects: [] }];
+    : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL }], effects: [] }];
 
   return {
     id: `clone_${operatorId}_${Date.now()}`,

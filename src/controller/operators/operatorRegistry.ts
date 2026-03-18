@@ -70,8 +70,8 @@ const PLACEHOLDER_EQUIPMENT = {
 
 // ── Element → published interactions mapping ────────────────────────────────
 
-const I = (subjectType: any, verbType: any, objectType: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectType, verbType, objectType, ...extra } as Interaction);
+const I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
+  ({ subject, verb, object, ...extra } as Interaction);
 
 const ELEMENT_INTERACTIONS: Partial<Record<string, Interaction[]>> = {
   HEAT:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED),  I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
@@ -100,8 +100,8 @@ function parseTriggerClause(trigger: Record<string, any>): {
     for (const predicate of trigger.triggerClause as Predicate[]) {
       for (const cond of predicate.conditions) {
         // Column constraint: ENEMY HAVE STATUS with objectId
-        if (cond.subjectType === SubjectType.ENEMY && cond.verbType === VerbType.HAVE
-            && cond.objectType === ObjectType.STATUS && cond.objectId) {
+        if (cond.subject === SubjectType.ENEMY && cond.verb === VerbType.HAVE
+            && cond.object === ObjectType.STATUS && cond.objectId) {
           const columnId = cond.objectId;
           if (cond.negated) {
             if (!forbids.includes(columnId)) forbids.push(columnId);
@@ -162,10 +162,11 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     ? dur(opJson.battleSkillCooldownDuration) : 0;
   const comboActivation = opJson.comboSkillActivationDuration != null
     ? dur(opJson.comboSkillActivationDuration) : timings.comboDur;
-  const ultActiveDur = opJson.ultimateActiveDuration != null
-    ? dur(opJson.ultimateActiveDuration) : Math.max(0, timings.ultDur - timings.ultAnimDur);
-  const ultCooldown = opJson.ultimateCooldownDuration != null
-    ? dur(opJson.ultimateCooldownDuration) : timings.ultCd;
+  const ultActiveDur = timings.ultActiveDur
+    ?? (opJson.ultimateActiveDuration != null
+      ? dur(opJson.ultimateActiveDuration) : Math.max(0, timings.ultDur - timings.ultAnimDur));
+  const ultCooldown = timings.ultCd || (opJson.ultimateCooldownDuration != null
+    ? dur(opJson.ultimateCooldownDuration) : 0);
 
   const skillTimingConfigs: Record<string, {
     defaultActivationDuration: number;

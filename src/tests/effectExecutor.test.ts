@@ -60,11 +60,11 @@ function makeCondCtx(overrides: Partial<ConditionContext> = {}): ConditionContex
 describe('APPLY effects', () => {
   test('APPLY HEAT INFLICTION produces an infliction event', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.INFLICTION,
+      verb: VerbType.APPLY,
+      object: NounType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      toObjectType: NounType.ENEMY,
-      withPreposition: {
+      toObject: NounType.ENEMY,
+      with: {
         duration: { verb: WithValueVerb.IS, value: 10 },
       },
     };
@@ -80,12 +80,12 @@ describe('APPLY effects', () => {
 
   test('APPLY STATUS produces a status event', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
-      withPreposition: {
+      toDeterminer: DeterminerType.THIS,
+      toObject: NounType.OPERATOR,
+      with: {
         duration: { verb: WithValueVerb.IS, value: 20 },
       },
     };
@@ -99,9 +99,9 @@ describe('APPLY effects', () => {
     expect(result.produced[0].name).toBe('MELTING_FLAME');
   });
 
-  test('APPLY STATUS MELTING_FLAME is dropped when 4 active stacks exist', () => {
-    // Pre-fill 4 active MF events
-    const existingMf = Array.from({ length: 4 }, (_, i) => makeEvent({
+  test('APPLY STATUS MELTING_FLAME is not capped — stacks grow freely', () => {
+    // Pre-fill 10 active MF events — no hardcoded cap
+    const existingMf = Array.from({ length: 10 }, (_, i) => makeEvent({
       id: `mf-${i}`,
       name: 'MELTING_FLAME',
       columnId: 'melting-flame',
@@ -110,70 +110,21 @@ describe('APPLY effects', () => {
       activationDuration: 108000,
     }));
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
+      toDeterminer: DeterminerType.THIS,
+      toObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: existingMf });
     const result = executeEffect(effect, ctx);
 
     expect(result.failed).toBe(false);
-    expect(result.produced).toHaveLength(0); // 5th stack silently dropped
-  });
-
-  test('APPLY STATUS MELTING_FLAME succeeds when under cap', () => {
-    const existingMf = Array.from({ length: 3 }, (_, i) => makeEvent({
-      id: `mf-${i}`,
-      name: 'MELTING_FLAME',
-      columnId: 'melting-flame',
-      ownerId: 'slot1',
-      startFrame: i * 10,
-      activationDuration: 108000,
-    }));
-    const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
-      objectId: 'MELTING_FLAME',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
-    };
-    const ctx = makeCtx({ events: existingMf });
-    const result = executeEffect(effect, ctx);
-
-    expect(result.produced).toHaveLength(1); // 4th stack allowed
-  });
-
-  test('APPLY STATUS MELTING_FLAME succeeds after consumed stacks free slots', () => {
-    const existingMf = Array.from({ length: 4 }, (_, i) => makeEvent({
-      id: `mf-${i}`,
-      name: 'MELTING_FLAME',
-      columnId: 'melting-flame',
-      ownerId: 'slot1',
-      startFrame: i * 10,
-      activationDuration: 108000,
-      eventStatus: i < 2 ? EventStatusType.CONSUMED : undefined,
-    }));
-    // 2 consumed + 2 active = 2 active. Should allow new stack.
-    // But consumed events have their activationDuration clamped — need to shorten them
-    existingMf[0].activationDuration = 50; // ends at frame 50
-    existingMf[1].activationDuration = 50; // ends at frame 60
-    const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
-      objectId: 'MELTING_FLAME',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
-    };
-    const ctx = makeCtx({ events: existingMf, frame: 100 }); // frame 100: consumed events expired
-    const result = executeEffect(effect, ctx);
-
-    expect(result.produced).toHaveLength(1); // slot freed by consumed stacks
+    expect(result.produced).toHaveLength(1); // 11th stack allowed
   });
 
   test('APPLY non-exchange STATUS is not capped', () => {
-    // SCORCHING_HEART_EFFECT is not in EXCHANGE_STATUS_MAX_SLOTS — no cap
+    // No cap on any status type
     const existing = Array.from({ length: 10 }, (_, i) => makeEvent({
       id: `sh-${i}`,
       name: 'SCORCHING_HEART_EFFECT',
@@ -183,11 +134,11 @@ describe('APPLY effects', () => {
       activationDuration: 2400,
     }));
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'SCORCHING_HEART_EFFECT',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
+      toDeterminer: DeterminerType.THIS,
+      toObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: existing });
     const result = executeEffect(effect, ctx);
@@ -197,11 +148,11 @@ describe('APPLY effects', () => {
 
   test('APPLY COMBUSTION REACTION produces a reaction event', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.REACTION,
+      verb: VerbType.APPLY,
+      object: NounType.REACTION,
       adjective: AdjectiveType.COMBUSTION,
-      toObjectType: NounType.ENEMY,
-      withPreposition: {
+      toObject: NounType.ENEMY,
+      with: {
         duration: { verb: WithValueVerb.IS, value: 5 },
         statusLevel: { verb: WithValueVerb.IS, value: 2 },
       },
@@ -229,10 +180,10 @@ describe('CONSUME effects', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: NounType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: NounType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
+      fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [infliction] });
     const result = executeEffect(effect, ctx);
@@ -246,10 +197,10 @@ describe('CONSUME effects', () => {
 
   test('CONSUME fails when no active infliction exists', () => {
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: NounType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: NounType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
+      fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [] });
     const result = executeEffect(effect, ctx);
@@ -268,11 +219,11 @@ describe('CONSUME effects', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: NounType.STATUS,
+      verb: VerbType.CONSUME,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
-      fromObjectDeterminer: DeterminerType.THIS,
-      fromObjectType: NounType.OPERATOR,
+      fromDeterminer: DeterminerType.THIS,
+      fromObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: [status] });
     const result = executeEffect(effect, ctx);
@@ -288,22 +239,22 @@ describe('CONSUME effects', () => {
 describe('ALL compound effects', () => {
   test('ALL executes all child effects when no conditions', () => {
     const effect: Effect = {
-      verbType: VerbType.ALL,
+      verb: VerbType.ALL,
       predicates: [{
         conditions: [],
         effects: [
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           },
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'FOCUS',
-            toObjectType: NounType.ENEMY,
+            toObject: NounType.ENEMY,
           },
         ],
       }],
@@ -318,22 +269,22 @@ describe('ALL compound effects', () => {
 
   test('ALL atomicity: if CONSUME fails, sibling APPLY does not fire', () => {
     const effect: Effect = {
-      verbType: VerbType.ALL,
+      verb: VerbType.ALL,
       predicates: [{
         conditions: [],
         effects: [
           {
-            verbType: VerbType.CONSUME,
-            objectType: NounType.INFLICTION,
+            verb: VerbType.CONSUME,
+            object: NounType.INFLICTION,
             adjective: AdjectiveType.HEAT,
-            fromObjectType: NounType.ENEMY,
+            fromObject: NounType.ENEMY,
           },
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           },
         ],
       }],
@@ -357,22 +308,22 @@ describe('ALL compound effects', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.ALL,
+      verb: VerbType.ALL,
       predicates: [{
         conditions: [],
         effects: [
           {
-            verbType: VerbType.CONSUME,
-            objectType: NounType.INFLICTION,
+            verb: VerbType.CONSUME,
+            object: NounType.INFLICTION,
             adjective: AdjectiveType.HEAT,
-            fromObjectType: NounType.ENEMY,
+            fromObject: NounType.ENEMY,
           },
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           },
         ],
       }],
@@ -399,8 +350,8 @@ describe('ALL compound effects', () => {
     }));
 
     const effect: Effect = {
-      verbType: VerbType.ALL,
-      forPreposition: {
+      verb: VerbType.ALL,
+      for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
         cardinality: 2,
       },
@@ -408,17 +359,17 @@ describe('ALL compound effects', () => {
         conditions: [],
         effects: [
           {
-            verbType: VerbType.CONSUME,
-            objectType: NounType.INFLICTION,
+            verb: VerbType.CONSUME,
+            object: NounType.INFLICTION,
             adjective: AdjectiveType.HEAT,
-            fromObjectType: NounType.ENEMY,
+            fromObject: NounType.ENEMY,
           },
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           },
         ],
       }],
@@ -432,25 +383,6 @@ describe('ALL compound effects', () => {
     expect(result.clamped.size).toBe(2);
   });
 
-  test('ALL with legacy flat effects (backward compat)', () => {
-    const effect: Effect = {
-      verbType: VerbType.ALL,
-      effects: [
-        {
-          verbType: VerbType.APPLY,
-          objectType: NounType.STATUS,
-          objectId: 'MELTING_FLAME',
-          toObjectDeterminer: DeterminerType.THIS,
-          toObjectType: NounType.OPERATOR,
-        },
-      ],
-    };
-
-    const ctx = makeCtx();
-    const result = executeEffect(effect, ctx);
-
-    expect(result.produced).toHaveLength(1);
-  });
 });
 
 // ── ANY tests ────────────────────────────────────────────────────────────
@@ -466,30 +398,30 @@ describe('ANY compound effects', () => {
     });
 
     const effect: Effect = {
-      verbType: VerbType.ANY,
+      verb: VerbType.ANY,
       predicates: [
         {
           conditions: [{
-            subjectType: NounType.ENEMY,
-            verbType: VerbType.HAVE,
-            objectType: NounType.STATUS,
+            subject: NounType.ENEMY,
+            verb: VerbType.HAVE,
+            object: NounType.STATUS,
             objectId: 'COMBUSTION',
           }],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'SCORCHING_FANGS',
-            toObjectType: NounType.ENEMY,
+            toObject: NounType.ENEMY,
           }],
         },
         {
           conditions: [],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'FALLBACK_STATUS',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           }],
         },
       ],
@@ -506,30 +438,30 @@ describe('ANY compound effects', () => {
   test('ANY falls through to unconditional when first fails', () => {
     // No combustion → first predicate fails → second (unconditional) fires
     const effect: Effect = {
-      verbType: VerbType.ANY,
+      verb: VerbType.ANY,
       predicates: [
         {
           conditions: [{
-            subjectType: NounType.ENEMY,
-            verbType: VerbType.HAVE,
-            objectType: NounType.STATUS,
+            subject: NounType.ENEMY,
+            verb: VerbType.HAVE,
+            object: NounType.STATUS,
             objectId: 'COMBUSTION',
           }],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'SCORCHING_FANGS',
-            toObjectType: NounType.ENEMY,
+            toObject: NounType.ENEMY,
           }],
         },
         {
           conditions: [],
           effects: [{
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'FALLBACK_STATUS',
-            toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+            toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
           }],
         },
       ],
@@ -548,43 +480,43 @@ describe('ANY compound effects', () => {
 describe('Nested compound effects', () => {
   test('ALL containing nested ANY', () => {
     const effect: Effect = {
-      verbType: VerbType.ALL,
+      verb: VerbType.ALL,
       predicates: [{
         conditions: [],
         effects: [
           // First child: plain APPLY
           {
-            verbType: VerbType.APPLY,
-            objectType: NounType.STATUS,
+            verb: VerbType.APPLY,
+            object: NounType.STATUS,
             objectId: 'FOCUS',
-            toObjectType: NounType.ENEMY,
+            toObject: NounType.ENEMY,
           },
           // Second child: nested ANY
           {
-            verbType: VerbType.ANY,
+            verb: VerbType.ANY,
             predicates: [
               {
                 conditions: [{
-                  subjectType: NounType.ENEMY,
-                  verbType: VerbType.HAVE,
-                  objectType: NounType.STATUS,
+                  subject: NounType.ENEMY,
+                  verb: VerbType.HAVE,
+                  object: NounType.STATUS,
                   objectId: 'COMBUSTION',
                 }],
                 effects: [{
-                  verbType: VerbType.APPLY,
-                  objectType: NounType.STATUS,
+                  verb: VerbType.APPLY,
+                  object: NounType.STATUS,
                   objectId: 'CONDITIONAL_STATUS',
-                  toObjectType: NounType.ENEMY,
+                  toObject: NounType.ENEMY,
                 }],
               },
               {
                 conditions: [],
                 effects: [{
-                  verbType: VerbType.APPLY,
-                  objectType: NounType.STATUS,
+                  verb: VerbType.APPLY,
+                  object: NounType.STATUS,
                   objectId: 'DEFAULT_STATUS',
-                  toObjectDeterminer: DeterminerType.THIS,
-            toObjectType: NounType.OPERATOR,
+                  toDeterminer: DeterminerType.THIS,
+            toObject: NounType.OPERATOR,
                 }],
               },
             ],
@@ -617,9 +549,9 @@ describe('Condition evaluation', () => {
 
     const conditions: Interaction[] = [{
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.OPERATOR,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
     }];
 
@@ -630,9 +562,9 @@ describe('Condition evaluation', () => {
   test('HAVE STATUS fails when status is not active', () => {
     const conditions: Interaction[] = [{
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.OPERATOR,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
     }];
 
@@ -651,9 +583,9 @@ describe('Condition evaluation', () => {
 
     const conditions: Interaction[] = [{
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.OPERATOR,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
       cardinalityConstraint: CardinalityConstraintType.AT_LEAST,
       cardinality: 3,
@@ -677,9 +609,9 @@ describe('Condition evaluation', () => {
     });
 
     const conditions: Interaction[] = [{
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.IS,
-      objectType: AdjectiveType.COMBUSTED,
+      subject: NounType.ENEMY,
+      verb: VerbType.IS,
+      object: AdjectiveType.COMBUSTED,
     }];
 
     const ctx = makeCondCtx({ events: [combustion] });
@@ -736,11 +668,11 @@ describe('applyMutations', () => {
 describe('Edge cases', () => {
   test('Empty timeline produces no mutations for CONSUME', () => {
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: NounType.STATUS,
+      verb: VerbType.CONSUME,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
-      fromObjectDeterminer: DeterminerType.THIS,
-      fromObjectType: NounType.OPERATOR,
+      fromDeterminer: DeterminerType.THIS,
+      fromObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: [] });
     const result = executeEffect(effect, ctx);
@@ -750,12 +682,12 @@ describe('Edge cases', () => {
 
   test('Resource verbs (RECOVER, DEAL) return empty mutation set', () => {
     const recoverEffect: Effect = {
-      verbType: VerbType.RECOVER,
-      objectType: NounType.SKILL_POINT,
+      verb: VerbType.RECOVER,
+      object: NounType.SKILL_POINT,
     };
     const dealEffect: Effect = {
-      verbType: VerbType.DEAL,
-      objectType: NounType.DAMAGE,
+      verb: VerbType.DEAL,
+      object: NounType.DAMAGE,
     };
     const ctx = makeCtx();
 
@@ -768,17 +700,17 @@ describe('Edge cases', () => {
   test('executeEffects accumulates results from multiple effects', () => {
     const effects: Effect[] = [
       {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'FOCUS',
-        toObjectType: NounType.ENEMY,
+        toObject: NounType.ENEMY,
       },
       {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'MELTING_FLAME',
-        toObjectDeterminer: DeterminerType.THIS,
-        toObjectType: NounType.OPERATOR,
+        toDeterminer: DeterminerType.THIS,
+        toObject: NounType.OPERATOR,
       },
     ];
     const ctx = makeCtx();
@@ -791,17 +723,17 @@ describe('Edge cases', () => {
   test('executeEffects fails early on required failure', () => {
     const effects: Effect[] = [
       {
-        verbType: VerbType.CONSUME,
-        objectType: NounType.INFLICTION,
+        verb: VerbType.CONSUME,
+        object: NounType.INFLICTION,
         adjective: AdjectiveType.HEAT,
-        fromObjectType: NounType.ENEMY,
+        fromObject: NounType.ENEMY,
       },
       {
-        verbType: VerbType.APPLY,
-        objectType: NounType.STATUS,
+        verb: VerbType.APPLY,
+        object: NounType.STATUS,
         objectId: 'MELTING_FLAME',
-        toObjectDeterminer: DeterminerType.THIS,
-        toObjectType: NounType.OPERATOR,
+        toDeterminer: DeterminerType.THIS,
+        toObject: NounType.OPERATOR,
       },
     ];
     const ctx = makeCtx({ events: [] });
@@ -817,15 +749,15 @@ describe('matchInteraction — determiner handling', () => {
   test('ANY determiner matches any OPERATOR subject', () => {
     const published: Interaction = {
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     const required: Interaction = {
       subjectDeterminer: DeterminerType.ANY,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     expect(matchInteraction(published, required)).toBe(true);
   });
@@ -833,15 +765,15 @@ describe('matchInteraction — determiner handling', () => {
   test('ANY determiner matches ALL determiner', () => {
     const published: Interaction = {
       subjectDeterminer: DeterminerType.ALL,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     const required: Interaction = {
       subjectDeterminer: DeterminerType.ANY,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     expect(matchInteraction(published, required)).toBe(true);
   });
@@ -849,15 +781,15 @@ describe('matchInteraction — determiner handling', () => {
   test('mismatched determiners reject', () => {
     const published: Interaction = {
       subjectDeterminer: DeterminerType.OTHER,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     const required: Interaction = {
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     };
     expect(matchInteraction(published, required)).toBe(false);
   });
@@ -865,14 +797,14 @@ describe('matchInteraction — determiner handling', () => {
   test('omitted determiner defaults to THIS', () => {
     const withExplicit: Interaction = {
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.APPLY,
-      objectType: NounType.INFLICTION,
+      subject: NounType.OPERATOR,
+      verb: VerbType.APPLY,
+      object: NounType.INFLICTION,
     };
     const withoutDeterminer: Interaction = {
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.APPLY,
-      objectType: NounType.INFLICTION,
+      subject: NounType.OPERATOR,
+      verb: VerbType.APPLY,
+      object: NounType.INFLICTION,
     };
     // Both directions should match since omitted defaults to THIS
     expect(matchInteraction(withExplicit, withoutDeterminer)).toBe(true);
@@ -881,29 +813,29 @@ describe('matchInteraction — determiner handling', () => {
 
   test('ENEMY subject still works without determiners', () => {
     const published: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.IS,
-      objectType: AdjectiveType.COMBUSTED,
+      subject: NounType.ENEMY,
+      verb: VerbType.IS,
+      object: AdjectiveType.COMBUSTED,
     };
     const required: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.IS,
-      objectType: AdjectiveType.COMBUSTED,
+      subject: NounType.ENEMY,
+      verb: VerbType.IS,
+      object: AdjectiveType.COMBUSTED,
     };
     expect(matchInteraction(published, required)).toBe(true);
   });
 
   test('ENEMY vs OPERATOR rejects regardless of determiner', () => {
     const published: Interaction = {
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.ENEMY,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
     };
     const required: Interaction = {
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.OPERATOR,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
     };
     expect(matchInteraction(published, required)).toBe(false);
   });
@@ -913,9 +845,9 @@ describe('interactionToLabel — determiner display', () => {
   test('THIS OPERATOR omits subject (implicit)', () => {
     const label = interactionToLabel({
       subjectDeterminer: DeterminerType.THIS,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.BATTLE_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.BATTLE_SKILL,
     });
     expect(label).toBe('Perform Battle Skill');
   });
@@ -923,9 +855,9 @@ describe('interactionToLabel — determiner display', () => {
   test('ALL OPERATOR shows determiner', () => {
     const label = interactionToLabel({
       subjectDeterminer: DeterminerType.ALL,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.HAVE,
-      objectType: NounType.STATUS,
+      subject: NounType.OPERATOR,
+      verb: VerbType.HAVE,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
     });
     expect(label).toBe('All Operator Have Status (Melting Flame)');
@@ -934,18 +866,18 @@ describe('interactionToLabel — determiner display', () => {
   test('ANY OPERATOR shows determiner', () => {
     const label = interactionToLabel({
       subjectDeterminer: DeterminerType.ANY,
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.PERFORM,
-      objectType: NounType.COMBO_SKILL,
+      subject: NounType.OPERATOR,
+      verb: VerbType.PERFORM,
+      object: NounType.COMBO_SKILL,
     });
     expect(label).toBe('Any Operator Perform Combo Skill');
   });
 
   test('omitted determiner defaults to THIS (no subject shown)', () => {
     const label = interactionToLabel({
-      subjectType: NounType.OPERATOR,
-      verbType: VerbType.APPLY,
-      objectType: NounType.INFLICTION,
+      subject: NounType.OPERATOR,
+      verb: VerbType.APPLY,
+      object: NounType.INFLICTION,
       element: 'HEAT',
     });
     expect(label).toBe('Apply Infliction [Heat]');
@@ -953,9 +885,9 @@ describe('interactionToLabel — determiner display', () => {
 
   test('ENEMY subject renders normally', () => {
     const label = interactionToLabel({
-      subjectType: NounType.ENEMY,
-      verbType: VerbType.IS,
-      objectType: AdjectiveType.COMBUSTED,
+      subject: NounType.ENEMY,
+      verb: VerbType.IS,
+      object: AdjectiveType.COMBUSTED,
     });
     expect(label).toBe('Enemy Is Combusted');
   });
@@ -964,11 +896,11 @@ describe('interactionToLabel — determiner display', () => {
 describe('resolveOwnerId — determiner-based target resolution', () => {
   test('APPLY TO THIS OPERATOR resolves to sourceOwnerId', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
-      toObjectDeterminer: DeterminerType.THIS,
-      toObjectType: NounType.OPERATOR,
+      toDeterminer: DeterminerType.THIS,
+      toObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot2' });
     const result = executeEffect(effect, ctx);
@@ -978,11 +910,11 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
 
   test('APPLY TO ALL OPERATOR resolves to COMMON_OWNER_ID', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'SCORCHING_FANGS',
-      toObjectDeterminer: DeterminerType.ALL,
-      toObjectType: NounType.OPERATOR,
+      toDeterminer: DeterminerType.ALL,
+      toObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot1' });
     const result = executeEffect(effect, ctx);
@@ -992,10 +924,10 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
 
   test('APPLY TO ENEMY still resolves to enemy owner', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'FOCUS',
-      toObjectType: NounType.ENEMY,
+      toObject: NounType.ENEMY,
     };
     const ctx = makeCtx();
     const result = executeEffect(effect, ctx);
@@ -1005,10 +937,10 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
 
   test('omitted determiner defaults to THIS (sourceOwnerId)', () => {
     const effect: Effect = {
-      verbType: VerbType.APPLY,
-      objectType: NounType.STATUS,
+      verb: VerbType.APPLY,
+      object: NounType.STATUS,
       objectId: 'BUFF',
-      toObjectType: NounType.OPERATOR,
+      toObject: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot3' });
     const result = executeEffect(effect, ctx);
@@ -1025,10 +957,10 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       activationDuration: 2400,
     });
     const effect: Effect = {
-      verbType: VerbType.CONSUME,
-      objectType: NounType.INFLICTION,
+      verb: VerbType.CONSUME,
+      object: NounType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      fromObjectType: NounType.ENEMY,
+      fromObject: NounType.ENEMY,
     };
     const ctx = makeCtx({ events: [infliction] });
     const result = executeEffect(effect, ctx);
