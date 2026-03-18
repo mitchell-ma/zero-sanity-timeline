@@ -16,7 +16,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number> },
+    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -137,7 +137,7 @@ export class SkillSegmentBuilder {
         const impliedDuration = Math.max(...rebased.map(f => f.offsetFrame)) + 1;
         segments.push({
           durationFrames: impliedDuration,
-          label: 'Delay',
+          label: options?.delayedHitLabel ?? 'Delay',
           frames: rebased,
         });
         totalDurationFrames += impliedDuration;

@@ -494,10 +494,10 @@ export interface DamageParams {
  *        × DefenseMultiplier × ResistanceMultiplier
  */
 export function calculateDamage(params: DamageParams): number {
+  const effectiveAttack = Math.round(params.attack * params.attributeBonus * 10) / 10;
   return (
-    params.attack *
+    effectiveAttack *
     params.baseMultiplier *
-    params.attributeBonus *
     params.multiplierGroup *
     params.critMultiplier *
     params.ampMultiplier *

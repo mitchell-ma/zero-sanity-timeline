@@ -3,12 +3,10 @@
  */
 import { GearSetType } from '../../consts/enums';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
-import type { GearSetEffectsEntry, GearSetEffect, GearEffectBuff } from '../../consts/gearSetEffects';
 import { GEARS } from '../../utils/loadoutRegistry';
 import type { GearRegistryEntry } from '../../utils/loadoutRegistry';
 import { DataDrivenGear } from '../../model/gears/dataDrivenGear';
 import type { CustomGearSet } from '../../model/custom/customGearTypes';
-import { mapTargetToLegacy } from './bridgeUtils';
 import { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 
 // ── Registration ────────────────────────────────────────────────────────────
@@ -32,40 +30,14 @@ export function registerCustomGearSet(gearSet: CustomGearSet): void {
     GEARS.push(entry);
   }
 
-  // Register set effects
+  // Register passive stats for loadout aggregation
   if (gearSet.setEffect) {
-    const effects: GearSetEffect[] = [];
-    if (gearSet.setEffect.effects) {
-      for (let i = 0; i < gearSet.setEffect.effects.length; i++) {
-        const effect = gearSet.setEffect.effects[i];
-        const triggers = effect.triggers;
-        if (triggers.length === 0) continue;
-
-        effects.push({
-          label: effect.label,
-          gearSetEffectType: `CUSTOM_${gearSet.id}_${i}` as any,
-          triggers,
-          target: mapTargetToLegacy(effect.target),
-          durationSeconds: effect.durationSeconds,
-          maxStacks: effect.maxStacks,
-          cooldownSeconds: effect.cooldownSeconds ?? 0,
-          buffs: effect.buffs.map((b): GearEffectBuff => ({
-            stat: b.stat as any,
-            value: b.value,
-            perStack: b.perStack,
-          })),
-          note: effect.note,
-        });
-      }
-    }
-
-    const entry: GearSetEffectsEntry = {
+    GEAR_SET_EFFECTS.push({
       gearSetType: customGearSetType,
       label: gearSet.setName,
       passiveStats: gearSet.setEffect.passiveStats ?? {},
-      effects,
-    };
-    GEAR_SET_EFFECTS.push(entry);
+      effects: [],
+    });
 
     // Register DSL status event defs for the derivation engine
     const dslDefs = buildDslDefsFromCustomGearSet(gearSet, customGearSetType);

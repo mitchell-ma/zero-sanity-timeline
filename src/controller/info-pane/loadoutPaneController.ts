@@ -7,7 +7,8 @@ import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
 import { interpolateAttack } from '../../model/weapons/weapon';
 import { aggregateLoadoutStats, weaponSkillStat, AggregatedStats } from '../calculation/loadoutAggregator';
-import { getWeaponEffects } from '../../consts/weaponSkillEffects';
+import { getWeaponEffectDefs, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
+import { fmtN } from '../../utils/timeline';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -30,8 +31,8 @@ const PERCENT_STATS = new Set<StatType>([
 ]);
 
 export function formatStatValue(stat: StatType, value: number): string {
-  if (PERCENT_STATS.has(stat)) return `${(value * 100).toFixed(2)}%`;
-  return value.toFixed(2);
+  if (PERCENT_STATS.has(stat)) return `${fmtN(value * 100)}%`;
+  return fmtN(value);
 }
 
 // ── Weapon Breakdown ────────────────────────────────────────────────────────
@@ -121,16 +122,16 @@ export function resolveWeaponBreakdown(
 
   const baseAtk = interpolateAttack(wpn.baseAttack, stats.weapon.level);
 
-  // Named skill effects
+  // Named skill effects (from DSL JSON)
   const effects: WeaponEffectDisplay[] = [];
-  const weaponEffects = getWeaponEffects(weaponEntry.name);
-  if (weaponEffects) {
+  const dslDefs = getWeaponEffectDefs(weaponEntry.name);
+  if (dslDefs.length > 0) {
     const sk3 = wpn.weaponSkillThree;
-    const effectGroups = sk3?.getNamedEffectGroups?.() ?? null;
 
-    for (let ei = 0; ei < weaponEffects.effects.length; ei++) {
-      const eff = weaponEffects.effects[ei];
-      const group = effectGroups?.[ei] ?? null;
+    for (let ei = 0; ei < dslDefs.length; ei++) {
+      const def = dslDefs[ei];
+      const maxStacks = def.stack?.max?.P0 ?? 1;
+      const durationSeconds = resolveDurationSeconds(def);
 
       // Secondary attribute bonus
       let secondaryAttrBonus: WeaponEffectDisplay['secondaryAttrBonus'] = null;
@@ -145,20 +146,14 @@ export function resolveWeaponBreakdown(
       }
 
       // Buff lines
-      const stackSuffix = eff.maxStacks > 1 ? `/stack (max ${eff.maxStacks})` : '';
-      const buffs: WeaponEffectBuff[] = eff.buffs.map((b, bi) => {
+      const stackSuffix = maxStacks > 1 ? `/stack (max ${maxStacks})` : '';
+      const buffs: WeaponEffectBuff[] = (def.buffs ?? []).map((b: any) => {
         const isPercent = PERCENT_STATS.has(b.stat as StatType);
-        const modelStat = group?.stats[bi];
-        let valueStr: string;
-        if (modelStat && modelStat.value !== 0) {
-          valueStr = isPercent
-            ? `${(modelStat.value * 100).toFixed(2)}%`
-            : modelStat.value.toFixed(2);
-        } else {
-          valueStr = isPercent
-            ? `${(b.valueMin * 100).toFixed(2)}–${(b.valueMax * 100).toFixed(2)}%`
-            : `${b.valueMin}–${b.valueMax}`;
-        }
+        const valueStr = b.valueMin != null && b.valueMax != null
+          ? (isPercent
+            ? `${fmtN(b.valueMin * 100)}–${fmtN(b.valueMax * 100)}%`
+            : `${b.valueMin}–${b.valueMax}`)
+          : (isPercent ? `${fmtN((b.value ?? 0) * 100)}%` : String(b.value ?? 0));
         return {
           statLabel: b.stat as string,
           valueStr,
@@ -167,16 +162,17 @@ export function resolveWeaponBreakdown(
       });
 
       // Meta
+      const cooldownSeconds = def.cooldownSeconds ?? 0;
       const metaParts = [
-        eff.maxStacks > 1 ? `${eff.maxStacks} stacks` : '',
-        eff.cooldownSeconds > 0 ? `${eff.cooldownSeconds}s CD` : '',
+        maxStacks > 1 ? `${maxStacks} stacks` : '',
+        cooldownSeconds > 0 ? `${cooldownSeconds}s CD` : '',
       ].filter(Boolean);
-      const metaStr = [eff.note, ...metaParts].filter(Boolean).join(' · ');
+      const metaStr = [def.note, ...metaParts].filter(Boolean).join(' · ');
 
       effects.push({
-        label: eff.label,
-        description: eff.description,
-        durationSeconds: eff.durationSeconds,
+        label: def.label ?? def.name,
+        description: def.description,
+        durationSeconds,
         secondaryAttrBonus,
         buffs,
         stackSuffix,

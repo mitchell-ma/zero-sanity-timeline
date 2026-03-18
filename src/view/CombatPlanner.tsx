@@ -223,6 +223,7 @@ export default function CombatPlanner({
   const scrollRef   = useRef<HTMLDivElement>(null);
   const outerRef    = useRef<HTMLDivElement>(null);
   const loadoutRef  = useRef<HTMLDivElement>(null);
+  const headerGridRef = useRef<HTMLDivElement>(null);
   const timeAxisRef = useRef<HTMLDivElement>(null);
   const dragRef     = useRef<DragState | null>(null);
   const marqueeRef  = useRef<MarqueeState | null>(null);
@@ -481,7 +482,9 @@ export default function CombatPlanner({
   // In vertical mode, headers are above → offset Y mouse coords by header height.
   // In horizontal mode, headers are to the left → no frame-axis (X) offset needed.
   // (We use scrollRect directly for hover calculations, so this only matters for touch handlers.)
-  const combinedHeaderHeight = isHorizontal ? 0 : loadoutRowHeight + HEADER_HEIGHT;
+  const [headerRowHeight, setHeaderRowHeight] = useState(0);
+  const headerHeight = isHorizontal ? HEADER_HEIGHT : headerRowHeight;
+  const combinedHeaderHeight = isHorizontal ? 0 : loadoutRowHeight + headerHeight;
 
   // ─── Viewport-aware rendering (lazy timeline) ─────────────────────────────
   const [scrollTop, setScrollTop] = useState(0);
@@ -536,6 +539,18 @@ export default function CombatPlanner({
     ro.observe(el);
     return () => ro.disconnect();
   }, [onLoadoutRowHeight, isHorizontal]);
+
+  // ─── Measure header row height dynamically (vertical mode only) ─────────
+  useLayoutEffect(() => {
+    if (isHorizontal) return;
+    const el = headerGridRef.current;
+    if (!el) return;
+    const update = () => setHeaderRowHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isHorizontal]);
 
   // ─── Expose scroll ref & scroll events for sync ────────────────────────
   useEffect(() => {
@@ -1561,10 +1576,11 @@ export default function CombatPlanner({
 
         {/* Row 2: Skill column headers — becomes row labels in horizontal mode */}
         <div
+          ref={headerGridRef}
           className="timeline-header-grid"
           style={isHorizontal
             ? { gridTemplateRows: gridRows, width: HEADER_HEIGHT }
-            : { gridTemplateColumns: gridCols, height: HEADER_HEIGHT }
+            : { gridTemplateColumns: gridCols }
           }
         >
           <div className="tl-corner">

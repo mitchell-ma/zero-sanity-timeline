@@ -638,7 +638,6 @@ At runtime, this chain allows a status to resolve skill-level-dependent values b
 | `stack` | object | Stacking configuration (see below) |
 | `triggerClause` | array | Conditions that trigger status application |
 | `clause` | array | Effects active while the status is alive (see below) |
-| `consumeClause` | array | Optional. Conditions and effects for stack consumption |
 | `properties` | object | Fixed properties: `duration` (`Duration` struct) |
 | `segments` | array | Optional. Multi-phase statuses with per-segment properties and clauses |
 | `potentialMin` / `potentialMax` | number | Optional. Potential range this definition applies to |

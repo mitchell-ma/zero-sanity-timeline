@@ -3,8 +3,6 @@
  * so they appear alongside built-in weapons in loadout dropdowns
  * and the timeline pipeline.
  */
-import { registerWeaponEffects, deregisterWeaponEffects } from '../../consts/weaponSkillEffects';
-import type { WeaponSkillEffect, WeaponEffectBuff } from '../../consts/weaponSkillEffects';
 import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { WEAPON_DATA, registerCustomSkillFactory, deregisterCustomSkillFactory, createWeaponFromData as createWeaponFromDataFn } from '../../model/weapons/weaponData';
 import type { WeaponConfig } from '../../model/weapons/weaponData';
@@ -12,7 +10,6 @@ import { WEAPONS } from '../../utils/loadoutRegistry';
 import type { WeaponRegistryEntry } from '../../utils/loadoutRegistry';
 import { CustomStatBoostSkill, CustomNamedWeaponSkill } from '../../model/weapon-skills/customWeaponSkill';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
-import { mapTargetToLegacy } from './bridgeUtils';
 
 function customSkillKey(weaponId: string, index: number): string {
   return `CUSTOM_${weaponId}_SKILL_${index}`;
@@ -54,37 +51,6 @@ export function registerCustomWeapon(weapon: CustomWeapon): void {
   };
   WEAPONS.push(entry);
 
-  const effects: WeaponSkillEffect[] = [];
-  for (let i = 0; i < weapon.skills.length; i++) {
-    const skill = weapon.skills[i];
-    if (skill.type !== 'NAMED' || !skill.namedEffect) continue;
-    const ne = skill.namedEffect;
-    const triggers = ne.triggers;
-    if (triggers.length === 0) continue;
-
-    effects.push({
-      label: ne.name,
-      description: ne.description,
-      skillKey: customSkillKey(weapon.id, i),
-      triggers,
-      target: mapTargetToLegacy(ne.target),
-      durationSeconds: ne.durationSeconds,
-      maxStacks: ne.maxStacks,
-      cooldownSeconds: ne.cooldownSeconds ?? 0,
-      buffs: ne.buffs.map((b): WeaponEffectBuff => ({
-        stat: b.stat as any,
-        valueMin: b.valueMin,
-        valueMax: b.valueMax,
-        perStack: b.perStack,
-      })),
-      note: ne.note,
-    });
-  }
-
-  if (effects.length > 0) {
-    registerWeaponEffects({ weaponName: weapon.name, effects });
-  }
-
   // Register DSL status event defs for the derivation engine
   const dslDefs = buildDslDefsFromCustomWeapon(weapon);
   if (dslDefs.length > 0) {
@@ -99,7 +65,6 @@ export function deregisterCustomWeapon(weapon: CustomWeapon): void {
   delete WEAPON_DATA[weapon.name];
   const wIdx = WEAPONS.findIndex((w) => w.name === weapon.name);
   if (wIdx >= 0) WEAPONS.splice(wIdx, 1);
-  deregisterWeaponEffects(weapon.name);
   deregisterCustomWeaponEffectDefs(weapon.name);
 }
 

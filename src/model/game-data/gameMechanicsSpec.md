@@ -53,20 +53,7 @@ Some effects use multiple interaction types in sequence:
 
 ### Pipeline Order
 
-The processing pipeline applies stack interactions in a specific order (see `processInflictionEvents`):
-
-1. Time-stop extension (all durations become real-time)
-2. Potential effects (combo cooldown resets)
-3. Frame-derived inflictions (APPLY new infliction events from frame data)
-4. Same-element refresh (EXTEND arts inflictions)
-5. Physical infliction refresh (EXTEND physical inflictions)
-6. Operator status consumption (CONSUME exchange statuses like Thunderlance)
-7. Team status consumption (CONSUME Link on skill cast)
-8. Absorptions (CONSUME inflictions + create exchange statuses)
-9. Reactions (APPLY cross-element → reaction + CONSUME both elements)
-10. Reaction merge (MERGE same-type overlapping reactions)
-11. Derived buffs (APPLY combustion → Scorching Fangs, SP recovery → Unbridled Edge with REFRESH)
-12. SP return gauge reduction
+The processing pipeline applies stack interactions in chronological frame order via the event queue. See [Engine Specification](../../controller/timeline/engineSpec.md) for the full architecture.
 
 ---
 

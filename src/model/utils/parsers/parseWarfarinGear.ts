@@ -198,8 +198,8 @@ function resolveStats(
 }
 
 /**
- * Round to clean floating point noise.
- * Uses 3 decimal digits for percentages (< 1).
+ * Round to clean floating point noise while preserving precision.
+ * Uses 10 decimal digits for percentages (< 1) to keep exact game values.
  * Uses 1 decimal for flat stats with decimals (e.g., 41.4).
  * Keeps integers as-is.
  * Adds tiny epsilon before rounding to fix floating point edge cases
@@ -207,11 +207,11 @@ function resolveStats(
  */
 function round(v: number): number {
   if (Number.isInteger(v)) return v;
-  const eps = 1e-9;
+  const eps = 1e-12;
   // Flat stats (>= 1): round to 1 decimal place
   if (Math.abs(v) >= 1) return Math.round((v + eps) * 10) / 10;
-  // Percentages (< 1): round to 3 decimal places
-  return Math.round((v + eps) * 1000) / 1000;
+  // Percentages (< 1): round to 10 decimal places to strip FP noise only
+  return Math.round((v + eps) * 1e10) / 1e10;
 }
 
 // ── Piece parsing ────────────────────────────────────────────────────────────

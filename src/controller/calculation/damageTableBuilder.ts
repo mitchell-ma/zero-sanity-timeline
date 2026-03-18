@@ -37,10 +37,10 @@ import {
   getTotalAttack,
   getWeakenMultiplier,
 } from '../../model/calculation/damageFormulas';
-import { StatusQueryService } from './statusQueryService';
+import { EventsQueryService } from '../timeline/eventsQueryService';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from '../../view/InformationPane';
 import type { Slot } from '../timeline/columnBuilder';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { buildReactionDamageRows, ReactionOperatorContext } from './artsReactionController';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -138,6 +138,7 @@ function columnIdToSkillType(columnId: string): CombatSkillType {
     case SKILL_COLUMNS.BATTLE: return CombatSkillType.BATTLE_SKILL;
     case SKILL_COLUMNS.COMBO: return CombatSkillType.COMBO_SKILL;
     case SKILL_COLUMNS.ULTIMATE: return CombatSkillType.ULTIMATE;
+    case OPERATOR_COLUMNS.OTHER: return CombatSkillType.BASIC_ATTACK;
     default: return CombatSkillType.BASIC_ATTACK;
   }
 }
@@ -228,7 +229,7 @@ export function buildDamageTableRows(
   enemy: ViewEnemy,
   loadoutStats: Record<string, LoadoutProperties>,
   loadouts?: Record<string, OperatorLoadoutState>,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
   critMode?: CritMode,
 ): DamageTableRow[] {
   const rows: DamageTableRow[] = [];
@@ -633,8 +634,9 @@ export function buildDamageTableRows(
       potential: sourceProps.operator.potential,
     };
 
-    // Find a column key for this reaction — use the source operator's column
-    const sourceCol = colLookup.get(`${ev.sourceOwnerId}-basic`);
+    // Find a column key for this reaction — use the source operator's OTHER column
+    const sourceCol = colLookup.get(`${ev.sourceOwnerId}-${OPERATOR_COLUMNS.OTHER}`)
+      ?? colLookup.get(`${ev.sourceOwnerId}-basic`);
     const columnKey = sourceCol ? sourceCol.key : `${ev.sourceOwnerId}-${ev.columnId}`;
 
     const reactionRows = buildReactionDamageRows(
@@ -661,12 +663,16 @@ export function buildDamageTableRows(
  * Build the column descriptors for the damage table.
  * Returns only operator skill columns (no common, no enemy, no placeholders, no derived).
  */
+/** Column IDs excluded from the damage sheet (no damage data). */
+const EXCLUDED_SHEET_COLUMNS = new Set<string>([OPERATOR_COLUMNS.DASH]);
+
 export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] {
   const result: DamageTableColumn[] = [];
   for (const col of columns) {
     if (col.type !== 'mini-timeline') continue;
     if (col.source !== TimelineSourceType.OPERATOR) continue;
     if ((col as MiniTimeline).derived) continue;
+    if (EXCLUDED_SHEET_COLUMNS.has(col.columnId)) continue;
     result.push({
       key: col.key,
       label: col.label,
@@ -676,6 +682,83 @@ export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] 
     });
   }
   return result;
+}
+
+// ── Merged rows (reduce sparseness) ───────────────────────────────────────
+
+/** A visual row that may contain damage values from multiple columns at the same frame. */
+export interface MergedDamageRow {
+  absoluteFrame: number;
+  /** Map from columnKey → DamageTableRow for cells that have data. */
+  cells: Map<string, DamageTableRow>;
+  /** Total damage across all cells in this merged row. */
+  totalDamage: number;
+  /** Key for React rendering. */
+  key: string;
+  /** Boss HP remaining after this merged row (from the last cell chronologically). */
+  hpRemaining: number | null;
+}
+
+/**
+ * Merge adjacent rows at the same absoluteFrame into single visual rows.
+ * This dramatically reduces sparseness when multiple operators hit on the same frame.
+ */
+export function mergeRowsByFrame(rows: DamageTableRow[]): MergedDamageRow[] {
+  if (rows.length === 0) return [];
+  const merged: MergedDamageRow[] = [];
+  let current: MergedDamageRow | null = null;
+
+  for (const row of rows) {
+    if (current && current.absoluteFrame === row.absoluteFrame) {
+      current.cells.set(row.columnKey, row);
+      current.totalDamage += row.damage ?? 0;
+      current.hpRemaining = row.hpRemaining;
+    } else {
+      current = {
+        absoluteFrame: row.absoluteFrame,
+        cells: new Map([[row.columnKey, row]]),
+        totalDamage: row.damage ?? 0,
+        key: `merged-${row.absoluteFrame}`,
+        hpRemaining: row.hpRemaining,
+      };
+      merged.push(current);
+    }
+  }
+  return merged;
+}
+
+/** Collapsed column descriptor — one per operator, aggregating all skill columns. */
+export interface CollapsedColumn {
+  key: string;
+  ownerId: string;
+  label: string;
+  color: string;
+  /** Original column keys that are collapsed into this one. */
+  sourceColumnKeys: string[];
+}
+
+/** Build collapsed columns — one per operator. */
+export function buildCollapsedColumns(tableColumns: DamageTableColumn[], slots: Slot[]): CollapsedColumn[] {
+  const ownerOrder: string[] = [];
+  const ownerMap = new Map<string, DamageTableColumn[]>();
+  for (const col of tableColumns) {
+    if (!ownerMap.has(col.ownerId)) {
+      ownerOrder.push(col.ownerId);
+      ownerMap.set(col.ownerId, []);
+    }
+    ownerMap.get(col.ownerId)!.push(col);
+  }
+  return ownerOrder.map((ownerId) => {
+    const cols = ownerMap.get(ownerId)!;
+    const slot = slots.find((s) => s.slotId === ownerId);
+    return {
+      key: `collapsed-${ownerId}`,
+      ownerId,
+      label: slot?.operator?.name ?? ownerId,
+      color: cols[0]?.color ?? '#666',
+      sourceColumnKeys: cols.map((c) => c.key),
+    };
+  });
 }
 
 /**

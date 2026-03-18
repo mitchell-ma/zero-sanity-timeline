@@ -7,17 +7,56 @@
  * - Earlier events are visually truncated where the next same-type event starts.
  * - All same-type events share a single visual column (not split side-by-side).
  *
+ * Statuses with max 1 instance and no stacking interactions (NONE/RESET) omit
+ * the roman numeral suffix since only one can be active at a time in-game.
+ *
  * Beyond 9 stacks, standard numbers are used (e.g. "Heat 10").
  */
 import { TimelineEvent, Column } from '../../consts/viewTypes';
 import { INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { formatSegmentShortName } from '../../utils/semanticsTranslation';
+import { getOperatorJson, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
 
 const MAX_ROMAN = 9;
 
 function stackLabel(stackNumber: number): string {
   if (stackNumber <= MAX_ROMAN) return formatSegmentShortName(undefined, stackNumber - 1);
   return `${stackNumber}`;
+}
+
+// ── Status stack metadata cache ────────────────────────────────────────────
+
+interface StatusStackInfo {
+  instances: number;
+  verb: string;
+}
+
+/** Lazily-built map from status name → stack config. */
+let statusStackCache: Map<string, StatusStackInfo> | null = null;
+
+function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
+  if (!statusStackCache) {
+    statusStackCache = new Map();
+    for (const opId of getAllOperatorIds()) {
+      const json = getOperatorJson(opId);
+      const statusEvents = json?.statusEvents as any[] | undefined;
+      if (!statusEvents) continue;
+      for (const se of statusEvents) {
+        if (statusStackCache.has(se.name)) continue;
+        const instances = se.stack?.instances ?? 1;
+        const verb = se.stack?.verb ?? se.stack?.verbType ?? 'NONE';
+        statusStackCache.set(se.name, { instances, verb });
+      }
+    }
+  }
+  return statusStackCache.get(statusName);
+}
+
+/** Returns true if this status should NOT show roman numeral suffixes. */
+function isSingleInstanceStatus(statusName: string): boolean {
+  const info = getStatusStackInfo(statusName);
+  if (!info) return false;
+  return info.instances <= 1 && (info.verb === 'NONE' || info.verb === 'RESET');
 }
 
 export interface StatusViewOverride {
@@ -33,6 +72,7 @@ export interface StatusViewOverride {
  * For same-type overlapping events:
  * - Labels become "{StatusName} {I/II/III/...}" based on chronological position
  * - Earlier events are visually truncated to end where the next same-type event starts
+ * - Statuses with max 1 instance and no stacking use the base name without numerals
  *
  * Returns a map of eventId → StatusViewOverride.
  */
@@ -65,6 +105,9 @@ export function computeStatusViewOverrides(
       const sorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
       const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[sorted[0].name] ?? sorted[0].name;
 
+      // Check if this status type is single-instance (no stacking numerals needed)
+      const singleInstance = isSingleInstanceStatus(sorted[0].name);
+
       for (let i = 0; i < sorted.length; i++) {
         const ev = sorted[i];
         // Count how many earlier same-type events are still active at this event's start
@@ -76,7 +119,7 @@ export function computeStatusViewOverrides(
         }
         const position = activeEarlier + 1;
         const override: StatusViewOverride = {
-          label: `${baseName} ${stackLabel(position)}`,
+          label: singleInstance ? baseName : `${baseName} ${stackLabel(position)}`,
         };
 
         // Truncate visual duration: if there's a next same-type event that starts

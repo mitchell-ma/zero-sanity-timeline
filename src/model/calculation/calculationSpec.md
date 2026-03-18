@@ -11,7 +11,8 @@ Defines the formulas and rounding rules used for stat aggregation and damage cal
 | Frame counts (seconds → frames) | `Math.round(seconds * 120)` | Frames are integers by definition |
 | Number of stacks, uses, enemies | Integer context — round as appropriate | Discrete counts |
 | Stat values (ATK, INT, STR, etc.) | **No rounding** — full precision | Preserve accuracy through the pipeline |
-| Effective attributes for ATK formula | `Math.floor(raw)` | Game mechanic — verified against in-game values |
+| Effective attributes for ATK formula | `Math.floor(raw)` | Game floors individual attributes before ATK bonus — verified: game shows INT 720 from 720.985 |
+| Effective ATK | Round up if fractional ≥ 0.7, else floor | Experimentally determined — see Rounding Experiments below |
 | Weapon base ATK interpolation | **No rounding** — full precision | Intermediate value |
 | Operator base stats from JSON | **No rounding** — use raw values | JSON contains exact game-extracted values |
 | Display in view layer | `.toFixed(2)` for stats, percentages | View-only formatting |
@@ -51,7 +52,7 @@ BasicTotal = BaseATK + ATKBonus + FlatBonuses
 
 ### Attribute Bonus
 
-The attribute bonus multiplier uses **floored** effective attribute values. This is a game mechanic, not a display choice — verified against in-game screenshots.
+Individual effective attributes are **floored** before computing the ATK bonus. This is a verified game mechanic — the game displays floored values (e.g. INT 720 from raw 720.985).
 
 ```
 EffectiveMainAttr = floor(RawMainAttr × (1 + MainAttr_BONUS%))
@@ -64,8 +65,11 @@ AttributeBonus = 1 + MainAttrBonus + SecAttrBonus
 
 ### Effective Attack
 
+Effective ATK is rounded using a threshold: if the fractional part ≥ 0.7, round up; otherwise floor. This was experimentally determined (see Rounding Experiments below).
+
 ```
-EffectiveATK = BasicTotal × AttributeBonus
+RawEffATK = BasicTotal × AttributeBonus
+EffectiveATK = (frac(RawEffATK) >= 0.7) ? ceil(RawEffATK) : floor(RawEffATK)
 ```
 
 ### Verified Example: Laevatain (maxed)
@@ -93,9 +97,10 @@ Loadout: Lv90, P5, all skills Lv12, Forgeborn Scathe Lv90 (skills Lv9), Tide Fal
 | ATK bonus from Intellect | 0.005 × 720 = 360.0% |
 | ATK bonus from Strength | 0.002 × 251 = 50.2% |
 | **Total Attribute Bonus** | **410.2%** |
-| **Effective ATK** | **≈ 5871** |
+| Raw Effective ATK | 1150.92 × 5.102 = 5871.994 |
+| **Effective ATK** | **5872** (frac 0.994 ≥ 0.7 → ceil) |
 
-Game shows: ATK 5871, Intellect 720, Strength 251. ✓
+Game shows: ATK 5872, Intellect 720, Strength 251. ✓
 
 ---
 
@@ -247,3 +252,35 @@ Stat(level) = lv1 + (lv90 - lv1) × (level - 1) / 89
 ```
 
 No rounding. For operators with `allLevels` JSON, use exact values from the level entry.
+
+---
+
+## Rounding Experiments
+
+Experiments to determine the game's rounding behavior on effective ATK, using Laevatain damage tests with game-observed expected values as ground truth.
+
+### Data Points
+
+| Loadout | Raw effATK | Fractional | Game value | Rule |
+|---------|-----------|------------|------------|------|
+| Full (Forgeborn Scathe, full gear) | 5871.994 | 0.994 | 5872 | ceil |
+| Bare (Tarr 11 lv1, no gear) | 943.697 | 0.697 | 943 | floor |
+
+### Experiments Tried
+
+| Rounding method | Full loadout (37 tests) | Bare loadout (19 tests) | Notes |
+|----------------|------------------------|------------------------|-------|
+| No rounding (full precision) | ✗ All overshoot by +2 to +8 | ✗ All overshoot | effATK too high |
+| `Math.floor(effATK)` | ✗ All undershoot by -1 to -2 | Not tested independently | effATK=5871, game=5872 |
+| `Math.round(effATK)` | ✓ (rounds 5871.99→5872) | ✗ (rounds 943.70→944, game=943) | |
+| `Math.trunc(effATK)` | ✗ Same as floor for positive | ✗ Same as floor | |
+| Ceil if frac ≥ 0.7, else floor | **✓ All 37 pass** | ✗ effATK=944 (943.697→ceil, but game=943) | 0.697 < 0.7 → floor ✓ |
+| Ceil if frac ≥ 0.9, else floor | **✓ All 37 pass** | ✗ Same bare failures | Threshold doesn't matter in 0.70–0.99 range |
+| Floor attrs with 0.7 rule | ✗ INT 720.985→721, game=720 | ✗ | Attrs must be floored, not rounded |
+
+### Conclusions
+
+1. **Individual attributes are floored** — game displays INT 720 from raw 720.985, STR 251 from 251.374. The 0.7 rounding rule does NOT apply to individual attributes.
+2. **Effective ATK uses a threshold-based rounding** — fractional 0.994 rounds up, fractional 0.697 floors down. The exact threshold is between 0.697 and 0.994. Currently using 0.7 as the threshold (any value in 0.70–0.99 produces identical results with current test data).
+3. **More data points needed** — only two loadouts tested. Additional loadouts with fractional parts between 0.70 and 0.99 would narrow the threshold further.
+4. **Bare loadout tests still fail** — the 19 bare loadout failures are consistently -1 off with effATK=943 (correct). The issue may be in how the multiplier engine resolves bare loadout skill multipliers, not in the rounding.

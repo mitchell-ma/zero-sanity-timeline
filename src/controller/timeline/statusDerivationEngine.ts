@@ -36,7 +36,7 @@ interface StatusSegmentDef {
   clause?: EffectClause[];
 }
 
-interface StatusEventDef {
+export interface StatusEventDef {
   name: string;
   type?: string;
   target: string;
@@ -50,7 +50,6 @@ interface StatusEventDef {
   };
   triggerClause: TriggerClause[];
   clause?: EffectClause[];
-  consumeClause?: EffectClause[];
   /** Effects that fire once when this status becomes active. */
   onActivationClause?: EffectClause[];
   /** Effects that fire each time a condition is newly met during this status's lifetime. */
@@ -931,117 +930,6 @@ function evaluateThresholdClauses(
   return thresholdDerived;
 }
 
-// ── Consume clause evaluation ───────────────────────────────────────────────
-
-/**
- * Evaluate consumeClause on a status definition. When conditions are met
- * (e.g. PERFORM BATTLE_SKILL while at MAX stacks), clamp all active derived
- * events at the consumption frame, freeing up stack slots for re-accumulation.
- *
- * Mutates `derivedEvents` in place (shortens activationDuration).
- * Returns the frames at which consumption occurred (for downstream use).
- */
-interface PreExistingConsumption {
-  id: string;
-  clampFrame: number;
-  sourceOwnerId: string;
-  sourceSkillName: string;
-}
-
-function evaluateConsumeClauses(
-  def: StatusEventDef,
-  derivedEvents: TimelineEvent[],
-  ctx: DeriveContext,
-): { consumeFrames: number[]; preExistingConsumptions: PreExistingConsumption[] } {
-  if (!def.consumeClause || def.consumeClause.length === 0) return { consumeFrames: [], preExistingConsumptions: [] };
-
-  const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
-  const consumeFrames: number[] = [];
-  const preExistingConsumptions: PreExistingConsumption[] = [];
-  const columnId = statusNameToColumnId(def.name);
-  const ownerId = resolveOwnerId(def.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.targetDeterminer);
-
-  for (const clause of def.consumeClause) {
-    // Find PERFORM conditions to scan for trigger events
-    const performConds = clause.conditions.filter(c => c.verbType === 'PERFORM');
-    const stackConds = clause.conditions.filter(c =>
-      c.subjectType === 'THIS_EVENT' && c.verbType === 'HAVE' && c.objectType === 'STACKS'
-    );
-    if (performConds.length === 0) continue;
-
-    const performCond = performConds[0];
-    const matchingColumn = performCond.objectType === 'BATTLE_SKILL' ? 'battle'
-      : performCond.objectType === 'COMBO_SKILL' ? 'combo'
-      : performCond.objectType === 'ULTIMATE' ? 'ultimate'
-      : performCond.objectType;
-
-    // Check if effects include CONSUME ALL_STACKS
-    const consumeAll = clause.effects.some(e =>
-      e.verbType === 'CONSUME' && e.objectType === 'ALL_STACKS'
-    );
-    if (!consumeAll) continue;
-
-    // Scan input events for matching skill casts, sorted chronologically.
-    // Array order may differ from chronological order after drag operations.
-    const matchingEvents = ctx.events
-      .filter(ev => ev.ownerId === ctx.operatorSlotId && ev.columnId === matchingColumn)
-      .sort((a, b) => a.startFrame - b.startFrame);
-    for (const ev of matchingEvents) {
-
-      // Check stack condition: count stacks that were active BEFORE this trigger.
-      // A trigger that successfully created an MF should not also consume — only
-      // triggers that were blocked by the max cap should consume.
-      if (stackConds.length > 0) {
-        const stackCond = stackConds[0];
-        const targetCount = stackCond.cardinality === 'MAX' ? maxStacks : Number(stackCond.cardinality);
-
-        // Count active stacks from derived events EXCLUDING any created at this exact frame
-        // by this trigger (those were just added, not pre-existing)
-        const preExistingCount = derivedEvents.filter(d =>
-          d.columnId === columnId &&
-          d.ownerId === ownerId &&
-          d.startFrame < ev.startFrame &&
-          ev.startFrame < d.startFrame + d.activationDuration
-        ).length;
-
-        if (stackCond.cardinalityConstraint === 'EXACTLY' && preExistingCount !== targetCount) continue;
-        if (stackCond.cardinalityConstraint === 'AT_LEAST' && preExistingCount < targetCount) continue;
-      }
-
-      // Consume: clamp all active events (both derived and pre-existing) at this frame
-      for (const d of derivedEvents) {
-        if (d.columnId !== columnId || d.ownerId !== ownerId) continue;
-        const end = d.startFrame + d.activationDuration;
-        if (d.startFrame <= ev.startFrame && ev.startFrame < end) {
-          d.activationDuration = ev.startFrame - d.startFrame;
-          d.eventStatus = EventStatusType.CONSUMED;
-          d.eventStatusOwnerId = ev.ownerId;
-          d.eventStatusSkillName = ev.name;
-        }
-      }
-      // Also clamp pre-existing events in the input array (e.g. Originium Crystals
-      // placed by frame effects, not engine-derived)
-      for (const d of ctx.events) {
-        if (d.columnId !== columnId || d.ownerId !== ownerId) continue;
-        if (d.eventStatus === EventStatusType.CONSUMED) continue;
-        const end = d.startFrame + d.activationDuration;
-        if (d.startFrame <= ev.startFrame && ev.startFrame < end) {
-          preExistingConsumptions.push({
-            id: d.id,
-            clampFrame: ev.startFrame,
-            sourceOwnerId: ev.ownerId,
-            sourceSkillName: ev.name,
-          });
-        }
-      }
-
-      consumeFrames.push(ev.startFrame);
-    }
-  }
-
-  return { consumeFrames, preExistingConsumptions };
-}
-
 // ── Lifecycle clause evaluation ──────────────────────────────────────────────
 
 /** Evaluate lifecycle clauses for a single status event. Returns updated events array. */
@@ -1189,6 +1077,8 @@ export function deriveStatusesFromEngine(
   slotWeapons?: Record<string, string | undefined>,
   /** Slot ID → gear set type mapping for gear effect derivation. */
   slotGearSets?: Record<string, string | undefined>,
+  /** Def names to skip (handled externally by the event queue). */
+  skipDefNames?: ReadonlySet<string>,
 ): TimelineEvent[] {
   let result = [...events];
 
@@ -1224,6 +1114,9 @@ export function deriveStatusesFromEngine(
 
     const defs = json.statusEvents as StatusEventDef[];
     for (const def of defs) {
+      // Skip defs handled by the event queue (exchange statuses)
+      if (skipDefNames?.has(def.name)) continue;
+
       // Check talent level requirement
       if (def.minTalentLevel) {
         const talentLevel = def.minTalentLevel.talent === 1
@@ -1280,56 +1173,6 @@ export function deriveStatusesFromEngine(
             eventStatusSkillName: absorption.sourceSkillName,
           };
         });
-      }
-
-      // Evaluate consume clauses — mutates derived events (clamps durations)
-      const { consumeFrames, preExistingConsumptions } = evaluateConsumeClauses(def, derived, ctx);
-
-      // Apply clamping to pre-existing events (e.g. Originium Crystals placed by frame effects)
-      if (preExistingConsumptions.length > 0) {
-        result = result.map(ev => {
-          const consumption = preExistingConsumptions.find(c => c.id === ev.id);
-          if (!consumption) return ev;
-          return {
-            ...ev,
-            activationDuration: Math.max(0, consumption.clampFrame - ev.startFrame),
-            eventStatus: EventStatusType.CONSUMED,
-            eventStatusOwnerId: consumption.sourceOwnerId,
-            eventStatusSkillName: consumption.sourceSkillName,
-          };
-        });
-      }
-
-      // After consumption, re-derive to fill new stacks from triggers after each consume point.
-      // Generic loop capped at MAX_REDERIVE_DEPTH to handle chains of consume→re-derive cycles.
-      const MAX_REDERIVE_DEPTH = 5;
-      let currentConsumeFrames = consumeFrames;
-      let allPrior = [...derived];
-      for (let depth = 0; depth < MAX_REDERIVE_DEPTH && currentConsumeFrames.length > 0; depth++) {
-        const earliestConsume = Math.min(...currentConsumeFrames);
-        const reCtx = { ...ctx, events: result };
-        const { derived: reDerived, absorbedInflictions: reAbsorbed } = deriveStatusEvents(def, reCtx, earliestConsume, allPrior);
-
-        // Apply re-absorption clamping
-        if (reAbsorbed.length > 0) {
-          result = result.map(ev => {
-            const absorption = reAbsorbed.find(a => a.eventId === ev.id);
-            if (!absorption) return ev;
-            return {
-              ...ev,
-              activationDuration: Math.max(0, absorption.clampFrame - ev.startFrame),
-              eventStatus: EventStatusType.CONSUMED,
-              eventStatusOwnerId: absorption.sourceOwnerId,
-              eventStatusSkillName: absorption.sourceSkillName,
-            };
-          });
-        }
-
-        // Evaluate consume clauses on re-derived events for the next cycle
-        const { consumeFrames: nextConsumeFrames } = evaluateConsumeClauses(def, reDerived, reCtx);
-        derived.push(...reDerived);
-        allPrior = [...allPrior, ...reDerived];
-        currentConsumeFrames = nextConsumeFrames;
       }
 
       const thresholdDerived = evaluateThresholdClauses(def, derived, ctx);
@@ -1395,4 +1238,594 @@ export function deriveStatusesFromEngine(
   return result;
 }
 
-// (collectExchangeAbsorptions removed — absorption is now handled inline by deriveStatusEvents)
+// ── Exchange status queue support ──────────────────────────────────────────
+
+/** Trigger match for queue-based exchange status processing. */
+export interface ExchangeStatusTrigger {
+  frame: number;
+  sourceOwnerId: string;
+  sourceSkillName: string;
+}
+
+/** Context for a single exchange status definition, used by the event queue. */
+export interface ExchangeStatusQueueContext {
+  statusName: string;
+  columnId: string;
+  ownerId: string;
+  maxStacks: number;
+  durationFrames: number;
+  operatorSlotId: string;
+  operatorId: string;
+  potential: number;
+  triggers: ExchangeStatusTrigger[];
+  /** @internal Raw def for threshold evaluation. */
+  _def: StatusEventDef;
+}
+
+/**
+ * Collect trigger contexts for exchange status defs.
+ * These defs are skipped by deriveStatusesFromEngine and processed
+ * by the event queue instead.
+ */
+export function collectExchangeStatusTriggers(
+  events: TimelineEvent[],
+  exchangeStatusNames: ReadonlySet<string>,
+  loadoutProperties?: Record<string, LoadoutProperties>,
+  slotOperatorMap?: Record<string, string>,
+): ExchangeStatusQueueContext[] {
+  const contexts: ExchangeStatusQueueContext[] = [];
+
+  const operatorSlotMap: Record<string, string> = {};
+  if (slotOperatorMap) {
+    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
+      operatorSlotMap[opId] = slotId;
+    }
+  }
+  for (const opId of getAllOperatorIds()) {
+    if (operatorSlotMap[opId]) continue;
+    const slot = findOperatorSlot(events, opId);
+    if (slot) operatorSlotMap[opId] = slot;
+  }
+
+  for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
+    const json = getOperatorJson(operatorId);
+    if (!json?.statusEvents) continue;
+
+    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
+    if (!slotId) continue;
+
+    const props = loadoutProperties?.[slotId];
+    const potential = props?.operator.potential ?? 0;
+
+    for (const def of json.statusEvents as StatusEventDef[]) {
+      if (!exchangeStatusNames.has(def.name)) continue;
+
+      if (def.minTalentLevel) {
+        const talentLevel = def.minTalentLevel.talent === 1
+          ? (props?.operator.talentOneLevel ?? 0)
+          : (props?.operator.talentTwoLevel ?? 0);
+        if (talentLevel < def.minTalentLevel.minLevel) continue;
+      }
+
+      const duration = def.properties?.duration ?? def.duration;
+      if (!duration) continue;
+
+      contexts.push({
+        statusName: def.name,
+        columnId: statusNameToColumnId(def.name),
+        ownerId: resolveOwnerId(def.target, slotId, operatorSlotMap, def.targetDeterminer),
+        maxStacks: getMaxStacks(def.stack.max, potential),
+        durationFrames: getDurationFrames(duration),
+        operatorSlotId: slotId,
+        operatorId,
+        potential,
+        triggers: findTriggerMatches(def, events, slotId),
+        _def: def,
+      });
+    }
+  }
+
+  return contexts;
+}
+
+/**
+ * Evaluate threshold for a specific exchange status crossing at a given frame.
+ * Called inline by the queue when an exchange event creation pushes the active
+ * count to the threshold. Returns any threshold-derived events to create.
+ */
+export function evaluateThresholdForExchange(
+  ctx: ExchangeStatusQueueContext,
+  crossingFrame: number,
+  previousThresholdEvents: TimelineEvent[],
+  slotOperatorMap?: Record<string, string>,
+): TimelineEvent[] {
+  const def = ctx._def;
+  if (!def.clause || def.clause.length === 0) return [];
+
+  const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
+  const result: TimelineEvent[] = [];
+
+  const operatorSlotMap: Record<string, string> = {};
+  if (slotOperatorMap) {
+    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
+      operatorSlotMap[opId] = slotId;
+    }
+  }
+
+  for (const clause of def.clause) {
+    const stackCond = clause.conditions.find(c =>
+      c.subjectType === 'THIS_EVENT' && c.verbType === 'HAVE' && c.objectType === 'STACKS'
+    );
+    if (!stackCond) continue;
+
+    const targetCount = stackCond.cardinality === 'MAX' ? maxStacks : Number(stackCond.cardinality);
+    if (targetCount !== maxStacks) continue; // only fire at the configured threshold
+
+    for (const effect of clause.effects) {
+      if (effect.verbType !== 'APPLY' || effect.objectType !== 'STATUS' || !effect.objectId) continue;
+      const targetStatusName = effect.objectId;
+
+      const json = getOperatorJson(ctx.operatorId);
+      const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+        .find(d => d.name === targetStatusName);
+
+      const targetField = targetDef?.target ?? effect.toObjectType;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const targetDet = targetDef?.targetDeterminer ?? (effect as any).toObjectDeterminer;
+      const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, operatorSlotMap, targetDet ?? 'THIS');
+
+      const targetDuration = targetDef
+        ? (targetDef.properties?.duration ?? targetDef.duration)
+        : undefined;
+      const duration = targetDuration ? getDurationFrames(targetDuration) : 2400;
+      const targetColumnId = statusNameToColumnId(targetStatusName);
+
+      // Refresh: clamp previous threshold events of same column
+      for (const prev of previousThresholdEvents) {
+        if (prev.columnId !== targetColumnId) continue;
+        const prevEnd = prev.startFrame + prev.activationDuration;
+        if (crossingFrame < prevEnd) {
+          prev.activationDuration = crossingFrame - prev.startFrame;
+          prev.eventStatus = EventStatusType.REFRESHED;
+          prev.eventStatusOwnerId = ctx.operatorSlotId;
+          prev.eventStatusSkillName = def.name;
+        }
+      }
+
+      result.push({
+        id: `${targetStatusName.toLowerCase()}-${ctx.operatorSlotId}-inline-${crossingFrame}`,
+        name: targetStatusName,
+        ownerId: targetOwnerId,
+        columnId: targetColumnId,
+        startFrame: crossingFrame,
+        activationDuration: duration,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: ctx.operatorSlotId,
+        sourceSkillName: def.name,
+      });
+    }
+  }
+
+  return result;
+}
+
+// ── Absorption trigger support (queue-evaluated) ──────────────────────────
+
+/** Context for a talent absorption trigger (e.g. Scorching Heart). */
+export interface AbsorptionContext {
+  /** Infliction element column to absorb from enemy (e.g. infliction-heat). */
+  inflictionColumnId: string;
+  /** Exchange status to create per absorbed infliction (e.g. MELTING_FLAME). */
+  exchangeStatusName: string;
+  exchangeColumnId: string;
+  exchangeOwnerId: string;
+  exchangeMaxStacks: number;
+  exchangeDurationFrames: number;
+  operatorSlotId: string;
+}
+
+/**
+ * Collect absorption trigger contexts from talent definitions.
+ *
+ * Scans talent JSONs for compound PERFORM FINAL_STRIKE + HAVE INFLICTION
+ * triggers. These can't be pre-evaluated because infliction events don't
+ * exist yet — the queue evaluates them at processing time against DerivedEventController.
+ */
+export function collectAbsorptionContexts(
+  events: TimelineEvent[],
+  loadoutProperties?: Record<string, LoadoutProperties>,
+  slotOperatorMap?: Record<string, string>,
+): AbsorptionContext[] {
+  const contexts: AbsorptionContext[] = [];
+
+  const operatorSlotMap: Record<string, string> = {};
+  if (slotOperatorMap) {
+    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
+      operatorSlotMap[opId] = slotId;
+    }
+  }
+  for (const opId of getAllOperatorIds()) {
+    if (operatorSlotMap[opId]) continue;
+    const slot = findOperatorSlot(events, opId);
+    if (slot) operatorSlotMap[opId] = slot;
+  }
+
+  for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
+    const json = getOperatorJson(operatorId);
+    if (!json?.statusEvents) continue;
+
+    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
+    if (!slotId) continue;
+
+    const props = loadoutProperties?.[slotId];
+    const potential = props?.operator.potential ?? 0;
+
+    for (const def of json.statusEvents as StatusEventDef[]) {
+      if (def.type !== 'TALENT') continue;
+
+      if (def.minTalentLevel) {
+        const talentLevel = def.minTalentLevel.talent === 1
+          ? (props?.operator.talentOneLevel ?? 0)
+          : (props?.operator.talentTwoLevel ?? 0);
+        if (talentLevel < def.minTalentLevel.minLevel) continue;
+      }
+
+      for (const clause of def.triggerClause) {
+        const performConds = clause.conditions.filter((c: Predicate) => c.verbType === 'PERFORM');
+        const haveConds = clause.conditions.filter((c: Predicate) => c.verbType === 'HAVE');
+        if (performConds.length === 0 || haveConds.length === 0) continue;
+
+        const isFinalStrike = performConds[0].objectType === 'FINAL_STRIKE';
+        if (!isFinalStrike) continue;
+
+        const haveInfliction = haveConds.find((c: Predicate) => c.objectType === 'INFLICTION');
+        if (!haveInfliction?.objectId) continue;
+        const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[haveInfliction.objectId];
+        if (!inflictionColumnId) continue;
+
+        const allEffect = (clause.effects ?? []).find((e: TriggerEffect) => e.verbType === 'ALL');
+        const applyEffect = (allEffect?.effects ?? []).find(
+          (e: TriggerSubEffect) => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId
+        );
+        if (!applyEffect?.objectId) continue;
+
+        const targetDef = (json.statusEvents as StatusEventDef[])
+          .find(d => d.name === applyEffect.objectId);
+        if (!targetDef) continue;
+
+        const duration = targetDef.properties?.duration ?? targetDef.duration;
+        if (!duration) continue;
+
+        contexts.push({
+          inflictionColumnId,
+          exchangeStatusName: targetDef.name,
+          exchangeColumnId: statusNameToColumnId(targetDef.name),
+          exchangeOwnerId: resolveOwnerId(targetDef.target, slotId, operatorSlotMap, targetDef.targetDeterminer),
+          exchangeMaxStacks: getMaxStacks(targetDef.stack.max, potential),
+          exchangeDurationFrames: getDurationFrames(duration),
+          operatorSlotId: slotId,
+        });
+      }
+    }
+  }
+
+  return contexts;
+}
+
+// ── ENGINE_TRIGGER queue support ──────────────────────────────────────────
+
+/** Context carried on an ENGINE_TRIGGER queue entry. */
+export interface EngineTriggerContext {
+  def: StatusEventDef;
+  operatorId: string;
+  operatorSlotId: string;
+  potential: number;
+  operatorSlotMap: Record<string, string>;
+  loadoutProperties?: LoadoutProperties;
+  haveConditions: Predicate[];
+  triggerEffects?: TriggerEffect[];
+}
+
+export interface EngineTriggerEntry {
+  frame: number;
+  sourceOwnerId: string;
+  sourceSkillName: string;
+  ctx: EngineTriggerContext;
+  isEquip: boolean;
+}
+
+/**
+ * Collect ENGINE_TRIGGER entries for all non-exchange status defs.
+ * Scans PERFORM/RECOVER/IS conditions to find candidate frames WITHOUT
+ * evaluating HAVE conditions (deferred to queue time).
+ *
+ * Also returns TALENT events (permanent presence, no trigger dependency).
+ */
+export function collectEngineTriggerEntries(
+  events: TimelineEvent[],
+  loadoutProperties?: Record<string, LoadoutProperties>,
+  slotOperatorMap?: Record<string, string>,
+  slotWeapons?: Record<string, string | undefined>,
+  slotGearSets?: Record<string, string | undefined>,
+  skipDefNames?: ReadonlySet<string>,
+): { entries: EngineTriggerEntry[]; talentEvents: TimelineEvent[] } {
+  const entries: EngineTriggerEntry[] = [];
+  const talentEvents: TimelineEvent[] = [];
+
+  const operatorSlotMap: Record<string, string> = {};
+  if (slotOperatorMap) {
+    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
+      operatorSlotMap[opId] = slotId;
+    }
+  }
+  for (const opId of getAllOperatorIds()) {
+    if (operatorSlotMap[opId]) continue;
+    const slot = findOperatorSlot(events, opId);
+    if (slot) operatorSlotMap[opId] = slot;
+  }
+
+  const processDefsForSlot = (slotId: string, operatorId: string, defs: StatusEventDef[], isEquip = false) => {
+    const props = loadoutProperties?.[slotId];
+    const potential = props?.operator.potential ?? 0;
+
+    for (const def of defs) {
+      if (skipDefNames?.has(def.name)) continue;
+
+      if (def.minTalentLevel) {
+        const talentLevel = def.minTalentLevel.talent === 1
+          ? (props?.operator.talentOneLevel ?? 0)
+          : (props?.operator.talentTwoLevel ?? 0);
+        if (talentLevel < def.minTalentLevel.minLevel) continue;
+      }
+
+      // TALENT type: permanent presence event
+      if (def.type === 'TALENT') {
+        const talentDuration = def.properties?.duration ?? def.duration;
+        const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
+        const talentOwnerId = resolveOwnerId(def.target, slotId, operatorSlotMap, def.targetDeterminer);
+        const talentColumnId = statusNameToColumnId(def.name);
+        if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
+          talentEvents.push({
+            id: `${def.name.toLowerCase()}-talent-${slotId}`,
+            name: def.name,
+            ownerId: talentOwnerId,
+            columnId: talentColumnId,
+            startFrame: 0,
+            activationDuration: talentDurationFrames,
+            activeDuration: 0,
+            cooldownDuration: 0,
+            sourceOwnerId: slotId,
+            sourceSkillName: def.name,
+          });
+        }
+      }
+
+      if (!def.triggerClause || def.triggerClause.length === 0) continue;
+
+      for (const clause of def.triggerClause) {
+        const performConds = clause.conditions.filter(c => c.verbType === 'PERFORM');
+        const haveConds = clause.conditions.filter(c => c.verbType === 'HAVE');
+        const recoverConds = clause.conditions.filter(c => c.verbType === 'RECOVER');
+        const isConds = clause.conditions.filter(c => c.verbType === 'IS');
+
+        const triggerCtx: EngineTriggerContext = {
+          def, operatorId, operatorSlotId: slotId, potential, operatorSlotMap,
+          loadoutProperties: props, haveConditions: haveConds, triggerEffects: clause.effects,
+        };
+
+        if (performConds.length > 0) {
+          const pc = performConds[0];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const isAny = pc.subjectType === 'OPERATOR' && (pc as any).subjectDeterminer === 'ANY';
+
+          if (pc.objectType === 'FINAL_STRIKE') {
+            for (const ev of events) {
+              if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
+              if (!isAny && ev.ownerId !== slotId) continue;
+              if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+              if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
+              const f = getFinalStrikeTriggerFrame(ev);
+              if (f != null) entries.push({ frame: f, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+            }
+          } else {
+            const col = pc.objectType === 'BATTLE_SKILL' ? 'battle'
+              : pc.objectType === 'COMBO_SKILL' ? 'combo'
+              : pc.objectType === 'ULTIMATE' ? 'ultimate' : pc.objectType;
+            for (const ev of events) {
+              if (!isAny && ev.ownerId !== slotId) continue;
+              if (isAny && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
+              if (ev.columnId !== col) continue;
+              entries.push({ frame: getFirstEventFrame(ev), sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+            }
+          }
+        } else if (haveConds.length > 0 && recoverConds.length === 0 && isConds.length === 0) {
+          // Pure HAVE: create entries from matching status events in base events
+          const hc = haveConds[0];
+          if (hc.objectType === 'STATUS' && hc.objectId) {
+            const colId = statusNameToColumnId(hc.objectId);
+            for (const ev of events) {
+              if (ev.columnId !== colId) continue;
+              if (hc.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+              entries.push({ frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+            }
+          }
+        } else if (recoverConds.length > 0) {
+          const rc = recoverConds[0];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const isThis = (rc as any).subjectDeterminer === 'THIS';
+          if (rc.objectType === 'SKILL_POINT') {
+            for (const ev of events) {
+              if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
+              if (isThis && ev.ownerId !== slotId) continue;
+              if (!ev.segments) continue;
+              let cum = 0;
+              for (const seg of ev.segments) {
+                if (seg.frames) {
+                  for (const fr of seg.frames) {
+                    if (fr.skillPointRecovery && fr.skillPointRecovery > 0) {
+                      entries.push({ frame: ev.startFrame + cum + fr.offsetFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+                    }
+                  }
+                }
+                cum += seg.durationFrames;
+              }
+            }
+          }
+        } else if (isConds.length > 0) {
+          const ic = isConds[0];
+          const rm: Record<string, string> = { COMBUSTED: 'combustion', SOLIDIFIED: 'solidification', CORRODED: 'corrosion', ELECTRIFIED: 'electrification' };
+          const colId = rm[ic.objectType ?? ''];
+          if (colId) {
+            for (const ev of events) {
+              if (ev.columnId !== colId) continue;
+              if (ic.subjectType === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+              entries.push({ frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+            }
+          }
+        }
+      }
+    }
+  };
+
+  for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
+    const json = getOperatorJson(operatorId);
+    if (!json?.statusEvents) continue;
+    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
+    if (!slotId) continue;
+    processDefsForSlot(slotId, operatorId, json.statusEvents as StatusEventDef[]);
+  }
+
+  if (slotWeapons) {
+    for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
+      if (!weaponName) continue;
+      const opId = slotOperatorMap ? Object.entries(slotOperatorMap).find(([s]) => s === slotId)?.[1] : undefined;
+      processDefsForSlot(slotId, opId ?? '', getWeaponEffectDefs(weaponName) as StatusEventDef[], true);
+    }
+  }
+  if (slotGearSets) {
+    for (const [slotId, gearSetType] of Object.entries(slotGearSets)) {
+      if (!gearSetType) continue;
+      const opId = slotOperatorMap ? Object.entries(slotOperatorMap).find(([s]) => s === slotId)?.[1] : undefined;
+      processDefsForSlot(slotId, opId ?? '', getGearEffectDefs(gearSetType) as StatusEventDef[], true);
+    }
+  }
+
+  const seen = new Set<string>();
+  const deduped = entries.filter(e => {
+    const key = `${e.ctx.def.name}:${e.ctx.operatorSlotId}:${e.frame}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return { entries: deduped.sort((a, b) => a.frame - b.frame), talentEvents };
+}
+
+/**
+ * Evaluate an ENGINE_TRIGGER at queue time: check HAVE conditions against
+ * DerivedEventController, enforce stack caps, and create the derived status event.
+ */
+export function evaluateEngineTrigger(
+  entry: EngineTriggerEntry,
+  events: TimelineEvent[],
+  activeCountFn: (columnId: string, ownerId: string, frame: number) => number,
+  addEventFn: (ev: TimelineEvent) => void,
+) {
+  const { ctx } = entry;
+  const { def } = ctx;
+
+  if (ctx.haveConditions.length > 0) {
+    const allMet = ctx.haveConditions.every(hc =>
+      checkPredicate(hc, events, ctx.operatorSlotId, entry.frame)
+    );
+    if (!allMet) return;
+  }
+
+  // Resolve output def (follows ALL APPLY STATUS redirects)
+  const applySubEffect = (ctx.triggerEffects ?? [])
+    .filter(e => e.verbType === 'ALL')
+    .flatMap(e => e.effects ?? [])
+    .find(e => e.verbType === 'APPLY' && e.objectType === 'STATUS' && e.objectId);
+  let outputDef = def;
+  if (applySubEffect?.objectId) {
+    const json = getOperatorJson(ctx.operatorId);
+    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+      .find(d => d.name === applySubEffect.objectId);
+    if (targetDef) outputDef = targetDef;
+  }
+
+  const duration = outputDef.properties?.duration ?? outputDef.duration;
+  if (!duration) return;
+  const durationFrames = getDurationFrames(duration);
+  const ownerId = resolveOwnerId(outputDef.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.targetDeterminer);
+  const columnId = statusNameToColumnId(outputDef.name);
+  const maxStacks = getMaxStacks(outputDef.stack.max, ctx.potential);
+
+  if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
+
+  const finalOwnerId = entry.isEquip && outputDef.targetDeterminer === 'OTHER'
+    ? COMMON_OWNER_ID : ownerId;
+
+  const ev: TimelineEvent = {
+    id: `${outputDef.name.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
+    name: outputDef.name,
+    ownerId: finalOwnerId,
+    columnId,
+    startFrame: entry.frame,
+    activationDuration: durationFrames,
+    activeDuration: 0,
+    cooldownDuration: 0,
+    sourceOwnerId: ctx.operatorSlotId,
+    sourceSkillName: entry.sourceSkillName,
+  };
+
+  const deriveCtx: DeriveContext = {
+    events, operatorId: ctx.operatorId, operatorSlotId: ctx.operatorSlotId,
+    potential: ctx.potential, operatorSlotMap: ctx.operatorSlotMap, loadoutProperties: ctx.loadoutProperties,
+  };
+  resolveClauseEffects(ev, outputDef, deriveCtx);
+
+  if (outputDef.segments && outputDef.segments.length > 0) {
+    const segments: EventSegmentData[] = [];
+    let totalDuration = 0;
+    for (const seg of outputDef.segments) {
+      const segDuration = seg.properties?.duration ? getDurationFrames(seg.properties.duration) : durationFrames;
+      const segData: EventSegmentData = { durationFrames: segDuration, label: seg.name };
+      if (seg.clause) {
+        const segEv: TimelineEvent = { ...ev, susceptibility: undefined };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolveClauseEffectsFromClauses(segEv, seg.clause as any, deriveCtx, def, false);
+        if (segEv.susceptibility) segData.susceptibility = segEv.susceptibility as Record<string, number>;
+      }
+      segments.push(segData);
+      totalDuration += segDuration;
+    }
+    ev.segments = segments;
+    ev.activationDuration = totalDuration;
+    if (!ev.susceptibility && segments[0]?.susceptibility) ev.susceptibility = segments[0].susceptibility;
+  }
+
+  if (!ev.susceptibility && outputDef.susceptibility) {
+    const resolved: Record<string, number> = {};
+    for (const [element, values] of Object.entries(outputDef.susceptibility)) {
+      const arr = values as number[];
+      const tl = outputDef.minTalentLevel?.talent === 2
+        ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
+        : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+      resolved[element] = arr[Math.min(tl, arr.length) - 1] ?? arr[0];
+    }
+    ev.susceptibility = resolved;
+  }
+  if (ev.statusValue == null && outputDef.stats && outputDef.stats.length > 0) {
+    const stat = outputDef.stats[0] as { perIntellect?: number[] };
+    if (stat.perIntellect) {
+      const tl = outputDef.minTalentLevel?.talent === 2
+        ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
+        : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+      ev.statusValue = stat.perIntellect[Math.min(tl, stat.perIntellect.length) - 1] ?? stat.perIntellect[0];
+    }
+  }
+
+  addEventFn(ev);
+}

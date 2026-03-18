@@ -115,6 +115,7 @@ interface JsonSkillCategory {
     animation?: { duration: JsonDuration; timeInteractionType: string; dataSources?: string[] };
     trigger?: unknown;
     hasDelayedHit?: boolean;
+    delayedHitLabel?: string;
   };
   effects?: JsonEffect[];
   frames?: JsonFrame[];

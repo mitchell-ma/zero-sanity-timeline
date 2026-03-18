@@ -2809,7 +2809,7 @@
     ],
     "properties": {
       "duration": {
-        "value": 1.9,
+        "value": 2.1,
         "unit": "SECOND"
       }
     },
@@ -3096,6 +3096,12 @@
           }
         },
         "effects": [
+          {
+            "verbType": "CONSUME",
+            "objectType": "STATUS",
+            "objectId": "MELTING_FLAME",
+            "toObjectType": "THIS_OPERATOR"
+          },
           {
             "verbType": "RECOVER",
             "objectType": "SKILL_POINT",

@@ -46,14 +46,14 @@
         "1": {
           "WILL": 65,
           "INTELLECT": 43,
-          "CRYO_DAMAGE_BONUS": 0.192,
-          "ELECTRIC_DAMAGE_BONUS": 0.192
+          "CRYO_DAMAGE_BONUS": 0.1916666667,
+          "ELECTRIC_DAMAGE_BONUS": 0.1916666667
         },
         "2": {
           "WILL": 71,
           "INTELLECT": 47,
-          "CRYO_DAMAGE_BONUS": 0.211,
-          "ELECTRIC_DAMAGE_BONUS": 0.211
+          "CRYO_DAMAGE_BONUS": 0.21083333,
+          "ELECTRIC_DAMAGE_BONUS": 0.21083333
         },
         "3": {
           "WILL": 78,
@@ -64,8 +64,32 @@
         "4": {
           "WILL": 84,
           "INTELLECT": 55,
-          "CRYO_DAMAGE_BONUS": 0.249,
-          "ELECTRIC_DAMAGE_BONUS": 0.249
+          "CRYO_DAMAGE_BONUS": 0.24916667,
+          "ELECTRIC_DAMAGE_BONUS": 0.24916667
+        }
+      }
+    },
+    {
+      "gearType": "PULSER_LABS_INVASION_CORE",
+      "name": "Pulser Labs Invasion Core",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 41,
+          "ULTIMATE_DAMAGE_BONUS": 0.5175
+        },
+        "2": {
+          "WILL": 45,
+          "ULTIMATE_DAMAGE_BONUS": 0.56925
+        },
+        "3": {
+          "WILL": 49,
+          "ULTIMATE_DAMAGE_BONUS": 0.621
+        },
+        "4": {
+          "WILL": 53,
+          "ULTIMATE_DAMAGE_BONUS": 0.67275
         }
       }
     },
@@ -89,6 +113,34 @@
         },
         "4": {
           "INTELLECT": 53,
+          "ARTS_INTENSITY": 53.8
+        }
+      }
+    },
+    {
+      "gearType": "PULSER_LABS_PROBE",
+      "name": "Pulser Labs Probe",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "AGILITY": 21,
+          "ARTS_INTENSITY": 41.4
+        },
+        "2": {
+          "INTELLECT": 35,
+          "AGILITY": 23,
+          "ARTS_INTENSITY": 45.5
+        },
+        "3": {
+          "INTELLECT": 38,
+          "AGILITY": 25,
+          "ARTS_INTENSITY": 49.7
+        },
+        "4": {
+          "INTELLECT": 41,
+          "AGILITY": 27,
           "ARTS_INTENSITY": 53.8
         }
       }

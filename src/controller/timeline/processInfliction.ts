@@ -8,9 +8,11 @@ import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
-import { MAX_SKILL_LEVEL_INDEX } from '../calculation/statusQueryService';
 import { evaluateConditions } from './conditionEvaluator';
 import type { Interaction } from '../../consts/semantics';
+
+/** Maximum 0-based index for skill level arrays (12 levels → index 0–11). */
+const MAX_SKILL_LEVEL_INDEX = 11;
 
 /** Maps forced reaction name → reaction columnId. */
 export const FORCED_REACTION_COLUMN: Record<string, string> = {
@@ -115,7 +117,7 @@ export function resolveSusceptibility(
  * Scans sequenced operator events for frames with `applyArtsInfliction` markers
  * and generates corresponding enemy infliction events at the correct absolute frame.
  */
-export function deriveFrameInflictions(events: TimelineEvent[], loadoutProperties?: Record<string, LoadoutProperties>, stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
+export function deriveFrameInflictions(events: TimelineEvent[], loadoutProperties?: Record<string, LoadoutProperties>, stops: readonly TimeStopRegion[] = [], skipExchangeStatuses = false, skipInflictions = false): TimelineEvent[] {
   const derived: TimelineEvent[] = [];
 
   for (const event of events) {
@@ -130,7 +132,9 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutPropertie
           const frame = seg.frames[fi];
           const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
 
-          if (frame.applyArtsInfliction) {
+          // Arts inflictions — when skipInflictions is true, these are handled
+          // by the event queue with deque stacking semantics.
+          if (frame.applyArtsInfliction && !skipInflictions) {
             const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
             // Skip if this combo event's trigger column already handles this element
             // (the comboTriggerColumnId loop below generates those)
@@ -161,24 +165,27 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutPropertie
             if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
 
             if (statusEffect.target === TargetType.SELF) {
-              // Exchange statuses (Melting Flame, Thunderlance) — create from
-              // frame data. The engine handles threshold/consumption clauses
-              // against these frame-created events.
+              // Exchange statuses (Melting Flame, Thunderlance) — when
+              // skipExchangeStatuses is true, these are handled exclusively
+              // by the status derivation engine which enforces max-stack caps
+              // and correct consumption/re-derivation ordering.
               const grantColumnId = EXCHANGE_STATUS_COLUMN[statusEffect.status];
               if (grantColumnId) {
-                const exchDuration = EXCHANGE_STATUS_DURATION[statusEffect.status] ?? EXCHANGE_EVENT_DURATION;
-                derived.push({
-                  id: `${event.id}-exchange-${si}-${fi}`,
-                  name: statusEffect.status,
-                  ownerId: event.ownerId,
-                  columnId: grantColumnId,
-                  startFrame: absFrame,
-                  activationDuration: exchDuration,
-                  activeDuration: 0,
-                  cooldownDuration: 0,
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                });
+                if (!skipExchangeStatuses) {
+                  const exchDuration = EXCHANGE_STATUS_DURATION[statusEffect.status] ?? EXCHANGE_EVENT_DURATION;
+                  derived.push({
+                    id: `${event.id}-exchange-${si}-${fi}`,
+                    name: statusEffect.status,
+                    ownerId: event.ownerId,
+                    columnId: grantColumnId,
+                    startFrame: absFrame,
+                    activationDuration: exchDuration,
+                    activeDuration: 0,
+                    cooldownDuration: 0,
+                    sourceOwnerId: event.ownerId,
+                    sourceSkillName: event.name,
+                  });
+                }
               }
               // Team status (e.g. Squad Buff → Link)
               const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
@@ -305,52 +312,53 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutPropertie
   }
 
   // Combo events with comboTriggerColumnId: generate derived infliction/status
-  // matching the trigger source at each tick frame
-  for (const event of events) {
-    if (!event.comboTriggerColumnId || !event.segments) continue;
+  // matching the trigger source at each tick frame.
+  // When skipInflictions is true, inflictions are handled by the event queue.
+  if (!skipInflictions) {
+    for (const event of events) {
+      if (!event.comboTriggerColumnId || !event.segments) continue;
 
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-      if (seg.frames) {
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-          const triggerCol = event.comboTriggerColumnId;
+      const fStops = foreignStopsFor(event, stops);
+      let cumulativeOffset = 0;
+      for (let si = 0; si < event.segments.length; si++) {
+        const seg = event.segments[si];
+        if (seg.frames) {
+          for (let fi = 0; fi < seg.frames.length; fi++) {
+            const frame = seg.frames[fi];
+            const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
+            const triggerCol = event.comboTriggerColumnId;
 
-          if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
-            // Arts infliction: generate infliction event
-            derived.push({
-              id: `${event.id}-combo-inflict-${si}-${fi}`,
-              name: triggerCol,
-              ownerId: ENEMY_OWNER_ID,
-              columnId: triggerCol,
-              startFrame: absFrame,
-              activationDuration: INFLICTION_DURATION,
-              activeDuration: 0,
-              cooldownDuration: 0,
-              sourceOwnerId: event.ownerId,
-              sourceSkillName: event.name,
-            });
-          } else if (PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol)) {
-            // Physical status: generate physical infliction event
-            derived.push({
-              id: `${event.id}-combo-phys-${si}-${fi}`,
-              name: triggerCol,
-              ownerId: ENEMY_OWNER_ID,
-              columnId: triggerCol,
-              startFrame: absFrame,
-              activationDuration: PHYSICAL_INFLICTION_DURATION,
-              activeDuration: 0,
-              cooldownDuration: 0,
-              sourceOwnerId: event.ownerId,
-              sourceSkillName: event.name,
-            });
+            if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
+              derived.push({
+                id: `${event.id}-combo-inflict-${si}-${fi}`,
+                name: triggerCol,
+                ownerId: ENEMY_OWNER_ID,
+                columnId: triggerCol,
+                startFrame: absFrame,
+                activationDuration: INFLICTION_DURATION,
+                activeDuration: 0,
+                cooldownDuration: 0,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+              });
+            } else if (PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol)) {
+              derived.push({
+                id: `${event.id}-combo-phys-${si}-${fi}`,
+                name: triggerCol,
+                ownerId: ENEMY_OWNER_ID,
+                columnId: triggerCol,
+                startFrame: absFrame,
+                activationDuration: PHYSICAL_INFLICTION_DURATION,
+                activeDuration: 0,
+                cooldownDuration: 0,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+              });
+            }
           }
         }
+        cumulativeOffset += seg.durationFrames;
       }
-      cumulativeOffset += seg.durationFrames;
     }
   }
 
@@ -1171,7 +1179,7 @@ const REACTION_SEGMENT_LABEL: Record<string, string> = {
   electrification: 'Electrification',
 };
 
-function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; label: string; frames: EventFrameMarker[] } | null {
+export function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; label: string; frames: EventFrameMarker[] } | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
 
@@ -1212,7 +1220,7 @@ function buildReactionSegment(ev: TimelineEvent): { durationFrames: number; labe
  * Segment 1 is named "Corrosion 1", subsequent segments are "2", "3", etc.
  * Each segment contains a status frame showing the base resistance reduction.
  */
-function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | null {
+export function buildCorrosionSegments(ev: TimelineEvent): EventSegmentData[] | null {
   const element = REACTION_DAMAGE_ELEMENT[ev.columnId];
   if (!element) return null;
 
@@ -1434,4 +1442,66 @@ export function consumeReactionsForStatus(
     }
   }
   return [...result, ...generated];
+}
+
+// ── SP recovery extraction ────────────────────────────────────────────────
+
+/**
+ * Derives SP recovery events from frame markers and perfect dodge dashes.
+ * Extracted from deriveFrameInflictions — SP recovery is a pure resource
+ * event with no state dependency, so it stays outside the queue.
+ */
+export function deriveSPRecovery(events: TimelineEvent[], stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
+  const derived: TimelineEvent[] = [];
+
+  for (const event of events) {
+    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+
+    const fStops = foreignStopsFor(event, stops);
+    let cumulativeOffset = 0;
+    for (let si = 0; si < event.segments.length; si++) {
+      const seg = event.segments[si];
+      if (seg.frames) {
+        for (let fi = 0; fi < seg.frames.length; fi++) {
+          const frame = seg.frames[fi];
+          if ((frame.skillPointRecovery ?? 0) > 0) {
+            derived.push({
+              id: `${event.id}-sp-${si}-${fi}`,
+              name: 'sp-recovery',
+              ownerId: COMMON_OWNER_ID,
+              columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+              startFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
+              activationDuration: -(frame.skillPointRecovery!),
+              activeDuration: 0,
+              cooldownDuration: 0,
+              sourceOwnerId: event.ownerId,
+              sourceSkillName: event.name,
+            });
+          }
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+
+  // Perfect dodge dash events → SP recovery
+  for (const event of events) {
+    if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
+      derived.push({
+        id: `${event.id}-sp-dodge`,
+        name: 'sp-recovery',
+        ownerId: COMMON_OWNER_ID,
+        columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+        startFrame: event.startFrame,
+        activationDuration: -GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
+        activeDuration: 0,
+        cooldownDuration: 0,
+        sourceOwnerId: event.ownerId,
+        sourceSkillName: event.name,
+      });
+    }
+  }
+
+  if (derived.length === 0) return events;
+  return [...events, ...derived];
 }

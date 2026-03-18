@@ -62,6 +62,30 @@
       }
     },
     {
+      "gearType": "REDEEMER_ARMOR",
+      "name": "Redeemer Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 115,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1285714286
+        },
+        "2": {
+          "INTELLECT": 126,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.14142857
+        },
+        "3": {
+          "INTELLECT": 138,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.15428571
+        },
+        "4": {
+          "INTELLECT": 149,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.16714285
+        }
+      }
+    },
+    {
       "gearType": "MINER_ARMOR",
       "name": "Miner Armor",
       "gearCategory": "ARMOR",
@@ -282,6 +306,30 @@
           "INTELLECT": 65,
           "AGILITY": 43,
           "ATTACK_BONUS": 0.078
+        }
+      }
+    },
+    {
+      "gearType": "REDEEMER_PLATES",
+      "name": "Redeemer Plates",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 115,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.144
+        },
+        "2": {
+          "AGILITY": 126,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.1584
+        },
+        "3": {
+          "AGILITY": 138,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.1728
+        },
+        "4": {
+          "AGILITY": 149,
+          "BASIC_ATTACK_DAMAGE_BONUS": 0.1872
         }
       }
     },
@@ -546,22 +594,70 @@
         "1": {
           "WILL": 49,
           "INTELLECT": 32,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.155
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1547619048
         },
         "2": {
           "WILL": 49,
           "INTELLECT": 32,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.155
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1547619048
         },
         "3": {
           "WILL": 49,
           "INTELLECT": 32,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.155
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1547619048
         },
         "4": {
           "WILL": 49,
           "INTELLECT": 32,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.155
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1547619048
+        }
+      }
+    },
+    {
+      "gearType": "REDEEMER_GLOVES",
+      "name": "Redeemer Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "AGILITY": 86,
+          "ULTIMATE_DAMAGE_BONUS": 0.45
+        },
+        "2": {
+          "AGILITY": 94,
+          "ULTIMATE_DAMAGE_BONUS": 0.495
+        },
+        "3": {
+          "AGILITY": 103,
+          "ULTIMATE_DAMAGE_BONUS": 0.54
+        },
+        "4": {
+          "AGILITY": 111,
+          "ULTIMATE_DAMAGE_BONUS": 0.585
+        }
+      }
+    },
+    {
+      "gearType": "REDEEMER_HANDS",
+      "name": "Redeemer Hands",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 86,
+          "SKILL_DAMAGE_BONUS": 0.24
+        },
+        "2": {
+          "STRENGTH": 94,
+          "SKILL_DAMAGE_BONUS": 0.264
+        },
+        "3": {
+          "STRENGTH": 103,
+          "SKILL_DAMAGE_BONUS": 0.288
+        },
+        "4": {
+          "STRENGTH": 111,
+          "SKILL_DAMAGE_BONUS": 0.312
         }
       }
     },
@@ -606,26 +702,26 @@
       }
     },
     {
-      "gearType": "MINER_COMPRESSION_CORE_T1",
-      "name": "Miner Compression Core T1",
+      "gearType": "REDEEMER_SEAL",
+      "name": "Redeemer Seal",
       "gearCategory": "KIT",
-      "defense": 15,
+      "defense": 21,
       "allLevels": {
         "1": {
-          "AGILITY": 31,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+          "INTELLECT": 43,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2571428571
         },
         "2": {
-          "AGILITY": 31,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+          "INTELLECT": 47,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.28285715
         },
         "3": {
-          "AGILITY": 31,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+          "INTELLECT": 51,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.30857143
         },
         "4": {
-          "AGILITY": 31,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+          "INTELLECT": 55,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.3342857
         }
       }
     },
@@ -733,19 +829,19 @@
       "allLevels": {
         "1": {
           "STRENGTH": 31,
-          "FINAL_DAMAGE_REDUCTION": 0.135
+          "FINAL_DAMAGE_REDUCTION": 0.1349480969
         },
         "2": {
           "STRENGTH": 31,
-          "FINAL_DAMAGE_REDUCTION": 0.135
+          "FINAL_DAMAGE_REDUCTION": 0.1349480969
         },
         "3": {
           "STRENGTH": 31,
-          "FINAL_DAMAGE_REDUCTION": 0.135
+          "FINAL_DAMAGE_REDUCTION": 0.1349480969
         },
         "4": {
           "STRENGTH": 31,
-          "FINAL_DAMAGE_REDUCTION": 0.135
+          "FINAL_DAMAGE_REDUCTION": 0.1349480969
         }
       }
     },
@@ -756,20 +852,44 @@
       "defense": 15,
       "allLevels": {
         "1": {
+          "AGILITY": 31,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+        },
+        "2": {
+          "AGILITY": 31,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+        },
+        "3": {
+          "AGILITY": 31,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+        },
+        "4": {
+          "AGILITY": 31,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.312
+        }
+      }
+    },
+    {
+      "gearType": "MINER_COMPRESSION_CORE_T1",
+      "name": "Miner Compression Core T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
           "INTELLECT": 31,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.186
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1857142857
         },
         "2": {
           "INTELLECT": 31,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.186
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1857142857
         },
         "3": {
           "INTELLECT": 31,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.186
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1857142857
         },
         "4": {
           "INTELLECT": 31,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.186
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1857142857
         }
       }
     },
@@ -809,39 +929,15 @@
         },
         "2": {
           "WILL": 47,
-          "CRITICAL_RATE": 0.119
+          "CRITICAL_RATE": 0.1188
         },
         "3": {
           "WILL": 51,
-          "CRITICAL_RATE": 0.13
+          "CRITICAL_RATE": 0.1296
         },
         "4": {
           "WILL": 55,
-          "CRITICAL_RATE": 0.14
-        }
-      }
-    },
-    {
-      "gearType": "REDEEMER_SEAL",
-      "name": "Redeemer Seal",
-      "gearCategory": "KIT",
-      "defense": 21,
-      "allLevels": {
-        "1": {
-          "INTELLECT": 43,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.257
-        },
-        "2": {
-          "INTELLECT": 47,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.283
-        },
-        "3": {
-          "INTELLECT": 51,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.309
-        },
-        "4": {
-          "INTELLECT": 55,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.334
+          "CRITICAL_RATE": 0.1404
         }
       }
     },
@@ -853,19 +949,19 @@
       "allLevels": {
         "1": {
           "STRENGTH": 43,
-          "FINAL_DAMAGE_REDUCTION": 0.178
+          "FINAL_DAMAGE_REDUCTION": 0.1776315789
         },
         "2": {
           "STRENGTH": 47,
-          "FINAL_DAMAGE_REDUCTION": 0.192
+          "FINAL_DAMAGE_REDUCTION": 0.1919845
         },
         "3": {
           "STRENGTH": 51,
-          "FINAL_DAMAGE_REDUCTION": 0.206
+          "FINAL_DAMAGE_REDUCTION": 0.205845
         },
         "4": {
           "STRENGTH": 55,
-          "FINAL_DAMAGE_REDUCTION": 0.219
+          "FINAL_DAMAGE_REDUCTION": 0.219238
         }
       }
     },
@@ -881,15 +977,15 @@
         },
         "2": {
           "AGILITY": 47,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.475
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4752
         },
         "3": {
           "AGILITY": 51,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.518
+          "COMBO_SKILL_DAMAGE_BONUS": 0.5184
         },
         "4": {
           "AGILITY": 55,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.562
+          "COMBO_SKILL_DAMAGE_BONUS": 0.5616
         }
       }
     }

@@ -10,34 +10,6 @@
   },
   "pieces": [
     {
-      "gearType": "TYPE_50_YINGLUNG_LIGHT_ARMOR",
-      "name": "Type 50 Yinglung Light Armor",
-      "gearCategory": "ARMOR",
-      "defense": 56,
-      "allLevels": {
-        "1": {
-          "WILL": 87,
-          "STRENGTH": 58,
-          "SKILL_DAMAGE_BONUS": 0.138
-        },
-        "2": {
-          "WILL": 95,
-          "STRENGTH": 63,
-          "SKILL_DAMAGE_BONUS": 0.152
-        },
-        "3": {
-          "WILL": 104,
-          "STRENGTH": 69,
-          "SKILL_DAMAGE_BONUS": 0.166
-        },
-        "4": {
-          "WILL": 113,
-          "STRENGTH": 75,
-          "SKILL_DAMAGE_BONUS": 0.179
-        }
-      }
-    },
-    {
       "gearType": "TYPE_50_YINGLUNG_HEAVY_ARMOR",
       "name": "Type 50 Yinglung Heavy Armor",
       "gearCategory": "ARMOR",
@@ -51,7 +23,7 @@
         "2": {
           "STRENGTH": 95,
           "WILL": 63,
-          "PHYSICAL_DAMAGE_BONUS": 0.127
+          "PHYSICAL_DAMAGE_BONUS": 0.1265
         },
         "3": {
           "STRENGTH": 104,
@@ -61,7 +33,91 @@
         "4": {
           "STRENGTH": 113,
           "WILL": 75,
-          "PHYSICAL_DAMAGE_BONUS": 0.15
+          "PHYSICAL_DAMAGE_BONUS": 0.1495
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_HEAVY_ARMOR_T1",
+      "name": "Type 50 Yinglung Heavy Armor T1",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "STRENGTH": 58,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.1232142857
+        },
+        "2": {
+          "AGILITY": 95,
+          "STRENGTH": 63,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.13553572
+        },
+        "3": {
+          "AGILITY": 104,
+          "STRENGTH": 69,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.14785714
+        },
+        "4": {
+          "AGILITY": 113,
+          "STRENGTH": 75,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.16017857
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_HEAVY_ARMOR_T2",
+      "name": "Type 50 Yinglung Heavy Armor T2",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "AGILITY": 87,
+          "INTELLECT": 58,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.207
+        },
+        "2": {
+          "AGILITY": 95,
+          "INTELLECT": 63,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.2277
+        },
+        "3": {
+          "AGILITY": 104,
+          "INTELLECT": 69,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.2484
+        },
+        "4": {
+          "AGILITY": 113,
+          "INTELLECT": 75,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.2691
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_LIGHT_ARMOR",
+      "name": "Type 50 Yinglung Light Armor",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "WILL": 87,
+          "STRENGTH": 58,
+          "SKILL_DAMAGE_BONUS": 0.138
+        },
+        "2": {
+          "WILL": 95,
+          "STRENGTH": 63,
+          "SKILL_DAMAGE_BONUS": 0.1518
+        },
+        "3": {
+          "WILL": 104,
+          "STRENGTH": 69,
+          "SKILL_DAMAGE_BONUS": 0.1656
+        },
+        "4": {
+          "WILL": 113,
+          "STRENGTH": 75,
+          "SKILL_DAMAGE_BONUS": 0.1794
         }
       }
     },
@@ -79,7 +135,7 @@
         "2": {
           "WILL": 71,
           "AGILITY": 47,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.38
+          "COMBO_SKILL_DAMAGE_BONUS": 0.3795
         },
         "3": {
           "WILL": 78,
@@ -89,7 +145,7 @@
         "4": {
           "WILL": 84,
           "AGILITY": 55,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.449
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4485
         }
       }
     },
@@ -107,7 +163,7 @@
         "2": {
           "AGILITY": 71,
           "INTELLECT": 47,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.38
+          "COMBO_SKILL_DAMAGE_BONUS": 0.3795
         },
         "3": {
           "AGILITY": 78,
@@ -117,7 +173,63 @@
         "4": {
           "AGILITY": 84,
           "INTELLECT": 55,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.449
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4485
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_KNIFE",
+      "name": "Type 50 Yinglung Knife",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "AGILITY": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+        },
+        "2": {
+          "WILL": 35,
+          "AGILITY": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4554
+        },
+        "3": {
+          "WILL": 38,
+          "AGILITY": 25,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4968
+        },
+        "4": {
+          "WILL": 41,
+          "AGILITY": 27,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.5382
+        }
+      }
+    },
+    {
+      "gearType": "TYPE_50_YINGLUNG_KNIFE_T1",
+      "name": "Type 50 Yinglung Knife T1",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 32,
+          "STRENGTH": 21,
+          "SKILL_DAMAGE_BONUS": 0.276
+        },
+        "2": {
+          "INTELLECT": 35,
+          "STRENGTH": 23,
+          "SKILL_DAMAGE_BONUS": 0.3036
+        },
+        "3": {
+          "INTELLECT": 38,
+          "STRENGTH": 25,
+          "SKILL_DAMAGE_BONUS": 0.3312
+        },
+        "4": {
+          "INTELLECT": 41,
+          "STRENGTH": 27,
+          "SKILL_DAMAGE_BONUS": 0.3588
         }
       }
     },
@@ -150,58 +262,58 @@
       }
     },
     {
-      "gearType": "TYPE_50_YINGLUNG_KNIFE",
-      "name": "Type 50 Yinglung Knife",
+      "gearType": "TYPE_50_YINGLUNG_RADAR_T1",
+      "name": "Type 50 Yinglung Radar T1",
       "gearCategory": "KIT",
       "defense": 21,
       "allLevels": {
         "1": {
-          "WILL": 32,
-          "AGILITY": 21,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.414
+          "AGILITY": 32,
+          "STRENGTH": 21,
+          "ULTIMATE_DAMAGE_BONUS": 0.5175
         },
         "2": {
-          "WILL": 35,
-          "AGILITY": 23,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.455
+          "AGILITY": 35,
+          "STRENGTH": 23,
+          "ULTIMATE_DAMAGE_BONUS": 0.56925
         },
         "3": {
-          "WILL": 38,
-          "AGILITY": 25,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.497
+          "AGILITY": 38,
+          "STRENGTH": 25,
+          "ULTIMATE_DAMAGE_BONUS": 0.621
         },
         "4": {
-          "WILL": 41,
-          "AGILITY": 27,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.538
+          "AGILITY": 41,
+          "STRENGTH": 27,
+          "ULTIMATE_DAMAGE_BONUS": 0.67275
         }
       }
     },
     {
-      "gearType": "TYPE_50_YINGLUNG_KNIFE_T1",
-      "name": "Type 50 Yinglung Knife T1",
+      "gearType": "TYPE_50_YINGLUNG_RADAR_T2",
+      "name": "Type 50 Yinglung Radar T2",
       "gearCategory": "KIT",
       "defense": 21,
       "allLevels": {
         "1": {
-          "INTELLECT": 32,
-          "STRENGTH": 21,
-          "SKILL_DAMAGE_BONUS": 0.276
+          "AGILITY": 32,
+          "INTELLECT": 21,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.414
         },
         "2": {
-          "INTELLECT": 35,
-          "STRENGTH": 23,
-          "SKILL_DAMAGE_BONUS": 0.304
+          "AGILITY": 35,
+          "INTELLECT": 23,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4554
         },
         "3": {
-          "INTELLECT": 38,
-          "STRENGTH": 25,
-          "SKILL_DAMAGE_BONUS": 0.331
+          "AGILITY": 38,
+          "INTELLECT": 25,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.4968
         },
         "4": {
-          "INTELLECT": 41,
-          "STRENGTH": 27,
-          "SKILL_DAMAGE_BONUS": 0.359
+          "AGILITY": 41,
+          "INTELLECT": 27,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.5382
         }
       }
     }

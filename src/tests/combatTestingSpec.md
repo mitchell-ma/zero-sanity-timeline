@@ -6,6 +6,10 @@ Validate that the controller layer correctly models operator interactions, statu
 
 Frame timing offsets (e.g. 0.73s, 2.067s) are intentionally NOT asserted — they are volatile and may change with game patches. Tests assert **position** (first frame, last frame, segment N) and **effect type** (apply status, forced reaction, infliction, absorption).
 
+## Damage Test Rules
+
+**NEVER change expected damage values in damage calculation tests.** Expected values are observed from the actual game and are the source of truth. If a test fails because our calculated value doesn't match the expected value, the bug is in our code (formulas, stat aggregation, data parsing, rounding) — not in the expected value. Investigate and fix the calculation pipeline instead.
+
 ## Scope
 
 - Status derivation engine (`statusDerivationEngine.ts`)
@@ -28,7 +32,7 @@ Status application (`APPLY STATUS`) is always a **frame-level effect** — it oc
 
 ### CONSUME STATUS is a frame-level effect
 
-Stack consumption (`CONSUME STATUS`) is also a frame-level effect. When the empowered battle skill's additional attack fires, it consumes all Melting Flame stacks. The derivation engine models this via `consumeClause` on the status definition, which clamps active stack events at the consumption frame.
+Stack consumption (`CONSUME STATUS`) is a **frame-level effect**. When the empowered battle skill's additional attack fires, it consumes all Melting Flame stacks via a `consumeStatus` marker on the frame data, processed by `consumeOperatorStatuses`. Similarly, Endministrator's battle skill and ultimate consume Originium Crystals via frame-level `CONSUME STATUS` effects.
 
 ### `toObjectType` supports operator IDs
 
@@ -104,7 +108,7 @@ All three sources feed the **same 4-stack pool**:
 2. **HAVE predicate cardinality** — `checkPredicate()` and `findTriggerMatches()` now enforce `cardinalityConstraint` (EXACTLY, AT_LEAST) on HAVE STATUS predicates instead of boolean "exists?" check.
 3. **Dedup broadened** — Dedup check uses columnId only (ignoring ownerId) and excludes CONSUMED events, preventing double-derivation while allowing post-consumption re-accumulation.
 4. **Threshold target resolution** — `evaluateThresholdClauses()` resolves target owner from the target status def's own `target` field (e.g. SCORCHING_HEART_EFFECT → THIS_OPERATOR) instead of the clause's `toObjectType`.
-5. **Consumption** — `consumeClause` processing added: detects battle skills at max pre-existing stacks, clamps all active MF events, then re-derives for post-consumption triggers. Supports multiple consume-reaccumulate cycles.
+5. **Consumption** — All status consumption uses frame-level `consumeStatus` markers processed by `consumeOperatorStatuses`. No engine-level consume logic.
 
 ### JSON Data Changes Applied
 
@@ -114,7 +118,8 @@ All three sources feed the **same 4-stack pool**:
 4. SCORCHING_HEART → extracted to `operator-talents/laevatain-talents.json` as type TALENT. Owns absorption exchange (FINAL_STRIKE + HEAT INFLICTION → PERFORM_ALL { ABSORB, APPLY MF }).
 5. SCORCHING_HEART_EFFECT: Renamed from SCORCHING_HEART in skills JSON. Target changed from ENEMY to THIS_OPERATOR (self-buff). Applied via MELTING_FLAME's threshold clause.
 5. EMPOWERED_BATTLE_SKILL: Added `CONSUME STATUS MELTING_FLAME` on last frame
-6. MELTING_FLAME: Added `consumeClause` (PERFORM BATTLE_SKILL while HAVE STACKS EXACTLY MAX → CONSUME ALL_STACKS)
+6. MELTING_FLAME: Consumption via empowered battle skill's frame-level `consumeStatus` marker
+7. ORIGINIUM_CRYSTAL: Consumption via frame-level `CONSUME STATUS` on battle skill and ultimate frames
 
 ---
 

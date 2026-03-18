@@ -972,6 +972,12 @@
         },
         "effects": [
           {
+            "verbType": "CONSUME",
+            "objectType": "STATUS",
+            "objectId": "ORIGINIUM_CRYSTAL",
+            "toObjectType": "ENEMY"
+          },
+          {
             "verbType": "RECOVER",
             "objectType": "SKILL_POINT",
             "withPreposition": {
@@ -1334,6 +1340,12 @@
         },
         "effects": [
           {
+            "verbType": "CONSUME",
+            "objectType": "STATUS",
+            "objectId": "ORIGINIUM_CRYSTAL",
+            "toObjectType": "ENEMY"
+          },
+          {
             "verbType": "RECOVER",
             "objectType": "SKILL_POINT",
             "withPreposition": {
@@ -1464,40 +1476,6 @@
         "verbType": "NONE"
       },
       "triggerClause": [],
-      "consumeClause": [
-        {
-          "conditions": [
-            {
-              "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "BATTLE_SKILL"
-            }
-          ],
-          "effects": [
-            {
-              "verbType": "CONSUME",
-              "objectType": "ALL_STACKS"
-            }
-          ]
-        },
-        {
-          "conditions": [
-            {
-              "subjectDeterminer": "THIS",
-              "subjectType": "OPERATOR",
-              "verbType": "PERFORM",
-              "objectType": "ULTIMATE"
-            }
-          ],
-          "effects": [
-            {
-              "verbType": "CONSUME",
-              "objectType": "ALL_STACKS"
-            }
-          ]
-        }
-      ],
       "stats": [],
       "properties": {
         "duration": {

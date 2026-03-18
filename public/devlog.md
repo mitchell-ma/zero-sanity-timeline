@@ -1,31 +1,25 @@
 # Devlog
 
+## 2026-03-17
+- Under-the-hood cleanup — fixed some edge cases in how status effects get consumed and removed unused code
+- Renamed internal components for clarity (no user-facing changes)
+
 ## 2026-03-16
-- Data-driven weapon and gear effects — all weapon skills and gear set bonuses now load from JSON files with full DSL clause support
-- New DSL effect executor and condition evaluator — status effects, buffs, and debuffs are processed through a shared rules engine instead of hardcoded logic
-- Operator status data split into dedicated JSON files (Melting Flame, Electrification, Corrosion, etc.) for easier maintenance
-- Gilberta added with full talent and lifecycle clause data
-- Status derivation engine expanded with lifecycle clauses, reactive triggers, and segmented multi-phase statuses
-- Ultimate energy controller rewritten to handle gauge gain, team gauge sharing, and SP return interactions
-- Sharing system upgraded with a more compact embed format
-- Event info pane shows richer detail — susceptibility values, resistance ignore, and damage bonuses from status effects
-- Expanded test coverage for infliction stack caps, corrosion segments, lifecycle clauses, and weapon/gear derivation
+- Weapon skills and gear set bonuses are now smarter — effects like "increase Heat DMG when Combustion is active" correctly respond to what's happening in the fight
+- Gilberta added with full talent support
+- Status effects now show more detail in the info pane — you can see exactly how much susceptibility, resistance ignore, or damage bonus each effect provides
+- Sharing links are shorter and more compact
+- Improved accuracy for how multi-phase status effects (like Corrosion decay) are calculated over time
 
 ## 2026-03-15
 - Rebranded to **Endfield: Zero Sanity Simulations** — new name, new logo, new domain (endfieldsimulations.dev)
-- App now deploys to Cloudflare Pages in addition to GitHub Pages
 - Tangtang added as a new playable operator
-- Custom content system expanded — users can now link custom skills to operators and browse/edit shared content more easily
+- Custom content system expanded — you can now link custom skills to operators and browse/edit shared content more easily
 - Stagger timeline tracks enemy stagger buildup across the fight
 - Horizontal timeline mode with improved layout and touch controls
-- Major data pipeline improvements — operator skill data split into separate files, parsers updated for better accuracy
-- Lots of UI polish: light/dark theme toggle, starred operators, improved info pane, better mobile support
-- Rewrote how status effects and reactions are calculated — combo skills, inflictions, and element reactions are now processed through a unified pipeline
-- Info pane and event detail panels moved to proper controller logic instead of living in the view
-- New event validation system catches invalid skill placements before they happen
+- Light/dark theme toggle, starred operators, improved info pane, better mobile support
 - Antal and Ardelia skill data greatly expanded with full frame timing and multipliers
-- Laevatain damage calculation test suite added
-- Combo trigger resolution tests added to verify multi-operator interaction chains
+- Invalid skill placements are now caught before they happen
 
 ## 2026-03-14
 - All operator, weapon, and gear data now loads from JSON files instead of being hardcoded — makes it much easier to add new content and keep up with game updates

@@ -38,34 +38,6 @@
       }
     },
     {
-      "gearType": "ETERNAL_XIRANITE_GLOVES",
-      "name": "Eternal Xiranite Gloves",
-      "gearCategory": "GLOVES",
-      "defense": 42,
-      "allLevels": {
-        "1": {
-          "INTELLECT": 65,
-          "STRENGTH": 43,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.205
-        },
-        "2": {
-          "INTELLECT": 71,
-          "STRENGTH": 47,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.226
-        },
-        "3": {
-          "INTELLECT": 78,
-          "STRENGTH": 51,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.246
-        },
-        "4": {
-          "INTELLECT": 84,
-          "STRENGTH": 55,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.267
-        }
-      }
-    },
-    {
       "gearType": "ETERNAL_XIRANITE_GLOVES_T1",
       "name": "Eternal Xiranite Gloves T1",
       "gearCategory": "GLOVES",
@@ -74,50 +46,78 @@
         "1": {
           "INTELLECT": 65,
           "WILL": 43,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.205
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2053571429
         },
         "2": {
           "INTELLECT": 71,
           "WILL": 47,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.226
+          "ULTIMATE_GAIN_EFFICIENCY": 0.22589286
         },
         "3": {
           "INTELLECT": 78,
           "WILL": 51,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+          "ULTIMATE_GAIN_EFFICIENCY": 0.24642856
         },
         "4": {
           "INTELLECT": 84,
           "WILL": 55,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.267
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2669643
         }
       }
     },
     {
-      "gearType": "ETERNAL_XIRANITE_POWER_CORE",
-      "name": "Eternal Xiranite Power Core",
+      "gearType": "ETERNAL_XIRANITE_GLOVES",
+      "name": "Eternal Xiranite Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 65,
+          "STRENGTH": 43,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2053571429
+        },
+        "2": {
+          "INTELLECT": 71,
+          "STRENGTH": 47,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.22589286
+        },
+        "3": {
+          "INTELLECT": 78,
+          "STRENGTH": 51,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.24642856
+        },
+        "4": {
+          "INTELLECT": 84,
+          "STRENGTH": 55,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2669643
+        }
+      }
+    },
+    {
+      "gearType": "ETERNAL_XIRANITE_AUXILIARY_ARM",
+      "name": "Eternal Xiranite Auxiliary Arm",
       "gearCategory": "KIT",
       "defense": 21,
       "allLevels": {
         "1": {
-          "INTELLECT": 32,
-          "STRENGTH": 21,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+          "WILL": 32,
+          "INTELLECT": 21,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2464285714
         },
         "2": {
-          "INTELLECT": 35,
-          "STRENGTH": 23,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.271
+          "WILL": 35,
+          "INTELLECT": 23,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.27107143
         },
         "3": {
-          "INTELLECT": 38,
-          "STRENGTH": 25,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.296
+          "WILL": 38,
+          "INTELLECT": 25,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2957143
         },
         "4": {
-          "INTELLECT": 41,
-          "STRENGTH": 27,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.32
+          "WILL": 41,
+          "INTELLECT": 27,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.32035714
         }
       }
     },
@@ -135,45 +135,45 @@
         "2": {
           "INTELLECT": 35,
           "WILL": 23,
-          "TREATMENT_BONUS": 0.228
+          "TREATMENT_BONUS": 0.2277
         },
         "3": {
           "INTELLECT": 38,
           "WILL": 25,
-          "TREATMENT_BONUS": 0.248
+          "TREATMENT_BONUS": 0.2484
         },
         "4": {
           "INTELLECT": 41,
           "WILL": 27,
-          "TREATMENT_BONUS": 0.269
+          "TREATMENT_BONUS": 0.2691
         }
       }
     },
     {
-      "gearType": "ETERNAL_XIRANITE_AUXILIARY_ARM",
-      "name": "Eternal Xiranite Auxiliary Arm",
+      "gearType": "ETERNAL_XIRANITE_POWER_CORE",
+      "name": "Eternal Xiranite Power Core",
       "gearCategory": "KIT",
       "defense": 21,
       "allLevels": {
         "1": {
-          "WILL": 32,
-          "INTELLECT": 21,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.246
+          "INTELLECT": 32,
+          "STRENGTH": 21,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2464285714
         },
         "2": {
-          "WILL": 35,
-          "INTELLECT": 23,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.271
+          "INTELLECT": 35,
+          "STRENGTH": 23,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.27107143
         },
         "3": {
-          "WILL": 38,
-          "INTELLECT": 25,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.296
+          "INTELLECT": 38,
+          "STRENGTH": 25,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2957143
         },
         "4": {
-          "WILL": 41,
-          "INTELLECT": 27,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.32
+          "INTELLECT": 41,
+          "STRENGTH": 27,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.32035714
         }
       }
     }

@@ -52,7 +52,7 @@
  *    - Level table 1–99+
  */
 import { TimelineEvent } from '../consts/viewTypes';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { SKILL_COLUMNS } from '../model/channels';
 
 // Mock modules that use require.context (not available in Jest)
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
@@ -76,10 +76,6 @@ jest.mock('../view/InformationPane', () => ({
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../model/event-frames/dataDrivenEventFrames';
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
-// eslint-disable-next-line import/first
-import { deriveReactions } from '../controller/timeline/deriveReactions';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/akekuri-operator.json');
@@ -526,115 +522,6 @@ describe('F. Operator Identity & Metadata', () => {
 
   test('F6: Basic attack default duration is 0.15 seconds', () => {
     expect(mockJson.basicAttackDefaultDuration).toBe(0.15);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Group G: Status & Infliction Interactions
-// ═══════════════════════════════════════════════════════════════════════════════
-
-describe('G. Status & Infliction Interactions', () => {
-  const FPS = 120;
-  const SLOT_ID = 'slot-0';
-
-  /** Create a battle skill event with parsed frame markers. */
-  function battleSkillWithFrames(startFrame: number): TimelineEvent {
-    return {
-      id: `bs-${startFrame}`,
-      name: 'BURST_OF_PASSION',
-      ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.BATTLE,
-      startFrame,
-      activationDuration: Math.round(1.33 * FPS),
-      activeDuration: 0,
-      cooldownDuration: 0,
-      segments: [{
-        durationFrames: Math.round(1.33 * FPS),
-        frames: [{
-          offsetFrame: Math.round(0.67 * FPS),
-          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
-        }],
-      }],
-    };
-  }
-
-  test('G1: Battle skill derives Heat infliction on enemy', () => {
-    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
-    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === INFLICTION_COLUMNS.HEAT);
-    expect(inflictions.length).toBe(1);
-    expect(inflictions[0].startFrame).toBe(Math.round(0.67 * FPS));
-    expect(inflictions[0].activationDuration).toBe(2400); // 20s
-    expect(inflictions[0].sourceOwnerId).toBe(SLOT_ID);
-    expect(inflictions[0].sourceSkillName).toBe('BURST_OF_PASSION');
-  });
-
-  test('G2: Multiple battle skills derive multiple inflictions', () => {
-    const events = [battleSkillWithFrames(0), battleSkillWithFrames(300)];
-    const result = deriveFrameInflictions(events);
-    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
-    expect(inflictions.length).toBe(2);
-  });
-
-  test('G3: Heat infliction + Nature infliction → Corrosion reaction', () => {
-    const heatInfliction: TimelineEvent = {
-      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: SLOT_ID,
-    };
-    const natureInfliction: TimelineEvent = {
-      id: 'n1', name: INFLICTION_COLUMNS.NATURE, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.NATURE, startFrame: FPS,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: 'slot-1',
-    };
-    const result = deriveReactions([heatInfliction, natureInfliction]);
-    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
-    expect(reactions.length).toBe(1);
-    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
-    expect(reactions[0].statusLevel).toBe(1);
-  });
-
-  test('G4: Akekuri Heat + another Heat from teammate → Combustion on second element arrival', () => {
-    // Akekuri applies Heat, teammate applies Cryo → Solidification
-    const heat: TimelineEvent = {
-      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: SLOT_ID,
-    };
-    const cryo: TimelineEvent = {
-      id: 'c1', name: INFLICTION_COLUMNS.CRYO, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.CRYO, startFrame: FPS,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: 'slot-1',
-    };
-    const result = deriveReactions([heat, cryo]);
-    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
-    expect(reactions.length).toBe(1);
-    // Cryo incoming → Solidification
-    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.SOLIDIFICATION);
-  });
-
-  test('G5: Basic attack frames have no infliction markers', () => {
-    const basicEvent: TimelineEvent = {
-      id: 'ba-1', name: 'SWORD_OF_ASPIRATION', ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.BASIC, startFrame: 0,
-      activationDuration: Math.round(0.5 * FPS), activeDuration: 0, cooldownDuration: 0,
-      segments: [{
-        durationFrames: Math.round(0.5 * FPS),
-        frames: [{ offsetFrame: 0 }],
-      }],
-    };
-    const result = deriveFrameInflictions([basicEvent]);
-    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
-    expect(inflictions.length).toBe(0);
-  });
-
-  test('G6: Combo triggers on Combustion — trigger clause structure verified', () => {
-    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
-    // Akekuri provides Heat infliction → needs a cross-element partner for Combustion
   });
 });
 

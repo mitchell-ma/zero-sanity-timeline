@@ -34,6 +34,7 @@ export const enum ColumnLabel {
   ORIGINIUM_CRYSTAL    = 'CRYSTAL',
   WILDLAND_TREKKER     = 'WILDLAND TREKKER',
   MESSENGERS_SONG      = "MESSENGER'S SONG",
+  OTHER                = 'OTHER',
 }
 
 export const STATUS_LABELS: Record<StatusType, string> = {

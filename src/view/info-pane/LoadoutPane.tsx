@@ -1,6 +1,7 @@
 import React from 'react';
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
 import { StatType, StatOwnerType } from '../../consts/enums';
+import { fmtN } from '../../utils/timeline';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { LoadoutProperties } from '../InformationPane';
 import { StatField } from './SharedFields';
@@ -218,7 +219,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             ))}
             <div style={{ ...statRowStyle, marginTop: 4 }}>
               <span style={statLabelStyle}>ATK (Base)</span>
-              <span style={statValueStyle}>{weaponData.baseAtk.toFixed(2)}</span>
+              <span style={statValueStyle}>{fmtN(weaponData.baseAtk)}</span>
             </div>
             {weaponData.statContributions.map((c) => (
               <div key={`stat-${c.skillIndex}`} style={statRowStyle}>
@@ -245,7 +246,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 {eff.secondaryAttrBonus && (
                   <div style={statRowStyle}>
                     <span style={statLabelStyle}>Secondary Attr% ({STAT_LABELS[eff.secondaryAttrBonus.label as StatType] ?? eff.secondaryAttrBonus.label}%)</span>
-                    <span style={statValueStyle}>{(eff.secondaryAttrBonus.value * 100).toFixed(2)}%</span>
+                    <span style={statValueStyle}>{fmtN(eff.secondaryAttrBonus.value * 100)}%</span>
                   </div>
                 )}
                 {eff.buffs.map((b, bi) => (
@@ -367,45 +368,45 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
         </div>
         <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
           <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK</span>
-          <span style={statValueStyle}>{agg.effectiveAttack.toFixed(2)}</span>
+          <span style={statValueStyle}>{fmtN(agg.effectiveAttack)}</span>
         </div>
         <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
           <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
             <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Base ATK</span>
-            <span style={statValueStyle}>{agg.baseAttack.toFixed(2)}</span>
+            <span style={statValueStyle}>{fmtN(agg.baseAttack)}</span>
           </div>
           <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
             <div style={statRowStyle}>
               <span style={statLabelStyle}>Operator</span>
-              <span style={statValueStyle}>{agg.operatorBaseAttack.toFixed(2)}</span>
+              <span style={statValueStyle}>{fmtN(agg.operatorBaseAttack)}</span>
             </div>
             <div style={statRowStyle}>
               <span style={statLabelStyle}>Weapon</span>
-              <span style={statValueStyle}>{agg.weaponBaseAttack.toFixed(2)}</span>
+              <span style={statValueStyle}>{fmtN(agg.weaponBaseAttack)}</span>
             </div>
           </div>
           <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
             <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK Bonus</span>
-            <span style={statValueStyle}>{agg.atkPercentageBonus.toFixed(2)}</span>
+            <span style={statValueStyle}>{fmtN(agg.atkPercentageBonus)}</span>
           </div>
           <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
             <div style={statRowStyle}>
               <span style={statLabelStyle}>Percentage Bonus</span>
-              <span style={statValueStyle}>{formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → {agg.atkPercentageBonus.toFixed(2)}</span>
+              <span style={statValueStyle}>{formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → {fmtN(agg.atkPercentageBonus)}</span>
             </div>
           </div>
           <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
             <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Attribute Bonus</span>
-            <span style={statValueStyle}>{((agg.mainAttributeBonus + agg.secondaryAttributeBonus) * 100).toFixed(2)}%</span>
+            <span style={statValueStyle}>{fmtN((agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus) * 100)}%</span>
           </div>
           <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
             <div style={statRowStyle}>
               <span style={statLabelStyle}>ATK bonus from {STAT_LABELS[agg.mainAttributeType]}</span>
-              <span style={statValueStyle}>{(agg.mainAttributeBonus * 100).toFixed(2)}%</span>
+              <span style={statValueStyle}>{fmtN(agg.displayMainAttributeBonus * 100)}%</span>
             </div>
             <div style={statRowStyle}>
               <span style={statLabelStyle}>ATK bonus from {STAT_LABELS[agg.secondaryAttributeType]}</span>
-              <span style={statValueStyle}>{(agg.secondaryAttributeBonus * 100).toFixed(2)}%</span>
+              <span style={statValueStyle}>{fmtN(agg.displaySecondaryAttributeBonus * 100)}%</span>
             </div>
           </div>
         </div>

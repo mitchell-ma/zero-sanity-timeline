@@ -13,6 +13,11 @@ Project structure:
 Architecture:
 - All business logic belongs in the controller layer. The view layer is presentation-only — it receives pre-computed values from controllers and should not process or derive logic itself.
 
+Event engine (`src/controller/timeline/`):
+- **No batch bulk pre-processing or post-processing.** All event processing happens through DerivedEventController registration and the priority queue. Never add passes that iterate all events before or after the queue to transform them in bulk.
+- A chain-of-action search is fine — some frames need to resolve to the source frame responsible for the chain that caused them. Tracing causality through events is expected; bulk-transforming all events is not.
+- See `src/controller/timeline/engineSpec.md` for the full engine architecture.
+
 Naming convention:
 - directory: kebab-case
 - file: camelCase
@@ -44,6 +49,6 @@ Processes:
   3. Implement tests in `src/tests/` after the feature is working, validating the controller logic in isolation.
 - **"wrap up"** — End-of-session process:
   1. Summarize all changes done today (including earlier commits) and the current file changes; this will be the git commit message body.
-  2. Summarize the above in very high-level and layman's terms and update the devlog (`public/devlog.md`) for today's local date.
+  2. Update the devlog (`public/devlog.md`) for today's local date. **Devlog must be written for players, not developers.** Describe what changed for the user — new features, UI changes, behavior improvements. Never mention code structure, class names, refactors, file names, internal systems, or architecture. If a change is purely internal, either omit it or describe only its user-facing benefit.
   3. Commit all changes and push to `main`.
 - **"push to prod"** — Rebase `prod` onto `main` to pick up all new changes, then push `prod` to remote.

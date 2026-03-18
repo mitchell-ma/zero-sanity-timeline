@@ -5,21 +5,26 @@ import {
   buildDamageTableRows,
   buildDamageTableColumns,
   computeDamageStatistics,
+  mergeRowsByFrame,
+  buildCollapsedColumns,
   DamageTableRow,
   DamageTableColumn,
+  MergedDamageRow,
+  CollapsedColumn,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { StatusQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/calculation/statusQueryService';
+import { EventsQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/timeline/eventsQueryService';
+import { getLastController } from '../controller/timeline/eventQueue';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { CritMode, ElementType, StatType } from '../consts/enums';
-import { getWeaponEffects } from '../consts/weaponSkillEffects';
+import { getWeaponEffectDefs, resolveTargetDisplay } from '../model/game-data/weaponGearEffectLoader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from './InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
 import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
 
-const ROW_HEIGHT = 20;
+const ROW_HEIGHT = 22;
 
 const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NONE, CritMode.ALWAYS];
 const CRIT_MODE_LABELS: Record<CritMode, string> = {
@@ -77,6 +82,13 @@ export default function CombatSheet({
   );
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
 
+  // Collapsed mode: one column per operator
+  const [collapsed, setCollapsed] = useState(false);
+  const collapsedColumns = useMemo(
+    () => buildCollapsedColumns(tableColumns, slots),
+    [tableColumns, slots],
+  );
+
   // Build aggregated stats per operator for corrosion Arts Intensity lookup
   const aggregatedStats = useMemo(() => {
     const result: Record<string, { stats: Record<StatType, number> }> = {};
@@ -97,15 +109,15 @@ export default function CombatSheet({
     const result: Record<string, WeaponFragilityEffect[]> = {};
     for (const slot of slots) {
       if (!slot.operator || !slot.weaponName) continue;
-      const entry = getWeaponEffects(slot.weaponName);
-      if (!entry) continue;
+      const defs = getWeaponEffectDefs(slot.weaponName);
+      if (defs.length === 0) continue;
       const effects: WeaponFragilityEffect[] = [];
-      for (const eff of entry.effects) {
-        if (eff.target !== 'enemy') continue;
-        for (const buff of eff.buffs) {
+      for (const def of defs) {
+        if (resolveTargetDisplay(def) !== 'enemy') continue;
+        for (const buff of (def.buffs ?? [])) {
           const elements = statToFragilityElements(buff.stat as string);
           if (elements) {
-            effects.push({ elements, bonus: buff.valueMax });
+            effects.push({ elements, bonus: buff.valueMax ?? buff.value ?? 0 });
           }
         }
       }
@@ -140,7 +152,8 @@ export default function CombatSheet({
   }, [slots, loadoutProperties]);
 
   const statusQuery = useMemo(
-    () => new StatusQueryService(events, staggerBreaks ?? [], loadoutProperties, aggregatedStats, weaponFragility, talentFragility),
+    () => new EventsQueryService(getLastController(), staggerBreaks ?? [], loadoutProperties, aggregatedStats, weaponFragility, talentFragility),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [events, staggerBreaks, loadoutProperties, aggregatedStats, weaponFragility, talentFragility],
   );
   const rows = useMemo(
@@ -217,51 +230,51 @@ export default function CombatSheet({
     }
   }, [onScrollProp]);
 
-  // Find nearest row within a generous pixel tolerance for hover highlighting
-  const hoveredRow = useMemo(() => {
-    if (hoverFrame == null || rows.length === 0) return null;
-    const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom)); // 8px hit area
-    let best: DamageTableRow | null = null;
+  // Merge rows by frame for denser display
+  const mergedRows = useMemo(() => mergeRowsByFrame(rows), [rows]);
+
+  // Find nearest merged row for hover highlighting
+  const hoveredMergedKey = useMemo(() => {
+    if (hoverFrame == null || mergedRows.length === 0) return null;
+    const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
+    let best: MergedDamageRow | null = null;
     let bestDist = Infinity;
-    for (const row of rows) {
-      const dist = Math.abs(row.absoluteFrame - hoverFrame);
+    for (const mr of mergedRows) {
+      const dist = Math.abs(mr.absoluteFrame - hoverFrame);
       if (dist < bestDist && dist <= toleranceFrames) {
         bestDist = dist;
-        best = row;
+        best = mr;
       }
     }
-    return best;
-  }, [hoverFrame, rows, zoom]);
-  const hoveredRowKey = hoveredRow?.key ?? null;
-  const hoveredColumnKey = hoveredRow?.columnKey ?? null;
+    return best?.key ?? null;
+  }, [hoverFrame, mergedRows, zoom]);
 
   // Track row+column hover from mouse interaction on cells (for + cross highlight)
   const [mouseHover, setMouseHover] = useState<{ rowKey: string; colKey: string } | null>(null);
-  const activeRowKey = mouseHover?.rowKey ?? hoveredRowKey;
-  const activeColumnKey = mouseHover?.colKey ?? hoveredColumnKey;
+  const activeRowKey = mouseHover?.rowKey ?? hoveredMergedKey;
+  const activeColumnKey = mouseHover?.colKey ?? null;
 
-  // Compute clamped top positions so rows never overlap
-  const rowLayout = useMemo(() => {
-    const layout: { row: DamageTableRow; top: number; frameTop: number }[] = [];
+  // Compute clamped top positions for merged rows
+  const mergedRowLayout = useMemo(() => {
+    const layout: { merged: MergedDamageRow; top: number }[] = [];
     let prevBottom = -Infinity;
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const frameTop = frameToPx(row.absoluteFrame, zoom) - ROW_HEIGHT / 2;
+    for (let i = 0; i < mergedRows.length; i++) {
+      const mr = mergedRows[i];
+      const frameTop = frameToPx(mr.absoluteFrame, zoom) - ROW_HEIGHT / 2;
       const top = compact ? i * ROW_HEIGHT : Math.max(frameTop, prevBottom);
-      layout.push({ row, top, frameTop });
+      layout.push({ merged: mr, top });
       prevBottom = top + ROW_HEIGHT;
     }
     return layout;
-  }, [rows, zoom, compact]);
+  }, [mergedRows, zoom, compact]);
 
 
   const tlHeight = useMemo(() => {
     const baseHeight = timelineHeight(zoom, contentFramesProp);
-    if (rowLayout.length === 0) return baseHeight;
-    const lastRow = rowLayout[rowLayout.length - 1];
-    // Extend body if clamped rows push past the natural timeline height
+    if (mergedRowLayout.length === 0) return baseHeight;
+    const lastRow = mergedRowLayout[mergedRowLayout.length - 1];
     return Math.max(baseHeight, lastRow.top + ROW_HEIGHT + 16);
-  }, [zoom, rowLayout, contentFramesProp]);
+  }, [zoom, mergedRowLayout, contentFramesProp]);
   const numCols = tableColumns.length;
 
   if (numCols === 0) {
@@ -317,6 +330,13 @@ export default function CombatSheet({
               title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
             >
               {CRIT_MODE_LABELS[critMode]}
+            </button>
+            <button
+              className={`dmg-collapse-toggle${collapsed ? ' dmg-collapse-toggle--active' : ''}`}
+              onClick={() => setCollapsed((c) => !c)}
+              title={collapsed ? 'Expand to individual skill columns' : 'Collapse to one column per operator'}
+            >
+              {collapsed ? 'EXPAND' : 'COLLAPSE'}
             </button>
             <div className="dmg-team-total-bars">
               {statistics.operators.map((op) => {
@@ -430,26 +450,45 @@ export default function CombatSheet({
         )}
       </div>
 
+      {/* Column headers */}
       <div className="dmg-header">
         <div className="dmg-header-time">Time</div>
-        {tableColumns.map((col) => {
-          const colTotal = statistics.columnTotals.get(col.key) ?? 0;
-          return (
-            <div
-              key={col.key}
-              className={`dmg-header-skill${col.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
-              style={{
-                '--op-color': col.color,
-                flex: colFlexMap.get(col.key) ?? 1,
-              } as React.CSSProperties}
-            >
-              <span className="dmg-header-skill-label">{col.label}</span>
-              {colTotal > 0 && (
-                <span className="dmg-header-skill-total">{formatDamage(colTotal)}</span>
-              )}
-            </div>
-          );
-        })}
+        {collapsed ? (
+          collapsedColumns.map((cc) => {
+            const opTotal = statistics.operators.find((o) => o.ownerId === cc.ownerId)?.totalDamage ?? 0;
+            return (
+              <div
+                key={cc.key}
+                className={`dmg-header-skill${cc.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
+                style={{ '--op-color': cc.color, flex: 1 } as React.CSSProperties}
+              >
+                <span className="dmg-header-skill-label dmg-header-skill-label--collapsed">{cc.label}</span>
+                {opTotal > 0 && (
+                  <span className="dmg-header-skill-total">{formatDamage(opTotal)}</span>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          tableColumns.map((col) => {
+            const colTotal = statistics.columnTotals.get(col.key) ?? 0;
+            return (
+              <div
+                key={col.key}
+                className={`dmg-header-skill${col.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
+                style={{
+                  '--op-color': col.color,
+                  flex: colFlexMap.get(col.key) ?? 1,
+                } as React.CSSProperties}
+              >
+                <span className="dmg-header-skill-label">{col.label}</span>
+                {colTotal > 0 && (
+                  <span className="dmg-header-skill-total">{formatDamage(colTotal)}</span>
+                )}
+              </div>
+            );
+          })
+        )}
         {hasBossHp && (
           <div className="dmg-header-hp">
             <span className="dmg-header-skill-label">Boss HP</span>
@@ -464,24 +503,22 @@ export default function CombatSheet({
           className="dmg-body"
           style={{ height: tlHeight }}
         >
-          {rowLayout.length === 0 ? (
+          {mergedRowLayout.length === 0 ? (
             <div className="dmg-body-empty">
               Add events to the timeline to see damage calculations
             </div>
           ) : (
-            rowLayout.map(({ row, top }) => (
-              <DamageRow
-                key={row.key}
-                row={row}
+            mergedRowLayout.map(({ merged, top }) => (
+              <MergedRow
+                key={merged.key}
+                merged={merged}
                 tableColumns={tableColumns}
+                collapsedColumns={collapsedColumns}
+                collapsed={collapsed}
                 colFlexMap={colFlexMap}
                 top={top}
-                selected={selectedFrames?.some(
-                  (sf) => sf.eventId === row.eventId
-                    && sf.segmentIndex === row.segmentIndex
-                    && sf.frameIndex === row.frameIndex,
-                ) ?? false}
-                hovered={row.key === activeRowKey}
+                selectedFrames={selectedFrames}
+                hovered={merged.key === activeRowKey}
                 highlightedColumnKey={activeColumnKey}
                 onCellHover={setMouseHover}
                 onDamageClick={onDamageClick}
@@ -497,12 +534,14 @@ export default function CombatSheet({
   );
 }
 
-function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, highlightedColumnKey, onCellHover, onDamageClick, hasBossHp, bossMaxHp, formatTime }: {
-  row: DamageTableRow;
+function MergedRow({ merged, tableColumns, collapsedColumns, collapsed, colFlexMap, top, selectedFrames, hovered, highlightedColumnKey, onCellHover, onDamageClick, hasBossHp, bossMaxHp, formatTime }: {
+  merged: MergedDamageRow;
   tableColumns: DamageTableColumn[];
+  collapsedColumns: CollapsedColumn[];
+  collapsed: boolean;
   colFlexMap: Map<string, number>;
   top: number;
-  selected: boolean;
+  selectedFrames?: SelectedFrame[];
   hovered: boolean;
   highlightedColumnKey: string | null;
   onCellHover: (hover: { rowKey: string; colKey: string } | null) => void;
@@ -511,46 +550,88 @@ function DamageRow({ row, tableColumns, colFlexMap, top, selected, hovered, high
   bossMaxHp: number | null;
   formatTime: (frame: number) => string;
 }) {
-  const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
+  const hasSelection = selectedFrames?.some((sf) => {
+    let found = false;
+    merged.cells.forEach((row) => {
+      if (sf.eventId === row.eventId && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex) found = true;
+    });
+    return found;
+  }) ?? false;
+
+  const cellCount = merged.cells.size;
+  const cls = `dmg-row${hasSelection ? ' dmg-row--selected' : ''}${hovered && !hasSelection ? ' dmg-row--hovered' : ''}${cellCount > 1 ? ' dmg-row--multi' : ''}`;
+
   return (
     <div className={cls} style={{ top }}>
       <div className="dmg-cell dmg-cell-time">
-        {formatTime(row.absoluteFrame)}
+        {formatTime(merged.absoluteFrame)}
       </div>
-      {tableColumns.map((col) => {
-        const isMatch = col.key === row.columnKey;
-        const isColHighlighted = col.key === highlightedColumnKey;
-        const flex = colFlexMap.get(col.key) ?? 1;
-        let displayValue = '';
-        if (isMatch) {
-          if (row.damage != null) {
-            displayValue = formatDamage(row.damage);
-          } else if (row.multiplier != null) {
-            displayValue = `${(row.multiplier * 100).toFixed(1)}%`;
-          } else {
-            displayValue = '\u2014';
+      {collapsed ? (
+        // Collapsed mode: one cell per operator, sum damage from all their columns
+        collapsedColumns.map((cc) => {
+          let totalDmg = 0;
+          let clickableRow: DamageTableRow | null = null;
+          let color = cc.color;
+          for (const colKey of cc.sourceColumnKeys) {
+            const row = merged.cells.get(colKey);
+            if (row) {
+              totalDmg += row.damage ?? 0;
+              if (row.params && !clickableRow) clickableRow = row;
+              color = row.columnKey ? (tableColumns.find((c) => c.key === row.columnKey)?.color ?? cc.color) : cc.color;
+            }
           }
-        }
-        return (
-          <div
-            key={col.key}
-            className={`dmg-cell${isMatch ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${isMatch && row.params ? ' dmg-cell-clickable' : ''}`}
-            style={isMatch ? { color: col.color, flex } : { flex }}
-            title={isMatch && row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
-            onClick={isMatch && row.params ? () => onDamageClick?.(row) : undefined}
-            onMouseEnter={() => onCellHover({ rowKey: row.key, colKey: col.key })}
-            onMouseLeave={() => onCellHover(null)}
-          >
-            {displayValue}
-          </div>
-        );
-      })}
-      {hasBossHp && row.hpRemaining != null && (
+          const hasValue = cc.sourceColumnKeys.some((k) => merged.cells.has(k));
+          const isColHighlighted = cc.key === highlightedColumnKey;
+          return (
+            <div
+              key={cc.key}
+              className={`dmg-cell${hasValue ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${clickableRow ? ' dmg-cell-clickable' : ''}`}
+              style={hasValue ? { color, flex: 1 } : { flex: 1 }}
+              onClick={clickableRow ? () => onDamageClick?.(clickableRow!) : undefined}
+              onMouseEnter={() => onCellHover({ rowKey: merged.key, colKey: cc.key })}
+              onMouseLeave={() => onCellHover(null)}
+            >
+              {hasValue ? formatDamage(totalDmg) : ''}
+            </div>
+          );
+        })
+      ) : (
+        // Expanded mode: one cell per skill column
+        tableColumns.map((col) => {
+          const row = merged.cells.get(col.key);
+          const isColHighlighted = col.key === highlightedColumnKey;
+          const flex = colFlexMap.get(col.key) ?? 1;
+          let displayValue = '';
+          if (row) {
+            if (row.damage != null) {
+              displayValue = formatDamage(row.damage);
+            } else if (row.multiplier != null) {
+              displayValue = `${(row.multiplier * 100).toFixed(1)}%`;
+            } else {
+              displayValue = '\u2014';
+            }
+          }
+          return (
+            <div
+              key={col.key}
+              className={`dmg-cell${row ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${row?.params ? ' dmg-cell-clickable' : ''}`}
+              style={row ? { color: col.color, flex } : { flex }}
+              title={row?.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
+              onClick={row?.params ? () => onDamageClick?.(row) : undefined}
+              onMouseEnter={() => onCellHover({ rowKey: merged.key, colKey: col.key })}
+              onMouseLeave={() => onCellHover(null)}
+            >
+              {displayValue}
+            </div>
+          );
+        })
+      )}
+      {hasBossHp && merged.hpRemaining != null && (
         <div
-          className={`dmg-cell dmg-cell-hp${row.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
-          title={`${Math.round(row.hpRemaining).toLocaleString()} / ${Math.round(bossMaxHp!).toLocaleString()} HP`}
+          className={`dmg-cell dmg-cell-hp${merged.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
+          title={`${Math.round(merged.hpRemaining).toLocaleString()} / ${Math.round(bossMaxHp!).toLocaleString()} HP`}
         >
-          {formatDamage(row.hpRemaining)}
+          {formatDamage(merged.hpRemaining)}
         </div>
       )}
     </div>

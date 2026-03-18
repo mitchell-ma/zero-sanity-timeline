@@ -33,7 +33,7 @@ import {
 } from '../../model/calculation/damageFormulas';
 import { Enemy } from '../../model/enemies/enemy';
 import type { DamageTableRow } from './damageTableBuilder';
-import type { StatusQueryService } from './statusQueryService';
+import type { EventsQueryService } from '../timeline/eventsQueryService';
 import { FPS } from '../../utils/timeline';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ function buildBaseParams(
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
   element: ElementType,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
   frame?: number,
   sourceOwnerId?: string,
 ): Omit<StatusDamageParams, 'statusBaseMultiplier'> {
@@ -149,7 +149,7 @@ function buildInitialTick(
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
   element: ElementType,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick | null {
   if (isForced(reactionEvent)) return null;
 
@@ -174,7 +174,7 @@ export function computeCombustionDamage(
   reactionEvent: TimelineEvent,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.HEAT;
   const statusLevel = getStatusLevel(reactionEvent);
@@ -223,7 +223,7 @@ export function computeSolidificationDamage(
   reactionEvent: TimelineEvent,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.CRYO;
   const statusLevel = getStatusLevel(reactionEvent);
@@ -256,7 +256,7 @@ export function computeCorrosionDamage(
   reactionEvent: TimelineEvent,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.NATURE;
   const ticks: ReactionDamageTick[] = [];
@@ -276,7 +276,7 @@ export function computeElectrificationDamage(
   reactionEvent: TimelineEvent,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.ELECTRIC;
   const ticks: ReactionDamageTick[] = [];
@@ -296,7 +296,7 @@ export function computeReactionDamage(
   reactionEvent: TimelineEvent,
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   switch (reactionEvent.columnId) {
     case 'combustion':      return computeCombustionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
@@ -317,7 +317,7 @@ export function buildReactionDamageRows(
   opCtx: ReactionOperatorContext,
   modelEnemy: Enemy,
   columnKey: string,
-  statusQuery?: StatusQueryService,
+  statusQuery?: EventsQueryService,
 ): DamageTableRow[] {
   const ticks = computeReactionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
 

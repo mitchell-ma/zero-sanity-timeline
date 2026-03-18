@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS } from '../../utils/timeline';
+import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
@@ -9,9 +9,15 @@ import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveC
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
+import { getLastController } from '../../controller/timeline/eventQueue';
 import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
-import { type TranslatedEffect, formatSegmentDisplayName } from '../../utils/semanticsTranslation';
+import { type TranslatedEffect } from '../../utils/semanticsTranslation';
+
+function formatSegNum(index: number): string {
+  return `Seg ${index + 1}`;
+}
+
 
 const SKILL_COLUMN_SET = new Set<string>(SKILL_COLUMN_ORDER);
 
@@ -300,7 +306,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
               {event.gaugeGainByEnemies != null && <div>gaugeGainByEnemies: <span style={{ color: '#55aadd' }}>{JSON.stringify(event.gaugeGainByEnemies)}</span></div>}
               {event.inflictionStacks != null && <div>inflictionStacks: <span style={{ color: '#dd8844' }}>{event.inflictionStacks}</span></div>}
               {event.statusLevel != null && <div>statusLevel: <span style={{ color: '#88cc44' }}>{event.statusLevel}</span></div>}
-              {event.statusValue != null && <div>statusValue: <span style={{ color: '#88cc44' }}>{(event.statusValue * 100).toFixed(1)}%</span></div>}
+              {event.statusValue != null && <div>statusValue: <span style={{ color: '#88cc44' }}>{fmtN(event.statusValue * 100)}%</span></div>}
               {event.forcedReaction && <div style={{ color: '#ff5522' }}>forcedReaction: true</div>}
               {event.isForced && <div style={{ color: '#ff5522' }}>isForced: true</div>}
               {event.eventStatus && <div>eventStatus: <span style={{ color: 'var(--gold)' }}>{event.eventStatus}</span></div>}
@@ -759,11 +765,11 @@ function EventPane({
                 <PredicateDisplay predicates={dslData.predicates} />
               )}
               {Object.entries(dslData.segmentPredicates).map(([si, preds]) => (
-                <PredicateDisplay key={`sp-${si}`} predicates={preds} label={formatSegmentDisplayName(undefined, Number(si))} />
+                <PredicateDisplay key={`sp-${si}`} predicates={preds} label={formatSegNum(Number(si))} />
               ))}
               {Object.entries(dslData.segmentEffects).filter(([k]) => k !== '-1').map(([si, effs]) => (
                 <div key={`se-${si}`}>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>{formatSegmentDisplayName(undefined, Number(si))}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 600, marginTop: 4 }}>{formatSegNum(Number(si))}</div>
                   <DslEffectStrings effects={effs} />
                 </div>
               ))}
@@ -904,7 +910,7 @@ function EventPane({
                       type="text"
                       inputMode="numeric"
                       style={{ width: 60 }}
-                      value={(event.statusValue * 100).toFixed(1)}
+                      value={fmtN(event.statusValue * 100)}
                       onChange={(e) => {
                         const pct = parseFloat(e.target.value);
                         if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
@@ -964,7 +970,7 @@ function EventPane({
                     type="text"
                     inputMode="numeric"
                     style={{ width: 60 }}
-                    value={(event.statusValue * 100).toFixed(1)}
+                    value={fmtN(event.statusValue * 100)}
                     onChange={(e) => {
                       const pct = parseFloat(e.target.value);
                       if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
@@ -1101,11 +1107,11 @@ function EventPane({
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
-                      {(overallMultiplier * 100).toFixed(1)}%
+                      {fmtN(overallMultiplier * 100)}%
                     </span>
                     {overallMaxFrames > 1 && (
                       <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                        ({((overallMultiplier / overallMaxFrames) * 100).toFixed(1)}% x{overallMaxFrames})
+                        ({fmtN((overallMultiplier / overallMaxFrames) * 100)}% x{overallMaxFrames})
                       </span>
                     )}
                     {skillLevel != null && (
@@ -1119,11 +1125,11 @@ function EventPane({
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
-                      {(perTickBase * 100).toFixed(1)}%
-                      {perTickIncrement > 0 && ` + ${(perTickIncrement * 100).toFixed(1)}%/tick`}
+                      {fmtN(perTickBase * 100)}%
+                      {perTickIncrement > 0 && ` + ${fmtN(perTickIncrement * 100)}%/tick`}
                     </span>
                     <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                      ({perTickFrames} ticks: {(perTickBase * 100).toFixed(1)}%–{((perTickBase + perTickIncrement * (perTickFrames - 1)) * 100).toFixed(1)}%)
+                      ({perTickFrames} ticks: {fmtN(perTickBase * 100)}%–{fmtN((perTickBase + perTickIncrement * (perTickFrames - 1)) * 100)}%)
                     </span>
                     {skillLevel != null && (
                       <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
@@ -1141,11 +1147,11 @@ function EventPane({
                       <div key={sm.label} style={{ paddingLeft: 8 }}>
                         <span style={{ color: 'var(--text-muted)' }}>{sm.label}: </span>
                         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
-                          {(sm.value * 100).toFixed(1)}%
+                          {fmtN(sm.value * 100)}%
                         </span>
                         {sm.maxFrames > 1 && (
                           <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                            ({((sm.value / sm.maxFrames) * 100).toFixed(1)}% x{sm.maxFrames})
+                            ({fmtN((sm.value / sm.maxFrames) * 100)}% x{sm.maxFrames})
                           </span>
                         )}
                       </div>
@@ -1211,7 +1217,7 @@ function EventPane({
                 const label = ELEMENT_LABELS[element as ElementType] ?? element;
                 return (
                   <div key={element}>
-                    <span style={{ color }}>{label}</span>: {(value * 100).toFixed(1)}%
+                    <span style={{ color }}>{label}</span>: {fmtN(value * 100)}%
                   </div>
                 );
               })}
@@ -1293,7 +1299,7 @@ function EventPane({
           const spData = resolveSpReturn(event, slots, consumptionRecord);
           if (!spData) return null;
           const { summary: sp, spNotes } = spData;
-          const r = (v: number) => v.toFixed(1);
+          const r = fmtN;
           const spInfo = (
             <div className="edit-info-text">
               {sp.totalSpReturn > 0 && <div>Return: {r(sp.totalSpReturn)}</div>}
@@ -1365,8 +1371,8 @@ function EventPane({
               {event.segments!.map((seg, si) => {
                 const ultSegName = seg.name ?? (seg.label ? seg.label : null);
                 const ultSegHeader = ultSegName
-                  ? `${ultSegName} (${formatSegmentDisplayName(undefined, si)})`
-                  : event.segments!.length > 1 ? formatSegmentDisplayName(undefined, si) : null;
+                  ? `${ultSegName} (${formatSegNum(si)})`
+                  : event.segments!.length > 1 ? formatSegNum(si) : null;
                 return seg.frames && seg.frames.length > 0 && (
                   <div key={si} style={{ marginTop: 6 }}>
                     {ultSegHeader && (
@@ -1394,20 +1400,20 @@ function EventPane({
                           <div className="edit-info-text" style={TREE_LINE_2}>
                             <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {fmtN(f.skillPointRecovery!)}</div>}
+                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{fmtN(f.gaugeGain!)}</div>}
+                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{fmtN(f.teamGaugeGain!)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
-                                    {(hitDmgRow.multiplier * 100).toFixed(1)}%
+                                    {fmtN(hitDmgRow.multiplier * 100)}%
                                   </span>
                                 )}
                                 {hitDmgRow.damage != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
-                                    {hitDmgRow.damage.toFixed(1)}
+                                    {fmtN(hitDmgRow.damage)}
                                   </span>
                                 )}
                               </div>
@@ -1417,10 +1423,10 @@ function EventPane({
                           {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
                             <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
                               <div style={FRAME_SUB_LABEL}>EFFECTS</div>
-                              <FrameDslEffects f={f} />
-                              {dslData?.frameEffects[`${si}-${fi}`] && (
-                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                              )}
+                              {dslData?.frameEffects[`${si}-${fi}`]
+                                ? <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                                : <FrameDslEffects f={f} />
+                              }
                             </div>
                           )}
                         </div>
@@ -1460,8 +1466,8 @@ function EventPane({
               {event.segments!.map((seg, si) => {
                 const ultEditSegName = seg.name ?? (seg.label ? seg.label : null);
                 const ultEditSegHeader = ultEditSegName
-                  ? `${ultEditSegName} (${formatSegmentDisplayName(undefined, si)})`
-                  : event.segments!.length > 1 ? formatSegmentDisplayName(undefined, si) : null;
+                  ? `${ultEditSegName} (${formatSegNum(si)})`
+                  : event.segments!.length > 1 ? formatSegNum(si) : null;
                 return seg.frames && seg.frames.length > 0 && (
                   <div key={si} style={{ marginTop: 6 }}>
                     {ultEditSegHeader && (
@@ -1499,20 +1505,20 @@ function EventPane({
                           {/* Properties */}
                           <div className="edit-info-text" style={TREE_LINE_2}>
                             {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
+                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {fmtN(f.skillPointRecovery!)}</div>}
+                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{fmtN(f.gaugeGain!)}</div>}
+                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{fmtN(f.teamGaugeGain!)}</div>}
                             {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
                             {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                               <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                 {hitDmgRow.multiplier != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
-                                    {(hitDmgRow.multiplier * 100).toFixed(1)}%
+                                    {fmtN(hitDmgRow.multiplier * 100)}%
                                   </span>
                                 )}
                                 {hitDmgRow.damage != null && (
                                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
-                                    {hitDmgRow.damage.toFixed(1)}
+                                    {fmtN(hitDmgRow.damage)}
                                   </span>
                                 )}
                               </div>
@@ -1522,10 +1528,10 @@ function EventPane({
                           {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
                             <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
                               <div style={FRAME_SUB_LABEL}>EFFECTS</div>
-                              <FrameDslEffects f={f} />
-                              {dslData?.frameEffects[`${si}-${fi}`] && (
-                                <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                              )}
+                              {dslData?.frameEffects[`${si}-${fi}`]
+                                ? <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                                : <FrameDslEffects f={f} />
+                              }
                             </div>
                           )}
                         </div>
@@ -1569,8 +1575,8 @@ function EventPane({
               const isNumericLabel = seg.label && /^\d+$/.test(seg.label);
               const segName = seg.name ?? (seg.label && !isNumericLabel ? seg.label : null);
               const segLabel = segName
-                ? `${segName} (${formatSegmentDisplayName(undefined, si)})`
-                : formatSegmentDisplayName(undefined, si);
+                ? `${segName} (${formatSegNum(si)})`
+                : formatSegNum(si);
               // Segment-level damage: sum per-frame damages and get multiplier
               const segDamageFrames = seg.frames
                 ? seg.frames.map((_, fi) => eventDamageRows.get(`${si}-${fi}`))
@@ -1602,16 +1608,16 @@ function EventPane({
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
                         <span style={{ color: 'var(--text-muted)' }}>Multiplier: </span>
                         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)' }}>
-                          {(segTotalMultiplier * 100).toFixed(1)}%
+                          {fmtN(segTotalMultiplier * 100)}%
                         </span>
                         {segMaxFrames > 1 && segPerFrameMultiplier != null && (
                           <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 4 }}>
-                            ({(segPerFrameMultiplier * 100).toFixed(1)}% x{segMaxFrames})
+                            ({fmtN(segPerFrameMultiplier * 100)}% x{segMaxFrames})
                           </span>
                         )}
                         {segTotalDamage > 0 && (
                           <span style={{ color: 'var(--green)', fontSize: 10, marginLeft: 6 }}>
-                            {segTotalDamage.toFixed(1)} dmg
+                            {fmtN(segTotalDamage)} dmg
                           </span>
                         )}
                       </div>
@@ -1710,7 +1716,7 @@ function EventPane({
                               {(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) && (
                                 (readOnly || isDerived) ? (
                                   <>
-                                    {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {f.skillPointRecovery!.toFixed(1)}</div>}
+                                    {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {fmtN(f.skillPointRecovery!)}</div>}
                                     {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
                                   </>
                                 ) : (
@@ -1780,18 +1786,18 @@ function EventPane({
                                   </>
                                 )
                               )}
-                              {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{f.gaugeGain!.toFixed(1)}</div>}
-                              {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{f.teamGaugeGain!.toFixed(1)}</div>}
+                              {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{fmtN(f.gaugeGain!)}</div>}
+                              {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{fmtN(f.teamGaugeGain!)}</div>}
                               {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
                                 <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                                   {hitDmgRow.multiplier != null && (
                                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
-                                      {(hitDmgRow.multiplier * 100).toFixed(1)}%
+                                      {fmtN(hitDmgRow.multiplier * 100)}%
                                     </span>
                                   )}
                                   {hitDmgRow.damage != null && (
                                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
-                                      {hitDmgRow.damage.toFixed(1)}
+                                      {fmtN(hitDmgRow.damage)}
                                     </span>
                                   )}
                                 </div>
@@ -1801,10 +1807,10 @@ function EventPane({
                             {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
                                 <div style={FRAME_SUB_LABEL}>EFFECTS</div>
-                                <FrameDslEffects f={f} />
-                                {dslData?.frameEffects[`${si}-${fi}`] && (
-                                  <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                                )}
+                                {dslData?.frameEffects[`${si}-${fi}`]
+                                  ? <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
+                                  : <FrameDslEffects f={f} />
+                                }
                               </div>
                             )}
                           </div>
@@ -2083,6 +2089,9 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         </div>
       )}
 
+      {/* Pipeline internals — DerivedEventController snapshot */}
+      <PipelineTimeline />
+
       {/* Controller Objects — tree view */}
       {(rawEvents || allProcessedEvents) && (() => {
         const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.id)) : null;
@@ -2149,6 +2158,134 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         );
       })()}
 
+    </div>
+  );
+}
+
+/** Pipeline internals: time-stop regions, combo chaining, queue output organized chronologically. */
+function PipelineTimeline() {
+  const state = getLastController();
+  if (!state) return null;
+
+  const stops = state.getStops();
+  const comboStops = state.getComboStops();
+  const queueOutput = state.getQueueOutput();
+  const registered = state.getRegisteredEvents();
+
+  const fmt = (f: number) => `${framesToSeconds(f)}s`;
+  const fmtRange = (start: number, dur: number) => `${fmt(start)}–${fmt(start + dur)} (${dur}f)`;
+
+  // Build a unified timeline of pipeline events
+  type Entry = { frame: number; type: string; label: string; detail?: string; color: string };
+  const entries: Entry[] = [];
+
+  for (const s of stops) {
+    const source = registered.find(e => e.id === s.eventId);
+    const label = source ? `${source.columnId}` : s.eventId;
+    entries.push({
+      frame: s.startFrame,
+      type: 'TIME_STOP',
+      label: `⏸ ${label}`,
+      detail: fmtRange(s.startFrame, s.durationFrames),
+      color: '#8888cc',
+    });
+  }
+
+  for (const cs of comboStops) {
+    entries.push({
+      frame: cs.startFrame,
+      type: 'COMBO_CHAIN',
+      label: `⛓ combo`,
+      detail: `${cs.id} animDur=${cs.animDur}f`,
+      color: '#cc8844',
+    });
+  }
+
+  // Group queue output by type
+  const queueByType = new Map<string, number>();
+  for (const ev of queueOutput) {
+    const key = ev.columnId;
+    queueByType.set(key, (queueByType.get(key) ?? 0) + 1);
+  }
+
+  // Show first few queue events chronologically
+  const sortedQueue = [...queueOutput].sort((a, b) => a.startFrame - b.startFrame);
+  for (const ev of sortedQueue.slice(0, 30)) {
+    entries.push({
+      frame: ev.startFrame,
+      type: 'QUEUE',
+      label: ev.columnId,
+      detail: `${ev.id} [${fmt(ev.activationDuration)}]${ev.eventStatus ? ` (${ev.eventStatus})` : ''}`,
+      color: ev.eventStatus === EventStatusType.CONSUMED ? '#666' : '#dd8844',
+    });
+  }
+
+  entries.sort((a, b) => a.frame - b.frame);
+
+  return (
+    <div style={{ marginTop: 6, marginBottom: 6 }}>
+      <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4 }}>
+        Pipeline ({stops.length} stops, {comboStops.length} chains, {queueOutput.length} queue events, {registered.length} registered)
+      </div>
+
+      {/* Time-stop summary */}
+      {stops.length > 0 && (
+        <div style={{ marginBottom: 4, paddingLeft: 8, borderLeft: '2px solid #8888cc' }}>
+          <div style={{ color: '#8888cc', fontSize: 9, fontWeight: 600, marginBottom: 1 }}>Time Stops</div>
+          {stops.map((s, i) => (
+            <div key={i} style={{ fontSize: 10 }}>
+              {fmtRange(s.startFrame, s.durationFrames)}
+              <span style={{ color: 'var(--text-muted)' }}> {s.eventId}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Combo chaining */}
+      {comboStops.length > 0 && (
+        <div style={{ marginBottom: 4, paddingLeft: 8, borderLeft: '2px solid #cc8844' }}>
+          <div style={{ color: '#cc8844', fontSize: 9, fontWeight: 600, marginBottom: 1 }}>Combo Chains</div>
+          {comboStops.map((cs, i) => (
+            <div key={i} style={{ fontSize: 10 }}>
+              @{fmt(cs.startFrame)} animDur={cs.animDur}f
+              <span style={{ color: 'var(--text-muted)' }}> {cs.id}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Queue output summary */}
+      {queueOutput.length > 0 && (
+        <div style={{ marginBottom: 4, paddingLeft: 8, borderLeft: '2px solid #dd8844' }}>
+          <div style={{ color: '#dd8844', fontSize: 9, fontWeight: 600, marginBottom: 1 }}>
+            Queue Output ({queueOutput.length})
+          </div>
+          {Array.from(queueByType.entries())
+            .sort((a, b) => b[1] - a[1])
+            .map(([col, count]) => (
+              <div key={col} style={{ fontSize: 10 }}>
+                {col}: <span style={{ color: 'var(--text-primary)' }}>{count}</span>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* Chronological timeline */}
+      {entries.length > 0 && (
+        <div style={{ paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 9, fontWeight: 600, marginBottom: 1 }}>Timeline</div>
+          {entries.slice(0, 50).map((e, i) => (
+            <div key={i} style={{ fontSize: 10 }}>
+              <span style={{ color: 'var(--text-muted)' }}>@{fmt(e.frame)}</span>
+              {' '}<span style={{ color: e.color }}>{e.label}</span>
+              {e.detail && <span style={{ color: 'var(--text-muted)' }}> {e.detail}</span>}
+            </div>
+          ))}
+          {entries.length > 50 && (
+            <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>...{entries.length - 50} more</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

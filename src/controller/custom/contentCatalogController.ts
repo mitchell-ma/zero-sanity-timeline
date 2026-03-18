@@ -4,8 +4,8 @@
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
-import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
-import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
+import { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../../model/game-data/weaponGearEffectLoader';
+import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
 import { getCustomWeapons } from './customWeaponController';
@@ -149,27 +149,29 @@ export function getAllContentItems(): ContentBrowserItem[] {
   }
 
   // ── Weapon Skill Effects ────────────────────────────────────────────────
-  for (const entry of WEAPON_SKILL_EFFECTS) {
-    const firstEffect = entry.effects[0];
+  for (const weaponName of getAllWeaponEffectNames()) {
+    const defs = getWeaponEffectDefs(weaponName);
+    const firstDef = defs[0];
     items.push({
-      id: `wse:${entry.weaponName}`,
-      name: entry.weaponName,
+      id: `wse:${weaponName}`,
+      name: weaponName,
       category: ContentCategory.WEAPON_EFFECTS,
       source: 'builtin',
-      meta: firstEffect ? firstEffect.label : 'No effects',
+      meta: firstDef ? (firstDef.label ?? firstDef.name) : 'No effects',
     });
   }
 
   // ── Gear Set Effects ────────────────────────────────────────────────────
-  for (const entry of GEAR_SET_EFFECTS) {
-    const passiveCount = Object.keys(entry.passiveStats).length;
-    const effectCount = entry.effects.length;
+  for (const gearSetType of getAllGearEffectTypes()) {
+    const defs = getGearEffectDefs(gearSetType);
+    const passiveEntry = getGearSetEffects(gearSetType as any);
+    const passiveCount = passiveEntry ? Object.keys(passiveEntry.passiveStats).length : 0;
     items.push({
-      id: `gse:${entry.gearSetType}`,
-      name: entry.label,
+      id: `gse:${gearSetType}`,
+      name: getGearEffectLabel(gearSetType) ?? passiveEntry?.label ?? gearSetType,
       category: ContentCategory.GEAR_EFFECTS,
       source: 'builtin',
-      meta: `${passiveCount} passive${effectCount ? ` \u00B7 ${effectCount} triggered` : ''}`,
+      meta: `${passiveCount} passive${defs.length ? ` \u00B7 ${defs.length} triggered` : ''}`,
     });
   }
 

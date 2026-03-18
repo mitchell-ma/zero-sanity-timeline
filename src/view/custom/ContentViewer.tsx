@@ -7,8 +7,8 @@ import { ContentCategory, ContentSelection } from '../../consts/contentBrowserTy
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
 import { WEAPON_DATA } from '../../model/weapons/weaponData';
-import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
-import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
+import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
+import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import type { CombatSkillsType } from '../../consts/enums';
@@ -290,12 +290,12 @@ function OperatorView({ id, navigate }: { id: string; navigate: NavigateFn }) {
 function WeaponView({ id, navigate }: { id: string; navigate: NavigateFn }) {
   const entry = WEAPONS.find((w) => w.name === id);
   const config = WEAPON_DATA[id];
-  const effects = WEAPON_SKILL_EFFECTS.find((e) => e.weaponName === id);
+  const dslDefs = getWeaponEffectDefs(id);
 
   if (!entry || !config) return <div className="content-viewer-empty">Weapon not found</div>;
 
   const viewWeaponEffect = () => {
-    if (effects) navigate({ id: `wse:${id}`, category: ContentCategory.WEAPON_EFFECTS, source: 'builtin' });
+    if (dslDefs.length > 0) navigate({ id: `wse:${id}`, category: ContentCategory.WEAPON_EFFECTS, source: 'builtin' });
   };
 
   return (
@@ -316,30 +316,29 @@ function WeaponView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         </div>
       </Section>
 
-      {effects && (
+      {dslDefs.length > 0 && (
         <SectionWithNav title="Triggered Effects" onView={viewWeaponEffect}>
-          {effects.effects.map((eff, i) => (
+          {dslDefs.map((def: any, i: number) => (
             <div key={i} className="cv-effect-card">
-              <div className="cv-effect-name">{eff.label}</div>
-              {eff.description && <div className="cv-effect-desc">{eff.description}</div>}
+              <div className="cv-effect-name">{def.label ?? def.name}</div>
               <div className="cv-field-grid">
-                <Field label="Target" value={eff.target} />
-                <Field label="Duration" value={`${eff.durationSeconds}s`} />
-                <Field label="Max Stacks" value={String(eff.maxStacks)} />
-                {eff.cooldownSeconds > 0 && <Field label="Cooldown" value={`${eff.cooldownSeconds}s`} />}
+                <Field label="Target" value={resolveTargetDisplay(def)} />
+                <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
+                <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+                {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
               </div>
               <div className="cv-triggers">
                 <span className="cv-label">Triggers:</span>
-                {eff.triggers.map((t, j) => (
+                {resolveTriggerInteractions(def).map((t: any, j: number) => (
                   <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
                 ))}
               </div>
-              {eff.buffs.length > 0 && (
+              {def.buffs?.length > 0 && (
                 <div className="cv-buffs">
                   <span className="cv-label">Buffs:</span>
-                  {eff.buffs.map((b, j) => (
+                  {def.buffs.map((b: any, j: number) => (
                     <span key={j} className="cv-buff-tag">
-                      {b.stat} {b.valueMin}\u2013{b.valueMax}{b.perStack ? ' /stack' : ''}
+                      {b.stat} {b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}{b.perStack ? ' /stack' : ''}
                     </span>
                   ))}
                 </div>
@@ -354,7 +353,8 @@ function WeaponView({ id, navigate }: { id: string; navigate: NavigateFn }) {
 
 function GearSetView({ id, navigate }: { id: string; navigate: NavigateFn }) {
   const pieces = GEARS.filter((g) => g.gearSetType === id);
-  const effects = GEAR_SET_EFFECTS.find((e) => e.gearSetType === id);
+  const passiveEntry = getGearSetEffects(id as any);
+  const dslDefs = getGearEffectDefs(id);
 
   const viewGearEffect = () => {
     navigate({ id: `gse:${id}`, category: ContentCategory.GEAR_EFFECTS, source: 'builtin' });
@@ -364,7 +364,7 @@ function GearSetView({ id, navigate }: { id: string; navigate: NavigateFn }) {
 
   return (
     <>
-      <h2 className="cv-title">{effects?.label ?? id}</h2>
+      <h2 className="cv-title">{passiveEntry?.label ?? id}</h2>
       <Section title={`Pieces (${pieces.length})`}>
         {pieces.map((p) => (
           <div key={p.name} className="cv-subsection">
@@ -374,50 +374,46 @@ function GearSetView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         ))}
       </Section>
 
-      {effects && (
-        <>
-          {Object.keys(effects.passiveStats).length > 0 && (
-            <Section title="Passive Stats (3-piece)">
+      {passiveEntry && Object.keys(passiveEntry.passiveStats).length > 0 && (
+        <Section title="Passive Stats (3-piece)">
+          <div className="cv-field-grid">
+            {Object.entries(passiveEntry.passiveStats).map(([stat, val]) => (
+              <Field key={stat} label={stat.replace(/_/g, ' ')} value={String(val)} />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {dslDefs.length > 0 && (
+        <SectionWithNav title="Triggered Effects" onView={viewGearEffect}>
+          {dslDefs.map((def: any, i: number) => (
+            <div key={i} className="cv-effect-card">
+              <div className="cv-effect-name">{def.label ?? def.name}</div>
               <div className="cv-field-grid">
-                {Object.entries(effects.passiveStats).map(([stat, val]) => (
-                  <Field key={stat} label={stat.replace(/_/g, ' ')} value={String(val)} />
+                <Field label="Target" value={resolveTargetDisplay(def)} />
+                <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
+                <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+                {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
+              </div>
+              <div className="cv-triggers">
+                <span className="cv-label">Triggers:</span>
+                {resolveTriggerInteractions(def).map((t: any, j: number) => (
+                  <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
                 ))}
               </div>
-            </Section>
-          )}
-
-          {effects.effects.length > 0 && (
-            <SectionWithNav title="Triggered Effects" onView={viewGearEffect}>
-              {effects.effects.map((eff, i) => (
-                <div key={i} className="cv-effect-card">
-                  <div className="cv-effect-name">{eff.label}</div>
-                  <div className="cv-field-grid">
-                    <Field label="Target" value={eff.target} />
-                    <Field label="Duration" value={`${eff.durationSeconds}s`} />
-                    <Field label="Max Stacks" value={String(eff.maxStacks)} />
-                    {eff.cooldownSeconds > 0 && <Field label="Cooldown" value={`${eff.cooldownSeconds}s`} />}
-                  </div>
-                  <div className="cv-triggers">
-                    <span className="cv-label">Triggers:</span>
-                    {eff.triggers.map((t, j) => (
-                      <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
-                    ))}
-                  </div>
-                  {eff.buffs.length > 0 && (
-                    <div className="cv-buffs">
-                      <span className="cv-label">Buffs:</span>
-                      {eff.buffs.map((b, j) => (
-                        <span key={j} className="cv-buff-tag">
-                          {b.stat} {b.value}{b.perStack ? ' /stack' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+              {def.buffs?.length > 0 && (
+                <div className="cv-buffs">
+                  <span className="cv-label">Buffs:</span>
+                  {def.buffs.map((b: any, j: number) => (
+                    <span key={j} className="cv-buff-tag">
+                      {b.stat} {b.value}{b.perStack ? ' /stack' : ''}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </SectionWithNav>
-          )}
-        </>
+              )}
+            </div>
+          ))}
+        </SectionWithNav>
       )}
     </>
   );
@@ -425,40 +421,39 @@ function GearSetView({ id, navigate }: { id: string; navigate: NavigateFn }) {
 
 function WeaponEffectView({ id }: { id: string }) {
   const weaponName = id.replace(/^wse:/, '');
-  const entry = WEAPON_SKILL_EFFECTS.find((e) => e.weaponName === weaponName);
-  if (!entry) return <div className="content-viewer-empty">Weapon effect not found</div>;
+  const dslDefs = getWeaponEffectDefs(weaponName);
+  if (dslDefs.length === 0) return <div className="content-viewer-empty">Weapon effect not found</div>;
 
   return (
     <>
-      <h2 className="cv-title">{entry.weaponName}</h2>
-      {entry.effects.map((eff, i) => (
+      <h2 className="cv-title">{weaponName}</h2>
+      {dslDefs.map((def: any, i: number) => (
         <div key={i} className="cv-effect-card">
-          <div className="cv-effect-name">{eff.label}</div>
-          {eff.description && <div className="cv-effect-desc">{eff.description}</div>}
+          <div className="cv-effect-name">{def.label ?? def.name}</div>
           <div className="cv-field-grid">
-            <Field label="Skill Key" value={eff.skillKey.replace(/_/g, ' ')} />
-            <Field label="Target" value={eff.target} />
-            <Field label="Duration" value={`${eff.durationSeconds}s`} />
-            <Field label="Max Stacks" value={String(eff.maxStacks)} />
-            {eff.cooldownSeconds > 0 && <Field label="Cooldown" value={`${eff.cooldownSeconds}s`} />}
+            <Field label="Origin" value={(def.originId ?? '').replace(/_/g, ' ')} />
+            <Field label="Target" value={resolveTargetDisplay(def)} />
+            <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
+            <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+            {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
           </div>
           <div className="cv-triggers">
             <span className="cv-label">Triggers:</span>
-            {eff.triggers.map((t, j) => (
+            {resolveTriggerInteractions(def).map((t: any, j: number) => (
               <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
             ))}
           </div>
-          {eff.buffs.length > 0 && (
+          {def.buffs?.length > 0 && (
             <div className="cv-buffs">
               <span className="cv-label">Buffs:</span>
-              {eff.buffs.map((b, j) => (
+              {def.buffs.map((b: any, j: number) => (
                 <span key={j} className="cv-buff-tag">
-                  {b.stat} {b.valueMin}\u2013{b.valueMax}{b.perStack ? ' /stack' : ''}
+                  {b.stat} {b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}{b.perStack ? ' /stack' : ''}
                 </span>
               ))}
             </div>
           )}
-          {eff.note && <div className="cv-note">{eff.note}</div>}
+          {def.note && <div className="cv-note">{def.note}</div>}
         </div>
       ))}
     </>
@@ -467,51 +462,52 @@ function WeaponEffectView({ id }: { id: string }) {
 
 function GearEffectView({ id }: { id: string }) {
   const gearSetType = id.replace(/^gse:/, '');
-  const entry = GEAR_SET_EFFECTS.find((e) => e.gearSetType === gearSetType);
-  if (!entry) return <div className="content-viewer-empty">Gear effect not found</div>;
+  const passiveEntry = getGearSetEffects(gearSetType as any);
+  const dslDefs = getGearEffectDefs(gearSetType);
+  if (!passiveEntry && dslDefs.length === 0) return <div className="content-viewer-empty">Gear effect not found</div>;
 
   return (
     <>
-      <h2 className="cv-title">{entry.label}</h2>
+      <h2 className="cv-title">{passiveEntry?.label ?? gearSetType}</h2>
 
-      {Object.keys(entry.passiveStats).length > 0 && (
+      {passiveEntry && Object.keys(passiveEntry.passiveStats).length > 0 && (
         <Section title="Passive Stats">
           <div className="cv-field-grid">
-            {Object.entries(entry.passiveStats).map(([stat, val]) => (
+            {Object.entries(passiveEntry.passiveStats).map(([stat, val]) => (
               <Field key={stat} label={stat.replace(/_/g, ' ')} value={String(val)} />
             ))}
           </div>
         </Section>
       )}
 
-      {entry.effects.length > 0 && (
+      {dslDefs.length > 0 && (
         <Section title="Triggered Effects">
-          {entry.effects.map((eff, i) => (
+          {dslDefs.map((def: any, i: number) => (
             <div key={i} className="cv-effect-card">
-              <div className="cv-effect-name">{eff.label}</div>
+              <div className="cv-effect-name">{def.label ?? def.name}</div>
               <div className="cv-field-grid">
-                <Field label="Target" value={eff.target} />
-                <Field label="Duration" value={`${eff.durationSeconds}s`} />
-                <Field label="Max Stacks" value={String(eff.maxStacks)} />
-                {eff.cooldownSeconds > 0 && <Field label="Cooldown" value={`${eff.cooldownSeconds}s`} />}
+                <Field label="Target" value={resolveTargetDisplay(def)} />
+                <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
+                <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+                {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
               </div>
               <div className="cv-triggers">
                 <span className="cv-label">Triggers:</span>
-                {eff.triggers.map((t, j) => (
+                {resolveTriggerInteractions(def).map((t: any, j: number) => (
                   <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
                 ))}
               </div>
-              {eff.buffs.length > 0 && (
+              {def.buffs?.length > 0 && (
                 <div className="cv-buffs">
                   <span className="cv-label">Buffs:</span>
-                  {eff.buffs.map((b, j) => (
+                  {def.buffs.map((b: any, j: number) => (
                     <span key={j} className="cv-buff-tag">
                       {b.stat} {b.value}{b.perStack ? ' /stack' : ''}
                     </span>
                   ))}
                 </div>
               )}
-              {eff.note && <div className="cv-note">{eff.note}</div>}
+              {def.note && <div className="cv-note">{def.note}</div>}
             </div>
           ))}
         </Section>

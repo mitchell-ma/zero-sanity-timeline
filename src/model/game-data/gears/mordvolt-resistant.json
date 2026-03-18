@@ -10,34 +10,6 @@
   },
   "pieces": [
     {
-      "gearType": "MORDVOLT_RESISTANT_VEST_T1",
-      "name": "Mordvolt Resistant Vest T1",
-      "gearCategory": "ARMOR",
-      "defense": 40,
-      "allLevels": {
-        "1": {
-          "WILL": 61,
-          "INTELLECT": 41,
-          "HP_BONUS": 0.147
-        },
-        "2": {
-          "WILL": 61,
-          "INTELLECT": 41,
-          "HP_BONUS": 0.147
-        },
-        "3": {
-          "WILL": 61,
-          "INTELLECT": 41,
-          "HP_BONUS": 0.147
-        },
-        "4": {
-          "WILL": 61,
-          "INTELLECT": 41,
-          "HP_BONUS": 0.147
-        }
-      }
-    },
-    {
       "gearType": "MORDVOLT_RESISTANT_VEST",
       "name": "Mordvolt Resistant Vest",
       "gearCategory": "ARMOR",
@@ -66,6 +38,34 @@
       }
     },
     {
+      "gearType": "MORDVOLT_RESISTANT_VEST_T1",
+      "name": "Mordvolt Resistant Vest T1",
+      "gearCategory": "ARMOR",
+      "defense": 40,
+      "allLevels": {
+        "1": {
+          "WILL": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "2": {
+          "WILL": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "3": {
+          "WILL": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        },
+        "4": {
+          "WILL": 61,
+          "INTELLECT": 41,
+          "HP_BONUS": 0.147
+        }
+      }
+    },
+    {
       "gearType": "MORDVOLT_RESISTANT_GLOVES",
       "name": "Mordvolt Resistant Gloves",
       "gearCategory": "GLOVES",
@@ -74,22 +74,22 @@
         "1": {
           "WILL": 33,
           "INTELLECT": 22,
-          "TREATMENT_BONUS": 0.088
+          "TREATMENT_BONUS": 0.0875
         },
         "2": {
           "WILL": 33,
           "INTELLECT": 22,
-          "TREATMENT_BONUS": 0.088
+          "TREATMENT_BONUS": 0.0875
         },
         "3": {
           "WILL": 33,
           "INTELLECT": 22,
-          "TREATMENT_BONUS": 0.088
+          "TREATMENT_BONUS": 0.0875
         },
         "4": {
           "WILL": 33,
           "INTELLECT": 22,
-          "TREATMENT_BONUS": 0.088
+          "TREATMENT_BONUS": 0.0875
         }
       }
     },
@@ -102,50 +102,22 @@
         "1": {
           "WILL": 46,
           "AGILITY": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "2": {
           "WILL": 46,
           "AGILITY": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "3": {
           "WILL": 46,
           "AGILITY": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "4": {
           "WILL": 46,
           "AGILITY": 30,
-          "ATTACK_BONUS": 0.123
-        }
-      }
-    },
-    {
-      "gearType": "MORDVOLT_RESISTANT_BATTERY_T1",
-      "name": "Mordvolt Resistant Battery T1",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "WILL": 23,
-          "AGILITY": 15,
-          "TREATMENT_BONUS": 0.147
-        },
-        "2": {
-          "WILL": 23,
-          "AGILITY": 15,
-          "TREATMENT_BONUS": 0.147
-        },
-        "3": {
-          "WILL": 23,
-          "AGILITY": 15,
-          "TREATMENT_BONUS": 0.147
-        },
-        "4": {
-          "WILL": 23,
-          "AGILITY": 15,
-          "TREATMENT_BONUS": 0.147
+          "ATTACK_BONUS": 0.1225
         }
       }
     },
@@ -194,6 +166,34 @@
         "4": {
           "WILL": 21,
           "TREATMENT_BONUS": 0.105
+        }
+      }
+    },
+    {
+      "gearType": "MORDVOLT_RESISTANT_BATTERY_T1",
+      "name": "Mordvolt Resistant Battery T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "WILL": 23,
+          "AGILITY": 15,
+          "TREATMENT_BONUS": 0.147
+        },
+        "2": {
+          "WILL": 23,
+          "AGILITY": 15,
+          "TREATMENT_BONUS": 0.147
+        },
+        "3": {
+          "WILL": 23,
+          "AGILITY": 15,
+          "TREATMENT_BONUS": 0.147
+        },
+        "4": {
+          "WILL": 23,
+          "AGILITY": 15,
+          "TREATMENT_BONUS": 0.147
         }
       }
     },

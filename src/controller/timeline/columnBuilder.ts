@@ -2,7 +2,6 @@ import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../cons
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { DEBUGGER_OWNER_ID, ENEMY_OWNER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
-import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { TACTICALS } from '../../utils/loadoutRegistry';
 import { Tactical } from '../../model/consumables/tactical';
@@ -10,7 +9,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
-import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getFrameSequences, getSegmentLabels, getDelayedHitLabel, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
@@ -257,38 +256,7 @@ export function buildColumns(
   }
 
   // ── Shared team weapon/gear effect column ─────────────────────────────────
-  // Collect team-targeting effects from both old TS registry and new DSL defs
-  const teamGearBuffs: { slotId: string; statusName: string; label: string; durationFrames: number; color: string }[] = [];
-  // From TS registry (gear sets only — for backward compatibility during migration)
-  for (const slot of slots) {
-    if (!slot.operator || !slot.gearSetType) continue;
-    const gearEntry = getGearSetEffects(slot.gearSetType);
-    if (!gearEntry) continue;
-    for (const effect of gearEntry.effects) {
-      if (effect.target === 'team') {
-        teamGearBuffs.push({
-          slotId: slot.slotId,
-          statusName: effect.label.toUpperCase().replace(/[^A-Z0-9]+/g, '_'),
-          label: effect.label,
-          durationFrames: Math.round(effect.durationSeconds * 120),
-          color: slot.operator.color,
-        });
-      }
-    }
-  }
-  // From DSL defs (weapon + gear team effects)
-  for (const twd of teamWeaponGearDefs) {
-    // Avoid duplicating gear effects already added from TS registry
-    if (!teamGearBuffs.some(b => b.slotId === twd.slotId && b.label === twd.label)) {
-      teamGearBuffs.push({
-        slotId: twd.slotId,
-        statusName: twd.statusName,
-        label: twd.label,
-        durationFrames: twd.durationFrames,
-        color: twd.color,
-      });
-    }
-  }
+  const teamGearBuffs = teamWeaponGearDefs;
   if (teamGearBuffs.length > 0) {
     const microCols = teamGearBuffs.map((tgb) => {
       const id = tgb.statusName.toLowerCase().replace(/_/g, '-');
@@ -525,7 +493,8 @@ export function buildColumns(
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
-            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const battleDelayLabel = getDelayedHitLabel(op!.id, battleName!);
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, delayedHitLabel: battleDelayLabel });
             const battleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
             const battleSegments = battleCd > 0
               ? [...seg.segments, { durationFrames: battleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
@@ -573,7 +542,8 @@ export function buildColumns(
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
-            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies });
+            const comboDelayLabel = getDelayedHitLabel(op!.id, comboName!);
+            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, delayedHitLabel: comboDelayLabel });
             const comboCd = skill.defaultCooldownDuration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
@@ -642,41 +612,28 @@ export function buildColumns(
         }
       }
     }
-    // ── Gear set buff column (wielder effects) ─────────────────────────────────
-    let gearColCount = 0;
-    if (op && slot.gearSetType) {
-      const gearEntry = getGearSetEffects(slot.gearSetType);
-      if (gearEntry) {
-        const wielderEffects = gearEntry.effects.filter((e) => e.target === 'wielder');
-        if (wielderEffects.length > 0) {
-          const microCols = wielderEffects.map((eff, i) => ({
-            id: i === 0 ? 'gear-buff' : `gear-buff-${i}`,
-            label: eff.label,
-            color: op.color,
-            defaultEvent: {
-              name: eff.label,
-              defaultActivationDuration: Math.round(eff.durationSeconds * 120),
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
-            },
-          }));
-          columns.push({
-            key: `${slot.slotId}-gear-buff`,
-            type: 'mini-timeline',
-            source: TimelineSourceType.GEAR_EFFECT,
-            ownerId: slot.slotId,
-            columnId: 'operator-gear-status',
-            label: ColumnLabel.GEAR_BUFF,
-            color: op.color,
-            headerVariant: 'skill',
-            derived: true,
-            microColumns: microCols,
-            microColumnAssignment: 'dynamic-split',
-            matchColumnIds: microCols.map((mc) => mc.id),
-          });
-          gearColCount++;
-        }
-      }
+    // ── OTHER column — uncategorized operator damage ──────────────────────────
+    let otherColCount = 0;
+    if (op) {
+      const OTHER_DEFAULT_FRAMES = Math.round(1 * FPS); // 1 second at 120fps
+      columns.push({
+        key: `${slot.slotId}-${OPERATOR_COLUMNS.OTHER}`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: OPERATOR_COLUMNS.OTHER,
+        label: ColumnLabel.OTHER,
+        color: op.color,
+        headerVariant: 'skill',
+        defaultEvent: {
+          name: 'Other',
+          defaultActivationDuration: OTHER_DEFAULT_FRAMES,
+          defaultActiveDuration: 0,
+          defaultCooldownDuration: 0,
+        },
+      });
+      otherColCount++;
+      slotHasCols = true;
     }
 
     // ── Tactical subtimeline column ───────────────────────────────────────────
@@ -778,7 +735,7 @@ export function buildColumns(
     const skillColCount = slotHasCols
       ? SKILL_ORDER.filter((st) => visibleSkills[slot.slotId]?.[st]).length
       : 0;
-    const needed = MIN_SLOT_COLS - (skillColCount + gearColCount + tacticalColCount + statusColCount);
+    const needed = MIN_SLOT_COLS - (skillColCount + otherColCount + tacticalColCount + statusColCount);
     for (let p = 0; p < Math.max(0, needed); p++) {
       columns.push({
         key: `${slot.slotId}-placeholder${p}`,

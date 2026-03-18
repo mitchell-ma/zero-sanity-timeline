@@ -74,22 +74,22 @@
         "1": {
           "AGILITY": 33,
           "STRENGTH": 22,
-          "PHYSICAL_DAMAGE_BONUS": 0.097
+          "PHYSICAL_DAMAGE_BONUS": 0.0972222222
         },
         "2": {
           "AGILITY": 33,
           "STRENGTH": 22,
-          "PHYSICAL_DAMAGE_BONUS": 0.097
+          "PHYSICAL_DAMAGE_BONUS": 0.0972222222
         },
         "3": {
           "AGILITY": 33,
           "STRENGTH": 22,
-          "PHYSICAL_DAMAGE_BONUS": 0.097
+          "PHYSICAL_DAMAGE_BONUS": 0.0972222222
         },
         "4": {
           "AGILITY": 33,
           "STRENGTH": 22,
-          "PHYSICAL_DAMAGE_BONUS": 0.097
+          "PHYSICAL_DAMAGE_BONUS": 0.0972222222
         }
       }
     },
@@ -102,50 +102,22 @@
         "1": {
           "AGILITY": 46,
           "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "2": {
           "AGILITY": 46,
           "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "3": {
           "AGILITY": 46,
           "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
+          "ATTACK_BONUS": 0.1225
         },
         "4": {
           "AGILITY": 46,
           "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
-        }
-      }
-    },
-    {
-      "gearType": "ROVING_MSGR_GYRO_T1",
-      "name": "Roving Msgr Gyro T1",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "AGILITY": 23,
-          "INTELLECT": 15,
-          "ATTACK_BONUS": 0.147
-        },
-        "2": {
-          "AGILITY": 23,
-          "INTELLECT": 15,
-          "ATTACK_BONUS": 0.147
-        },
-        "3": {
-          "AGILITY": 23,
-          "INTELLECT": 15,
-          "ATTACK_BONUS": 0.147
-        },
-        "4": {
-          "AGILITY": 23,
-          "INTELLECT": 15,
-          "ATTACK_BONUS": 0.147
+          "ATTACK_BONUS": 0.1225
         }
       }
     },
@@ -170,34 +142,6 @@
         "4": {
           "AGILITY": 21,
           "COMBO_SKILL_DAMAGE_BONUS": 0.21
-        }
-      }
-    },
-    {
-      "gearType": "ROVING_MSGR_FLASHLIGHT_T2",
-      "name": "Roving Msgr Flashlight T2",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
-        },
-        "2": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
-        },
-        "3": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
-        },
-        "4": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
         }
       }
     },
@@ -250,6 +194,62 @@
           "AGILITY": 23,
           "STRENGTH": 15,
           "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_FLASHLIGHT_T2",
+      "name": "Roving Msgr Flashlight T2",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
+        },
+        "2": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
+        },
+        "3": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
+        },
+        "4": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
+        }
+      }
+    },
+    {
+      "gearType": "ROVING_MSGR_GYRO_T1",
+      "name": "Roving Msgr Gyro T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "2": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "3": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
+        },
+        "4": {
+          "AGILITY": 23,
+          "INTELLECT": 15,
+          "ATTACK_BONUS": 0.147
         }
       }
     }

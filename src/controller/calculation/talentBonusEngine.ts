@@ -7,7 +7,7 @@
 import { CombatSkillType, ElementType, StatType } from '../../consts/enums';
 import { Potential } from '../../consts/types';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
-import type { StatusQueryService } from './statusQueryService';
+import type { EventsQueryService } from '../timeline/eventsQueryService';
 
 // ── JSON types ──────────────────────────────────────────────────────────────
 
@@ -59,7 +59,7 @@ interface TalentEvalContext {
   skillType: CombatSkillType;
   skillName: string;
   isStaggered: boolean;
-  statusQuery?: StatusQueryService;
+  statusQuery?: EventsQueryService;
 }
 
 interface TalentStatContext {

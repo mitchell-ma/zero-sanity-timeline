@@ -369,11 +369,6 @@ statusEvent = {
   // The talent itself is created as a permanent presence event at frame 0.
   "triggerClause": Predicate[],
 
-  // Consume clause — predicates that determine when stacks are consumed.
-  // When conditions are met (e.g. cast battle skill at max stacks), all active
-  // stacks are clamped, freeing slots for re-accumulation.
-  "consumeClause"?: Predicate[],
-
   // Talent level requirement — only process this def when the talent is unlocked.
   "minTalentLevel"?: { "talent": number, "minLevel": number },
 
@@ -469,15 +464,6 @@ At max stacks, the threshold clause applies SCORCHING_HEART_EFFECT to the operat
   "triggerClause": [
     { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "BATTLE_SKILL" }] },
     { "conditions": [{ "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "COMBO_SKILL" }] }
-  ],
-  "consumeClause": [
-    {
-      "conditions": [
-        { "subjectType": "THIS_OPERATOR", "verbType": "PERFORM", "objectType": "BATTLE_SKILL" },
-        { "subjectType": "THIS_EVENT", "verbType": "HAVE", "objectType": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
-      ],
-      "effects": [{ "verbType": "CONSUME", "objectType": "ALL_STACKS" }]
-    }
   ],
   "properties": { "duration": { "value": [-1], "unit": "SECOND" } }
 }

@@ -18,22 +18,22 @@
         "1": {
           "WILL": 87,
           "INTELLECT": 58,
-          "TREATMENT_BONUS": 0.104
+          "TREATMENT_BONUS": 0.1035
         },
         "2": {
           "WILL": 95,
           "INTELLECT": 63,
-          "TREATMENT_BONUS": 0.114
+          "TREATMENT_BONUS": 0.11385
         },
         "3": {
           "WILL": 104,
           "INTELLECT": 69,
-          "TREATMENT_BONUS": 0.124
+          "TREATMENT_BONUS": 0.1242
         },
         "4": {
           "WILL": 113,
           "INTELLECT": 75,
-          "TREATMENT_BONUS": 0.135
+          "TREATMENT_BONUS": 0.13455
         }
       }
     },
@@ -46,50 +46,22 @@
         "1": {
           "STRENGTH": 87,
           "WILL": 58,
-          "TREATMENT_BONUS": 0.104
+          "TREATMENT_BONUS": 0.1035
         },
         "2": {
           "STRENGTH": 95,
           "WILL": 63,
-          "TREATMENT_BONUS": 0.114
+          "TREATMENT_BONUS": 0.11385
         },
         "3": {
           "STRENGTH": 104,
           "WILL": 69,
-          "TREATMENT_BONUS": 0.124
+          "TREATMENT_BONUS": 0.1242
         },
         "4": {
           "STRENGTH": 113,
           "WILL": 75,
-          "TREATMENT_BONUS": 0.135
-        }
-      }
-    },
-    {
-      "gearType": "LYNX_GLOVES",
-      "name": "Lynx Gloves",
-      "gearCategory": "GLOVES",
-      "defense": 42,
-      "allLevels": {
-        "1": {
-          "STRENGTH": 65,
-          "WILL": 43,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.205
-        },
-        "2": {
-          "STRENGTH": 71,
-          "WILL": 47,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.226
-        },
-        "3": {
-          "STRENGTH": 78,
-          "WILL": 51,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.246
-        },
-        "4": {
-          "STRENGTH": 84,
-          "WILL": 55,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.267
+          "TREATMENT_BONUS": 0.13455
         }
       }
     },
@@ -102,12 +74,12 @@
         "1": {
           "WILL": 65,
           "STRENGTH": 43,
-          "TREATMENT_BONUS": 0.173
+          "TREATMENT_BONUS": 0.1725
         },
         "2": {
           "WILL": 71,
           "STRENGTH": 47,
-          "TREATMENT_BONUS": 0.19
+          "TREATMENT_BONUS": 0.18975
         },
         "3": {
           "WILL": 78,
@@ -117,7 +89,115 @@
         "4": {
           "WILL": 84,
           "STRENGTH": 55,
-          "TREATMENT_BONUS": 0.224
+          "TREATMENT_BONUS": 0.22425
+        }
+      }
+    },
+    {
+      "gearType": "LYNX_GLOVES",
+      "name": "Lynx Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 65,
+          "WILL": 43,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2053571429
+        },
+        "2": {
+          "STRENGTH": 71,
+          "WILL": 47,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.22589286
+        },
+        "3": {
+          "STRENGTH": 78,
+          "WILL": 51,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.24642856
+        },
+        "4": {
+          "STRENGTH": 84,
+          "WILL": 55,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.2669643
+        }
+      }
+    },
+    {
+      "gearType": "LYNX_CONNECTOR",
+      "name": "Lynx Connector",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 32,
+          "WILL": 21,
+          "FINAL_DAMAGE_REDUCTION": 0.1714995858
+        },
+        "2": {
+          "STRENGTH": 35,
+          "WILL": 23,
+          "FINAL_DAMAGE_REDUCTION": 0.18546873
+        },
+        "3": {
+          "STRENGTH": 38,
+          "WILL": 25,
+          "FINAL_DAMAGE_REDUCTION": 0.19897467
+        },
+        "4": {
+          "STRENGTH": 41,
+          "WILL": 27,
+          "FINAL_DAMAGE_REDUCTION": 0.21204
+        }
+      }
+    },
+    {
+      "gearType": "LYNX_AEGIS_INJECTOR",
+      "name": "Lynx Aegis Injector",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 41,
+          "TREATMENT_BONUS": 0.207
+        },
+        "2": {
+          "WILL": 45,
+          "TREATMENT_BONUS": 0.2277
+        },
+        "3": {
+          "WILL": 49,
+          "TREATMENT_BONUS": 0.2484
+        },
+        "4": {
+          "WILL": 53,
+          "TREATMENT_BONUS": 0.2691
+        }
+      }
+    },
+    {
+      "gearType": "LYNX_SLAB",
+      "name": "Lynx Slab",
+      "gearCategory": "KIT",
+      "defense": 21,
+      "allLevels": {
+        "1": {
+          "WILL": 32,
+          "INTELLECT": 21,
+          "PRIMARY_ATTRIBUTE_BONUS": 0.207017835
+        },
+        "2": {
+          "WILL": 35,
+          "INTELLECT": 23,
+          "PRIMARY_ATTRIBUTE_BONUS": 0.22771962
+        },
+        "3": {
+          "WILL": 38,
+          "INTELLECT": 25,
+          "PRIMARY_ATTRIBUTE_BONUS": 0.2484214
+        },
+        "4": {
+          "WILL": 41,
+          "INTELLECT": 27,
+          "PRIMARY_ATTRIBUTE_BONUS": 0.2691232
         }
       }
     },
@@ -135,97 +215,41 @@
         "2": {
           "STRENGTH": 35,
           "WILL": 23,
-          "HP_BONUS": 0.455
+          "HP_BONUS": 0.4554
         },
         "3": {
           "STRENGTH": 38,
           "WILL": 25,
-          "HP_BONUS": 0.497
+          "HP_BONUS": 0.4968
         },
         "4": {
           "STRENGTH": 41,
           "WILL": 27,
-          "HP_BONUS": 0.538
+          "HP_BONUS": 0.5382
         }
       }
     },
     {
-      "gearType": "LYNX_CONNECTOR",
-      "name": "Lynx Connector",
+      "gearType": "LYNX_CONNECTOR_T2",
+      "name": "Lynx Connector T2",
       "gearCategory": "KIT",
       "defense": 21,
       "allLevels": {
         "1": {
-          "STRENGTH": 32,
-          "WILL": 21,
-          "FINAL_DAMAGE_REDUCTION": 0.171
-        },
-        "2": {
-          "STRENGTH": 35,
-          "WILL": 23,
-          "FINAL_DAMAGE_REDUCTION": 0.185
-        },
-        "3": {
-          "STRENGTH": 38,
-          "WILL": 25,
-          "FINAL_DAMAGE_REDUCTION": 0.199
-        },
-        "4": {
           "STRENGTH": 41,
-          "WILL": 27,
-          "FINAL_DAMAGE_REDUCTION": 0.212
-        }
-      }
-    },
-    {
-      "gearType": "LYNX_SLAB",
-      "name": "Lynx Slab",
-      "gearCategory": "KIT",
-      "defense": 21,
-      "allLevels": {
-        "1": {
-          "WILL": 32,
-          "INTELLECT": 21,
-          "PRIMARY_ATTRIBUTE_BONUS": 0.207
+          "HP_BONUS": 0.414
         },
         "2": {
-          "WILL": 35,
-          "INTELLECT": 23,
-          "PRIMARY_ATTRIBUTE_BONUS": 0.228
+          "STRENGTH": 45,
+          "HP_BONUS": 0.4554
         },
         "3": {
-          "WILL": 38,
-          "INTELLECT": 25,
-          "PRIMARY_ATTRIBUTE_BONUS": 0.248
+          "STRENGTH": 49,
+          "HP_BONUS": 0.4968
         },
         "4": {
-          "WILL": 41,
-          "INTELLECT": 27,
-          "PRIMARY_ATTRIBUTE_BONUS": 0.269
-        }
-      }
-    },
-    {
-      "gearType": "LYNX_AEGIS_INJECTOR",
-      "name": "Lynx Aegis Injector",
-      "gearCategory": "KIT",
-      "defense": 21,
-      "allLevels": {
-        "1": {
-          "WILL": 41,
-          "TREATMENT_BONUS": 0.207
-        },
-        "2": {
-          "WILL": 45,
-          "TREATMENT_BONUS": 0.228
-        },
-        "3": {
-          "WILL": 49,
-          "TREATMENT_BONUS": 0.248
-        },
-        "4": {
-          "WILL": 53,
-          "TREATMENT_BONUS": 0.269
+          "STRENGTH": 53,
+          "HP_BONUS": 0.5382
         }
       }
     }

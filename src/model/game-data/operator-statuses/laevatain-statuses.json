@@ -40,8 +40,7 @@
         ]
       }
     ],
-    "triggerClause": [],
-    "consumeClause": [
+    "triggerClause": [
       {
         "conditions": [
           {
@@ -49,19 +48,16 @@
             "subject": "OPERATOR",
             "verb": "PERFORM",
             "object": "BATTLE_SKILL"
-          },
-          {
-            "subject": "THIS_EVENT",
-            "verb": "HAVE",
-            "object": "STACKS",
-            "cardinalityConstraint": "EXACTLY",
-            "cardinality": "MAX"
           }
-        ],
-        "effects": [
+        ]
+      },
+      {
+        "conditions": [
           {
-            "verb": "CONSUME",
-            "object": "ALL_STACKS"
+            "subjectDet": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "COMBO_SKILL"
           }
         ]
       }

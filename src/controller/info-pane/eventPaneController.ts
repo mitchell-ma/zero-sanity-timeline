@@ -11,7 +11,7 @@ import type { TranslatedEffect } from '../../utils/semanticsTranslation';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
-import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../calculation/statusQueryService';
+import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Event Identity ──────────────────────────────────────────────────────────

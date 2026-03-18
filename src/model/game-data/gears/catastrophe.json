@@ -10,34 +10,6 @@
   },
   "pieces": [
     {
-      "gearType": "CATASTROPHE_HEAVY_ARMOR_T1",
-      "name": "Catastrophe Heavy Armor T1",
-      "gearCategory": "ARMOR",
-      "defense": 40,
-      "allLevels": {
-        "1": {
-          "STRENGTH": 61,
-          "WILL": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
-        },
-        "2": {
-          "STRENGTH": 61,
-          "WILL": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
-        },
-        "3": {
-          "STRENGTH": 61,
-          "WILL": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
-        },
-        "4": {
-          "STRENGTH": 61,
-          "WILL": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
-        }
-      }
-    },
-    {
       "gearType": "CATASTROPHE_HEAVY_ARMOR",
       "name": "Catastrophe Heavy Armor",
       "gearCategory": "ARMOR",
@@ -46,22 +18,50 @@
         "1": {
           "STRENGTH": 61,
           "INTELLECT": 41,
-          "ULTIMATE_DAMAGE_BONUS": 0.184
+          "ULTIMATE_DAMAGE_BONUS": 0.18375
         },
         "2": {
           "STRENGTH": 61,
           "INTELLECT": 41,
-          "ULTIMATE_DAMAGE_BONUS": 0.184
+          "ULTIMATE_DAMAGE_BONUS": 0.18375
         },
         "3": {
           "STRENGTH": 61,
           "INTELLECT": 41,
-          "ULTIMATE_DAMAGE_BONUS": 0.184
+          "ULTIMATE_DAMAGE_BONUS": 0.18375
         },
         "4": {
           "STRENGTH": 61,
           "INTELLECT": 41,
-          "ULTIMATE_DAMAGE_BONUS": 0.184
+          "ULTIMATE_DAMAGE_BONUS": 0.18375
+        }
+      }
+    },
+    {
+      "gearType": "CATASTROPHE_HEAVY_ARMOR_T1",
+      "name": "Catastrophe Heavy Armor T1",
+      "gearCategory": "ARMOR",
+      "defense": 40,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 61,
+          "WILL": 41,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
+        },
+        "2": {
+          "STRENGTH": 61,
+          "WILL": 41,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
+        },
+        "3": {
+          "STRENGTH": 61,
+          "WILL": 41,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
+        },
+        "4": {
+          "STRENGTH": 61,
+          "WILL": 41,
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
         }
       }
     },
@@ -122,34 +122,6 @@
       }
     },
     {
-      "gearType": "CATASTROPHE_GAUZE_CARTRIDGE_T1",
-      "name": "Catastrophe Gauze Cartridge T1",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "STRENGTH": 23,
-          "WILL": 15,
-          "SECONDARY_ATTRIBUTE_BONUS": 0.147
-        },
-        "2": {
-          "STRENGTH": 23,
-          "WILL": 15,
-          "SECONDARY_ATTRIBUTE_BONUS": 0.147
-        },
-        "3": {
-          "STRENGTH": 23,
-          "WILL": 15,
-          "SECONDARY_ATTRIBUTE_BONUS": 0.147
-        },
-        "4": {
-          "STRENGTH": 23,
-          "WILL": 15,
-          "SECONDARY_ATTRIBUTE_BONUS": 0.147
-        }
-      }
-    },
-    {
       "gearType": "CATASTROPHE_GAUZE_CARTRIDGE",
       "name": "Catastrophe Gauze Cartridge",
       "gearCategory": "KIT",
@@ -158,22 +130,50 @@
         "1": {
           "STRENGTH": 23,
           "INTELLECT": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
         },
         "2": {
           "STRENGTH": 23,
           "INTELLECT": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
         },
         "3": {
           "STRENGTH": 23,
           "INTELLECT": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
         },
         "4": {
           "STRENGTH": 23,
           "INTELLECT": 15,
-          "ULTIMATE_DAMAGE_BONUS": 0.368
+          "ULTIMATE_DAMAGE_BONUS": 0.3675
+        }
+      }
+    },
+    {
+      "gearType": "CATASTROPHE_GAUZE_CARTRIDGE_T1",
+      "name": "Catastrophe Gauze Cartridge T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 23,
+          "WILL": 15,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.1470126654
+        },
+        "2": {
+          "STRENGTH": 23,
+          "WILL": 15,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.1470126654
+        },
+        "3": {
+          "STRENGTH": 23,
+          "WILL": 15,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.1470126654
+        },
+        "4": {
+          "STRENGTH": 23,
+          "WILL": 15,
+          "SECONDARY_ATTRIBUTE_BONUS": 0.1470126654
         }
       }
     }

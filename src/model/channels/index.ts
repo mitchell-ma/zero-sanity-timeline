@@ -91,6 +91,7 @@ export const OPERATOR_COLUMNS = {
   ORIGINIUM_CRYSTAL: 'originium-crystal',
   WILDLAND_TREKKER_TRIGGER: 'wildland-trekker-trigger',
   DASH:           'dash',
+  OTHER:          'other',
 } as const;
 
 /** Max micro-column slots for exchange statuses (hard cap — excess is dropped). */

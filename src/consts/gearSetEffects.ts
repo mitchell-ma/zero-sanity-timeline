@@ -1,27 +1,13 @@
 /**
- * Gear set effect data registry.
+ * Gear set passive stats and metadata registry.
  *
- * Single source of truth for all gear set effects — both passive (always-on)
- * stats and triggered (conditional) buff/debuff effects.
+ * Passive (always-on) stats live here. Triggered (conditional) effects have
+ * been migrated to DSL JSON files in game-data/gear-effects/.
  *
- * Used by loadoutAggregator for passive stat aggregation and by columnBuilder
- * to create gear buff subtimeline columns.
- *
- * Replaces the old gearEffects.ts abstract class hierarchy.
+ * Used by loadoutAggregator for passive stat aggregation.
  */
 import { GearSetEffectType, GearSetType, StatType } from './enums';
-import { SubjectType, VerbType, ObjectType, DeterminerType } from './semantics';
 import type { Interaction } from './semantics';
-
-const _I = (s: any, v: any, o: any, x?: Partial<Interaction>): Interaction => ({ subjectType: s, verbType: v, objectType: o, ...x } as Interaction);
-const _IO = (det: DeterminerType, v: any, o: any, x?: Partial<Interaction>): Interaction => ({ subjectDeterminer: det, subjectType: SubjectType.OPERATOR, verbType: v, objectType: o, ...x } as Interaction);
-const THIS = DeterminerType.THIS;
-const ENEMY = SubjectType.ENEMY;
-const ANY = DeterminerType.ANY;
-const PERFORM = VerbType.PERFORM;
-const APPLY = VerbType.APPLY;
-const RECOVER = VerbType.RECOVER;
-const IS = VerbType.IS;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,18 +77,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.AIC_LIGHT,
     label: 'AIC Light',
     passiveStats: { [StatType.FLAT_HP]: 500 },
-    effects: [{
-      label: 'AIC Light',
-      gearSetEffectType: GearSetEffectType.AIC_LIGHT,
-      triggers: [_IO(THIS, VerbType.DEFEAT, ObjectType.ENEMY)],
-      target: 'wielder',
-      durationSeconds: 5,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.BASE_ATTACK, value: 20 },
-      ],
-    }],
+    effects: [],
   },
 
   // ── Aburrey's Legacy ───────────────────────────────────────────────────────
@@ -111,23 +86,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.ABURREY_LEGACY,
     label: "Aburrey's Legacy",
     passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.24 },
-    effects: [{
-      label: "Aburrey's Legacy",
-      gearSetEffectType: GearSetEffectType.ABURREY_LEGACY,
-      triggers: [
-        _IO(THIS, PERFORM, ObjectType.BATTLE_SKILL),
-        _IO(THIS, PERFORM, ObjectType.COMBO_SKILL),
-        _IO(THIS, PERFORM, ObjectType.ULTIMATE),
-      ],
-      target: 'wielder',
-      durationSeconds: 15,
-      maxStacks: 3,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.ATTACK_BONUS, value: 0.05, perStack: true },
-      ],
-      note: 'Each skill type gives a unique non-self-stacking buff',
-    }],
+    effects: [],
   },
 
   // ── Lynx ───────────────────────────────────────────────────────────────────
@@ -136,19 +95,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.LYNX,
     label: 'LYNX',
     passiveStats: { [StatType.TREATMENT_BONUS]: 0.2 },
-    effects: [{
-      label: 'LYNX',
-      gearSetEffectType: GearSetEffectType.LYNX,
-      triggers: [_IO(THIS, RECOVER, ObjectType.HP)],
-      target: 'team',
-      durationSeconds: 10,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.FINAL_DAMAGE_REDUCTION, value: 0.15 },
-      ],
-      note: '30% if treatment exceeds max HP',
-    }],
+    effects: [],
   },
 
   // ── Æthertech ──────────────────────────────────────────────────────────────
@@ -158,33 +105,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.AETHERTECH,
     label: 'Æthertech',
     passiveStats: { [StatType.ATTACK_BONUS]: 0.08 },
-    effects: [
-      {
-        label: 'Æthertech',
-        gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
-        target: 'wielder',
-        durationSeconds: 15,
-        maxStacks: 4,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.PHYSICAL_DAMAGE_BONUS, value: 0.08, perStack: true },
-        ],
-      },
-      {
-        label: 'Æthertech (Max)',
-        gearSetEffectType: GearSetEffectType.AETHERTECH,
-        triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "VULNERABILITY" })],
-        target: 'wielder',
-        durationSeconds: 10,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.PHYSICAL_DAMAGE_BONUS, value: 0.16 },
-        ],
-        note: 'Activates at 4 stacks of Vulnerability',
-      },
-    ],
+    effects: [],
   },
 
   // ── Pulser Labs ────────────────────────────────────────────────────────────
@@ -194,32 +115,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.PULSER_LABS,
     label: 'Pulser Labs',
     passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
-    effects: [
-      {
-        label: 'Pulser Labs (Electric)',
-        gearSetEffectType: GearSetEffectType.PULSER_LABS,
-        triggers: [_I(ENEMY, IS, ObjectType.ELECTRIFIED)],
-        target: 'wielder',
-        durationSeconds: 10,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.ELECTRIC_DAMAGE_BONUS, value: 0.50 },
-        ],
-      },
-      {
-        label: 'Pulser Labs (Cryo)',
-        gearSetEffectType: GearSetEffectType.PULSER_LABS,
-        triggers: [_I(ENEMY, IS, ObjectType.SOLIDIFIED)],
-        target: 'wielder',
-        durationSeconds: 10,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.CRYO_DAMAGE_BONUS, value: 0.50 },
-        ],
-      },
-    ],
+    effects: [],
   },
 
   // ── Frontiers ──────────────────────────────────────────────────────────────
@@ -228,19 +124,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.FRONTIERS,
     label: 'Frontiers',
     passiveStats: { [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 0.15 },
-    effects: [{
-      label: 'Frontiers',
-      gearSetEffectType: GearSetEffectType.FRONTIERS,
-      triggers: [_IO(THIS, RECOVER, ObjectType.SKILL_POINT)],
-      target: 'team',
-      durationSeconds: 15,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.SKILL_DAMAGE_BONUS, value: 0.16 },
-      ],
-      note: 'Team DMG +16%',
-    }],
+    effects: [],
   },
 
   // ── Hot Work ───────────────────────────────────────────────────────────────
@@ -250,32 +134,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.HOT_WORK,
     label: 'Hot Work',
     passiveStats: { [StatType.ARTS_INTENSITY]: 30 },
-    effects: [
-      {
-        label: 'Hot Work (Heat)',
-        gearSetEffectType: GearSetEffectType.HOT_WORK,
-        triggers: [_I(ENEMY, IS, ObjectType.COMBUSTED)],
-        target: 'wielder',
-        durationSeconds: 10,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.HEAT_DAMAGE_BONUS, value: 0.50 },
-        ],
-      },
-      {
-        label: 'Hot Work (Nature)',
-        gearSetEffectType: GearSetEffectType.HOT_WORK,
-        triggers: [_I(ENEMY, IS, ObjectType.CORRODED)],
-        target: 'wielder',
-        durationSeconds: 10,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.NATURE_DAMAGE_BONUS, value: 0.50 },
-        ],
-      },
-    ],
+    effects: [],
   },
 
   // ── MI Security ────────────────────────────────────────────────────────────
@@ -285,33 +144,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.MI_SECURITY,
     label: 'MI Security',
     passiveStats: { [StatType.CRITICAL_RATE]: 0.05 },
-    effects: [
-      {
-        label: 'MI Security',
-        gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [_IO(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
-        target: 'wielder',
-        durationSeconds: 5,
-        maxStacks: 5,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.ATTACK_BONUS, value: 0.05, perStack: true },
-        ],
-      },
-      {
-        label: 'MI Security (Max)',
-        gearSetEffectType: GearSetEffectType.MI_SECURITY,
-        triggers: [_IO(THIS, PERFORM, ObjectType.CRITICAL_HIT)],
-        target: 'wielder',
-        durationSeconds: 5,
-        maxStacks: 1,
-        cooldownSeconds: 0,
-        buffs: [
-          { stat: StatType.CRITICAL_RATE, value: 0.05 },
-        ],
-        note: 'Activates at 5 stacks',
-      },
-    ],
+    effects: [],
   },
 
   // ── Tide Surge ─────────────────────────────────────────────────────────────
@@ -320,18 +153,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.TIDE_SURGE,
     label: 'Tide Surge',
     passiveStats: { [StatType.SKILL_DAMAGE_BONUS]: 0.20 },
-    effects: [{
-      label: 'Tide Surge',
-      gearSetEffectType: GearSetEffectType.TIDE_SURGE,
-      triggers: [_IO(THIS, APPLY, ObjectType.INFLICTION, { stacks: 2 })],
-      target: 'wielder',
-      durationSeconds: 15,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.ARTS_DAMAGE_BONUS, value: 0.35 },
-      ],
-    }],
+    effects: [],
   },
 
   // ── Eternal Xiranite ───────────────────────────────────────────────────────
@@ -341,19 +163,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.ETERNAL_XIRANITE,
     label: 'Eternal Xiranite',
     passiveStats: { [StatType.FLAT_HP]: 1000 },
-    effects: [{
-      label: 'Eternal Xiranite',
-      gearSetEffectType: GearSetEffectType.ETERNAL_XIRANITE,
-      triggers: [_IO(THIS, APPLY, ObjectType.STATUS, { objectId: "BUFF" })],
-      target: 'team',
-      durationSeconds: 15,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.SKILL_DAMAGE_BONUS, value: 0.16 },
-      ],
-      note: 'On applying Amp/Protected/Susceptibility/Weakened',
-    }],
+    effects: [],
   },
 
   // ── Catastrophe ──────────────────────────────────────────────────────────
@@ -362,17 +172,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.CATASTROPHE,
     label: 'Catastrophe',
     passiveStats: { [StatType.ULTIMATE_GAIN_EFFICIENCY]: 0.2 },
-    effects: [{
-      label: 'Catastrophe',
-      gearSetEffectType: GearSetEffectType.CATASTROPHE,
-      triggers: [_IO(THIS, PERFORM, ObjectType.BATTLE_SKILL)],
-      target: 'wielder',
-      durationSeconds: 1,
-      maxStacks: 1,
-      cooldownSeconds: 0,
-      buffs: [],
-      note: '+50 SP, once per battle',
-    }],
+    effects: [],
   },
 
   // ── Swordmancer ──────────────────────────────────────────────────────────
@@ -381,17 +181,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.SWORDMANCER,
     label: 'Swordmancer',
     passiveStats: { [StatType.STAGGER_EFFICIENCY_BONUS]: 0.2 },
-    effects: [{
-      label: 'Swordmancer',
-      gearSetEffectType: GearSetEffectType.SWORDMANCER,
-      triggers: [_IO(THIS, APPLY, ObjectType.STATUS)],
-      target: 'enemy',
-      durationSeconds: 1,
-      maxStacks: 1,
-      cooldownSeconds: 14,
-      buffs: [],
-      note: '250% ATK Physical DMG + 10 Stagger',
-    }],
+    effects: [],
   },
 
   // ── Bonekrusha ───────────────────────────────────────────────────────────
@@ -401,19 +191,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.BONEKRUSHA,
     label: 'Bonekrusha',
     passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
-    effects: [{
-      label: 'Bonekrusha',
-      gearSetEffectType: GearSetEffectType.BONEKRUSHA,
-      triggers: [_IO(THIS, PERFORM, ObjectType.COMBO_SKILL)],
-      target: 'wielder',
-      durationSeconds: 0,
-      maxStacks: 2,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.BATTLE_SKILL_DAMAGE_BONUS, value: 0.30, perStack: true },
-      ],
-      note: 'Consumed on next battle skill cast',
-    }],
+    effects: [],
   },
 
   // ── Type 50 Yinglung ─────────────────────────────────────────────────────
@@ -423,19 +201,7 @@ export const GEAR_SET_EFFECTS: GearSetEffectsEntry[] = [
     gearSetType: GearSetType.TYPE_50_YINGLUNG,
     label: 'Type 50 Yinglung',
     passiveStats: { [StatType.ATTACK_BONUS]: 0.15 },
-    effects: [{
-      label: 'Type 50 Yinglung',
-      gearSetEffectType: GearSetEffectType.TYPE_50_YINGLUNG,
-      triggers: [_IO(ANY, PERFORM, ObjectType.BATTLE_SKILL)],
-      target: 'wielder',
-      durationSeconds: 0,
-      maxStacks: 3,
-      cooldownSeconds: 0,
-      buffs: [
-        { stat: StatType.COMBO_SKILL_DAMAGE_BONUS, value: 0.20, perStack: true },
-      ],
-      note: 'Consumed on next combo skill cast',
-    }],
+    effects: [],
   },
 
   // ── Armored MSGR ──────────────────────────────────────────────────────────

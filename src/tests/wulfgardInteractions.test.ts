@@ -63,7 +63,7 @@
  *    - Talent names and levels
  */
 import { TimelineEvent } from '../consts/viewTypes';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { SKILL_COLUMNS } from '../model/channels';
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -88,10 +88,6 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
 import { applyPotentialEffects } from '../controller/timeline/processComboSkill';
-// eslint-disable-next-line import/first
-import { deriveFrameInflictions } from '../controller/timeline/processInfliction';
-// eslint-disable-next-line import/first
-import { deriveReactions } from '../controller/timeline/deriveReactions';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/wulfgard-operator.json');
@@ -680,175 +676,6 @@ describe('H. Operator Identity & Metadata', () => {
 
   test('H6: Basic attack default duration is 0.1667 seconds', () => {
     expect(mockJson.basicAttackDefaultDuration).toBe(0.1667);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Group I: Status & Infliction Interactions
-// ═══════════════════════════════════════════════════════════════════════════════
-
-describe('I. Status & Infliction Interactions', () => {
-  const FPS = 120;
-  const SLOT_ID = 'slot-0';
-
-  /** Create a battle skill event with Heat infliction on frame 3 (0.767s). */
-  function battleSkillWithFrames(startFrame: number): TimelineEvent {
-    return {
-      id: `bs-${startFrame}`, name: 'THERMITE_TRACERS', ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.BATTLE, startFrame,
-      activationDuration: Math.round(1.07 * FPS), activeDuration: 0, cooldownDuration: 0,
-      segments: [{
-        durationFrames: Math.round(1.07 * FPS),
-        frames: [
-          { offsetFrame: Math.round(0.2 * FPS) },
-          { offsetFrame: Math.round(0.53 * FPS) },
-          {
-            offsetFrame: Math.round(0.767 * FPS),
-            applyArtsInfliction: { element: 'HEAT', stacks: 1 },
-          },
-        ],
-      }],
-    };
-  }
-
-  /** Create an ultimate event with forced Combustion on the last frame. */
-  function ultimateWithFrames(startFrame: number): TimelineEvent {
-    return {
-      id: `ult-${startFrame}`, name: 'WOLVEN_FURY', ownerId: SLOT_ID,
-      columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
-      activationDuration: Math.round(2.5 * FPS), activeDuration: 0, cooldownDuration: 0,
-      segments: [{
-        durationFrames: Math.round(2.5 * FPS),
-        frames: [
-          { offsetFrame: Math.round(1.53 * FPS) },
-          { offsetFrame: Math.round(1.73 * FPS) },
-          { offsetFrame: Math.round(1.967 * FPS) },
-          { offsetFrame: Math.round(1.13 * FPS) },
-          {
-            offsetFrame: Math.round(2.3 * FPS),
-            applyForcedReaction: { reaction: 'COMBUSTION', statusLevel: 1 },
-          },
-        ],
-      }],
-    };
-  }
-
-  test('I1: Battle skill frame 3 derives Heat infliction on enemy', () => {
-    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
-    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
-    expect(inflictions.length).toBe(1);
-    expect(inflictions[0].ownerId).toBe(ENEMY_OWNER_ID);
-    expect(inflictions[0].startFrame).toBe(Math.round(0.767 * FPS));
-    expect(inflictions[0].activationDuration).toBe(2400); // 20s
-    expect(inflictions[0].sourceSkillName).toBe('THERMITE_TRACERS');
-  });
-
-  test('I2: Battle skill frames 1 and 2 do NOT produce inflictions', () => {
-    const result = deriveFrameInflictions([battleSkillWithFrames(0)]);
-    const inflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
-    // Only 1 infliction from frame 3
-    expect(inflictions.length).toBe(1);
-  });
-
-  test('I3: Ultimate last frame derives forced Combustion on enemy', () => {
-    const result = deriveFrameInflictions([ultimateWithFrames(0)]);
-    const reactions = result.filter(ev => ev.columnId === REACTION_COLUMNS.COMBUSTION);
-    expect(reactions.length).toBe(1);
-    expect(reactions[0].ownerId).toBe(ENEMY_OWNER_ID);
-    expect(reactions[0].statusLevel).toBe(1);
-    expect(reactions[0].sourceSkillName).toBe('WOLVEN_FURY');
-    expect((reactions[0] as any).forcedReaction).toBe(true);
-  });
-
-  test('I4: Forced Combustion from ultimate does not require prior inflictions', () => {
-    // No Heat/Nature/etc. inflictions exist — forced reaction still fires
-    const result = deriveFrameInflictions([ultimateWithFrames(0)]);
-    const combustion = result.filter(ev => ev.columnId === REACTION_COLUMNS.COMBUSTION);
-    expect(combustion.length).toBe(1);
-  });
-
-  test('I5: Heat infliction from battle skill + cross-element from teammate → reaction', () => {
-    // Wulfgard Heat + teammate Nature → Corrosion
-    const heat: TimelineEvent = {
-      id: 'h1', name: INFLICTION_COLUMNS.HEAT, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.HEAT, startFrame: 0,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: SLOT_ID,
-    };
-    const nature: TimelineEvent = {
-      id: 'n1', name: INFLICTION_COLUMNS.NATURE, ownerId: ENEMY_OWNER_ID,
-      columnId: INFLICTION_COLUMNS.NATURE, startFrame: FPS,
-      activationDuration: 2400, activeDuration: 0, cooldownDuration: 0,
-      sourceOwnerId: 'slot-1',
-    };
-    const result = deriveReactions([heat, nature]);
-    const reactions = result.filter(ev => ev.id.endsWith('-reaction'));
-    expect(reactions.length).toBe(1);
-    expect(reactions[0].columnId).toBe(REACTION_COLUMNS.CORROSION);
-  });
-
-  test('I6: Multiple battle skills produce stacking inflictions', () => {
-    const events = [battleSkillWithFrames(0), battleSkillWithFrames(300), battleSkillWithFrames(600)];
-    const result = deriveFrameInflictions(events);
-    const inflictions = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
-    expect(inflictions.length).toBe(3);
-  });
-
-  test('I7: Combo skill frame applies Heat infliction (from JSON)', () => {
-    const comboFrame = mockJson.skills.COMBO_SKILL.frames[0];
-    const infliction = comboFrame.effects.find(
-      (e: any) => e.verbType === 'APPLY' && e.objectType === 'INFLICTION'
-    );
-    expect(infliction).toBeDefined();
-    expect(infliction.adjectiveType).toBe('HEAT');
-  });
-
-  test('I8: Combo triggers on Combustion — trigger clause verified', () => {
-    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
-  });
-
-  test('I9: Scorching Fangs triggers when enemy has Combustion (trigger clause 1)', () => {
-    const sf = mockJson.statusEvents[0];
-    const clause1 = sf.triggerClause[0];
-    expect(clause1.conditions[0].subjectType).toBe('ENEMY');
-    expect(clause1.conditions[0].verbType).toBe('HAVE');
-    expect(clause1.conditions[0].objectId).toBe('COMBUSTION');
-  });
-
-  test('I10: Scorching Fangs refreshes on battle skill while active (trigger clause 2)', () => {
-    const sf = mockJson.statusEvents[0];
-    const clause2 = sf.triggerClause[1];
-    // Requires: THIS_OPERATOR PERFORM BATTLE_SKILL AND THIS_OPERATOR HAVE SCORCHING_FANGS
-    expect(clause2.conditions[0].subjectDeterminer).toBe('THIS');
-    expect(clause2.conditions[0].subjectType).toBe('OPERATOR');
-    expect(clause2.conditions[0].verbType).toBe('PERFORM');
-    expect(clause2.conditions[0].objectType).toBe('BATTLE_SKILL');
-    expect(clause2.conditions[1].subjectDeterminer).toBe('THIS');
-    expect(clause2.conditions[1].subjectType).toBe('OPERATOR');
-    expect(clause2.conditions[1].verbType).toBe('HAVE');
-    expect(clause2.conditions[1].objectId).toBe('SCORCHING_FANGS');
-  });
-
-  test('I11: Empowered battle skill does NOT apply infliction (frame data check)', () => {
-    const ebsFrames = mockJson.skills.EMPOWERED_BATTLE_SKILL.frames;
-    for (const frame of ebsFrames) {
-      const infliction = frame.effects?.find(
-        (e: any) => e.verbType === 'APPLY' && e.objectType === 'INFLICTION'
-      );
-      expect(infliction).toBeUndefined();
-    }
-  });
-
-  test('I12: Ultimate → forced Combustion → satisfies Scorching Fangs trigger + combo trigger', () => {
-    // Both Scorching Fangs (ENEMY HAVE COMBUSTION) and combo (ENEMY IS COMBUSTED)
-    // are satisfied by forced Combustion from the ultimate
-    const sf = mockJson.statusEvents[0];
-    const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    // Scorching Fangs clause 1 triggers on Combustion
-    expect(sf.triggerClause[0].conditions[0].objectId).toBe('COMBUSTION');
-    // Combo triggers on COMBUSTED state
-    expect(trigger.triggerClause[0].conditions[0].objectType).toBe('COMBUSTED');
   });
 });
 

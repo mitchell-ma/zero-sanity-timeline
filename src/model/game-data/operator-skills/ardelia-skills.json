@@ -1102,7 +1102,8 @@
         "description": "Controlled operator Final Strike on enemy with no Vulnerability or Arts Infliction",
         "windowFrames": 720
       },
-      "hasDelayedHit": true
+      "hasDelayedHit": true,
+      "delayedHitLabel": "Volcanic Cloud Explosion"
     },
     "frames": [
       {

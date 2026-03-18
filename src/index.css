@@ -54,6 +54,9 @@
   --scrim-70:  rgba(0, 0, 0, 0.70);
   --scrim-80:  rgba(0, 0, 0, 0.80);
 
+  --lo-slot-bg:     rgba(0, 0, 0, 0.35);
+  --lo-slot-border: rgba(255, 255, 255, 0.12);
+
   --font-display: 'Rajdhani', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 }
@@ -98,6 +101,9 @@
   --overlay-50:  rgba(0, 0, 0, 0.52);
   --overlay-70:  rgba(0, 0, 0, 0.72);
   --overlay-80:  rgba(0, 0, 0, 0.82);
+
+  --lo-slot-bg:     rgba(255, 255, 255, 0.45);
+  --lo-slot-border: rgba(0, 0, 0, 0.15);
 
   --scrim-35:  rgba(0, 0, 0, 0.22);
   --scrim-40:  rgba(0, 0, 0, 0.28);

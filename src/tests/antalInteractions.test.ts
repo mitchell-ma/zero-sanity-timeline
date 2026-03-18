@@ -1109,6 +1109,230 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     expect(antalHeat.length).toBe(0);
   });
 
+  test('H12: Deferred resolution — Focus derived from battle skill frame, combo mirrors heat infliction', () => {
+    // Real scenario: Focus is NOT a raw event — it's derived from Antal's
+    // battle skill frame effect.  Akekuri publishes heat infliction trigger.
+    // Antal combo should mirror heat infliction via deferred COMBO_RESOLVE.
+    const SLOT_AKEKURI = 'slot-0';
+
+    // Antal battle skill with applyStatus Focus frame effect
+    const antalBattle = makeEv({
+      id: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyStatus: {
+            target: 'ENEMY', status: StatusType.FOCUS, stacks: 1,
+            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
+          },
+        }],
+      }],
+    });
+
+    // Akekuri battle skill (source of heat infliction trigger) with infliction frame
+    const akekuriBattle = makeEv({
+      id: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 100, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        }],
+      }],
+    });
+
+    // Antal combo — no comboTriggerColumnId (Phase 2 will fail, deferred resolves it)
+    const antalCombo = makeAntalCombo(300);
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [antalBattle, akekuriBattle, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Focus should be derived from Antal's battle skill
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    expect(focusEvents.length).toBeGreaterThan(0);
+
+    // Heat infliction from Akekuri should exist
+    const akekuriHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_AKEKURI,
+    );
+    expect(akekuriHeat.length).toBeGreaterThan(0);
+
+    // Antal combo should have deferred-resolved comboTriggerColumnId
+    const combo = processed.find((e) => e.id === antalCombo.id);
+    expect(combo).toBeDefined();
+    expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
+
+    // Mirrored heat infliction from Antal combo should exist
+    const antalHeat = processed.filter(
+      (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
+    );
+    expect(antalHeat.length).toBeGreaterThan(0);
+    expect(antalHeat[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+  });
+
+  test('H13: Full timeline — Antal BS → Focus, Akekuri BS → heat, Antal combo time-stop extends Akekuri + mirrors heat', () => {
+    const SLOT_AKEKURI = 'slot-0';
+
+    // Antal battle skill at frame 0 — derives Focus at offset 0.67s
+    const antalBattle = makeEv({
+      id: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: FPS, // 1s = 120f
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyStatus: {
+            target: 'ENEMY', status: StatusType.FOCUS, stacks: 1,
+            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
+          },
+        }],
+      }],
+    });
+
+    // Akekuri battle skill at frame 120 — 1.33s duration, heat infliction at 0.67s
+    const akekuriBattleDur = Math.round(1.33 * FPS); // 160f
+    const akekuriBattle = makeEv({
+      id: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: FPS, activationDuration: akekuriBattleDur,
+      segments: [{
+        durationFrames: akekuriBattleDur,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        }],
+      }],
+    });
+
+    // Antal combo at frame 240 — time stop [240, 300) overlaps Akekuri BS [120, 280)
+    const comboStart = 240;
+    const antalCombo = makeAntalCombo(comboStart);
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [antalBattle, akekuriBattle, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // 1. Focus derived from Antal's battle skill
+    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    expect(focusEvents.length).toBe(1);
+    expect(focusEvents[0].sourceOwnerId).toBe(SLOT_ANTAL);
+
+    // 2. Two heat inflictions: one from Akekuri BS, one mirrored by Antal combo
+    const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
+    expect(heatInflictions.length).toBe(2);
+    const akekuriHeat = heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI);
+    const antalHeat = heatInflictions.filter((e) => e.sourceOwnerId === SLOT_ANTAL);
+    expect(akekuriHeat.length).toBe(1);
+    expect(antalHeat.length).toBe(1);
+    expect(antalHeat[0].sourceSkillName).toBe('EMP_TEST_SITE');
+
+    // 3. Combo time-stop extends Akekuri's battle skill segment duration
+    const extendedAkekuriBs = processed.find((e) => e.id === akekuriBattle.id)!;
+    const extendedDuration = extendedAkekuriBs.segments![0].durationFrames;
+    expect(extendedDuration).toBeGreaterThan(akekuriBattleDur);
+  });
+
+  test('H14: Simultaneous battle skills — combo at window start mirrors heat', () => {
+    const SLOT_AKEKURI = 'slot-0';
+
+    // Both battle skills at frame 0
+    const antalBattle = makeEv({
+      id: 'antal-bs-0', name: 'SPECIFIED_RESEARCH_SUBJECT', ownerId: SLOT_ANTAL,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS), // Focus at frame 80
+          applyStatus: {
+            target: 'ENEMY', status: StatusType.FOCUS, stacks: 1,
+            durationFrames: 60 * FPS, stackingInteraction: 'RESET',
+          },
+        }],
+      }],
+    });
+
+    const akekuriBattle = makeEv({
+      id: 'akekuri-bs-0', name: 'BURST_OF_PASSION', ownerId: SLOT_AKEKURI,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame: 0, activationDuration: Math.round(1.33 * FPS),
+      segments: [{
+        durationFrames: Math.round(1.33 * FPS),
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS), // Heat infliction at frame 80
+          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        }],
+      }],
+    });
+
+    // Combo right at the activation window start (frame 80 = when infliction + Focus appear)
+    const comboStart = Math.round(0.67 * FPS);
+    const antalCombo = makeAntalCombo(comboStart);
+
+    const akekuriWiring: SlotTriggerWiring = {
+      slotId: SLOT_AKEKURI,
+      capability: {
+        publishesTriggers: {
+          [SKILL_COLUMNS.BATTLE]: [
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.PERFORM, objectType: ObjectType.BATTLE_SKILL },
+            { subjectDeterminer: DeterminerType.THIS, subjectType: SubjectType.OPERATOR, verbType: VerbType.APPLY, objectType: ObjectType.INFLICTION, element: 'HEAT' },
+          ],
+        },
+        comboRequires: [],
+        comboDescription: '',
+        comboWindowFrames: 720,
+      },
+    };
+    const wirings = [akekuriWiring, antalWiring()];
+
+    const processed = processInflictionEvents(
+      [antalBattle, akekuriBattle, antalCombo],
+      undefined, undefined, wirings,
+    );
+
+    // Two heat inflictions: Akekuri's original + Antal combo mirror
+    const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
+    expect(heatInflictions.length).toBe(2);
+    expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI).length).toBe(1);
+    expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_ANTAL).length).toBe(1);
+  });
+
   test('H10: No mirrored infliction when combo is user-placed without a trigger source', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Combo placed by user in debug mode — no trigger source, no comboTriggerColumnId

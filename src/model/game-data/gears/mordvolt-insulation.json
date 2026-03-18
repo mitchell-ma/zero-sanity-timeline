@@ -94,34 +94,6 @@
       }
     },
     {
-      "gearType": "MORDVOLT_INSULATION_GLOVES_T1",
-      "name": "Mordvolt Insulation Gloves T1",
-      "gearCategory": "GLOVES",
-      "defense": 30,
-      "allLevels": {
-        "1": {
-          "INTELLECT": 46,
-          "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
-        },
-        "2": {
-          "INTELLECT": 46,
-          "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
-        },
-        "3": {
-          "INTELLECT": 46,
-          "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
-        },
-        "4": {
-          "INTELLECT": 46,
-          "STRENGTH": 30,
-          "ATTACK_BONUS": 0.123
-        }
-      }
-    },
-    {
       "gearType": "MORDVOLT_INSULATION_GLOVES",
       "name": "Mordvolt Insulation Gloves",
       "gearCategory": "GLOVES",
@@ -130,98 +102,50 @@
         "1": {
           "INTELLECT": 33,
           "WILL": 22,
-          "ARTS_DAMAGE_BONUS": 0.092
+          "ARTS_DAMAGE_BONUS": 0.0921052632
         },
         "2": {
           "INTELLECT": 33,
           "WILL": 22,
-          "ARTS_DAMAGE_BONUS": 0.092
+          "ARTS_DAMAGE_BONUS": 0.0921052632
         },
         "3": {
           "INTELLECT": 33,
           "WILL": 22,
-          "ARTS_DAMAGE_BONUS": 0.092
+          "ARTS_DAMAGE_BONUS": 0.0921052632
         },
         "4": {
           "INTELLECT": 33,
           "WILL": 22,
-          "ARTS_DAMAGE_BONUS": 0.092
+          "ARTS_DAMAGE_BONUS": 0.0921052632
         }
       }
     },
     {
-      "gearType": "MORDVOLT_INSULATION_WRENCH_T1",
-      "name": "Mordvolt Insulation Wrench T1",
-      "gearCategory": "KIT",
-      "defense": 10.8,
+      "gearType": "MORDVOLT_INSULATION_GLOVES_T1",
+      "name": "Mordvolt Insulation Gloves T1",
+      "gearCategory": "GLOVES",
+      "defense": 30,
       "allLevels": {
         "1": {
-          "INTELLECT": 21,
-          "CRYO_DAMAGE_BONUS": 0.117,
-          "ELECTRIC_DAMAGE_BONUS": 0.117
+          "INTELLECT": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.1225
         },
         "2": {
-          "INTELLECT": 21,
-          "CRYO_DAMAGE_BONUS": 0.117,
-          "ELECTRIC_DAMAGE_BONUS": 0.117
+          "INTELLECT": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.1225
         },
         "3": {
-          "INTELLECT": 21,
-          "CRYO_DAMAGE_BONUS": 0.117,
-          "ELECTRIC_DAMAGE_BONUS": 0.117
+          "INTELLECT": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.1225
         },
         "4": {
-          "INTELLECT": 21,
-          "CRYO_DAMAGE_BONUS": 0.117,
-          "ELECTRIC_DAMAGE_BONUS": 0.117
-        }
-      }
-    },
-    {
-      "gearType": "MORDVOLT_INSULATION_WRENCH",
-      "name": "Mordvolt Insulation Wrench",
-      "gearCategory": "KIT",
-      "defense": 10.8,
-      "allLevels": {
-        "1": {
-          "INTELLECT": 21,
-          "ATTACK_BONUS": 0.105
-        },
-        "2": {
-          "INTELLECT": 21,
-          "ATTACK_BONUS": 0.105
-        },
-        "3": {
-          "INTELLECT": 21,
-          "ATTACK_BONUS": 0.105
-        },
-        "4": {
-          "INTELLECT": 21,
-          "ATTACK_BONUS": 0.105
-        }
-      }
-    },
-    {
-      "gearType": "MORDVOLT_INSULATION_BATTERY",
-      "name": "Mordvolt Insulation Battery",
-      "gearCategory": "KIT",
-      "defense": 10.8,
-      "allLevels": {
-        "1": {
-          "INTELLECT": 21,
-          "CRITICAL_RATE": 0.053
-        },
-        "2": {
-          "INTELLECT": 21,
-          "CRITICAL_RATE": 0.053
-        },
-        "3": {
-          "INTELLECT": 21,
-          "CRITICAL_RATE": 0.053
-        },
-        "4": {
-          "INTELLECT": 21,
-          "CRITICAL_RATE": 0.053
+          "INTELLECT": 46,
+          "STRENGTH": 30,
+          "ATTACK_BONUS": 0.1225
         }
       }
     },
@@ -274,6 +198,82 @@
           "INTELLECT": 23,
           "AGILITY": 15,
           "ATTACK_BONUS": 0.147
+        }
+      }
+    },
+    {
+      "gearType": "MORDVOLT_INSULATION_WRENCH",
+      "name": "Mordvolt Insulation Wrench",
+      "gearCategory": "KIT",
+      "defense": 10.8,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "2": {
+          "INTELLECT": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "3": {
+          "INTELLECT": 21,
+          "ATTACK_BONUS": 0.105
+        },
+        "4": {
+          "INTELLECT": 21,
+          "ATTACK_BONUS": 0.105
+        }
+      }
+    },
+    {
+      "gearType": "MORDVOLT_INSULATION_WRENCH_T1",
+      "name": "Mordvolt Insulation Wrench T1",
+      "gearCategory": "KIT",
+      "defense": 10.8,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 21,
+          "CRYO_DAMAGE_BONUS": 0.1166666667,
+          "ELECTRIC_DAMAGE_BONUS": 0.1166666667
+        },
+        "2": {
+          "INTELLECT": 21,
+          "CRYO_DAMAGE_BONUS": 0.1166666667,
+          "ELECTRIC_DAMAGE_BONUS": 0.1166666667
+        },
+        "3": {
+          "INTELLECT": 21,
+          "CRYO_DAMAGE_BONUS": 0.1166666667,
+          "ELECTRIC_DAMAGE_BONUS": 0.1166666667
+        },
+        "4": {
+          "INTELLECT": 21,
+          "CRYO_DAMAGE_BONUS": 0.1166666667,
+          "ELECTRIC_DAMAGE_BONUS": 0.1166666667
+        }
+      }
+    },
+    {
+      "gearType": "MORDVOLT_INSULATION_BATTERY",
+      "name": "Mordvolt Insulation Battery",
+      "gearCategory": "KIT",
+      "defense": 10.8,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 21,
+          "CRITICAL_RATE": 0.0525
+        },
+        "2": {
+          "INTELLECT": 21,
+          "CRITICAL_RATE": 0.0525
+        },
+        "3": {
+          "INTELLECT": 21,
+          "CRITICAL_RATE": 0.0525
+        },
+        "4": {
+          "INTELLECT": 21,
+          "CRITICAL_RATE": 0.0525
         }
       }
     }

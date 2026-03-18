@@ -201,6 +201,22 @@ export function getSegmentLabels(
   return labels.length === sequences.length ? labels : undefined;
 }
 
+/**
+ * Get the delayedHitLabel for a skill (from properties.delayedHitLabel in the skills JSON).
+ * Returns undefined if not set.
+ */
+export function getDelayedHitLabel(
+  operatorId: string,
+  skillId: string,
+): string | undefined {
+  const json = getOperatorJson(operatorId);
+  if (!json) return undefined;
+  const skills = json.skills as Record<string, any> | undefined;
+  if (!skills) return undefined;
+  const skillData = skills[skillId];
+  return skillData?.properties?.delayedHitLabel;
+}
+
 // Re-export timing functions from dataDrivenEventFrames
 export {
   getSkillTimings,

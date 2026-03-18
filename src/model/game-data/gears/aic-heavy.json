@@ -18,22 +18,22 @@
         "1": {
           "STRENGTH": 30,
           "AGILITY": 30,
-          "FINAL_DAMAGE_REDUCTION": 0.039
+          "FINAL_DAMAGE_REDUCTION": 0.0389235944
         },
         "2": {
           "STRENGTH": 30,
           "AGILITY": 30,
-          "FINAL_DAMAGE_REDUCTION": 0.039
+          "FINAL_DAMAGE_REDUCTION": 0.0389235944
         },
         "3": {
           "STRENGTH": 30,
           "AGILITY": 30,
-          "FINAL_DAMAGE_REDUCTION": 0.039
+          "FINAL_DAMAGE_REDUCTION": 0.0389235944
         },
         "4": {
           "STRENGTH": 30,
           "AGILITY": 30,
-          "FINAL_DAMAGE_REDUCTION": 0.039
+          "FINAL_DAMAGE_REDUCTION": 0.0389235944
         }
       }
     },
@@ -46,22 +46,22 @@
         "1": {
           "STRENGTH": 23,
           "WILL": 23,
-          "FINAL_DAMAGE_REDUCTION": 0.063
+          "FINAL_DAMAGE_REDUCTION": 0.0632318501
         },
         "2": {
           "STRENGTH": 23,
           "WILL": 23,
-          "FINAL_DAMAGE_REDUCTION": 0.063
+          "FINAL_DAMAGE_REDUCTION": 0.0632318501
         },
         "3": {
           "STRENGTH": 23,
           "WILL": 23,
-          "FINAL_DAMAGE_REDUCTION": 0.063
+          "FINAL_DAMAGE_REDUCTION": 0.0632318501
         },
         "4": {
           "STRENGTH": 23,
           "WILL": 23,
-          "FINAL_DAMAGE_REDUCTION": 0.063
+          "FINAL_DAMAGE_REDUCTION": 0.0632318501
         }
       }
     },
@@ -73,19 +73,19 @@
       "allLevels": {
         "1": {
           "STRENGTH": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "2": {
           "STRENGTH": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "3": {
           "STRENGTH": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "4": {
           "STRENGTH": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         }
       }
     },
@@ -97,19 +97,19 @@
       "allLevels": {
         "1": {
           "AGILITY": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "2": {
           "AGILITY": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "3": {
           "AGILITY": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         },
         "4": {
           "AGILITY": 16,
-          "FINAL_DAMAGE_REDUCTION": 0.075
+          "FINAL_DAMAGE_REDUCTION": 0.0749306198
         }
       }
     }

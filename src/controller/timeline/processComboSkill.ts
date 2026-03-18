@@ -145,7 +145,7 @@ for (const interactions of Object.values(ENEMY_COLUMN_TO_INTERACTIONS)) {
   for (const i of interactions) DERIVED_INTERACTIONS.push(i);
 }
 
-function isDerivedInteraction(i: Interaction): boolean {
+export function isDerivedInteraction(i: Interaction): boolean {
   return DERIVED_INTERACTIONS.some((d) => matchInteraction(i, d));
 }
 
@@ -394,7 +394,7 @@ export function getFinalStrikeTriggerFrame(
  * Map a derived interaction to its enemy infliction column ID.
  * Returns undefined if the interaction is not a derived infliction type.
  */
-function derivedInteractionToColumnId(i: Interaction): string | undefined {
+export function derivedInteractionToColumnId(i: Interaction): string | undefined {
   for (const [columnId, interactions] of Object.entries(ENEMY_COLUMN_TO_INTERACTIONS)) {
     if (interactions.some((d) => matchInteraction(i, d))) return columnId;
   }

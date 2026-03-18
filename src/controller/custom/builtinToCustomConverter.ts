@@ -5,8 +5,8 @@
 import { WeaponType, GearSetType, ElementType } from '../../consts/enums';
 import { WEAPON_DATA } from '../../model/weapons/weaponData';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
-import { WEAPON_SKILL_EFFECTS } from '../../consts/weaponSkillEffects';
-import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
+import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
+import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
@@ -28,34 +28,39 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
   const skillTypes = [config.skill1, config.skill2];
   if (config.skill3) skillTypes.push(config.skill3);
 
-  // Check for triggered effects from the effects registry
-  const effectsEntry = WEAPON_SKILL_EFFECTS.find((e) => e.weaponName === weaponName);
+  // Check for triggered effects from DSL JSON
+  const dslDefs = getWeaponEffectDefs(weaponName);
+  // Index DSL defs by label for matching to skill slots
+  let dslDefIdx = 0;
 
   for (const skillType of skillTypes) {
-    // Check if this skill has a named effect entry
-    const matchedEffect = effectsEntry?.effects.find((e) => e.skillKey === skillType);
-
-    if (matchedEffect) {
-      skills.push({
-        type: 'NAMED',
-        label: matchedEffect.label,
-        namedEffect: {
-          name: matchedEffect.label,
-          description: matchedEffect.description,
-          triggers: matchedEffect.triggers,
-          target: encodeLegacyTarget(legacyTargetToObjectType(matchedEffect.target === 'wielder' ? 'wielder' : matchedEffect.target === 'team' ? 'team' : 'enemy')),
-          durationSeconds: matchedEffect.durationSeconds,
-          maxStacks: matchedEffect.maxStacks,
-          cooldownSeconds: matchedEffect.cooldownSeconds,
-          buffs: matchedEffect.buffs.map((b) => ({
-            stat: b.stat,
-            valueMin: b.valueMin,
-            valueMax: b.valueMax,
-            perStack: b.perStack ?? false,
-          })),
-          note: matchedEffect.note,
-        },
-      });
+    // Named skill (skill 3) — match to DSL defs
+    if (dslDefIdx < dslDefs.length && skillType === config.skill3) {
+      // All remaining DSL defs belong to the named skill slot
+      while (dslDefIdx < dslDefs.length) {
+        const def = dslDefs[dslDefIdx];
+        const target = resolveTargetDisplay(def);
+        skills.push({
+          type: 'NAMED',
+          label: def.label ?? def.name,
+          namedEffect: {
+            name: def.label ?? def.name,
+            triggers: resolveTriggerInteractions(def),
+            target: encodeLegacyTarget(legacyTargetToObjectType(target as 'wielder' | 'team' | 'enemy')),
+            durationSeconds: resolveDurationSeconds(def),
+            maxStacks: def.stack?.max?.P0 ?? 1,
+            cooldownSeconds: def.cooldownSeconds ?? 0,
+            buffs: (def.buffs ?? []).map((b: any) => ({
+              stat: b.stat,
+              valueMin: b.valueMin ?? b.value ?? 0,
+              valueMax: b.valueMax ?? b.value ?? 0,
+              perStack: b.perStack ?? false,
+            })),
+            note: def.note,
+          },
+        });
+        dslDefIdx++;
+      }
     } else {
       // Treat as stat boost with placeholder label
       skills.push({
@@ -81,7 +86,8 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   const gearEntries = GEARS.filter((g) => g.gearSetType === gearSetType);
   if (gearEntries.length === 0) return null;
 
-  const effectsEntry = GEAR_SET_EFFECTS.find((e) => e.gearSetType === gearSetType);
+  const passiveEntry = getGearSetEffects(gearSetType);
+  const dslDefs = getGearEffectDefs(gearSetType);
 
   const pieces: CustomGearPiece[] = gearEntries.slice(0, 3).map((g) => ({
     name: g.name,
@@ -91,29 +97,29 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   }));
 
   let setEffect: CustomGearSetEffect | undefined;
-  if (effectsEntry) {
+  if (passiveEntry || dslDefs.length > 0) {
     setEffect = {
-      passiveStats: effectsEntry.passiveStats as Record<string, number>,
-      effects: effectsEntry.effects.map((e) => ({
-        label: e.label,
-        triggers: e.triggers,
-        target: encodeLegacyTarget(legacyTargetToObjectType(e.target === 'wielder' ? 'wielder' : e.target === 'team' ? 'team' : 'enemy')),
-        durationSeconds: e.durationSeconds,
-        maxStacks: e.maxStacks,
-        cooldownSeconds: e.cooldownSeconds,
-        buffs: e.buffs.map((b) => ({
+      passiveStats: (passiveEntry?.passiveStats ?? {}) as Record<string, number>,
+      effects: dslDefs.map((def: any) => ({
+        label: def.label ?? def.name,
+        triggers: resolveTriggerInteractions(def),
+        target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
+        durationSeconds: resolveDurationSeconds(def),
+        maxStacks: def.stack?.max?.P0 ?? 1,
+        cooldownSeconds: def.cooldownSeconds ?? 0,
+        buffs: (def.buffs ?? []).map((b: any) => ({
           stat: b.stat,
-          value: b.value,
+          value: b.value ?? b.valueMin ?? 0,
           perStack: b.perStack ?? false,
         })),
-        note: e.note,
+        note: def.note,
       })),
     };
   }
 
   return {
     id: `clone_${gearSetType.toLowerCase()}_${Date.now()}`,
-    setName: `${effectsEntry?.label ?? gearSetType} (Clone)`,
+    setName: `${passiveEntry?.label ?? gearSetType} (Clone)`,
     rarity: (gearEntries[0].rarity as 4 | 5 | 6) || 5,
     pieces,
     setEffect,

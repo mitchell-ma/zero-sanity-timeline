@@ -107,3 +107,29 @@ export function registerCustomGearEffectDefs(gearSetType: string, defs: any[]): 
 export function deregisterCustomGearEffectDefs(gearSetType: string): void {
   delete customGearEffects[gearSetType];
 }
+
+/** Get the gear set label from the gear JSON metadata. */
+export function getGearEffectLabel(gearSetType: GearSetType | string): string | undefined {
+  const key = GEAR_TYPE_INDEX[gearSetType];
+  if (!key) return undefined;
+  return GEAR_EFFECT_JSON[key]?.label;
+}
+
+// ── Display helpers for DSL status event defs ────────────────────────────────
+
+/** Resolve target display string from DSL def fields. */
+export function resolveTargetDisplay(def: { target: string; targetDeterminer?: string }): string {
+  if (def.target === 'ENEMY') return 'enemy';
+  if (def.targetDeterminer === 'OTHER') return 'team';
+  return 'wielder';
+}
+
+/** Get duration in seconds from a DSL def. */
+export function resolveDurationSeconds(def: { properties?: { duration?: { value: number[] } } }): number {
+  return def.properties?.duration?.value?.[0] ?? 0;
+}
+
+/** Resolve triggerClause conditions to flat Interaction-like objects for display. */
+export function resolveTriggerInteractions(def: { triggerClause: { conditions: any[] }[] }): any[] {
+  return def.triggerClause.flatMap(c => c.conditions);
+}

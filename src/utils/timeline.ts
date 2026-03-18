@@ -1,4 +1,10 @@
 export const FPS = 120;
+
+/** Decimal precision for numeric display in info panes. Change this to control all formatted numbers. */
+export const DISPLAY_PRECISION = 4;
+
+/** Format a number to up to DISPLAY_PRECISION decimal places, trimming trailing zeros. */
+export const fmtN = (v: number) => v.toFixed(DISPLAY_PRECISION).replace(/\.?0+$/, '');
 export const TOTAL_SECONDS = 900;
 export const TOTAL_FRAMES = FPS * TOTAL_SECONDS; // 108,000 (15 minutes)
 
@@ -9,6 +15,7 @@ export const TIME_AXIS_WIDTH = 68;
 export const COL_WIDTH = 25;
 export const LOADOUT_ROW_HEIGHT = 140;
 export const HEADER_HEIGHT = 72;
+export const HEADER_HEIGHT_VERTICAL = 40;
 export const APP_BAR_HEIGHT = 52;
 export const CONTROLS_BAR_HEIGHT = 44;
 

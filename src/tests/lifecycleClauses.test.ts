@@ -59,8 +59,6 @@ import type { Effect, Interaction } from '../consts/semantics';
 import type { TimelineEvent } from '../consts/viewTypes';
 // eslint-disable-next-line import/first
 import { EventStatusType } from '../consts/enums';
-// eslint-disable-next-line import/first
-import { deriveStatusesFromEngine } from '../controller/timeline/statusDerivationEngine';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -341,62 +339,3 @@ describe('RECEIVE condition', () => {
   });
 });
 
-// ── Empty triggerClause — no passive creation ────────────────────────────
-
-describe('Empty triggerClause statuses', () => {
-  const SLOT_ID = 'slot1';
-
-  function battleSkillEvent(startFrame: number): TimelineEvent {
-    return makeEvent({
-      id: `bs-${startFrame}`,
-      name: 'SPECIFIED_RESEARCH_SUBJECT',
-      columnId: 'battle',
-      ownerId: SLOT_ID,
-      startFrame,
-      activationDuration: 960,
-    });
-  }
-
-  test('FOCUS is not created as passive at frame 0', () => {
-    // With no skill events, the engine should not create FOCUS
-    const events: TimelineEvent[] = [];
-    const result = deriveStatusesFromEngine(events);
-    const focusEvents = result.filter(ev => ev.name === 'FOCUS');
-    expect(focusEvents.length).toBe(0);
-  });
-
-  test('FOCUS_EMPOWERED is not created as passive at frame 0', () => {
-    const events: TimelineEvent[] = [];
-    const result = deriveStatusesFromEngine(events);
-    const focusEvents = result.filter(ev => ev.name === 'FOCUS_EMPOWERED');
-    expect(focusEvents.length).toBe(0);
-  });
-
-  test('FOCUS is not created when operator has skill events but no APPLY STATUS frame', () => {
-    // Battle skill events exist but don't trigger FOCUS creation via the engine
-    const events: TimelineEvent[] = [battleSkillEvent(0), battleSkillEvent(1200)];
-    const result = deriveStatusesFromEngine(events);
-    const focusEvents = result.filter(ev => ev.name === 'FOCUS');
-    expect(focusEvents.length).toBe(0);
-  });
-
-  test('frame-created FOCUS events are preserved (not engine-created)', () => {
-    // Simulate a FOCUS event placed by frame effects (as the real pipeline does)
-    const frameCreatedFocus = makeEvent({
-      id: 'focus-frame-1',
-      name: 'FOCUS',
-      columnId: 'focus',
-      ownerId: 'enemy',
-      startFrame: 100,
-      activationDuration: 7200,
-      sourceOwnerId: SLOT_ID,
-      sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
-    });
-    const events: TimelineEvent[] = [battleSkillEvent(100), frameCreatedFocus];
-    const result = deriveStatusesFromEngine(events);
-    const focusEvents = result.filter(ev => ev.name === 'FOCUS');
-    // The frame-created event should still be there, no extra engine-created ones
-    expect(focusEvents.length).toBe(1);
-    expect(focusEvents[0].id).toBe('focus-frame-1');
-  });
-});

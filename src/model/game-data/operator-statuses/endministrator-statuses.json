@@ -17,40 +17,6 @@
       "verb": "NONE"
     },
     "triggerClause": [],
-    "consumeClause": [
-      {
-        "conditions": [
-          {
-            "subjectDet": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "BATTLE_SKILL"
-          }
-        ],
-        "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "ALL_STACKS"
-          }
-        ]
-      },
-      {
-        "conditions": [
-          {
-            "subjectDet": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "ULTIMATE"
-          }
-        ],
-        "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "ALL_STACKS"
-          }
-        ]
-      }
-    ],
     "stats": [],
     "properties": {
       "duration": {

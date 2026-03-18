@@ -62,6 +62,10 @@ export interface AggregatedStats {
   mainAttributeBonus: number;
   /** Attribute bonus from secondary attribute (0.002 * secAttr). */
   secondaryAttributeBonus: number;
+  /** Unrounded main attribute bonus for display. */
+  displayMainAttributeBonus: number;
+  /** Unrounded secondary attribute bonus for display. */
+  displaySecondaryAttributeBonus: number;
   /** All stats merged from all sources (excludes base ATK and flat ATK bonuses). */
   stats: Record<StatType, number>;
   /** Per-stat breakdown of where each contribution came from. */
@@ -309,13 +313,18 @@ export function aggregateLoadoutStats(
   const atkPercentageBonus = baseAttack * atkBonus;
   const totalAttack = baseAttack * (1 + atkBonus) + flatAttackBonuses;
   // Apply percentage bonuses to flat attributes before computing attribute bonus.
-  // The game floors the effective attribute value before applying the ATK multiplier.
+  // The game floors the effective attribute value before computing the ATK bonus.
   const mainAttrBonusStat = ATTR_TO_BONUS[model.mainAttributeType];
   const effectiveMainAttr = Math.floor(stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0)));
   const secAttrBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
   const effectiveSecAttr = Math.floor(stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0)));
   const mainAttributeBonus = 0.005 * effectiveMainAttr;
   const secondaryAttributeBonus = 0.002 * effectiveSecAttr;
+  // Unrounded values for info pane display (show true stat contribution before game rounding).
+  const rawMainAttr = stats[model.mainAttributeType] * (1 + (mainAttrBonusStat ? stats[mainAttrBonusStat] : 0));
+  const rawSecAttr = stats[model.secondaryAttributeType] * (1 + (secAttrBonusStat ? stats[secAttrBonusStat] : 0));
+  const displayMainAttributeBonus = 0.005 * rawMainAttr;
+  const displaySecondaryAttributeBonus = 0.002 * rawSecAttr;
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;
   const effectiveAttack = totalAttack * attributeBonus;
 
@@ -331,6 +340,8 @@ export function aggregateLoadoutStats(
     effectiveAttack,
     mainAttributeBonus,
     secondaryAttributeBonus,
+    displayMainAttributeBonus,
+    displaySecondaryAttributeBonus,
     stats,
     statSources,
     mainAttributeType: model.mainAttributeType,

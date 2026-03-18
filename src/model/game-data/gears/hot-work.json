@@ -24,8 +24,8 @@
         "2": {
           "STRENGTH": 95,
           "AGILITY": 63,
-          "HEAT_DAMAGE_BONUS": 0.127,
-          "NATURE_DAMAGE_BONUS": 0.127
+          "HEAT_DAMAGE_BONUS": 0.1265,
+          "NATURE_DAMAGE_BONUS": 0.1265
         },
         "3": {
           "STRENGTH": 104,
@@ -36,8 +36,40 @@
         "4": {
           "STRENGTH": 113,
           "AGILITY": 75,
-          "HEAT_DAMAGE_BONUS": 0.15,
-          "NATURE_DAMAGE_BONUS": 0.15
+          "HEAT_DAMAGE_BONUS": 0.1495,
+          "NATURE_DAMAGE_BONUS": 0.1495
+        }
+      }
+    },
+    {
+      "gearType": "HOT_WORK_EXO_RIG",
+      "name": "Hot Work Exo Rig",
+      "gearCategory": "ARMOR",
+      "defense": 56,
+      "allLevels": {
+        "1": {
+          "INTELLECT": 87,
+          "WILL": 58,
+          "HEAT_DAMAGE_BONUS": 0.115,
+          "NATURE_DAMAGE_BONUS": 0.115
+        },
+        "2": {
+          "INTELLECT": 95,
+          "WILL": 63,
+          "HEAT_DAMAGE_BONUS": 0.1265,
+          "NATURE_DAMAGE_BONUS": 0.1265
+        },
+        "3": {
+          "INTELLECT": 104,
+          "WILL": 69,
+          "HEAT_DAMAGE_BONUS": 0.138,
+          "NATURE_DAMAGE_BONUS": 0.138
+        },
+        "4": {
+          "INTELLECT": 113,
+          "WILL": 75,
+          "HEAT_DAMAGE_BONUS": 0.1495,
+          "NATURE_DAMAGE_BONUS": 0.1495
         }
       }
     },
@@ -50,14 +82,14 @@
         "1": {
           "INTELLECT": 65,
           "STRENGTH": 43,
-          "HEAT_DAMAGE_BONUS": 0.192,
-          "NATURE_DAMAGE_BONUS": 0.192
+          "HEAT_DAMAGE_BONUS": 0.1916666667,
+          "NATURE_DAMAGE_BONUS": 0.1916666667
         },
         "2": {
           "INTELLECT": 71,
           "STRENGTH": 47,
-          "HEAT_DAMAGE_BONUS": 0.211,
-          "NATURE_DAMAGE_BONUS": 0.211
+          "HEAT_DAMAGE_BONUS": 0.21083333,
+          "NATURE_DAMAGE_BONUS": 0.21083333
         },
         "3": {
           "INTELLECT": 78,
@@ -68,8 +100,36 @@
         "4": {
           "INTELLECT": 84,
           "STRENGTH": 55,
-          "HEAT_DAMAGE_BONUS": 0.249,
-          "NATURE_DAMAGE_BONUS": 0.249
+          "HEAT_DAMAGE_BONUS": 0.24916667,
+          "NATURE_DAMAGE_BONUS": 0.24916667
+        }
+      }
+    },
+    {
+      "gearType": "HOT_WORK_GLOVES",
+      "name": "Hot Work Gloves",
+      "gearCategory": "GLOVES",
+      "defense": 42,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 65,
+          "WILL": 43,
+          "ARTS_INTENSITY": 34.5
+        },
+        "2": {
+          "STRENGTH": 71,
+          "WILL": 47,
+          "ARTS_INTENSITY": 38
+        },
+        "3": {
+          "STRENGTH": 78,
+          "WILL": 51,
+          "ARTS_INTENSITY": 41.4
+        },
+        "4": {
+          "STRENGTH": 84,
+          "WILL": 55,
+          "ARTS_INTENSITY": 44.9
         }
       }
     },
@@ -82,14 +142,14 @@
         "1": {
           "WILL": 65,
           "INTELLECT": 43,
-          "HEAT_DAMAGE_BONUS": 0.192,
-          "NATURE_DAMAGE_BONUS": 0.192
+          "HEAT_DAMAGE_BONUS": 0.1916666667,
+          "NATURE_DAMAGE_BONUS": 0.1916666667
         },
         "2": {
           "WILL": 71,
           "INTELLECT": 47,
-          "HEAT_DAMAGE_BONUS": 0.211,
-          "NATURE_DAMAGE_BONUS": 0.211
+          "HEAT_DAMAGE_BONUS": 0.21083333,
+          "NATURE_DAMAGE_BONUS": 0.21083333
         },
         "3": {
           "WILL": 78,
@@ -100,8 +160,8 @@
         "4": {
           "WILL": 84,
           "INTELLECT": 55,
-          "HEAT_DAMAGE_BONUS": 0.249,
-          "NATURE_DAMAGE_BONUS": 0.249
+          "HEAT_DAMAGE_BONUS": 0.24916667,
+          "NATURE_DAMAGE_BONUS": 0.24916667
         }
       }
     },
@@ -145,15 +205,15 @@
         },
         "2": {
           "INTELLECT": 45,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.455
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.4554
         },
         "3": {
           "INTELLECT": 49,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.497
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.4968
         },
         "4": {
           "INTELLECT": 53,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.538
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.5382
         }
       }
     },

@@ -1736,46 +1736,40 @@
 /* ─── Loadout cell layout ─────────────────────────────── */
 .lo-cell {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
   position: relative;
   overflow: hidden;
   min-width: 0;
-  height: 8rem;
+  height: 140px;
   z-index: 0;
-}
-
-
-/* ─── Splash art — covers top portion down to name ───── */
-.lo-splash {
-  position: relative;
-  width: 100%;
-  flex: 1 1 0;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .lo-splash--clickable {
   cursor: pointer;
 }
 
+/* ─── Splash art — background layer covering entire cell ── */
 .lo-splash-img {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
+  width: 100%;
   height: 100%;
-  width: auto;
+  object-fit: cover;
+  object-position: center center;
   display: block;
+  pointer-events: none;
 }
 
 .lo-splash-fallback {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--op-color) 20%, var(--bg-panel)) 0%,
     var(--bg-panel) 100%
   );
+  pointer-events: none;
 }
 
 .lo-splash-fade {
@@ -1783,19 +1777,22 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40%;
+  height: 50%;
   background: linear-gradient(to bottom, transparent, var(--bg-panel));
   pointer-events: none;
 }
 
-/* ─── Operator name ───────────────────────────────────── */
+/* ─── Operator name — overlaid at bottom center ───────── */
 .lo-name-row {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0 0.25rem;
-  flex: 0 0 1.125rem;
+  padding: 0.125rem 0.25rem;
+  pointer-events: none;
 }
 
 .lo-name {
@@ -1829,37 +1826,42 @@
   transition: color 0.1s, border-color 0.1s, background 0.1s;
 }
 
-/* ─── Equipment icon slots ────────────────────────────── */
+/* ─── Equipment icon slots — left/right columns ──────── */
 .lo-slots {
   display: flex;
   flex-direction: column;
-  gap: 0.1875rem;
-  padding: 0.1875rem 0.25rem 0.25rem;
-  flex: 0 0 3.25rem;
-  min-width: 0;
-}
-
-.lo-slots-row {
-  display: flex;
-  gap: 0.1875rem;
-  justify-content: center;
-  min-width: 0;
-  flex: 1;
-}
-
-/* Top row items sized by aspect-ratio */
-.lo-slots-row--top .lo-dropdown {
+  gap: 1px;
+  padding: 2px;
   flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  z-index: 1;
+  align-self: stretch;
+}
+
+.lo-slots > .lo-dropdown {
+  flex: 0 0 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .lo-slots-spacer {
-  width: 0.375rem;
-  flex-shrink: 0;
+  flex: 1 1 0;
 }
 
-/* Bottom row items sized by aspect-ratio */
-.lo-slots-row:not(.lo-slots-row--top) .lo-dropdown {
-  flex: 0 0 auto;
+.lo-slots-right {
+  justify-content: flex-end;
+}
+
+.lo-slots > .lo-dropdown > .lo-dropdown-trigger {
+  min-width: 0;
+  min-height: 0;
+  background: var(--lo-slot-bg);
+  border: 1px solid var(--lo-slot-border);
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
 }
 
 
@@ -2157,7 +2159,7 @@
   background: var(--bg-panel);
   border-right: 1px solid var(--border-dim);
   border-bottom: 1px solid var(--border-med);
-  padding: 0.25rem 0.25rem;
+  padding: 0.125rem 0.125rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2209,7 +2211,7 @@
 .skill-badge--vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  padding: 0.3125rem 0.0625rem;
+  padding: 0.125rem 0.0625rem;
   white-space: normal;
   overflow-wrap: normal;
   word-break: keep-all;
@@ -2232,7 +2234,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 3.25rem;
+  max-height: calc(100% - 0.5rem);
 }
 
 .hdr-trigger {
@@ -3431,6 +3433,7 @@
 ══════════════════════════════════════════════════════════ */
 @media (pointer: coarse) {
   .lo-dropdown-trigger { min-width: 2.75rem; min-height: 2.75rem; }
+  .lo-slots > .lo-dropdown > .lo-dropdown-trigger { min-width: 0; min-height: 0; }
   .lo-edit-btn { min-width: 2.75rem; min-height: 2.75rem; }
   .context-menu-item { padding: 0.75rem 0.875rem; min-height: 2.75rem; }
   .lo-dropdown-option { padding: 0.625rem; min-height: 2.75rem; }
@@ -3473,7 +3476,7 @@
   flex: 1;
   display: flex;
   align-items: flex-end;
-  padding: 0 0 0.375rem 3.5rem; /* matches time column width */
+  padding: 0 0 0.375rem 3.5rem;
 }
 
 .dmg-loadout-op {
@@ -3508,12 +3511,11 @@
   letter-spacing: 0;
 }
 
-/* ── Header row — mirrors timeline skill header ───── */
+/* ── Header row ───────────────────────────────────── */
 .dmg-header {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  height: 72px;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-med);
 }
@@ -3547,9 +3549,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 1px;
+  padding: 0.125rem 0;
   border-right: 1px solid var(--border-med);
   background: var(--bg-panel);
+  transition: background 0.12s;
 }
 
 .dmg-header-skill-label {
@@ -3561,9 +3565,13 @@
   letter-spacing: 0.1em;
   color: var(--op-color, var(--text-muted));
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: calc(100% - 0.5rem);
+}
+
+.dmg-header-skill-label--collapsed {
+  writing-mode: horizontal-tb;
+  text-orientation: initial;
+  max-height: none;
+  font-size: 0.625rem;
 }
 
 .dmg-header-skill-total {
@@ -3654,6 +3662,31 @@
 .dmg-crit-toggle--none {
   border-color: var(--border-med);
   color: var(--text-muted);
+}
+
+/* ── Collapse toggle button ─────────────────────────── */
+.dmg-collapse-toggle {
+  flex-shrink: 0;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--border-med);
+  border-radius: 3px;
+  background: var(--overlay-05);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.dmg-collapse-toggle:hover {
+  background: var(--overlay-10);
+  color: var(--text-primary);
+}
+.dmg-collapse-toggle--active {
+  border-color: rgba(100, 200, 255, 0.5);
+  color: rgba(100, 200, 255, 0.8);
 }
 
 /* ── Statistics row ────────────────────────────────── */
@@ -3790,10 +3823,11 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 20px;
+  height: 22px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--overlay-10);
+  border-bottom: 1px solid var(--overlay-05);
+  transition: background 0.08s;
 }
 
 .dmg-row:hover {
@@ -3811,6 +3845,11 @@
   z-index: 1;
 }
 
+/* Multi-hit rows get a subtle left accent */
+.dmg-row--multi {
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+}
+
 /* ── Cells ─────────────────────────────────────────── */
 .dmg-cell {
   flex: 1;
@@ -3821,7 +3860,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1px solid var(--border-med);
+  border-right: 1px solid var(--overlay-04);
+  padding: 0 2px;
 }
 
 .dmg-cell-label {
@@ -3837,13 +3877,15 @@
 
 .dmg-cell-time {
   flex: 0 0 3.5rem;
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   color: var(--text-muted);
+  opacity: 0.7;
+  padding: 0 2px;
 }
 
 .dmg-cell-value {
   font-weight: 600;
-  background: var(--overlay-02);
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .dmg-cell-blank {
@@ -3876,7 +3918,7 @@
   font-size: 0.625rem;
   text-align: center;
   color: var(--red);
-  border-left: 1px solid var(--border-med);
+  border-left: 1px solid var(--overlay-04);
 }
 
 .dmg-cell-hp--dead {
@@ -5016,9 +5058,20 @@
   min-width: 180px;
 }
 
-/* Loadout cells: fill row height, image fills remaining space */
+/* Loadout cells: fill parent in horizontal mode */
 .timeline-outer--horizontal .tl-loadout-cell .lo-cell {
+  aspect-ratio: unset;
   height: 100%;
+  width: 100%;
+  flex-direction: row;
+}
+
+.timeline-outer--horizontal .tl-loadout-cell .lo-slots {
+  flex-direction: column;
+}
+
+.timeline-outer--horizontal .tl-loadout-cell .lo-slots > .lo-dropdown {
+  flex: 1 1 0;
 }
 .timeline-outer--horizontal .tl-loadout-cell--enemy .lo-cell {
   position: absolute;

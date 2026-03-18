@@ -292,6 +292,55 @@ function IconDropdown<T>({
   );
 }
 
+/* ─── Equipment slots container ────────────────────────────────────────── */
+
+interface EquipmentSlotsProps {
+  operatorWeaponTypes: string[];
+  state: OperatorLoadoutState;
+  onChange: (state: OperatorLoadoutState) => void;
+}
+
+export function EquipmentSlots({ operatorWeaponTypes, state, onChange }: EquipmentSlotsProps) {
+  const nameSet = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]) => (idx: number | null) =>
+    onChange({ ...state, [key]: idx !== null ? entries[idx]?.name ?? null : null });
+
+  const nameIdx = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]): number | null => {
+    const name = state[key];
+    if (name === null) return null;
+    const idx = entries.findIndex((e) => e.name === name);
+    return idx >= 0 ? idx : null;
+  };
+
+  const compatibleWeapons = useMemo(
+    () => WEAPONS.filter((w) => operatorWeaponTypes.includes(w.weaponType)),
+    [operatorWeaponTypes],
+  );
+
+  const wpnIdx = state.weaponName !== null ? compatibleWeapons.findIndex((w) => w.name === state.weaponName) : -1;
+  const filteredSelectedIdx = wpnIdx >= 0 ? wpnIdx : null;
+
+  const handleWeaponChange = useCallback((filteredIdx: number | null) => {
+    onChange({ ...state, weaponName: filteredIdx !== null ? compatibleWeapons[filteredIdx]?.name ?? null : null });
+  }, [compatibleWeapons, state, onChange]);
+
+  return (
+    <>
+      <div className="lo-slots lo-slots-left">
+        <IconDropdown label="WPN"  title="Weapon"      entries={compatibleWeapons} selectedIdx={filteredSelectedIdx} onChange={handleWeaponChange} />
+        <div className="lo-slots-spacer" />
+        <IconDropdown label="CSM"  title="Consumable"  entries={CONSUMABLES}       selectedIdx={nameIdx('consumableName', CONSUMABLES)} onChange={nameSet('consumableName', CONSUMABLES)} />
+        <IconDropdown label="TAC"  title="Tactical"    entries={TACTICALS}         selectedIdx={nameIdx('tacticalName', TACTICALS)}     onChange={nameSet('tacticalName', TACTICALS)} />
+      </div>
+      <div className="lo-slots lo-slots-right">
+        <IconDropdown label="ARM"  title="Armor"       entries={ARMORS}  selectedIdx={nameIdx('armorName', ARMORS)}   onChange={nameSet('armorName', ARMORS)} />
+        <IconDropdown label="GLV"  title="Gloves"      entries={GLOVES}  selectedIdx={nameIdx('glovesName', GLOVES)} onChange={nameSet('glovesName', GLOVES)} />
+        <IconDropdown label="K1"   title="Kit 1"       entries={KITS}    selectedIdx={nameIdx('kit1Name', KITS)}     onChange={nameSet('kit1Name', KITS)} />
+        <IconDropdown label="K2"   title="Kit 2"       entries={KITS}    selectedIdx={nameIdx('kit2Name', KITS)}     onChange={nameSet('kit2Name', KITS)} />
+      </div>
+    </>
+  );
+}
+
 /* ─── Main component ────────────────────────────────────────────────────── */
 
 export default function OperatorLoadoutHeader({
@@ -385,47 +434,32 @@ export default function OperatorLoadoutHeader({
     e.preventDefault();
     setStarred(toggleStarredOperator(opId));
   }, []);
-  /** Create a handler that maps IconDropdown index ↔ registry name for a given slot. */
-  const nameSet = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]) => (idx: number | null) =>
-    onChange({ ...state, [key]: idx !== null ? entries[idx]?.name ?? null : null });
-
-  const nameIdx = (key: keyof OperatorLoadoutState, entries: RegistryEntry<any>[]): number | null => {
-    const name = state[key];
-    if (name === null) return null;
-    const idx = entries.findIndex((e) => e.name === name);
-    return idx >= 0 ? idx : null;
-  };
-
-  // Filter weapons by operator's compatible weapon types
-  const compatibleWeapons = useMemo(
-    () => WEAPONS.filter((w) => operatorWeaponTypes.includes(w.weaponType)),
-    [operatorWeaponTypes],
-  );
-
-  const wpnIdx = state.weaponName !== null ? compatibleWeapons.findIndex((w) => w.name === state.weaponName) : -1;
-  const filteredSelectedIdx = wpnIdx >= 0 ? wpnIdx : null;
-
-  const handleWeaponChange = useCallback((filteredIdx: number | null) => {
-    onChange({ ...state, weaponName: filteredIdx !== null ? compatibleWeapons[filteredIdx]?.name ?? null : null });
-  }, [compatibleWeapons, state, onChange]);
 
   return (
     <div
-      className="lo-cell"
+      ref={splashRef}
+      className={`lo-cell${allOperators ? ' lo-splash--clickable' : ''}`}
       style={{ '--op-color': operatorColor } as React.CSSProperties}
+      onClick={handleSplashClick}
     >
-      {/* Splash art (clickable for operator selection) */}
-      <div
-        ref={splashRef}
-        className={`lo-splash${allOperators ? ' lo-splash--clickable' : ''}`}
-        onClick={handleSplashClick}
-      >
-        {splash ? (
-          <img className="lo-splash-img" src={splash} alt={operatorName} />
-        ) : (
-          <div className="lo-splash-fallback" />
-        )}
-        <div className="lo-splash-fade" />
+      {/* Splash art — background layer */}
+      {splash ? (
+        <img className="lo-splash-img" src={splash} alt={operatorName} />
+      ) : (
+        <div className="lo-splash-fallback" />
+      )}
+      <div className="lo-splash-fade" />
+
+      {/* Equipment icons — split left/right */}
+      <EquipmentSlots
+        operatorWeaponTypes={operatorWeaponTypes}
+        state={state}
+        onChange={onChange}
+      />
+
+      {/* Operator name */}
+      <div className="lo-name-row">
+        <span className="lo-name">{operatorName}</span>
       </div>
 
       {/* Operator selection dropdown */}
@@ -481,27 +515,6 @@ export default function OperatorLoadoutHeader({
           <path d="M7.5.8 9.2 2.5 3.2 8.5.5 9.5l1-2.7z"/>
         </svg>
       </button>
-
-      {/* Name */}
-      <div className="lo-name-row">
-        <span className="lo-name">{operatorName}</span>
-      </div>
-
-      {/* Equipment icons */}
-      <div className="lo-slots">
-        <div className="lo-slots-row lo-slots-row--top">
-          <IconDropdown label="WPN"  title="Weapon"      entries={compatibleWeapons} selectedIdx={filteredSelectedIdx} onChange={handleWeaponChange} />
-          <div className="lo-slots-spacer" />
-          <IconDropdown label="CSM"  title="Consumable"  entries={CONSUMABLES}       selectedIdx={nameIdx('consumableName', CONSUMABLES)} onChange={nameSet('consumableName', CONSUMABLES)} />
-          <IconDropdown label="TAC"  title="Tactical"    entries={TACTICALS}         selectedIdx={nameIdx('tacticalName', TACTICALS)}     onChange={nameSet('tacticalName', TACTICALS)} />
-        </div>
-        <div className="lo-slots-row">
-          <IconDropdown label="ARM" title="Armor"       entries={ARMORS}  selectedIdx={nameIdx('armorName', ARMORS)}   onChange={nameSet('armorName', ARMORS)} />
-          <IconDropdown label="GLV" title="Gloves"      entries={GLOVES}  selectedIdx={nameIdx('glovesName', GLOVES)} onChange={nameSet('glovesName', GLOVES)} />
-          <IconDropdown label="K1"  title="Kit 1"       entries={KITS}    selectedIdx={nameIdx('kit1Name', KITS)}     onChange={nameSet('kit1Name', KITS)} />
-          <IconDropdown label="K2"  title="Kit 2"       entries={KITS}    selectedIdx={nameIdx('kit2Name', KITS)}     onChange={nameSet('kit2Name', KITS)} />
-        </div>
-      </div>
     </div>
   );
 }

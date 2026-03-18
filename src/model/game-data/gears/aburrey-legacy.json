@@ -10,34 +10,6 @@
   },
   "pieces": [
     {
-      "gearType": "ABURREY_LIGHT_ARMOR_T1",
-      "name": "Aburrey Light Armor T1",
-      "gearCategory": "ARMOR",
-      "defense": 40,
-      "allLevels": {
-        "1": {
-          "WILL": 61,
-          "AGILITY": 41,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
-        },
-        "2": {
-          "WILL": 61,
-          "AGILITY": 41,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
-        },
-        "3": {
-          "WILL": 61,
-          "AGILITY": 41,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
-        },
-        "4": {
-          "WILL": 61,
-          "AGILITY": 41,
-          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
-        }
-      }
-    },
-    {
       "gearType": "ABURREY_HEAVY_ARMOR",
       "name": "Aburrey Heavy Armor",
       "gearCategory": "ARMOR",
@@ -102,22 +74,50 @@
         "1": {
           "INTELLECT": 61,
           "STRENGTH": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
         },
         "2": {
           "INTELLECT": 61,
           "STRENGTH": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
         },
         "3": {
           "INTELLECT": 61,
           "STRENGTH": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
         },
         "4": {
           "INTELLECT": 61,
           "STRENGTH": 41,
-          "ULTIMATE_GAIN_EFFICIENCY": 0.088
+          "ULTIMATE_GAIN_EFFICIENCY": 0.0875
+        }
+      }
+    },
+    {
+      "gearType": "ABURREY_LIGHT_ARMOR_T1",
+      "name": "Aburrey Light Armor T1",
+      "gearCategory": "ARMOR",
+      "defense": 40,
+      "allLevels": {
+        "1": {
+          "WILL": 61,
+          "AGILITY": 41,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
+        },
+        "2": {
+          "WILL": 61,
+          "AGILITY": 41,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
+        },
+        "3": {
+          "WILL": 61,
+          "AGILITY": 41,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
+        },
+        "4": {
+          "WILL": 61,
+          "AGILITY": 41,
+          "BATTLE_SKILL_DAMAGE_BONUS": 0.147
         }
       }
     },
@@ -150,34 +150,6 @@
       }
     },
     {
-      "gearType": "ABURREY_AUDITORY_CHIP_T1",
-      "name": "Aburrey Auditory Chip T1",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.294
-        },
-        "2": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.294
-        },
-        "3": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.294
-        },
-        "4": {
-          "AGILITY": 23,
-          "STRENGTH": 15,
-          "COMBO_SKILL_DAMAGE_BONUS": 0.294
-        }
-      }
-    },
-    {
       "gearType": "ABURREY_AUDITORY_CHIP",
       "name": "Aburrey Auditory Chip",
       "gearCategory": "KIT",
@@ -202,6 +174,34 @@
           "STRENGTH": 23,
           "WILL": 15,
           "STAGGER_DAMAGE_BONUS": 0.294
+        }
+      }
+    },
+    {
+      "gearType": "ABURREY_AUDITORY_CHIP_T1",
+      "name": "Aburrey Auditory Chip T1",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "2": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "3": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
+        },
+        "4": {
+          "AGILITY": 23,
+          "STRENGTH": 15,
+          "COMBO_SKILL_DAMAGE_BONUS": 0.294
         }
       }
     },
@@ -262,34 +262,6 @@
       }
     },
     {
-      "gearType": "ABURREY_UV_LAMP",
-      "name": "Aburrey Uv Lamp",
-      "gearCategory": "KIT",
-      "defense": 15,
-      "allLevels": {
-        "1": {
-          "STRENGTH": 23,
-          "AGILITY": 15,
-          "SKILL_DAMAGE_BONUS": 0.196
-        },
-        "2": {
-          "STRENGTH": 23,
-          "AGILITY": 15,
-          "SKILL_DAMAGE_BONUS": 0.196
-        },
-        "3": {
-          "STRENGTH": 23,
-          "AGILITY": 15,
-          "SKILL_DAMAGE_BONUS": 0.196
-        },
-        "4": {
-          "STRENGTH": 23,
-          "AGILITY": 15,
-          "SKILL_DAMAGE_BONUS": 0.196
-        }
-      }
-    },
-    {
       "gearType": "ABURREY_SENSOR_CHIP_T1",
       "name": "Aburrey Sensor Chip T1",
       "gearCategory": "KIT",
@@ -314,6 +286,34 @@
           "WILL": 23,
           "INTELLECT": 15,
           "BATTLE_SKILL_DAMAGE_BONUS": 0.294
+        }
+      }
+    },
+    {
+      "gearType": "ABURREY_UV_LAMP",
+      "name": "Aburrey Uv Lamp",
+      "gearCategory": "KIT",
+      "defense": 15,
+      "allLevels": {
+        "1": {
+          "STRENGTH": 23,
+          "AGILITY": 15,
+          "SKILL_DAMAGE_BONUS": 0.196
+        },
+        "2": {
+          "STRENGTH": 23,
+          "AGILITY": 15,
+          "SKILL_DAMAGE_BONUS": 0.196
+        },
+        "3": {
+          "STRENGTH": 23,
+          "AGILITY": 15,
+          "SKILL_DAMAGE_BONUS": 0.196
+        },
+        "4": {
+          "STRENGTH": 23,
+          "AGILITY": 15,
+          "SKILL_DAMAGE_BONUS": 0.196
         }
       }
     }
