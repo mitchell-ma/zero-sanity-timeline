@@ -1,6 +1,10 @@
 {
   "skillTypeMap": {
-    "BASIC_ATTACK": "FLAMING_CINDERS",
+    "BASIC_ATTACK": {
+      "BATK": "FLAMING_CINDERS",
+      "FINISHER": "FLAMING_CINDERS_FINISHER",
+      "DIVE": "FLAMING_CINDERS_DIVE"
+    },
     "BATTLE_SKILL": "SMOULDERING_FIRE",
     "COMBO_SKILL": "SEETHE",
     "ULTIMATE": "TWILIGHT"
@@ -36,77 +40,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.16,
+                          0.18,
+                          0.19,
+                          0.21,
+                          0.22,
+                          0.24,
+                          0.26,
+                          0.27,
+                          0.29,
+                          0.31,
+                          0.33,
+                          0.36
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.19
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.21
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.24
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.26
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.29
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.31
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.33
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.36
+                ]
               }
             ]
           }
@@ -139,77 +103,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19,
+                          0.2,
+                          0.22,
+                          0.23,
+                          0.25,
+                          0.27
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.12
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.19
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.27
+                ]
               }
             ]
           },
@@ -226,77 +150,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19,
+                          0.2,
+                          0.22,
+                          0.23,
+                          0.25,
+                          0.27
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.12
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.19
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.27
+                ]
               }
             ]
           }
@@ -329,77 +213,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.25,
+                          0.28,
+                          0.3,
+                          0.33,
+                          0.35,
+                          0.38,
+                          0.4,
+                          0.43,
+                          0.45,
+                          0.48,
+                          0.52,
+                          0.56
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.28
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.3
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.33
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.35
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.38
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.4
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.43
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.45
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.48
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.52
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.56
+                ]
               }
             ]
           }
@@ -432,77 +276,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.13,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2,
+                          0.21,
+                          0.22,
+                          0.23,
+                          0.25,
+                          0.27,
+                          0.29
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.21
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.29
+                ]
               }
             ]
           },
@@ -519,77 +323,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.13,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2,
+                          0.21,
+                          0.22,
+                          0.23,
+                          0.25,
+                          0.27,
+                          0.29
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.21
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.29
+                ]
               }
             ]
           },
@@ -606,77 +370,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.13,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2,
+                          0.21,
+                          0.22,
+                          0.23,
+                          0.25,
+                          0.27,
+                          0.29
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.21
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.22
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.25
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.29
+                ]
               }
             ]
           }
@@ -709,101 +433,45 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.27,
+                          0.29,
+                          0.32,
+                          0.34,
+                          0.37,
+                          0.4,
+                          0.42,
+                          0.45,
+                          0.48,
+                          0.51,
+                          0.55,
+                          0.6
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 18
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.27,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.29,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.32,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.34,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.37,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.4,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.42,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.45,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.48,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.51,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.55,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.6,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
+                ]
               }
             ]
           },
@@ -820,77 +488,58 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 20
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 18
+                      }
+                    },
+                    "toObject": "ENEMY"
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.27,
+                          0.29,
+                          0.32,
+                          0.34,
+                          0.37,
+                          0.4,
+                          0.42,
+                          0.45,
+                          0.48,
+                          0.51,
+                          0.55,
+                          0.6
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 18
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.29
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.32
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.34
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.37
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.4
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.42
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.45
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.48
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.51
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.55
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.6
+                ]
               }
             ]
           }
@@ -922,157 +571,110 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "APPLY",
-            "object": "STATUS",
-            "objectId": "MELTING_FLAME",
-            "toObject": "LAEVATAIN",
-            "with": {
-              "stacks": {
-                "verb": "IS",
-                "value": 1
-              }
-            }
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "APPLY",
+                "object": "STATUS",
+                "objectId": "MELTING_FLAME",
+                "toObject": "LAEVATAIN",
+                "with": {
+                  "stacks": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  },
+                  "extraUsp": {
+                    "verb": "IS",
+                    "value": 100
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1088,143 +690,98 @@
             "unit": "SECOND"
           }
         },
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  },
+                  "extraUsp": {
+                    "verb": "IS",
+                    "value": 100
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1240,106 +797,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1355,106 +884,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1470,106 +971,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1585,106 +1058,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1700,106 +1145,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1815,106 +1232,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -1930,106 +1319,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -2045,106 +1406,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -2160,135 +1493,133 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "toObject": "ENEMY",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            }
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       }
     ],
-    "effects": [
+    "originId": "laevatain",
+    "clause": [
       {
-        "verb": "CONSUME",
-        "object": "SKILL_POINT",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 100
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "CONSUME",
+            "object": "SKILL_POINT",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 100
+              }
+            }
+          },
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toObject": "THIS_OPERATOR",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 6.5
+              }
+            }
+          },
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toObject": "OPERATOR",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 6.5
+              }
+            },
+            "toDeterminer": "ALL"
           }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toObject": "THIS_OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 6.5
-          }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toObject": "OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 6.5
-          }
-        },
-        "toDeterminer": "ALL"
+        ]
       }
-    ],
-    "originId": "laevatain"
+    ]
   },
   "SEETHE": {
     "name": "Seethe",
@@ -2309,7 +1640,7 @@
         ]
       },
       "trigger": {
-        "triggerClause": [
+        "onTriggerClause": [
           {
             "conditions": [
               {
@@ -2347,175 +1678,119 @@
             "unit": "SECOND"
           }
         },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verb": "APPLY",
+                "object": "STATUS",
+                "objectId": "MELTING_FLAME",
+                "toObject": "LAEVATAIN",
+                "with": {
+                  "stacks": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "verb": "RECOVER",
+                "object": "ULTIMATE_ENERGY",
+                "with": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 25
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      2.4,
+                      2.64,
+                      2.88,
+                      3.12,
+                      3.36,
+                      3.6,
+                      3.84,
+                      4.08,
+                      4.32,
+                      4.62,
+                      4.98,
+                      5.4
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "usp_1Display": {
+                    "verb": "IS",
+                    "value": 25
+                  },
+                  "usp_2Display": {
+                    "verb": "IS",
+                    "value": 30
+                  },
+                  "usp_3Display": {
+                    "verb": "IS",
+                    "value": 35
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "originId": "laevatain",
+    "clause": [
+      {
+        "conditions": [],
         "effects": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
+            "verb": "CONSUME",
+            "object": "COOLDOWN",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "toObject": "ENEMY",
-            "with": {
-              "value": {
                 "verb": "IS",
                 "value": 10
               }
             }
           },
           {
-            "verb": "APPLY",
-            "object": "STATUS",
-            "objectId": "MELTING_FLAME",
-            "toObject": "LAEVATAIN",
-            "with": {
-              "stacks": {
-                "verb": "IS",
-                "value": 1
-              }
-            }
-          },
-          {
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
+            "toObject": "THIS_OPERATOR",
             "with": {
               "cardinality": {
                 "verb": "IS",
-                "value": 25
+                "value": 30
               }
             }
           }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 2.4,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 2.64,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 2.88,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 3.12,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 3.36,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 3.6,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 3.84,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 4.08,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 4.32,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 4.62,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 4.98,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 5.4,
-            "STAGGER": 10,
-            "usp_1_display": 25,
-            "usp_2_display": 30,
-            "usp_3_display": 35
-          }
         ]
       }
-    ],
-    "effects": [
-      {
-        "verb": "CONSUME",
-        "object": "COOLDOWN",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 10
-          }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toObject": "THIS_OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 30
-          }
-        }
-      }
-    ],
-    "originId": "laevatain"
+    ]
   },
   "TWILIGHT": {
     "name": "Twilight",
@@ -2537,6 +1812,7 @@
         },
         "clause": [
           {
+            "conditions": [],
             "effects": [
               {
                 "verb": "IGNORE",
@@ -2569,6 +1845,7 @@
         },
         "clause": [
           {
+            "conditions": [],
             "effects": [
               {
                 "verb": "ENHANCE",
@@ -2595,6 +1872,7 @@
         },
         "clause": [
           {
+            "conditions": [],
             "effects": [
               {
                 "verb": "ENHANCE",
@@ -2623,29 +1901,34 @@
         "frames": []
       }
     ],
-    "effects": [
+    "originId": "laevatain",
+    "clause": [
       {
-        "verb": "CONSUME",
-        "object": "ULTIMATE_ENERGY",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 300
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "CONSUME",
+            "object": "ULTIMATE_ENERGY",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 300
+              }
+            }
           }
-        }
+        ]
       }
-    ],
-    "originId": "laevatain"
+    ]
   },
   "SMOULDERING_FIRE_ENHANCED": {
-    "enhancementTypes": [
-      "ENHANCED"
-    ],
     "properties": {
       "duration": {
         "value": 1.1,
         "unit": "SECOND"
-      }
+      },
+      "enhancementTypes": [
+        "ENHANCED"
+      ]
     },
     "frames": [
       {
@@ -2661,149 +1944,100 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                },
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.47,
+                      1.61,
+                      1.76,
+                      1.91,
+                      2.05,
+                      2.2,
+                      2.35,
+                      2.49,
+                      2.64,
+                      2.82,
+                      3.04,
+                      3.3
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.64,
+                      1.81,
+                      1.97,
+                      2.14,
+                      2.3,
+                      2.47,
+                      2.63,
+                      2.79,
+                      2.96,
+                      3.16,
+                      3.41,
+                      3.7
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 1.47,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.64,
-            "atk_scale_3": 4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 1.61,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.81,
-            "atk_scale_3": 4.4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 1.76,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.97,
-            "atk_scale_3": 4.8,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 1.91,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.14,
-            "atk_scale_3": 5.2,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 2.05,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.3,
-            "atk_scale_3": 5.6,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 2.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.47,
-            "atk_scale_3": 6,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 2.35,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.63,
-            "atk_scale_3": 6.4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 2.49,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.79,
-            "atk_scale_3": 6.8,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 2.64,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.96,
-            "atk_scale_3": 7.2,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 2.82,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.16,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 3.04,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.41,
-            "atk_scale_3": 8.3,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 3.3,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.7,
-            "atk_scale_3": 9,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
+            ]
           }
         ]
       },
@@ -2820,101 +2054,84 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                },
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.47,
+                      1.61,
+                      1.76,
+                      1.91,
+                      2.05,
+                      2.2,
+                      2.35,
+                      2.49,
+                      2.64,
+                      2.82,
+                      3.04,
+                      3.3
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.64,
+                      1.81,
+                      1.97,
+                      2.14,
+                      2.3,
+                      2.47,
+                      2.63,
+                      2.79,
+                      2.96,
+                      3.16,
+                      3.41,
+                      3.7
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 1.47,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.64,
-            "atk_scale_3": 4
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 1.61,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.81,
-            "atk_scale_3": 4.4
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 1.76,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.97,
-            "atk_scale_3": 4.8
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 1.91,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.14,
-            "atk_scale_3": 5.2
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 2.05,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.3,
-            "atk_scale_3": 5.6
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 2.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.47,
-            "atk_scale_3": 6
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 2.35,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.63,
-            "atk_scale_3": 6.4
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 2.49,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.79,
-            "atk_scale_3": 6.8
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 2.64,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.96,
-            "atk_scale_3": 7.2
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 2.82,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.16,
-            "atk_scale_3": 7.7
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 3.04,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.41,
-            "atk_scale_3": 8.3
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 3.3,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.7,
-            "atk_scale_3": 9
+            ]
           }
         ]
       }
@@ -2922,15 +2139,15 @@
     "originId": "laevatain"
   },
   "SMOULDERING_FIRE_ENHANCED_EMPOWERED": {
-    "enhancementTypes": [
-      "ENHANCED",
-      "EMPOWERED"
-    ],
     "properties": {
       "duration": {
         "value": 2.1,
         "unit": "SECOND"
-      }
+      },
+      "enhancementTypes": [
+        "ENHANCED",
+        "EMPOWERED"
+      ]
     },
     "frames": [
       {
@@ -2946,149 +2163,100 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                },
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.47,
+                      1.61,
+                      1.76,
+                      1.91,
+                      2.05,
+                      2.2,
+                      2.35,
+                      2.49,
+                      2.64,
+                      2.82,
+                      3.04,
+                      3.3
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.64,
+                      1.81,
+                      1.97,
+                      2.14,
+                      2.3,
+                      2.47,
+                      2.63,
+                      2.79,
+                      2.96,
+                      3.16,
+                      3.41,
+                      3.7
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 1.47,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.64,
-            "atk_scale_3": 4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 1.61,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.81,
-            "atk_scale_3": 4.4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 1.76,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.97,
-            "atk_scale_3": 4.8,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 1.91,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.14,
-            "atk_scale_3": 5.2,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 2.05,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.3,
-            "atk_scale_3": 5.6,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 2.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.47,
-            "atk_scale_3": 6,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 2.35,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.63,
-            "atk_scale_3": 6.4,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 2.49,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.79,
-            "atk_scale_3": 6.8,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 2.64,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.96,
-            "atk_scale_3": 7.2,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 2.82,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.16,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 3.04,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.41,
-            "atk_scale_3": 8.3,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 3.3,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.7,
-            "atk_scale_3": 9,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5
+            ]
           }
         ]
       },
@@ -3105,101 +2273,84 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                },
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.47,
+                      1.61,
+                      1.76,
+                      1.91,
+                      2.05,
+                      2.2,
+                      2.35,
+                      2.49,
+                      2.64,
+                      2.82,
+                      3.04,
+                      3.3
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.64,
+                      1.81,
+                      1.97,
+                      2.14,
+                      2.3,
+                      2.47,
+                      2.63,
+                      2.79,
+                      2.96,
+                      3.16,
+                      3.41,
+                      3.7
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 1.47,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.64,
-            "atk_scale_3": 4
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 1.61,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.81,
-            "atk_scale_3": 4.4
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 1.76,
-            "DAMAGE_MULTIPLIER_INCREMENT": 1.97,
-            "atk_scale_3": 4.8
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 1.91,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.14,
-            "atk_scale_3": 5.2
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 2.05,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.3,
-            "atk_scale_3": 5.6
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 2.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.47,
-            "atk_scale_3": 6
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 2.35,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.63,
-            "atk_scale_3": 6.4
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 2.49,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.79,
-            "atk_scale_3": 6.8
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 2.64,
-            "DAMAGE_MULTIPLIER_INCREMENT": 2.96,
-            "atk_scale_3": 7.2
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 2.82,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.16,
-            "atk_scale_3": 7.7
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 3.04,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.41,
-            "atk_scale_3": 8.3
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 3.3,
-            "DAMAGE_MULTIPLIER_INCREMENT": 3.7,
-            "atk_scale_3": 9
+            ]
           }
         ]
       },
@@ -3216,47 +2367,42 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "CONSUME",
-            "object": "STATUS",
-            "objectId": "MELTING_FLAME",
-            "toObject": "THIS_OPERATOR"
-          },
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "CONSUME",
+                "object": "STATUS",
+                "objectId": "MELTING_FLAME",
+                "toObject": "THIS_OPERATOR"
+              },
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                },
+                "toObject": "ENEMY"
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            },
-            "toObject": "ENEMY"
+            ]
           }
         ]
       }
     ]
   },
   "SMOULDERING_FIRE_EMPOWERED": {
-    "enhancementTypes": [
-      "EMPOWERED"
-    ],
     "properties": {
       "duration": {
         "value": 1.95,
         "unit": "SECOND"
-      }
+      },
+      "enhancementTypes": [
+        "EMPOWERED"
+      ]
     },
     "frames": [
       {
@@ -3272,166 +2418,98 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  },
+                  "extraUsp": {
+                    "verb": "IS",
+                    "value": 100
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -3447,143 +2525,98 @@
             "unit": "SECOND"
           }
         },
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7,
-            "STAGGER": 10,
-            "poise_extra": 10,
-            "count": 4,
-            "DURATION": 5,
-            "extra_usp": 100
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "poiseExtra": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "count": {
+                    "verb": "IS",
+                    "value": 4
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 5
+                  },
+                  "extraUsp": {
+                    "verb": "IS",
+                    "value": 100
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -3599,106 +2632,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -3714,106 +2719,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -3829,106 +2806,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -3944,106 +2893,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -4059,106 +2980,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -4174,106 +3067,78 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
-              }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 0
-              }
-            },
-            "toObject": "ENEMY"
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.06,
-            "atk_scale_3": 3.42
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.68,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.07,
-            "atk_scale_3": 3.76
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.75,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.1
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.81,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.08,
-            "atk_scale_3": 4.45
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.87,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 4.79
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.09,
-            "atk_scale_3": 5.13
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.99,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.1,
-            "atk_scale_3": 5.47
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 1.06,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 5.81
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 1.12,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.11,
-            "atk_scale_3": 6.16
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 1.2,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.12,
-            "atk_scale_3": 6.58
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 1.29,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.13,
-            "atk_scale_3": 7.1
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1.4,
-            "DAMAGE_MULTIPLIER_INCREMENT": 0.14,
-            "atk_scale_3": 7.7
-          }
-        ],
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.62,
+                      0.68,
+                      0.75,
+                      0.81,
+                      0.87,
+                      0.93,
+                      0.99,
+                      1.06,
+                      1.12,
+                      1.2,
+                      1.29,
+                      1.4
+                    ]
+                  },
+                  "damageMultiplierIncrement": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.06,
+                      0.07,
+                      0.08,
+                      0.08,
+                      0.09,
+                      0.09,
+                      0.1,
+                      0.11,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14
+                    ]
+                  },
+                  "atkScale_3": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         ]
       },
       {
@@ -4289,49 +3154,51 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "STATUS",
-            "objectId": "MELTING_FLAME",
-            "toObject": "THIS_OPERATOR"
-          },
-          {
-            "verb": "APPLY",
-            "object": "REACTION",
-            "adjective": [
-              "FORCED",
-              "COMBUSTION"
-            ],
-            "toObject": "THIS_OPERATOR",
-            "with": {
-              "stacks": {
-                "verb": "IS",
-                "value": 1
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 100
-              }
-            }
-          }
-        ],
         "frameTypes": [
           "INTERRUPTIBLE"
+        ],
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "CONSUME",
+                "object": "STATUS",
+                "objectId": "MELTING_FLAME",
+                "toObject": "THIS_OPERATOR"
+              },
+              {
+                "verb": "APPLY",
+                "object": "REACTION",
+                "adjective": [
+                  "FORCED",
+                  "COMBUSTION"
+                ],
+                "toObject": "THIS_OPERATOR",
+                "with": {
+                  "stacks": {
+                    "verb": "IS",
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "verb": "RECOVER",
+                "object": "ULTIMATE_ENERGY",
+                "with": {
+                  "cardinality": {
+                    "verb": "IS",
+                    "value": 100
+                  }
+                }
+              }
+            ]
+          }
         ]
       }
     ]
   },
   "FLAMING_CINDERS_ENHANCED": {
-    "enhancementTypes": [
-      "ENHANCED"
-    ],
     "segments": [
       {
         "metadata": {
@@ -4360,89 +3227,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.65,
+                          0.71,
+                          0.78,
+                          0.84,
+                          0.91,
+                          0.97,
+                          1.04,
+                          1.1,
+                          1.17,
+                          1.25,
+                          1.34,
+                          1.46
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.65,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.71,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.78,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.84,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.91,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.97,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 1.04,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 1.1,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 1.17,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 1.25,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 1.34,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 1.46,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           }
@@ -4475,89 +3294,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.41,
+                          0.45,
+                          0.49,
+                          0.53,
+                          0.57,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.73,
+                          0.78,
+                          0.84,
+                          0.91
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.41,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.45,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.49,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.53,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.57,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.61,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.65,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.69,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.73,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.78,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.84,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.91,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           },
@@ -4574,77 +3345,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.41,
+                          0.45,
+                          0.49,
+                          0.53,
+                          0.57,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.73,
+                          0.78,
+                          0.84,
+                          0.91
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.41
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.45
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.49
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.53
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.57
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.61
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.65
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.69
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.73
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.78
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.84
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.91
+                ]
               }
             ]
           }
@@ -4677,101 +3408,53 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "HEAT",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.15,
+                          1.27,
+                          1.39,
+                          1.5,
+                          1.62,
+                          1.73,
+                          1.85,
+                          1.96,
+                          2.08,
+                          2.22,
+                          2.4,
+                          2.6
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "HEAT",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 1.15,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 1.27,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 1.39,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 1.5,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 1.62,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 1.73,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 1.85,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 1.96,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 2.08,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 2.22,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 2.4,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 2.6,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           }
@@ -4804,101 +3487,45 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.01,
+                          1.11,
+                          1.22,
+                          1.32,
+                          1.42,
+                          1.52,
+                          1.62,
+                          1.72,
+                          1.82,
+                          1.95,
+                          2.1,
+                          2.28
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 24
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 22
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 1.01,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 1.11,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 1.22,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 1.32,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 1.42,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 1.52,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 1.62,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 1.72,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 1.82,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 1.95,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 2.1,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 2.28,
-                "STAGGER": 24,
-                "SKILL_POINT": 22
+                ]
               }
             ]
           },
@@ -4915,82 +3542,186 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 20
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 12
+                      }
+                    },
+                    "toObject": "ENEMY"
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.01,
+                          1.11,
+                          1.22,
+                          1.32,
+                          1.42,
+                          1.52,
+                          1.62,
+                          1.72,
+                          1.82,
+                          1.95,
+                          2.1,
+                          2.28
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 12
-                  }
-                },
-                "toObject": "ENEMY"
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 1.01
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 1.11
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 1.22
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 1.32
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 1.42
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 1.52
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 1.62
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 1.72
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 1.82
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 1.95
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 2.1
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 2.28
+                ]
               }
             ]
           }
         ]
       }
-    ]
+    ],
+    "properties": {
+      "enhancementTypes": [
+        "ENHANCED"
+      ]
+    }
+  },
+  "FLAMING_CINDERS_FINISHER": {
+    "name": "Flaming Cinders (Finisher)",
+    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ]
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 0,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "originId": "laevatain"
+  },
+  "FLAMING_CINDERS_DIVE": {
+    "name": "Flaming Cinders (Dive)",
+    "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ]
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 0,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "originId": "laevatain"
   }
 }

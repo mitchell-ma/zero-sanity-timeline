@@ -23,20 +23,20 @@ const DEFAULT_SKILL: CustomCombatSkillDef = {
  * This bridges the CustomOperator type to the same operator JSON format
  * used by built-in operators.
  */
-function customOperatorToJson(operator: CustomOperator): Record<string, any> {
+function customOperatorToJson(operator: CustomOperator): Record<string, unknown> {
   const skills = operator.skills ?? {
     basicAttack: { ...DEFAULT_SKILL, name: 'Basic Attack', combatSkillType: CombatSkillType.BASIC_ATTACK },
     battleSkill: { ...DEFAULT_SKILL, name: 'Battle Skill', combatSkillType: CombatSkillType.BATTLE_SKILL },
     comboSkill: { ...DEFAULT_SKILL, name: 'Combo Skill', combatSkillType: CombatSkillType.COMBO_SKILL },
     ultimate: { ...DEFAULT_SKILL, name: 'Ultimate', combatSkillType: CombatSkillType.ULTIMATE, durationSeconds: 3 },
   };
-  const json: Record<string, any> = {
+  const json: Record<string, unknown> = {
     operatorType: operator.id.toUpperCase(),
     name: operator.name,
     operatorRarity: operator.operatorRarity,
     operatorClassType: operator.operatorClassType,
     elementType: operator.elementType,
-    weaponType: operator.weaponType,
+    weaponType: operator.weaponTypes,
     mainAttributeType: operator.mainAttributeType,
     secondaryAttributeType: operator.secondaryAttributeType ?? operator.mainAttributeType,
     splashArt: operator.splashArt,
@@ -86,9 +86,9 @@ function customOperatorToJson(operator: CustomOperator): Record<string, any> {
           ? { animation: { duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' } } }
           : {}),
         // Combo trigger
-        ...(operator.combo.triggerClause.length > 0 ? {
+        ...(operator.combo.onTriggerClause.length > 0 ? {
           trigger: {
-            triggerClause: operator.combo.triggerClause,
+            onTriggerClause: operator.combo.onTriggerClause,
             description: operator.combo.description,
             windowFrames: operator.combo.windowFrames ?? 720,
           },
@@ -121,7 +121,7 @@ export function registerCustomOperator(operator: CustomOperator): void {
     name: operator.name,
     icon: operator.splashArt,
     rarity: operator.operatorRarity,
-    create: () => viewOp as any,
+    create: () => viewOp as unknown as import('../../model/operators/dataDrivenOperator').DataDrivenOperator,
   });
 }
 

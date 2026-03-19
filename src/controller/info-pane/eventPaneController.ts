@@ -12,7 +12,7 @@ import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Event Identity ──────────────────────────────────────────────────────────
 
@@ -93,14 +93,19 @@ export function resolveEventIdentity(
           triggerCondition = skill.triggerCondition;
           columnLabel = event.columnId.charAt(0).toUpperCase() + event.columnId.slice(1) + ' skill';
         }
-        if (event.columnId === SKILL_COLUMNS.COMBO && op.triggerCapability) {
-          comboTriggerLabels = op.triggerCapability.comboRequires.map(
-            (i) => interactionToLabel(i),
-          );
-          if (op.triggerCapability.comboRequiresActiveColumns) {
-            comboRequiresLabels = op.triggerCapability.comboRequiresActiveColumns.map(
-              (col) => STATUS_LABELS[col as StatusType] ?? col,
-            );
+        if (event.columnId === SKILL_COLUMNS.COMBO) {
+          const info = getComboTriggerInfo(op.id);
+          if (info) {
+            for (const pred of info.onTriggerClause) {
+              for (const cond of pred.conditions) {
+                if (cond.negated) continue;
+                if (cond.verb === 'HAVE' && cond.object === 'STATUS' && cond.objectId) {
+                  comboRequiresLabels.push(STATUS_LABELS[cond.objectId as StatusType] ?? cond.objectId);
+                } else {
+                  comboTriggerLabels.push(interactionToLabel(cond as Interaction));
+                }
+              }
+            }
           }
         }
       }
@@ -456,7 +461,7 @@ export interface ResolvedPredicate {
 export interface EventDslData {
   /** Skill-level predicates (clause). */
   predicates: ResolvedPredicate[];
-  /** Trigger predicates from properties.trigger.triggerClause. */
+  /** Trigger predicates from properties.trigger.onTriggerClause. */
   triggerPredicates: ResolvedPredicate[];
   /** Trigger description from properties.trigger.description. */
   triggerDescription: string | null;
@@ -483,7 +488,7 @@ function isRedundantEffect(e: any): boolean {
     if (val === 0) return true;
   }
   // Zero-value stagger applications are noise
-  if (verb === 'APPLY' && obj === 'STAGGER') {
+  if (verb === 'DEAL' && obj === 'STAGGER') {
     const val = e.with?.value?.value;
     if (val === 0) return true;
   }
@@ -549,8 +554,8 @@ export function resolveEventDsl(
   const trigger = skillCat.properties?.trigger;
   if (trigger) {
     triggerDescription = trigger.description ?? null;
-    if (trigger.triggerClause && Array.isArray(trigger.triggerClause)) {
-      for (const pred of trigger.triggerClause) {
+    if (trigger.onTriggerClause && Array.isArray(trigger.onTriggerClause)) {
+      for (const pred of trigger.onTriggerClause) {
         triggerPredicates.push({
           conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
           effects: [],
@@ -587,12 +592,13 @@ export function resolveEventDsl(
       segmentEffects[si] = seg.effects.map((e: Effect) => effectToText(e));
     }
 
-    // Frame-level effects (filtered by operator potential)
+    // Frame-level effects from clause predicates (filtered by operator potential)
     const frames: any[] = seg.frames ?? [];
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
-      if (frame.effects && Array.isArray(frame.effects)) {
-        resolveFrameEffects(frame.effects, `${si}-${fi}`, potential, frameEffects);
+      const clauseEffects = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
+      if (clauseEffects.length > 0) {
+        resolveFrameEffects(clauseEffects, `${si}-${fi}`, potential, frameEffects);
       }
     }
   }
@@ -602,16 +608,18 @@ export function resolveEventDsl(
     const frames: any[] = skillCat.frames;
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
-      if (frame.effects && Array.isArray(frame.effects)) {
-        resolveFrameEffects(frame.effects, `0-${fi}`, potential, frameEffects);
+      const clauseEffects = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
+      if (clauseEffects.length > 0) {
+        resolveFrameEffects(clauseEffects, `0-${fi}`, potential, frameEffects);
       }
     }
   }
 
-  // Skill-level effects (filter out SP/gauge effects already shown in dedicated sections)
-  if (skillCat.effects && Array.isArray(skillCat.effects)) {
-    const filtered = (skillCat.effects as any[])
-      .filter((e) => !isRedundantEffect(e))
+  // Skill-level effects from clause predicates
+  const skillClauseEffects = (skillCat.clause ?? []).flatMap((p: any) => p.effects ?? []);
+  if (skillClauseEffects.length > 0) {
+    const filtered = skillClauseEffects
+      .filter((e: any) => !isRedundantEffect(e))
       .map((e: Effect) => effectToText(e));
     if (filtered.length > 0) segmentEffects[-1] = filtered;
   }
@@ -643,20 +651,16 @@ export interface EventFullDetail {
   statusEvents: any[] | null;
   /** Skill-level clause (raw predicates) */
   clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
-  /** Skill-level effects (non-predicate) */
-  effects: Effect[] | null;
   /** Segment details */
   segments: {
     index: number;
     properties: Record<string, { value: number | string; unit?: string }> | null;
     clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
-    effects: Effect[] | null;
     metadata: Record<string, any> | null;
     frames: {
       index: number;
       properties: Record<string, { value: number | string; unit?: string }> | null;
-      effects: Effect[] | null;
-      multipliers: Record<string, number>[] | null;
+      clause: { conditions: any[]; effects: any[] }[] | null;
       metadata: Record<string, any> | null;
     }[];
   }[];
@@ -703,8 +707,7 @@ export function resolveEventFullDetail(
       frames.push({
         index: fi,
         properties: frame.properties ?? null,
-        effects: frame.effects ?? null,
-        multipliers: frame.multipliers ?? null,
+        clause: frame.clause ?? null,
         metadata: frame.metadata ?? null,
       });
     }
@@ -713,7 +716,6 @@ export function resolveEventFullDetail(
       index: si,
       properties: seg.properties ?? null,
       clause: seg.clause ?? null,
-      effects: seg.effects ?? null,
       metadata: seg.metadata ?? null,
       frames,
     });
@@ -727,8 +729,7 @@ export function resolveEventFullDetail(
       frames.push({
         index: fi,
         properties: frame.properties ?? null,
-        effects: frame.effects ?? null,
-        multipliers: frame.multipliers ?? null,
+        clause: frame.clause ?? null,
         metadata: frame.metadata ?? null,
       });
     }
@@ -736,7 +737,6 @@ export function resolveEventFullDetail(
       index: 0,
       properties: skillCat.properties ?? null,
       clause: null,
-      effects: null,
       metadata: null,
       frames,
     });
@@ -750,7 +750,6 @@ export function resolveEventFullDetail(
     properties: skillCat.properties ?? null,
     statusEvents: skillCat.statusEvents ?? null,
     clause: skillCat.clause ?? null,
-    effects: skillCat.effects ?? null,
     segments,
     metadata: skillCat.metadata ?? null,
     skillTypeMapping,

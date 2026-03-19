@@ -2,20 +2,47 @@
   "weaponName": "Howling Guard",
   "statusEvents": [
     {
-      "name": "HOWLING_GUARD_EMERGENCY_BOOST",
-      "type": "WEAPON_EFFECT",
-      "originId": "HOWLING_GUARD",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Emergency Boost",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.24
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "HOWLING_GUARD_EMERGENCY_BOOST",
+        "name": "Emergency Boost",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "HOWLING_GUARD",
+        "description": "Emergency Boost"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,23 +53,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.24
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

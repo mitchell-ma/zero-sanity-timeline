@@ -624,7 +624,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', marginTop: i > 0 ? 4 : 0 }}>{label}</div>
                 {onLoadoutChange && (
                   <ItemSelector
-                    entries={entries as RegistryEntry<any>[]}
+                    entries={entries as RegistryEntry<unknown>[]}
                     selectedName={loadout[loadoutKey]}
                     onSelect={(name) => setLoadoutField(loadoutKey, name)}
                     placeholder={label}
@@ -678,7 +678,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Consumable</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={CONSUMABLES as RegistryEntry<any>[]}
+              entries={CONSUMABLES as RegistryEntry<unknown>[]}
               selectedName={loadout.consumableName}
               onSelect={(name) => setLoadoutField('consumableName', name)}
               placeholder="Consumable"
@@ -691,7 +691,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Tactical</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={TACTICALS as RegistryEntry<any>[]}
+              entries={TACTICALS as RegistryEntry<unknown>[]}
               selectedName={loadout.tacticalName}
               onSelect={(name) => setLoadoutField('tacticalName', name)}
               placeholder="Tactical"

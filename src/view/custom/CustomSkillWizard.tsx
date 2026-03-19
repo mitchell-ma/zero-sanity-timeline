@@ -169,8 +169,8 @@ export default function CustomSkillWizard({ initial, onSave, onCancel }: Props) 
           <div className="wizard-section">
             <div className="wz-subsection">
               <SegmentFrameEditor
-                segments={(skill.segments ?? []) as any[]}
-                onChange={(segments) => update({ segments: segments.length > 0 ? segments as any : undefined })}
+                segments={(skill.segments ?? []) as unknown as import('../../model/custom/customOperatorTypes').CustomSegmentDef[]}
+                onChange={(segments) => update({ segments: segments.length > 0 ? segments as unknown as CustomSkill['segments'] : undefined })}
               />
             </div>
 

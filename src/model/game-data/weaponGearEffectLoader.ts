@@ -3,73 +3,171 @@
  *
  * Auto-discovers JSON files from weapon-effects/ and gear-effects/ directories.
  * Provides lookup functions used by the status derivation engine.
- *
- * Uses require.context (webpack) for auto-discovery. Falls back to empty
- * registries in test environments where require.context is unavailable.
  */
 import type { GearSetType } from '../../consts/enums';
+import type { Interaction } from '../../consts/semantics';
+
+// ── Normalized effect def shape ──────────────────────────────────────────────
+
+/** Normalized status event def as returned by the public API. */
+export interface NormalizedEffectDef {
+  [key: string]: unknown;
+  id: string;
+  name?: string;
+  type?: string;
+  label?: string;
+  description?: string;
+  element?: string;
+  target: string;
+  targetDeterminer: string;
+  originId?: string;
+  statusLevel: {
+    limit: Record<string, number>;
+    statusLevelInteractionType: string;
+  };
+  onTriggerClause: { conditions: Interaction[] }[];
+  clause?: { conditions: Interaction[]; effects: Record<string, unknown>[] }[];
+  note?: string;
+  cooldownSeconds?: number;
+  properties?: { duration?: { value: number[]; unit: string } };
+  stack?: { max?: Record<string, number> };
+  buffs?: { stat: string; value?: number; valueMin?: number; valueMax?: number; perStack?: boolean }[];
+  isForced?: boolean;
+  enhancementTypes?: string[];
+  susceptibility?: Record<string, number[]>;
+  segments?: unknown[];
+  stats?: unknown[];
+  /** Event status type override for the engine. */
+  statusValue?: number;
+}
 
 // ── Auto-discover weapon effect JSONs ────────────────────────────────────────
 
-const WEAPON_EFFECT_JSON: Record<string, { weaponName: string; statusEvents: any[] }> = {};
+interface WeaponEffectJson { weaponName: string; statusEvents: Record<string, unknown>[] }
+const WEAPON_EFFECT_JSON: Record<string, WeaponEffectJson> = {};
 /** Weapon name → file key lookup for O(1) access. */
 const WEAPON_NAME_INDEX: Record<string, string> = {};
 
-try {
-  const weaponEffectContext = (require as any).context('./weapon-effects', false, /-effects\.json$/);
-  for (const key of weaponEffectContext.keys()) {
-    const data = weaponEffectContext(key);
-    WEAPON_EFFECT_JSON[key] = data;
-    if (data.weaponName) {
-      WEAPON_NAME_INDEX[data.weaponName] = key;
-    }
+const weaponEffectContext = require.context('./weapon-effects', false, /-effects\.json$/);
+for (const key of weaponEffectContext.keys()) {
+  const data = weaponEffectContext(key) as WeaponEffectJson;
+  WEAPON_EFFECT_JSON[key] = data;
+  if (data.weaponName) {
+    WEAPON_NAME_INDEX[data.weaponName] = key;
   }
-} catch {
-  // require.context unavailable (Jest) — weapon effects populated via custom registration
 }
 
 // ── Auto-discover gear effect JSONs ──────────────────────────────────────────
 
-const GEAR_EFFECT_JSON: Record<string, { gearSetType: string; label: string; statusEvents: any[] }> = {};
+interface GearEffectJson { gearSetType: string; label: string; statusEvents: Record<string, unknown>[] }
+const GEAR_EFFECT_JSON: Record<string, GearEffectJson> = {};
 /** GearSetType → file key lookup for O(1) access. */
 const GEAR_TYPE_INDEX: Record<string, string> = {};
 
-try {
-  const gearEffectContext = (require as any).context('./gear-effects', false, /-effects\.json$/);
-  for (const key of gearEffectContext.keys()) {
-    const data = gearEffectContext(key);
-    GEAR_EFFECT_JSON[key] = data;
-    if (data.gearSetType) {
-      GEAR_TYPE_INDEX[data.gearSetType] = key;
-    }
+const gearEffectContext = require.context('./gear-effects', false, /-effects\.json$/);
+for (const key of gearEffectContext.keys()) {
+  const data = gearEffectContext(key) as GearEffectJson;
+  GEAR_EFFECT_JSON[key] = data;
+  if (data.gearSetType) {
+    GEAR_TYPE_INDEX[data.gearSetType] = key;
   }
-} catch {
-  // require.context unavailable (Jest) — gear effects populated via custom registration
 }
 
 // ── Custom weapon/gear effect registries ─────────────────────────────────────
 
-const customWeaponEffects: Record<string, any[]> = {};
-const customGearEffects: Record<string, any[]> = {};
+const customWeaponEffects: Record<string, NormalizedEffectDef[]> = {};
+const customGearEffects: Record<string, NormalizedEffectDef[]> = {};
+
+// ── Normalization ─────────────────────────────────────────────────────────────
+
+/**
+ * Infer target/targetDeterminer from clause effects.
+ */
+function inferTarget(se: Record<string, unknown>): { target: string; targetDeterminer: string } {
+  const clauses = se.clause as { effects?: { to?: string; toDeterminer?: string }[] }[] | undefined;
+  if (clauses) {
+    for (const clause of clauses) {
+      for (const effect of clause.effects ?? []) {
+        if (effect.to === 'ENEMY') return { target: 'ENEMY', targetDeterminer: 'THIS' };
+        if (effect.toDeterminer === 'OTHER') return { target: 'OPERATOR', targetDeterminer: 'OTHER' };
+        if (effect.toDeterminer === 'ALL') return { target: 'OPERATOR', targetDeterminer: 'ALL' };
+      }
+    }
+  }
+  return { target: 'OPERATOR', targetDeterminer: 'THIS' };
+}
+
+/**
+ * Normalize a new-format weapon/gear statusEvent entry into the engine-expected flat shape.
+ */
+function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef {
+  const props = (raw.properties ?? {}) as Record<string, unknown>;
+  const sl = (props.statusLevel ?? {}) as Record<string, unknown>;
+
+  // Resolve statusLevel.limit from DSL value to per-potential map
+  let resolvedLimit: Record<string, number> | undefined;
+  const limit = sl.limit as { verb?: string; value?: unknown } | undefined;
+  if (limit) {
+    if (limit.verb === 'IS') {
+      const v = limit.value as number;
+      resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
+    } else if (limit.verb === 'BASED_ON' && Array.isArray(limit.value)) {
+      const arr = limit.value as number[];
+      resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
+    } else {
+      resolvedLimit = limit as unknown as Record<string, number>;
+    }
+  }
+
+  const { target, targetDeterminer } = inferTarget(raw);
+
+  const out: NormalizedEffectDef = {
+    id: (props.id ?? raw.id) as string,
+    ...(props.name ? { name: props.name as string } : {}),
+    ...(props.type ? { type: props.type as string } : {}),
+    ...(raw.description ? { description: raw.description as string } : {}),
+    ...(raw.element ? { element: raw.element as string } : {}),
+    target,
+    targetDeterminer,
+    originId: raw.originId as string | undefined,
+    statusLevel: {
+      limit: resolvedLimit ?? { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+      statusLevelInteractionType: (sl.statusLevelInteractionType as string) ?? 'NONE',
+    },
+    onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],
+    ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
+    ...(raw.note ? { note: raw.note as string } : {}),
+    ...(raw.cooldownSeconds ? { cooldownSeconds: raw.cooldownSeconds as number } : {}),
+  };
+
+  // Duration
+  if (props.duration) {
+    const dur = props.duration as { value: number | number[]; unit: string };
+    const dv = dur.value;
+    out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
+  }
+
+  return out;
+}
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /** Get DSL status event defs for a weapon by name. */
-export function getWeaponEffectDefs(weaponName: string): any[] {
+export function getWeaponEffectDefs(weaponName: string): NormalizedEffectDef[] {
   // Check custom first
   if (customWeaponEffects[weaponName]) return customWeaponEffects[weaponName];
   const key = WEAPON_NAME_INDEX[weaponName];
   if (!key) return [];
-  return WEAPON_EFFECT_JSON[key]?.statusEvents ?? [];
+  return (WEAPON_EFFECT_JSON[key]?.statusEvents ?? []).map(normalizeEffectEntry);
 }
 
 /** Get DSL status event defs for a gear set type. */
-export function getGearEffectDefs(gearSetType: GearSetType | string): any[] {
+export function getGearEffectDefs(gearSetType: GearSetType | string): NormalizedEffectDef[] {
   // Check custom first
   if (customGearEffects[gearSetType]) return customGearEffects[gearSetType];
   const key = GEAR_TYPE_INDEX[gearSetType];
   if (!key) return [];
-  return GEAR_EFFECT_JSON[key]?.statusEvents ?? [];
+  return (GEAR_EFFECT_JSON[key]?.statusEvents ?? []).map(normalizeEffectEntry);
 }
 
 /** Get all weapon names that have effect definitions. */
@@ -89,8 +187,8 @@ export function getAllGearEffectTypes(): string[] {
 }
 
 /** Register custom weapon effect defs at runtime. */
-export function registerCustomWeaponEffectDefs(weaponName: string, defs: any[]): void {
-  customWeaponEffects[weaponName] = defs;
+export function registerCustomWeaponEffectDefs(weaponName: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
+  customWeaponEffects[weaponName] = defs as NormalizedEffectDef[];
 }
 
 /** Deregister custom weapon effect defs. */
@@ -99,8 +197,8 @@ export function deregisterCustomWeaponEffectDefs(weaponName: string): void {
 }
 
 /** Register custom gear effect defs at runtime. */
-export function registerCustomGearEffectDefs(gearSetType: string, defs: any[]): void {
-  customGearEffects[gearSetType] = defs;
+export function registerCustomGearEffectDefs(gearSetType: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
+  customGearEffects[gearSetType] = defs as NormalizedEffectDef[];
 }
 
 /** Deregister custom gear effect defs. */
@@ -118,7 +216,7 @@ export function getGearEffectLabel(gearSetType: GearSetType | string): string | 
 // ── Display helpers for DSL status event defs ────────────────────────────────
 
 /** Resolve target display string from DSL def fields. */
-export function resolveTargetDisplay(def: { target: string; targetDeterminer?: string }): string {
+export function resolveTargetDisplay(def: { target?: string; targetDeterminer?: string }): string {
   if (def.target === 'ENEMY') return 'enemy';
   if (def.targetDeterminer === 'OTHER') return 'team';
   return 'wielder';
@@ -129,7 +227,8 @@ export function resolveDurationSeconds(def: { properties?: { duration?: { value:
   return def.properties?.duration?.value?.[0] ?? 0;
 }
 
-/** Resolve triggerClause conditions to flat Interaction-like objects for display. */
-export function resolveTriggerInteractions(def: { triggerClause: { conditions: any[] }[] }): any[] {
-  return def.triggerClause.flatMap(c => c.conditions);
+/** Resolve onTriggerClause conditions to flat Interaction-like objects for display. */
+export function resolveTriggerInteractions(def: { onTriggerClause?: { conditions: Interaction[] }[] }): Interaction[] {
+  const clauses = def.onTriggerClause ?? [];
+  return clauses.flatMap(c => c.conditions);
 }

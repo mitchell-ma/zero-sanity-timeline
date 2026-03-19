@@ -2,20 +2,59 @@
   "weaponName": "OBJ Razorhorn",
   "statusEvents": [
     {
-      "name": "OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS",
-      "type": "WEAPON_EFFECT",
-      "originId": "OBJ_RAZORHORN",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Conquest of Icy Peaks",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRYO_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.24
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS",
+        "name": "Conquest of Icy Peaks",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OBJ_RAZORHORN",
+        "description": "Conquest of Icy Peaks",
+        "note": "vs Cryo/Solid DMG +8-16%; consume Solidification → ATK buff"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -25,29 +64,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRYO_DAMAGE_BONUS",
-          "valueMin": 0.08,
-          "valueMax": 0.16
-        },
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.24
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "vs Cryo/Solid DMG +8-16%; consume Solidification → ATK buff"
+      ]
     }
   ]
 }

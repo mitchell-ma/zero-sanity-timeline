@@ -2,18 +2,72 @@
   "weaponName": "Umbral Torch",
   "statusEvents": [
     {
-      "name": "UMBRAL_TORCH_COVETOUS_BUILDUP",
-      "type": "WEAPON_EFFECT",
-      "originId": "UMBRAL_TORCH",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Covetous Buildup",
-      "stack": {
-        "max": { "P0": 2 },
-        "instances": 2,
-        "verb": "NONE"
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "HEAT_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.08,
+                  "valueMax": 0.224
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "NATURE_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.08,
+                  "valueMax": 0.224
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.07,
+                  "valueMax": 0.196
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "UMBRAL_TORCH_COVETOUS_BUILDUP",
+        "name": "Covetous Buildup",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "UMBRAL_TORCH",
+        "description": "Covetous Buildup"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -32,16 +86,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        { "stat": "HEAT_DAMAGE_BONUS", "valueMin": 0.08, "valueMax": 0.224, "perStack": true },
-        { "stat": "NATURE_DAMAGE_BONUS", "valueMin": 0.08, "valueMax": 0.224, "perStack": true },
-        { "stat": "ATTACK_BONUS", "valueMin": 0.07, "valueMax": 0.196, "perStack": true }
-      ],
-      "properties": {
-        "duration": { "value": [20], "unit": "SECOND" }
-      }
+      ]
     }
   ]
 }

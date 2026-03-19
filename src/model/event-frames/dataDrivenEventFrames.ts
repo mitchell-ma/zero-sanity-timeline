@@ -85,8 +85,6 @@ interface JsonClauseCondition {
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
   properties?: { offset?: JsonDuration };
-  effects?: JsonEffect[];
-  /** DSL v2 clause structure: array of predicate groups. Replaces flat effects when present. */
   clause?: JsonClausePredicate[];
   damageElement?: string;
 }
@@ -94,7 +92,7 @@ interface JsonFrame {
 interface JsonSegment {
   metadata?: { eventComponentType?: string; segmentType?: string; dataSources?: string[] };
   properties?: { duration?: JsonDuration; name?: string; timeDependency?: string; timeInteractionType?: string };
-  clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
+  clause?: { conditions: JsonClauseCondition[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
   frames: JsonFrame[];
 }
 
@@ -107,8 +105,9 @@ interface JsonSkillCategory {
     trigger?: unknown;
     hasDelayedHit?: boolean;
     delayedHitLabel?: string;
+    enhancementTypes?: string[];
   };
-  effects?: JsonEffect[];
+  clause?: JsonClausePredicate[];
   frames?: JsonFrame[];
   segments?: JsonSegment[];
   dataSources?: string[];
@@ -173,24 +172,28 @@ function findEffectValue(
   return undefined;
 }
 
-/** Find a value from a skill category's effects array. */
+/** Flatten all effects from a skill category's clause predicates. */
+function flattenClauseEffects(category: JsonSkillCategory | undefined): JsonEffect[] {
+  if (!category?.clause) return [];
+  return category.clause.flatMap(pred => pred.effects ?? []);
+}
+
+/** Find a value from a skill category's clause effects. */
 function findValue(
   category: JsonSkillCategory | undefined,
   object: string,
   verb: string,
   target?: string,
 ): number | undefined {
-  return findEffectValue(category?.effects, object, verb, target);
+  return findEffectValue(flattenClauseEffects(category), object, verb, target);
 }
 
-/** Get all conditional gauge gains (by enemies hit) from effects. */
+/** Get all conditional gauge gains (by enemies hit) from clause effects. */
 function findConditionalGaugeGains(category: JsonSkillCategory | undefined): Record<number, number> {
   const byEnemies: Record<number, number> = {};
-  if (category?.effects) {
-    for (const ef of category.effects) {
-      if (ef.object === 'ULTIMATE_ENERGY' && ef.verb === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
-        byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.cardinality);
-      }
+  for (const ef of flattenClauseEffects(category)) {
+    if (ef.object === 'ULTIMATE_ENERGY' && ef.verb === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
+      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.cardinality);
     }
   }
   return byEnemies;
@@ -233,8 +236,23 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     let consumeStatus: string | null = null;
     let consumeReaction: FrameReactionConsumption | null = null;
 
-    if (frame.effects) {
-      for (const ef of frame.effects) {
+    // ── Clause parsing ─────────────────────────────────────────────────────
+    const clauses: FrameClausePredicate[] = [];
+    let dealDamage: FrameDealDamage | null = null;
+
+    for (const pred of (frame.clause ?? [])) {
+      const conditions: FrameCondition[] = (pred.conditions ?? []).map(c => ({
+        subject: c.subject,
+        verb: c.verb,
+        ...(c.negated != null && { negated: c.negated }),
+        ...(c.object && { object: c.object }),
+        ...(c.objectId && { objectId: c.objectId }),
+        ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
+        ...(c.cardinality != null && { cardinality: c.cardinality }),
+      }));
+
+      const clauseEffects: FrameClauseEffect[] = [];
+      for (const ef of pred.effects) {
         const wp = ef.with;
         const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
         const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
@@ -244,14 +262,11 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
         switch (ef.verb) {
           case 'RECOVER':
-            if (ef.object === 'SKILL_POINT') sp = withValue(wp?.cardinality);
+            if (ef.object === 'SKILL_POINT') { sp = withValue(wp?.cardinality); clauseEffects.push({ type: 'recoverSP' }); }
             if (ef.object === 'ULTIMATE_ENERGY') gaugeGain = withValue(wp?.cardinality);
             break;
 
           case 'APPLY':
-            // APPLY STAGGER TO ENEMY — stagger damage
-            if (ef.object === 'STAGGER') { stagger = withValue(wp?.value); break; }
-            // APPLY SOURCE INFLICTION / APPLY SOURCE STATUS — duplicate triggering effect
             if (isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
               duplicatesSource = true;
             } else if (ef.object === 'INFLICTION') {
@@ -273,19 +288,14 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 stacks: withValue(wp?.stacks) || 1,
                 durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
               };
-              // If toObject is not a standard target, treat it as an operator ID
               if (ef.toObject && !isStandardTarget) {
                 status.targetOperatorId = ef.toObject;
               }
               if (ef.susceptibility) {
                 status.susceptibility = ef.susceptibility as Partial<Record<ElementType, readonly number[]>>;
               }
-              if (ef.eventName) {
-                status.eventName = ef.eventName;
-              }
-              if (ef.stackingInteraction) {
-                status.stackingInteraction = ef.stackingInteraction;
-              }
+              if (ef.eventName) status.eventName = ef.eventName;
+              if (ef.stackingInteraction) status.stackingInteraction = ef.stackingInteraction;
               if (ef.potentialMin != null) status.potentialMin = ef.potentialMin;
               if (ef.potentialMax != null) status.potentialMax = ef.potentialMax;
               if (ef.segments) {
@@ -296,13 +306,13 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 }));
               }
               applyStatuses.push(status);
+              clauseEffects.push({ type: 'applyStatus', applyStatus: status });
             }
             break;
 
           case 'CONSUME':
             if (ef.object === 'INFLICTION') {
               if (ef.conversion) {
-                // CONSUME with conversion → absorption (consume infliction + exchange for status)
                 absorbInfliction = {
                   element: elementAdj!,
                   stacks: withValue(wp?.stacks) || 1,
@@ -315,7 +325,6 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
             } else if (ef.object === 'STATUS') {
               consumeStatus = ef.objectId!;
             } else if (ef.object === 'REACTION') {
-              // CONSUME REACTION with optional applyOnConsume
               const cr: FrameReactionConsumption = {
                 columnId: DSL_REACTION_TO_COLUMN[reactionAdj ?? ef.objectId ?? ''] ?? (reactionAdj ?? ef.objectId ?? ''),
               };
@@ -333,89 +342,28 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 };
               }
               consumeReaction = cr;
+              clauseEffects.push({ type: 'consumeReaction', consumeReaction: cr });
+            }
+            break;
+
+          case 'DEAL':
+            if (ef.object === 'DAMAGE') {
+              const multipliers = wp?.value;
+              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
+              const dd: FrameDealDamage = {
+                ...(elementAdj && { element: elementAdj }),
+                multipliers: mulArr,
+              };
+              dealDamage = dd;
+              clauseEffects.push({ type: 'dealDamage', dealDamage: dd });
+            } else if (ef.object === 'STAGGER') {
+              stagger = withValue(wp?.value);
+              clauseEffects.push({ type: 'applyStagger' });
             }
             break;
         }
       }
-    }
-
-    // ── Clause parsing (DSL v2) ──────────────────────────────────────────
-    let clauses: FrameClausePredicate[] = [];
-    let dealDamage: FrameDealDamage | null = null;
-
-    if (frame.clause) {
-      for (const pred of frame.clause) {
-        const conditions: FrameCondition[] = (pred.conditions ?? []).map(c => ({
-          subject: c.subject,
-          verb: c.verb,
-          ...(c.negated != null && { negated: c.negated }),
-          ...(c.object && { object: c.object }),
-          ...(c.objectId && { objectId: c.objectId }),
-          ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
-          ...(c.cardinality != null && { cardinality: c.cardinality }),
-        }));
-
-        const effects: FrameClauseEffect[] = [];
-        for (const ef of pred.effects) {
-          const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
-          const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
-          const reactionAdj = adjectives.find(a => ['COMBUSTION', 'SOLIDIFICATION', 'CORROSION', 'ELECTRIFICATION'].includes(a));
-          const wp = ef.with;
-
-          switch (ef.verb) {
-            case 'CONSUME':
-              if (ef.object === 'REACTION') {
-                const columnId = DSL_REACTION_TO_COLUMN[reactionAdj ?? ef.objectId ?? ''] ?? (reactionAdj ?? ef.objectId ?? '');
-                effects.push({ type: 'consumeReaction', consumeReaction: { columnId } });
-                // Also set legacy consumeReaction for backward compat
-                consumeReaction = { columnId };
-              }
-              break;
-            case 'APPLY':
-              if (ef.object === 'STATUS') {
-                const durVal = wp?.duration;
-                const status: FrameApplyStatus = {
-                  target: dslTargetToTargetType(ef.toObject),
-                  status: ef.objectId!,
-                  stacks: withValue(wp?.stacks) || 1,
-                  durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
-                };
-                if (ef.susceptibility) {
-                  status.susceptibility = ef.susceptibility as Partial<Record<ElementType, readonly number[]>>;
-                }
-                if (ef.eventName) status.eventName = ef.eventName;
-                if (ef.stackingInteraction) status.stackingInteraction = ef.stackingInteraction;
-                if (ef.potentialMin != null) status.potentialMin = ef.potentialMin;
-                if (ef.potentialMax != null) status.potentialMax = ef.potentialMax;
-                effects.push({ type: 'applyStatus', applyStatus: status });
-              } else if (ef.object === 'STAGGER') {
-                // Unconditional stagger — still extracted to top-level for backward compat
-                stagger = withValue(wp?.value);
-                effects.push({ type: 'applyStagger' });
-              }
-              break;
-            case 'RECOVER':
-              if (ef.object === 'SKILL_POINT') {
-                sp = withValue(wp?.cardinality);
-                effects.push({ type: 'recoverSP' });
-              }
-              break;
-            case 'DEAL':
-              if (ef.object === 'DAMAGE') {
-                const multipliers = wp?.multiplier;
-                const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
-                const dd: FrameDealDamage = {
-                  ...(elementAdj && { element: elementAdj }),
-                  multipliers: mulArr,
-                };
-                dealDamage = dd;
-                effects.push({ type: 'dealDamage', dealDamage: dd });
-              }
-              break;
-          }
-        }
-        clauses.push({ conditions, effects });
-      }
+      clauses.push({ conditions, effects: clauseEffects });
     }
 
     this._clauses = clauses;
@@ -509,12 +457,21 @@ export function buildSequencesFromSkillCategory(
  * All skill data lives in the skills JSON — no operator-level overrides.
  */
 export function buildSequencesFromOperatorJson(
-  operatorJson: Record<string, any>,
+  operatorJson: Record<string, unknown>,
   skillCategoryKey: string,
 ): readonly DataDrivenSkillEventSequence[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
-  if (!skills?.[skillCategoryKey]) return [];
-  return buildSequencesFromSkillCategory(skills[skillCategoryKey]);
+  if (!skills) return [];
+  // Resolve via skillTypeMap if the key is a category (BASIC_ATTACK, BATTLE_SKILL, etc.)
+  const typeMap = operatorJson.skillTypeMap as Record<string, unknown> | undefined;
+  const rawEntry = typeMap?.[skillCategoryKey];
+  const resolvedKey = rawEntry
+    ? (typeof rawEntry === 'string' ? rawEntry : (rawEntry as any).BATK ?? skillCategoryKey)
+    : skillCategoryKey;
+  // Try resolved key first, fall back to raw key
+  const cat = skills[resolvedKey] ?? skills[skillCategoryKey];
+  if (!cat) return [];
+  return buildSequencesFromSkillCategory(cat);
 }
 
 // ── Timing extraction (from operator JSON) ──────────────────────────────────
@@ -543,7 +500,7 @@ export interface SkillTimings {
   ultActiveDur?: number;
 }
 
-export function getSkillTimings(operatorJson: Record<string, any>): SkillTimings {
+export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTimings {
   const skills = (operatorJson.skills ?? {}) as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
 
@@ -599,7 +556,7 @@ export function getSkillTimings(operatorJson: Record<string, any>): SkillTimings
   };
 }
 
-export function getUltimateEnergyCost(operatorJson: Record<string, any>): number {
+export function getUltimateEnergyCost(operatorJson: Record<string, unknown>): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const ultimate = skills?.[typeMap?.ULTIMATE ?? 'ULTIMATE'];
@@ -614,7 +571,7 @@ export interface SkillGaugeGains {
   comboGaugeGainByEnemies?: Record<number, number>;
 }
 
-export function getSkillGaugeGains(operatorJson: Record<string, any>): SkillGaugeGains {
+export function getSkillGaugeGains(operatorJson: Record<string, unknown>): SkillGaugeGains {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const result: SkillGaugeGains = { battleGaugeGain: 0, battleTeamGaugeGain: 0, comboGaugeGain: 0, comboTeamGaugeGain: 0 };
@@ -622,7 +579,7 @@ export function getSkillGaugeGains(operatorJson: Record<string, any>): SkillGaug
   // Battle skill gauge gains
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
   const bs = skills?.[battleSkillId];
-  if (bs?.effects) {
+  if (bs?.clause) {
     result.battleGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF') ?? 0;
     result.battleTeamGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM') ?? 0;
   }
@@ -630,7 +587,7 @@ export function getSkillGaugeGains(operatorJson: Record<string, any>): SkillGaug
   // Combo skill gauge gains
   const comboSkillId = typeMap?.COMBO_SKILL ?? 'COMBO_SKILL';
   const cs = skills?.[comboSkillId];
-  if (cs?.effects) {
+  if (cs?.clause) {
     const byEnemies = findConditionalGaugeGains(cs);
     if (Object.keys(byEnemies).length > 0) {
       result.comboGaugeGainByEnemies = byEnemies;
@@ -645,7 +602,7 @@ export function getSkillGaugeGains(operatorJson: Record<string, any>): SkillGaug
 }
 
 /** Extract the SP cost for battle skill from merged operator JSON (skills keyed by skill ID). */
-export function getBattleSkillSpCost(operatorJson: Record<string, any>): number {
+export function getBattleSkillSpCost(operatorJson: Record<string, unknown>): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
@@ -668,7 +625,7 @@ export interface SkillCategoryData {
  * Falls back to BATTLE_SKILL effects for variants that share the same SP cost.
  */
 export function getSkillCategoryData(
-  operatorJson: Record<string, any>,
+  operatorJson: Record<string, unknown>,
   skillCategory: string,
 ): SkillCategoryData {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
@@ -694,10 +651,12 @@ export function getSkillCategoryData(
  * Get the durations of basic attack segments from operator JSON.
  * Returns an array of duration values in seconds.
  */
-export function getBasicAttackDurations(operatorJson: Record<string, any>): number[] {
+export function getBasicAttackDurations(operatorJson: Record<string, unknown>): number[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
-  const basicAttack = skills?.[typeMap?.BASIC_ATTACK ?? 'BASIC_ATTACK'];
+  const basicEntry = typeMap?.BASIC_ATTACK as string | Record<string, string> | undefined;
+  const basicId = typeof basicEntry === 'string' ? basicEntry : (basicEntry as Record<string, string> | undefined)?.BATK ?? 'BASIC_ATTACK';
+  const basicAttack = skills?.[basicId];
   if (!basicAttack?.segments) return [];
   return basicAttack.segments.map(seg => seg.properties!.duration!.value);
 }

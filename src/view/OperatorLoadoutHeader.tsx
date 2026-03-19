@@ -132,7 +132,7 @@ export { DropdownFilterBar, DropdownTierBar };
 
 /* ─── Static icon display ────────────────────────────────────────────── */
 
-function StaticIcon({ label, entry }: { label: string; entry: RegistryEntry<any> | null }) {
+function StaticIcon({ label, entry }: { label: string; entry: RegistryEntry<unknown> | null }) {
   return (
     <div className="lo-dropdown">
       <div
@@ -157,7 +157,7 @@ interface EquipmentSlotsProps {
 }
 
 export function EquipmentSlots({ operatorWeaponTypes, state }: EquipmentSlotsProps) {
-  const findEntry = (name: string | null, entries: RegistryEntry<any>[]): RegistryEntry<any> | null => {
+  const findEntry = (name: string | null, entries: RegistryEntry<unknown>[]): RegistryEntry<unknown> | null => {
     if (name === null) return null;
     return entries.find((e) => e.name === name) ?? null;
   };

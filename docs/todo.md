@@ -192,6 +192,24 @@ Proposed mapping:
 - `duration` → `DURATION`
 - `atb` → `SKILL_POINT`
 
+## Resolve talent level and p3TeamShare from DSL
+
+`minTalentLevel` and `p3TeamShare` were removed from status JSON configs during the DSL refactor.
+The engine currently uses dummy talent level values (`1`) where it previously resolved from
+`def.minTalentLevel`. These features need to be re-implemented through the DSL:
+
+- **Talent level gating**: statuses that only activate at a certain talent level need a DSL
+  condition (e.g. `TALENT_LEVEL >= 2`) instead of the old `minTalentLevel` field.
+- **P3 team sharing**: statuses that share to team at P3+ need a DSL mechanism for creating
+  shared copies with reduced duration, replacing the old `p3TeamShare.durationMultiplier` field.
+
+Search for `TODO: resolve talent level from DSL` in `statusDerivationEngine.ts` for all affected sites.
+
+## Segment name should go in properties
+
+Status segment `name` field should be moved into `segments[].properties.name` to be consistent
+with the Event/Segment/Frame DSL structure where all descriptive fields live in `properties`.
+
 ## Sheet statistics
 
 Add aggregate statistics for sheets, including:

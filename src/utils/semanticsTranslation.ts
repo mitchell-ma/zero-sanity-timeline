@@ -23,19 +23,41 @@ export interface TranslatedEffect {
 const titleCase = (s: string) =>
   s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
-const DETERMINER_LABELS: Record<string, string> = {
+export const SUBJECT_LABELS: Record<string, string> = {
+  OPERATOR: 'Operator',
+  ENEMY: 'Enemy',
+  EVENT: 'Event',
+  SYSTEM: 'System',
+};
+
+export const ADJECTIVE_LABELS: Record<string, string> = {
+  HEAT: 'Heat', CRYO: 'Cryo', NATURE: 'Nature', ELECTRIC: 'Electric', PHYSICAL: 'Physical',
+  COMBUSTION: 'Combustion', SOLIDIFICATION: 'Solidification', CORROSION: 'Corrosion', ELECTRIFICATION: 'Electrification',
+  LIFT: 'Lift', KNOCK_DOWN: 'Knock Down', BREACH: 'Breach', CRUSH: 'Crush',
+  FORCED: 'Forced',
+  NODE_STAGGERED: 'Node Staggered', FULL_STAGGERED: 'Full Staggered',
+  COMBO: 'Combo', DODGE: 'Dodge', ANIMATION: 'Animation',
+};
+
+export const CARDINALITY_LABELS: Record<string, string> = {
+  EXACTLY: 'exactly',
+  AT_LEAST: 'at least',
+  AT_MOST: 'at most',
+};
+
+export const DETERMINER_LABELS: Record<string, string> = {
   THIS: 'this',
   OTHER: 'other',
   ALL: 'all',
   ANY: 'any',
 };
 
-const TARGET_LABELS: Record<string, string> = {
+export const TARGET_LABELS: Record<string, string> = {
   ENEMY: 'the enemy',
   OPERATOR: 'the operator',
 };
 
-const VERB_LABELS: Record<string, string> = {
+export const VERB_LABELS: Record<string, string> = {
   // Compound
   ALL: 'All',
   ANY: 'Any',
@@ -67,7 +89,7 @@ const VERB_LABELS: Record<string, string> = {
   RECEIVE: 'Receive',
 };
 
-const OBJECT_LABELS: Record<string, string> = {
+export const OBJECT_LABELS: Record<string, string> = {
   STATUS: 'status',
   INFLICTION: 'infliction',
   REACTION: 'reaction',
@@ -292,8 +314,8 @@ export function formatSkillDisplayName(baseName: string, enhancementTypes?: stri
  * Serialize an Interaction to short-key JSON format with natural ordering.
  * Output: { subject, verb, object, objectId, ... }
  */
-export function interactionToJson(i: Interaction): Record<string, any> {
-  const out: Record<string, any> = {};
+export function interactionToJson(i: Interaction): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   if (i.subjectDeterminer) out.subjectDeterminer = i.subjectDeterminer;
   out.subject = i.subject;
   if (i.subjectProperty) out.subjectProperty = i.subjectProperty;
@@ -312,8 +334,8 @@ export function interactionToJson(i: Interaction): Record<string, any> {
  * Serialize an Effect to short-key JSON format with natural ordering.
  * Key order: verb, adjective, object, objectId, to, from, on, with, for, predicates, effects
  */
-export function effectToJson(e: Effect): Record<string, any> {
-  const out: Record<string, any> = {};
+export function effectToJson(e: Effect): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   out.verb = e.verb;
   if (e.adjective) out.adjective = e.adjective;
   if (e.object) out.object = e.object;
@@ -338,15 +360,15 @@ export function effectToJson(e: Effect): Record<string, any> {
 /**
  * Serialize a Predicate to short-key JSON format.
  */
-export function predicateToJson(p: Predicate): Record<string, any> {
+export function predicateToJson(p: Predicate): Record<string, unknown> {
   return {
     conditions: p.conditions.map(interactionToJson),
     effects: p.effects.map(effectToJson),
   };
 }
 
-function withPrepositionToJson(wp: WithPreposition): Record<string, any> {
-  const out: Record<string, any> = {};
+function withPrepositionToJson(wp: WithPreposition): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(wp)) {
     out[k] = { verb: v.verb, ...(v.object ? { object: v.object } : {}), value: v.value };
   }
@@ -361,11 +383,11 @@ function withPrepositionToJson(wp: WithPreposition): Record<string, any> {
  * - Short arrays (all primitives, ≤80 chars) inline on one line
  * - Consistent 2-space indentation
  */
-export function formatJsonKR(value: any, indent = 2): string {
+export function formatJsonKR(value: unknown, indent = 2): string {
   return formatNode(value, 0, indent);
 }
 
-function formatNode(val: any, depth: number, indent: number): string {
+function formatNode(val: unknown, depth: number, indent: number): string {
   if (val == null || typeof val !== 'object') return JSON.stringify(val);
 
   const pad = ' '.repeat(depth * indent);
@@ -374,15 +396,15 @@ function formatNode(val: any, depth: number, indent: number): string {
   if (Array.isArray(val)) {
     if (val.length === 0) return '[]';
     // Inline short primitive arrays
-    if (val.every((v) => v == null || typeof v !== 'object')) {
+    if (val.every((v: unknown) => v == null || typeof v !== 'object')) {
       const inline = JSON.stringify(val);
       if (inline.length <= 80) return inline;
     }
-    const items = val.map((v) => `${inner}${formatNode(v, depth + 1, indent)}`);
+    const items = val.map((v: unknown) => `${inner}${formatNode(v, depth + 1, indent)}`);
     return `[\n${items.join(',\n')}\n${pad}]`;
   }
 
-  const entries = Object.entries(val);
+  const entries = Object.entries(val as Record<string, unknown>);
   if (entries.length === 0) return '{}';
   // Inline short flat objects (all primitive values, ≤80 chars)
   if (entries.every(([, v]) => v == null || typeof v !== 'object')) {

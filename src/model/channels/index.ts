@@ -106,5 +106,7 @@ export const ENEMY_GROUP_COLUMNS = {
   ENEMY_STATUS:         'enemy-status',
 } as const;
 
-/** Event-level column IDs for stagger frailty events (routed to unified status column). */
-export const STAGGER_FRAILTY_COLUMN_ID = 'stagger-frailty';
+/** Column ID for node stagger frailty events. */
+export const NODE_STAGGER_COLUMN_ID = 'node-stagger';
+/** Column ID for full stagger frailty events. */
+export const FULL_STAGGER_COLUMN_ID = 'full-stagger';

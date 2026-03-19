@@ -24,6 +24,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getBattleSkillSpCost: () => undefined,
   getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 
 jest.mock('../model/game-data/weaponGameData', () => ({

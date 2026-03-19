@@ -2,20 +2,58 @@
   "weaponName": "White Night Nova",
   "statusEvents": [
     {
-      "name": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
-      "type": "WEAPON_EFFECT",
-      "originId": "WHITE_NIGHT_NOVA",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "White Night Nova",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.336
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ARTS_INTENSITY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 25,
+                  "valueMax": 70
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
+        "name": "White Night Nova",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "WHITE_NIGHT_NOVA",
+        "description": "White Night Nova"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,28 +64,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ARTS_DAMAGE_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.336
-        },
-        {
-          "stat": "ARTS_INTENSITY",
-          "valueMin": 25,
-          "valueMax": 70
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

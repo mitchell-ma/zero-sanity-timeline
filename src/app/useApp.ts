@@ -16,6 +16,7 @@ import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
+import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
   createEvent,
@@ -83,7 +84,7 @@ import {
 } from '../controller/appStateController';
 import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, STAGGER_FRAILTY_COLUMN_ID } from '../model/channels';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -208,6 +209,7 @@ export function useApp() {
   const preDragSplitRef = useRef(65);
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
+  const [clauseEditorOpen, setClauseEditorOpen] = useState(false);
   const [interactionMode, setInteractionMode] = useState<InteractionModeType>(() => {
     try {
       const stored = localStorage.getItem('zst-interaction-mode');
@@ -379,8 +381,8 @@ export function useApp() {
     const wirings: SlotTriggerWiring[] = [];
     for (let i = 0; i < SLOT_IDS.length; i++) {
       const op = operators[i];
-      if (op?.triggerCapability) {
-        wirings.push({ slotId: SLOT_IDS[i], capability: op.triggerCapability });
+      if (op && getComboTriggerClause(op.id)) {
+        wirings.push({ slotId: SLOT_IDS[i], operatorId: op.id });
       }
     }
     return wirings;
@@ -448,7 +450,8 @@ export function useApp() {
     const nodeRecoveryFrames = Math.round((enemyStats.staggerNodeRecoverySeconds ?? 0) * FPS);
     return combatLoadout.commonSlot.stagger.generateFrailtyEvents(
       nodeRecoveryFrames,
-      STAGGER_FRAILTY_COLUMN_ID,
+      NODE_STAGGER_COLUMN_ID,
+      FULL_STAGGER_COLUMN_ID,
       ENEMY_OWNER_ID,
       'stagger-frailty',
     );
@@ -1794,7 +1797,7 @@ export function useApp() {
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
-    devlogOpen, keysOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
+    devlogOpen, keysOpen, clauseEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -1830,7 +1833,7 @@ export function useApp() {
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setKeysOpen, setClauseEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 

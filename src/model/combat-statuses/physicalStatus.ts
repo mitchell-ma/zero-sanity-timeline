@@ -1,19 +1,15 @@
-import { StatusType } from "../../consts/enums";
+import { StatusType, PhysicalStatusType } from "../../consts/enums";
 import { StatusLevel } from "../../consts/types";
-import { Status } from "./status";
+import { Reaction } from "./reaction";
 
-const PHYSICAL_STATUS_TYPES = new Set([
-  StatusType.LIFT,
-  StatusType.KNOCK_DOWN,
-  StatusType.CRUSH,
-  StatusType.BREACH,
-]);
+const PHYSICAL_STATUS_TYPES = new Set<string>(Object.values(PhysicalStatusType));
 
-export abstract class PhysicalStatus extends Status {
+export abstract class PhysicalStatus extends Reaction {
   constructor(params: {
     statusType: StatusType;
     statusLevel: StatusLevel;
     maxStatusLevel: StatusLevel;
+    isForced?: boolean;
   }) {
     if (!PHYSICAL_STATUS_TYPES.has(params.statusType)) {
       throw new Error(

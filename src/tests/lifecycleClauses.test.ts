@@ -4,7 +4,7 @@
  * Tests:
  * - EXTEND UNTIL END: target shorter than parent → extended; target longer → no-op
  * - RECEIVE condition: fires when matching event starts at frame
- * - Empty triggerClause: statuses are NOT created as passive at frame 0
+ * - Empty onTriggerClause: statuses are NOT created as passive at frame 0
  */
 
 // ── Mocks (must be before imports) ──────────────────────────────────────
@@ -15,14 +15,14 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
       name: 'FOCUS',
       target: 'ENEMY',
       stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
-      triggerClause: [],
+      onTriggerClause: [],
       properties: { duration: { value: [60], unit: 'SECOND' } },
     },
     {
       name: 'FOCUS_EMPOWERED',
       target: 'ENEMY',
       stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
-      triggerClause: [],
+      onTriggerClause: [],
       properties: { duration: { value: [60], unit: 'SECOND' } },
     },
   ];
@@ -32,6 +32,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getAllOperatorIds: () => ['antal'],
     getSkillIds: () => new Set(['EXCHANGE_CURRENT', 'SPECIFIED_RESEARCH_SUBJECT']),
     getSkillTypeMap: () => ({}),
+    getExchangeStatusConfig: () => ({}),
+    getExchangeStatusIds: () => new Set(),
   };
 });
 jest.mock('../model/game-data/weaponGameData', () => ({

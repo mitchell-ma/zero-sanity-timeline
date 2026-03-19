@@ -14,8 +14,6 @@ export interface SkillDef {
   defaultActiveDuration: number; // frames
   defaultCooldownDuration: number; // frames
   triggerCondition: string | null;
-  /** Trigger conditions this skill publishes when used. */
-  publishesTriggers?: import('./semantics').Interaction[];
   /** Ultimate gauge gained by this operator when skill is used. */
   gaugeGain?: number;
   /** Ultimate gauge gained by all team operators when skill is used. */
@@ -57,7 +55,6 @@ export interface Operator {
   attributeIncreaseName: string;
   attributeIncreaseAttribute: string;
   maxAttributeIncreaseLevel: number;
-  triggerCapability?: import('./triggerCapabilities').TriggerCapability;
   /** Per-level talent descriptions. Key = talent index (1 or 2), value = array indexed by level (0-based). */
   talentDescriptions?: Record<number, string[]>;
   /** Per-potential-level descriptions. Array indexed by potential (index 0 = P1). */
@@ -187,7 +184,7 @@ export interface EventSegmentData {
   /** Status effect label for this segment (e.g. "-3.6 Res"). */
   statusLabel?: string;
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
 }
 
 export interface TimelineEvent {
@@ -279,7 +276,11 @@ export interface ContextMenuItem {
   /** Action identifier for controller-built menus (view maps to callback). */
   actionId?: string;
   /** Payload for the action (e.g. event creation params). */
-  actionPayload?: any;
+  actionPayload?: unknown;
+  /** Show a check indicator — for toggle items. */
+  checked?: boolean;
+  /** If true, clicking this item does NOT close the menu. */
+  keepOpen?: boolean;
 }
 
 export interface ContextMenuState {
@@ -367,6 +368,8 @@ export type MiniTimeline = {
     name: string;
     /** Display label in the context menu (falls back to COMBAT_SKILL_LABELS or name). */
     displayName?: string;
+    /** Enhancement tier of this variant (NORMAL for base skills, ENHANCED/EMPOWERED for upgraded). */
+    enhancementType?: import('./enums').EnhancementType;
     defaultActivationDuration: number;
     defaultActiveDuration: number;
     defaultCooldownDuration: number;

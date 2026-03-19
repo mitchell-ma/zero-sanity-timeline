@@ -67,6 +67,18 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
   getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: (id: string) => id === 'ardelia'
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    ? require('../model/game-data/operator-skills/ardelia-skills.json').ERUPTION_COLUMN.properties.trigger.onTriggerClause
+    : undefined,
+  getComboTriggerInfo: (id: string) => {
+    if (id !== 'ardelia') return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const trigger = require('../model/game-data/operator-skills/ardelia-skills.json').ERUPTION_COLUMN.properties.trigger;
+    return { onTriggerClause: trigger.onTriggerClause, description: trigger.description ?? '', windowFrames: trigger.windowFrames ?? 720 };
+  },
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -93,8 +105,7 @@ import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
 // eslint-disable-next-line import/first
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
-// eslint-disable-next-line import/first
-import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
+
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/ardelia-operator.json');
@@ -104,15 +115,29 @@ const mockSkillsJson = require('../model/game-data/operator-skills/ardelia-skill
 const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...ardeliaSkillEntries } = mockSkillsJson as Record<string, any>;
 const ardeliaSkills: Record<string, any> = {};
 for (const [key, val] of Object.entries(ardeliaSkillEntries)) {
-  ardeliaSkills[key] = { ...(val as any), id: key };
+  ardeliaSkills[key] = { ...(val as Record<string, any>), id: key };
 }
 if (_skTypeMap) {
   const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
-    if (ardeliaSkills[skillId]) ardeliaSkills[category] = ardeliaSkills[skillId];
-    for (const suffix of variantSuffixes) {
-      const variantSkillId = `${skillId}_${suffix}`;
-      if (ardeliaSkills[variantSkillId]) ardeliaSkills[`${suffix}_${category}`] = ardeliaSkills[variantSkillId];
+  for (const [category, value] of Object.entries(_skTypeMap as Record<string, any>)) {
+    if (typeof value === 'string') {
+      if (ardeliaSkills[value]) ardeliaSkills[category] = ardeliaSkills[value];
+      for (const suffix of variantSuffixes) {
+        const variantSkillId = `${value}_${suffix}`;
+        if (ardeliaSkills[variantSkillId]) ardeliaSkills[`${suffix}_${category}`] = ardeliaSkills[variantSkillId];
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const batkId = (value as any).BATK;
+      if (batkId && ardeliaSkills[batkId]) ardeliaSkills[category] = ardeliaSkills[batkId];
+      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
+        if (ardeliaSkills[subId]) ardeliaSkills[subKey] = ardeliaSkills[subId];
+      }
+      if (batkId) {
+        for (const suffix of variantSuffixes) {
+          const variantSkillId = `${batkId}_${suffix}`;
+          if (ardeliaSkills[variantSkillId]) ardeliaSkills[`${suffix}_${category}`] = ardeliaSkills[variantSkillId];
+        }
+      }
     }
   }
 }
@@ -149,22 +174,27 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
   test('A3: Final Strike (segment 4) recovers 18 SP and 18 Stagger', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
-    const spEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.object === 'SKILL_POINT'
+    const effects = finalStrikeFrame.clause[0].effects;
+    const spEffect = effects.find(
+      (e: Record<string, any>) => e.object === 'SKILL_POINT'
     );
-    const staggerEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.object === 'STAGGER'
+    const staggerEffect = effects.find(
+      (e: Record<string, any>) => e.object === 'STAGGER'
     );
     expect(spEffect.with.cardinality.value).toBe(18);
     expect(staggerEffect.with.value.value).toBe(18);
   });
 
-  test('A4: Earlier segments recover 0 SP', () => {
+  test('A4: Earlier segments have no SKILL_POINT or STAGGER effects', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
     for (let i = 0; i < 3; i++) {
-      const frame = rawSegments[i].frames[0];
-      // SP stored in multipliers, not effects
-      expect(frame.multipliers[0].SKILL_POINT).toBe(0);
+      for (const frame of rawSegments[i].frames) {
+        const effects = frame.clause[0].effects;
+        const spEffect = effects.find((e: Record<string, any>) => e.object === 'SKILL_POINT');
+        const staggerEffect = effects.find((e: Record<string, any>) => e.object === 'STAGGER');
+        expect(spEffect).toBeUndefined();
+        expect(staggerEffect).toBeUndefined();
+      }
     }
   });
 
@@ -190,13 +220,17 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
   test('A8: Damage multipliers scale from lv1 to lv12', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
     // Segment 1: 0.3 → 0.68
-    const seg1Mults = rawSegments[0].frames[0].multipliers;
-    expect(seg1Mults[0].DAMAGE_MULTIPLIER).toBe(0.3);
-    expect(seg1Mults[11].DAMAGE_MULTIPLIER).toBe(0.68);
+    const seg1Dmg = rawSegments[0].frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'DAMAGE'
+    );
+    expect(seg1Dmg.with.value.value[0]).toBe(0.3);
+    expect(seg1Dmg.with.value.value[11]).toBe(0.68);
     // Final Strike (segment 4): 0.55 → 1.24
-    const seg4Mults = rawSegments[3].frames[0].multipliers;
-    expect(seg4Mults[0].DAMAGE_MULTIPLIER).toBe(0.55);
-    expect(seg4Mults[11].DAMAGE_MULTIPLIER).toBe(1.24);
+    const seg4Dmg = rawSegments[3].frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'DAMAGE'
+    );
+    expect(seg4Dmg.with.value.value[0]).toBe(0.55);
+    expect(seg4Dmg.with.value.value[11]).toBe(1.24);
   });
 });
 
@@ -213,8 +247,8 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
-    const spCost = battleSkill.effects.find(
-      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+    const spCost = battleSkill.clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.cardinality.value).toBe(100);
@@ -222,16 +256,17 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 
   test('B3: Battle skill has SP cost + 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
-    const spCost = battleSkill.effects.find(
-      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+    const effects = battleSkill.clause[0].effects;
+    const spCost = effects.find(
+      (e: Record<string, any>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
-    const selfEnergy = battleSkill.effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+    const selfEnergy = effects.find(
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'THIS' && e.toObject === 'OPERATOR'
     );
-    const allEnergy = battleSkill.effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+    const allEnergy = effects.find(
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'ALL' && e.toObject === 'OPERATOR'
     );
     expect(selfEnergy).toBeDefined();
@@ -247,28 +282,30 @@ describe('B. Battle Skill (Dolly Rush)', () => {
   });
 
   test('B5: Vulnerability rate scales from 0.12 (lv1) to 0.20 (lv12)', () => {
-    const multipliers = mockJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    expect(multipliers[0].rate_vul_base).toBe(0.12);
-    expect(multipliers[11].rate_vul_base).toBe(0.2);
+    const effects = mockJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find((e: Record<string, any>) => e.object === 'DAMAGE');
+    expect(dmgEffect.with.rateVulBase.value[0]).toBe(0.12);
+    expect(dmgEffect.with.rateVulBase.value[11]).toBe(0.2);
   });
 
   test('B6: Vulnerability duration is 30s at all skill levels', () => {
-    const multipliers = mockJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    for (const m of multipliers) {
-      expect(m.duration_vul).toBe(30);
-    }
+    const effects = mockJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find((e: Record<string, any>) => e.object === 'DAMAGE');
+    expect(dmgEffect.with.durationVul.value).toBe(30);
   });
 
   test('B7: Vulnerability max rate scales from 0.36 (lv1) to 0.40 (lv12)', () => {
-    const multipliers = mockJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    expect(multipliers[0].rate_vul_max).toBe(0.36);
-    expect(multipliers[11].rate_vul_max).toBe(0.4);
+    const effects = mockJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find((e: Record<string, any>) => e.object === 'DAMAGE');
+    expect(dmgEffect.with.rateVulMax.value[0]).toBe(0.36);
+    expect(dmgEffect.with.rateVulMax.value[11]).toBe(0.4);
   });
 
   test('B8: Damage multiplier scales from 1.42 (lv1) to 3.2 (lv12)', () => {
-    const multipliers = mockJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    expect(multipliers[0].DAMAGE_MULTIPLIER).toBe(1.42);
-    expect(multipliers[11].DAMAGE_MULTIPLIER).toBe(3.2);
+    const effects = mockJson.skills.BATTLE_SKILL.frames[0].clause[1].effects;
+    const dmgEffect = effects.find((e: Record<string, any>) => e.object === 'DAMAGE');
+    expect(dmgEffect.with.multiplier.value[0]).toBe(1.42);
+    expect(dmgEffect.with.multiplier.value[11]).toBe(3.2);
   });
 
   test('B9: Battle skill duration is 1.57 seconds', () => {
@@ -289,15 +326,15 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 describe('C. Combo Skill (Eruption Column)', () => {
   test('C1: Combo trigger requires Final Strike with no Vulnerability or Arts Infliction', () => {
     const trigger = mockJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause.length).toBe(1);
-    const conditions = trigger.triggerClause[0].conditions;
+    expect(trigger.onTriggerClause.length).toBe(1);
+    const conditions = trigger.onTriggerClause[0].conditions;
     // 1 trigger condition + 5 negated forbid conditions
     expect(conditions.length).toBe(6);
     expect(conditions[0].subjectDeterminer).toBe('ANY');
     expect(conditions[0].subject).toBe('OPERATOR');
     expect(conditions[0].verb).toBe('PERFORM');
     expect(conditions[0].object).toBe('FINAL_STRIKE');
-    const negated = conditions.filter((c: any) => c.negated);
+    const negated = conditions.filter((c: Record<string, any>) => c.negated);
     expect(negated.length).toBe(5);
     for (const n of negated) {
       expect(n.subject).toBe('ENEMY');
@@ -312,9 +349,9 @@ describe('C. Combo Skill (Eruption Column)', () => {
   });
 
   test('C3: Combo cooldown is 18 seconds', () => {
-    const effects = mockJson.skills.COMBO_SKILL.effects;
+    const effects = mockJson.skills.COMBO_SKILL.clause[0].effects;
     const cooldown = effects.find(
-      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(18);
@@ -326,8 +363,8 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
   test('C5: Combo frame 2 applies forced Corrosion reaction to enemy', () => {
     const frame1 = mockJson.skills.COMBO_SKILL.frames[1];
-    const reaction = frame1.effects.find(
-      (e: any) => e.verb === 'APPLY' && e.object === 'REACTION'
+    const reaction = frame1.clause[0].effects.find(
+      (e: Record<string, any>) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
     expect(reaction).toBeDefined();
     expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
@@ -343,8 +380,8 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
   test('C6: Combo frame 2 recovers 10 stagger', () => {
     const frame1 = mockJson.skills.COMBO_SKILL.frames[1];
-    const stagger = frame1.effects.find(
-      (e: any) => e.object === 'STAGGER'
+    const stagger = frame1.clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'STAGGER'
     );
     expect(stagger.with.value.value).toBe(10);
   });
@@ -360,9 +397,9 @@ describe('C. Combo Skill (Eruption Column)', () => {
   });
 
   test('C9: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockJson.skills.COMBO_SKILL.effects;
+    const effects = mockJson.skills.COMBO_SKILL.clause[0].effects;
     const energy = effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
@@ -371,9 +408,11 @@ describe('C. Combo Skill (Eruption Column)', () => {
   });
 
   test('C10: Combo damage multiplier: 0.45 (lv1) → 1.0 (lv12)', () => {
-    const multipliers = mockJson.skills.COMBO_SKILL.frames[0].multipliers;
-    expect(multipliers[0].DAMAGE_MULTIPLIER).toBe(0.45);
-    expect(multipliers[11].DAMAGE_MULTIPLIER).toBe(1);
+    const dmgEffect = mockJson.skills.COMBO_SKILL.frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'DAMAGE'
+    );
+    expect(dmgEffect.with.value.value[0]).toBe(0.45);
+    expect(dmgEffect.with.value.value[11]).toBe(1);
   });
 
   test('C11: Combo skill ID is ERUPTION_COLUMN', () => {
@@ -387,9 +426,9 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
 describe('D. Ultimate (Wooly Party)', () => {
   test('D1: Ultimate energy cost is 90', () => {
-    const effects = mockJson.skills.ULTIMATE.effects;
+    const effects = mockJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.cardinality.value).toBe(90);
@@ -406,11 +445,13 @@ describe('D. Ultimate (Wooly Party)', () => {
     expect(ult.properties.animation.timeInteractionType).toBe('TIME_STOP');
   });
 
-  test('D4: Ultimate has 11 frames (3 with multipliers)', () => {
+  test('D4: Ultimate has 11 frames (3 with damage effects)', () => {
     const ult = mockJson.skills.ULTIMATE;
     expect(ult.frames.length).toBe(11);
-    const framesWithMults = ult.frames.filter((f: any) => f.multipliers?.length > 0);
-    expect(framesWithMults.length).toBe(3);
+    const framesWithDmg = ult.frames.filter((f: Record<string, any>) =>
+      f.clause?.[0]?.effects?.some((e: Record<string, any>) => e.object === 'DAMAGE')
+    );
+    expect(framesWithDmg.length).toBe(3);
   });
 
   test('D5: Ultimate skill ID is WOOLY_PARTY', () => {
@@ -419,21 +460,24 @@ describe('D. Ultimate (Wooly Party)', () => {
 
   test('D6: Ultimate first damage frame multiplier: 0.73 (lv1)', () => {
     const frames = mockJson.skills.ULTIMATE.frames;
-    const dmgFrame = frames.find((f: any) => f.multipliers?.length > 0);
-    expect(dmgFrame).toBeDefined();
-    expect(dmgFrame.multipliers[0].DAMAGE_MULTIPLIER).toBe(0.73);
-  });
-
-  test('D7: Ultimate damage frame has effect_prob and interval parameters', () => {
-    const frames = mockJson.skills.ULTIMATE.frames;
-    const dmgFrame = frames.find(
-      (f: any) => f.multipliers?.[0]?.effect_prob != null
+    const dmgFrame = frames.find((f: Record<string, any>) =>
+      f.clause?.[0]?.effects?.some((e: Record<string, any>) => e.object === 'DAMAGE')
     );
     expect(dmgFrame).toBeDefined();
-    const mults = dmgFrame.multipliers[0];
-    expect(mults.effect_prob).toBe(0.1);
-    expect(mults.interval).toBe(0.3);
-    expect(mults.DURATION).toBe(3);
+    const dmgEffect = dmgFrame.clause[0].effects.find((e: Record<string, any>) => e.object === 'DAMAGE');
+    expect(dmgEffect.with.value.value[0]).toBe(0.73);
+  });
+
+  test('D7: Ultimate damage frame has effectProb and interval parameters', () => {
+    const frames = mockJson.skills.ULTIMATE.frames;
+    const dmgFrame = frames.find(
+      (f: Record<string, any>) => f.clause?.[0]?.effects?.some((e: Record<string, any>) => e.with?.effectProb != null)
+    );
+    expect(dmgFrame).toBeDefined();
+    const dmgEffect = dmgFrame.clause[0].effects.find((e: Record<string, any>) => e.with?.effectProb != null);
+    expect(dmgEffect.with.effectProb.value).toBe(0.1);
+    expect(dmgEffect.with.interval.value).toBe(0.3);
+    expect(dmgEffect.with.duration.value).toBe(3);
   });
 });
 
@@ -488,7 +532,7 @@ describe('F. Potentials', () => {
     expect(p2.effects.length).toBe(2);
 
     const dollyEffect = p2.effects.find(
-      (e: any) => e.skillParameterModifier?.skillType === 'DOLLY_RUSH'
+      (e: Record<string, any>) => e.skillParameterModifier?.skillType === 'DOLLY_RUSH'
     );
     expect(dollyEffect).toBeDefined();
     expect(dollyEffect.skillParameterModifier.parameterKey).toBe('potential2');
@@ -496,7 +540,7 @@ describe('F. Potentials', () => {
     expect(dollyEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const woolyEffect = p2.effects.find(
-      (e: any) => e.skillParameterModifier?.skillType === 'WOOLY_PARTY'
+      (e: Record<string, any>) => e.skillParameterModifier?.skillType === 'WOOLY_PARTY'
     );
     expect(woolyEffect).toBeDefined();
     expect(woolyEffect.skillParameterModifier.parameterKey).toBe('potential2');
@@ -510,7 +554,7 @@ describe('F. Potentials', () => {
     expect(p3.effects.length).toBe(2);
 
     const durationEffect = p3.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'potential3_duration'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential3_duration'
     );
     expect(durationEffect).toBeDefined();
     expect(durationEffect.skillParameterModifier.skillType).toBe('WOOLY_PARTY');
@@ -518,7 +562,7 @@ describe('F. Potentials', () => {
     expect(durationEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const probEffect = p3.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'effect_prob'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'effect_prob'
     );
     expect(probEffect).toBeDefined();
     expect(probEffect.skillParameterModifier.skillType).toBe('WOOLY_PARTY');
@@ -543,28 +587,28 @@ describe('F. Potentials', () => {
     expect(p5.effects.length).toBe(4);
 
     const durationEffect = p5.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'potential5_duration'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential5_duration'
     );
     expect(durationEffect).toBeDefined();
     expect(durationEffect.skillParameterModifier.skillType).toBe('ERUPTION_COLUMN');
     expect(durationEffect.skillParameterModifier.value).toBe(4);
 
     const dmgEffect = p5.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'potential5_dmg_rate'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential5_dmg_rate'
     );
     expect(dmgEffect).toBeDefined();
     expect(dmgEffect.skillParameterModifier.value).toBe(1.2);
     expect(dmgEffect.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
 
     const cooldownEffect = p5.effects.find(
-      (e: any) => e.potentialEffectType === 'SKILL_COST'
+      (e: Record<string, any>) => e.potentialEffectType === 'SKILL_COST'
     );
     expect(cooldownEffect).toBeDefined();
     expect(cooldownEffect.skillCostModifier.skillType).toBe('ARDELIA_ERUPTION_COLUMN');
     expect(cooldownEffect.skillCostModifier.value).toBe(-2);
 
     const buff = p5.effects.find(
-      (e: any) => e.potentialEffectType === 'BUFF_ATTACHMENT'
+      (e: Record<string, any>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
     );
     expect(buff).toBeDefined();
     expect(buff.buffAttachment.objectId).toBe('ARDELIA_POTENTIAL5_VOLCANIC_STEAM');
@@ -635,22 +679,22 @@ describe('I. Cooldown Interactions', () => {
 
   test('H1: Basic attack (Rocky Whispers) has no cooldown', () => {
     const ba = mockJson.skills.BASIC_ATTACK;
-    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
-      .flatMap((f: any) => f.effects ?? [])
-      .find((e: any) => e.object === 'COOLDOWN');
+    const cooldown = ba.segments?.flatMap((s: Record<string, any>) => s.frames ?? [])
+      .flatMap((f: Record<string, any>) => f.effects ?? [])
+      .find((e: Record<string, any>) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Battle skill (Dolly Rush) has no COOLDOWN effect', () => {
     const cooldown = mockJson.skills.BATTLE_SKILL.effects?.find(
-      (e: any) => e.object === 'COOLDOWN'
+      (e: Record<string, any>) => e.object === 'COOLDOWN'
     );
     expect(cooldown).toBeUndefined();
   });
 
   test('H3: Combo skill (Eruption Column) has 18s cooldown', () => {
-    const cooldown = mockJson.skills.COMBO_SKILL.effects.find(
-      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+    const cooldown = mockJson.skills.COMBO_SKILL.clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(18);
@@ -699,39 +743,12 @@ describe('J. Combo Activation Window Pipeline', () => {
     return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
   }
 
-  function ardeliaCapability(): SlotTriggerWiring {
-    return {
-      slotId: SLOT_ARDELIA,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-          ],
-        },
-        comboRequires: [
-          { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-        ],
-        comboDescription: 'Any operator Final Strike while enemy has no inflictions',
-        comboWindowFrames: 720,
-        comboForbidsActiveColumns: ['heatInfliction', 'cryoInfliction', 'natureInfliction', 'electricInfliction', 'vulnerableInfliction'],
-      },
-    };
+  function ardeliaWiring(): SlotTriggerWiring {
+    return { slotId: SLOT_ARDELIA, operatorId: 'ardelia' };
   }
 
-  function otherOperatorCapability(): SlotTriggerWiring {
-    return {
-      slotId: SLOT_OTHER,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+  function otherOperatorWiring(): SlotTriggerWiring {
+    return { slotId: SLOT_OTHER, operatorId: 'other' };
   }
 
   function makeBasicAttack(slotId: string, startFrame: number): TimelineEvent {
@@ -763,14 +780,15 @@ describe('J. Combo Activation Window Pipeline', () => {
     });
   }
 
-  test('J1: Combo window appears after final strike with no inflictions on enemy', () => {
+  test('J1: Combo window opens from basic attack final strike', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([ba], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
+    // Final strike of basic attack triggers Ardelia's combo window
     expect(windows.length).toBe(1);
   });
 
@@ -778,7 +796,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
     // Heat infliction covering the entire basic attack duration
     const heat = makeInflictionEvent('heat', 0, 20 * FPS);
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
@@ -790,7 +808,7 @@ describe('J. Combo Activation Window Pipeline', () => {
   test('J3: Combo window blocked when enemy has active nature infliction at trigger time', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
     const nature = makeInflictionEvent('nature', 0, 20 * FPS);
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([ba, nature], undefined, undefined, wirings);
     const windows = processed.filter(
@@ -799,23 +817,24 @@ describe('J. Combo Activation Window Pipeline', () => {
     expect(windows.length).toBe(0);
   });
 
-  test('J4: Combo window appears when infliction expired before final strike trigger', () => {
+  test('J4: Combo window opens when infliction has expired before final strike', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 10 * FPS);
     // Heat infliction that ends well before the final strike trigger frame
     const heat = makeInflictionEvent('heat', 0, 2 * FPS);
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
+    // Infliction expired before trigger frame, so combo window opens
     expect(windows.length).toBe(1);
   });
 
   test('J5: Combo window blocked when enemy has active vulnerability', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
     const vuln = makeInflictionEvent('vulnerable', 0, 20 * FPS);
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([ba, vuln], undefined, undefined, wirings);
     const windows = processed.filter(
@@ -824,15 +843,15 @@ describe('J. Combo Activation Window Pipeline', () => {
     expect(windows.length).toBe(0);
   });
 
-  test('J6: Other operator final strike also triggers Ardelia combo window', () => {
+  test('J6: Combo window opens from other operator basic attack final strike', () => {
     const otherBa = makeBasicAttack(SLOT_OTHER, 0);
-    // Give the other operator's basic attack segments so final strike can be detected
-    const wirings = [ardeliaCapability(), otherOperatorCapability()];
+    const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
     const processed = processInflictionEvents([otherBa], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
+    // Other operator's final strike triggers Ardelia's combo window
     expect(windows.length).toBe(1);
   });
 });

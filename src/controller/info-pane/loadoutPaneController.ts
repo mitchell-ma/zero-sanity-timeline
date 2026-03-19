@@ -130,7 +130,7 @@ export function resolveWeaponBreakdown(
 
     for (let ei = 0; ei < dslDefs.length; ei++) {
       const def = dslDefs[ei];
-      const maxStacks = def.stack?.max?.P0 ?? 1;
+      const maxStacks = def.statusLevel?.limit?.P0 ?? 1;
       const durationSeconds = resolveDurationSeconds(def);
 
       // Secondary attribute bonus
@@ -145,19 +145,25 @@ export function resolveWeaponBreakdown(
         }
       }
 
-      // Buff lines
+      // Buff lines — extracted from clause effects (APPLY verb with stat object)
       const stackSuffix = maxStacks > 1 ? `/stack (max ${maxStacks})` : '';
-      const buffs: WeaponEffectBuff[] = (def.buffs ?? []).map((b: any) => {
-        const isPercent = PERCENT_STATS.has(b.stat as StatType);
-        const valueStr = b.valueMin != null && b.valueMax != null
+      interface ClauseEffect { verb: string; object: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
+      const clauseEffects: ClauseEffect[] = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as unknown as ClauseEffect[])
+        .filter((e) => e.verb === 'APPLY' && e.with?.value);
+      const buffs: WeaponEffectBuff[] = clauseEffects.map((e) => {
+        const stat = e.object;
+        const wv = e.with!.value!;
+        const isPercent = PERCENT_STATS.has(stat as StatType);
+        const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+        const valueStr = wv.valueMin != null && wv.valueMax != null
           ? (isPercent
-            ? `${fmtN(b.valueMin * 100)}–${fmtN(b.valueMax * 100)}%`
-            : `${b.valueMin}–${b.valueMax}`)
-          : (isPercent ? `${fmtN((b.value ?? 0) * 100)}%` : String(b.value ?? 0));
+            ? `${fmtN(wv.valueMin * 100)}–${fmtN(wv.valueMax * 100)}%`
+            : `${wv.valueMin}–${wv.valueMax}`)
+          : (isPercent ? `${fmtN((wv.value ?? 0) * 100)}%` : String(wv.value ?? 0));
         return {
-          statLabel: b.stat as string,
+          statLabel: stat as string,
           valueStr,
-          perStack: !!b.perStack,
+          perStack,
         };
       });
 
@@ -170,7 +176,7 @@ export function resolveWeaponBreakdown(
       const metaStr = [def.note, ...metaParts].filter(Boolean).join(' · ');
 
       effects.push({
-        label: def.label ?? def.name,
+        label: def.name ?? def.description ?? '',
         description: def.description,
         durationSeconds,
         secondaryAttrBonus,

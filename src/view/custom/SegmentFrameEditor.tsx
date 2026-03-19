@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { ElementType } from '../../consts/enums';
 import type { CustomSegmentDef, CustomFrameDef } from '../../model/custom/customOperatorTypes';
+import type { Interaction } from '../../consts/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 
 interface SegmentFrameEditorProps {
@@ -284,7 +285,7 @@ function FrameEditor({ index, frame, onChange, onRemove }: {
             value={si}
             onChange={(s) => {
               const statusInteractions = [...(frame.statusInteractions ?? [])];
-              statusInteractions[i] = s as any;
+              statusInteractions[i] = s as Interaction;
               update({ statusInteractions });
             }}
             onRemove={() => update({

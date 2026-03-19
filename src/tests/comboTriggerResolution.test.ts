@@ -23,10 +23,19 @@
  */
 import { TimelineEvent } from '../consts/viewTypes';
 import { StatusType } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
-import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
-// eslint-disable-next-line import/first
-import { TriggerCapability } from '../consts/triggerCapabilities';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+
+function mockGetTriggerFromJson(id: string) {
+  const map: Record<string, { file: string; skillId: string }> = {
+    antal: { file: '../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
+    laevatain: { file: '../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
+    akekuri: { file: '../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
+  };
+  const entry = map[id];
+  if (!entry) return undefined;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require(entry.file)[entry.skillId]?.properties?.trigger;
+}
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -35,6 +44,14 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
   getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: (id: string) => mockGetTriggerFromJson(id)?.onTriggerClause,
+  getComboTriggerInfo: (id: string) => {
+    const trigger = mockGetTriggerFromJson(id);
+    if (!trigger?.onTriggerClause?.length) return undefined;
+    return { onTriggerClause: trigger.onTriggerClause, description: trigger.description ?? '', windowFrames: trigger.windowFrames ?? 720 };
+  },
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -65,38 +82,11 @@ function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: s
   };
 }
 
-/** Minimal trigger capability for Antal: combo requires ANY_OPERATOR APPLY INFLICTION */
-function antalCapability(): TriggerCapability {
-  return {
-    publishesTriggers: {},
-    comboRequires: [
-      { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
-    ],
-    comboDescription: 'any infliction',
-    comboWindowFrames: 720,
-    comboRequiresActiveColumns: [StatusType.FOCUS],
-  };
-}
-
-/** Minimal trigger capability for Laevatain: battle skill publishes APPLY INFLICTION */
-function laevCapability(): TriggerCapability {
-  return {
-    publishesTriggers: {
-      [SKILL_COLUMNS.BATTLE]: [
-        { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-      ],
-    },
-    comboRequires: [],
-    comboDescription: '',
-    comboWindowFrames: 720,
-  };
-}
-
 /** Standard wirings: Laevatain (slot-0) + Antal (slot-1) */
 function standardWirings(): SlotTriggerWiring[] {
   return [
-    { slotId: SLOT_LAEV, capability: laevCapability() },
-    { slotId: SLOT_ANTAL, capability: antalCapability() },
+    { slotId: SLOT_LAEV, operatorId: 'laevatain' },
+    { slotId: SLOT_ANTAL, operatorId: 'antal' },
   ];
 }
 
@@ -106,13 +96,13 @@ function makeFocusEvent(startFrame: number, durationFrames: number): TimelineEve
     id: `focus-${startFrame}`,
     name: StatusType.FOCUS,
     ownerId: ENEMY_OWNER_ID,
-    columnId: StatusType.FOCUS,
+    columnId: 'focus',
     startFrame,
     activationDuration: durationFrames,
   });
 }
 
-/** Build a Laevatain battle skill event */
+/** Build a Laevatain battle skill event with heat infliction frame data */
 function makeLaevBattle(startFrame: number): TimelineEvent {
   return makeEvent({
     id: `laev-battle-${startFrame}`,
@@ -121,6 +111,27 @@ function makeLaevBattle(startFrame: number): TimelineEvent {
     columnId: SKILL_COLUMNS.BATTLE,
     startFrame,
     activationDuration: FPS, // 1s
+    segments: [{
+      durationFrames: FPS,
+      frames: [{
+        offsetFrame: Math.round(0.67 * FPS),
+        applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+      }],
+    }],
+  });
+}
+
+/** Build a heat infliction event on the enemy (derived from Laevatain battle) */
+function makeHeatInfliction(startFrame: number): TimelineEvent {
+  return makeEvent({
+    id: `heat-infliction-${startFrame}`,
+    name: 'heatInfliction',
+    ownerId: ENEMY_OWNER_ID,
+    columnId: INFLICTION_COLUMNS.HEAT,
+    startFrame,
+    activationDuration: 20 * FPS,
+    sourceOwnerId: SLOT_LAEV,
+    sourceSkillName: 'FLAMING_CINDERS',
   });
 }
 
@@ -154,9 +165,10 @@ describe('A. resolveComboTriggerColumns', () => {
   test('A1: Updates comboTriggerColumnId when combo is in a heat window', () => {
     const focus = makeFocusEvent(0, 120 * FPS);
     const laevBattle = makeLaevBattle(100);
+    const heatInfliction = makeHeatInfliction(150);
     // Combo was placed with wrong trigger column (e.g., stale from previous position)
     const antalCombo = makeAntalCombo(250, 'electricInfliction');
-    const events = [focus, laevBattle, antalCombo];
+    const events = [focus, laevBattle, heatInfliction, antalCombo];
 
     const result = resolveComboTriggerColumns(events, standardWirings(), []);
     const combo = result.find((e) => e.id === antalCombo.id)!;
@@ -166,8 +178,9 @@ describe('A. resolveComboTriggerColumns', () => {
   test('A2: No-op when comboTriggerColumnId already matches window', () => {
     const focus = makeFocusEvent(0, 120 * FPS);
     const laevBattle = makeLaevBattle(100);
+    const heatInfliction = makeHeatInfliction(150);
     const antalCombo = makeAntalCombo(250, 'heatInfliction');
-    const events = [focus, laevBattle, antalCombo];
+    const events = [focus, laevBattle, heatInfliction, antalCombo];
 
     const result = resolveComboTriggerColumns(events, standardWirings(), []);
     // Should return same array reference (no changes)
@@ -365,54 +378,10 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
   const SLOT_AKEKURI = 'slot-0';
   const ANTAL_SLOT = 'slot-1';
 
-  /** Akekuri: Heat Vanguard, battle skill publishes Heat infliction */
-  function akekuriCapability(): TriggerCapability {
-    return {
-      publishesTriggers: {
-        [SKILL_COLUMNS.BASIC]: [
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-        ],
-        [SKILL_COLUMNS.BATTLE]: [
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-          { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.COMBUSTED },
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-        ],
-      },
-      comboRequires: [
-        { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.COMBUSTED },
-      ],
-      comboDescription: 'Enemy is Combusted',
-      comboWindowFrames: 720,
-    };
-  }
-
-  /** Full Antal capability: both Physical Status and Infliction clauses */
-  function antalFullCapability(): TriggerCapability {
-    return {
-      publishesTriggers: {
-        [SKILL_COLUMNS.BASIC]: [
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-        ],
-        [SKILL_COLUMNS.BATTLE]: [
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-          { subject: SubjectType.ENEMY, verb: VerbType.IS, object: ObjectType.ELECTRIFIED },
-          { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
-        ],
-      },
-      comboRequires: [
-        { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.STATUS, objectId: 'PHYSICAL' },
-        { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
-      ],
-      comboDescription: 'Enemy with Focus suffers Physical Status or Arts Infliction',
-      comboWindowFrames: 720,
-      comboRequiresActiveColumns: ['FOCUS'],
-    };
-  }
-
   function akekuriAntalWirings(): SlotTriggerWiring[] {
     return [
-      { slotId: SLOT_AKEKURI, capability: akekuriCapability() },
-      { slotId: ANTAL_SLOT, capability: antalFullCapability() },
+      { slotId: SLOT_AKEKURI, operatorId: 'akekuri' },
+      { slotId: ANTAL_SLOT, operatorId: 'antal' },
     ];
   }
 
@@ -422,7 +391,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       id: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'FOCUS',
+      columnId: 'focus',
       startFrame: 80, // offset ~0.67s from Antal battle skill at frame 0
       activationDuration: 60 * FPS, // 60s Focus duration
       sourceOwnerId: ANTAL_SLOT,
@@ -460,7 +429,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       id: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'FOCUS',
+      columnId: 'focus',
       startFrame: 80,
       activationDuration: 200, // short Focus — expires at frame 280
       sourceOwnerId: ANTAL_SLOT,
@@ -518,7 +487,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       id: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'FOCUS',
+      columnId: 'focus',
       startFrame: 0,
       activationDuration: 60 * FPS,
       sourceOwnerId: ANTAL_SLOT,
@@ -552,7 +521,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       id: 'antal-focus',
       name: 'Focus',
       ownerId: ENEMY_OWNER_ID,
-      columnId: 'FOCUS',
+      columnId: 'focus',
       startFrame: 0,
       activationDuration: 60 * FPS,
       sourceOwnerId: ANTAL_SLOT,

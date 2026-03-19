@@ -17,6 +17,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getSkillIds: () => new Set(),
   getAllOperatorIds: () => [],
   getSkillTypeMap: () => ({}),
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGearEffectLoader', () => ({
   getWeaponEffectDefs: () => [],
@@ -44,7 +46,7 @@ import { EventInterpretor } from '../controller/timeline/eventInterpretor';
 // eslint-disable-next-line import/first
 import type { InterpretContext } from '../controller/timeline/eventInterpretor';
 // eslint-disable-next-line import/first
-import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType } from '../consts/semantics';
+import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType, WithValueVerb } from '../consts/semantics';
 // eslint-disable-next-line import/first
 import type { Effect } from '../consts/semantics';
 
@@ -123,7 +125,7 @@ describe('EventInterpretor: APPLY', () => {
       objectId: 'FOCUS',
       toObject: NounType.OPERATOR,
       with: {
-        duration: { verb: 'IS' as any, value: 10 },
+        duration: { verb: 'IS' as WithValueVerb, value: 10 },
       },
     };
 
@@ -145,7 +147,7 @@ describe('EventInterpretor: APPLY', () => {
       adjective: AdjectiveType.COMBUSTION,
       toObject: NounType.ENEMY,
       with: {
-        statusLevel: { verb: 'IS' as any, value: 2 },
+        statusLevel: { verb: 'IS' as WithValueVerb, value: 2 },
       },
     };
 
@@ -190,7 +192,7 @@ describe('EventInterpretor: CONSUME', () => {
       adjective: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
-        stacks: { verb: 'IS' as any, value: 1 },
+        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
       },
     };
 
@@ -211,7 +213,7 @@ describe('EventInterpretor: CONSUME', () => {
       adjective: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
-        stacks: { verb: 'IS' as any, value: 1 },
+        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
       },
     };
 
@@ -234,7 +236,7 @@ describe('EventInterpretor: CONSUME', () => {
       objectId: 'MELTING_FLAME',
       fromObject: NounType.OPERATOR,
       with: {
-        stacks: { verb: 'IS' as any, value: 1 },
+        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
       },
     };
 
@@ -295,7 +297,7 @@ describe('EventInterpretor: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as any, value: 1 } },
+            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
           },
           {
             verb: VerbType.APPLY,
@@ -343,7 +345,7 @@ describe('EventInterpretor: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as any, value: 1 } },
+            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
           },
         ],
       }],
@@ -381,7 +383,7 @@ describe('EventInterpretor: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as any, value: 1 } },
+            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
           },
           {
             verb: VerbType.APPLY,

@@ -2,20 +2,30 @@
   "weaponName": "Freedom to Proselytize",
   "statusEvents": [
     {
-      "name": "FREEDOM_TO_PROSELYTIZE_REDEMPTION_OF_FAITH",
-      "type": "WEAPON_EFFECT",
-      "originId": "FREEDOM_TO_PROSELYTIZE",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Redemption of Faith",
-      "stack": {
-        "max": {
-          "P0": 1
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "FREEDOM_TO_PROSELYTIZE_REDEMPTION_OF_FAITH",
+        "name": "Redemption of Faith",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "FREEDOM_TO_PROSELYTIZE",
+        "description": "Redemption of Faith",
+        "note": "Heal controlled operator; 15s CD"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,19 +36,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "cooldownSeconds": 15,
-      "note": "Heal controlled operator; 15s CD"
+      ]
     }
   ]
 }

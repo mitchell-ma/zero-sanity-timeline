@@ -10,14 +10,25 @@ import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-/** Flattened multiplier entry: level + all scale/param keys at top level. */
-interface JsonMultiplierEntry {
-  level: number;
-  [key: string]: number;  // DAMAGE_MULTIPLIER, DAMAGE_MULTIPLIER_INCREMENT, STAGGER, etc.
+interface JsonWithValue {
+  verb: string;
+  object?: string;
+  value: number | number[];
+}
+
+interface JsonClauseEffect {
+  verb: string;
+  object?: string;
+  with?: Record<string, JsonWithValue>;
+}
+
+interface JsonClausePredicate {
+  conditions: Record<string, unknown>[];
+  effects: JsonClauseEffect[];
 }
 
 interface JsonFrame {
-  multipliers?: JsonMultiplierEntry[];
+  clause?: JsonClausePredicate[];
 }
 
 interface JsonSegment {
@@ -67,11 +78,29 @@ function getCacheKey(operatorId: string, category: string): string {
 
 // ── Build multiplier data from JSON ──────────────────────────────────────────
 
+/** Map old multiplier key names to their camelCase equivalents in the DEAL effect's with block. */
+const MULTIPLIER_KEY_MAP: Record<string, string> = {
+  DAMAGE_MULTIPLIER: 'value',
+  DAMAGE_MULTIPLIER_INCREMENT: 'damageMultiplierIncrement',
+};
+
+function getDealEffect(frame: JsonFrame): JsonClauseEffect | undefined {
+  for (const pred of (frame.clause ?? [])) {
+    for (const ef of pred.effects) {
+      if (ef.verb === 'DEAL' && ef.object === 'DAMAGE') return ef;
+    }
+  }
+  return undefined;
+}
+
 function getAtk(frame: JsonFrame, level: number, key: string = 'DAMAGE_MULTIPLIER'): number {
-  if (!frame.multipliers) return 0;
-  const entry = frame.multipliers.find(m => m.level === level);
-  if (!entry) return 0;
-  return entry[key] ?? 0;
+  const deal = getDealEffect(frame);
+  if (!deal?.with) return 0;
+  const withKey = MULTIPLIER_KEY_MAP[key] ?? key.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  const wv = deal.with[withKey];
+  if (!wv) return 0;
+  if (Array.isArray(wv.value)) return wv.value[level - 1] ?? 0;
+  return typeof wv.value === 'number' ? wv.value : 0;
 }
 
 function buildCategoryCache(operatorId: string, category: string): CategoryMultiplierCache | null {

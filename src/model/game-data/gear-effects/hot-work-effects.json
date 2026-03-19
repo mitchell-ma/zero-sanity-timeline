@@ -3,20 +3,46 @@
   "label": "Hot Work",
   "statusEvents": [
     {
-      "name": "HOT_WORK_HEAT",
-      "type": "GEAR_EFFECT",
-      "originId": "HOT_WORK",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Hot Work (Heat)",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "HEAT_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.5
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "HOT_WORK_HEAT",
+        "name": "Hot Work (Heat)",
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "HOT_WORK",
+        "description": "Hot Work (Heat)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,38 +52,49 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
+      ]
+    },
+    {
+      "clause": [
         {
-          "stat": "HEAT_DAMAGE_BONUS",
-          "value": 0.5
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "NATURE_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.5
+                }
+              }
+            }
+          ]
         }
       ],
       "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "HOT_WORK_NATURE",
+        "name": "Hot Work (Nature)",
         "duration": {
           "value": [
             10
           ],
           "unit": "SECOND"
-        }
-      }
-    },
-    {
-      "name": "HOT_WORK_NATURE",
-      "type": "GEAR_EFFECT",
-      "originId": "HOT_WORK",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Hot Work (Nature)",
-      "stack": {
-        "max": {
-          "P0": 1
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "HOT_WORK",
+        "description": "Hot Work (Nature)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -67,22 +104,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "NATURE_DAMAGE_BONUS",
-          "value": 0.5
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            10
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

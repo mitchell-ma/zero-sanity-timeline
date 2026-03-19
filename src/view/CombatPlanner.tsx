@@ -158,9 +158,9 @@ interface CombatPlannerProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const noop2 = (_a: any, _b: any) => {};
+const noop2 = (_a: unknown, _b: unknown) => {};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const noop3 = (_a: any, _b: any, _c: any) => {};
+const noop3 = (_a: unknown, _b: unknown, _c: unknown) => {};
 
 export default function CombatPlanner({
   slots,
@@ -246,6 +246,8 @@ export default function CombatPlanner({
   } | null>(null);
   const zoomRef     = useRef(zoom);
   const bodyTopRef  = useRef<number | null>(null);
+  /** Raw mouse client position along frame axis — used to recompute hoverFrame on scroll. */
+  const hoverClientFrameRef = useRef<number | null>(null);
 
   const [hoverClientY,     setHoverClientY]     = useState<number | null>(null);
   const [hoverFrame,       setHoverFrameRaw]    = useState<number | null>(null);
@@ -433,10 +435,10 @@ export default function CombatPlanner({
   const SKILL_IDS = new Set([SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE]);
   const getColWeight = (col: Column) => {
     if (col.type === 'placeholder') return 1;
-    const cid = (col as any).columnId as string | undefined;
+    const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
     if (cid === OPERATOR_COLUMNS.DASH) return 1;
     if (cid === 'operator-status') return 4;
-    if (cid && SKILL_IDS.has(cid as any)) return 2;
+    if (cid && (SKILL_IDS as Set<string>).has(cid)) return 2;
     return 2; // tactical, etc.
   };
   // Pre-compute total weight per slot group
@@ -609,10 +611,25 @@ export default function CombatPlanner({
       setScrollTop(el[axis.scrollPos]);
       onScrollProp?.(el[axis.scrollPos]);
       onContextMenu(null);
+      // Recompute hoverFrame during scroll so segment highlights update
+      const frameClient = hoverClientFrameRef.current;
+      if (frameClient != null && bodyTopRef.current !== null) {
+        const scrollRect = el.getBoundingClientRect();
+        const scrollFrame = el[axis.scrollPos];
+        const bodyTop = bodyTopRef.current;
+        const relFrame = frameClient - scrollRect[axis.rectFrameStart] + scrollFrame - bodyTop;
+        if (relFrame > 0) {
+          const ppf = getPxPerFrame(zoomRef.current);
+          const snappedRel = Math.max(TIMELINE_TOP_PAD, TIMELINE_TOP_PAD + Math.round((relFrame - TIMELINE_TOP_PAD) / ppf) * ppf);
+          const frame = pxToFrame(snappedRel, zoomRef.current);
+          setHoverFrame(frame);
+          setHoverClientY(snappedRel - scrollFrame + scrollRect[axis.rectFrameStart] + bodyTop);
+        }
+      }
     };
     el.addEventListener('scroll', handler, { passive: true });
     return () => { el.removeEventListener('scroll', handler); ro.disconnect(); };
-  }, [onScrollProp, onContextMenu, axis, isHorizontal]);
+  }, [onScrollProp, onContextMenu, axis, isHorizontal, setHoverFrame]);
 
   // Headers are now outside the scroll container, so body starts at top of scroll
   useEffect(() => {
@@ -870,7 +887,9 @@ export default function CombatPlanner({
       if (frameClient < scrollRect[axis.rectFrameStart] || frameClient > scrollRect[frameEnd]) {
         setHoverFrame(null);
         setHoverClientY(null);
+        hoverClientFrameRef.current = null;
       } else {
+        hoverClientFrameRef.current = frameClient;
         const scrollFrame = scrollEl[axis.scrollPos];
         const bodyTop = bodyTopRef.current;
         const relFrame = frameClient - scrollRect[axis.rectFrameStart] + scrollFrame - bodyTop;
@@ -1106,6 +1125,7 @@ export default function CombatPlanner({
     setHoverClientY(null);
     setHoverFrame(null);
     setHoverColKey(null);
+    hoverClientFrameRef.current = null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1303,18 +1323,18 @@ export default function CombatPlanner({
     const { actionId, actionPayload, ...rest } = item;
     switch (actionId) {
       case 'addEvent': {
-        const { ownerId, columnId, atFrame, defaultSkill } = actionPayload;
-        return { ...rest, action: () => onAddEvent(ownerId, columnId, atFrame, defaultSkill) };
+        const p = actionPayload as { ownerId: string; columnId: string; atFrame: number; defaultSkill: object | null };
+        return { ...rest, action: () => onAddEvent(p.ownerId, p.columnId, p.atFrame, p.defaultSkill) };
       }
       case 'editResource':
-        return { ...rest, action: () => { onEditResource?.(actionPayload); onContextMenu(null); } };
+        return { ...rest, action: () => { onEditResource?.(actionPayload as string); onContextMenu(null); } };
       case 'addSegment': {
-        const { eventId, segmentLabel } = actionPayload;
-        return { ...rest, action: () => { onAddSegment?.(eventId, segmentLabel); onContextMenu(null); } };
+        const p = actionPayload as { eventId: string; segmentLabel: string };
+        return { ...rest, action: () => { onAddSegment?.(p.eventId, p.segmentLabel); onContextMenu(null); } };
       }
       case 'addFrame': {
-        const { eventId, segmentIndex, frameOffsetFrame } = actionPayload;
-        return { ...rest, action: () => { onAddFrame?.(eventId, segmentIndex, frameOffsetFrame); onContextMenu(null); } };
+        const p = actionPayload as { eventId: string; segmentIndex: number; frameOffsetFrame: number };
+        return { ...rest, action: () => { onAddFrame?.(p.eventId, p.segmentIndex, p.frameOffsetFrame); onContextMenu(null); } };
       }
       default:
         return item;
@@ -1944,7 +1964,7 @@ export default function CombatPlanner({
                   }
                   const presentationOpts = {
                     slotElementColors, alwaysAvailableComboSlots, autoFinisherIds,
-                    validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides,
+                    validationMaps: mergedValidationMaps, interactionMode, statusViewOverrides, events,
                   };
 
                   const buildEventBlockProps = (ev: TimelineEvent, pres: import('../controller/timeline/eventPresentationController').EventPresentation) => ({
@@ -1975,7 +1995,7 @@ export default function CombatPlanner({
                     onFrameDragStart: pres.passive ? undefined : handleFrameDragStart,
                     onSegmentContextMenu: pres.passive ? undefined : handleSegmentContextMenu,
                     selectedFrames: pres.passive ? undefined : selectedFrames?.filter((sf) => sf.eventId === ev.id),
-                    hoverFrame: pres.passive ? undefined : (pres.variant === 'sequenced' ? hoverFrame : undefined),
+                    hoverFrame: draggingIds?.has(ev.id) ? null : hoverFrame,
                   });
 
                   return hasMicro ? (
@@ -2046,6 +2066,7 @@ export default function CombatPlanner({
                         {...buildEventBlockProps(ev, pres)}
                         selected={isWindow ? false : selectedIds.has(ev.id)}
                         hovered={isWindow ? false : hoveredId === ev.id}
+                        hoverFrame={isWindow ? undefined : draggingIds?.has(ev.id) ? null : hoverFrame}
                       />
                     );
                   })

@@ -2,6 +2,7 @@
  * Controller for custom skill CRUD operations.
  */
 import type { CustomSkill } from '../../model/custom/customSkillTypes';
+import { CombatSkillType } from '../../consts/enums';
 import { checkIdConflict } from '../../utils/customContentStorage';
 import { removeAllLinksForSkill } from './customSkillLinkController';
 
@@ -104,7 +105,7 @@ export function getDefaultCustomSkill(): CustomSkill {
   return {
     id: `skill_${Date.now()}`,
     name: '',
-    combatSkillType: 'BASIC_ATTACK' as any,
+    combatSkillType: CombatSkillType.BASIC_ATTACK,
     durationSeconds: 1,
   };
 }

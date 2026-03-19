@@ -42,13 +42,13 @@ function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
     statusStackCache = new Map();
     for (const opId of getAllOperatorIds()) {
       const json = getOperatorJson(opId);
-      const statusEvents = json?.statusEvents as any[] | undefined;
+      const statusEvents = json?.statusEvents as { id: string; statusLevel?: { limit?: { P0?: number }; statusLevelInteractionType?: string } }[] | undefined;
       if (!statusEvents) continue;
       for (const se of statusEvents) {
-        if (statusStackCache.has(se.name)) continue;
-        const instances = se.stack?.instances ?? 1;
-        const verb = se.stack?.verb ?? se.stack?.verb ?? 'NONE';
-        statusStackCache.set(se.name, { instances, verb });
+        if (statusStackCache.has(se.id)) continue;
+        const limitP0 = se.statusLevel?.limit?.P0 ?? 1;
+        const verb = se.statusLevel?.statusLevelInteractionType ?? 'NONE';
+        statusStackCache.set(se.id, { instances: limitP0, verb });
       }
     }
   }

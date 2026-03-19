@@ -5,6 +5,7 @@ import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeSto
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { getExchangeStatusConfig } from '../../model/event-frames/operatorJsonLoader';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
@@ -66,18 +67,6 @@ export const TEAM_STATUS_COLUMN: Record<string, string> = {
 
 /** P5 link extension: extra frames added to link duration when operator potential >= 5. */
 export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
-
-/** Maps absorption exchange status → columnId for generated events. */
-export const EXCHANGE_STATUS_COLUMN: Record<string, string> = {
-  MELTING_FLAME: 'melting-flame',
-  THUNDERLANCE: 'thunderlance',
-};
-
-
-/** Duration (frames) for each exchange status. Unkeyed = effectively permanent. */
-export const EXCHANGE_STATUS_DURATION: Record<string, number> = {
-  THUNDERLANCE: 2400, // 20s at 120fps
-};
 
 /** Default duration for generated exchange events (effectively permanent). */
 export const EXCHANGE_EVENT_DURATION = TOTAL_FRAMES * 10;
@@ -169,15 +158,15 @@ export function deriveFrameInflictions(events: TimelineEvent[], loadoutPropertie
               // skipExchangeStatuses is true, these are handled exclusively
               // by the status derivation engine which enforces max-stack caps
               // and correct consumption/re-derivation ordering.
-              const grantColumnId = EXCHANGE_STATUS_COLUMN[statusEffect.status];
-              if (grantColumnId) {
+              const exchangeInfo = getExchangeStatusConfig()[statusEffect.status];
+              if (exchangeInfo) {
                 if (!skipExchangeStatuses) {
-                  const exchDuration = EXCHANGE_STATUS_DURATION[statusEffect.status] ?? EXCHANGE_EVENT_DURATION;
+                  const exchDuration = exchangeInfo.durationFrames;
                   derived.push({
                     id: `${event.id}-exchange-${si}-${fi}`,
                     name: statusEffect.status,
                     ownerId: event.ownerId,
-                    columnId: grantColumnId,
+                    columnId: exchangeInfo.columnId,
                     startFrame: absFrame,
                     activationDuration: exchDuration,
                     activeDuration: 0,
@@ -539,12 +528,12 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
             });
           }
           if (frame.consumeStatus) {
-            const exchCol = EXCHANGE_STATUS_COLUMN[frame.consumeStatus];
-            if (exchCol) {
+            const exchInfo = getExchangeStatusConfig()[frame.consumeStatus];
+            if (exchInfo) {
               exchangeConsumePoints.push({
                 absoluteFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
                 ownerId: event.ownerId,
-                exchangeColumnId: exchCol,
+                exchangeColumnId: exchInfo.columnId,
                 source: { ownerId: event.ownerId, skillName: event.name },
               });
             }
@@ -583,8 +572,9 @@ export function applyAbsorptions(events: TimelineEvent[], stops: readonly TimeSt
   for (const absorption of absorptions) {
     const { absoluteFrame, ownerId, marker } = absorption;
     const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
-    const exchangeColumnId = EXCHANGE_STATUS_COLUMN[marker.exchangeStatus];
-    if (!inflictionColumnId || !exchangeColumnId) continue;
+    const exchangeInfo = getExchangeStatusConfig()[marker.exchangeStatus];
+    if (!inflictionColumnId || !exchangeInfo) continue;
+    const exchangeColumnId = exchangeInfo.columnId;
 
     // Find active enemy infliction events of the matching element at this frame.
     // Durations are already extended by applyTimeStopExtension at this point.

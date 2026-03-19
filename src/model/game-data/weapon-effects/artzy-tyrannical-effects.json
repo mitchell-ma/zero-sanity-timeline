@@ -2,20 +2,49 @@
   "weaponName": "Artzy Tyrannical",
   "statusEvents": [
     {
-      "name": "ARTZY_TYRANNICAL_ARTZY_EXAGGERATION",
-      "type": "WEAPON_EFFECT",
-      "originId": "ARTZY_TYRANNICAL",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Artzy Exaggeration",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRYO_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.16,
+                  "valueMax": 0.448
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "ARTZY_TYRANNICAL_ARTZY_EXAGGERATION",
+        "name": "Artzy Exaggeration",
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "ARTZY_TYRANNICAL",
+        "description": "Artzy Exaggeration",
+        "note": "Crit with battle/combo skill"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,25 +55,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRYO_DAMAGE_BONUS",
-          "valueMin": 0.16,
-          "valueMax": 0.448,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            30
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Crit with battle/combo skill"
+      ]
     }
   ]
 }

@@ -2,8 +2,8 @@
  * Gilberta — Lifecycle Clause Integration Tests
  *
  * Tests the ANOMALOUS_GRAVITY_FIELD status lifecycle:
- * - onActivationClause: if enemy has Lift at activation → extend Lift until field ends
- * - reactiveTriggerClause: each time enemy receives Lift during field → extend Lift
+ * - onEntryClause: if enemy has Lift at activation → extend Lift until field ends
+ * - onTriggerClause: each time enemy receives Lift during field → extend Lift
  * - No Lift → no extension
  * - Lift already longer than field → no change
  */
@@ -16,7 +16,50 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockTalentJson = require('../model/game-data/operator-talents/gilberta-talents.json');
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap } = mockSkillsJson;
-  const mergedStatusEvents = [...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
+
+  // Normalize talent status entries (same as operatorJsonLoader.ts)
+  const normalizeStatusEntry = (raw: Record<string, any>): Record<string, any> => {
+    const props = (raw.properties ?? {}) as Record<string, any>;
+    const sl = (props.statusLevel ?? {}) as Record<string, any>;
+    let resolvedLimit: unknown;
+    const limit = sl.limit;
+    if (limit) {
+      if (limit.verb === 'IS') {
+        const v = limit.value;
+        resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
+      } else if (limit.verb === 'BASED_ON' && Array.isArray(limit.value)) {
+        const arr = limit.value;
+        resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
+      } else {
+        resolvedLimit = limit.value ?? limit;
+      }
+    }
+    const out: Record<string, any> = {
+      id: props.id,
+      ...(props.name ? { name: props.name } : {}),
+      ...(props.type ? { type: props.type } : {}),
+      ...(props.element || raw.element ? { element: props.element ?? raw.element } : {}),
+      ...(props.isForced ? { isForced: props.isForced } : {}),
+      target: 'OPERATOR',
+      targetDeterminer: 'THIS',
+      statusLevel: {
+        limit: resolvedLimit ?? { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+        statusLevelInteractionType: sl.statusLevelInteractionType ?? 'NONE',
+      },
+      onTriggerClause: raw.onTriggerClause ?? [],
+      originId: raw.originId,
+      ...(raw.clause ? { clause: raw.clause } : {}),
+      ...(raw.stats ? { stats: raw.stats } : {}),
+    };
+    if (props.duration) {
+      const dv = props.duration.value;
+      out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: props.duration.unit } };
+    }
+    return out;
+  };
+
+  const normalizedTalentStatuses = (mockTalentJson.statusEvents ?? []).map((s: Record<string, any>) => normalizeStatusEntry(s));
+  const mergedStatusEvents = [...(skStatusEvents ?? []), ...normalizedTalentStatuses];
   const mockJson = { skillTypeMap: skTypeMap, statusEvents: mergedStatusEvents };
 
   return {
@@ -25,6 +68,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getAllOperatorIds: () => ['gilberta'],
     getSkillIds: () => new Set(['BEAM_COHESION_ARTS', 'GRAVITY_MODE', 'MATRIX_DISPLACEMENT', 'GRAVITY_FIELD']),
     getSkillTypeMap: () => skTypeMap ?? {},
+    getExchangeStatusConfig: () => ({}),
+    getExchangeStatusIds: () => new Set(),
   };
 });
 jest.mock('../model/game-data/weaponGameData', () => ({
@@ -45,6 +90,8 @@ jest.mock('../controller/calculation/loadoutAggregator', () => ({
 // eslint-disable-next-line import/first
 import { Operator } from '../consts/viewTypes';
 // eslint-disable-next-line import/first
+import type { LoadoutProperties } from '../view/InformationPane';
+// eslint-disable-next-line import/first
 import { resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
 
 // ── Messenger's Song efficiency bonus tests ─────────────────────────────
@@ -61,7 +108,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
       id, name: id, color: '#fff', element: 'NATURE', role: classType,
       operatorClassType: classType, rarity: 6, weaponTypes: ['ARTS_UNIT'],
       weapon: '', armor: '', gloves: '', kit1: '', kit2: '', food: '', tactical: '',
-      skills: {} as any, ultimateEnergyCost: 100,
+      skills: {} as Operator['skills'], ultimateEnergyCost: 100,
       maxTalentOneLevel: 2, maxTalentTwoLevel: 0,
       talentOneName: "Messenger's Song", talentTwoName: '',
       attributeIncreaseName: '', attributeIncreaseAttribute: '', maxAttributeIncreaseLevel: 4,
@@ -76,12 +123,12 @@ describe("Messenger's Song — energy gain efficiency", () => {
   const defaultProps = {
     operator: { potential: 0, talentOneLevel: 1, talentTwoLevel: 0, attributeIncreaseLevel: 0 },
     skills: { battleSkillLevel: 12 },
-  } as any;
+  } as LoadoutProperties;
 
   const propsLevel2 = {
     operator: { potential: 0, talentOneLevel: 2, talentTwoLevel: 0, attributeIncreaseLevel: 0 },
     skills: { battleSkillLevel: 12 },
-  } as any;
+  } as LoadoutProperties;
 
   test('applies 4% bonus to Guard/Caster at talent level 1', () => {
     const operators = [gilberta, guard, caster, striker];
@@ -175,11 +222,11 @@ describe("Messenger's Song — energy gain efficiency", () => {
     const p3L1 = {
       operator: { potential: 3, talentOneLevel: 1, talentTwoLevel: 0, attributeIncreaseLevel: 0 },
       skills: { battleSkillLevel: 12 },
-    } as any;
+    } as LoadoutProperties;
     const p3L2 = {
       operator: { potential: 3, talentOneLevel: 2, talentTwoLevel: 0, attributeIncreaseLevel: 0 },
       skills: { battleSkillLevel: 12 },
-    } as any;
+    } as LoadoutProperties;
 
     // P3 talent level 1
     const bonuses1 = resolveMessengersSongBonuses(operators, ALL_SLOTS, {
@@ -204,7 +251,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
     const p5Props = {
       operator: { potential: 5, talentOneLevel: 2, talentTwoLevel: 0, attributeIncreaseLevel: 0 },
       skills: { battleSkillLevel: 12 },
-    } as any;
+    } as LoadoutProperties;
 
     const bonuses = resolveMessengersSongBonuses(operators, ALL_SLOTS, {
       [GILBERTA_SLOT]: p5Props, [GUARD_SLOT]: defaultProps,

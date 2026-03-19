@@ -42,7 +42,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     return out;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expandedStatuses = (mockStatusesJson as any[]).map(expandKeys);
+  const expandedStatuses = (mockStatusesJson as any[]).map((s: any) => expandKeys(s));
 
   const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,6 +98,42 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getBattleSkillSpCost: () => undefined,
     getSkillCategoryData: () => undefined,
     getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: (id: string) => {
+    const map: Record<string, { file: string; skillId: string }> = {
+      antal: { file: '../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
+      laevatain: { file: '../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
+      akekuri: { file: '../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
+    };
+    const entry = map[id];
+    if (!entry) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require(entry.file)[entry.skillId]?.properties?.trigger?.onTriggerClause;
+  },
+  getExchangeStatusConfig: () => {
+      const OPERATOR_COLUMNS: Record<string, string> = { MELTING_FLAME: 'melting-flame', THUNDERLANCE: 'thunderlance' };
+      const TOTAL_FRAMES = 14400;
+      const config: Record<string, { columnId: string; durationFrames: number }> = {};
+      for (const status of expandedStatuses) {
+        const props = status.properties;
+        if (!props || props.type !== 'EXCHANGE') continue;
+        const id = props.id as string;
+        const columnId = OPERATOR_COLUMNS[id] ?? id.toLowerCase().replace(/_/g, '-');
+        let durationFrames = TOTAL_FRAMES * 10;
+        if (props.duration) {
+          const val = Array.isArray(props.duration.value) ? props.duration.value[0] : props.duration.value;
+          if (val >= 0) durationFrames = props.duration.unit === 'SECOND' ? Math.round(val * 120) : val;
+        }
+        config[id] = { columnId, durationFrames };
+      }
+      return config;
+    },
+    getExchangeStatusIds: () => {
+      const ids = new Set<string>();
+      for (const status of expandedStatuses) {
+        if (status.properties?.type === 'EXCHANGE') ids.add(status.properties.id);
+      }
+      return ids;
+    },
   };
 });
 
@@ -149,7 +185,7 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
   for (const f of empDef.frames) {
     const offset = Math.round(f.properties.offset.value * FPS);
     const frameMarker: any = { offsetFrame: offset };
-    for (const ef of (f.effects ?? [])) {
+    for (const ef of (f.clause?.[0]?.effects ?? [])) {
       if (ef.verb === 'CONSUME' && ef.object === 'STATUS') {
         frameMarker.consumeStatus = ef.objectId;
       }

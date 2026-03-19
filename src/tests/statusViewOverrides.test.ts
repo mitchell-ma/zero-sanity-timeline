@@ -8,29 +8,39 @@
  * - Single events are never overridden
  */
 
-const mockStatusEvents: Record<string, any[]> = {
+const mockStatusEvents: Record<string, Record<string, unknown>[]> = {
   laevatain: [
     {
-      name: 'MELTING_FLAME',
-      target: 'OPERATOR',
-      targetDeterminer: 'THIS',
-      stack: { max: { P0: 4 }, instances: 4, verb: 'NONE' },
-      properties: { duration: { value: [-1], unit: 'SECOND' } },
+      id: 'MELTING_FLAME',
+      name: 'Melting Flame',
+      element: 'HEAT',
+      statusLevel: {
+        limit: { P0: 4, P1: 4, P2: 4, P3: 4, P4: 4, P5: 4 },
+        statusLevelInteractionType: 'NONE',
+      },
+      onTriggerClause: [],
     },
     {
-      name: 'SCORCHING_HEART_EFFECT',
-      target: 'OPERATOR',
-      targetDeterminer: 'THIS',
-      stack: { max: { P0: 1 }, instances: 1, verb: 'RESET' },
+      id: 'SCORCHING_HEART_EFFECT',
+      name: 'Scorching Heart',
+      element: 'HEAT',
+      statusLevel: {
+        limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+        statusLevelInteractionType: 'RESET',
+      },
+      onTriggerClause: [],
       properties: { duration: { value: [20], unit: 'SECOND' } },
     },
   ],
   antal: [
     {
-      name: 'FOCUS',
-      target: 'OPERATOR',
-      targetDeterminer: 'THIS',
-      stack: { max: { P0: 1 }, instances: 1, verb: 'RESET' },
+      id: 'FOCUS',
+      name: 'Focus',
+      statusLevel: {
+        limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+        statusLevelInteractionType: 'RESET',
+      },
+      onTriggerClause: [],
       properties: { duration: { value: [20], unit: 'SECOND' } },
     },
   ],
@@ -47,6 +57,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
   getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],

@@ -7,6 +7,8 @@
  * See src/model/eventSpec.md for the full specification.
  */
 
+import { Reaction } from '../model/combat-statuses/reaction';
+
 // ── Sentinels ───────────────────────────────────────────────────────────────
 
 /** Sentinel value meaning "the potential-resolved maximum" for stack counts and cardinality. */
@@ -50,8 +52,8 @@ enum CoreNounType {
   OPERATOR = "OPERATOR",
   /** The enemy target. */
   ENEMY = "ENEMY",
-  /** The event/status that owns this clause — self-referential (e.g. "this event has MAX stacks"). */
-  THIS_EVENT = "THIS_EVENT",
+  /** An event — the event/status that owns this clause. */
+  EVENT = "EVENT",
   /** System-initiated (threshold effects, passive triggers). */
   SYSTEM = "SYSTEM",
 
@@ -157,6 +159,8 @@ export enum VerbType {
   IGNORE = "IGNORE",
   /** Enhance a skill type for a target operator (e.g. ENHANCE BASIC_ATTACK TO THIS OPERATOR). */
   ENHANCE = "ENHANCE",
+  /** Disable a skill variant tier (e.g. DISABLE NORMAL BASIC_ATTACK TO THIS OPERATOR). */
+  DISABLE = "DISABLE",
 
   // ── Time ────────────────────────────────────────────────────────────────
   /** Segment time interaction (GAME_TIME, REAL_TIME). */
@@ -190,7 +194,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, string[]>> = {
   [VerbType.CONSUME]:    ['INFLICTION', 'REACTION', 'STATUS', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'COOLDOWN', 'STAGGER', 'STACKS'],
   [VerbType.RECOVER]:    ['SKILL_POINT', 'ULTIMATE_ENERGY', 'HP'],
   [VerbType.RETURN]:     ['SKILL_POINT'],
-  [VerbType.DEAL]:       ['DAMAGE'],
+  [VerbType.DEAL]:       ['DAMAGE', 'STAGGER'],
   [VerbType.PERFORM]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE', 'FINAL_STRIKE', 'NORMAL_ATTACK'],
   [VerbType.HIT]:        ['ENEMY'],
   [VerbType.DEFEAT]:     ['ENEMY'],
@@ -302,6 +306,14 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   [ObjectType.FINAL_STRIKE]: [
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
+};
+
+/** Objects whose adjective is required (no empty "—" option in dropdown). */
+export const OBJECT_REQUIRED_ADJECTIVE = new Set<string>([ObjectType.DAMAGE]);
+
+/** Default adjective for objects that require one. */
+export const OBJECT_DEFAULT_ADJECTIVE: Partial<Record<ObjectType, AdjectiveType>> = {
+  [ObjectType.DAMAGE]: AdjectiveType.PHYSICAL,
 };
 
 /**
@@ -574,4 +586,310 @@ export function interactionToLabel(i: Interaction): string {
 
   return `${subject}${neg}${verb} ${obj}${id}${el}`.trim();
 }
+
+// ── Verb/Object lists for builders ──────────────────────────────────────────
+
+/** Verbs available when subject is OPERATOR (alphabetical by label). */
+export const OPERATOR_VERBS = [
+  VerbType.APPLY, VerbType.CONSUME, VerbType.DEAL,
+  VerbType.DEFEAT, VerbType.HAVE, VerbType.IS,
+  VerbType.OVERHEAL, VerbType.PERFORM, VerbType.RECEIVE,
+  VerbType.RECOVER,
+];
+
+/** Verbs available for effects (alphabetical, ANY disabled). */
+export const EFFECT_VERBS = [
+  VerbType.ALL, // VerbType.ANY,
+  VerbType.APPLY, VerbType.CONSUME, VerbType.DEAL,
+  VerbType.DISABLE, VerbType.ENHANCE, VerbType.EXTEND,
+  VerbType.IGNORE, VerbType.MERGE, VerbType.PERFORM,
+  VerbType.RECOVER, VerbType.REFRESH, VerbType.RESET,
+  VerbType.RETURN,
+];
+
+/** Valid object types for a given effect verb. */
+export function getObjectsForEffectVerb(verb: VerbType): ObjectType[] {
+  const mapped = VERB_OBJECTS[verb];
+  if (mapped) return mapped as ObjectType[];
+  return Object.values(ObjectType);
+}
+
+/** Valid object types for a given condition verb. */
+export function getObjectsForConditionVerb(verb: VerbType): ObjectType[] {
+  const mapped = VERB_OBJECTS[verb];
+  if (mapped) return mapped as ObjectType[];
+  return Object.values(ObjectType);
+}
+
+/** Get available verb options for a given subject. */
+export function getVerbsForSubject(subject: SubjectType): VerbType[] {
+  if (subject === SubjectType.OPERATOR) return OPERATOR_VERBS;
+  return Object.values(VerbType);
+}
+
+// ── Interaction field visibility (progressive disclosure) ───────────────────
+
+// Verbs that support cardinality
+const CARDINALITY_VERBS = new Set([VerbType.HAVE, VerbType.HIT, VerbType.PERFORM, VerbType.CONSUME]);
+// Verbs that support subjectProperty
+const PROPERTY_VERBS = new Set([VerbType.IS, VerbType.OVERHEAL]);
+// Objects that need an objectId
+const NEEDS_OBJECT_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN]);
+
+/** Which fields are visible in the interaction builder. */
+export interface InteractionFieldVisibility {
+  showDeterminer: boolean;
+  showVerb: boolean;
+  showProperty: boolean;
+  showNegated: boolean;
+  showObject: boolean;
+  showObjectId: boolean;
+  showObjectIdIsStatus: boolean;
+  showObjectIdIsInfliction: boolean;
+  showObjectIdIsReaction: boolean;
+  showCardinality: boolean;
+  showCardinalityValue: boolean;
+  showTo: boolean;
+  showFrom: boolean;
+  showQualifierRow: boolean;
+  /** WITH property keys available for this verb+object combination. */
+  withProperties: string[];
+  /** If non-null, the target is forced (not user-selectable) — e.g. STAGGER always targets ENEMY. */
+  forcedTarget: SubjectType | null;
+}
+
+// Verbs that need prepositions
+const NEEDS_TO = new Set([VerbType.APPLY, VerbType.RECOVER, VerbType.RETURN, VerbType.ENHANCE, VerbType.DISABLE]);
+const NEEDS_FROM = new Set([VerbType.CONSUME]);
+const NEEDS_ON = new Set([VerbType.EXTEND, VerbType.REFRESH, VerbType.MERGE, VerbType.IGNORE]);
+const NEEDS_DURATION = new Set([VerbType.APPLY]);
+
+/** Which fields are visible in the effect builder. */
+export interface EffectFieldVisibility {
+  showCardinality: boolean;
+  showAdjective: boolean;
+  showObjectId: boolean;
+  showObjectIdIsStatus: boolean;
+  showObjectIdIsInfliction: boolean;
+  showObjectIdIsReaction: boolean;
+  showTo: boolean;
+  showFrom: boolean;
+  showOn: boolean;
+  showDuration: boolean;
+  showUntilEnd: boolean;
+  showQualifierRow: boolean;
+  withProperties: string[];
+}
+
+/** Compute effect field visibility based on current effect state. */
+export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
+  const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
+  const showObjectId = NEEDS_OBJECT_ID.has(value.object ?? '');
+  const showTo = NEEDS_TO.has(value.verb);
+  const showFrom = NEEDS_FROM.has(value.verb);
+  const showOn = NEEDS_ON.has(value.verb);
+  const showDuration = NEEDS_DURATION.has(value.verb) && value.object === ObjectType.TIME_STOP;
+  const showUntilEnd = value.verb === VerbType.EXTEND;
+
+  return {
+    showCardinality: new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.RECOVER, VerbType.RETURN]).has(value.verb),
+    showAdjective: adjectives.length > 0 && value.object !== ObjectType.STATUS,
+    showObjectId,
+    showObjectIdIsStatus: value.object === ObjectType.STATUS,
+    showObjectIdIsInfliction: value.object === ObjectType.INFLICTION,
+    showObjectIdIsReaction: value.object === ObjectType.REACTION,
+    showTo,
+    showFrom,
+    showOn,
+    showDuration,
+    showUntilEnd,
+    showQualifierRow: showTo || showFrom || showOn || showDuration || showUntilEnd,
+    withProperties: value.object ? getWithProperties(value.verb, value.object, value.objectId) : [],
+  };
+}
+
+// ── WITH property resolution ────────────────────────────────────────────────
+
+/** WITH property labels for UI display. */
+export const WITH_PROPERTY_LABELS: Record<string, string> = {
+  duration: 'Duration (s)',
+  multiplier: 'Multiplier',
+  statusLevel: 'Status Level',
+  value: 'Value',
+  isForced: 'Forced',
+};
+
+/** WITH properties that are boolean toggles (not numeric inputs). */
+export const WITH_BOOLEAN_PROPERTIES = new Set(['isForced']);
+
+/**
+ * Object → forced target. Objects that can only target a specific entity.
+ * If an object is in this map, the TO target is auto-set and not user-selectable.
+ */
+export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
+  [ObjectType.STAGGER]:    SubjectType.ENEMY,
+  [ObjectType.INFLICTION]: SubjectType.ENEMY,
+  [ObjectType.REACTION]:   SubjectType.ENEMY,
+};
+
+/**
+ * Verb+Object → available WITH property keys.
+ * Central source of truth for which properties a given combination supports.
+ */
+export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]>> = {
+  [VerbType.APPLY]: {
+    [ObjectType.STATUS]:     ['duration', 'statusLevel'],
+    [ObjectType.INFLICTION]: ['statusLevel'],
+    [ObjectType.REACTION]:   [...Reaction.EDITABLE_PROPERTIES],
+    [ObjectType.TIME_STOP]:  ['duration'],
+    [ObjectType.STAGGER]:    ['value'],
+  },
+  [VerbType.DEAL]: {
+    [ObjectType.DAMAGE]:     ['value'],
+    [ObjectType.STAGGER]:    ['value'],
+  },
+  [VerbType.CONSUME]: {
+    [ObjectType.STATUS]:     ['statusLevel'],
+    [ObjectType.INFLICTION]: ['statusLevel'],
+  },
+  [VerbType.EXTEND]:  { _default: ['duration'] },
+  [VerbType.REFRESH]: { _default: ['duration'] },
+  [VerbType.RECOVER]: { _default: ['statusLevel'] },
+};
+
+/**
+ * Get available WITH properties for a verb+object combination.
+ * For STATUS, also accepts objectId to look up dynamic properties from configs.
+ */
+export function getWithProperties(verb: VerbType, object: ObjectType, objectId?: string): string[] {
+  // Static lookup from the map
+  const verbMap = VERB_OBJECT_WITH_PROPERTIES[verb];
+  const staticProps = verbMap ? (verbMap[object] ?? verbMap._default ?? []) : [];
+
+  // For STATUS with a specific objectId, merge dynamic properties from configs
+  if (object === ObjectType.STATUS && objectId) {
+    // Lazy import to avoid circular deps
+    const { getStatusWithProperties } = require('../model/event-frames/operatorJsonLoader');
+    const dynamicProps = getStatusWithProperties(objectId) as string[];
+    if (dynamicProps.length > 0) {
+      const merged = new Set([...staticProps, ...dynamicProps]);
+      return Array.from(merged);
+    }
+  }
+
+  return staticProps;
+}
+
+/** Compute progressive field visibility based on current interaction state. */
+export function getInteractionFieldVisibility(value: Interaction): InteractionFieldVisibility {
+  const hasSubject = !!value.subject;
+  const needsDeterminer = hasSubject && value.subject === SubjectType.OPERATOR;
+  const determinerDone = !needsDeterminer || !!value.subjectDeterminer;
+  const showVerb = hasSubject && determinerDone;
+  const hasVerb = showVerb && !!value.verb;
+  const hasObject = hasVerb && !!value.object;
+  const needsId = hasObject && NEEDS_OBJECT_ID.has(value.object);
+
+  return {
+    showDeterminer: needsDeterminer,
+    showVerb,
+    showProperty: hasVerb && PROPERTY_VERBS.has(value.verb),
+    showNegated: hasVerb && (value.verb === VerbType.IS || value.verb === VerbType.BECOME),
+    showObject: hasVerb,
+    showObjectId: needsId,
+    showObjectIdIsStatus: hasObject && value.object === ObjectType.STATUS,
+    showObjectIdIsInfliction: hasObject && value.object === ObjectType.INFLICTION,
+    showObjectIdIsReaction: hasObject && value.object === ObjectType.REACTION,
+    showCardinality: hasObject && CARDINALITY_VERBS.has(value.verb),
+    showCardinalityValue: !!value.cardinalityConstraint,
+    showTo: hasObject && NEEDS_TO.has(value.verb) && !OBJECT_FORCED_TARGET[value.object],
+    showFrom: hasObject && NEEDS_FROM.has(value.verb) && !OBJECT_FORCED_TARGET[value.object],
+    showQualifierRow: hasObject && (NEEDS_TO.has(value.verb) || NEEDS_FROM.has(value.verb)) && !OBJECT_FORCED_TARGET[value.object],
+    forcedTarget: hasObject ? OBJECT_FORCED_TARGET[value.object] ?? null : null,
+    withProperties: hasObject ? getWithProperties(value.verb, value.object, value.objectId) : [],
+  };
+}
+
+// ── Display labels for builder UI ────────────────────────────────────────────
+
+const titleCase = (s: string) =>
+  s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+export const VERB_LABELS: Record<string, string> = {
+  [VerbType.ALL]: 'All',
+  [VerbType.ANY]: 'Any',
+  [VerbType.PERFORM]: 'Perform',
+  [VerbType.APPLY]: 'Apply',
+  [VerbType.CONSUME]: 'Consume',
+  [VerbType.DEAL]: 'Deal',
+  [VerbType.HIT]: 'Hit',
+  [VerbType.DEFEAT]: 'Defeat',
+  [VerbType.RECOVER]: 'Recover',
+  [VerbType.OVERHEAL]: 'Overheal',
+  [VerbType.RETURN]: 'Return',
+  [VerbType.REFRESH]: 'Refresh',
+  [VerbType.EXTEND]: 'Extend',
+  [VerbType.MERGE]: 'Merge',
+  [VerbType.RESET]: 'Reset',
+  [VerbType.IGNORE]: 'Ignore',
+  [VerbType.ENHANCE]: 'Enhance',
+  [VerbType.DISABLE]: 'Disable',
+  [VerbType.EXPERIENCE]: 'Experience',
+  [VerbType.HAVE]: 'Have',
+  [VerbType.IS]: 'Is',
+  [VerbType.BECOME]: 'Become',
+  [VerbType.RECEIVE]: 'Receive',
+};
+
+export const SUBJECT_LABELS: Record<string, string> = {
+  [SubjectType.OPERATOR]: 'Operator',
+  [SubjectType.ENEMY]: 'Enemy',
+  [SubjectType.EVENT]: 'Event',
+};
+
+export const OBJECT_LABELS: Record<string, string> = {
+  [ObjectType.STATUS]: 'Status',
+  [ObjectType.INFLICTION]: 'Infliction',
+  [ObjectType.REACTION]: 'Reaction',
+  [ObjectType.ARTS_REACTION]: 'Arts Reaction',
+  [ObjectType.STACKS]: 'Stacks',
+  [ObjectType.SKILL_POINT]: 'Skill Point',
+  [ObjectType.ULTIMATE_ENERGY]: 'Ultimate Energy',
+  [ObjectType.STAGGER]: 'Stagger',
+  [ObjectType.COOLDOWN]: 'Cooldown',
+  [ObjectType.HP]: 'HP',
+  [ObjectType.DAMAGE]: 'Damage',
+  [ObjectType.TIME_STOP]: 'Time Stop',
+  [ObjectType.GAME_TIME]: 'Game Time',
+  [ObjectType.REAL_TIME]: 'Real Time',
+  [ObjectType.BASIC_ATTACK]: 'Basic Attack',
+  [ObjectType.BATTLE_SKILL]: 'Battle Skill',
+  [ObjectType.COMBO_SKILL]: 'Combo Skill',
+  [ObjectType.ULTIMATE]: 'Ultimate',
+  [ObjectType.FINAL_STRIKE]: 'Final Strike',
+  [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
+  [ObjectType.ACTIVE]: 'Active',
+};
+
+export const ADJECTIVE_LABELS: Record<string, string> = Object.fromEntries(
+  Object.values(AdjectiveType).filter((v) => v !== AdjectiveType.NONE).map((v) => [v, titleCase(v)])
+);
+
+export const DETERMINER_LABELS: Record<string, string> = {
+  [DeterminerType.THIS]: 'This',
+  [DeterminerType.OTHER]: 'Other',
+  [DeterminerType.ALL]: 'All',
+  [DeterminerType.ANY]: 'Any',
+};
+
+export const TARGET_LABELS: Record<string, string> = {
+  ENEMY: 'Enemy',
+  OPERATOR: 'Operator',
+};
+
+export const CARDINALITY_LABELS: Record<string, string> = {
+  [CardinalityConstraintType.EXACTLY]: 'Exactly',
+  [CardinalityConstraintType.AT_LEAST]: 'At Least',
+  [CardinalityConstraintType.AT_MOST]: 'At Most',
+};
 

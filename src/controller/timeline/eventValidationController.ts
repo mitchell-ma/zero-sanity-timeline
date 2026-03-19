@@ -16,10 +16,11 @@ import {
   validateResources,
   validateEmpowered,
   validateEnhanced,
-  validateRegularBasicDuringUltimate,
+  validateDisabledVariants,
   validateVariantClauses,
   validateFinisherStaggerBreak,
   getAutoFinisherIds,
+  getEffectiveStaggerWindows,
   validateTimeStops,
   validateInflictionStacks,
   type TimeStopRegion,
@@ -64,17 +65,17 @@ export function computeAllValidations(
       : new Map(),
     empowered: validateEmpowered(events),
     enhanced: validateEnhanced(events),
-    regularBasic: validateRegularBasicDuringUltimate(events),
+    regularBasic: validateDisabledVariants(events),
     clause: validateVariantClauses(events, slots),
     finisherStagger: staggerBreaks
-      ? validateFinisherStaggerBreak(events, staggerBreaks)
+      ? validateFinisherStaggerBreak(events, getEffectiveStaggerWindows(events, staggerBreaks))
       : new Map(),
     timeStop: validateTimeStops(events, timeStopRegions),
     infliction: validateInflictionStacks(events),
   };
 
   const autoFinisherIds = staggerBreaks
-    ? getAutoFinisherIds(events, staggerBreaks)
+    ? getAutoFinisherIds(events, getEffectiveStaggerWindows(events, staggerBreaks))
     : new Set<string>();
 
   return { maps, timeStopRegions, autoFinisherIds };

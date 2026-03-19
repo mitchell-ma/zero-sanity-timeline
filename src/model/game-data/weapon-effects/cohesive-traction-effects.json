@@ -2,20 +2,61 @@
   "weaponName": "Cohesive Traction",
   "statusEvents": [
     {
-      "name": "COHESIVE_TRACTION_CONCENTRIC_CIRCLES",
-      "type": "WEAPON_EFFECT",
-      "originId": "COHESIVE_TRACTION",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Concentric Circles",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "COMBO_SKILL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ELECTRIC_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "COHESIVE_TRACTION_CONCENTRIC_CIRCLES",
+        "name": "Concentric Circles",
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "COHESIVE_TRACTION",
+        "description": "Concentric Circles",
+        "note": "Electric DMG on next battle skill"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,31 +67,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "COMBO_SKILL_DAMAGE_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28,
-          "perStack": true
-        },
-        {
-          "stat": "ELECTRIC_DAMAGE_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            30
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Electric DMG on next battle skill"
+      ]
     }
   ]
 }

@@ -17,6 +17,16 @@ import type { ValidationMaps } from './eventValidationController';
 import { aggregateEventWarnings } from './eventValidationController';
 import type { StatusViewOverride } from './statusViewController';
 
+function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEvent[]): boolean {
+  const endFrame = windowEv.startFrame + windowEv.activationDuration;
+  return events.some((ev) =>
+    ev.columnId === SKILL_COLUMNS.COMBO &&
+    ev.ownerId === windowEv.ownerId &&
+    ev.startFrame >= windowEv.startFrame &&
+    ev.startFrame < endFrame,
+  );
+}
+
 export interface EventPresentation {
   variant: 'default' | 'ultimate' | 'sequenced';
   label: string;
@@ -87,9 +97,10 @@ export function computeEventPresentation(
     validationMaps: ValidationMaps;
     interactionMode?: InteractionModeType;
     statusViewOverrides?: Map<string, StatusViewOverride>;
+    events?: readonly TimelineEvent[];
   },
 ): EventPresentation {
-  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides } = options;
+  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
   const isSequenced = ev.segments && ev.segments.length > 0;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
@@ -101,7 +112,9 @@ export function computeEventPresentation(
 
   // Status view override: stack-aware label + visual truncation
   const statusOverride = statusViewOverrides?.get(ev.id);
-  const label = isWindow ? 'COMBO ACTIVATION WINDOW' : (statusOverride?.label ?? resolveEventLabel(ev));
+  const label = isWindow
+    ? (events && isWindowConsumed(ev, events) ? '' : 'COMBO ACTIVATION WINDOW')
+    : (statusOverride?.label ?? resolveEventLabel(ev));
   const color = resolveEventColor(ev, col, slotElementColors);
 
   // Aggregate warnings — infliction-only for micro-column events, full for single-column

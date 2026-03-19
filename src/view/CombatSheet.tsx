@@ -1,30 +1,108 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
-import { Column, TimelineEvent, SelectedFrame, Enemy } from '../consts/viewTypes';
+import { Column, TimelineEvent, SelectedFrame, Enemy, ContextMenuItem } from '../consts/viewTypes';
+import ContextMenu from './ContextMenu';
 import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, secondsToFrames } from '../utils/timeline';
 import {
   buildDamageTableRows,
   buildDamageTableColumns,
   computeDamageStatistics,
-  mergeRowsByFrame,
-  buildCollapsedColumns,
   DamageTableRow,
-  DamageTableColumn,
-  MergedDamageRow,
-  CollapsedColumn,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { EventsQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/timeline/eventsQueryService';
 import { getLastController } from '../controller/timeline/eventQueue';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
+import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
-import { CritMode, ElementType, StatType } from '../consts/enums';
+import { CritMode, CombatSkillsType, ElementType, StatType } from '../consts/enums';
 import { getWeaponEffectDefs, resolveTargetDisplay } from '../model/game-data/weaponGearEffectLoader';
 import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from './InformationPane';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
 import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
+import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
+import { SkillType } from '../consts/viewTypes';
 
 const ROW_HEIGHT = 22;
+
+// ── Sheet column definitions ────────────────────────────────────────────────
+
+const enum SheetCol {
+  TIME = 'time',
+  OPERATOR = 'operator',
+  TYPE = 'type',
+  SOURCE = 'source',
+  DAMAGE = 'damage',
+  BOSS_HP = 'bossHp',
+  BOSS_STAGGER = 'bossStagger',
+  ULT_CHARGE = 'ultCharge',
+  SKILL_POINTS = 'skillPoints',
+}
+
+interface SheetColDef {
+  id: SheetCol;
+  label: string;
+  flex: number;
+  align: 'left' | 'right';
+  headerClass: string;
+  cellClass: string;
+  defaultVisible: boolean;
+}
+
+const SHEET_COL_DEFS: SheetColDef[] = [
+  { id: SheetCol.TIME,          label: 'Time',          flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--time',   cellClass: 'dmg-cell-time',          defaultVisible: true },
+  { id: SheetCol.OPERATOR,      label: 'Operator',      flex: 4, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--op',     cellClass: 'dmg-cell-flat-op',       defaultVisible: true },
+  { id: SheetCol.TYPE,          label: 'Type',          flex: 2, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--type',   cellClass: 'dmg-cell-flat-type',     defaultVisible: true },
+  { id: SheetCol.SOURCE,        label: 'Source',        flex: 3, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--source', cellClass: 'dmg-cell-flat-source',   defaultVisible: true },
+  { id: SheetCol.DAMAGE,        label: 'Damage',        flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--dmg',    cellClass: 'dmg-cell-flat-dmg',      defaultVisible: true },
+  { id: SheetCol.BOSS_HP,       label: 'Boss HP',       flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--hp',     cellClass: 'dmg-cell-hp',            defaultVisible: true },
+  { id: SheetCol.BOSS_STAGGER,  label: 'Boss Stagger',  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+  { id: SheetCol.ULT_CHARGE,    label: 'Ult Charge',    flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+  { id: SheetCol.SKILL_POINTS,  label: 'Skill Points',  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+];
+
+const COL_DEF_MAP = new Map(SHEET_COL_DEFS.map((d) => [d.id, d]));
+
+const DEFAULT_ORDER: SheetCol[] = SHEET_COL_DEFS.map((d) => d.id);
+
+function buildDefaultVisible(): Record<SheetCol, boolean> {
+  const v = {} as Record<SheetCol, boolean>;
+  for (const d of SHEET_COL_DEFS) v[d.id] = d.defaultVisible;
+  return v;
+}
+
+const LS_COL_VISIBLE_KEY = 'zst-sheet-col-visible';
+const LS_COL_ORDER_KEY = 'zst-sheet-col-order';
+
+function loadColVisible(): Record<SheetCol, boolean> {
+  try {
+    const raw = localStorage.getItem(LS_COL_VISIBLE_KEY);
+    if (!raw) return buildDefaultVisible();
+    const saved = JSON.parse(raw) as Record<string, boolean>;
+    const result = buildDefaultVisible();
+    for (const def of SHEET_COL_DEFS) {
+      if (saved[def.id] !== undefined) result[def.id] = saved[def.id];
+    }
+    return result;
+  } catch { return buildDefaultVisible(); }
+}
+
+function loadColOrder(): SheetCol[] {
+  try {
+    const raw = localStorage.getItem(LS_COL_ORDER_KEY);
+    if (!raw) return DEFAULT_ORDER;
+    const saved = JSON.parse(raw) as string[];
+    const validIds = new Set<string>(DEFAULT_ORDER);
+    const filtered = saved.filter((id) => validIds.has(id)) as SheetCol[];
+    // Append any new columns not in saved order
+    for (const id of DEFAULT_ORDER) {
+      if (!filtered.includes(id)) filtered.push(id);
+    }
+    return filtered;
+  } catch { return DEFAULT_ORDER; }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NONE, CritMode.ALWAYS];
 const CRIT_MODE_LABELS: Record<CritMode, string> = {
@@ -43,6 +121,42 @@ function formatDamage(n: number): string {
 function formatPct(n: number): string {
   return `${(n * 100).toFixed(1)}%`;
 }
+
+function getSkillDisplayName(skillName: string): string {
+  return COMBAT_SKILL_LABELS[skillName as CombatSkillsType] ?? skillName;
+}
+
+function getCategoryLabel(columnId: string): string {
+  return SKILL_LABELS[columnId as SkillType] ?? columnId.toUpperCase();
+}
+
+/** Get the resource value after all events at a given frame have been processed.
+ *  Returns the last point at or before the frame (no interpolation). */
+function getResourceValueAfter(points: ReadonlyArray<ResourcePoint>, frame: number): number {
+  if (points.length === 0) return 0;
+  // Binary search for the last point at or before `frame`
+  let lo = 0;
+  let hi = points.length - 1;
+  let result = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >>> 1;
+    if (points[mid].frame <= frame) {
+      result = points[mid].value;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return result;
+}
+
+interface OperatorInfo {
+  name: string;
+  color: string;
+  icon?: string;
+}
+
+// ── Component ───────────────────────────────────────────────────────────────
 
 interface CombatSheetProps {
   slots: Slot[];
@@ -68,13 +182,14 @@ interface CombatSheetProps {
   critMode?: CritMode;
   onCritModeChange?: (mode: CritMode) => void;
   plannerHidden?: boolean;
+  resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }
 
 export default function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
-  critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden,
+  critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -83,12 +198,151 @@ export default function CombatSheet({
   );
   const tableColumns = useMemo(() => buildDamageTableColumns(columns), [columns]);
 
-  // Collapsed mode: one column per operator
-  const [collapsed, setCollapsed] = useState(true);
-  const collapsedColumns = useMemo(
-    () => buildCollapsedColumns(tableColumns, slots),
-    [tableColumns, slots],
+  // Column visibility + order state (persisted to localStorage)
+  const [colVisible, setColVisible] = useState<Record<SheetCol, boolean>>(loadColVisible);
+  const [colOrder, setColOrder] = useState<SheetCol[]>(loadColOrder);
+  const [headerMenu, setHeaderMenu] = useState<{ x: number; y: number } | null>(null);
+
+  // Persist column settings to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(LS_COL_VISIBLE_KEY, JSON.stringify(colVisible)); } catch { /* ignore */ }
+  }, [colVisible]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_COL_ORDER_KEY, JSON.stringify(colOrder)); } catch { /* ignore */ }
+  }, [colOrder]);
+
+  // Mouse-based drag reorder — live measurement on every move
+  const [draggingCol, setDraggingCol] = useState<SheetCol | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [dragColRect, setDragColRect] = useState<{ left: number; width: number } | null>(null);
+  // Use a ref for colOrder inside mousemove so the closure always sees the latest
+  const colOrderRef = useRef(colOrder);
+  colOrderRef.current = colOrder;
+
+  const toggleCol = useCallback((col: SheetCol) => {
+    setColVisible((prev) => ({ ...prev, [col]: !prev[col] }));
+  }, []);
+
+  const handleHeaderContext = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setHeaderMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  /** Read live header child rects and find which column index the cursor is over. */
+  const getTargetIndex = useCallback((cursorX: number): number => {
+    const header = headerRef.current;
+    if (!header) return -1;
+    const children = Array.from(header.children) as HTMLElement[];
+    for (let i = 0; i < children.length; i++) {
+      const rect = children[i].getBoundingClientRect();
+      if (cursorX < rect.left + rect.width / 2) return i;
+    }
+    return children.length - 1;
+  }, []);
+
+  /** Compute the dragged column's rect from flex ratios — no DOM measurement needed. */
+  const computeColRect = useCallback((visOrder: SheetCol[], col: SheetCol) => {
+    const header = headerRef.current;
+    if (!header) return;
+    const parentRect = header.parentElement!.getBoundingClientRect();
+    const totalWidth = header.getBoundingClientRect().width;
+    const padding = parseFloat(getComputedStyle(header).paddingLeft) + parseFloat(getComputedStyle(header).paddingRight);
+    const innerWidth = totalWidth - padding;
+    const paddingLeft = parseFloat(getComputedStyle(header).paddingLeft);
+
+    const defs = visOrder.map((id) => COL_DEF_MAP.get(id)!);
+    const totalFlex = defs.reduce((sum, d) => sum + d.flex, 0);
+
+    let left = paddingLeft;
+    for (const d of defs) {
+      const w = (d.flex / totalFlex) * innerWidth;
+      if (d.id === col) {
+        const headerLeft = header.getBoundingClientRect().left - parentRect.left;
+        setDragColRect({ left: headerLeft + left, width: w });
+        return;
+      }
+      left += w;
+    }
+  }, []);
+
+  const handleMouseDown = useCallback((col: SheetCol, e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+
+    const startX = e.clientX;
+    let hasMoved = false;
+    let rafId = 0;
+
+    const onMouseMove = (me: MouseEvent) => {
+      if (!hasMoved && Math.abs(me.clientX - startX) < 4) return;
+
+      if (!hasMoved) {
+        hasMoved = true;
+        setDraggingCol(col);
+        document.body.style.cursor = 'grabbing';
+        const vis = colOrderRef.current.filter((id) => colVisible[id]);
+        computeColRect(vis, col);
+      }
+
+      // Throttle reorder to animation frames
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const targetIdx = getTargetIndex(me.clientX);
+        if (targetIdx === -1) return;
+
+        const current = colOrderRef.current;
+        const vis = current.filter((id) => colVisible[id]);
+        const srcIdx = vis.indexOf(col);
+        if (srcIdx === -1 || srcIdx === targetIdx) return;
+
+        // Move within visible columns
+        const next = [...vis];
+        next.splice(srcIdx, 1);
+        next.splice(targetIdx, 0, col);
+
+        // Rebuild full order preserving hidden columns
+        const hidden = current.filter((id) => !colVisible[id]);
+        const full = [...next, ...hidden];
+        setColOrder(full);
+
+        // Compute overlay from flex ratios — instant, no DOM wait
+        computeColRect(next, col);
+      });
+    };
+
+    const onMouseUp = () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      setDraggingCol(null);
+      setDragColRect(null);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [colVisible, getTargetIndex, computeColRect]);
+
+  // Visible ordered column defs
+  const visibleCols = useMemo(
+    () => colOrder.filter((id) => colVisible[id]).map((id) => COL_DEF_MAP.get(id)!),
+    [colOrder, colVisible],
   );
+
+  // Build operator info lookup: slotId → { name, color, icon }
+  const opInfoMap = useMemo(() => {
+    const map = new Map<string, OperatorInfo>();
+    for (const slot of slots) {
+      if (!slot.operator) continue;
+      const entry = OPERATORS.find((o) => o.name === slot.operator!.name);
+      map.set(slot.slotId, {
+        name: slot.operator.name,
+        color: slot.operator.color,
+        icon: entry?.icon,
+      });
+    }
+    return map;
+  }, [slots]);
 
   // Build aggregated stats per operator for corrosion Arts Intensity lookup
   const aggregatedStats = useMemo(() => {
@@ -105,7 +359,7 @@ export default function CombatSheet({
     return result;
   }, [slots, loadouts, loadoutProperties]);
 
-  // Pre-compute weapon fragility config: which slots have enemy-targeting DMG Taken debuffs
+  // Pre-compute weapon fragility config
   const weaponFragility = useMemo(() => {
     const result: Record<string, WeaponFragilityEffect[]> = {};
     for (const slot of slots) {
@@ -129,21 +383,17 @@ export default function CombatSheet({
     return result;
   }, [slots]);
 
-  // Pre-compute operator talent fragility (e.g. Xaihi Execute Process)
+  // Pre-compute operator talent fragility
   const talentFragility = useMemo(() => {
     const effects: OperatorTalentFragility[] = [];
     for (const slot of slots) {
       if (!slot.operator) continue;
       const stats = loadoutProperties[slot.slotId];
       if (!stats) continue;
-
-      // Xaihi Execute Process: Cryo DMG Taken +7%/10% while Cryo Infliction active
       if (slot.operator.id === 'xaihi' && stats.operator.talentOneLevel >= 1) {
         const bonus = stats.operator.talentOneLevel >= 2 ? 0.10 : 0.07;
         effects.push({ elements: [ElementType.CRYO], bonus, requiredColumnId: 'cryoInfliction' });
       }
-
-      // Endministrator Realspace Stasis: Physical DMG Taken +10%/20% while Originium Crystals attached
       if (slot.operator.id === 'endministrator' && stats.operator.talentTwoLevel >= 1) {
         const bonus = stats.operator.talentTwoLevel >= 2 ? 0.20 : 0.10;
         effects.push({ elements: [ElementType.PHYSICAL], bonus, requiredColumnId: 'originium-crystal' });
@@ -165,9 +415,8 @@ export default function CombatSheet({
     const model = getModelEnemy(enemy.id);
     return model ? model.getHp() : null;
   }, [enemy.id]);
-  const hasBossHp = bossMaxHp != null;
 
-  // DPS range filter — user can set start/end time to scope the statistics window
+  // DPS range filter
   const [dpsRangeStart, setDpsRangeStart] = useState('');
   const [dpsRangeEnd, setDpsRangeEnd] = useState('');
   const rangeStartFrame = dpsRangeStart ? secondsToFrames(dpsRangeStart) : undefined;
@@ -181,7 +430,7 @@ export default function CombatSheet({
   // Lift damage rows to parent
   useEffect(() => { onDamageRows?.(rows); }, [rows, onDamageRows]);
 
-  // Forward shift+scroll to zoom handler (same as timeline)
+  // Forward shift+scroll to zoom handler
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || !onZoom) return;
@@ -195,31 +444,6 @@ export default function CombatSheet({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [onZoom]);
 
-  const slotGroups = useMemo(() => {
-    const groups: { slot: Slot; columns: DamageTableColumn[] }[] = [];
-    for (const slot of slots) {
-      const slotCols = tableColumns.filter((c) => c.ownerId === slot.slotId);
-      if (slotCols.length > 0) {
-        groups.push({ slot, columns: slotCols });
-      }
-    }
-    return groups;
-  }, [slots, tableColumns]);
-
-  // Per-column flex: each group gets equal total width, columns subdivide within
-  const colFlexMap = useMemo(() => {
-    const map = new Map<string, number>();
-    const groupCount = slotGroups.length;
-    if (groupCount === 0) return map;
-    for (const g of slotGroups) {
-      const perCol = 1 / g.columns.length;
-      for (const col of g.columns) {
-        map.set(col.key, perCol);
-      }
-    }
-    return map;
-  }, [slotGroups]);
-
   useEffect(() => {
     onScrollRef?.(scrollRef.current);
     return () => onScrollRef?.(null);
@@ -231,54 +455,44 @@ export default function CombatSheet({
     }
   }, [onScrollProp]);
 
-  // Merge rows by frame for denser display
-  const mergedRows = useMemo(() => mergeRowsByFrame(rows), [rows]);
-
-  // Find nearest merged row for hover highlighting
-  const hoveredMergedKey = useMemo(() => {
-    if (hoverFrame == null || mergedRows.length === 0) return null;
+  // Find nearest row for hover highlighting
+  const hoveredRowKey = useMemo(() => {
+    if (hoverFrame == null || rows.length === 0) return null;
     const toleranceFrames = Math.ceil(8 / pxPerFrame(zoom));
-    let best: MergedDamageRow | null = null;
+    let best: DamageTableRow | null = null;
     let bestDist = Infinity;
-    for (const mr of mergedRows) {
-      const dist = Math.abs(mr.absoluteFrame - hoverFrame);
+    for (const row of rows) {
+      const dist = Math.abs(row.absoluteFrame - hoverFrame);
       if (dist < bestDist && dist <= toleranceFrames) {
         bestDist = dist;
-        best = mr;
+        best = row;
       }
     }
     return best?.key ?? null;
-  }, [hoverFrame, mergedRows, zoom]);
+  }, [hoverFrame, rows, zoom]);
 
-  // Track row+column hover from mouse interaction on cells (for + cross highlight)
-  const [mouseHover, setMouseHover] = useState<{ rowKey: string; colKey: string } | null>(null);
-  const activeRowKey = mouseHover?.rowKey ?? hoveredMergedKey;
-  const activeColumnKey = mouseHover?.colKey ?? null;
-
-  // Compute clamped top positions for merged rows
-  const mergedRowLayout = useMemo(() => {
-    const layout: { merged: MergedDamageRow; top: number }[] = [];
+  // Compute row layout (top positions) — one row per DamageTableRow
+  const rowLayout = useMemo(() => {
+    const layout: { row: DamageTableRow; top: number }[] = [];
     let prevBottom = -Infinity;
-    for (let i = 0; i < mergedRows.length; i++) {
-      const mr = mergedRows[i];
-      const frameTop = frameToPx(mr.absoluteFrame, zoom) - ROW_HEIGHT / 2;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const frameTop = frameToPx(row.absoluteFrame, zoom) - ROW_HEIGHT / 2;
       const top = compact ? i * ROW_HEIGHT : Math.max(frameTop, prevBottom);
-      layout.push({ merged: mr, top });
+      layout.push({ row, top });
       prevBottom = top + ROW_HEIGHT;
     }
     return layout;
-  }, [mergedRows, zoom, compact]);
-
+  }, [rows, zoom, compact]);
 
   const tlHeight = useMemo(() => {
     const baseHeight = timelineHeight(zoom, contentFramesProp);
-    if (mergedRowLayout.length === 0) return baseHeight;
-    const lastRow = mergedRowLayout[mergedRowLayout.length - 1];
+    if (rowLayout.length === 0) return baseHeight;
+    const lastRow = rowLayout[rowLayout.length - 1];
     return Math.max(baseHeight, lastRow.top + ROW_HEIGHT + 16);
-  }, [zoom, mergedRowLayout, contentFramesProp]);
-  const numCols = tableColumns.length;
+  }, [zoom, rowLayout, contentFramesProp]);
 
-  if (numCols === 0) {
+  if (tableColumns.length === 0) {
     return (
       <div className="dmg-table-empty">
         <span className="dmg-table-empty-text">No skill columns</span>
@@ -288,24 +502,25 @@ export default function CombatSheet({
 
   return (
     <div className="dmg-table-outer">
-      {/* Headers outside scroll — scrollbar starts below them */}
+      {/* Loadout spacer — team stats summary */}
       <div
         className="dmg-loadout-spacer"
         style={{ height: loadoutRowHeight }}
       >
         <div className="dmg-loadout-ops">
-          {slotGroups.map((g) => {
-            const opStats = statistics.operators.find((o) => o.ownerId === g.slot.slotId);
+          {slots.map((slot) => {
+            if (!slot.operator) return null;
+            const opStats = statistics.operators.find((o) => o.ownerId === slot.slotId);
             return (
               <div
-                key={g.slot.slotId}
+                key={slot.slotId}
                 className="dmg-loadout-op"
                 style={{
-                  '--op-color': g.slot.operator?.color ?? '#666',
+                  '--op-color': slot.operator.color,
                   flex: 1,
                 } as React.CSSProperties}
               >
-                <span className="dmg-loadout-op-name">{g.slot.operator?.name ?? '\u2014'}</span>
+                <span className="dmg-loadout-op-name">{slot.operator.name}</span>
                 {opStats && opStats.totalDamage > 0 && (
                   <span className="dmg-loadout-op-stats">
                     {formatDamage(opStats.totalDamage)} ({formatPct(opStats.teamPct)})
@@ -316,7 +531,7 @@ export default function CombatSheet({
           })}
         </div>
 
-        {/* Team total bar — inside loadout spacer to keep header heights aligned */}
+        {/* Team total bar */}
         {statistics.teamTotalDamage > 0 && (
           <div className="dmg-team-total">
             <span className="dmg-team-total-label">Team Total</span>
@@ -331,13 +546,6 @@ export default function CombatSheet({
               title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
             >
               {CRIT_MODE_LABELS[critMode]}
-            </button>
-            <button
-              className={`dmg-collapse-toggle${collapsed ? ' dmg-collapse-toggle--active' : ''}`}
-              onClick={() => setCollapsed((c) => !c)}
-              title={collapsed ? 'Expand to individual skill columns' : 'Collapse to one column per operator'}
-            >
-              {collapsed ? 'EXPAND' : 'COLLAPSE'}
             </button>
             <div className="dmg-team-total-bars">
               {statistics.operators.map((op) => {
@@ -422,8 +630,6 @@ export default function CombatSheet({
               const kit2Entry = loadout?.kit2Name ? GEARS.find((g) => g.name === loadout.kit2Name) : null;
               const consumableEntry = loadout?.consumableName ? CONSUMABLES.find((c) => c.name === loadout.consumableName) : null;
               const tacticalEntry = loadout?.tacticalName ? TACTICALS.find((t) => t.name === loadout.tacticalName) : null;
-
-              // Always show weapon + gear slots; only show CSM/TAC if selected
               const coreItems = [weaponEntry, armorEntry, glovesEntry, kit1Entry, kit2Entry];
               const items = [
                 ...coreItems,
@@ -451,81 +657,76 @@ export default function CombatSheet({
         )}
       </div>
 
-      {/* Column headers */}
-      <div className="dmg-header" style={headerRowHeight ? { height: headerRowHeight } : undefined}>
-        <div className="dmg-header-time">Time</div>
-        {collapsed ? (
-          collapsedColumns.map((cc) => {
-            const opTotal = statistics.operators.find((o) => o.ownerId === cc.ownerId)?.totalDamage ?? 0;
-            return (
-              <div
-                key={cc.key}
-                className={`dmg-header-skill${cc.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
-                style={{ '--op-color': cc.color, flex: 1 } as React.CSSProperties}
-              >
-                <span className="dmg-header-skill-label dmg-header-skill-label--collapsed">{cc.label}</span>
-                {opTotal > 0 && (
-                  <span className="dmg-header-skill-total">{formatDamage(opTotal)}</span>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          tableColumns.map((col) => {
-            const colTotal = statistics.columnTotals.get(col.key) ?? 0;
-            return (
-              <div
-                key={col.key}
-                className={`dmg-header-skill${col.key === activeColumnKey ? ' dmg-header-skill--highlighted' : ''}`}
-                style={{
-                  '--op-color': col.color,
-                  flex: colFlexMap.get(col.key) ?? 1,
-                } as React.CSSProperties}
-              >
-                <span className="dmg-header-skill-label">{col.label}</span>
-                {colTotal > 0 && (
-                  <span className="dmg-header-skill-total">{formatDamage(colTotal)}</span>
-                )}
-              </div>
-            );
-          })
-        )}
-        {hasBossHp && (
-          <div className="dmg-header-hp">
-            <span className="dmg-header-skill-label">Boss HP</span>
-            <span className="dmg-header-skill-total">{formatDamage(bossMaxHp!)}</span>
+      {/* Column headers — data-driven, draggable for reorder */}
+      <div
+        ref={headerRef}
+        className={`dmg-header${draggingCol ? ' dmg-header--reordering' : ''}`}
+        style={headerRowHeight ? { height: headerRowHeight } : undefined}
+        onContextMenu={handleHeaderContext}
+      >
+        {visibleCols.map((def) => (
+          <div
+            key={def.id}
+            className={`${def.headerClass}${def.id === draggingCol ? ' dmg-header--dragging' : ''}`}
+            style={{ flex: def.flex, textAlign: 'left' }}
+            onMouseDown={(e) => handleMouseDown(def.id, e)}
+          >
+            {def.label}
           </div>
-        )}
+        ))}
       </div>
 
-      {/* Scrollable body — same coordinate system as timeline body */}
+      {headerMenu && (
+        <ContextMenu
+          x={headerMenu.x}
+          y={headerMenu.y}
+          items={colOrder.map((id): ContextMenuItem => ({
+            label: COL_DEF_MAP.get(id)!.label,
+            checked: colVisible[id],
+            keepOpen: true,
+            action: () => toggleCol(id),
+          }))}
+          onClose={() => setHeaderMenu(null)}
+        />
+      )}
+
+      {/* Scrollable body */}
+      {/* Full-column drag overlay — covers header + body, not loadout area */}
+      {draggingCol && dragColRect && headerRef.current && (
+        <div
+          className="dmg-drag-col-overlay"
+          style={{
+            left: dragColRect.left,
+            width: dragColRect.width,
+            top: headerRef.current.offsetTop,
+            bottom: 0,
+          }}
+        />
+      )}
+
       <div ref={scrollRef} className="dmg-table-scroll" onScroll={handleScroll}>
         <div
           className="dmg-body"
           style={{ height: tlHeight }}
         >
-          {mergedRowLayout.length === 0 ? (
+          {rowLayout.length === 0 ? (
             <div className="dmg-body-empty">
               Add events to the timeline to see damage calculations
             </div>
           ) : (
-            mergedRowLayout.map(({ merged, top }) => (
-              <MergedRow
-                key={merged.key}
-                merged={merged}
-                tableColumns={tableColumns}
-                collapsedColumns={collapsedColumns}
-                collapsed={collapsed}
-                colFlexMap={colFlexMap}
+            rowLayout.map(({ row, top }) => (
+              <FlatRow
+                key={row.key}
+                row={row}
+                opInfo={opInfoMap.get(row.ownerId)}
                 top={top}
                 selectedFrames={selectedFrames}
-                hovered={merged.key === activeRowKey}
-                highlightedColumnKey={activeColumnKey}
-                onCellHover={setMouseHover}
+                hovered={row.key === hoveredRowKey}
                 onDamageClick={onDamageClick}
-                hasBossHp={hasBossHp}
+                visibleCols={visibleCols}
                 bossMaxHp={bossMaxHp}
                 formatTime={formatTime}
+                resourceGraphs={resourceGraphs}
               />
             ))
           )}
@@ -535,106 +736,155 @@ export default function CombatSheet({
   );
 }
 
-function MergedRow({ merged, tableColumns, collapsedColumns, collapsed, colFlexMap, top, selectedFrames, hovered, highlightedColumnKey, onCellHover, onDamageClick, hasBossHp, bossMaxHp, formatTime }: {
-  merged: MergedDamageRow;
-  tableColumns: DamageTableColumn[];
-  collapsedColumns: CollapsedColumn[];
-  collapsed: boolean;
-  colFlexMap: Map<string, number>;
+// ── Row component ───────────────────────────────────────────────────────────
+
+function FlatRow({ row, opInfo, top, selectedFrames, hovered, onDamageClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
+  row: DamageTableRow;
+  opInfo?: OperatorInfo;
   top: number;
   selectedFrames?: SelectedFrame[];
   hovered: boolean;
-  highlightedColumnKey: string | null;
-  onCellHover: (hover: { rowKey: string; colKey: string } | null) => void;
   onDamageClick?: (row: DamageTableRow) => void;
-  hasBossHp: boolean;
+  visibleCols: SheetColDef[];
   bossMaxHp: number | null;
   formatTime: (frame: number) => string;
+  resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }) {
-  const hasSelection = selectedFrames?.some((sf) => {
-    let found = false;
-    merged.cells.forEach((row) => {
-      if (sf.eventId === row.eventId && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex) found = true;
-    });
-    return found;
-  }) ?? false;
+  const hasSelection = selectedFrames?.some(
+    (sf) => sf.eventId === row.eventId && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex,
+  ) ?? false;
 
-  const cellCount = merged.cells.size;
-  const cls = `dmg-row${hasSelection ? ' dmg-row--selected' : ''}${hovered && !hasSelection ? ' dmg-row--hovered' : ''}${cellCount > 1 ? ' dmg-row--multi' : ''}`;
+  const opColor = opInfo?.color ?? '#666';
+  const cls = `dmg-row${hasSelection ? ' dmg-row--selected' : ''}${hovered && !hasSelection ? ' dmg-row--hovered' : ''}`;
 
   return (
     <div className={cls} style={{ top }}>
-      <div className="dmg-cell dmg-cell-time">
-        {formatTime(merged.absoluteFrame)}
-      </div>
-      {collapsed ? (
-        // Collapsed mode: one cell per operator, sum damage from all their columns
-        collapsedColumns.map((cc) => {
-          let totalDmg = 0;
-          let clickableRow: DamageTableRow | null = null;
-          let color = cc.color;
-          for (const colKey of cc.sourceColumnKeys) {
-            const row = merged.cells.get(colKey);
-            if (row) {
-              totalDmg += row.damage ?? 0;
-              if (row.params && !clickableRow) clickableRow = row;
-              color = row.columnKey ? (tableColumns.find((c) => c.key === row.columnKey)?.color ?? cc.color) : cc.color;
-            }
-          }
-          const hasValue = cc.sourceColumnKeys.some((k) => merged.cells.has(k));
-          const isColHighlighted = cc.key === highlightedColumnKey;
-          return (
-            <div
-              key={cc.key}
-              className={`dmg-cell${hasValue ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${clickableRow ? ' dmg-cell-clickable' : ''}`}
-              style={hasValue ? { color, flex: 1 } : { flex: 1 }}
-              onClick={clickableRow ? () => onDamageClick?.(clickableRow!) : undefined}
-              onMouseEnter={() => onCellHover({ rowKey: merged.key, colKey: cc.key })}
-              onMouseLeave={() => onCellHover(null)}
-            >
-              {hasValue ? formatDamage(totalDmg) : ''}
-            </div>
-          );
-        })
-      ) : (
-        // Expanded mode: one cell per skill column
-        tableColumns.map((col) => {
-          const row = merged.cells.get(col.key);
-          const isColHighlighted = col.key === highlightedColumnKey;
-          const flex = colFlexMap.get(col.key) ?? 1;
-          let displayValue = '';
-          if (row) {
-            if (row.damage != null) {
-              displayValue = formatDamage(row.damage);
-            } else if (row.multiplier != null) {
-              displayValue = `${(row.multiplier * 100).toFixed(1)}%`;
-            } else {
-              displayValue = '\u2014';
-            }
-          }
-          return (
-            <div
-              key={col.key}
-              className={`dmg-cell${row ? ' dmg-cell-value' : ' dmg-cell-blank'}${isColHighlighted ? ' dmg-cell--col-highlighted' : ''}${row?.params ? ' dmg-cell-clickable' : ''}`}
-              style={row ? { color: col.color, flex } : { flex }}
-              title={row?.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
-              onClick={row?.params ? () => onDamageClick?.(row) : undefined}
-              onMouseEnter={() => onCellHover({ rowKey: merged.key, colKey: col.key })}
-              onMouseLeave={() => onCellHover(null)}
-            >
-              {displayValue}
-            </div>
-          );
-        })
-      )}
-      {hasBossHp && merged.hpRemaining != null && (
-        <div
-          className={`dmg-cell dmg-cell-hp${merged.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
-          title={`${Math.round(merged.hpRemaining).toLocaleString()} / ${Math.round(bossMaxHp!).toLocaleString()} HP`}
-        >
-          {formatDamage(merged.hpRemaining)}
-        </div>
-      )}
+      {visibleCols.map((def) => (
+        <SheetCell
+          key={def.id}
+          def={def}
+          row={row}
+          opInfo={opInfo}
+          opColor={opColor}
+          bossMaxHp={bossMaxHp}
+          formatTime={formatTime}
+          onDamageClick={onDamageClick}
+          resourceGraphs={resourceGraphs}
+        />
+      ))}
     </div>
   );
+}
+
+// ── Cell renderer ───────────────────────────────────────────────────────────
+
+/** Resource graph key constants matching useResourceGraphs conventions. */
+const SP_GRAPH_KEY = 'common-skill-points';
+const STAGGER_GRAPH_KEY = 'enemy-stagger';
+
+function SheetCell({ def, row, opInfo, opColor, bossMaxHp, formatTime, onDamageClick, resourceGraphs }: {
+  def: SheetColDef;
+  row: DamageTableRow;
+  opInfo?: OperatorInfo;
+  opColor: string;
+  bossMaxHp: number | null;
+  formatTime: (frame: number) => string;
+  onDamageClick?: (row: DamageTableRow) => void;
+  resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
+}) {
+  const style: React.CSSProperties = { flex: def.flex, textAlign: def.align };
+
+  switch (def.id) {
+    case SheetCol.TIME:
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={style}>
+          {formatTime(row.absoluteFrame)}
+        </div>
+      );
+    case SheetCol.OPERATOR:
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, '--op-color': opColor } as React.CSSProperties}>
+          {opInfo?.icon && (
+            <img className="dmg-flat-op-icon" src={opInfo.icon} alt={opInfo.name} />
+          )}
+        </div>
+      );
+    case SheetCol.TYPE:
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, color: opColor }}>
+          {getCategoryLabel(row.columnId)}
+        </div>
+      );
+    case SheetCol.SOURCE:
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={{ ...style, color: opColor }}>
+          {getSkillDisplayName(row.skillName)}
+        </div>
+      );
+    case SheetCol.DAMAGE: {
+      let displayDamage = '';
+      if (row.damage != null) {
+        displayDamage = formatDamage(row.damage);
+      } else if (row.multiplier != null) {
+        displayDamage = `${(row.multiplier * 100).toFixed(1)}%`;
+      } else {
+        displayDamage = '\u2014';
+      }
+      return (
+        <div
+          className={`dmg-cell ${def.cellClass}${row.params ? ' dmg-cell-clickable' : ''}`}
+          style={{ ...style, color: opColor }}
+          onClick={row.params ? () => onDamageClick?.(row) : undefined}
+          title={row.damage != null ? `${row.label}\n${Math.round(row.damage).toLocaleString()} damage${row.multiplier != null ? ` (${(row.multiplier * 100).toFixed(1)}% ATK)` : ''}` : undefined}
+        >
+          {displayDamage}
+        </div>
+      );
+    }
+    case SheetCol.BOSS_HP:
+      return (
+        <div
+          className={`dmg-cell ${def.cellClass}${row.hpRemaining != null && row.hpRemaining <= 0 ? ' dmg-cell-hp--dead' : ''}`}
+          style={style}
+          title={row.hpRemaining != null && bossMaxHp != null ? `${Math.round(row.hpRemaining).toLocaleString()} / ${Math.round(bossMaxHp).toLocaleString()} HP` : undefined}
+        >
+          {row.hpRemaining != null ? Math.round(row.hpRemaining).toLocaleString() : '\u2014'}
+        </div>
+      );
+    case SheetCol.BOSS_STAGGER: {
+      const staggerGraph = resourceGraphs?.get(STAGGER_GRAPH_KEY);
+      const staggerVal = staggerGraph ? getResourceValueAfter(staggerGraph.points, row.absoluteFrame) : null;
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={style}
+          title={staggerVal != null && staggerGraph ? `${Math.round(staggerVal)} / ${staggerGraph.max}` : undefined}
+        >
+          {staggerVal != null ? Math.round(staggerVal).toLocaleString() : '\u2014'}
+        </div>
+      );
+    }
+    case SheetCol.ULT_CHARGE: {
+      const ultGraph = resourceGraphs?.get(`${row.ownerId}-ultimate`);
+      const ultVal = ultGraph ? getResourceValueAfter(ultGraph.points, row.absoluteFrame) : null;
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={style}
+          title={ultVal != null && ultGraph ? `${Math.round(ultVal)} / ${ultGraph.max}` : undefined}
+        >
+          {ultVal != null ? Math.round(ultVal).toLocaleString() : '\u2014'}
+        </div>
+      );
+    }
+    case SheetCol.SKILL_POINTS: {
+      const spGraph = resourceGraphs?.get(SP_GRAPH_KEY);
+      const spVal = spGraph ? getResourceValueAfter(spGraph.points, row.absoluteFrame) : null;
+      return (
+        <div className={`dmg-cell ${def.cellClass}`} style={style}
+          title={spVal != null && spGraph ? `${Math.round(spVal)} / ${spGraph.max}` : undefined}
+        >
+          {spVal != null ? Math.round(spVal).toLocaleString() : '\u2014'}
+        </div>
+      );
+    }
+    default:
+      return null;
+  }
 }

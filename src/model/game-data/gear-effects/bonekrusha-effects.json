@@ -3,20 +3,48 @@
   "label": "Bonekrusha",
   "statusEvents": [
     {
-      "name": "BONEKRUSHA",
-      "type": "GEAR_EFFECT",
-      "originId": "BONEKRUSHA",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Bonekrusha",
-      "stack": {
-        "max": {
-          "P0": 2
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "BATTLE_SKILL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "value": 0.3
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "BONEKRUSHA",
+        "name": "Bonekrusha",
+        "duration": {
+          "value": [
+            0
+          ],
+          "unit": "SECOND"
         },
-        "instances": 2,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "BONEKRUSHA",
+        "description": "Bonekrusha",
+        "note": "Consumed on next battle skill cast"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,24 +55,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "BATTLE_SKILL_DAMAGE_BONUS",
-          "value": 0.3,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            0
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Consumed on next battle skill cast"
+      ]
     }
   ]
 }

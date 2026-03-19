@@ -12,6 +12,7 @@ Project structure:
 
 Architecture:
 - All business logic belongs in the controller layer. The view layer is presentation-only — it receives pre-computed values from controllers and should not process or derive logic itself.
+- **Models are the single source of truth.** All domain knowledge — valid field combinations, allowable values, visibility rules, verb-object mappings, property definitions — MUST live in the model/consts layer (e.g. `semantics.ts`, `enums.ts`, `viewTypes.ts`). Controllers consume models. Views consume controllers. **NEVER derive, hardcode, or duplicate domain rules in the view or controller layers.** If a view needs to know "which properties does this verb+object support?" or "which verbs are valid for this subject?", that answer must come from a model function or const — not from a Set/Map defined in the component file. This is non-negotiable; violating it causes misalignment between layers.
 
 Event engine (`src/controller/timeline/`):
 - **No batch bulk pre-processing or post-processing.** All event processing happens through DerivedEventController registration and the priority queue. Never add passes that iterate all events before or after the queue to transform them in bulk.

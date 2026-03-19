@@ -3,20 +3,30 @@
   "label": "Catastrophe",
   "statusEvents": [
     {
-      "name": "CATASTROPHE",
-      "type": "GEAR_EFFECT",
-      "originId": "CATASTROPHE",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Catastrophe",
-      "stack": {
-        "max": {
-          "P0": 1
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "CATASTROPHE",
+        "name": "Catastrophe",
+        "duration": {
+          "value": [
+            1
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "CATASTROPHE",
+        "description": "Catastrophe",
+        "note": "+50 SP, once per battle"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,18 +37,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [],
-      "properties": {
-        "duration": {
-          "value": [
-            1
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "+50 SP, once per battle"
+      ]
     }
   ]
 }

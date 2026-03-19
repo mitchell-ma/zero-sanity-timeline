@@ -45,12 +45,11 @@ export { THRESHOLD_MAX } from "../../consts/semantics";
 /** Threshold key: a numeric stack count, or 'MAX' to fire at the potential-resolved max. */
 export type ThresholdKey = number | typeof THRESHOLD_MAX;
 
-/** Full stack configuration for a status. */
-export interface StackConfig {
-  interactionType: StackInteractionType;
+/** Status level configuration. */
+export interface StatusLevelConfig {
+  statusLevelInteractionType: StackInteractionType;
   /** Maximum stack count, keyed by PotentialType. */
-  max: Record<PotentialType, number>;
-  instances: number;
+  limit: Record<PotentialType, number>;
   /** Effects applied when stack count reaches a threshold.
    *  Key is the stack count (or 'MAX' for the potential-resolved max).
    *  Values are Effect[] applied unconditionally at that threshold. */
@@ -60,8 +59,8 @@ export interface StackConfig {
 /**
  * Resolves the max stack count for a given potential level.
  */
-export function resolveMaxStacks(max: Record<PotentialType, number>, potential: PotentialType): number {
-  return max[potential];
+export function resolveMaxStacks(limit: Record<PotentialType, number>, potential: PotentialType): number {
+  return limit[potential];
 }
 
 // ── Abstract StatusEvent ──────────────────────────────────────────────────────
@@ -76,14 +75,13 @@ export function resolveMaxStacks(max: Record<PotentialType, number>, potential: 
 export abstract class StatusEvent extends Event {
   readonly statusType: StatusType;
   readonly element: ElementType;
-  readonly isNamedEvent: boolean;
-  readonly isForceApplied: boolean;
+  readonly isForced: boolean;
 
-  /** Full stack configuration. */
-  readonly stack: StackConfig;
+  /** Status level configuration. */
+  readonly statusLevel: StatusLevelConfig;
 
   /** Trigger clause — predicates that determine when this status is created. */
-  readonly triggerClause: Clause;
+  readonly onTriggerClause: Clause;
 
   /** How this status can be externally modified (consumed, reset, absorbed). */
   readonly interactionTypes: StatusInteractionEntry[];
@@ -101,15 +99,13 @@ export abstract class StatusEvent extends Event {
     sourceOperator: OperatorType;
     element: ElementType;
     duration: Duration;
-    isNamedEvent?: boolean;
-    isForceApplied?: boolean;
-    stack?: {
-      interactionType?: StackInteractionType;
-      max: number | number[] | Record<PotentialType, number>;
-      instances?: number;
+    isForced?: boolean;
+    statusLevel?: {
+      statusLevelInteractionType?: StackInteractionType;
+      limit: number | number[] | Record<PotentialType, number>;
       thresholdEffects?: Partial<Record<ThresholdKey, Effect[]>>;
     };
-    triggerClause?: Clause;
+    onTriggerClause?: Clause;
     interactionTypes?: StatusInteractionEntry[];
     stats?: StatModifier[];
     stacks?: number;
@@ -124,42 +120,38 @@ export abstract class StatusEvent extends Event {
     });
     this.statusType = params.statusType;
     this.element = params.element;
-    this.isNamedEvent = params.isNamedEvent ?? true;
-    this.isForceApplied = params.isForceApplied ?? false;
+    this.isForced = params.isForced ?? false;
 
-    const rawMax = params.stack?.max ?? 1;
-    let maxRecord: Record<PotentialType, number>;
-    if (typeof rawMax === 'number') {
-      // Single number → same for all potentials
-      maxRecord = Object.fromEntries(
-        Object.values(PotentialType).map((p) => [p, rawMax])
+    const rawLimit = params.statusLevel?.limit ?? 1;
+    let limitRecord: Record<PotentialType, number>;
+    if (typeof rawLimit === 'number') {
+      limitRecord = Object.fromEntries(
+        Object.values(PotentialType).map((p) => [p, rawLimit])
       ) as Record<PotentialType, number>;
-    } else if (Array.isArray(rawMax)) {
-      // Array → map positionally to P0-P5
+    } else if (Array.isArray(rawLimit)) {
       const potentials = Object.values(PotentialType);
-      maxRecord = Object.fromEntries(
-        potentials.map((p, i) => [p, rawMax[Math.min(i, rawMax.length - 1)]])
+      limitRecord = Object.fromEntries(
+        potentials.map((p, i) => [p, rawLimit[Math.min(i, rawLimit.length - 1)]])
       ) as Record<PotentialType, number>;
     } else {
-      maxRecord = rawMax;
+      limitRecord = rawLimit;
     }
 
-    this.stack = {
-      interactionType: params.stack?.interactionType ?? StackInteractionType.NONE,
-      max: maxRecord,
-      instances: params.stack?.instances ?? 1,
-      thresholdEffects: params.stack?.thresholdEffects ?? {},
+    this.statusLevel = {
+      statusLevelInteractionType: params.statusLevel?.statusLevelInteractionType ?? StackInteractionType.NONE,
+      limit: limitRecord,
+      thresholdEffects: params.statusLevel?.thresholdEffects ?? {},
     };
 
-    this.triggerClause = params.triggerClause ?? [];
+    this.onTriggerClause = params.onTriggerClause ?? [];
     this.interactionTypes = params.interactionTypes ?? [];
     this.stats = params.stats ?? [];
     this.stacks = params.stacks ?? 0;
 
-    const highestMax = Math.max(...Object.values(this.stack.max));
-    if (this.stacks > highestMax && highestMax > 0) {
+    const highestLimit = Math.max(...Object.values(this.statusLevel.limit));
+    if (this.stacks > highestLimit && highestLimit > 0) {
       throw new RangeError(
-        `stacks (${this.stacks}) cannot exceed stack.max (${highestMax})`,
+        `stacks (${this.stacks}) cannot exceed statusLevel.limit (${highestLimit})`,
       );
     }
   }

@@ -2,20 +2,48 @@
   "weaponName": "Twelve Questions",
   "statusEvents": [
     {
-      "name": "TWELVE_QUESTIONS_SINCERE_INTERROGATION",
-      "type": "WEAPON_EFFECT",
-      "originId": "TWELVE_QUESTIONS",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Sincere Interrogation",
-      "stack": {
-        "max": {
-          "P0": 2
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.075,
+                  "valueMax": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "TWELVE_QUESTIONS_SINCERE_INTERROGATION",
+        "name": "Sincere Interrogation",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 2,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "TWELVE_QUESTIONS",
+        "description": "Sincere Interrogation"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,24 +54,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.075,
-          "valueMax": 0.15,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

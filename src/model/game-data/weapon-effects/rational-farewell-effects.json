@@ -2,18 +2,59 @@
   "weaponName": "Rational Farewell",
   "statusEvents": [
     {
-      "name": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
-      "type": "WEAPON_EFFECT",
-      "originId": "RATIONAL_FAREWELL",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Aid from the Past",
-      "stack": {
-        "max": { "P0": 1 },
-        "instances": 1,
-        "verb": "RESET"
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "BATTLE_SKILL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.16,
+                  "valueMax": 0.448
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
+        "name": "Aid from the Past",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "RATIONAL_FAREWELL",
+        "description": "Aid from the Past",
+        "note": "When combo applies Arts Burst/Combustion"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -33,16 +74,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        { "stat": "BATTLE_SKILL_DAMAGE_BONUS", "valueMin": 0.10, "valueMax": 0.28 },
-        { "stat": "ATTACK_BONUS", "valueMin": 0.16, "valueMax": 0.448 }
-      ],
-      "properties": {
-        "duration": { "value": [15], "unit": "SECOND" }
-      },
-      "note": "When combo applies Arts Burst/Combustion"
+      ]
     }
   ]
 }

@@ -26,6 +26,26 @@ import {
   duplicateCustomSkill,
   createCustomSkill,
 } from '../../controller/custom/customSkillController';
+import {
+  deleteCustomWeaponEffect,
+  duplicateCustomWeaponEffect,
+  createCustomWeaponEffect,
+} from '../../controller/custom/customWeaponEffectController';
+import {
+  deleteCustomGearEffect,
+  duplicateCustomGearEffect,
+  createCustomGearEffect,
+} from '../../controller/custom/customGearEffectController';
+import {
+  deleteCustomOperatorStatus,
+  duplicateCustomOperatorStatus,
+  createCustomOperatorStatus,
+} from '../../controller/custom/customOperatorStatusController';
+import {
+  deleteCustomOperatorTalent,
+  duplicateCustomOperatorTalent,
+  createCustomOperatorTalent,
+} from '../../controller/custom/customOperatorTalentController';
 import ContextMenu from '../ContextMenu';
 import type { ContextMenuItem, ContextMenuState } from '../../consts/viewTypes';
 
@@ -37,6 +57,9 @@ const CATEGORY_LABELS: Record<ContentCategory, string> = {
   [ContentCategory.GEAR_SETS]: 'Gear Sets',
   [ContentCategory.WEAPON_EFFECTS]: 'Weapon Effects',
   [ContentCategory.GEAR_EFFECTS]: 'Gear Effects',
+  [ContentCategory.OPERATOR_STATUSES]: 'Operator Statuses',
+  [ContentCategory.OPERATOR_TALENTS]: 'Operator Talents',
+  [ContentCategory.EVENT_EDITOR]: 'Event Editor',
 };
 
 const CATEGORY_ORDER: ContentCategory[] = [
@@ -47,6 +70,8 @@ const CATEGORY_ORDER: ContentCategory[] = [
   ContentCategory.GEAR_SETS,
   ContentCategory.WEAPON_EFFECTS,
   ContentCategory.GEAR_EFFECTS,
+  ContentCategory.OPERATOR_STATUSES,
+  ContentCategory.OPERATOR_TALENTS,
 ];
 
 /** Categories that support creating new custom items. */
@@ -55,6 +80,10 @@ const CREATABLE_CATEGORIES = new Set([
   ContentCategory.WEAPONS,
   ContentCategory.GEAR_SETS,
   ContentCategory.SKILLS,
+  ContentCategory.WEAPON_EFFECTS,
+  ContentCategory.GEAR_EFFECTS,
+  ContentCategory.OPERATOR_STATUSES,
+  ContentCategory.OPERATOR_TALENTS,
 ]);
 
 /** Categories that support cloning built-in items. */
@@ -72,6 +101,8 @@ interface Props {
   onCloneAsCustom?: (item: ContentSelection) => void;
   /** Request to edit a custom item — handled by App.tsx. */
   onEditCustom?: (item: ContentSelection) => void;
+  /** Open an item in the V2 Workbench. */
+  onOpenInWorkbench?: (item: ContentSelection) => void;
   /** Called after any item is deleted/duplicated so parent can refresh. */
   onContentChanged?: () => void;
   /** External refresh trigger — bump to re-fetch content items. */
@@ -83,6 +114,7 @@ export default function ContentBrowserPanel({
   onSelectItem,
   onCloneAsCustom,
   onEditCustom,
+  onOpenInWorkbench,
   onContentChanged,
   refreshKey: externalRefreshKey,
 }: Props) {
@@ -108,6 +140,9 @@ export default function ContentBrowserPanel({
       [ContentCategory.GEAR_SETS]: [],
       [ContentCategory.WEAPON_EFFECTS]: [],
       [ContentCategory.GEAR_EFFECTS]: [],
+      [ContentCategory.OPERATOR_STATUSES]: [],
+      [ContentCategory.OPERATOR_TALENTS]: [],
+      [ContentCategory.EVENT_EDITOR]: [],
     };
     for (const item of allItems) {
       if (filterLower && !item.name.toLowerCase().includes(filterLower)) continue;
@@ -144,6 +179,13 @@ export default function ContentBrowserPanel({
         });
       }
 
+      if (onOpenInWorkbench && CREATABLE_CATEGORIES.has(item.category)) {
+        menuItems.push({
+          label: 'Open in Workbench',
+          action: () => onOpenInWorkbench({ id: item.id, category: item.category, source: item.source }),
+        });
+      }
+
       menuItems.push({
         label: 'Duplicate',
         action: () => {
@@ -159,6 +201,18 @@ export default function ContentBrowserPanel({
           } else if (item.category === ContentCategory.SKILLS) {
             const clone = duplicateCustomSkill(item.id);
             if (clone) createCustomSkill(clone);
+          } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
+            const clone = duplicateCustomWeaponEffect(item.id);
+            if (clone) createCustomWeaponEffect(clone);
+          } else if (item.category === ContentCategory.GEAR_EFFECTS) {
+            const clone = duplicateCustomGearEffect(item.id);
+            if (clone) createCustomGearEffect(clone);
+          } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
+            const clone = duplicateCustomOperatorStatus(item.id);
+            if (clone) createCustomOperatorStatus(clone);
+          } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
+            const clone = duplicateCustomOperatorTalent(item.id);
+            if (clone) createCustomOperatorTalent(clone);
           }
           refresh();
         },
@@ -178,6 +232,14 @@ export default function ContentBrowserPanel({
             deleteCustomGearSet(item.id);
           } else if (item.category === ContentCategory.SKILLS) {
             deleteCustomSkill(item.id);
+          } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
+            deleteCustomWeaponEffect(item.id);
+          } else if (item.category === ContentCategory.GEAR_EFFECTS) {
+            deleteCustomGearEffect(item.id);
+          } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
+            deleteCustomOperatorStatus(item.id);
+          } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
+            deleteCustomOperatorTalent(item.id);
           }
           refresh();
         },
@@ -202,7 +264,7 @@ export default function ContentBrowserPanel({
     if (menuItems.length > 0) {
       setCtxMenu({ x: e.clientX, y: e.clientY, items: menuItems });
     }
-  }, [onCloneAsCustom, onEditCustom, refresh]);
+  }, [onCloneAsCustom, onEditCustom, onOpenInWorkbench, refresh]);
 
   const handleCategoryContextMenu = useCallback((e: React.MouseEvent, cat: ContentCategory) => {
     if (!CREATABLE_CATEGORIES.has(cat)) return;

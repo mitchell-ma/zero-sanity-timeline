@@ -1,17 +1,11 @@
-import { ElementType, StatusType } from "../../consts/enums";
+import { ElementType, StatusType, ArtsReactionType } from "../../consts/enums";
 import { StatusLevel } from "../../consts/types";
-import { Status } from "./status";
+import { Reaction } from "./reaction";
 
-const ARTS_REACTION_TYPES = new Set([
-  StatusType.COMBUSTION,
-  StatusType.SOLIDIFICATION,
-  StatusType.CORROSION,
-  StatusType.ELECTRIFICATION,
-]);
+const ARTS_REACTION_TYPES = new Set<string>(Object.values(ArtsReactionType));
 
-export abstract class ArtsReaction extends Status {
+export abstract class ArtsReaction extends Reaction {
   readonly element: ElementType;
-  readonly isForceApplied: boolean;
   readonly durationSeconds: number;
 
   constructor(params: {
@@ -19,7 +13,7 @@ export abstract class ArtsReaction extends Status {
     statusLevel: StatusLevel;
     maxStatusLevel: StatusLevel;
     element: ElementType;
-    isForceApplied: boolean;
+    isForced?: boolean;
     durationSeconds: number;
   }) {
     if (!ARTS_REACTION_TYPES.has(params.statusType)) {
@@ -27,10 +21,13 @@ export abstract class ArtsReaction extends Status {
         `${params.statusType} is not an arts reaction status type`,
       );
     }
-    super(params);
+    super({ ...params, isForced: params.isForced });
     this.element = params.element;
-    this.isForceApplied = params.isForceApplied;
     this.durationSeconds = params.durationSeconds;
+  }
+
+  getDurationSeconds(): number {
+    return this.durationSeconds;
   }
 
   abstract getInitialDamage(): number;

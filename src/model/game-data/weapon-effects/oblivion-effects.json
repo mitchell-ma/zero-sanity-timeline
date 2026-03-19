@@ -2,18 +2,48 @@
   "weaponName": "Oblivion",
   "statusEvents": [
     {
-      "name": "OBLIVION_HUMILIATION",
-      "type": "WEAPON_EFFECT",
-      "originId": "OBLIVION",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Humiliation",
-      "stack": {
-        "max": { "P0": 1 },
-        "instances": 1,
-        "verb": "RESET"
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.24,
+                  "valueMax": 0.48
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OBLIVION_HUMILIATION",
+        "name": "Humiliation",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OBLIVION",
+        "description": "Humiliation",
+        "note": "Ultimate: 24-48%, Combo: 12-24%"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -34,15 +64,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        { "stat": "ARTS_DAMAGE_BONUS", "valueMin": 0.24, "valueMax": 0.48 }
-      ],
-      "properties": {
-        "duration": { "value": [15], "unit": "SECOND" }
-      },
-      "note": "Ultimate: 24-48%, Combo: 12-24%"
+      ]
     }
   ]
 }

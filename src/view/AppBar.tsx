@@ -13,6 +13,7 @@ interface AppBarProps {
   onDevlog: () => void;
   onKeys: () => void;
   onCustomContent: () => void;
+  onClauseEditor?: () => void;
   interactionMode?: InteractionModeType;
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
@@ -22,7 +23,7 @@ interface AppBarProps {
 export default function AppBar({
   activeLoadoutName, onRenameLoadout,
   onClearLoadout, onClearAll,
-  onExport, onImport, onShare, onDevlog, onKeys, onCustomContent,
+  onExport, onImport, onShare, onDevlog, onKeys, onCustomContent, onClauseEditor,
   interactionMode, onToggleInteractionMode,
   lightMode, onToggleTheme,
 }: AppBarProps) {
@@ -122,6 +123,11 @@ export default function AppBar({
       <button className="btn-devlog" onClick={onCustomContent}>
         CUSTOM
       </button>
+      {IS_DEV && onClauseEditor && (
+        <button className="btn-devlog" onClick={onClauseEditor}>
+          CLAUSE
+        </button>
+      )}
       <button
         className={`btn-devlog${shareStatus === 'copied' ? ' btn-share--copied' : ''}`}
         onClick={handleShare}

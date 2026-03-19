@@ -113,7 +113,7 @@ export class SkillSegmentBuilder {
         if (options?.gaugeGainByEnemies) frames[0].gaugeGainByEnemies = options.gaugeGainByEnemies;
       }
 
-      const seqName = 'segmentName' in seq ? (seq as any).segmentName as string | undefined : undefined;
+      const seqName = 'segmentName' in seq ? (seq as SkillEventSequence & { segmentName?: string }).segmentName : undefined;
       const label = seqName
         ?? (customLabels
           ? customLabels[i]
@@ -131,14 +131,15 @@ export class SkillSegmentBuilder {
         label,
         frames: inBound.length > 0 ? inBound : undefined,
       };
-      if ('segmentType' in seq && (seq as any).segmentType) {
-        segData.segmentType = (seq as any).segmentType as SegmentType;
+      const seqRecord = seq as SkillEventSequence & { segmentType?: string; timeDependency?: string; clause?: EventSegmentData['clause'] };
+      if (seqRecord.segmentType) {
+        segData.segmentType = seqRecord.segmentType as SegmentType;
       }
-      if ('timeDependency' in seq && (seq as any).timeDependency) {
-        segData.timeDependency = (seq as any).timeDependency as TimeDependency;
+      if (seqRecord.timeDependency) {
+        segData.timeDependency = seqRecord.timeDependency as TimeDependency;
       }
-      if ('clause' in seq && (seq as any).clause) {
-        segData.clause = (seq as any).clause;
+      if (seqRecord.clause) {
+        segData.clause = seqRecord.clause;
       }
       segments.push(segData);
       totalDurationFrames += durationFrames;

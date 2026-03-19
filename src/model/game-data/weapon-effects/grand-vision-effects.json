@@ -2,20 +2,59 @@
   "weaponName": "Grand Vision",
   "statusEvents": [
     {
-      "name": "GRAND_VISION_LONG_TIME_WISH",
-      "type": "WEAPON_EFFECT",
-      "originId": "GRAND_VISION",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Long Time Wish",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_INTENSITY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 30,
+                  "valueMax": 60
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.36,
+                  "valueMax": 0.72
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "GRAND_VISION_LONG_TIME_WISH",
+        "name": "Long Time Wish",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "GRAND_VISION",
+        "description": "Long Time Wish",
+        "note": "Phys DMG bonus on next battle/ult skill"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -25,29 +64,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ARTS_INTENSITY",
-          "valueMin": 30,
-          "valueMax": 60
-        },
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "valueMin": 0.36,
-          "valueMax": 0.72
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Phys DMG bonus on next battle/ult skill"
+      ]
     }
   ]
 }

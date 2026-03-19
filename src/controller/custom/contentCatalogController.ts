@@ -12,6 +12,10 @@ import { getCustomWeapons } from './customWeaponController';
 import { getCustomGearSets } from './customGearController';
 import { getCustomOperators } from './customOperatorController';
 import { getCustomSkills } from './customSkillController';
+import { getCustomWeaponEffects } from './customWeaponEffectController';
+import { getCustomGearEffects } from './customGearEffectController';
+import { getCustomOperatorStatuses } from './customOperatorStatusController';
+import { getCustomOperatorTalents } from './customOperatorTalentController';
 import type { SkillType } from '../../consts/viewTypes';
 
 function starStr(rarity: number): string {
@@ -157,14 +161,14 @@ export function getAllContentItems(): ContentBrowserItem[] {
       name: weaponName,
       category: ContentCategory.WEAPON_EFFECTS,
       source: 'builtin',
-      meta: firstDef ? (firstDef.label ?? firstDef.name) : 'No effects',
+      meta: firstDef ? (firstDef.label ?? firstDef.name ?? '') : 'No effects',
     });
   }
 
   // ── Gear Set Effects ────────────────────────────────────────────────────
   for (const gearSetType of getAllGearEffectTypes()) {
     const defs = getGearEffectDefs(gearSetType);
-    const passiveEntry = getGearSetEffects(gearSetType as any);
+    const passiveEntry = getGearSetEffects(gearSetType as import('../../consts/enums').GearSetType);
     const passiveCount = passiveEntry ? Object.keys(passiveEntry.passiveStats).length : 0;
     items.push({
       id: `gse:${gearSetType}`,
@@ -172,6 +176,50 @@ export function getAllContentItems(): ContentBrowserItem[] {
       category: ContentCategory.GEAR_EFFECTS,
       source: 'builtin',
       meta: `${passiveCount} passive${defs.length ? ` \u00B7 ${defs.length} triggered` : ''}`,
+    });
+  }
+
+  // ── Custom Weapon Effects ─────────────────────────────────────────────
+  for (const we of getCustomWeaponEffects()) {
+    items.push({
+      id: we.id,
+      name: we.name,
+      category: ContentCategory.WEAPON_EFFECTS,
+      source: 'custom',
+      meta: `${we.statusEvents.length} status event${we.statusEvents.length !== 1 ? 's' : ''}`,
+    });
+  }
+
+  // ── Custom Gear Effects ───────────────────────────────────────────────
+  for (const ge of getCustomGearEffects()) {
+    items.push({
+      id: ge.id,
+      name: ge.name,
+      category: ContentCategory.GEAR_EFFECTS,
+      source: 'custom',
+      meta: `${ge.statusEvents.length} status event${ge.statusEvents.length !== 1 ? 's' : ''}`,
+    });
+  }
+
+  // ── Custom Operator Statuses ──────────────────────────────────────────
+  for (const os of getCustomOperatorStatuses()) {
+    items.push({
+      id: os.id,
+      name: os.name,
+      category: ContentCategory.OPERATOR_STATUSES,
+      source: 'custom',
+      meta: os.operatorId ? `Operator: ${os.operatorId}` : 'Standalone',
+    });
+  }
+
+  // ── Custom Operator Talents ───────────────────────────────────────────
+  for (const ot of getCustomOperatorTalents()) {
+    items.push({
+      id: ot.id,
+      name: ot.name,
+      category: ContentCategory.OPERATOR_TALENTS,
+      source: 'custom',
+      meta: `Slot ${ot.slot} \u00B7 Lv${ot.maxLevel}`,
     });
   }
 

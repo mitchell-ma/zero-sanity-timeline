@@ -2,20 +2,64 @@
   "weaponName": "OBJ Edge of Lightness",
   "statusEvents": [
     {
-      "name": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
-      "type": "WEAPON_EFFECT",
-      "originId": "OBJ_EDGE_OF_LIGHTNESS",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Unbridled Edge",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "HEAT_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.03,
+                  "valueMax": 0.084
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ELECTRIC_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.03,
+                  "valueMax": 0.084
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
+        "name": "Unbridled Edge",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OBJ_EDGE_OF_LIGHTNESS",
+        "description": "Unbridled Edge"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,30 +70,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "HEAT_DAMAGE_BONUS",
-          "valueMin": 0.03,
-          "valueMax": 0.084,
-          "perStack": true
-        },
-        {
-          "stat": "ELECTRIC_DAMAGE_BONUS",
-          "valueMin": 0.03,
-          "valueMax": 0.084,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

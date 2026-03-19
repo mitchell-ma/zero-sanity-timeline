@@ -52,16 +52,19 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
         return (
           <button
             key={i}
-            className={`context-menu-item${item.danger ? ' danger' : ''}${item.disabled ? ' disabled' : ''}`}
+            className={`context-menu-item${item.danger ? ' danger' : ''}${item.disabled ? ' disabled' : ''}${item.checked != null ? ' context-menu-item--toggle' : ''}`}
             disabled={item.disabled}
             onClick={() => {
               if (item.disabled) return;
               item.action?.();
-              onClose();
+              if (!item.keepOpen) onClose();
             }}
           >
+            {item.checked != null && (
+              <span className="context-menu-check">{item.checked ? '\u2713' : ''}</span>
+            )}
             {item.label}
-            {item.disabled && item.disabledReason && (
+            {item.disabledReason && (
               <span className="context-menu-reason">{item.disabledReason}</span>
             )}
           </button>

@@ -3,20 +3,46 @@
   "label": "Pulser Labs",
   "statusEvents": [
     {
-      "name": "PULSER_LABS_ELECTRIC",
-      "type": "GEAR_EFFECT",
-      "originId": "PULSER_LABS",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Pulser Labs (Electric)",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ELECTRIC_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.5
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "PULSER_LABS_ELECTRIC",
+        "name": "Pulser Labs (Electric)",
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "PULSER_LABS",
+        "description": "Pulser Labs (Electric)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,38 +52,49 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
+      ]
+    },
+    {
+      "clause": [
         {
-          "stat": "ELECTRIC_DAMAGE_BONUS",
-          "value": 0.5
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRYO_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.5
+                }
+              }
+            }
+          ]
         }
       ],
       "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "PULSER_LABS_CRYO",
+        "name": "Pulser Labs (Cryo)",
         "duration": {
           "value": [
             10
           ],
           "unit": "SECOND"
-        }
-      }
-    },
-    {
-      "name": "PULSER_LABS_CRYO",
-      "type": "GEAR_EFFECT",
-      "originId": "PULSER_LABS",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Pulser Labs (Cryo)",
-      "stack": {
-        "max": {
-          "P0": 1
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "PULSER_LABS",
+        "description": "Pulser Labs (Cryo)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -67,22 +104,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRYO_DAMAGE_BONUS",
-          "value": 0.5
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            10
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

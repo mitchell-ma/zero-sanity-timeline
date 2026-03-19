@@ -10,11 +10,12 @@ import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
 import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
-import type { Predicate, Interaction } from '../../consts/semantics';
+import type { Predicate } from '../../consts/semantics';
 import { OperatorClassType } from '../../model/enums/operators';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
 import type { CustomGearSet, CustomGearPiece, CustomGearSetEffect } from '../../model/custom/customGearTypes';
 import type { CustomOperator } from '../../model/custom/customOperatorTypes';
+import { getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 
 /** Convert a built-in weapon to CustomWeapon format. */
 export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
@@ -40,22 +41,28 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
       while (dslDefIdx < dslDefs.length) {
         const def = dslDefs[dslDefIdx];
         const target = resolveTargetDisplay(def);
+        const clauseEffects = ((def.clause ?? []) as any[]).flatMap((c: any) => (c.effects ?? []) as any[])
+          .filter((e: any) => e.verb === 'APPLY' && e.with?.value);
         skills.push({
           type: 'NAMED',
-          label: def.label ?? def.name,
+          label: def.name ?? def.description ?? '',
           namedEffect: {
-            name: def.label ?? def.name,
+            name: def.name ?? def.description ?? '',
             triggers: resolveTriggerInteractions(def),
             target: encodeLegacyTarget(legacyTargetToObjectType(target as 'wielder' | 'team' | 'enemy')),
             durationSeconds: resolveDurationSeconds(def),
-            maxStacks: def.stack?.max?.P0 ?? 1,
+            maxStacks: def.statusLevel?.limit?.P0 ?? 1,
             cooldownSeconds: def.cooldownSeconds ?? 0,
-            buffs: (def.buffs ?? []).map((b: any) => ({
-              stat: b.stat,
-              valueMin: b.valueMin ?? b.value ?? 0,
-              valueMax: b.valueMax ?? b.value ?? 0,
-              perStack: b.perStack ?? false,
-            })),
+            buffs: clauseEffects.map((e: any) => {
+              const wv = e.with.value;
+              const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+              return {
+                stat: e.object as string,
+                valueMin: wv.valueMin ?? wv.value ?? 0,
+                valueMax: wv.valueMax ?? wv.value ?? 0,
+                perStack,
+              };
+            }),
             note: def.note,
           },
         });
@@ -100,20 +107,28 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   if (passiveEntry || dslDefs.length > 0) {
     setEffect = {
       passiveStats: (passiveEntry?.passiveStats ?? {}) as Record<string, number>,
-      effects: dslDefs.map((def: any) => ({
-        label: def.label ?? def.name,
-        triggers: resolveTriggerInteractions(def),
-        target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
-        durationSeconds: resolveDurationSeconds(def),
-        maxStacks: def.stack?.max?.P0 ?? 1,
-        cooldownSeconds: def.cooldownSeconds ?? 0,
-        buffs: (def.buffs ?? []).map((b: any) => ({
-          stat: b.stat,
-          value: b.value ?? b.valueMin ?? 0,
-          perStack: b.perStack ?? false,
-        })),
-        note: def.note,
-      })),
+      effects: dslDefs.map((def) => {
+        const clauseEffects = ((def.clause ?? []) as any[]).flatMap((c: any) => (c.effects ?? []) as any[])
+          .filter((e: any) => e.verb === 'APPLY' && e.with?.value);
+        return {
+          label: def.name ?? def.description ?? '',
+          triggers: resolveTriggerInteractions(def),
+          target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
+          durationSeconds: resolveDurationSeconds(def),
+          maxStacks: def.statusLevel?.limit?.P0 ?? 1,
+          cooldownSeconds: def.cooldownSeconds ?? 0,
+          buffs: clauseEffects.map((e: any) => {
+            const wv = e.with.value;
+            const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+            return {
+              stat: e.object as string,
+              value: wv.value ?? wv.valueMin ?? 0,
+              perStack,
+            };
+          }),
+          note: def.note,
+        };
+      }),
     };
   }
 
@@ -131,28 +146,14 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
   const op = ALL_OPERATORS.find((o) => o.id === operatorId);
   if (!op) return null;
 
-  const comboRequires = op.triggerCapability?.comboRequires ?? [];
-  const comboForbids = op.triggerCapability?.comboForbidsActiveColumns ?? [];
-  const comboRequiresActive = op.triggerCapability?.comboRequiresActiveColumns ?? [];
+  const info = getComboTriggerInfo(operatorId);
 
   // Provide placeholder BASE_ATTACK so validation passes
   const placeholderStats: Partial<Record<string, number>> = { BASE_ATTACK: 100 };
 
-  // Build triggerClause: each trigger condition → single-condition predicate
-  const triggerClause: Predicate[] = comboRequires.length > 0
-    ? comboRequires.map(tc => {
-        const conditions: Interaction[] = [tc];
-        // Fold column constraints into each predicate
-        for (const col of comboRequiresActive) {
-          const statusId = col.replace('enemy-', '').toUpperCase();
-          conditions.push({ subject: SubjectType.ENEMY, verb: VerbType.HAVE, object: ObjectType.STATUS, objectId: statusId });
-        }
-        for (const col of comboForbids) {
-          const statusId = col.replace('enemy-', '').toUpperCase();
-          conditions.push({ subject: SubjectType.ENEMY, verb: VerbType.HAVE, object: ObjectType.STATUS, objectId: statusId, negated: true });
-        }
-        return { conditions, effects: [] };
-      })
+  // Copy onTriggerClause directly from JSON (already in the right shape)
+  const onTriggerClause: Predicate[] = info
+    ? (info.onTriggerClause as Predicate[])
     : [{ conditions: [{ subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL }], effects: [] }];
 
   return {
@@ -160,15 +161,15 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
     name: `${op.name} (Clone)`,
     operatorClassType: op.role.toUpperCase().replace(/\s+/g, '_') as OperatorClassType,
     elementType: op.element as ElementType,
-    weaponType: op.weaponTypes[0] as WeaponType,
+    weaponTypes: op.weaponTypes as WeaponType[],
     operatorRarity: (op.rarity as 4 | 5 | 6) || 6,
     mainAttributeType: '',
     baseStats: { lv1: { ...placeholderStats }, lv90: { ...placeholderStats } },
     potentials: [],
     combo: {
-      triggerClause,
-      description: op.triggerCapability?.comboDescription ?? '',
-      windowFrames: op.triggerCapability?.comboWindowFrames ?? 720,
+      onTriggerClause,
+      description: info?.description ?? '',
+      windowFrames: info?.windowFrames ?? 720,
     },
   };
 }

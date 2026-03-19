@@ -2,11 +2,17 @@
 // lookup functions for skill level data and base attack tables.
 
 // Auto-discover all weapon JSON files
-const weaponContext = (require as any).context('./weapons', false, /\.json$/);
-const ALL_WEAPONS: any[] = weaponContext.keys().map((key: string) => weaponContext(key));
+interface WeaponJson {
+  name: string;
+  allLevels: { level: number; baseAttack: number }[];
+  skills: { weaponSkillType: string; allLevels: Record<string, unknown>[] }[];
+}
+
+const weaponContext = require.context('./weapons', false, /\.json$/);
+const ALL_WEAPONS: WeaponJson[] = weaponContext.keys().map((key: string) => weaponContext(key));
 
 // Skill index: weaponSkillType → allLevels array
-const skillIndex = new Map<string, any[]>();
+const skillIndex = new Map<string, Record<string, unknown>[]>();
 for (const w of ALL_WEAPONS) {
   for (const s of w.skills) {
     if (!skillIndex.has(s.weaponSkillType)) {
@@ -29,21 +35,21 @@ for (const w of ALL_WEAPONS) {
 export function getSkillValues(skillType: string, statKey: string): number[] {
   const levels = skillIndex.get(skillType);
   if (!levels) return [];
-  return levels.map((e: any) => e[statKey] as number);
+  return levels.map((e) => e[statKey] as number);
 }
 
 /** Get conditional stat values from a skill's conditionalStats entries. */
 export function getConditionalValues(skillType: string, statKey: string, condIndex = 0): number[] {
   const levels = skillIndex.get(skillType);
   if (!levels) return [];
-  return levels.map((e: any) => e.conditionalStats?.[condIndex]?.[statKey] as number);
+  return levels.map((e) => (e.conditionalStats as Record<string, unknown>[] | undefined)?.[condIndex]?.[statKey] as number);
 }
 
 /** Get a scalar value from the first level's conditionalStats (e.g. duration, maxStacks). */
-export function getConditionalScalar(skillType: string, key: string, condIndex = 0): any {
+export function getConditionalScalar(skillType: string, key: string, condIndex = 0): unknown {
   const levels = skillIndex.get(skillType);
   if (!levels || levels.length === 0) return undefined;
-  return levels[0].conditionalStats?.[condIndex]?.[key];
+  return (levels[0].conditionalStats as Record<string, unknown>[] | undefined)?.[condIndex]?.[key];
 }
 
 /** Get the full level→baseAttack lookup map for a weapon by display name. */

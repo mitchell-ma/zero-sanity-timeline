@@ -349,13 +349,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
           </>
         )}
 
-        {/* Skill-level effects */}
-        {detail.effects && detail.effects.length > 0 && (
-          <>
-            <div style={DETAIL_LABEL}>Skill Effects</div>
-            {detail.effects.map((e, i) => <EffectLine key={i} effect={e} />)}
-          </>
-        )}
+        {/* Skill-level effects (from clause) */}
 
         {/* Segments */}
         {detail.segments.length > 0 && (
@@ -388,14 +382,6 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                   </div>
                 )}
 
-                {/* Segment effects */}
-                {seg.effects && seg.effects.length > 0 && (
-                  <div style={{ marginLeft: 6, marginTop: 2 }}>
-                    <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>EFFECTS</div>
-                    {seg.effects.map((e, i) => <EffectLine key={i} effect={e} />)}
-                  </div>
-                )}
-
                 {/* Frames */}
                 {seg.frames.length > 0 && (
                   <div style={{ marginLeft: 6, marginTop: 2 }}>
@@ -407,13 +393,8 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                             <span> @ {(frame.properties.offset as any).value}{(frame.properties.offset as any).unit ? `${(frame.properties.offset as any).unit.toLowerCase().replace('second', 's')}` : ''}</span>
                           )}
                         </div>
-                        {frame.effects && frame.effects.length > 0 && (
-                          frame.effects.map((e, i) => <EffectLine key={i} effect={e} />)
-                        )}
-                        {frame.multipliers && frame.multipliers.length > 0 && (
-                          <div style={{ ...DETAIL_MONO, paddingLeft: 8, color: 'var(--text-muted)', fontSize: 10 }}>
-                            multipliers: [{frame.multipliers.length} levels]
-                          </div>
+                        {frame.clause && frame.clause.length > 0 && (
+                          frame.clause.flatMap((p: any) => p.effects ?? []).map((e: any, i: number) => <EffectLine key={i} effect={e} />)
                         )}
                       </div>
                     ))}
@@ -430,13 +411,12 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
             <div style={DETAIL_LABEL}>Status Events</div>
             {detail.statusEvents.map((se, i) => (
               <div key={i} style={{ ...DETAIL_VALUE, marginBottom: 4, paddingLeft: 6, borderLeft: '2px solid rgba(255,100,50,0.15)' }}>
-                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{se.name}</div>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{se.id}</div>
                 {se.target && <div>target: {se.target}</div>}
                 {se.element && <div>element: <span style={{ color: ELEMENT_COLORS[se.element?.toUpperCase() as ElementType] ?? 'inherit' }}>{se.element}</span></div>}
-                {se.stack && (
+                {se.statusLevel && (
                   <div>
-                    stacks: max={typeof se.stack.max === 'object' ? JSON.stringify(se.stack.max) : se.stack.max}
-                    {se.stack.instances != null && `, instances=${se.stack.instances}`}
+                    stacks: limit={typeof se.statusLevel.limit === 'object' ? JSON.stringify(se.statusLevel.limit) : se.statusLevel.limit}
                   </div>
                 )}
                 {se.clause && se.clause.length > 0 && (

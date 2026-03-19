@@ -2,20 +2,48 @@
   "weaponName": "Thermite Cutter",
   "statusEvents": [
     {
-      "name": "THERMITE_CUTTER_THERMAL_RELEASE",
-      "type": "WEAPON_EFFECT",
-      "originId": "THERMITE_CUTTER",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Thermal Release",
-      "stack": {
-        "max": {
-          "P0": 2
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "THERMITE_CUTTER_THERMAL_RELEASE",
+        "name": "Thermal Release",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 2,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "THERMITE_CUTTER",
+        "description": "Thermal Release"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,40 +54,53 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     },
     {
-      "name": "THERMITE_CUTTER_THERMAL_RELEASE_TEAM",
-      "type": "WEAPON_EFFECT",
-      "originId": "THERMITE_CUTTER",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Thermal Release (Team)",
-      "stack": {
-        "max": {
-          "P0": 2
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.05,
+                  "valueMax": 0.14
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "THERMITE_CUTTER_THERMAL_RELEASE_TEAM",
+        "name": "Thermal Release (Team)",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 2,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "THERMITE_CUTTER",
+        "description": "Thermal Release (Team)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -70,24 +111,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.05,
-          "valueMax": 0.14,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

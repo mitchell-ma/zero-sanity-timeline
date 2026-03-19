@@ -3,20 +3,49 @@
   "label": "Frontiers",
   "statusEvents": [
     {
-      "name": "FRONTIERS",
-      "type": "GEAR_EFFECT",
-      "originId": "FRONTIERS",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Frontiers",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "SKILL_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.16
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "FRONTIERS",
+        "name": "Frontiers",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "FRONTIERS",
+        "description": "Frontiers",
+        "note": "Team DMG +16%"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,23 +56,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "SKILL_DAMAGE_BONUS",
-          "value": 0.16
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Team DMG +16%"
+      ]
     }
   ]
 }

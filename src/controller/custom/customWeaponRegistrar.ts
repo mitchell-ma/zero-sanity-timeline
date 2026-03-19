@@ -36,9 +36,9 @@ export function registerCustomWeapon(weapon: CustomWeapon): void {
     type: weapon.weaponType,
     rarity: weapon.weaponRarity as 3 | 4 | 5 | 6,
     baseAtk: weapon.baseAtk,
-    skill1: skillKeys[0] as any,
-    skill2: skillKeys[1] as any,
-    ...(skillKeys[2] ? { skill3: skillKeys[2] as any } : {}),
+    skill1: skillKeys[0] as WeaponConfig['skill1'],
+    skill2: skillKeys[1] as WeaponConfig['skill2'],
+    ...(skillKeys[2] ? { skill3: skillKeys[2] as NonNullable<WeaponConfig['skill3']> } : {}),
   };
   WEAPON_DATA[weapon.name] = config;
 
@@ -69,8 +69,8 @@ export function deregisterCustomWeapon(weapon: CustomWeapon): void {
 }
 
 /** Convert a custom weapon's named effects to DSL StatusEventDef format. */
-function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): any[] {
-  const defs: any[] = [];
+function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): Record<string, unknown>[] {
+  const defs: Record<string, unknown>[] = [];
   const originId = weapon.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
 
   for (const skill of weapon.skills) {
@@ -96,7 +96,7 @@ function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): any[] {
         instances: ne.maxStacks,
         verb: ne.maxStacks > 1 ? 'NONE' : 'RESET',
       },
-      triggerClause: ne.triggers.map((t: any) => ({ conditions: [t] })),
+      onTriggerClause: ne.triggers.map((t) => ({ conditions: [t] })),
       clause: [],
       buffs: ne.buffs,
       properties: { duration: { value: [ne.durationSeconds], unit: 'SECOND' } },

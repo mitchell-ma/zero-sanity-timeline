@@ -26,7 +26,7 @@ export default function SentenceSlot({ active, children, className, row }: Sente
   // 'mounted' keeps the DOM node alive during exit animation
   const [mounted, setMounted] = useState(active);
   const [phase, setPhase] = useState<'entering' | 'idle' | 'exiting'>(active ? 'entering' : 'exiting');
-  const ref = useRef<HTMLSpanElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const prevActive = useRef(active);
 
   useEffect(() => {

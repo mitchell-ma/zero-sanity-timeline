@@ -3,7 +3,7 @@
  * No React dependencies — these are pure functions that compute next state.
  */
 
-import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline } from '../consts/viewTypes';
+import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
@@ -322,12 +322,13 @@ export function attachDefaultSegments(
       const props: Partial<TimelineEvent> = {};
       if (ev.skillPointCost === undefined && defaults.skillPointCost != null) props.skillPointCost = defaults.skillPointCost;
       if (ev.animationDuration === undefined && defaults.animationDuration != null) props.animationDuration = defaults.animationDuration;
-      if (ev.gaugeGain === undefined && (defaults as any).gaugeGain != null) props.gaugeGain = (defaults as any).gaugeGain;
-      if (ev.teamGaugeGain === undefined && (defaults as any).teamGaugeGain != null) props.teamGaugeGain = (defaults as any).teamGaugeGain;
-      if (ev.gaugeGainByEnemies === undefined && (defaults as any).gaugeGainByEnemies != null) props.gaugeGainByEnemies = (defaults as any).gaugeGainByEnemies;
-      if (ev.timeInteraction === undefined && (defaults as any).timeInteraction != null) props.timeInteraction = (defaults as any).timeInteraction;
-      if (ev.isPerfectDodge === undefined && (defaults as any).isPerfectDodge != null) props.isPerfectDodge = (defaults as any).isPerfectDodge;
-      if (ev.timeStop === undefined && (defaults as any).timeStop != null) props.timeStop = (defaults as any).timeStop;
+      const ext = defaults as Record<string, unknown>;
+      if (ev.gaugeGain === undefined && ext.gaugeGain != null) props.gaugeGain = ext.gaugeGain as number;
+      if (ev.teamGaugeGain === undefined && ext.teamGaugeGain != null) props.teamGaugeGain = ext.teamGaugeGain as number;
+      if (ev.gaugeGainByEnemies === undefined && ext.gaugeGainByEnemies != null) props.gaugeGainByEnemies = ext.gaugeGainByEnemies as Record<number, number>;
+      if (ev.timeInteraction === undefined && ext.timeInteraction != null) props.timeInteraction = ext.timeInteraction as string;
+      if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
+      if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;
       if (ev.nonOverlappableRange === undefined && defaults.segments) {
         const span = defaults.segments.reduce((sum, s) => sum + s.durationFrames, 0);
         props.nonOverlappableRange = span;
@@ -364,9 +365,11 @@ export function attachDefaultSegments(
         }
       }
       const { _pendingSegmentOverrides, ...rest } = patched;
-      return { ...rest, segments };
+      const span = computeSegmentsSpan(segments);
+      return { ...rest, segments, activationDuration: span };
     }
 
-    return { ...patched, segments };
+    const span = computeSegmentsSpan(segments);
+    return { ...patched, segments, activationDuration: span };
   });
 }

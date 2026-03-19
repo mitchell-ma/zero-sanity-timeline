@@ -2,19 +2,49 @@
   "weaponName": "Finchaser 3.0",
   "statusEvents": [
     {
-      "name": "FINCHASER_3_0_FIN_CHASERS_INTENT",
-      "type": "WEAPON_EFFECT",
-      "originId": "FINCHASER_3_0",
-      "target": "ENEMY",
-      "label": "Fin Chaser's Intent",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRYO_DAMAGE_BONUS",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.07,
+                  "valueMax": 0.14
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "FINCHASER_3_0_FIN_CHASERS_INTENT",
+        "name": "Fin Chaser's Intent",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "FINCHASER_3_0",
+        "description": "Fin Chaser's Intent",
+        "note": "Enemy Cryo DMG Taken (Fragility)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -24,24 +54,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRYO_DAMAGE_BONUS",
-          "valueMin": 0.07,
-          "valueMax": 0.14
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Enemy Cryo DMG Taken (Fragility)"
+      ]
     }
   ]
 }

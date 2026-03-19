@@ -1,11 +1,9 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
 import { CombatSkillsType } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
-import type { Interaction } from '../../consts/semantics';
-import { TriggerCapability } from '../../consts/triggerCapabilities';
-import { TOTAL_FRAMES } from '../../utils/timeline';
-import { ENEMY_OWNER_ID, SKILL_COLUMNS } from '../../model/channels';
+import { SKILL_COLUMNS } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
+import { findClauseTriggerMatches } from './statusDerivationEngine';
+import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Combo time-stop chaining ─────────────────────────────────────────────────
 
@@ -106,58 +104,10 @@ export function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] 
 /** Column ID for derived combo activation window events. */
 export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
 
-/**
- * Maps derived enemy event columnIds to the trigger conditions they represent.
- * Used to generate combo windows from derived events at their actual frame timing.
- */
-const _I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subject, verb, object, ...extra } as Interaction);
-
-const _IO = (determiner: DeterminerType, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectDeterminer: determiner, subject: SubjectType.OPERATOR, verb, object, ...extra } as Interaction);
-
-export const ENEMY_COLUMN_TO_INTERACTIONS: Record<string, Interaction[]> = {
-  heatInfliction:       [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'HEAT' })],
-  cryoInfliction:       [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'CRYO' })],
-  natureInfliction:     [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'NATURE' })],
-  electricInfliction:   [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.INFLICTION, { element: 'ELECTRIC' })],
-  combustion:           [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED)],
-  solidification:       [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED)],
-  corrosion:            [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED)],
-  electrification:      [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED)],
-  vulnerableInfliction: [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'VULNERABILITY' })],
-  breach:               [_IO(DeterminerType.THIS, VerbType.APPLY, ObjectType.STATUS, { objectId: 'PHYSICAL' })],
-  'stagger-frailty':    [_I(SubjectType.ENEMY, VerbType.IS, ObjectType.NODE_STAGGERED), _I(SubjectType.ENEMY, VerbType.IS, ObjectType.FULL_STAGGERED)],
-};
-
-const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
-];
-
-function isAlwaysAvailable(i: Interaction): boolean {
-  return ALWAYS_AVAILABLE_INTERACTIONS.some((aa) => matchInteraction(i, aa));
-}
-
-const DERIVED_INTERACTIONS: Interaction[] = [];
-for (const interactions of Object.values(ENEMY_COLUMN_TO_INTERACTIONS)) {
-  for (const i of interactions) DERIVED_INTERACTIONS.push(i);
-}
-
-export function isDerivedInteraction(i: Interaction): boolean {
-  return DERIVED_INTERACTIONS.some((d) => matchInteraction(i, d));
-}
-
-function isFinalStrike(i: Interaction): boolean {
-  return i.verb === VerbType.PERFORM && i.object === ObjectType.FINAL_STRIKE;
-}
-
 /** Slot-level trigger wiring for the pipeline. */
 export interface SlotTriggerWiring {
   slotId: string;
-  capability: TriggerCapability;
+  operatorId: string;
 }
 
 /**
@@ -170,7 +120,7 @@ export function deriveComboActivationWindows(
   stops: readonly TimeStopRegion[],
 ): TimelineEvent[] {
   // Intermediate accumulator: slotId → unsorted windows
-  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string; triggerInteraction?: Interaction }[]>();
+  const windowsBySlot = new Map<string, { startFrame: number; endFrame: number; sourceEventId: string; sourceOwnerId?: string; sourceSkillName?: string; sourceColumnId?: string }[]>();
 
   // Build slotId → index for event ownership lookup
   const slotIdToIndex = new Map<string, number>();
@@ -195,108 +145,63 @@ export function deriveComboActivationWindows(
     comboEventsBySlot.get(ev.ownerId)!.push(ev);
   }
 
-  const addWindow = (
-    published: Interaction,
-    event: TimelineEvent,
+  const addWindowDirect = (
+    wiring: SlotTriggerWiring,
     triggerFrame: number,
+    sourceOwnerId: string,
+    sourceSkillName: string,
+    originOwnerId?: string,
   ) => {
-    for (const wiring of slotWirings) {
-      const cap = wiring.capability;
-      const matchesTrigger = cap.comboRequires.some((req) => matchInteraction(published, req));
-      if (!matchesTrigger) continue;
+    // Skip self-trigger: don't let an operator's own action trigger their combo.
+    if (originOwnerId === wiring.slotId) return;
 
-      // Skip self-trigger
-      if (event.sourceOwnerId === wiring.slotId) continue;
-
-      // Skip if combo skill is on cooldown at trigger time.
-      const slotCombos = comboEventsBySlot.get(wiring.slotId);
-      if (slotCombos) {
-        const onCooldown = slotCombos.some((ce) => {
-          if (ce.segments && ce.segments.length > 0) {
-            let preCooldownDur = 0;
-            let totalDur = 0;
-            for (const s of ce.segments) {
-              totalDur += s.durationFrames;
-              if (s.label !== 'Cooldown') preCooldownDur += s.durationFrames;
-            }
-            const cooldownStart = ce.startFrame + preCooldownDur;
-            const cooldownEnd = ce.startFrame + totalDur;
-            return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
+    // Skip if combo skill is on cooldown at trigger time.
+    const slotCombos = comboEventsBySlot.get(wiring.slotId);
+    if (slotCombos) {
+      const onCooldown = slotCombos.some((ce) => {
+        if (ce.segments && ce.segments.length > 0) {
+          let preCooldownDur = 0;
+          let totalDur = 0;
+          for (const s of ce.segments) {
+            totalDur += s.durationFrames;
+            if (s.label !== 'Cooldown') preCooldownDur += s.durationFrames;
           }
-          const cooldownStart = ce.startFrame + ce.activationDuration + ce.activeDuration;
-          const cooldownEnd = cooldownStart + ce.cooldownDuration;
+          const cooldownStart = ce.startFrame + preCooldownDur;
+          const cooldownEnd = ce.startFrame + totalDur;
           return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
-        });
-        if (onCooldown) continue;
-      }
-
-      // Check comboForbidsActiveColumns
-      const forbids = cap.comboForbidsActiveColumns;
-      if (forbids && forbids.length > 0 && hasActiveEventInColumns(events, forbids, triggerFrame)) continue;
-
-      // Check comboRequiresActiveColumns
-      const requires = cap.comboRequiresActiveColumns;
-      if (requires && requires.length > 0 && !hasActiveEventInColumns(events, requires, triggerFrame)) continue;
-
-      const baseDuration = cap.comboWindowFrames;
-      const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
-      const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventId)) : stops;
-      const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
-
-      if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
-      windowsBySlot.get(wiring.slotId)!.push({
-        startFrame: triggerFrame,
-        endFrame: triggerFrame + extendedDuration,
-        sourceEventId: event.id,
-        sourceOwnerId: event.ownerId !== ENEMY_OWNER_ID ? event.ownerId : event.sourceOwnerId,
-        sourceSkillName: event.name,
-        sourceColumnId: event.columnId,
-        triggerInteraction: published,
+        }
+        const cooldownStart = ce.startFrame + ce.activationDuration + ce.activeDuration;
+        const cooldownEnd = cooldownStart + ce.cooldownDuration;
+        return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
       });
+      if (onCooldown) return;
     }
-  };
 
-  // Phase 1: operator-published interactions (skip derived)
-  for (const event of events) {
-    const slotIndex = slotIdToIndex.get(event.ownerId);
-    if (slotIndex === undefined) continue;
-    const cap = slotWirings[slotIndex].capability;
-    const published = cap.publishesTriggers[event.columnId];
-    if (!published || published.length === 0) continue;
+    const info = getComboTriggerInfo(wiring.operatorId);
+    const baseDuration = info?.windowFrames ?? 720;
+    const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
+    const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventId)) : stops;
+    const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
 
-    const isNonSequenceBasic = event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE;
-
-    const defaultTriggerFrame = event.startFrame + event.activationDuration;
-    const finalStrikeTriggerFrame = getFinalStrikeTriggerFrame(event, stops) ?? defaultTriggerFrame;
-
-    for (const interaction of published) {
-      if (isDerivedInteraction(interaction)) continue;
-      if (isNonSequenceBasic && isFinalStrike(interaction)) continue;
-      const frame = isFinalStrike(interaction) ? finalStrikeTriggerFrame : defaultTriggerFrame;
-      addWindow(interaction, event, frame);
-    }
-  }
-
-  // Phase 2: derived enemy event interactions
-  for (const event of events) {
-    if (event.ownerId !== ENEMY_OWNER_ID) continue;
-    const interactions = ENEMY_COLUMN_TO_INTERACTIONS[event.columnId];
-    if (!interactions) continue;
-    for (const interaction of interactions) {
-      addWindow(interaction, event, event.startFrame);
-    }
-  }
-
-  // Phase 3: always-available interactions → full-timeline windows
-  for (const wiring of slotWirings) {
-    const hasAlways = wiring.capability.comboRequires.some((req) => isAlwaysAvailable(req));
-    if (!hasAlways) continue;
     if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
     windowsBySlot.get(wiring.slotId)!.push({
-      startFrame: 0,
-      endFrame: TOTAL_FRAMES,
-      sourceEventId: '__always_available__',
+      startFrame: triggerFrame,
+      endFrame: triggerFrame + extendedDuration,
+      sourceEventId: `trigger-${wiring.slotId}-${triggerFrame}`,
+      sourceOwnerId,
+      sourceSkillName,
+      sourceColumnId: sourceSkillName,
     });
+  };
+
+  // Evaluate onTriggerClause from skills JSON via verb-handler registry.
+  for (const wiring of slotWirings) {
+    const clause = getComboTriggerClause(wiring.operatorId);
+    if (!clause?.length) continue;
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId);
+    for (const match of matches) {
+      addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId);
+    }
   }
 
   // Sort, merge, and convert to TimelineEvents
@@ -392,17 +297,6 @@ export function getFinalStrikeTriggerFrame(
 }
 
 /**
- * Map a derived interaction to its enemy infliction column ID.
- * Returns undefined if the interaction is not a derived infliction type.
- */
-export function derivedInteractionToColumnId(i: Interaction): string | undefined {
-  for (const [columnId, interactions] of Object.entries(ENEMY_COLUMN_TO_INTERACTIONS)) {
-    if (interactions.some((d) => matchInteraction(i, d))) return columnId;
-  }
-  return undefined;
-}
-
-/**
  * Update comboTriggerColumnId on combo events to match their containing
  * activation window. Runs before infliction derivation, so it uses Phase 1
  * interactions (including derived-type triggers that would normally be
@@ -415,97 +309,24 @@ export function resolveComboTriggerColumns(
 ): TimelineEvent[] {
   if (slotWirings.length === 0) return events;
 
-  // Build slotId → index for event ownership lookup
-  const slotIdToIndex = new Map<string, number>();
-  for (let i = 0; i < slotWirings.length; i++) {
-    slotIdToIndex.set(slotWirings[i].slotId, i);
-  }
-
-  // Pre-index combo events per slot for cooldown checks
-  const comboEventsBySlot = new Map<string, TimelineEvent[]>();
-  for (const ev of events) {
-    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-    if (!comboEventsBySlot.has(ev.ownerId)) comboEventsBySlot.set(ev.ownerId, []);
-    comboEventsBySlot.get(ev.ownerId)!.push(ev);
-  }
-
-  // Build combo windows using Phase 1 interactions only (before derived events exist).
-  // Unlike deriveComboActivationWindows, we include derived-type interactions here
-  // because the Phase 2 enemy events don't exist yet. We map them to their column ID
-  // so that comboTriggerColumnId can be resolved.
+  // Build combo windows per slot via findClauseTriggerMatches
   type WindowInfo = { startFrame: number; endFrame: number; sourceColumnId?: string };
   const windowsBySlot = new Map<string, WindowInfo[]>();
 
-  for (const event of events) {
-    const slotIndex = slotIdToIndex.get(event.ownerId);
-    if (slotIndex === undefined) continue;
-    const cap = slotWirings[slotIndex].capability;
-    const published = cap.publishesTriggers[event.columnId];
-    if (!published || published.length === 0) continue;
-
-    const triggerFrame = event.startFrame + event.activationDuration;
-
-    for (const interaction of published) {
-      for (const wiring of slotWirings) {
-        const wcap = wiring.capability;
-        if (!wcap.comboRequires.some((req) => matchInteraction(interaction, req))) continue;
-        // Skip self-trigger for derived interactions (e.g. APPLY INFLICTION):
-        // an operator's own infliction shouldn't trigger its own combo mirroring.
-        // Direct triggers like PERFORM FINAL_STRIKE are allowed (operators can self-trigger).
-        if (isDerivedInteraction(interaction) && event.ownerId === wiring.slotId) continue;
-        if (event.sourceOwnerId === wiring.slotId) continue;
-
-        // Cooldown check
-        const slotCombos = comboEventsBySlot.get(wiring.slotId);
-        if (slotCombos?.some((ce) => {
-          const cooldownStart = ce.startFrame + ce.activationDuration + ce.activeDuration;
-          const cooldownEnd = cooldownStart + ce.cooldownDuration;
-          return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
-        })) continue;
-
-        const forbids = wcap.comboForbidsActiveColumns;
-        if (forbids?.length && hasActiveEventInColumns(events, forbids, triggerFrame)) continue;
-        const requires = wcap.comboRequiresActiveColumns;
-        if (requires?.length && !hasActiveEventInColumns(events, requires, triggerFrame)) continue;
-
-        const baseDuration = wcap.comboWindowFrames;
-        const extDuration = extendByTimeStops(triggerFrame, baseDuration, stops);
-
-        // Resolve source column: for derived interactions, map to the enemy column
-        const sourceColumnId = derivedInteractionToColumnId(interaction) ?? event.columnId;
-
-        if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
-        windowsBySlot.get(wiring.slotId)!.push({
-          startFrame: triggerFrame,
-          endFrame: triggerFrame + extDuration,
-          sourceColumnId,
-        });
-      }
-    }
-  }
-
-  // Also include Phase 2 windows from existing enemy events (handles cases where
-  // derived events are already in the events list, e.g. from a previous pass)
-  for (const event of events) {
-    if (event.ownerId !== ENEMY_OWNER_ID) continue;
-    const interactions = ENEMY_COLUMN_TO_INTERACTIONS[event.columnId];
-    if (!interactions) continue;
-    for (const interaction of interactions) {
-      for (const wiring of slotWirings) {
-        if (!wiring.capability.comboRequires.some((req) => matchInteraction(interaction, req))) continue;
-        const requires = wiring.capability.comboRequiresActiveColumns;
-        if (requires?.length && !hasActiveEventInColumns(events, requires, event.startFrame)) continue;
-        const forbids = wiring.capability.comboForbidsActiveColumns;
-        if (forbids?.length && hasActiveEventInColumns(events, forbids, event.startFrame)) continue;
-        const baseDuration = wiring.capability.comboWindowFrames;
-        const extDuration = extendByTimeStops(event.startFrame, baseDuration, stops);
-        if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
-        windowsBySlot.get(wiring.slotId)!.push({
-          startFrame: event.startFrame,
-          endFrame: event.startFrame + extDuration,
-          sourceColumnId: event.columnId,
-        });
-      }
+  for (const wiring of slotWirings) {
+    const clause = getComboTriggerClause(wiring.operatorId);
+    if (!clause?.length) continue;
+    const info = getComboTriggerInfo(wiring.operatorId);
+    const baseDuration = info?.windowFrames ?? 720;
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId);
+    for (const match of matches) {
+      const extDuration = extendByTimeStops(match.frame, baseDuration, stops);
+      if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
+      windowsBySlot.get(wiring.slotId)!.push({
+        startFrame: match.frame,
+        endFrame: match.frame + extDuration,
+        sourceColumnId: match.sourceColumnId,
+      });
     }
   }
 

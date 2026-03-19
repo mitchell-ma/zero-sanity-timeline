@@ -24,7 +24,6 @@ export interface CustomSkill {
   activationConditions?: Interaction[][];
   segments?: CustomSkillSegmentDef[];
   multipliers?: { label: string; values: number[] }[];
-  publishesTriggers?: Interaction[];
   description?: string;
 }
 

@@ -364,7 +364,7 @@ statusEvent = {
   // Each predicate is evaluated independently; any passing predicate can create the status.
   // For TALENT type: triggers define side-effect conditions (e.g. absorption exchange).
   // The talent itself is created as a permanent presence event at frame 0.
-  "triggerClause": Predicate[],
+  "onTriggerClause": Predicate[],
 
   // Talent level requirement — only process this def when the talent is unlocked.
   "minTalentLevel"?: { "talent": number, "minLevel": number },
@@ -451,14 +451,14 @@ At max stacks, the threshold clause applies SCORCHING_HEART_EFFECT to the operat
   "clause": [
     {
       "conditions": [
-        { "subject": "THIS_EVENT", "verb": "HAVE", "object": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
+        { "subject": "EVENT", "verb": "HAVE", "object": "STACKS", "cardinalityConstraint": "EXACTLY", "cardinality": "MAX" }
       ],
       "effects": [
         { "verb": "APPLY", "object": "STATUS", "objectId": "SCORCHING_HEART_EFFECT", "toObject": "THIS_OPERATOR" }
       ]
     }
   ],
-  "triggerClause": [
+  "onTriggerClause": [
     { "conditions": [{ "subject": "THIS_OPERATOR", "verb": "PERFORM", "object": "BATTLE_SKILL" }] },
     { "conditions": [{ "subject": "THIS_OPERATOR", "verb": "PERFORM", "object": "COMBO_SKILL" }] }
   ],
@@ -480,7 +480,7 @@ the infliction and applies Melting Flame to Laevatain (PERFORM_ALL with output r
   "target": "THIS_OPERATOR",
   "element": "HEAT",
   "stack": { "max": { "P0": 1, ... }, "instances": 1, "verb": "NONE" },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         { "subject": "ANY_OPERATOR", "verb": "PERFORM", "object": "FINAL_STRIKE" },
@@ -516,7 +516,7 @@ Provides Heat Resistance Ignore scaling by talent level.
   "element": "HEAT",
   "isNamedEvent": true,
   "stack": { "max": { "P0": 1, ... }, "instances": 1, "verb": "RESET" },
-  "triggerClause": [],
+  "onTriggerClause": [],
   "stats": [{ "statType": "HEAT_RESISTANCE_IGNORE", "value": [10, 15, 20] }],
   "properties": { "duration": { "value": [20], "unit": "SECOND" } }
 }
@@ -544,7 +544,7 @@ Provides Heat Resistance Ignore scaling by talent level.
     ],
     "instances": 1
   },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -604,7 +604,7 @@ Provides Heat Resistance Ignore scaling by talent level.
     ],
     "instances": 1
   },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -702,7 +702,7 @@ Provides Heat Resistance Ignore scaling by talent level.
     ],
     "instances": 1
   },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -836,7 +836,7 @@ Provides Heat Resistance Ignore scaling by talent level.
       ]
     }
   ],
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -893,7 +893,7 @@ Provides Heat Resistance Ignore scaling by talent level.
     ],
     "instances": 3
   },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -959,7 +959,7 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subject": "THIS_EVENT",
+          "subject": "EVENT",
           "verb": "HAVE",
           "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
@@ -976,7 +976,7 @@ Melting Flame → Scorching Heart.
       ]
     }
   ],
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -1022,7 +1022,7 @@ Melting Flame → Scorching Heart.
     ],
     "instances": 1
   },
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {
@@ -1073,7 +1073,7 @@ Melting Flame → Scorching Heart.
     {
       "conditions": [
         {
-          "subject": "THIS_EVENT",
+          "subject": "EVENT",
           "verb": "HAVE",
           "object": "STACKS",
           "cardinalityConstraint": "EXACTLY",
@@ -1094,7 +1094,7 @@ Melting Flame → Scorching Heart.
       ]
     }
   ],
-  "triggerClause": [
+  "onTriggerClause": [
     {
       "conditions": [
         {

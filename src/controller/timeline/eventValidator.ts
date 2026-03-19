@@ -8,28 +8,13 @@ import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan } from 
 import { CombatSkillsType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
 import { COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
-import { SubjectType, VerbType, ObjectType, DeterminerType, matchInteraction } from '../../consts/semantics';
-import type { Interaction } from '../../consts/semantics';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
-
-const _I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subject, verb, object, ...extra } as Interaction);
-const _IO = (determiner: DeterminerType, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subjectDeterminer: determiner, subject: SubjectType.OPERATOR, verb, object, ...extra } as Interaction);
-const ALWAYS_AVAILABLE_INTERACTIONS: Interaction[] = [
-  _I(SubjectType.ENEMY, VerbType.HIT, ObjectType.OPERATOR),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_MOST' as any }),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.HP, { cardinalityConstraint: 'AT_LEAST' as any }),
-  _IO(DeterminerType.THIS, VerbType.HAVE, ObjectType.ULTIMATE_ENERGY, { cardinalityConstraint: 'AT_MOST' as any }),
-];
-function isAlwaysAvailable(i: Interaction): boolean {
-  return ALWAYS_AVAILABLE_INTERACTIONS.some((aa) => matchInteraction(i, aa));
-}
+import { isClauseAlwaysAvailable } from './statusDerivationEngine';
 
 export type TimeStopRegion = {
   startFrame: number;
@@ -70,6 +55,37 @@ export function hasEnhanceClauseAtFrame(
     }
   }
   return false;
+}
+
+/**
+ * Check if any overlapping segment has a DISABLE clause for the specified
+ * skill object type at the given frame. Returns the adjective (e.g. 'NORMAL')
+ * if found, or null if no DISABLE clause is active.
+ */
+function getDisableAdjectiveAtFrame(
+  events: readonly TimelineEvent[],
+  ownerId: string,
+  disableObject: string,
+  atFrame: number,
+): string | null {
+  for (const ev of events) {
+    if (ev.ownerId !== ownerId || !ev.segments) continue;
+    let cursor = ev.startFrame;
+    for (const seg of ev.segments) {
+      const segEnd = cursor + seg.durationFrames;
+      if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
+        for (const c of seg.clause) {
+          for (const e of c.effects) {
+            if (e.verb === 'DISABLE' && e.object === disableObject && e.adjective) {
+              return e.adjective;
+            }
+          }
+        }
+      }
+      cursor = segEnd;
+    }
+  }
+  return null;
 }
 
 // ── Time-stop regions ─────────────────────────────────────────────────────────
@@ -371,8 +387,9 @@ export function clampDeltaByResourceZones(
 export function getAlwaysAvailableComboSlots(slots: Slot[]): Set<string> {
   const set = new Set<string>();
   for (const s of slots) {
-    const cap = s.operator?.triggerCapability;
-    if (cap && cap.comboRequires.some((req) => isAlwaysAvailable(req))) {
+    if (!s.operator) continue;
+    const clause = getComboTriggerClause(s.operator.id);
+    if (clause && isClauseAlwaysAvailable(clause)) {
       set.add(s.slotId);
     }
   }
@@ -736,9 +753,10 @@ export function checkVariantAvailability(
   atFrame: number,
   columnId?: string,
   slots?: Slot[],
+  enhancementType?: string,
 ): VariantAvailability {
-  const isEnhanced = variantName.includes('ENHANCED');
-  const isEmpowered = variantName.includes('EMPOWERED');
+  const isEnhanced = enhancementType ? enhancementType === 'ENHANCED' : variantName.includes('ENHANCED');
+  const isEmpowered = enhancementType ? enhancementType === 'EMPOWERED' : variantName.includes('EMPOWERED');
 
   // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
@@ -764,9 +782,13 @@ export function checkVariantAvailability(
     }
   }
 
-  // Regular variant blocked when ENHANCE clause is active (use enhanced variant)
+  // Regular variant blocked by DISABLE clause or when ENHANCE clause is active
   if (!isEnhanced && !isEmpowered && enhanceObject && hasEnhancedVariants
     && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE) {
+    const disableAdj = getDisableAdjectiveAtFrame(events, ownerId, enhanceObject, atFrame);
+    if (disableAdj) {
+      return { disabled: true, reason: `${disableAdj} variant disabled during this window` };
+    }
     if (hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame)) {
       return { disabled: true, reason: 'Enhanced variant active (use enhanced)' };
     }
@@ -814,13 +836,7 @@ export function validateComboWindows(
 ): Map<string, string> {
   const map = new Map<string, string>();
 
-  const alwaysAvailable = new Set<string>();
-  for (const s of slots) {
-    const cap = s.operator?.triggerCapability;
-    if (cap && cap.comboRequires.some((req) => isAlwaysAvailable(req))) {
-      alwaysAvailable.add(s.slotId);
-    }
-  }
+  const alwaysAvailable = getAlwaysAvailableComboSlots(slots);
 
   const windowEvents = events.filter((ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID);
   const consumedWindows = new Map<string, string>();
@@ -971,7 +987,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
  * inside the ultimate active phase. Mirrors validateEnhanced (inverse logic).
  * Only applies to operators that have enhanced basic attack variants.
  */
-export function validateRegularBasicDuringUltimate(events: TimelineEvent[]): Map<string, string> {
+export function validateDisabledVariants(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
@@ -1089,6 +1105,37 @@ export function validateVariantClauses(
     }
   }
   return map;
+}
+
+/**
+ * Build effective stagger windows by combining computed stagger breaks with
+ * freeform-placed stagger events (Full Stagger and Node Stagger).
+ *
+ * Computed breaks come from StaggerTimeline; freeform events are user-placed
+ * on NODE_STAGGER_COLUMN_ID / FULL_STAGGER_COLUMN_ID columns.
+ */
+export function getEffectiveStaggerWindows(
+  events: readonly TimelineEvent[],
+  staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
+): readonly import('./staggerTimeline').StaggerBreak[] {
+  const freeformWindows: import('./staggerTimeline').StaggerBreak[] = [];
+  for (const ev of events) {
+    if (
+      (ev.columnId === NODE_STAGGER_COLUMN_ID || ev.columnId === FULL_STAGGER_COLUMN_ID)
+      && ev.activationDuration > 0
+    ) {
+      const endFrame = ev.startFrame + ev.activationDuration;
+      // Skip if already covered by a computed break
+      const covered = staggerBreaks.some(
+        (b) => ev.startFrame >= b.startFrame && endFrame <= b.endFrame,
+      );
+      if (!covered) {
+        freeformWindows.push({ startFrame: ev.startFrame, endFrame });
+      }
+    }
+  }
+  if (freeformWindows.length === 0) return staggerBreaks;
+  return [...staggerBreaks, ...freeformWindows];
 }
 
 /**

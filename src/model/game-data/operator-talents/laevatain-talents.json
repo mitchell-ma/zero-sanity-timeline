@@ -1,26 +1,31 @@
 {
   "statusEvents": [
     {
-      "name": "SCORCHING_HEART",
-      "type": "TALENT",
-      "originId": "laevatain",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "element": "HEAT",
-      "isNamedEvent": true,
-      "stack": {
-        "max": {
-          "P0": 1,
-          "P1": 1,
-          "P2": 1,
-          "P3": 1,
-          "P4": 1,
-          "P5": 1
+      "properties": {
+        "type": "TALENT",
+        "id": "SCORCHING_HEART",
+        "target": "OPERATOR",
+        "targetDeterminer": "THIS",
+        "name": "Scorching Heart",
+        "duration": {
+          "value": [
+            -1
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "NONE"
+        },
+        "element": "HEAT"
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "laevatain"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -61,19 +66,7 @@
             }
           ]
         }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            -1
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "minTalentLevel": {
-        "talent": 1,
-        "minLevel": 1
-      }
+      ]
     }
   ]
 }

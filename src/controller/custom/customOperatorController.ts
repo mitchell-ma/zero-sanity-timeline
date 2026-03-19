@@ -77,7 +77,7 @@ export function getDefaultCustomOperator(): CustomOperator {
     name: '',
     operatorClassType: OperatorClassType.STRIKER,
     elementType: ElementType.HEAT,
-    weaponType: WeaponType.SWORD,
+    weaponTypes: [WeaponType.SWORD],
     operatorRarity: 6,
     mainAttributeType: 'STRENGTH',
     baseStats: {
@@ -116,7 +116,7 @@ export function getDefaultCustomOperator(): CustomOperator {
       },
     },
     combo: {
-      triggerClause: [{
+      onTriggerClause: [{
         conditions: [{
           subject: SubjectType.ENEMY,
           verb: VerbType.IS,

@@ -179,8 +179,8 @@ export default function StatusEventEditor({ value, onChange, onRemove }: StatusE
           {/* Trigger Clause */}
           <div className="wz-subsection">
             <ClauseBuilder
-              value={value.triggerClause}
-              onChange={(triggerClause) => update({ triggerClause })}
+              value={value.onTriggerClause}
+              onChange={(onTriggerClause) => update({ onTriggerClause })}
               conditionsOnly
               label="Trigger — when this status is created"
             />
@@ -266,7 +266,7 @@ export function defaultStatusEventDef(): CustomStatusEventDef {
       max: 1,
       instances: 1,
     },
-    triggerClause: [],
+    onTriggerClause: [],
     clause: [],
     stats: [],
   };

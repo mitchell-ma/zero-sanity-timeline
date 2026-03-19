@@ -29,20 +29,20 @@ export class Corrosion extends ArtsReaction {
 
   constructor(params: {
     statusLevel: StatusLevel;
-    isForceApplied?: boolean;
+    isForced?: boolean;
   }) {
     super({
       statusType: StatusType.CORROSION,
       statusLevel: params.statusLevel,
       maxStatusLevel: 4,
       element: ElementType.NATURE,
-      isForceApplied: params.isForceApplied ?? false,
+      isForced: params.isForced ?? false,
       durationSeconds: Corrosion.DURATION_SECONDS,
     });
   }
 
   getInitialDamage(): number {
-    if (this.isForceApplied) return 0;
+    if (this.isForced) return 0;
     return INITIAL_DAMAGE[this.statusLevel];
   }
 

@@ -19,15 +19,15 @@ import {
 } from '../../consts/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { CombatSkillsType, ElementType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import { absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { EXCHANGE_EVENT_DURATION, INFLICTION_DURATION, PHYSICAL_INFLICTION_DURATION, TEAM_STATUS_COLUMN, resolveSusceptibility } from './processInfliction';
-import { hasActiveEventInColumns, derivedInteractionToColumnId, isDerivedInteraction, ENEMY_COLUMN_TO_INTERACTIONS } from './processComboSkill';
 import type { SlotTriggerWiring } from './processComboSkill';
-import { matchInteraction } from '../../consts/semantics';
+import { findClauseTriggerMatches } from './statusDerivationEngine';
+import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 import { MAX_INFLICTION_STACKS, PRIORITY, CONSUMING_COLUMNS } from './eventQueueTypes';
 import { evaluateThresholdForExchange, evaluateEngineTrigger } from './statusDerivationEngine';
 import { DerivedEventController } from './derivedEventController';
@@ -554,45 +554,22 @@ export class EventInterpretor {
 
     const wiring = this.slotWirings.find(w => w.slotId === combo.ownerId);
     if (!wiring) return [];
-    const wcap = wiring.capability;
     const allEvents = [...this.baseEvents, ...this.controller.output];
 
-    if (wcap.comboRequiresActiveColumns?.length &&
-        !hasActiveEventInColumns(allEvents, wcap.comboRequiresActiveColumns, entry.frame)) return [];
-    if (wcap.comboForbidsActiveColumns?.length &&
-        hasActiveEventInColumns(allEvents, wcap.comboForbidsActiveColumns, entry.frame)) return [];
+    // Use findClauseTriggerMatches to find the trigger that opened this combo's window
+    const clause = getComboTriggerClause(wiring.operatorId);
+    if (!clause?.length) return [];
+    const info = getComboTriggerInfo(wiring.operatorId);
+    const windowFrames = info?.windowFrames ?? 720;
 
+    const matches = findClauseTriggerMatches(clause, allEvents, wiring.slotId);
+    // Find the match whose window contains the combo's startFrame
     let triggerCol: string | undefined;
-
-    for (const ev of this.baseEvents) {
-      if (triggerCol) break;
-      const pubWiring = this.slotWirings.find(w => w.slotId === ev.ownerId);
-      if (!pubWiring) continue;
-      const published = pubWiring.capability.publishesTriggers[ev.columnId];
-      if (!published) continue;
-      const triggerFrame = ev.startFrame + ev.activationDuration;
-      if (combo.startFrame < triggerFrame || combo.startFrame >= triggerFrame + wcap.comboWindowFrames) continue;
-      for (const interaction of published) {
-        if (!wcap.comboRequires.some(req => matchInteraction(interaction, req))) continue;
-        if (isDerivedInteraction(interaction) && ev.ownerId === combo.ownerId) continue;
-        if (ev.sourceOwnerId === combo.ownerId) continue;
-        const col = derivedInteractionToColumnId(interaction) ?? ev.columnId;
-        if (INFLICTION_COLUMN_IDS.has(col) || PHYSICAL_INFLICTION_COLUMN_IDS.has(col)) { triggerCol = col; break; }
-      }
-    }
-
-    if (!triggerCol) {
-      for (const ev of this.controller.output) {
-        if (triggerCol) break;
-        if (ev.ownerId !== ENEMY_OWNER_ID) continue;
-        const interactions = ENEMY_COLUMN_TO_INTERACTIONS[ev.columnId];
-        if (!interactions) continue;
-        if (combo.startFrame < ev.startFrame || combo.startFrame >= ev.startFrame + wcap.comboWindowFrames) continue;
-        for (const interaction of interactions) {
-          if (!wcap.comboRequires.some(req => matchInteraction(interaction, req))) continue;
-          if (ev.sourceOwnerId === combo.ownerId) continue;
-          triggerCol = ev.columnId; break;
-        }
+    for (const match of matches) {
+      if (match.originOwnerId === combo.ownerId) continue; // skip self-trigger
+      if (combo.startFrame >= match.frame && combo.startFrame < match.frame + windowFrames) {
+        triggerCol = match.sourceColumnId;
+        break;
       }
     }
     if (!triggerCol) return [];

@@ -592,76 +592,85 @@ Single-segment combo skills use the flat format. Multi-segment (e.g., Ardelia's 
 
 ## Operator Statuses
 
-Status definitions live in `game-data/operator-statuses/<slug>-statuses.json`. Each file is a JSON array of status event definitions for one operator.
+Status definitions live in `game-data/operator-statuses/<slug>-statuses.json`. Each file is a JSON array of status event definitions for one operator. Additional status events can also appear in `operator-skills/*-skills.json` (under `statusEvents`), `operator-talents/*-talents.json` (under `statusEvents`), `weapon-effects/*-effects.json`, and `gear-effects/*-effects.json`.
 
 ### Source Chain
 
-Statuses resolve their source through `originId`:
-- `status.originId` → skill ID (e.g. `SMOULDERING_FIRE`)
-- `skill.originId` → operator ID (e.g. `laevatain`)
-- Derived statuses chain through other statuses: `SCORCHING_HEART_EFFECT.originId` → `MELTING_FLAME` → `SMOULDERING_FIRE` → `laevatain`
+Statuses resolve their source through `metadata.originId`:
+- `status.metadata.originId` → skill ID (e.g. `SMOULDERING_FIRE`)
+- `skill.metadata.originId` → operator ID (e.g. `laevatain`)
+- Derived statuses chain through other statuses: `SCORCHING_HEART_EFFECT.metadata.originId` → `MELTING_FLAME` → `SMOULDERING_FIRE` → `laevatain`
 
 At runtime, this chain allows a status to resolve skill-level-dependent values back to the operator's equipped skill level.
 
 ### Status Event Structure
 
+A status event has three top-level sections: `properties` (fixed identity/config), `metadata` (source chain), and clause arrays (behavior). All clause types can appear at both the status level and the segment level.
+
 ```json
 {
-  "name": "FOCUS",
-  "displayName": "Focus",
-  "target": "ENEMY",
-  "isNamedEvent": true,
-  "isForceApplied": false,
-  "stack": {
-    "max": { "P0": 1, "P1": 1, "P2": 1, "P3": 1, "P4": 1, "P5": 1 },
-    "instances": 1,
-    "verb": "RESET"
-  },
-  "triggerClause": [],
   "properties": {
-    "duration": { "value": [60], "unit": "SECOND" }
+    "id": "FOCUS",
+    "name": "Focus",
+    "element": "ELECTRIC",
+    "statusLevel": {
+      "limit": { "verb": "IS", "value": 1 },
+      "statusLevelInteractionType": "RESET"
+    },
+    "duration": { "value": 60, "unit": "SECOND" }
   },
-  "clause": [...],
-  "originId": "SPECIFIED_RESEARCH_SUBJECT"
+  "metadata": {
+    "originId": "SPECIFIED_RESEARCH_SUBJECT"
+  },
+  "onTriggerClause": [...],
+  "clause": [...]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Status identifier (e.g. `FOCUS`, `MELTING_FLAME`) |
-| `displayName` | string | Optional. Human-readable name |
-| `enhancementTypes` | string[] | Optional. `EnhancementType` values (e.g. `["EMPOWERED"]`) |
-| `target` | string | Who the status applies to: `ENEMY`, `THIS_OPERATOR`, `ALL_OPERATORS` |
-| `element` | string | Optional. `ElementType` associated with this status |
-| `isNamedEvent` | boolean | Whether this status creates named timeline events |
-| `isForceApplied` | boolean | Whether application bypasses normal rules |
-| `stack` | object | Stacking configuration (see below) |
-| `triggerClause` | array | Conditions that trigger status application |
-| `clause` | array | Effects active while the status is alive (see below) |
-| `properties` | object | Fixed properties: `duration` (`Duration` struct) |
-| `segments` | array | Optional. Multi-phase statuses with per-segment properties and clauses |
-| `potentialMin` / `potentialMax` | number | Optional. Potential range this definition applies to |
-| `minTalentLevel` | object | Optional. `{ talent: number, minLevel: number }` |
-| `p3TeamShare` | object | Optional. Team sharing at P3+ with `{ durationMultiplier: number }` |
-| `originId` | string | Source skill ID or parent status name |
+#### Top-Level Keys
 
-### Stack Configuration
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `properties` | object | Yes | Fixed identity and configuration (see below) |
+| `metadata` | object | Yes | Must contain `originId` — the skill or status this derives from |
+| `onTriggerClause` | array | No | Conditions that trigger status creation; entries with effects fire reactively during the status lifetime |
+| `onEntryClause` | array | No | Effects that fire once when the status first becomes active |
+| `clause` | array | No | Static effects active for the duration of the status |
+| `onExitClause` | array | No | Effects that fire when the status expires |
+| `segments` | array | No | Multi-phase statuses with per-segment properties and clauses |
+
+No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`, `target`, `name`, `id`, `stack`, `triggerClause`, `onActivationClause`, `reactiveTriggerClause`, etc.) must not appear at the top level.
+
+#### Status Properties
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | ALL_CAPS identifier (e.g. `FOCUS`, `MELTING_FLAME`) |
+| `name` | string | No | Human-readable display name |
+| `type` | string | No | `TALENT` for talent-derived statuses |
+| `element` | string | No | `ElementType` associated with this status |
+| `target` | string | No | Target of the status (`OPERATOR`, `ENEMY`). Defaults to `OPERATOR` |
+| `targetDeterminer` | string | No | `THIS`, `OTHER`, `ALL`, `ANY`. Defaults to `THIS` |
+| `isForced` | boolean | No | Whether application bypasses normal rules |
+| `enhancementTypes` | string[] | No | `EnhancementType` values (e.g. `["EMPOWERED"]`) |
+| `statusLevel` | object | Yes | Stacking configuration (see below) |
+| `duration` | object | No | Duration struct (`{ value, unit }`). Omit for permanent statuses |
+
+#### Status Level (Stacking)
 
 ```json
 {
-  "max": { "P0": 4, "P1": 4, "P2": 4, "P3": 4, "P4": 4, "P5": 4 },
-  "instances": 4,
-  "verb": "RESET"
+  "limit": { "verb": "IS", "value": 4 },
+  "statusLevelInteractionType": "NONE"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `max` | Record<string, number> | Max stacks per potential level (`P0`–`P5`) |
-| `instances` | number | Max concurrent status event instances |
-| `verb` | `StackInteraction` | `NONE` (independent stacks), `RESET` (refresh duration on reapply) |
+| `limit` | object | Max stacks — `{ "verb": "IS", "value": N }` for fixed, `{ "verb": "BASED_ON", "value": [...] }` for level-dependent |
+| `statusLevelInteractionType` | string | `NONE` (independent stacks) or `RESET` (refresh duration on reapply) |
 
-### Status Clauses
+### Clause Types
 
 Clauses define effects that are active while the status is alive. Each clause has optional conditions (predicates) and a list of effects.
 
@@ -690,14 +699,19 @@ Clauses define effects that are active while the status is alive. Each clause ha
 
 #### Clause Effect Types (damage calculation bucket)
 
-| verb | object | Description | Example |
-|----------|-----------|-------------|---------|
-| `APPLY` | `SUSCEPTIBILITY` | Adds to susceptibility multiplier bucket | Focus: ELECTRIC susceptibility |
-| `APPLY` | `DAMAGE_BONUS` | Adds to damage bonus multiplier bucket | Wildland Trekker: ELECTRIC damage bonus |
-| `IGNORE` | `RESISTANCE` | Ignores target resistance | Scorching Heart: HEAT resistance ignore |
-| `IGNORE` | `ULTIMATE_ENERGY` | Blocks ultimate energy gain for target | Laevatain ult Animation segment |
-| `APPLY` | `STATUS` | Applies a derived status | Melting Flame → Scorching Heart |
-| `CONSUME` | `ALL_STACKS` | Consumes all active stacks | Melting Flame consumed on battle skill |
+| verb | object | adjective | Description | Example |
+|----------|-----------|-----------|-------------|---------|
+| `APPLY` | `SUSCEPTIBILITY` | element | Adds to susceptibility multiplier bucket | Focus: ELECTRIC susceptibility |
+| `APPLY` | `DAMAGE_BONUS` | element | Adds to damage bonus multiplier bucket | Wildland Trekker: ELECTRIC damage bonus |
+| `IGNORE` | `RESISTANCE` | element | Ignores target resistance | Scorching Heart: HEAT resistance ignore |
+| `IGNORE` | `ULTIMATE_ENERGY` | — | Blocks ultimate energy gain for target | Laevatain ult Animation segment |
+| `APPLY` | `STATUS` | — | Applies a derived status | Melting Flame → Scorching Heart |
+| `CONSUME` | `ALL_STACKS` | — | Consumes all active stacks | Melting Flame consumed on battle skill |
+| `DEAL` | `DAMAGE` | element | Deals elemental damage with skill-level scaling | Frame: DEAL HEAT DAMAGE to TARGET |
+| `DEAL` | `STAGGER` | — | Deals stagger to enemy | Frame: DEAL STAGGER to ENEMY |
+| `RECOVER` | `SKILL_POINT` | — | Recovers SP | Frame: RECOVER SKILL_POINT |
+| `ENHANCE` | skill type | — | Enhances a skill type for operator | Ult: ENHANCE BASIC_ATTACK to THIS OPERATOR |
+| `DISABLE` | skill type | enhancement | Disables a variant tier for operator | Ult: DISABLE NORMAL BASIC_ATTACK to THIS OPERATOR |
 
 #### Value Resolution
 
@@ -709,6 +723,38 @@ Effect values use `with.value` with a `verb` indicating how to resolve:
 | `BASED_ON` | `SKILL_LEVEL` | Array indexed by skill level (1–12), resolved via source chain |
 | `BASED_ON` | `TALENT_LEVEL` | Array indexed by talent level |
 | `BASED_ON` | `INTELLECT` | Array of per-intellect scaling values |
+
+#### Enhancement Type Adjectives
+
+The `DISABLE` verb uses enhancement type adjectives to target specific skill variant tiers:
+
+| Adjective | Description |
+|-----------|-------------|
+| `NORMAL` | Base skill variant (no enhancement) |
+| `ENHANCED` | Enhanced variant (active during ultimate) |
+| `EMPOWERED` | Empowered variant (requires max status stacks) |
+
+Skill variants declare their enhancement type via `properties.enhancementTypes` in the skill JSON. Base skills without this field are implicitly `NORMAL`.
+
+#### Frame Effects
+
+Frames no longer use a separate `multipliers` array. All frame data (damage, SP recovery, stagger) is expressed as clause effects with value resolution:
+
+```json
+{
+  "metadata": { "eventComponentType": "FRAME" },
+  "properties": { "offset": { "value": 0.2, "unit": "SECOND" } },
+  "clause": [{
+    "conditions": [],
+    "effects": [
+      { "verb": "RECOVER", "object": "SKILL_POINT", "with": { "cardinality": { "verb": "IS", "value": 0 } } },
+      { "verb": "DEAL", "object": "STAGGER", "with": { "value": { "verb": "IS", "value": 10 } }, "toObject": "ENEMY" },
+      { "verb": "DEAL", "adjective": "HEAT", "object": "DAMAGE", "to": "TARGET",
+        "with": { "value": { "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.16, 0.18, ...] } } }
+    ]
+  }]
+}
+```
 
 ### Multi-Segment Statuses
 

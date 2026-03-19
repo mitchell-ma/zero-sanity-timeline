@@ -3,20 +3,46 @@
   "label": "AIC Light",
   "statusEvents": [
     {
-      "name": "AIC_LIGHT",
-      "type": "GEAR_EFFECT",
-      "originId": "AIC_LIGHT",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "AIC Light",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "BASE_ATTACK",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 20
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "AIC_LIGHT",
+        "name": "AIC Light",
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "AIC_LIGHT",
+        "description": "AIC Light"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,22 +53,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "BASE_ATTACK",
-          "value": 20
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            5
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

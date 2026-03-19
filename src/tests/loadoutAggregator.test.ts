@@ -10,6 +10,7 @@
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { StatType } from '../consts/enums';
 import { LoadoutProperties } from '../view/InformationPane';
+import type { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 
 // Mock operatorRegistry to avoid require.context for splash art assets
 jest.mock('../controller/operators/operatorRegistry', () => ({
@@ -102,6 +103,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getBattleSkillSpCost: () => undefined,
   getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 
 // Mock weaponGameData to avoid require.context
@@ -142,7 +146,7 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
   };
 
   it('should produce stats matching in-game values', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as OperatorLoadoutState, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // Operator base stats use Math.floor (not Math.round)
@@ -194,7 +198,7 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
   });
 
   it('should track stat sources correctly', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as OperatorLoadoutState, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // Intellect should have sources from: Operator, Potential, Attr Increase, Weapon Skill, Gear (x4)
@@ -215,7 +219,7 @@ describe('loadoutAggregator — Laevatain maxed loadout', () => {
   });
 
   it('operator base stats should preserve full precision (no rounding)', () => {
-    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as any, loadoutProperties);
+    const agg = aggregateLoadoutStats(OPERATOR_ID, loadout as OperatorLoadoutState, loadoutProperties);
     if (!agg) { throw new Error('aggregateLoadoutStats returned null'); }
 
     // INTELLECT raw from JSON: 177.98527245949924 — no rounding

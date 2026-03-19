@@ -2,20 +2,48 @@
   "weaponName": "Dreams of the Starry Beach",
   "statusEvents": [
     {
-      "name": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS",
-      "type": "WEAPON_EFFECT",
-      "originId": "DREAMS_OF_THE_STARRY_BEACH",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Tidal Murmurs",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "WILL_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.16,
+                  "valueMax": 0.448
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS",
+        "name": "Tidal Murmurs",
+        "duration": {
+          "value": [
+            25
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "DREAMS_OF_THE_STARRY_BEACH",
+        "description": "Tidal Murmurs",
+        "note": "Secondary attribute bonus"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,39 +55,52 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "WILL_BONUS",
-          "valueMin": 0.16,
-          "valueMax": 0.448
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            25
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Secondary attribute bonus"
+      ]
     },
     {
-      "name": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY",
-      "type": "WEAPON_EFFECT",
-      "originId": "DREAMS_OF_THE_STARRY_BEACH",
-      "target": "ENEMY",
-      "label": "Tidal Murmurs (Enemy)",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "DREAMS_OF_THE_STARRY_BEACH_TIDAL_MURMURS_ENEMY",
+        "name": "Tidal Murmurs (Enemy)",
+        "duration": {
+          "value": [
+            25
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "DREAMS_OF_THE_STARRY_BEACH",
+        "description": "Tidal Murmurs (Enemy)",
+        "note": "Enemy Arts DMG Taken (Fragility)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -71,24 +112,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ARTS_DAMAGE_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            25
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Enemy Arts DMG Taken (Fragility)"
+      ]
     }
   ]
 }

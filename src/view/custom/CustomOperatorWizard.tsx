@@ -2,7 +2,7 @@
  * Multi-step wizard for creating/editing custom operators.
  */
 import { useState, useMemo } from 'react';
-import { WeaponType, ElementType, CombatSkillType } from '../../consts/enums';
+import { WeaponType, ElementType, CombatSkillType, CombatSkillsType } from '../../consts/enums';
 import { OperatorClassType } from '../../model/enums/operators';
 import { ObjectType, SubjectType, VerbType, DeterminerType } from '../../consts/semantics';
 import type { Interaction, Predicate } from '../../consts/semantics';
@@ -73,9 +73,9 @@ function describeCondition(c: Interaction): string {
   return `${subject} ${verb} ${object}${id}`;
 }
 
-function generateComboDescription(triggerClause: Predicate[]): string {
-  if (triggerClause.length === 0) return '';
-  const parts = triggerClause
+function generateComboDescription(onTriggerClause: Predicate[]): string {
+  if (onTriggerClause.length === 0) return '';
+  const parts = onTriggerClause
     .map((pred) => pred.conditions.map(describeCondition).join(' and '))
     .filter(Boolean);
   if (parts.length === 0) return '';
@@ -85,9 +85,9 @@ function generateComboDescription(triggerClause: Predicate[]): string {
 /** Default interaction for combo triggers — "Enemy IS [state]" rather than generic "This Operator PERFORM Battle Skill". */
 function defaultComboTrigger(): Interaction {
   return {
-    subject: SubjectType.ENEMY as any,
+    subject: SubjectType.ENEMY,
     verb: VerbType.IS,
-    object: ObjectType.COMBUSTED as any,
+    object: ObjectType.COMBUSTED,
   };
 }
 
@@ -146,7 +146,7 @@ function buildSkillOptions(): SkillOption[] {
   for (const op of ALL_OPERATORS) {
     for (const [key, skill] of Object.entries(op.skills) as [SkillType, SkillDef][]) {
       const combatSkillType = SKILL_TYPE_MAP[key];
-      const label = (COMBAT_SKILL_LABELS as any)[skill.name] || skill.name;
+      const label = COMBAT_SKILL_LABELS[skill.name as CombatSkillsType] || skill.name;
       const totalFrames = skill.defaultActivationDuration + skill.defaultActiveDuration;
       options.push({
         id: `builtin:${op.id}:${key}`,
@@ -246,7 +246,7 @@ export default function CustomOperatorWizard({ initial, onSave, onCancel }: Prop
           </label>
           <label className="wz-field">
             <span>Weapon Type</span>
-            <select value={operator.weaponType} onChange={(e) => update({ weaponType: e.target.value as WeaponType })}>
+            <select value={operator.weaponTypes[0] ?? WeaponType.SWORD} onChange={(e) => update({ weaponTypes: [e.target.value as WeaponType] })}>
               {Object.values(WeaponType).map((w) => <option key={w} value={w}>{WEAPON_LABELS[w]}</option>)}
             </select>
           </label>
@@ -301,22 +301,22 @@ export default function CustomOperatorWizard({ initial, onSave, onCancel }: Prop
             <div className="wz-subsection-header">
               <span>Trigger Conditions (any match)</span>
               <button className="btn-add-sm" onClick={() => {
-                const triggerClause = [...operator.combo.triggerClause, { conditions: [defaultComboTrigger()], effects: [] }];
-                update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
+                const onTriggerClause = [...operator.combo.onTriggerClause, { conditions: [defaultComboTrigger()], effects: [] }];
+                update({ combo: { ...operator.combo, onTriggerClause, description: generateComboDescription(onTriggerClause) } });
               }}>+</button>
             </div>
-            {operator.combo.triggerClause.map((predicate, i) => (
+            {operator.combo.onTriggerClause.map((predicate, i) => (
               <InteractionBuilder
                 key={i}
                 value={predicate.conditions[0]}
                 onChange={(t) => {
-                  const triggerClause = [...operator.combo.triggerClause];
-                  triggerClause[i] = { ...triggerClause[i], conditions: [t] };
-                  update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
+                  const onTriggerClause = [...operator.combo.onTriggerClause];
+                  onTriggerClause[i] = { ...onTriggerClause[i], conditions: [t] };
+                  update({ combo: { ...operator.combo, onTriggerClause, description: generateComboDescription(onTriggerClause) } });
                 }}
-                onRemove={operator.combo.triggerClause.length > 1 ? () => {
-                  const triggerClause = operator.combo.triggerClause.filter((_, j) => j !== i);
-                  update({ combo: { ...operator.combo, triggerClause, description: generateComboDescription(triggerClause) } });
+                onRemove={operator.combo.onTriggerClause.length > 1 ? () => {
+                  const onTriggerClause = operator.combo.onTriggerClause.filter((_, j) => j !== i);
+                  update({ combo: { ...operator.combo, onTriggerClause, description: generateComboDescription(onTriggerClause) } });
                 } : undefined}
                 compact
               />

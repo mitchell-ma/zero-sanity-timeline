@@ -2,20 +2,62 @@
   "weaponName": "Delivery Guaranteed",
   "statusEvents": [
     {
-      "name": "DELIVERY_GUARANTEED_DUTY_FULFILLED",
-      "type": "WEAPON_EFFECT",
-      "originId": "DELIVERY_GUARANTEED",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Duty Fulfilled",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.336
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "NATURE_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.16,
+                  "valueMax": 0.448
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "DELIVERY_GUARANTEED_DUTY_FULFILLED",
+        "name": "Duty Fulfilled",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "DELIVERY_GUARANTEED",
+        "description": "Duty Fulfilled"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,28 +69,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ARTS_DAMAGE_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.336
-        },
-        {
-          "stat": "NATURE_DAMAGE_BONUS",
-          "valueMin": 0.16,
-          "valueMax": 0.448
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

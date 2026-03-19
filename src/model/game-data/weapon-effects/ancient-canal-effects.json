@@ -2,20 +2,48 @@
   "weaponName": "Ancient Canal",
   "statusEvents": [
     {
-      "name": "ANCIENT_CANAL_LANDS_OF_YORE",
-      "type": "WEAPON_EFFECT",
-      "originId": "ANCIENT_CANAL",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Lands of Yore",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.05,
+                  "valueMax": 0.1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "ANCIENT_CANAL_LANDS_OF_YORE",
+        "name": "Lands of Yore",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "ANCIENT_CANAL",
+        "description": "Lands of Yore",
+        "note": "Phys DMG bonus scales per consumed stack"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,24 +55,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "valueMin": 0.05,
-          "valueMax": 0.1
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Phys DMG bonus scales per consumed stack"
+      ]
     }
   ]
 }

@@ -34,11 +34,12 @@ const DURATION_SECONDS: Readonly<Record<StatusLevel, number>> = {
 };
 
 export class Breach extends PhysicalStatus {
-  constructor(params: { statusLevel: StatusLevel }) {
+  constructor(params: { statusLevel: StatusLevel; isForced?: boolean }) {
     super({
       statusType: StatusType.BREACH,
       statusLevel: params.statusLevel,
       maxStatusLevel: 4,
+      isForced: params.isForced,
     });
   }
 

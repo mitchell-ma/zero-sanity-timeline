@@ -3,7 +3,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
-import { EXCHANGE_STATUS_COLUMN } from './processInfliction';
+import { getExchangeStatusConfig } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -80,14 +80,19 @@ export interface QueueFrame {
 // ── Status consumption configuration ────────────────────────────────────────
 
 /** Maps consumeStatus name → column + target owner for queue consumption. */
-export const CONSUME_STATUS_CONFIG: Record<string, { columnId: string; targetOwnerId?: string }> = {
-  MELTING_FLAME: { columnId: EXCHANGE_STATUS_COLUMN.MELTING_FLAME },
-  THUNDERLANCE: { columnId: EXCHANGE_STATUS_COLUMN.THUNDERLANCE },
-  ORIGINIUM_CRYSTAL: { columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL, targetOwnerId: ENEMY_OWNER_ID },
-};
+let _consumeStatusConfig: Record<string, { columnId: string; targetOwnerId?: string }> | null = null;
+export function getConsumeStatusConfig(): Record<string, { columnId: string; targetOwnerId?: string }> {
+  if (!_consumeStatusConfig) {
+    _consumeStatusConfig = {
+      // Exchange statuses — derived from JSON configs with type=EXCHANGE
+      ...Object.fromEntries(
+        Object.entries(getExchangeStatusConfig()).map(([id, info]) => [id, { columnId: info.columnId }])
+      ),
+      ORIGINIUM_CRYSTAL: { columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL, targetOwnerId: ENEMY_OWNER_ID },
+    };
+  }
+  return _consumeStatusConfig;
+}
 
 /** Skill column IDs that consume team statuses (Link) when cast. */
 export const CONSUMING_COLUMNS = new Set(['battle', 'combo', 'ultimate']);
-
-/** Set of status def names handled by the queue (not the engine). */
-export const EXCHANGE_STATUS_NAMES = new Set(Object.keys(EXCHANGE_STATUS_COLUMN));

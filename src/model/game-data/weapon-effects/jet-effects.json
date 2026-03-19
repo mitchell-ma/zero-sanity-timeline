@@ -2,18 +2,47 @@
   "weaponName": "JET",
   "statusEvents": [
     {
-      "name": "JET_ASTROPHYSICS",
-      "type": "WEAPON_EFFECT",
-      "originId": "JET",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Astrophysics",
-      "stack": {
-        "max": { "P0": 1 },
-        "instances": 1,
-        "verb": "RESET"
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.336
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "JET_ASTROPHYSICS",
+        "name": "Astrophysics",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "JET",
+        "description": "Astrophysics"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -34,14 +63,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        { "stat": "ARTS_DAMAGE_BONUS", "valueMin": 0.12, "valueMax": 0.336 }
-      ],
-      "properties": {
-        "duration": { "value": [15], "unit": "SECOND" }
-      }
+      ]
     }
   ]
 }

@@ -682,7 +682,7 @@ async function main() {
       const fileSlug = r.operatorType.toLowerCase().replace(/_/g, '-');
       const filePath = path.join(OPERATORS_DIR, `${fileSlug}.json`);
 
-      let existing: Record<string, any> = {};
+      let existing: Record<string, unknown> = {};
       if (fs.existsSync(filePath)) {
         existing = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
       }

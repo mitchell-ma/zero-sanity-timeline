@@ -3,64 +3,47 @@
   "label": "Æthertech",
   "statusEvents": [
     {
-      "name": "AETHERTECH",
-      "type": "GEAR_EFFECT",
-      "originId": "AETHERTECH",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Æthertech",
-      "stack": {
-        "max": {
-          "P0": 4
-        },
-        "instances": 4,
-        "verb": "NONE"
-      },
-      "triggerClause": [
+      "clause": [
         {
-          "conditions": [
+          "conditions": [],
+          "effects": [
             {
-              "subjectDeterminer": "THIS",
-              "subject": "OPERATOR",
               "verb": "APPLY",
-              "object": "STATUS",
-              "objectId": "VULNERABILITY"
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "value": 0.08
+                }
+              }
             }
           ]
         }
       ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "value": 0.08,
-          "perStack": true
-        }
-      ],
       "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "AETHERTECH",
+        "name": "Æthertech",
         "duration": {
           "value": [
             15
           ],
           "unit": "SECOND"
-        }
-      }
-    },
-    {
-      "name": "AETHERTECH_MAX",
-      "type": "GEAR_EFFECT",
-      "originId": "AETHERTECH",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Æthertech (Max)",
-      "stack": {
-        "max": {
-          "P0": 1
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 4
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "AETHERTECH",
+        "description": "Æthertech"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -72,23 +55,62 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
+      ]
+    },
+    {
+      "clause": [
         {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "value": 0.16
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.16
+                }
+              }
+            }
+          ]
         }
       ],
       "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "AETHERTECH_MAX",
+        "name": "Æthertech (Max)",
         "duration": {
           "value": [
             10
           ],
           "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
         }
       },
-      "note": "Activates at 4 stacks of Vulnerability"
+      "metadata": {
+        "originId": "AETHERTECH",
+        "description": "Æthertech (Max)",
+        "note": "Activates at 4 stacks of Vulnerability"
+      },
+      "onTriggerClause": [
+        {
+          "conditions": [
+            {
+              "subjectDeterminer": "THIS",
+              "subject": "OPERATOR",
+              "verb": "APPLY",
+              "object": "STATUS",
+              "objectId": "VULNERABILITY"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -366,7 +366,7 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
   if (!reactionType) return 1;
 
   let multiplier = 1;
-  for (const effect of json.talentEffects as any[]) {
+  for (const effect of json.talentEffects as { bonusType: string; condition?: { reactionType?: string }; value?: { verb?: string; object?: string | string[]; value?: unknown } }[]) {
     if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
     if (effect.condition?.reactionType !== reactionType) continue;
 
@@ -384,7 +384,7 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
  * Supports multi-dimensional lookups keyed by POTENTIAL, TALENT_LEVEL, SKILL_LEVEL.
  */
 function resolveBasedOnValueForCalc(
-  wp: Record<string, any>,
+  wp: { verb?: string; object?: string | string[]; value?: unknown },
   ctx: { potential: number; talentLevel?: number; skillLevel?: number },
 ): number | undefined {
   if (wp.verb !== 'BASED_ON') return typeof wp.value === 'number' ? wp.value : undefined;
@@ -405,10 +405,11 @@ function resolveBasedOnValueForCalc(
 
   // Multi-dimension with nested map
   if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
-    let current: any = val;
-    for (const dim of dims as string[]) {
+    let current: unknown = val;
+    for (const dim of dims) {
       if (typeof current !== 'object' || current === null) return undefined;
-      const keys = Object.keys(current);
+      const currentObj = current as Record<string, unknown>;
+      const keys = Object.keys(currentObj);
       let best: string | undefined;
       let bestN = -1;
 
@@ -429,7 +430,7 @@ function resolveBasedOnValueForCalc(
       }
 
       if (!best) return undefined;
-      current = current[best];
+      current = currentObj[best];
     }
     return typeof current === 'number' ? current : undefined;
   }

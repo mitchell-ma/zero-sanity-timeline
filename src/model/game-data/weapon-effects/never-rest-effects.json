@@ -2,20 +2,48 @@
   "weaponName": "Never Rest",
   "statusEvents": [
     {
-      "name": "NEVER_REST_REINCARNATION",
-      "type": "WEAPON_EFFECT",
-      "originId": "NEVER_REST",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Reincarnation",
-      "stack": {
-        "max": {
-          "P0": 5
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.05,
+                  "valueMax": 0.1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "NEVER_REST_REINCARNATION",
+        "name": "Reincarnation",
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
         },
-        "instances": 5,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 5
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "NEVER_REST",
+        "description": "Reincarnation"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,40 +54,53 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "valueMin": 0.05,
-          "valueMax": 0.1,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            30
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     },
     {
-      "name": "NEVER_REST_REINCARNATION_TEAM",
-      "type": "WEAPON_EFFECT",
-      "originId": "NEVER_REST",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Reincarnation (Team)",
-      "stack": {
-        "max": {
-          "P0": 5
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.025,
+                  "valueMax": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "NEVER_REST_REINCARNATION_TEAM",
+        "name": "Reincarnation (Team)",
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
         },
-        "instances": 5,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 5
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "NEVER_REST",
+        "description": "Reincarnation (Team)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -70,24 +111,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.025,
-          "valueMax": 0.05,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            30
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

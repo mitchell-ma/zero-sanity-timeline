@@ -2,20 +2,48 @@
   "weaponName": "Opus: The Living",
   "statusEvents": [
     {
-      "name": "OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE",
-      "type": "WEAPON_EFFECT",
-      "originId": "OPUS_THE_LIVING",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Road Home for All Life",
-      "stack": {
-        "max": {
-          "P0": 2
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.075,
+                  "valueMax": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE",
+        "name": "Road Home for All Life",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 2,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 2
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OPUS_THE_LIVING",
+        "description": "Road Home for All Life"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,24 +54,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.075,
-          "valueMax": 0.15,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

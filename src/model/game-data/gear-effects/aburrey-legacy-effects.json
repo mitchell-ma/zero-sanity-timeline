@@ -3,20 +3,48 @@
   "label": "Aburrey's Legacy",
   "statusEvents": [
     {
-      "name": "ABURREY_LEGACY",
-      "type": "GEAR_EFFECT",
-      "originId": "ABURREY_LEGACY",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Aburrey's Legacy",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "ABURREY_LEGACY",
+        "name": "Aburrey's Legacy",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "ABURREY_LEGACY",
+        "description": "Aburrey's Legacy",
+        "note": "Each skill type gives a unique non-self-stacking buff"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -39,24 +67,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "value": 0.05,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Each skill type gives a unique non-self-stacking buff"
+      ]
     }
   ]
 }

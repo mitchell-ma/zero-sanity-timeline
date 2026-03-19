@@ -3,20 +3,47 @@
   "label": "MI Security",
   "statusEvents": [
     {
-      "name": "MI_SECURITY",
-      "type": "GEAR_EFFECT",
-      "originId": "MI_SECURITY",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "MI Security",
-      "stack": {
-        "max": {
-          "P0": 5
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "MI_SECURITY",
+        "name": "MI Security",
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
         },
-        "instances": 5,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 5
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "MI_SECURITY",
+        "description": "MI Security"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,39 +54,50 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "value": 0.05,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            5
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     },
     {
-      "name": "MI_SECURITY_MAX",
-      "type": "GEAR_EFFECT",
-      "originId": "MI_SECURITY",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "MI Security (Max)",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRITICAL_RATE",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.05
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "MI_SECURITY_MAX",
+        "name": "MI Security (Max)",
+        "duration": {
+          "value": [
+            5
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "MI_SECURITY",
+        "description": "MI Security (Max)",
+        "note": "Activates at 5 stacks"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -70,23 +108,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRITICAL_RATE",
-          "value": 0.05
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            5
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Activates at 5 stacks"
+      ]
     }
   ]
 }

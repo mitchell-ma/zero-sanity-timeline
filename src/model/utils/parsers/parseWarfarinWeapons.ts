@@ -623,23 +623,23 @@ export async function fetchWeaponList(): Promise<WarfarinWeaponListEntry[]> {
   return json.data;
 }
 
-export async function fetchWeaponDetail(slug: string): Promise<Record<string, any>> {
+export async function fetchWeaponDetail(slug: string): Promise<Record<string, unknown>> {
   const url = `${WEAPONS_DETAIL_URL}/${slug}`;
   console.log(`  Fetching ${url}...`);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  const json = await res.json() as { data: Record<string, any> };
+  const json = await res.json() as { data: Record<string, unknown> };
   return json.data;
 }
 
-export function buildWeaponEntry(data: Record<string, any>) {
-  const wbt = data.weaponBasicTable;
-  const upgradeList: UpgradeEntry[] = data.weaponUpgradeTemplateTable.list;
-  const skillPatchTable: Record<string, { SkillPatchDataBundle: SkillLevelEntry[] }> = data.skillPatchTable;
+export function buildWeaponEntry(data: Record<string, unknown>) {
+  const wbt = data.weaponBasicTable as Record<string, unknown>;
+  const upgradeList = (data.weaponUpgradeTemplateTable as Record<string, unknown>).list as UpgradeEntry[];
+  const skillPatchTable = data.skillPatchTable as Record<string, { SkillPatchDataBundle: SkillLevelEntry[] }>;
 
-  const weaponType = WARFARIN_WEAPON_TYPE[wbt.weaponType];
+  const weaponType = WARFARIN_WEAPON_TYPE[wbt.weaponType as number];
   if (!weaponType) {
-    console.warn(`    Unknown weaponType ${wbt.weaponType} for ${wbt.engName}`);
+    console.warn(`    Unknown weaponType ${wbt.weaponType} for ${wbt.engName as string}`);
   }
 
   // All levels with base attack
@@ -649,7 +649,7 @@ export function buildWeaponEntry(data: Record<string, any>) {
   }));
 
   // Parse skills in order of weaponSkillList
-  const skillIds: string[] = wbt.weaponSkillList;
+  const skillIds = wbt.weaponSkillList as string[];
   const skills = skillIds.map((skillId: string, idx: number) => {
     const skillData = skillPatchTable[skillId];
     if (!skillData) {
@@ -659,13 +659,13 @@ export function buildWeaponEntry(data: Record<string, any>) {
     return parseWeaponSkill(skillId, skillData.SkillPatchDataBundle, idx + 1);
   }).filter(Boolean);
 
-  const weaponEnumKey = nameToEnumKey(wbt.engName);
+  const weaponEnumKey = nameToEnumKey(wbt.engName as string);
 
   return {
     weaponId: weaponEnumKey,
     name: enumKeyToName(weaponEnumKey),
-    weaponType: weaponType ?? `UNKNOWN_${wbt.weaponType}`,
-    weaponRarity: wbt.rarity,
+    weaponType: weaponType ?? `UNKNOWN_${wbt.weaponType as number}`,
+    weaponRarity: wbt.rarity as number,
     allLevels,
     skills,
     dataSources: ['WARFARIN'],
@@ -712,7 +712,7 @@ async function parseOne(slug: string) {
   const lv1 = entry.allLevels[0]?.baseAttack ?? 0;
   const lv90 = entry.allLevels[entry.allLevels.length - 1]?.baseAttack ?? 0;
   console.log(`  Type: ${entry.weaponType}, Rarity: ${entry.weaponRarity}, ATK: ${lv1}→${lv90}`);
-  console.log(`  Skills: ${entry.skills.map((s: any) => s.name).join(', ')}`);
+  console.log(`  Skills: ${entry.skills.map((s: { name: string } | null) => s?.name).join(', ')}`);
 }
 
 async function parseAll() {

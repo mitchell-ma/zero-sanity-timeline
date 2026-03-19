@@ -2,20 +2,47 @@
   "weaponName": "OBJ Heavy Burden",
   "statusEvents": [
     {
-      "name": "OBJ_HEAVY_BURDEN_TENACIOUS_WILL",
-      "type": "WEAPON_EFFECT",
-      "originId": "OBJ_HEAVY_BURDEN",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Tenacious Will",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "DEF",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.18,
+                  "valueMax": 0.36
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OBJ_HEAVY_BURDEN_TENACIOUS_WILL",
+        "name": "Tenacious Will",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OBJ_HEAVY_BURDEN",
+        "description": "Tenacious Will"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,23 +54,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "DEF",
-          "valueMin": 0.18,
-          "valueMax": 0.36
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

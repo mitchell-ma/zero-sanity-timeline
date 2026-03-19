@@ -2,20 +2,50 @@
   "weaponName": "Stanza of Memorials",
   "statusEvents": [
     {
-      "name": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
-      "type": "WEAPON_EFFECT",
-      "originId": "STANZA_OF_MEMORIALS",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Lustrous Pyre",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
+        "name": "Lustrous Pyre",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "STANZA_OF_MEMORIALS",
+        "description": "Lustrous Pyre",
+        "note": "Applies to different-element operators"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,24 +56,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.08,
-          "valueMax": 0.16
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Applies to different-element operators"
+      ]
     }
   ]
 }

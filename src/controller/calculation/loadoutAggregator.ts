@@ -13,6 +13,7 @@
  */
 
 import { GearSetType, StatType, WeaponSkillType } from '../../consts/enums';
+import type { SkillLevel } from '../../consts/types';
 import { Weapon } from '../../model/weapons/weapon';
 import { Gear } from '../../model/gears/gear';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
@@ -144,14 +145,14 @@ export function aggregateLoadoutStats(
 
   // 1. Create operator model and apply user's loadout state
   const model = new DataDrivenOperator(config, loadoutProperties.operator.level);
-  model.potential = loadoutProperties.operator.potential as any;
+  model.potential = loadoutProperties.operator.potential as 0 | 1 | 2 | 3 | 4 | 5;
   model.talentOneLevel = loadoutProperties.operator.talentOneLevel;
   model.talentTwoLevel = loadoutProperties.operator.talentTwoLevel;
   model.attributeIncreaseLevel = loadoutProperties.operator.attributeIncreaseLevel ?? 4;
-  model.basicAttackLevel = loadoutProperties.skills.basicAttackLevel as any;
-  model.battleSkillLevel = loadoutProperties.skills.battleSkillLevel as any;
-  model.comboSkillLevel = loadoutProperties.skills.comboSkillLevel as any;
-  model.ultimateLevel = loadoutProperties.skills.ultimateLevel as any;
+  model.basicAttackLevel = loadoutProperties.skills.basicAttackLevel as SkillLevel;
+  model.battleSkillLevel = loadoutProperties.skills.battleSkillLevel as SkillLevel;
+  model.comboSkillLevel = loadoutProperties.skills.comboSkillLevel as SkillLevel;
+  model.ultimateLevel = loadoutProperties.skills.ultimateLevel as SkillLevel;
 
   const operatorBaseAttack = model.getBaseAttack();
   const stats: Record<StatType, number> = { ...model.stats };
@@ -227,7 +228,7 @@ export function aggregateLoadoutStats(
         }
         // Handle secondary attribute bonus for skills that grant it (e.g. Flow: Unbridled Edge)
         if ('getElementDmgBonus' in skill) {
-          const secAttrBonus = (skill as any).getValue();
+          const secAttrBonus = (skill as WeaponSkill & { getValue(): number }).getValue();
           if (secAttrBonus > 0) {
             const secBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
             if (secBonusStat) {

@@ -2,20 +2,47 @@
   "weaponName": "Industry 0.1",
   "statusEvents": [
     {
-      "name": "INDUSTRY_0_1_EMERGENCY_BOOST",
-      "type": "WEAPON_EFFECT",
-      "originId": "INDUSTRY_0_1",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Emergency Boost",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.24
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "INDUSTRY_0_1_EMERGENCY_BOOST",
+        "name": "Emergency Boost",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "INDUSTRY_0_1",
+        "description": "Emergency Boost"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,23 +53,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.24
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

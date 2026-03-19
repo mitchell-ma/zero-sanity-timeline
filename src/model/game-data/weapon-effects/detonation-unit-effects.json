@@ -2,20 +2,48 @@
   "weaponName": "Detonation Unit",
   "statusEvents": [
     {
-      "name": "DETONATION_UNIT_IMPOSING_CHAMPION",
-      "type": "WEAPON_EFFECT",
-      "originId": "DETONATION_UNIT",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Imposing Champion",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "WILL_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "DETONATION_UNIT_IMPOSING_CHAMPION",
+        "name": "Imposing Champion",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "DETONATION_UNIT",
+        "description": "Imposing Champion",
+        "note": "Secondary attribute bonus"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,39 +54,52 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "WILL_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Secondary attribute bonus"
+      ]
     },
     {
-      "name": "DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY",
-      "type": "WEAPON_EFFECT",
-      "originId": "DETONATION_UNIT",
-      "target": "ENEMY",
-      "label": "Imposing Champion (Enemy)",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ARTS_DAMAGE_BONUS",
+              "to": "ENEMY",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.09,
+                  "valueMax": 0.252
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY",
+        "name": "Imposing Champion (Enemy)",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "DETONATION_UNIT",
+        "description": "Imposing Champion (Enemy)",
+        "note": "Enemy Arts DMG Taken (Fragility)"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -69,24 +110,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ARTS_DAMAGE_BONUS",
-          "valueMin": 0.09,
-          "valueMax": 0.252
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Enemy Arts DMG Taken (Fragility)"
+      ]
     }
   ]
 }

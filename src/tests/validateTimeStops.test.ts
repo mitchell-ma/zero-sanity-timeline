@@ -12,6 +12,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getSkillIds: () => new Set(),
   getAllOperatorIds: () => [],
   getSkillTypeMap: () => ({}),
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGearEffectLoader', () => ({
   getWeaponEffectDefs: () => [],

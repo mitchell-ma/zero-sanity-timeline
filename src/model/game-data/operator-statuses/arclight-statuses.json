@@ -1,46 +1,10 @@
 [
   {
-    "name": "WILDLAND_TREKKER_TRIGGER",
-    "targetDeterminer": "THIS",
-    "target": "OPERATOR",
-    "element": "ELECTRIC",
-    "isNamedEvent": true,
-    "isForceApplied": false,
-    "stack": {
-      "max": {
-        "P0": 3,
-        "P1": 3,
-        "P2": 3,
-        "P3": 3,
-        "P4": 2,
-        "P5": 2
-      },
-      "instances": 3,
-      "verb": "NONE"
-    },
-    "triggerClause": [
-      {
-        "conditions": [
-          {
-            "subjectDeterminer": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "BATTLE_SKILL"
-          },
-          {
-            "subject": "ENEMY",
-            "verb": "HAVE",
-            "object": "STATUS",
-            "objectId": "ELECTRIFICATION"
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [
           {
-            "subject": "THIS_EVENT",
+            "subject": "EVENT",
             "verb": "HAVE",
             "object": "STACKS",
             "cardinalityConstraint": "EXACTLY",
@@ -58,48 +22,51 @@
         ]
       }
     ],
-    "minTalentLevel": {
-      "talent": 2,
-      "minLevel": 1
-    },
     "properties": {
-      "duration": {
-        "value": [
-          -1
-        ],
-        "unit": "SECOND"
+      "id": "WILDLAND_TREKKER_TRIGGER",
+      "name": "Wildland Trekker Trigger",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS",
+      "element": "ELECTRIC",
+      "statusLevel": {
+        "limit": {
+          "verb": "BASED_ON",
+          "object": "POTENTIAL",
+          "value": [
+            3,
+            3,
+            3,
+            3,
+            2,
+            2
+          ]
+        },
+        "statusLevelInteractionType": "NONE"
       }
     },
-    "originId": "TEMPESTUOUS_ARC"
+    "metadata": {
+      "originId": "TEMPESTUOUS_ARC"
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "BATTLE_SKILL"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "ELECTRIFICATION"
+          }
+        ]
+      }
+    ]
   },
   {
-    "name": "WILDLAND_TREKKER_BUFF",
-    "targetDeterminer": "ALL",
-    "target": "OPERATOR",
-    "element": "ELECTRIC",
-    "isNamedEvent": true,
-    "isForceApplied": false,
-    "stack": {
-      "max": {
-        "P0": 1,
-        "P1": 1,
-        "P2": 1,
-        "P3": 1,
-        "P4": 1,
-        "P5": 1
-      },
-      "instances": 1,
-      "verb": "RESET"
-    },
-    "triggerClause": [],
-    "properties": {
-      "duration": {
-        "value": [
-          15
-        ],
-        "unit": "SECOND"
-      }
-    },
     "clause": [
       {
         "conditions": [],
@@ -112,14 +79,35 @@
             "with": {
               "value": {
                 "verb": "BASED_ON",
-                "object": ["POTENTIAL", "INTELLECT"],
+                "object": [
+                  "POTENTIAL",
+                  "INTELLECT"
+                ],
                 "value": {
-                  "P0": { "1": 0.0008, "2": 0.0012 },
-                  "P1": { "1": 0.0008, "2": 0.0012 },
-                  "P2": { "1": 0.0008, "2": 0.0012 },
-                  "P3": { "1": 0.00104, "2": 0.00156 },
-                  "P4": { "1": 0.00104, "2": 0.00156 },
-                  "P5": { "1": 0.00104, "2": 0.00156 }
+                  "P0": {
+                    "1": 0.0008,
+                    "2": 0.0012
+                  },
+                  "P1": {
+                    "1": 0.0008,
+                    "2": 0.0012
+                  },
+                  "P2": {
+                    "1": 0.0008,
+                    "2": 0.0012
+                  },
+                  "P3": {
+                    "1": 0.00104,
+                    "2": 0.00156
+                  },
+                  "P4": {
+                    "1": 0.00104,
+                    "2": 0.00156
+                  },
+                  "P5": {
+                    "1": 0.00104,
+                    "2": 0.00156
+                  }
                 }
               }
             }
@@ -127,50 +115,29 @@
         ]
       }
     ],
-    "originId": "WILDLAND_TREKKER_TRIGGER"
-  },
-  {
-    "name": "TACTFUL_APPROACH",
-    "target": "ENEMY",
-    "element": "ELECTRIC",
-    "isNamedEvent": true,
-    "isForceApplied": false,
-    "stack": {
-      "max": {
-        "P0": 1,
-        "P1": 1,
-        "P2": 1,
-        "P3": 1,
-        "P4": 1,
-        "P5": 1
-      },
-      "instances": 1,
-      "verb": "RESET"
-    },
-    "triggerClause": [
-      {
-        "conditions": [
-          {
-            "subjectDeterminer": "THIS",
-            "subject": "OPERATOR",
-            "verb": "PERFORM",
-            "object": "ULTIMATE"
-          }
-        ]
-      }
-    ],
-    "minTalentLevel": {
-      "talent": 2,
-      "minLevel": 1
-    },
     "properties": {
+      "id": "WILDLAND_TREKKER_BUFF",
+      "name": "Wildland Trekker",
+      "target": "OPERATOR",
+      "targetDeterminer": "ALL",
+      "element": "ELECTRIC",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "value": 1
+        },
+        "statusLevelInteractionType": "RESET"
+      },
       "duration": {
-        "value": [
-          10
-        ],
+        "value": 15,
         "unit": "SECOND"
       }
     },
+    "metadata": {
+      "originId": "WILDLAND_TREKKER_TRIGGER"
+    }
+  },
+  {
     "clause": [
       {
         "conditions": [],
@@ -194,6 +161,37 @@
         ]
       }
     ],
-    "originId": "EXPLODING_BLITZ"
+    "properties": {
+      "id": "TACTFUL_APPROACH",
+      "name": "Tactful Approach",
+      "target": "ENEMY",
+      "element": "ELECTRIC",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "value": 1
+        },
+        "statusLevelInteractionType": "RESET"
+      },
+      "duration": {
+        "value": 10,
+        "unit": "SECOND"
+      }
+    },
+    "metadata": {
+      "originId": "EXPLODING_BLITZ"
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "ULTIMATE"
+          }
+        ]
+      }
+    ]
   }
 ]

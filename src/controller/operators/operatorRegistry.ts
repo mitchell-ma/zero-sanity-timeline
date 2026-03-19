@@ -8,10 +8,6 @@
  */
 import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
 import { ElementType, OperatorClassType, ELEMENT_COLORS } from '../../consts/enums';
-import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
-import type { Predicate, Interaction } from '../../consts/semantics';
-import { SKILL_COLUMNS } from '../../model/channels';
-import { TriggerCapability } from '../../consts/triggerCapabilities';
 import { Potential } from '../../consts/types';
 import {
   getOperatorJson,
@@ -26,7 +22,7 @@ import type { OperatorStatConfig } from '../../model/operators/dataDrivenOperato
 import { loadCustomOperators } from '../../utils/customContentStorage';
 
 // Auto-discover splash art assets
-const splashContext = (require as any).context('../../assets/operators', false, /Banner\.webp$/);
+const splashContext = require.context('../../assets/operators', false, /Banner\.webp$/);
 const SPLASH_ART: Record<string, string> = {};
 for (const key of splashContext.keys()) {
   const match = key.match(/\.\/(.+)_Banner\.webp$/);
@@ -68,56 +64,10 @@ const PLACEHOLDER_EQUIPMENT = {
   tactical: 'Stew Meeting',
 };
 
-// ── Element → published interactions mapping ────────────────────────────────
-
-const I = (subject: any, verb: any, object: any, extra?: Partial<Interaction>): Interaction =>
-  ({ subject, verb, object, ...extra } as Interaction);
-
-const ELEMENT_INTERACTIONS: Partial<Record<string, Interaction[]>> = {
-  HEAT:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.COMBUSTED),  I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'HEAT' })],
-  CRYO:     [I(SubjectType.ENEMY, VerbType.IS, ObjectType.SOLIDIFIED), I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'CRYO' })],
-  NATURE:   [I(SubjectType.ENEMY, VerbType.IS, ObjectType.CORRODED),   I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'NATURE' })],
-  ELECTRIC: [I(SubjectType.ENEMY, VerbType.IS, ObjectType.ELECTRIFIED),I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.INFLICTION, { subjectDeterminer: DeterminerType.THIS, element: 'ELECTRIC' })],
-  PHYSICAL: [I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'PHYSICAL' }), I(SubjectType.OPERATOR, VerbType.APPLY, ObjectType.STATUS, { subjectDeterminer: DeterminerType.THIS, objectId: 'VULNERABILITY' })],
-};
 
 // ── Helper: seconds → frames ────────────────────────────────────────────────
 
 function dur(seconds: number): number { return Math.round(seconds * 120); }
-
-// ── Helper: parse trigger clause ────────────────────────────────────────────
-
-function parseTriggerClause(trigger: Record<string, any>): {
-  comboRequires: Interaction[];
-  forbids: string[];
-  requiresActive: string[];
-} {
-  if (trigger.triggerClause?.length) {
-    const comboRequires: Interaction[] = [];
-    const forbids: string[] = [];
-    const requiresActive: string[] = [];
-
-    for (const predicate of trigger.triggerClause as Predicate[]) {
-      for (const cond of predicate.conditions) {
-        // Column constraint: ENEMY HAVE STATUS with objectId
-        if (cond.subject === SubjectType.ENEMY && cond.verb === VerbType.HAVE
-            && cond.object === ObjectType.STATUS && cond.objectId) {
-          const columnId = cond.objectId;
-          if (cond.negated) {
-            if (!forbids.includes(columnId)) forbids.push(columnId);
-          } else {
-            if (!requiresActive.includes(columnId)) requiresActive.push(columnId);
-          }
-          continue;
-        }
-        comboRequires.push(cond as Interaction);
-      }
-    }
-    return { comboRequires, forbids, requiresActive };
-  }
-
-  return { comboRequires: [], forbids: [], requiresActive: [] };
-}
 
 // ── Unified view operator builder ────────────────────────────────────────────
 
@@ -126,7 +76,7 @@ function parseTriggerClause(trigger: Record<string, any>): {
  * Works for both built-in operators (auto-discovered JSONs) and custom operators
  * (loaded from localStorage with the same shape).
  */
-function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, any>): ViewOperator {
+function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, unknown>): ViewOperator {
   const timings = loadSkillTimings(opJson);
   const gaugeMax = loadUltimateEnergyCost(opJson);
   const gg = loadSkillGaugeGains(opJson);
@@ -136,13 +86,13 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     two?: { name: string; maxLevel: number };
     attributeIncrease?: { name: string; attribute: string };
   } | undefined;
-  const opSkills = opJson.skills as Record<string, any>;
+  const opSkills = opJson.skills as Record<string, any> | undefined;
 
   // Display color: always derived from element
   const color = ELEMENT_COLORS[elementType as ElementType] ?? '#888888';
 
   // Splash art: explicit field → asset auto-discovery
-  const splash = opJson.splashArt ?? getSplashArt(opJson.name);
+  const splash = opJson.splashArt ?? getSplashArt(opJson.name as string);
 
   // Build skill type → base skill ID map from skillTypeMap
   const typeMap = getSkillTypeMap(operatorId);
@@ -155,18 +105,18 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
 
   // Compute skill timing — use JSON override fields when available, fall back to getSkillTimings
   const basicActivation = opJson.basicAttackDefaultDuration != null
-    ? dur(opJson.basicAttackDefaultDuration) : 24;
+    ? dur(opJson.basicAttackDefaultDuration as number) : 24;
   const battleActivation = opJson.battleSkillActivationDuration != null
-    ? dur(opJson.battleSkillActivationDuration) : timings.battleDur;
+    ? dur(opJson.battleSkillActivationDuration as number) : timings.battleDur;
   const battleCooldown = opJson.battleSkillCooldownDuration != null
-    ? dur(opJson.battleSkillCooldownDuration) : 0;
+    ? dur(opJson.battleSkillCooldownDuration as number) : 0;
   const comboActivation = opJson.comboSkillActivationDuration != null
-    ? dur(opJson.comboSkillActivationDuration) : timings.comboDur;
+    ? dur(opJson.comboSkillActivationDuration as number) : timings.comboDur;
   const ultActiveDur = timings.ultActiveDur
     ?? (opJson.ultimateActiveDuration != null
-      ? dur(opJson.ultimateActiveDuration) : Math.max(0, timings.ultDur - timings.ultAnimDur));
+      ? dur(opJson.ultimateActiveDuration as number) : Math.max(0, timings.ultDur - timings.ultAnimDur));
   const ultCooldown = timings.ultCd || (opJson.ultimateCooldownDuration != null
-    ? dur(opJson.ultimateCooldownDuration) : 0);
+    ? dur(opJson.ultimateCooldownDuration as number) : 0);
 
   const skillTimingConfigs: Record<string, {
     defaultActivationDuration: number;
@@ -203,31 +153,17 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     },
   };
 
-  const battleInteractions = ELEMENT_INTERACTIONS[elementType] ?? [];
-
-  const SKILL_PUBLISH_MAP: Record<string, Interaction> = {
-    [SKILL_COLUMNS.BASIC]:    I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.FINAL_STRIKE, { subjectDeterminer: DeterminerType.THIS }),
-    [SKILL_COLUMNS.BATTLE]:   I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.BATTLE_SKILL, { subjectDeterminer: DeterminerType.THIS }),
-    [SKILL_COLUMNS.COMBO]:    I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.COMBO_SKILL, { subjectDeterminer: DeterminerType.THIS }),
-    [SKILL_COLUMNS.ULTIMATE]: I(SubjectType.OPERATOR, VerbType.PERFORM, ObjectType.ULTIMATE, { subjectDeterminer: DeterminerType.THIS }),
-  };
-
   const skills: Record<string, SkillDef> = {};
   for (const [key, timing] of Object.entries(skillTimingConfigs)) {
     const skillName = categoryToName[key] ?? key;
     const categoryKey = key === 'basic' ? 'BASIC_ATTACK' : key === 'battle' ? 'BATTLE_SKILL'
       : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';
-    const resolvedSkillId = typeMap[categoryKey] ?? categoryKey;
+    const rawEntry = typeMap[categoryKey] as any;
+    const resolvedSkillId = typeof rawEntry === 'string' ? rawEntry
+      : rawEntry?.BATK ?? categoryKey;
     const catData = opSkills?.[resolvedSkillId];
-
-    const defaultTriggers: Interaction[] = [];
-    const skillPublish = SKILL_PUBLISH_MAP[key];
-    if (skillPublish) defaultTriggers.push(skillPublish);
-    const skillTriggers = key === 'battle' ? battleInteractions : [];
-    const merged = [...defaultTriggers, ...skillTriggers];
-    const publishesTriggers = merged.length > 0 ? merged : undefined;
     const desc = catData?.description;
-    skills[key] = { name: skillName, element: elementType, ...timing, publishesTriggers, ...(desc ? { description: desc } : {}) };
+    skills[key] = { name: skillName, element: elementType, ...timing, ...(desc ? { description: desc } : {}) };
   }
 
   // SP cost from JSON
@@ -253,59 +189,15 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     skills.battle = { ...skills.battle, spReturnNotes };
   }
 
-  // Combo trigger from JSON (resolve via skillTypeMap → actual skill ID)
-  const comboSkillId = typeMap.COMBO_SKILL;
-  const comboTrigger = comboSkillId ? opSkills?.[comboSkillId]?.properties?.trigger : undefined;
-  let triggerCapability: TriggerCapability | undefined;
-  const parsedTrigger = comboTrigger ? parseTriggerClause(comboTrigger) : null;
-  if (parsedTrigger && parsedTrigger.comboRequires.length > 0) {
-    const publishesTriggers: Partial<Record<string, Interaction[]>> = {};
-    for (const [key, skillDef] of Object.entries(skills)) {
-      if ((skillDef as SkillDef).publishesTriggers?.length) {
-        publishesTriggers[key] = (skillDef as SkillDef).publishesTriggers!;
-      }
-    }
-    triggerCapability = {
-      publishesTriggers,
-      comboRequires: parsedTrigger.comboRequires,
-      comboDescription: comboTrigger.description ?? '',
-      comboWindowFrames: comboTrigger.windowFrames ?? 720,
-      ...(parsedTrigger.forbids?.length ? { comboForbidsActiveColumns: parsedTrigger.forbids } : {}),
-      ...(parsedTrigger.requiresActive?.length ? { comboRequiresActiveColumns: parsedTrigger.requiresActive } : {}),
-    };
-  }
-
-  // Scan statusEvents for derivedTeamColumns declarations
-  const statusEventsRaw = opJson.statusEvents as { derivedTeamColumns?: string[] }[] | undefined;
-  if (statusEventsRaw) {
-    const teamCols: string[] = [];
-    for (const se of statusEventsRaw) {
-      if (se.derivedTeamColumns) teamCols.push(...se.derivedTeamColumns);
-    }
-    if (teamCols.length > 0) {
-      if (!triggerCapability) {
-        triggerCapability = {
-          publishesTriggers: {},
-          comboRequires: [],
-          comboDescription: '',
-          comboWindowFrames: 720,
-          derivedTeamColumns: teamCols,
-        };
-      } else {
-        triggerCapability = { ...triggerCapability, derivedTeamColumns: teamCols };
-      }
-    }
-  }
-
   return {
     id: operatorId,
-    name: opJson.name,
+    name: opJson.name as string,
     color,
     element: elementType,
-    operatorClassType: opJson.operatorClassType,
-    role: ROLE_LABELS[opJson.operatorClassType] ?? opJson.operatorClassType,
-    rarity: opJson.operatorRarity,
-    splash,
+    operatorClassType: opJson.operatorClassType as string,
+    role: ROLE_LABELS[opJson.operatorClassType as string] ?? opJson.operatorClassType,
+    rarity: opJson.operatorRarity as number,
+    splash: splash as string | undefined,
     weaponTypes: Array.isArray(opJson.weaponType) ? opJson.weaponType : [opJson.weaponType],
     weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
@@ -318,7 +210,6 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, an
     attributeIncreaseName: talents?.attributeIncrease?.name ?? '',
     attributeIncreaseAttribute: talents?.attributeIncrease?.attribute ?? '',
     maxAttributeIncreaseLevel: 4,
-    triggerCapability,
   };
 }
 
@@ -331,7 +222,7 @@ const FIELD_HINTS: Record<string, string> = {
   weaponType: 'weapon type (Sword, Arts Unit, etc.)',
 };
 
-function validateOperatorJson(json: Record<string, any>, isBuiltIn: boolean): string[] {
+function validateOperatorJson(json: Record<string, unknown>, isBuiltIn: boolean): string[] {
   const issues: string[] = [];
   for (const [field, hint] of Object.entries(FIELD_HINTS)) {
     if (!json[field]) issues.push(hint);
@@ -365,7 +256,7 @@ for (const id of getAllOperatorIds()) {
   }
   const issues = validateOperatorJson(json, true);
   if (issues.length > 0) {
-    const name = json.name ?? id;
+    const name = (json.name as string) ?? id;
     const msg = formatWarning(name, issues, true);
     console.warn(msg);
     operatorWarnings.push({ id, name, isBuiltIn: true, message: msg });
@@ -374,7 +265,7 @@ for (const id of getAllOperatorIds()) {
   try {
     ALL_OPERATORS.push(buildViewOperatorFromJson(id, json));
   } catch (e) {
-    const name = json.name ?? id;
+    const name = (json.name as string) ?? id;
     console.warn(`[game-data] ${name}: failed to build operator —`, e);
     operatorWarnings.push({ id, name, isBuiltIn: true, message: `[game-data] ${name}: unexpected build error. See console for details.` });
   }
@@ -388,9 +279,9 @@ for (const id of getAllOperatorIds()) {
  */
 export function registerCustomOperatorFromConfig(
   customId: string,
-  opJson: Record<string, any>,
+  opJson: Record<string, unknown>,
 ): ViewOperator | null {
-  const name = opJson.name ?? customId;
+  const name = (opJson.name as string) ?? customId;
   const issues = validateOperatorJson(opJson, false);
   if (issues.length > 0) {
     const msg = formatWarning(name, issues, false);
@@ -473,7 +364,7 @@ export function getOperatorConfig(operatorId: string): OperatorStatConfig | null
       elementType: custom.elementType,
       mainAttributeType: custom.mainAttributeType as string,
       secondaryAttributeType: (custom.secondaryAttributeType ?? custom.mainAttributeType) as string,
-      baseStats: custom.baseStats as any,
+      baseStats: custom.baseStats as OperatorStatConfig['baseStats'],
       potentials: custom.potentials
         ?.filter(p => p.statModifiers && Object.keys(p.statModifiers).length > 0)
         .map(p => ({

@@ -3,20 +3,48 @@
   "label": "Type 50 Yinglung",
   "statusEvents": [
     {
-      "name": "TYPE_50_YINGLUNG",
-      "type": "GEAR_EFFECT",
-      "originId": "TYPE_50_YINGLUNG",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Type 50 Yinglung",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "COMBO_SKILL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "value": 0.2
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "TYPE_50_YINGLUNG",
+        "name": "Type 50 Yinglung",
+        "duration": {
+          "value": [
+            0
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "TYPE_50_YINGLUNG",
+        "description": "Type 50 Yinglung",
+        "note": "Consumed on next combo skill cast"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,24 +55,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "COMBO_SKILL_DAMAGE_BONUS",
-          "value": 0.2,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            0
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "Consumed on next combo skill cast"
+      ]
     }
   ]
 }

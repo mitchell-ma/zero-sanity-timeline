@@ -2,18 +2,63 @@
   "weaponName": "OBJ Arts Identifier",
   "statusEvents": [
     {
-      "name": "OBJ_ARTS_IDENTIFIER_TRANSCENDENT_ARTS",
-      "type": "WEAPON_EFFECT",
-      "originId": "OBJ_ARTS_IDENTIFIER",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Transcendent Arts",
-      "stack": {
-        "max": { "P0": 1 },
-        "instances": 1,
-        "verb": "RESET"
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "HEAT_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ELECTRIC_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "OBJ_ARTS_IDENTIFIER_TRANSCENDENT_ARTS",
+        "name": "Transcendent Arts",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "OBJ_ARTS_IDENTIFIER",
+        "description": "Transcendent Arts",
+        "note": "When combo applies Arts Burst or Physical Status"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -34,16 +79,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        { "stat": "HEAT_DAMAGE_BONUS", "valueMin": 0.08, "valueMax": 0.16 },
-        { "stat": "ELECTRIC_DAMAGE_BONUS", "valueMin": 0.08, "valueMax": 0.16 }
-      ],
-      "properties": {
-        "duration": { "value": [15], "unit": "SECOND" }
-      },
-      "note": "When combo applies Arts Burst or Physical Status"
+      ]
     }
   ]
 }

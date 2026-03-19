@@ -1,31 +1,19 @@
 [
   {
-    "name": "ORIGINIUM_CRYSTAL",
-    "target": "ENEMY",
-    "isNamedEvent": false,
-    "isForceApplied": false,
-    "stack": {
-      "max": {
-        "P0": 4,
-        "P1": 4,
-        "P2": 4,
-        "P3": 4,
-        "P4": 4,
-        "P5": 4
-      },
-      "instances": 4,
-      "verb": "NONE"
-    },
-    "triggerClause": [],
-    "stats": [],
     "properties": {
-      "duration": {
-        "value": [
-          -1
-        ],
-        "unit": "SECOND"
+      "id": "ORIGINIUM_CRYSTAL",
+      "name": "Originium Crystal",
+      "target": "ENEMY",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "value": 4
+        },
+        "statusLevelInteractionType": "NONE"
       }
     },
-    "originId": "DESTRUCTIVE_SEQUENCE"
+    "metadata": {
+      "originId": "DESTRUCTIVE_SEQUENCE"
+    }
   }
 ]

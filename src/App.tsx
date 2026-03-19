@@ -13,6 +13,10 @@ import { createCustomWeapon, getDefaultCustomWeapon, updateCustomWeapon, getCust
 import { createCustomGearSet, getDefaultCustomGearSet, updateCustomGearSet, getCustomGearSets } from './controller/custom/customGearController';
 import { createCustomOperator, getDefaultCustomOperator, updateCustomOperator, getCustomOperators } from './controller/custom/customOperatorController';
 import { createCustomSkill, getDefaultCustomSkill, updateCustomSkill, getCustomSkills } from './controller/custom/customSkillController';
+import { createCustomWeaponEffect, updateCustomWeaponEffect, getCustomWeaponEffects, getDefaultCustomWeaponEffect } from './controller/custom/customWeaponEffectController';
+import { createCustomGearEffect, updateCustomGearEffect, getCustomGearEffects, getDefaultCustomGearEffect } from './controller/custom/customGearEffectController';
+import { createCustomOperatorStatus, updateCustomOperatorStatus, getCustomOperatorStatuses, getDefaultCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
+import { createCustomOperatorTalent, updateCustomOperatorTalent, getCustomOperatorTalents, getDefaultCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
 import { clearAllCustomContent } from './utils/customContentStorage';
 import { InteractionModeType } from './consts/enums';
@@ -34,6 +38,8 @@ const CustomWeaponWizard = lazy(() => import('./view/custom/CustomWeaponWizard')
 const CustomGearWizard = lazy(() => import('./view/custom/CustomGearWizard'));
 const CustomOperatorWizard = lazy(() => import('./view/custom/CustomOperatorWizard'));
 const CustomSkillWizard = lazy(() => import('./view/custom/CustomSkillWizard'));
+const ClauseEditorModal = lazy(() => import('./view/custom/ClauseEditorModal'));
+const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
 
 const UI_STATE_KEY = 'zst-ui-state';
 
@@ -49,7 +55,7 @@ function loadUiState(): UiState {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
         return {
-          sidebarMode: parsed.sidebarMode === 'custom' ? 'custom' : 'loadouts',
+          sidebarMode: parsed.sidebarMode === 'custom' ? 'custom' : parsed.sidebarMode === 'workbench' ? 'workbench' : 'loadouts',
           customPageActive: !!parsed.customPageActive,
         };
       }
@@ -71,6 +77,8 @@ export default function App() {
   const [customPageActive, setCustomPageActive] = useState(() => loadUiState().customPageActive);
   const [editingContent, setEditingContent] = useState<ContentSelection | null>(null);
   const [pendingClone, setPendingClone] = useState<{ category: ContentCategory; data: any } | null>(null);
+  const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === 'workbench');
+  const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: any } | undefined>();
   const [confirmClearCustom, setConfirmClearCustom] = useState(false);
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
@@ -153,16 +161,92 @@ export default function App() {
         newItem = getDefaultCustomGearSet();
       } else if (item.category === ContentCategory.SKILLS) {
         newItem = getDefaultCustomSkill();
+      } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
+        newItem = getDefaultCustomWeaponEffect();
+        setWorkbenchInitial({ entityType: item.category, data: newItem });
+        setWorkbenchOpen(true);
+        setSidebarMode('workbench');
+        return;
+      } else if (item.category === ContentCategory.GEAR_EFFECTS) {
+        newItem = getDefaultCustomGearEffect();
+        setWorkbenchInitial({ entityType: item.category, data: newItem });
+        setWorkbenchOpen(true);
+        setSidebarMode('workbench');
+        return;
+      } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
+        newItem = getDefaultCustomOperatorStatus();
+        setWorkbenchInitial({ entityType: item.category, data: newItem });
+        setWorkbenchOpen(true);
+        setSidebarMode('workbench');
+        return;
+      } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
+        newItem = getDefaultCustomOperatorTalent();
+        setWorkbenchInitial({ entityType: item.category, data: newItem });
+        setWorkbenchOpen(true);
+        setSidebarMode('workbench');
+        return;
       }
       if (newItem) {
         setPendingClone({ category: item.category, data: newItem });
         setEditingContent(null);
       }
     } else {
-      // Edit existing custom item — select it so the CustomContentPanel shows it
-      setEditingContent(item);
+      // New entity types open in workbench for editing
+      const workbenchCategories = new Set([
+        ContentCategory.WEAPON_EFFECTS,
+        ContentCategory.GEAR_EFFECTS,
+        ContentCategory.OPERATOR_STATUSES,
+        ContentCategory.OPERATOR_TALENTS,
+      ]);
+      if (workbenchCategories.has(item.category)) {
+        let existingData: any = null;
+        if (item.category === ContentCategory.WEAPON_EFFECTS) {
+          existingData = getCustomWeaponEffects().find((e) => e.id === item.id);
+        } else if (item.category === ContentCategory.GEAR_EFFECTS) {
+          existingData = getCustomGearEffects().find((e) => e.id === item.id);
+        } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
+          existingData = getCustomOperatorStatuses().find((s) => s.id === item.id);
+        } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
+          existingData = getCustomOperatorTalents().find((t) => t.id === item.id);
+        }
+        if (existingData) {
+          setWorkbenchInitial({ entityType: item.category, data: JSON.parse(JSON.stringify(existingData)) });
+          setWorkbenchOpen(true);
+          setSidebarMode('workbench');
+        }
+      } else {
+        // Edit existing custom item — select it so the CustomContentPanel shows it
+        setEditingContent(item);
+      }
     }
   }, []);
+
+  const handleWorkbenchSave = useCallback((type: ContentCategory, data: any): string[] => {
+    let errors: import('./utils/customContentStorage').ValidationError[] = [];
+    const isEdit = workbenchInitial?.entityType === type && workbenchInitial?.data?.id === data.id;
+    if (type === ContentCategory.OPERATORS) {
+      errors = isEdit ? updateCustomOperator(data.id, data) : createCustomOperator(data);
+    } else if (type === ContentCategory.WEAPONS) {
+      errors = isEdit ? updateCustomWeapon(data.id, data) : createCustomWeapon(data);
+    } else if (type === ContentCategory.GEAR_SETS) {
+      errors = isEdit ? updateCustomGearSet(data.id, data) : createCustomGearSet(data);
+    } else if (type === ContentCategory.SKILLS) {
+      errors = isEdit ? updateCustomSkill(data.id, data) : createCustomSkill(data);
+    } else if (type === ContentCategory.WEAPON_EFFECTS) {
+      errors = isEdit ? updateCustomWeaponEffect(data.id, data) : createCustomWeaponEffect(data);
+    } else if (type === ContentCategory.GEAR_EFFECTS) {
+      errors = isEdit ? updateCustomGearEffect(data.id, data) : createCustomGearEffect(data);
+    } else if (type === ContentCategory.OPERATOR_STATUSES) {
+      errors = isEdit ? updateCustomOperatorStatus(data.id, data) : createCustomOperatorStatus(data);
+    } else if (type === ContentCategory.OPERATOR_TALENTS) {
+      errors = isEdit ? updateCustomOperatorTalent(data.id, data) : createCustomOperatorTalent(data);
+    }
+    if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
+    setWorkbenchOpen(false);
+    setWorkbenchInitial(undefined);
+    bumpContentRefresh();
+    return [];
+  }, [workbenchInitial, bumpContentRefresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const COLUMN_TO_SKILL_TYPE: Record<string, string> = {
     basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE',
@@ -212,6 +296,7 @@ export default function App() {
           setCustomPageActive(true);
           setSidebarMode('custom');
         }}
+        onClauseEditor={() => app.setClauseEditorOpen(true)}
         interactionMode={app.interactionMode}
         onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
@@ -236,19 +321,64 @@ export default function App() {
               setCustomPageActive(false);
               setEditingContent(null);
               setPendingClone(null);
+              setWorkbenchOpen(false);
             } else if (mode === 'custom') {
               setCustomPageActive(true);
+              setWorkbenchOpen(false);
+            } else if (mode === 'workbench') {
+              setCustomPageActive(false);
+              setWorkbenchOpen(true);
+              if (!workbenchInitial) setWorkbenchInitial(undefined);
             }
           }}
           selectedContentItem={editingContent}
           onSelectContentItem={setEditingContent}
           onCloneContentAsCustom={handleCloneContentAsCustom}
           onEditCustomContent={handleEditCustomContent}
+          onOpenInWorkbench={(item) => {
+            // For V1 types, find existing data and open in workbench
+            let existingData: any = null;
+            if (item.category === ContentCategory.OPERATORS) {
+              existingData = getCustomOperators().find((o) => o.id === item.id);
+            } else if (item.category === ContentCategory.WEAPONS) {
+              existingData = getCustomWeapons().find((w) => w.id === item.id);
+            } else if (item.category === ContentCategory.GEAR_SETS) {
+              existingData = getCustomGearSets().find((g) => g.id === item.id);
+            } else if (item.category === ContentCategory.SKILLS) {
+              existingData = getCustomSkills().find((s) => s.id === item.id);
+            } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
+              existingData = getCustomWeaponEffects().find((e) => e.id === item.id);
+            } else if (item.category === ContentCategory.GEAR_EFFECTS) {
+              existingData = getCustomGearEffects().find((e) => e.id === item.id);
+            } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
+              existingData = getCustomOperatorStatuses().find((s) => s.id === item.id);
+            } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
+              existingData = getCustomOperatorTalents().find((t) => t.id === item.id);
+            }
+            if (existingData) {
+              setWorkbenchInitial({ entityType: item.category, data: JSON.parse(JSON.stringify(existingData)) });
+              setWorkbenchOpen(true);
+              setSidebarMode('workbench');
+            }
+          }}
           onContentChanged={bumpContentRefresh}
           contentRefreshKey={contentRefreshKey}
         />
 
-        {isCustomPage ? (
+        {workbenchOpen && sidebarMode === 'workbench' ? (
+          <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
+            <UnifiedCustomizer
+              initial={workbenchInitial}
+              onSave={handleWorkbenchSave}
+              onCancel={() => {
+                setWorkbenchOpen(false);
+                setSidebarMode('loadouts');
+              }}
+              onContentChanged={bumpContentRefresh}
+              contentRefreshKey={contentRefreshKey}
+            />
+          </Suspense>
+        ) : isCustomPage ? (
           <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
             {pendingClone ? (
               pendingClone.category === ContentCategory.WEAPONS ? (
@@ -571,6 +701,7 @@ export default function App() {
                     critMode={app.critMode}
                     onCritModeChange={app.setCritMode}
                     plannerHidden={app.hiddenPane === 'left'}
+                    resourceGraphs={app.resourceGraphs}
                   />
                   {(app.hidePreview === 'right' || app.showPreview === 'right') && (
                     <div className="pane-hide-overlay">
@@ -691,6 +822,7 @@ export default function App() {
         ) : null}
 
         <DevlogModal open={app.devlogOpen} onClose={() => app.setDevlogOpen(false)} />
+        {app.clauseEditorOpen && <ClauseEditorModal onClose={() => app.setClauseEditorOpen(false)} />}
 
         {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
 

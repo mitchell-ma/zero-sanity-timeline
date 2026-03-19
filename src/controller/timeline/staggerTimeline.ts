@@ -189,17 +189,21 @@ export class StaggerTimeline extends ResourceTimeline {
   protected onRecompute(): void {}
 
   /**
-   * Generate derived TimelineEvent objects for the stagger frailty column.
+   * Generate derived TimelineEvent objects for stagger frailty.
    *
-   * - Each node crossing produces a "Node Stagger" event at the crossing frame.
-   * - Each full stagger break produces a "Full Stagger" event spanning the break.
+   * - Each node crossing produces a "Node Stagger" event in the nodeColumnId.
+   * - Each full stagger break produces a "Full Stagger" event in the fullColumnId.
    *
    * @param nodeRecoveryFrames Duration of node stagger frailty in frames.
+   * @param nodeColumnId Column ID for node stagger events.
+   * @param fullColumnId Column ID for full stagger events.
+   * @param ownerId Owner of the generated events.
    * @param idPrefix Prefix for generated event IDs (must be stable for override persistence).
    */
   generateFrailtyEvents(
     nodeRecoveryFrames: number,
-    columnId: string,
+    nodeColumnId: string,
+    fullColumnId: string,
     ownerId: string,
     idPrefix: string,
   ): TimelineEvent[] {
@@ -210,7 +214,7 @@ export class StaggerTimeline extends ResourceTimeline {
         id: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
         name: 'Node Stagger',
         ownerId,
-        columnId,
+        columnId: nodeColumnId,
         startFrame: crossing.frame,
         activationDuration: nodeRecoveryFrames,
         activeDuration: 0,
@@ -224,7 +228,7 @@ export class StaggerTimeline extends ResourceTimeline {
         id: `${idPrefix}-full-${brk.startFrame}`,
         name: 'Full Stagger',
         ownerId,
-        columnId,
+        columnId: fullColumnId,
         startFrame: brk.startFrame,
         activationDuration: duration,
         activeDuration: 0,

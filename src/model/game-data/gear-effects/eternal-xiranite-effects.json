@@ -3,20 +3,49 @@
   "label": "Eternal Xiranite",
   "statusEvents": [
     {
-      "name": "ETERNAL_XIRANITE",
-      "type": "GEAR_EFFECT",
-      "originId": "ETERNAL_XIRANITE",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Eternal Xiranite",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "SKILL_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.16
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "ETERNAL_XIRANITE",
+        "name": "Eternal Xiranite",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "ETERNAL_XIRANITE",
+        "description": "Eternal Xiranite",
+        "note": "On applying Amp/Protected/Susceptibility/Weakened"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -28,23 +57,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "SKILL_DAMAGE_BONUS",
-          "value": 0.16
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "On applying Amp/Protected/Susceptibility/Weakened"
+      ]
     }
   ]
 }

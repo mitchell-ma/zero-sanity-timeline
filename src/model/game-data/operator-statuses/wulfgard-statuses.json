@@ -1,24 +1,27 @@
 [
   {
-    "name": "SCORCHING_FANGS",
-    "targetDeterminer": "THIS",
-    "target": "OPERATOR",
-    "element": "HEAT",
-    "isNamedEvent": true,
-    "isForceApplied": false,
-    "stack": {
-      "max": {
-        "P0": 1,
-        "P1": 1,
-        "P2": 1,
-        "P3": 1,
-        "P4": 1,
-        "P5": 1
+    "properties": {
+      "id": "SCORCHING_FANGS",
+      "name": "Scorching Fangs",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS",
+      "element": "HEAT",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "value": 1
+        },
+        "statusLevelInteractionType": "RESET"
       },
-      "instances": 1,
-      "verb": "RESET"
+      "duration": {
+        "value": 15,
+        "unit": "SECOND"
+      }
     },
-    "triggerClause": [
+    "metadata": {
+      "originId": "THERMITE_TRACERS"
+    },
+    "onTriggerClause": [
       {
         "conditions": [
           {
@@ -46,19 +49,6 @@
           }
         ]
       }
-    ],
-    "stats": [],
-    "p3TeamShare": {
-      "durationMultiplier": 0.5
-    },
-    "properties": {
-      "duration": {
-        "value": [
-          15
-        ],
-        "unit": "SECOND"
-      }
-    },
-    "originId": "THERMITE_TRACERS"
+    ]
   }
 ]

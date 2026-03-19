@@ -133,7 +133,7 @@ export const ELEMENT_COLORS: Record<ElementType, string> = {
 };
 
 export enum StatusType {
-  // ── Arts reactions ──────────────────────────────────────────────────────────
+  // ── Arts reactions (also in REACTION_STATUS_TYPES — not pure statuses) ─────
   COMBUSTION = "COMBUSTION",
   SOLIDIFICATION = "SOLIDIFICATION",
   CORROSION = "CORROSION",
@@ -267,22 +267,45 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE]: DamageFactorType.NONE,
 };
 
-/** Elemental inflictions that can be applied to a target, plus the universal VULNERABLE debuff. */
-export enum InflictionType {
-  HEAT_INFLICTION = "HEAT_INFLICTION",
-  CRYO_INFLICTION = "CRYO_INFLICTION",
-  NATURE_INFLICTION = "NATURE_INFLICTION",
-  ELECTRIC_INFLICTION = "ELECTRIC_INFLICTION",
-  VULNERABLE = "VULNERABLE",
-}
-
-/** Subset of InflictionType — the four elemental inflictions that trigger ArtsReactions. */
+/** Arts inflictions — elemental inflictions that trigger arts reactions. */
 export enum ArtsInflictionType {
   HEAT_INFLICTION = "HEAT_INFLICTION",
   CRYO_INFLICTION = "CRYO_INFLICTION",
   NATURE_INFLICTION = "NATURE_INFLICTION",
   ELECTRIC_INFLICTION = "ELECTRIC_INFLICTION",
 }
+
+/** Physical inflictions. */
+export enum PhysicalInflictionType {
+  VULNERABLE = "VULNERABLE",
+}
+
+/** All infliction types = arts + physical. */
+export type InflictionType = ArtsInflictionType | PhysicalInflictionType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InflictionType = { ...ArtsInflictionType, ...PhysicalInflictionType } as typeof ArtsInflictionType & typeof PhysicalInflictionType;
+
+/** Arts reactions — triggered by arts infliction combinations. */
+export enum ArtsReactionType {
+  COMBUSTION = "COMBUSTION",
+  SOLIDIFICATION = "SOLIDIFICATION",
+  CORROSION = "CORROSION",
+  ELECTRIFICATION = "ELECTRIFICATION",
+}
+
+/** Physical statuses — triggered by physical reactions (stagger consumption). */
+export enum PhysicalStatusType {
+  LIFT = "LIFT",
+  KNOCK_DOWN = "KNOCK_DOWN",
+  BREACH = "BREACH",
+  CRUSH = "CRUSH",
+  SHATTER = "SHATTER",
+}
+
+/** All built-in reaction types = arts reactions + physical statuses. */
+export type ReactionType = ArtsReactionType | PhysicalStatusType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionType = { ...ArtsReactionType, ...PhysicalStatusType } as typeof ArtsReactionType & typeof PhysicalStatusType;
 
 export { OperatorClassType } from '../model/enums/operators';
 
@@ -301,14 +324,15 @@ export enum GearCategory {
 }
 
 export enum BasicAttackType {
-  SEQUENCE_1 = "SEQUENCE_1",
-  SEQUENCE_2 = "SEQUENCE_2",
-  SEQUENCE_3 = "SEQUENCE_3",
-  SEQUENCE_4 = "SEQUENCE_4",
-  SEQUENCE_5 = "SEQUENCE_5",
+  BATK = "BATK",
   FINISHER = "FINISHER",
   DIVE = "DIVE",
-  FINAL_STRIKE = "FINAL_STRIKE",
+}
+
+/** Categorization of BATK sequences — NORMAL hits and FINAL_ATTACK (last hit in chain). */
+export enum BatkType {
+  NORMAL = "NORMAL",
+  FINAL_ATTACK = "FINAL_ATTACK",
 }
 
 export enum GearSetType {
@@ -383,6 +407,13 @@ export enum TimeInteractionType {
 export enum TimeDependency {
   GAME_TIME = "GAME_TIME",
   REAL_TIME = "REAL_TIME",
+}
+
+/** Enhancement tier of a skill variant. Base skills are NORMAL; absence implies NORMAL. */
+export enum EnhancementType {
+  NORMAL = "NORMAL",
+  ENHANCED = "ENHANCED",
+  EMPOWERED = "EMPOWERED",
 }
 
 /** The phase type of an event segment. */

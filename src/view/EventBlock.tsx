@@ -150,6 +150,13 @@ function EventBlock({
     return hoverFrameProp >= segStartFrame && hoverFrameProp < segStartFrame + segDuration;
   };
 
+  /** Compute the label's position offset (px) within a hovered segment so it follows the hover line. */
+  const hoverLabelStyle = (segStartFrame: number): React.CSSProperties | undefined => {
+    if (hoverFrameProp == null) return undefined;
+    const px = durationToPx(hoverFrameProp - segStartFrame, zoom) + 6;
+    return axis.framePos === 'top' ? { top: px } : { left: px };
+  };
+
   // ── Sequenced variant (multi-sequence with frame diamonds) ──────────────
   if (variant === 'sequenced' && segments && segments.length > 0) {
     const topPx = layout
@@ -205,7 +212,8 @@ function EventBlock({
         ? layout!.realStartFrame + segLayout.realOffset
         : startFrame + segOffset;
       const segAbsDur = segLayout ? segLayout.realDuration : seg.durationFrames;
-      const segHover = !passive && isSegmentHovered(segAbsStart, segAbsDur);
+      const segHover = isSegmentHovered(segAbsStart, segAbsDur);
+      const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
 
       segmentElements.push(
         <div
@@ -224,7 +232,7 @@ function EventBlock({
           onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
         >
           {(passive || segH > 14) && (seg.label || (isFirst && displayLabel)) && (
-            <span className="event-block-label" style={passive ? undefined : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }}>{toDisplayLabel(seg.label) ?? displayLabel}</span>
+            <span className="event-block-label" style={{ ...(passive ? {} : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }), ...segLabelHover }}>{toDisplayLabel(seg.label) ?? displayLabel}</span>
           )}
           {/* Frame diamonds */}
           {/* eslint-disable-next-line no-loop-func */}
@@ -355,11 +363,17 @@ function EventBlock({
     ? (ultSegs ? ultSegs[3].durationFrames : (phases?.realCooldownDuration ?? cooldownDuration))
     : 0;
 
-  const animSegHover = !passive && hasAnimation && isSegmentHovered(realStart, animDur);
-  const statisSegHover = !passive && hasAnimation && isSegmentHovered(realStart + animDur, activationDur - animDur);
-  const activationSegHover = !passive && !hasAnimation && isSegmentHovered(realStart, activationDur);
-  const activeSegHover = !passive && hasActive && isSegmentHovered(realStart + activationDur, activeDur);
-  const coolSegHover = !passive && hasCooldown && isSegmentHovered(realStart + activationDur + activeDur, coolDur);
+  const animSegHover = hasAnimation && isSegmentHovered(realStart, animDur);
+  const statisSegHover = hasAnimation && isSegmentHovered(realStart + animDur, activationDur - animDur);
+  const activationSegHover = !hasAnimation && isSegmentHovered(realStart, activationDur);
+  const activeSegHover = hasActive && isSegmentHovered(realStart + activationDur, activeDur);
+  const coolSegHover = hasCooldown && isSegmentHovered(realStart + activationDur + activeDur, coolDur);
+
+  const animLabelHover = animSegHover ? hoverLabelStyle(realStart) : undefined;
+  const statisLabelHover = statisSegHover ? hoverLabelStyle(realStart + animDur) : undefined;
+  const activationLabelHover = activationSegHover ? hoverLabelStyle(realStart) : undefined;
+  const activeLabelHover = activeSegHover ? hoverLabelStyle(realStart + activationDur) : undefined;
+  const coolLabelHover = coolSegHover ? hoverLabelStyle(realStart + activationDur + activeDur) : undefined;
 
   return (
     <div
@@ -396,7 +410,7 @@ function EventBlock({
             onMouseDown={(e) => onDragStart(e, id, startFrame)}
           >
             {animH > 14 && (
-              <span className="event-block-label" style={{ color: hexAlpha(color, 0.8) }}>Animation</span>
+              <span className="event-block-label" style={{ color: hexAlpha(color, 0.8), ...animLabelHover }}>Animation</span>
             )}
           </div>
           {/* Statis sub-phase (post-animation) */}
@@ -414,7 +428,7 @@ function EventBlock({
             onMouseDown={(e) => onDragStart(e, id, startFrame)}
           >
             {postAnimH > 14 && (
-              <span className="event-block-label" style={{ color: '#fff' }}>Statis</span>
+              <span className="event-block-label" style={{ color: '#fff', ...statisLabelHover }}>Statis</span>
             )}
             {actFrames?.map((f, fi) => {
 
@@ -464,7 +478,7 @@ function EventBlock({
           onMouseDown={(e) => onDragStart(e, id, startFrame)}
         >
           {activationH > 14 && (
-            <span className="event-block-label" style={{ color: '#fff' }}>
+            <span className="event-block-label" style={{ color: '#fff', ...activationLabelHover }}>
               {variant === SKILL_COLUMNS.ULTIMATE ? 'Statis' : (label ?? 'ACT')}
             </span>
           )}
@@ -519,7 +533,7 @@ function EventBlock({
           } as React.CSSProperties}
         >
           {activePhaseH > 14 && (
-            <span className="event-block-label" style={{ color: variant === SKILL_COLUMNS.ULTIMATE ? '#fff' : hexAlpha(color, 0.9) }}>
+            <span className="event-block-label" style={{ color: variant === SKILL_COLUMNS.ULTIMATE ? '#fff' : hexAlpha(color, 0.9), ...activeLabelHover }}>
               {variant === SKILL_COLUMNS.ULTIMATE ? 'Active' : 'LNG'}
             </span>
           )}
@@ -561,7 +575,7 @@ function EventBlock({
           } as React.CSSProperties}
         >
           {coolH > 14 && (
-            <span className="event-block-label" style={{ color: 'rgba(180,180,180,0.5)' }}>Cooldown</span>
+            <span className="event-block-label" style={{ color: 'rgba(180,180,180,0.5)', ...coolLabelHover }}>Cooldown</span>
           )}
         </div>
       )}

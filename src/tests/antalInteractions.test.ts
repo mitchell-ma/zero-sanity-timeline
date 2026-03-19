@@ -66,6 +66,32 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
   getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: (id: string) => {
+    const map: Record<string, { file: string; skillId: string }> = {
+      antal: { file: '../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
+      laevatain: { file: '../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
+      akekuri: { file: '../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
+    };
+    const entry = map[id];
+    if (!entry) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require(entry.file)[entry.skillId]?.properties?.trigger?.onTriggerClause;
+  },
+  getComboTriggerInfo: (id: string) => {
+    const map: Record<string, { file: string; skillId: string }> = {
+      antal: { file: '../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
+      laevatain: { file: '../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
+      akekuri: { file: '../model/game-data/operator-skills/akekuri-skills.json', skillId: 'FLASH_AND_DASH' },
+    };
+    const entry = map[id];
+    if (!entry) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const trigger = require(entry.file)[entry.skillId]?.properties?.trigger;
+    if (!trigger?.onTriggerClause?.length) return undefined;
+    return { onTriggerClause: trigger.onTriggerClause, description: trigger.description ?? '', windowFrames: trigger.windowFrames ?? 720 };
+  },
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 jest.mock('../model/game-data/weaponGameData', () => ({
   getSkillValues: () => [], getConditionalValues: () => [],
@@ -85,7 +111,6 @@ import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeli
 // eslint-disable-next-line import/first
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
 // eslint-disable-next-line import/first
-import { SubjectType, VerbType, ObjectType, DeterminerType } from '../consts/semantics';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/antal-operator.json');
@@ -95,15 +120,30 @@ const mockSkillsJson = require('../model/game-data/operator-skills/antal-skills.
 const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...antalSkillEntries } = mockSkillsJson as Record<string, any>;
 const antalSkills: Record<string, any> = {};
 for (const [key, val] of Object.entries(antalSkillEntries)) {
-  antalSkills[key] = { ...(val as any), id: key };
+  antalSkills[key] = { ...(val as Record<string, any>), id: key };
 }
 if (_skTypeMap) {
   const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-  for (const [category, skillId] of Object.entries(_skTypeMap as Record<string, string>)) {
-    if (antalSkills[skillId]) antalSkills[category] = antalSkills[skillId];
-    for (const suffix of variantSuffixes) {
-      const variantSkillId = `${skillId}_${suffix}`;
-      if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
+  for (const [category, value] of Object.entries(_skTypeMap as Record<string, any>)) {
+    if (typeof value === 'string') {
+      if (antalSkills[value]) antalSkills[category] = antalSkills[value];
+      for (const suffix of variantSuffixes) {
+        const variantSkillId = `${value}_${suffix}`;
+        if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      // Object form: { BATK: "...", FINISHER: "...", DIVE: "..." }
+      const batkId = (value as any).BATK;
+      if (batkId && antalSkills[batkId]) antalSkills[category] = antalSkills[batkId];
+      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
+        if (antalSkills[subId]) antalSkills[subKey] = antalSkills[subId];
+      }
+      if (batkId) {
+        for (const suffix of variantSuffixes) {
+          const variantSkillId = `${batkId}_${suffix}`;
+          if (antalSkills[variantSkillId]) antalSkills[`${suffix}_${category}`] = antalSkills[variantSkillId];
+        }
+      }
     }
   }
 }
@@ -141,30 +181,30 @@ describe('A. Basic Attack (Exchange Current)', () => {
   test('A3: Final Strike (segment 4) recovers 15 SP and 15 Stagger', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
-    const spEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.object === 'SKILL_POINT'
+    const effects = finalStrikeFrame.clause[0].effects;
+    const spEffect = effects.find(
+      (e: Record<string, any>) => e.object === 'SKILL_POINT'
     );
-    const staggerEffect = finalStrikeFrame.effects.find(
-      (e: any) => e.object === 'STAGGER'
+    const staggerEffect = effects.find(
+      (e: Record<string, any>) => e.object === 'STAGGER'
     );
     expect(spEffect.with.cardinality.value).toBe(15);
     expect(staggerEffect.with.value.value).toBe(15);
   });
 
-  test('A4: Earlier segments have SP and Stagger effects with value 0', () => {
+  test('A4: Earlier segments have no SP or Stagger effects (zero-value effects removed)', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     for (let i = 0; i < 3; i++) {
       const frame = rawSegments[i].frames[0];
-      const spEffect = frame.effects.find(
-        (e: any) => e.object === 'SKILL_POINT'
+      const effects = frame.clause[0].effects;
+      const spEffect = effects.find(
+        (e: Record<string, any>) => e.object === 'SKILL_POINT'
       );
-      const staggerEffect = frame.effects.find(
-        (e: any) => e.object === 'STAGGER'
+      const staggerEffect = effects.find(
+        (e: Record<string, any>) => e.object === 'STAGGER'
       );
-      expect(spEffect).toBeDefined();
-      expect(spEffect.with.cardinality.value).toBe(0);
-      expect(staggerEffect).toBeDefined();
-      expect(staggerEffect.with.value.value).toBe(0);
+      expect(spEffect).toBeUndefined();
+      expect(staggerEffect).toBeUndefined();
     }
   });
 
@@ -179,22 +219,32 @@ describe('A. Basic Attack (Exchange Current)', () => {
 
   test('A6: Damage multipliers scale from lv1 to lv12', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
-    // Segment 1: 0.23 → 0.52
-    const seg1Mults = rawSegments[0].frames[0].multipliers;
-    expect(seg1Mults[0].DAMAGE_MULTIPLIER).toBe(0.23);
-    expect(seg1Mults[11].DAMAGE_MULTIPLIER).toBe(0.52);
+    // Segment 1: 0.23 → 0.52 — damage values are in clause[0].effects DEAL DAMAGE with.value.value array
+    const seg1DmgEffect = rawSegments[0].frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    expect(seg1DmgEffect.with.value.value[0]).toBe(0.23);
+    expect(seg1DmgEffect.with.value.value[11]).toBe(0.52);
     // Segment 4 (Final Strike): 0.51 → 1.15
-    const seg4Mults = rawSegments[3].frames[0].multipliers;
-    expect(seg4Mults[0].DAMAGE_MULTIPLIER).toBe(0.51);
-    expect(seg4Mults[11].DAMAGE_MULTIPLIER).toBe(1.15);
+    const seg4DmgEffect = rawSegments[3].frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    expect(seg4DmgEffect.with.value.value[0]).toBe(0.51);
+    expect(seg4DmgEffect.with.value.value[11]).toBe(1.15);
   });
 
   test('A7: Segment 3 has 2 frames (double hit)', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
     expect(rawSegments[2].frames.length).toBe(2);
     // Both frames have same damage multiplier at each level
-    const lv12First = rawSegments[2].frames[0].multipliers[11].DAMAGE_MULTIPLIER;
-    const lv12Second = rawSegments[2].frames[1].multipliers[11].DAMAGE_MULTIPLIER;
+    const firstDmg = rawSegments[2].frames[0].clause[0].effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    const secondDmg = rawSegments[2].frames[1].clause[0].effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    const lv12First = firstDmg.with.value.value[11];
+    const lv12Second = secondDmg.with.value.value[11];
     expect(lv12First).toBe(lv12Second);
   });
 });
@@ -212,8 +262,9 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
   test('B2: Battle skill costs 100 SP', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
-    const spCost = battleSkill.effects.find(
-      (e: any) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+    const effects = battleSkill.clause[0].effects;
+    const spCost = effects.find(
+      (e: Record<string, any>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.cardinality.value).toBe(100);
@@ -221,12 +272,13 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
   test('B3: Battle skill includes 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
-    const selfEnergy = battleSkill.effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+    const effects = battleSkill.clause[0].effects;
+    const selfEnergy = effects.find(
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'THIS' && e.toObject === 'OPERATOR'
     );
-    const allEnergy = battleSkill.effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' &&
+    const allEnergy = effects.find(
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'ALL' && e.toObject === 'OPERATOR'
     );
     expect(selfEnergy).toBeDefined();
@@ -236,22 +288,30 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
   });
 
   test('B4: Focus duration is 60s at all skill levels', () => {
-    const multipliers = mockAntalJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    for (const m of multipliers) {
-      expect(m.DURATION).toBe(60);
-    }
+    const effects = mockAntalJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const focusEffect = effects.find(
+      (e: Record<string, any>) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId === 'FOCUS'
+    );
+    expect(focusEffect).toBeDefined();
+    expect(focusEffect.with.duration.value).toBe(60);
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
-    const multipliers = mockAntalJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    expect(multipliers[0].rate).toBe(0.05);
-    expect(multipliers[11].rate).toBe(0.1);
+    const effects = mockAntalJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    expect(dmgEffect.with.rate.value[0]).toBe(0.05);
+    expect(dmgEffect.with.rate.value[11]).toBe(0.1);
   });
 
   test('B6: Damage multiplier scales from 0.89 (lv1) to 2.0 (lv12)', () => {
-    const multipliers = mockAntalJson.skills.BATTLE_SKILL.frames[0].multipliers;
-    expect(multipliers[0].DAMAGE_MULTIPLIER).toBe(0.89);
-    expect(multipliers[11].DAMAGE_MULTIPLIER).toBe(2);
+    const effects = mockAntalJson.skills.BATTLE_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    expect(dmgEffect.with.value.value[0]).toBe(0.89);
+    expect(dmgEffect.with.value.value[11]).toBe(2);
   });
 
   test('B7: Battle skill duration is 1 second', () => {
@@ -272,11 +332,11 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 describe('C. Combo Skill (EMP Test Site)', () => {
   test('C1: Combo trigger has two clauses (Physical Status OR Arts Infliction while Focus)', () => {
     const trigger = mockAntalJson.skills.COMBO_SKILL.properties.trigger;
-    expect(trigger.triggerClause.length).toBe(2);
+    expect(trigger.onTriggerClause.length).toBe(2);
   });
 
   test('C2: First clause — ANY_OPERATOR APPLY Physical Status + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.properties.trigger.triggerClause[0];
+    const clause = mockAntalJson.skills.COMBO_SKILL.properties.trigger.onTriggerClause[0];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies physical status
@@ -294,7 +354,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C3: Second clause — ANY_OPERATOR APPLY Infliction + ENEMY HAVE FOCUS', () => {
-    const clause = mockAntalJson.skills.COMBO_SKILL.properties.trigger.triggerClause[1];
+    const clause = mockAntalJson.skills.COMBO_SKILL.properties.trigger.onTriggerClause[1];
     expect(clause.conditions.length).toBe(2);
 
     // Condition 1: any operator applies arts infliction
@@ -316,9 +376,9 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C5: Combo cooldown is 15 seconds', () => {
-    const effects = mockAntalJson.skills.COMBO_SKILL.effects;
+    const effects = mockAntalJson.skills.COMBO_SKILL.clause[0].effects;
     const cooldown = effects.find(
-      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(15);
@@ -339,9 +399,9 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C8: Combo recovers 10 ultimate energy to self', () => {
-    const effects = mockAntalJson.skills.COMBO_SKILL.effects;
+    const effects = mockAntalJson.skills.COMBO_SKILL.clause[0].effects;
     const energy = effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
@@ -350,9 +410,12 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   });
 
   test('C9: Combo damage multiplier: 1.51 (lv1) → 3.4 (lv12)', () => {
-    const multipliers = mockAntalJson.skills.COMBO_SKILL.frames[0].multipliers;
-    expect(multipliers[0].DAMAGE_MULTIPLIER).toBe(1.51);
-    expect(multipliers[11].DAMAGE_MULTIPLIER).toBe(3.4);
+    const effects = mockAntalJson.skills.COMBO_SKILL.frames[0].clause[0].effects;
+    const dmgEffect = effects.find(
+      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    );
+    expect(dmgEffect.with.value.value[0]).toBe(1.51);
+    expect(dmgEffect.with.value.value[11]).toBe(3.4);
   });
 
   test('C10: Combo skill ID is ANTAL_EMP_TEST_SITE', () => {
@@ -367,8 +430,9 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 describe('C2. Combo Skill Source Infliction Duplication', () => {
   test('C2.1: Combo frame has APPLY SOURCE INFLICTION DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
-    const sourceInfliction = comboFrame.effects.find(
-      (e: any) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'INFLICTION'
+    const effects = comboFrame.clause[0].effects;
+    const sourceInfliction = effects.find(
+      (e: Record<string, any>) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.toObject).toBe('ENEMY');
@@ -376,8 +440,9 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 
   test('C2.2: Combo frame has APPLY SOURCE STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.frames[0];
-    const sourceStatus = comboFrame.effects.find(
-      (e: any) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'STATUS'
+    const effects = comboFrame.clause[0].effects;
+    const sourceStatus = effects.find(
+      (e: Record<string, any>) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'STATUS'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.toObject).toBe('ENEMY');
@@ -420,9 +485,9 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
 
 describe('D. Ultimate (Overclocked Moment)', () => {
   test('D1: Ultimate energy cost is 90', () => {
-    const effects = mockAntalJson.skills.ULTIMATE.effects;
+    const effects = mockAntalJson.skills.ULTIMATE.clause[0].effects;
     const energyCost = effects.find(
-      (e: any) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.cardinality.value).toBe(90);
@@ -502,13 +567,13 @@ describe('E. Potentials', () => {
     expect(p4.effects.length).toBe(2);
 
     const intEffect = p4.effects.find(
-      (e: any) => e.statModifier?.statType === 'INTELLECT'
+      (e: Record<string, any>) => e.statModifier?.statType === 'INTELLECT'
     );
     expect(intEffect).toBeDefined();
     expect(intEffect.statModifier.value).toBe(10);
 
     const hpEffect = p4.effects.find(
-      (e: any) => e.statModifier?.statType === 'BASE_HP'
+      (e: Record<string, any>) => e.statModifier?.statType === 'BASE_HP'
     );
     expect(hpEffect).toBeDefined();
     expect(hpEffect.statModifier.value).toBe(0.1);
@@ -521,21 +586,21 @@ describe('E. Potentials', () => {
     expect(p5.effects.length).toBe(3);
 
     const uniqueMult = p5.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'potential_5'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential_5'
     );
     expect(uniqueMult).toBeDefined();
     expect(uniqueMult.skillParameterModifier.value).toBe(1);
     expect(uniqueMult.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const delayTime = p5.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'delay_time'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'delay_time'
     );
     expect(delayTime).toBeDefined();
     expect(delayTime.skillParameterModifier.value).toBe(20);
     expect(delayTime.skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
 
     const rate = p5.effects.find(
-      (e: any) => e.skillParameterModifier?.parameterKey === 'potential_5_rate'
+      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential_5_rate'
     );
     expect(rate).toBeDefined();
     expect(rate.skillParameterModifier.value).toBe(0.04);
@@ -634,25 +699,25 @@ describe('H. Cooldown Interactions', () => {
 
   test('H1: Basic attack (Exchange Current) has no cooldown', () => {
     const ba = mockAntalJson.skills.BASIC_ATTACK;
-    // Basic attacks are segment-based with no COOLDOWN effect
-    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
-      .flatMap((f: any) => f.effects ?? [])
-      .find((e: any) => e.object === 'COOLDOWN');
+    // Basic attacks are segment-based with no COOLDOWN effect — effects are now in clause[0].effects
+    const cooldown = ba.segments?.flatMap((s: Record<string, any>) => s.frames ?? [])
+      .flatMap((f: Record<string, any>) => f.clause?.[0]?.effects ?? [])
+      .find((e: Record<string, any>) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Battle skill has no COOLDOWN effect in DSL', () => {
     const bs = mockAntalJson.skills.BATTLE_SKILL;
-    const cooldown = bs.effects?.find(
-      (e: any) => e.object === 'COOLDOWN'
+    const cooldown = bs.clause?.[0]?.effects?.find(
+      (e: Record<string, any>) => e.object === 'COOLDOWN'
     );
     expect(cooldown).toBeUndefined();
   });
 
   test('H3: Combo skill (EMP Test Site) has 15s cooldown', () => {
     const cs = mockAntalJson.skills.COMBO_SKILL;
-    const cooldown = cs.effects.find(
-      (e: any) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+    const cooldown = cs.clause[0].effects.find(
+      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(15);
@@ -717,57 +782,30 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
   }
 
-  /** Antal: combo requires ANY_OPERATOR APPLY INFLICTION, requires Focus active */
   function antalWiring(): SlotTriggerWiring {
-    return {
-      slotId: SLOT_ANTAL,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-          ],
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
-          ],
-        },
-        comboRequires: [
-          { subjectDeterminer: DeterminerType.ANY, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION },
-        ],
-        comboDescription: 'any infliction with Focus',
-        comboWindowFrames: 720,
-        comboRequiresActiveColumns: [StatusType.FOCUS],
-      },
-    };
+    return { slotId: SLOT_ANTAL, operatorId: 'antal' };
   }
 
-  /** Laevatain: battle skill publishes APPLY INFLICTION (HEAT) */
   function laevWiring(): SlotTriggerWiring {
-    return {
-      slotId: SLOT_LAEV,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BASIC]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.FINAL_STRIKE },
-          ],
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    return { slotId: SLOT_LAEV, operatorId: 'laevatain' };
   }
 
   function makeFocus(startFrame: number, duration: number): TimelineEvent {
-    return makeEv({ id: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: StatusType.FOCUS, startFrame, activationDuration: duration });
+    return makeEv({ id: `focus-${startFrame}`, name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID, columnId: 'focus', startFrame, activationDuration: duration });
   }
 
   function makeLaevBattle(startFrame: number): TimelineEvent {
-    return makeEv({ id: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV, columnId: SKILL_COLUMNS.BATTLE, startFrame, activationDuration: FPS });
+    return makeEv({
+      id: `laev-bs-${startFrame}`, name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
+      columnId: SKILL_COLUMNS.BATTLE, startFrame, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+        }],
+      }],
+    });
   }
 
   function makeAntalCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
@@ -828,23 +866,17 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
   test('H4: Combo mirrors electric infliction when triggered by another operator', () => {
     const focus = makeFocus(0, 120 * FPS);
     // Simulate another operator (slot-2) applying electric infliction
-    const electricWiring: SlotTriggerWiring = {
-      slotId: 'slot-2',
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'ELECTRIC' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const electricWiring: SlotTriggerWiring = { slotId: 'slot-2', operatorId: '' };
     const arcBattle = makeEv({
       id: 'arc-bs-100', name: 'LIGHTNING_STRIKE', ownerId: 'slot-2',
       columnId: SKILL_COLUMNS.BATTLE, startFrame: 100, activationDuration: FPS,
+      segments: [{
+        durationFrames: FPS,
+        frames: [{
+          offsetFrame: Math.round(0.67 * FPS),
+          applyArtsInfliction: { element: 'ELECTRIC', stacks: 1 },
+        }],
+      }],
     });
     const antalCombo = makeAntalCombo(250);
     const wirings = [laevWiring(), antalWiring(), electricWiring];
@@ -898,20 +930,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal places combo within the activation window, with comboTriggerColumnId resolved
     const antalCombo = makeAntalCombo(300, 'heatInfliction');
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: SLOT_AKEKURI,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(
@@ -954,20 +973,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal combo placed WITHOUT comboTriggerColumnId (simulating first pass failing)
     const antalCombo = makeAntalCombo(300);
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: SLOT_AKEKURI,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(
@@ -1037,20 +1043,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
       sourceOwnerId: 'slot-0', sourceSkillName: 'BURST_OF_PASSION',
     });
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: 'slot-0',
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(
@@ -1059,7 +1052,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // Focus should be derived from Antal's battle skill frame
-    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
     expect(focusEvents.length).toBeGreaterThan(0);
 
     // Combo activation window should appear
@@ -1075,20 +1068,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Combo still has a stale comboTriggerColumnId from initial placement.
     const antalCombo = makeAntalCombo(300, 'heatInfliction');
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: 'slot-0',
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     // No Akekuri battle event in the events list — it was removed/dragged away
@@ -1147,20 +1127,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     // Antal combo — no comboTriggerColumnId (Phase 2 will fail, deferred resolves it)
     const antalCombo = makeAntalCombo(300);
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: SLOT_AKEKURI,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(
@@ -1169,7 +1136,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // Focus should be derived from Antal's battle skill
-    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
     expect(focusEvents.length).toBeGreaterThan(0);
 
     // Heat infliction from Akekuri should exist
@@ -1229,20 +1196,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const comboStart = 240;
     const antalCombo = makeAntalCombo(comboStart);
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: SLOT_AKEKURI,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(
@@ -1251,7 +1205,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
 
     // 1. Focus derived from Antal's battle skill
-    const focusEvents = processed.filter((e) => e.columnId === StatusType.FOCUS);
+    const focusEvents = processed.filter((e) => e.columnId === 'FOCUS');
     expect(focusEvents.length).toBe(1);
     expect(focusEvents[0].sourceOwnerId).toBe(SLOT_ANTAL);
 
@@ -1305,20 +1259,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const comboStart = Math.round(0.67 * FPS);
     const antalCombo = makeAntalCombo(comboStart);
 
-    const akekuriWiring: SlotTriggerWiring = {
-      slotId: SLOT_AKEKURI,
-      capability: {
-        publishesTriggers: {
-          [SKILL_COLUMNS.BATTLE]: [
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.PERFORM, object: ObjectType.BATTLE_SKILL },
-            { subjectDeterminer: DeterminerType.THIS, subject: SubjectType.OPERATOR, verb: VerbType.APPLY, object: ObjectType.INFLICTION, element: 'HEAT' },
-          ],
-        },
-        comboRequires: [],
-        comboDescription: '',
-        comboWindowFrames: 720,
-      },
-    };
+    const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
     const processed = processInflictionEvents(

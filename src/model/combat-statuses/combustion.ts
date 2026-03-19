@@ -29,14 +29,14 @@ export class Combustion extends ArtsReaction {
 
   constructor(params: {
     statusLevel: StatusLevel;
-    isForceApplied?: boolean;
+    isForced?: boolean;
   }) {
     super({
       statusType: StatusType.COMBUSTION,
       statusLevel: params.statusLevel,
       maxStatusLevel: 4,
       element: ElementType.HEAT,
-      isForceApplied: params.isForceApplied ?? false,
+      isForced: params.isForced ?? false,
       durationSeconds: Combustion.DURATION_SECONDS,
     });
   }

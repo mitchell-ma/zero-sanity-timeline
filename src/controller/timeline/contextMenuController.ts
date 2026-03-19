@@ -18,6 +18,7 @@ import {
   isBlockedByTimeStop,
   computeProspectiveRange,
   wouldSegmentAdditionOverlap,
+  getEffectiveStaggerWindows,
   type TimeStopRegion,
 } from './eventValidator';
 import type { Slot } from './columnBuilder';
@@ -147,7 +148,7 @@ export function buildColumnContextMenu(
         actionId: 'addEvent',
         actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
         disabled,
-        disabledReason: disabled ? disabledReason : undefined,
+        disabledReason: disabledReason || undefined,
       },
     ];
   }
@@ -176,7 +177,7 @@ export function buildColumnContextMenu(
           defaultSkill: { ...col.defaultEvent, comboTriggerColumnId: comboAvail.comboTriggerColumnId },
         },
         disabled,
-        disabledReason: disabled ? reason : undefined,
+        disabledReason: reason,
       },
     ];
   }
@@ -191,11 +192,12 @@ export function buildColumnContextMenu(
     return [
       headerItem,
       ...col.eventVariants.map((v) => {
-        const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame, col.columnId, slots);
+        const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame, col.columnId, slots, v.enhancementType);
         const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
         if (v.name === CombatSkillsType.FINISHER && staggerBreaks) {
-          const inBreak = staggerBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
+          const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
+          const inBreak = effectiveBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
           if (!inBreak) {
             finisherBlock = 'Finisher can only be used during stagger break';
           } else {
@@ -219,7 +221,7 @@ export function buildColumnContextMenu(
           : undefined);
         return {
           label: displayName,
-          disabledReason: disabled ? reason : undefined,
+          disabledReason: reason,
           actionId: 'addEvent' as const,
           actionPayload: {
             ownerId: col.ownerId,
@@ -265,7 +267,7 @@ export function buildColumnContextMenu(
       actionId: 'addEvent',
       actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
       disabled,
-      disabledReason: disabled ? reason : undefined,
+      disabledReason: reason,
     },
   ];
 }
@@ -320,7 +322,7 @@ export function buildEventAddItems(
     actionId: onAddEventActionId,
     actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
     disabled,
-    disabledReason: disabled ? disabledReason : undefined,
+    disabledReason,
   }];
 }
 
@@ -348,7 +350,7 @@ export function buildSegmentAddItems(
       actionId: 'addSegment',
       actionPayload: { eventId, segmentLabel: s.label! },
       disabled: interactionMode === InteractionModeType.STRICT && wouldOverlap,
-      disabledReason: interactionMode === InteractionModeType.STRICT && wouldOverlap ? 'Would overlap another event' : undefined,
+      disabledReason: wouldOverlap ? 'Would overlap another event' : undefined,
     };
   });
 }

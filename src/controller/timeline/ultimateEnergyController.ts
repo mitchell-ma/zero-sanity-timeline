@@ -110,7 +110,7 @@ function getDimensionKey(dimension: string, ctx: ResolveContext, keys: string[])
  * and multi-dimension (nested object) lookups.
  */
 function resolveBasedOnValue(
-  wp: Record<string, any>,
+  wp: Record<string, unknown>,
   ctx: ResolveContext,
 ): number | undefined {
   if (wp.verb !== 'BASED_ON') {
@@ -134,12 +134,13 @@ function resolveBasedOnValue(
 
   // Multi-dimension: object is an array of dimension types, value is nested map
   if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
-    let current: any = val;
+    let current: unknown = val;
     for (const dim of dims) {
       if (typeof current !== 'object' || current === null) return undefined;
-      const key = getDimensionKey(dim, ctx, Object.keys(current));
+      const currentObj = current as Record<string, unknown>;
+      const key = getDimensionKey(dim, ctx, Object.keys(currentObj));
       if (!key) return undefined;
-      current = current[key];
+      current = currentObj[key];
     }
     return typeof current === 'number' ? current : undefined;
   }
@@ -178,8 +179,8 @@ export function resolveMessengersSongBonuses(
 
   // Read clause effects from the talent JSON
   const opJson = getOperatorJson('gilberta');
-  const statusEvents = opJson?.statusEvents as { name: string; clause?: { conditions: any[]; effects: any[] }[] }[] | undefined;
-  const msDef = statusEvents?.find(se => se.name === 'MESSENGERS_SONG');
+  const statusEvents = opJson?.statusEvents as { id: string; clause?: { conditions: Record<string, any>[]; effects: Record<string, any>[] }[] }[] | undefined;
+  const msDef = statusEvents?.find(se => se.id === 'MESSENGERS_SONG');
   if (!msDef?.clause) return {};
 
   // Collect class → bonus value from ENERGY_GAIN_EFFICIENCY effects

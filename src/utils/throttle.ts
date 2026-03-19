@@ -7,12 +7,12 @@
  *
  * Returns a wrapped function with `cancel()` and `flush()` methods.
  */
-export function throttleByRAF<T extends (...args: any[]) => void>(
-  fn: T,
+export function throttleByRAF<A extends unknown[]>(
+  fn: (...args: A) => void,
   every = 2,
-): T & { cancel: () => void; flush: () => void } {
+): ((...args: A) => void) & { cancel: () => void; flush: () => void } {
   let rafId: number | null = null;
-  let latestArgs: any[] | null = null;
+  let latestArgs: A | null = null;
   let skipped = 0;
 
   const schedule = () => {
@@ -32,7 +32,7 @@ export function throttleByRAF<T extends (...args: any[]) => void>(
     });
   };
 
-  const throttled = (...args: any[]) => {
+  const throttled = (...args: A) => {
     latestArgs = args;
     if (rafId === null) {
       skipped = 0;
@@ -61,5 +61,5 @@ export function throttleByRAF<T extends (...args: any[]) => void>(
     }
   };
 
-  return throttled as T & { cancel: () => void; flush: () => void };
+  return throttled;
 }

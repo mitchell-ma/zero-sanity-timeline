@@ -10,11 +10,12 @@ import { WEAPON_DATA } from '../../model/weapons/weaponData';
 import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 import type { CombatSkillsType } from '../../consts/enums';
 import type { SkillType } from '../../consts/viewTypes';
 import type { Interaction, Effect } from '../../consts/semantics';
 import { formatSegmentDisplayName } from '../../utils/semanticsTranslation';
+import OperatorEventEditor from './OperatorEventEditor';
 
 interface Props {
   selection: ContentSelection;
@@ -110,6 +111,7 @@ export default function ContentViewer({ selection, onCloneAsCustom }: Props) {
         {current.category === ContentCategory.GEAR_SETS && <GearSetView id={current.id} navigate={navigate} />}
         {current.category === ContentCategory.WEAPON_EFFECTS && <WeaponEffectView id={current.id} />}
         {current.category === ContentCategory.GEAR_EFFECTS && <GearEffectView id={current.id} />}
+        {current.category === ContentCategory.EVENT_EDITOR && <OperatorEventEditor operatorId={current.id} />}
       </div>
     </div>
   );
@@ -149,9 +151,16 @@ function OperatorView({ id, navigate }: { id: string; navigate: NavigateFn }) {
     if (gear) navigate({ id: gear.gearSetType, category: ContentCategory.GEAR_SETS, source: 'builtin' });
   };
 
+  const viewEventEditor = () => navigate({
+    id: id,
+    category: ContentCategory.EVENT_EDITOR,
+    source: 'builtin',
+  });
+
   return (
     <>
       <h2 className="cv-title" style={{ color: op.color }}>{op.name}</h2>
+      <button className="cv-view-btn oee-launch-btn" onClick={viewEventEditor}>Event Editor</button>
       <div className="cv-field-grid">
         <Field label="Rarity" value={starStr(op.rarity)} />
         <Field label="Role" value={op.role} />
@@ -195,14 +204,6 @@ function OperatorView({ id, navigate }: { id: string; navigate: NavigateFn }) {
               <div className="cv-field-grid" style={{ marginTop: '0.25rem' }}>
                 {Object.entries(skill.gaugeGainByEnemies).map(([count, gain]) => (
                   <Field key={count} label={`Gauge (${count} enemy)`} value={String(gain)} />
-                ))}
-              </div>
-            )}
-            {skill.publishesTriggers && skill.publishesTriggers.length > 0 && (
-              <div className="cv-triggers">
-                <span className="cv-label">Publishes:</span>
-                {skill.publishesTriggers.map((t, j) => (
-                  <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
                 ))}
               </div>
             )}
@@ -256,22 +257,27 @@ function OperatorView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         </div>
       </Section>
 
-      {op.triggerCapability && (
-        <Section title="Combo Trigger">
-          <div className="cv-effect-card">
-            <div className="cv-effect-desc">{op.triggerCapability.comboDescription}</div>
-            <Field label="Window" value={`${op.triggerCapability.comboWindowFrames}f (${(op.triggerCapability.comboWindowFrames / 120).toFixed(1)}s)`} />
-            {op.triggerCapability.comboRequires.length > 0 && (
-              <div className="cv-triggers">
-                <span className="cv-label">Requires:</span>
-                {op.triggerCapability.comboRequires.map((t, j) => (
-                  <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
-                ))}
-              </div>
-            )}
-          </div>
-        </Section>
-      )}
+      {(() => {
+        const comboInfo = getComboTriggerInfo(op.id);
+        return comboInfo && (
+          <Section title="Combo Trigger">
+            <div className="cv-effect-card">
+              <div className="cv-effect-desc">{comboInfo.description}</div>
+              <Field label="Window" value={`${comboInfo.windowFrames}f (${(comboInfo.windowFrames / 120).toFixed(1)}s)`} />
+              {comboInfo.onTriggerClause.length > 0 && (
+                <div className="cv-triggers">
+                  <span className="cv-label">Requires:</span>
+                  {comboInfo.onTriggerClause.flatMap((pred, pi) =>
+                    pred.conditions.filter((c: any) => !c.negated).map((c: any, ci: number) => (
+                      <code key={`${pi}-${ci}`} className="cv-trigger-tag">{triggerText(c)}</code>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </Section>
+        );
+      })()}
 
       {op.potentialDescriptions && op.potentialDescriptions.length > 0 && (
         <Section title="Potentials">
@@ -600,11 +606,11 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         )}
       </Section>
 
-      {/* DSL Effects from JSON */}
-      {skillJson?.effects && Array.isArray(skillJson.effects) && skillJson.effects.length > 0 && (
+      {/* DSL Effects from skill clause */}
+      {skillJson?.clause && Array.isArray(skillJson.clause) && skillJson.clause.length > 0 && (
         <Section title="Effects (DSL)">
           <div className="cv-triggers">
-            {(skillJson.effects as Effect[]).map((eff, i) => (
+            {(skillJson.clause as any[]).flatMap((p: any) => p.effects ?? []).map((eff: Effect, i: number) => (
               <code key={i} className="cv-trigger-tag">{effectToText(eff)}</code>
             ))}
           </div>
@@ -660,16 +666,6 @@ function SkillView({ id, navigate }: { id: string; navigate: NavigateFn }) {
         </Section>
       )}
 
-      {skill.publishesTriggers && skill.publishesTriggers.length > 0 && (
-        <Section title="Publishes Triggers">
-          <div className="cv-triggers">
-            {skill.publishesTriggers.map((t, j) => (
-              <code key={j} className="cv-trigger-tag">{triggerText(t)}</code>
-            ))}
-          </div>
-        </Section>
-      )}
-
       {skill.triggerCondition && (
         <Section title="Trigger Condition">
           <code className="cv-trigger-tag">{skill.triggerCondition}</code>
@@ -715,7 +711,7 @@ function SegmentView({ index, segment, isComboChain }: { index: number; segment:
   const durVal = dur?.value ?? 0;
   const durStr = dur ? `${durVal}${dur.unit === 'FRAME' ? 'f' : 's'}` : '—';
   const frames: any[] = segment.frames ?? [];
-  const effects: Effect[] = segment.effects ?? [];
+  const effects: Effect[] = (segment.clause ?? []).flatMap((p: any) => p.effects ?? []);
   const stats: any[] = segment.stats ?? [];
 
   // Derive a meaningful name
@@ -773,15 +769,11 @@ function FrameView({ index, frame, total }: { index: number; frame: Record<strin
   const offset = frame.offset;
   const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
 
-  // Extract multiplier keys from first level entry (if present)
-  const multipliers: any[] = frame.multipliers ?? [];
-  const multKeys = multipliers.length > 0 ? Object.keys(multipliers[0]).filter((k) => k !== 'level') : [];
-
-  // Frame-level effects
-  const effects: Effect[] = frame.effects ?? [];
+  // Frame-level effects from clause
+  const effects: Effect[] = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
   const statusInteractions: Interaction[] = frame.statusInteractions ?? [];
 
-  const hasContent = effects.length > 0 || statusInteractions.length > 0 || multKeys.length > 0;
+  const hasContent = effects.length > 0 || statusInteractions.length > 0;
   const dataSources: string[] = frame.dataSources ?? [];
 
   return (
@@ -811,64 +803,8 @@ function FrameView({ index, frame, total }: { index: number; frame: Record<strin
         </div>
       )}
 
-      {multKeys.length > 0 && (
-        <MultiplierTable multipliers={multipliers} keys={multKeys} />
-      )}
     </div>
   );
-}
-
-/** Compact multiplier table with level rows and stat columns. */
-function MultiplierTable({ multipliers, keys }: { multipliers: any[]; keys: string[] }) {
-  // Show only a few representative levels for compactness
-  const displayLevels = multipliers.length <= 6
-    ? multipliers
-    : [multipliers[0], multipliers[Math.floor(multipliers.length / 2)], multipliers[multipliers.length - 1]];
-
-  return (
-    <div className="cv-multiplier-table">
-      <table className="cv-mult-table">
-        <thead>
-          <tr>
-            <th>Lv</th>
-            {keys.map((k) => <th key={k}>{formatMultKey(k)}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {displayLevels.map((m: any, mi: number) => (
-            <tr key={mi}>
-              <td className="cv-mult-lv">{m.level}</td>
-              {keys.map((k) => <td key={k}>{formatMultValue(m[k])}</td>)}
-            </tr>
-          ))}
-          {multipliers.length > 6 && (
-            <tr className="cv-mult-more">
-              <td colSpan={keys.length + 1}>{multipliers.length} levels total</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function formatMultKey(key: string): string {
-  return key
-    .replace(/^atk_scale$/, 'ATK%')
-    .replace(/^atk_scale_(\d)$/, 'ATK%$1')
-    .replace(/^poise$/, 'Poise')
-    .replace(/^poise_extra$/, 'Poise+')
-    .replace(/^count$/, 'Count')
-    .replace(/^duration$/, 'Dur')
-    .replace(/^extra_usp$/, 'USP+')
-    .replace(/^atb$/, 'ATB')
-    .replace(/_/g, ' ');
-}
-
-function formatMultValue(v: any): string {
-  if (v == null) return '—';
-  if (typeof v === 'number') return v % 1 === 0 ? String(v) : v.toFixed(3);
-  return String(v);
 }
 
 function VariantView({ variantKey, data }: { variantKey: string; data: Record<string, any> }) {
@@ -876,7 +812,7 @@ function VariantView({ variantKey, data }: { variantKey: string; data: Record<st
   const durStr = dur ? (typeof dur === 'number' ? `${dur}s` : `${dur.value}${dur.unit === 'FRAME' ? 'f' : 's'}`) : '';
   const frames: any[] = data.frames ?? [];
   const segments: any[] = data.segments ?? [];
-  const effects: Effect[] = data.effects ?? [];
+  const effects: Effect[] = (data.clause ?? []).flatMap((p: any) => p.effects ?? []);
   const clause: any[] = data.clause ?? [];
 
   return (
@@ -924,37 +860,34 @@ function VariantView({ variantKey, data }: { variantKey: string; data: Record<st
 }
 
 function StatusEventView({ data }: { data: Record<string, any> }) {
-  const stack = data.stack ?? {};
-  const maxRaw = stack.max ?? [];
-  const maxVals = Array.isArray(maxRaw) ? maxRaw : typeof maxRaw === 'object' && maxRaw !== null ? Object.values(maxRaw) : [maxRaw];
-  const maxUnique = Array.from(new Set(maxVals));
-  const maxStr = maxUnique.join('/');
+  const sl = data.statusLevel ?? {};
+  const limitRaw = sl.limit ?? {};
+  const limitVals = typeof limitRaw === 'object' && limitRaw !== null ? Object.values(limitRaw) : [limitRaw];
+  const limitUnique = Array.from(new Set(limitVals));
+  const limitStr = limitUnique.join('/');
   const dur = data.duration ?? data.properties?.duration;
   const durStr = dur ? (Array.isArray(dur.value) ? dur.value.join(', ') : dur.value) + (dur.unit === 'FRAME' ? 'f' : 's') : '';
-  const stats: any[] = data.stats ?? [];
-  const triggerClause: any[] = data.triggerClause ?? [];
+  const onTriggerClause: any[] = data.onTriggerClause ?? [];
   const clause: any[] = data.clause ?? [];
 
   return (
     <div className="cv-effect-card">
-      <div className="cv-effect-name">{data.name}</div>
+      <div className="cv-effect-name">{data.id}</div>
       <div className="cv-field-grid">
         <Field label="Target" value={String(data.target ?? '').replace(/_/g, ' ')} />
         <Field label="Element" value={String(data.element ?? 'NONE')} />
-        <Field label="Named" value={data.isNamedEvent ? 'Yes' : 'No'} />
-        <Field label="Force Applied" value={data.isForceApplied ? 'Yes' : 'No'} />
+        <Field label="Forced" value={data.isForced ? 'Yes' : 'No'} />
         {durStr && <Field label="Duration" value={durStr} />}
       </div>
       <div className="cv-field-grid">
-        <Field label="Stack Type" value={String(stack.verb ?? stack.interactionType ?? 'NONE')} />
-        <Field label="Max Stacks" value={maxStr} />
-        <Field label="Instances" value={String(stack.instances ?? 1)} />
+        <Field label="Interaction" value={String(sl.statusLevelInteractionType ?? 'NONE')} />
+        <Field label="Limit" value={limitStr} />
       </div>
 
-      {triggerClause.length > 0 && (
+      {onTriggerClause.length > 0 && (
         <div className="cv-clause-conditions">
           <span className="cv-label">Trigger:</span>
-          {triggerClause.map((pred: any, pi: number) => (
+          {onTriggerClause.map((pred: any, pi: number) => (
             <div key={pi}>
               {(pred.conditions ?? []).map((c: Interaction, ci: number) => (
                 <code key={ci} className="cv-trigger-tag">{interactionToText(c)}</code>
@@ -987,13 +920,6 @@ function StatusEventView({ data }: { data: Record<string, any> }) {
         </div>
       )}
 
-      {stats.length > 0 && (
-        <div className="cv-field-grid">
-          {stats.map((s: any, i: number) => (
-            <Field key={i} label={s.statType} value={Array.isArray(s.value) ? s.value.join(', ') : String(s.value)} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

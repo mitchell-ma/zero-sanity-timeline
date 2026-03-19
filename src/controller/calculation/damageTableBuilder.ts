@@ -547,7 +547,7 @@ export function buildDamageTableRows(
     const evPotential = (evProps.operator.potential ?? 5) as Potential;
 
     const json = getOperatorJson(oid);
-    const talentEffects = (json?.talentEffects ?? []) as any[];
+    const talentEffects = (json?.talentEffects ?? []) as { bonusType: string; name: string; label?: string; source: string; minPotential?: number; minLevel?: number; values: number[]; condition?: { skillType?: string | string[] }; waveCount?: number[] }[];
     const evCategory = columnIdToSkillType(ev.columnId);
 
     const col = colLookup.get(`${ev.ownerId}-${ev.columnId}`);
@@ -557,7 +557,7 @@ export function buildDamageTableRows(
       if (te.bonusType === 'ADDITIONAL_STRIKE') {
         // Check condition
         const allowedTypes = Array.isArray(te.condition?.skillType) ? te.condition.skillType : [te.condition?.skillType];
-        if (!allowedTypes.some((t: string) => evCategory === t)) continue;
+        if (!allowedTypes.some((t) => evCategory === t)) continue;
         // Check source level
         if (te.source === 'POTENTIAL' && evPotential < (te.minPotential ?? 1)) continue;
         if (te.source === 'TALENT_1' && evProps.operator.talentOneLevel < (te.minLevel ?? 1)) continue;

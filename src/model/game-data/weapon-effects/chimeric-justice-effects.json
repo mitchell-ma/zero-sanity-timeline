@@ -2,20 +2,59 @@
   "weaponName": "Chimeric Justice",
   "statusEvents": [
     {
-      "name": "CHIMERIC_JUSTICE_CEMENTED_FURY",
-      "type": "WEAPON_EFFECT",
-      "originId": "CHIMERIC_JUSTICE",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Cemented Fury",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "CRITICAL_RATE",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.03,
+                  "valueMax": 0.084
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.15,
+                  "valueMax": 0.42
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "CHIMERIC_JUSTICE_CEMENTED_FURY",
+        "name": "Cemented Fury",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "CHIMERIC_JUSTICE",
+        "description": "Cemented Fury",
+        "note": "On applying Vulnerability to 0-stack enemy"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,29 +66,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "CRITICAL_RATE",
-          "valueMin": 0.03,
-          "valueMax": 0.084
-        },
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.15,
-          "valueMax": 0.42
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "On applying Vulnerability to 0-stack enemy"
+      ]
     }
   ]
 }

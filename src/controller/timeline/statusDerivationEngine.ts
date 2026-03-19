@@ -6,7 +6,7 @@
  * functions in processStatus.ts one at a time.
  *
  * Supports:
- * - Empty triggerClause (passive/talent buffs, e.g. Messenger's Song)
+ * - Empty onTriggerClause (passive/talent buffs, e.g. Messenger's Song)
  * - PERFORM triggers (skill-cast-based, e.g. Scorching Heart via Melting Flame)
  * - HAVE STATUS triggers (reaction-based, e.g. Scorching Fangs on Combustion)
  * - Compound triggers (PERFORM X while ENEMY HAVE Y, e.g. Wildland Trekker)
@@ -16,8 +16,8 @@
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { CombatSkillsType, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
-import { TOTAL_FRAMES } from '../../utils/timeline';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getOperatorJson, getSkillIds, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { LoadoutProperties } from '../../view/InformationPane';
@@ -31,35 +31,39 @@ import type { Interaction, Effect as SemanticEffect } from '../../consts/semanti
 // ── Types from JSON ─────────────────────────────────────────────────────────
 
 interface StatusSegmentDef {
-  name: string;
-  properties?: { duration?: { value: number[]; unit: string } };
+  properties?: { name?: string; duration?: { value: number | number[]; unit: string } };
   clause?: EffectClause[];
+  onTriggerClause?: TriggerClause[];
+  onEntryClause?: EffectClause[];
+  onExitClause?: EffectClause[];
+}
+
+/** Properties block nested inside a status event definition. */
+interface StatusProperties {
+  id: string;
+  name?: string;
+  type?: string;
+  element?: string;
+  target?: string;
+  targetDeterminer?: string;
+  isForced?: boolean;
+  enhancementTypes?: string[];
+  statusLevel: {
+    statusLevelInteractionType: string;
+    limit: { verb: string; value: number };
+  };
+  duration?: { value: number | number[]; unit: string };
+  susceptibility?: Record<string, number[]>;
+  cooldownSeconds?: number;
 }
 
 export interface StatusEventDef {
-  name: string;
-  type?: string;
-  target: string;
-  targetDeterminer?: string;
-  element?: string;
-  isNamedEvent?: boolean;
-  stack: {
-    verb: string;
-    max: Record<string, number>;
-    instances: number;
-  };
-  triggerClause: TriggerClause[];
+  properties: StatusProperties;
+  metadata?: { originId?: string };
+  onTriggerClause?: TriggerClause[];
+  onEntryClause?: EffectClause[];
   clause?: EffectClause[];
-  /** Effects that fire once when this status becomes active. */
-  onActivationClause?: EffectClause[];
-  /** Effects that fire each time a condition is newly met during this status's lifetime. */
-  reactiveTriggerClause?: EffectClause[];
-  duration?: { value: number[]; unit: string };
-  properties?: { duration?: { value: number[]; unit: string } };
-  stats?: unknown[];
-  minTalentLevel?: { talent: number; minLevel: number };
-  p3TeamShare?: { durationMultiplier: number };
-  susceptibility?: Record<string, number[]>;
+  onExitClause?: EffectClause[];
   /** Multi-phase segments (e.g. Antal Focus: 20s Focus + 40s Empowered Focus). */
   segments?: StatusSegmentDef[];
 }
@@ -131,9 +135,7 @@ function resolveClauseDimensionKey(
     return best;
   }
   if (dim === 'TALENT_LEVEL' || dim === 'INTELLECT') {
-    const talentLevel = def.minTalentLevel?.talent === 2
-      ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-      : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+    const talentLevel = 1 // TODO: resolve talent level from DSL;
     let best: string | undefined;
     let bestN = 0;
     for (const k of keys) {
@@ -162,7 +164,7 @@ function resolveClauseDimensionKey(
  * Reads SUSCEPTIBILITY, DAMAGE_BONUS, and RESISTANCE effects from the clause structure.
  * Supports short keys (verb, object, with) from operator-statuses JSONs.
  *
- * When `skipConditional` is false, evaluates non-THIS_EVENT conditions and applies matching effects.
+ * When `skipConditional` is false, evaluates non-EVENT conditions and applies matching effects.
  */
 function resolveClauseEffectsFromClauses(
   ev: TimelineEvent,
@@ -174,12 +176,12 @@ function resolveClauseEffectsFromClauses(
   for (const clause of clauses) {
     if (clause.conditions && clause.conditions.length > 0) {
       if (skipConditional) {
-        // Check if all conditions reference THIS_EVENT — those are threshold conditions
+        // Check if all conditions reference EVENT — those are threshold conditions
         // handled by evaluateThresholdClauses, so skip them here.
-        const hasThisEvent = clause.conditions.some((c: any) => c.subject === 'THIS_EVENT');
+        const hasThisEvent = clause.conditions.some((c: any) => c.subject === 'EVENT');
         if (hasThisEvent) continue;
 
-        // Non-THIS_EVENT conditions: evaluate them now
+        // Non-EVENT conditions: evaluate them now
         const condCtx: ConditionContext = {
           events: ctx.events,
           frame: ev.startFrame,
@@ -215,9 +217,7 @@ function resolveClauseEffectsFromClauses(
             return arr[Math.min(skillLevel, arr.length) - 1] ?? arr[0];
           }
           if (dims === 'TALENT_LEVEL' || dims === 'INTELLECT') {
-            const talentLevel = def.minTalentLevel?.talent === 2
-              ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-              : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+            const talentLevel = 1 // TODO: resolve talent level from DSL;
             return arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
           }
           return undefined;
@@ -308,12 +308,13 @@ function statusNameToColumnId(name: string): string {
  * (e.g. 'LAEVATAIN') which are resolved via the operatorSlotMap.
  */
 function resolveOwnerId(
-  target: string,
+  target: string | undefined,
   operatorSlotId: string,
   operatorSlotMap?: Record<string, string>,
   determiner?: string,
   targetOwnerId?: string,
 ): string {
+  if (!target) return operatorSlotId;
   if (target === 'OPERATOR') {
     switch (determiner ?? 'THIS') {
       case 'THIS': return operatorSlotId;
@@ -336,17 +337,40 @@ function resolveOwnerId(
   }
 }
 
+// ── Normalize weapon/gear effect defs into StatusEventDef shape ──────────────
+
+function normalizeEquipDef(raw: any): StatusEventDef {
+  const props = raw.properties ?? {};
+  const sl = props.statusLevel ?? {};
+  return {
+    ...raw,
+    properties: {
+      id: props.id ?? raw.name,
+      name: props.name ?? raw.name,
+      target: props.target,
+      targetDeterminer: props.targetDeterminer,
+      statusLevel: {
+        limit: sl.limit ?? { verb: 'IS', value: 1 },
+        statusLevelInteractionType: sl.statusLevelInteractionType ?? 'NONE',
+      },
+      duration: props.duration,
+      susceptibility: props.susceptibility,
+      cooldownSeconds: props.cooldownSeconds,
+    },
+    onTriggerClause: raw.onTriggerClause ?? [],
+  };
+}
+
 // ── Max stacks by potential ─────────────────────────────────────────────────
 
-function getMaxStacks(stackMax: Record<string, number>, potential: number): number {
-  const key = `P${potential}`;
-  return stackMax[key] ?? stackMax.P0 ?? 1;
+function getMaxStacks(limit: { verb: string; value: number }, _potential: number): number {
+  return limit.value ?? 1;
 }
 
 // ── Duration resolution ─────────────────────────────────────────────────────
 
-function getDurationFrames(duration: { value: number[]; unit: string }): number {
-  const val = duration.value[0];
+function getDurationFrames(duration: { value: number | number[]; unit: string }): number {
+  const val = Array.isArray(duration.value) ? duration.value[0] : duration.value;
   if (val < 0) return TOTAL_FRAMES; // -1 = permanent
   if (duration.unit === 'SECOND') return Math.round(val * 120);
   return val;
@@ -354,10 +378,14 @@ function getDurationFrames(duration: { value: number[]; unit: string }): number 
 
 // ── Trigger evaluation ──────────────────────────────────────────────────────
 
-interface TriggerMatch {
+export interface TriggerMatch {
   frame: number;
   sourceOwnerId: string;
   sourceSkillName: string;
+  /** The operator that caused this event (e.g. who applied the infliction). */
+  originOwnerId?: string;
+  /** The column ID of the source event that matched this trigger. */
+  sourceColumnId?: string;
   effects?: TriggerEffect[];
 }
 
@@ -405,168 +433,398 @@ function getFirstEventFrame(ev: TimelineEvent): number {
   return ev.startFrame;
 }
 
+// ── Verb handler registry ────────────────────────────────────────────────────
+
+interface VerbHandlerContext {
+  events: TimelineEvent[];
+  operatorSlotId: string;
+  secondaryConditions: Predicate[];
+  clauseEffects?: TriggerEffect[];
+}
+
+type VerbHandlerFn = (primaryCond: Predicate, ctx: VerbHandlerContext) => TriggerMatch[];
+
+interface VerbHandler {
+  /** Lower = higher priority when selecting the primary verb from a clause. */
+  priority: number;
+  findMatches: VerbHandlerFn;
+}
+
+// ── Shared column + owner resolution ─────────────────────────────────────────
+
+const SKILL_OBJECT_TO_COLUMN: Record<string, string> = {
+  BASIC_ATTACK: SKILL_COLUMNS.BASIC,
+  BATTLE_SKILL: SKILL_COLUMNS.BATTLE,
+  COMBO_SKILL:  SKILL_COLUMNS.COMBO,
+  ULTIMATE:     SKILL_COLUMNS.ULTIMATE,
+};
+
+const STATE_TO_REACTION_COLUMN: Record<string, string> = {
+  COMBUSTED:     REACTION_COLUMNS.COMBUSTION,
+  SOLIDIFIED:    REACTION_COLUMNS.SOLIDIFICATION,
+  CORRODED:      REACTION_COLUMNS.CORROSION,
+  ELECTRIFIED:   REACTION_COLUMNS.ELECTRIFICATION,
+};
+
+const SKIP_COLUMNS = new Set<string>([
+  SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE,
+]);
+
+/**
+ * Resolve which timeline columns to scan for a given object + element/adjective + objectId.
+ * Returns undefined for generic STATUS (needs fallback scan logic).
+ */
+function resolveColumns(cond: Predicate): Set<string> | undefined {
+  const el = (cond as any).element ?? (cond as any).adjective;
+
+  switch (cond.object) {
+    case 'REACTION':
+    case 'ARTS_REACTION':
+      if (cond.objectId) {
+        const colId = (REACTION_COLUMNS as Record<string, string>)[cond.objectId];
+        return colId ? new Set([colId]) : new Set();
+      }
+      return new Set(REACTION_COLUMN_IDS);
+
+    case 'INFLICTION':
+      if (el) {
+        const colId = ELEMENT_TO_INFLICTION_COLUMN[el];
+        return colId ? new Set([colId]) : new Set();
+      }
+      return new Set(INFLICTION_COLUMN_IDS);
+
+    case 'STATUS':
+      if (cond.objectId) return new Set([statusNameToColumnId(cond.objectId)]);
+      return undefined; // generic — needs fallback
+
+    case 'STAGGER':
+      return new Set(['node-stagger', 'full-stagger']);
+
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Resolve which ownerId to filter events by, based on verb semantics.
+ *
+ * For action verbs (APPLY, CONSUME), the subject is the actor and the target
+ * (toObject) is the recipient. Timeline events are owned by the recipient.
+ * For state/possession verbs (HAVE, IS, RECEIVE), the subject is the entity.
+ * For skill verbs (PERFORM, DEAL, RECOVER), the subject is the performer.
+ */
+function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
+  const det = (cond as any).subjectDeterminer;
+  const isAnyOperator = cond.subject === 'OPERATOR' && det === 'ANY';
+  const toObj = (cond as any).toObject;
+  const toDet = (cond as any).toDeterminer;
+
+  // Action verbs: event ownerId = recipient (toObject), not subject
+  const isActionVerb = verb === 'APPLY' || verb === 'CONSUME';
+
+  return {
+    isAnyOperator,
+    matchesOwner(ownerId: string) {
+      if (isActionVerb && toObj) {
+        // Explicit target — match event owner against target
+        if (toObj === 'ENEMY') return ownerId === ENEMY_OWNER_ID;
+        if (toObj === 'OPERATOR') {
+          if (toDet === 'ANY') return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+          if (toDet === 'ALL') return true; // team-wide
+          if (toDet === 'OTHER') return ownerId !== operatorSlotId && ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+          return ownerId === operatorSlotId; // THIS or default
+        }
+        return true;
+      }
+      if (isActionVerb) {
+        // No explicit target — wildcard (match any recipient)
+        return true;
+      }
+      // Subject-based filtering (PERFORM, HAVE, IS, RECEIVE, DEAL, RECOVER, etc.)
+      if (cond.subject === 'ENEMY') return ownerId === ENEMY_OWNER_ID;
+      if (isAnyOperator) return ownerId !== ENEMY_OWNER_ID && ownerId !== COMMON_OWNER_ID;
+      return ownerId === operatorSlotId;
+    },
+  };
+}
+
+function checkSecondary(ctx: VerbHandlerContext, frame: number): boolean {
+  return ctx.secondaryConditions.every(sc =>
+    checkPredicate(sc, ctx.events, ctx.operatorSlotId, frame)
+  );
+}
+
+function makeMatch(frame: number, ev: TimelineEvent, effects?: TriggerEffect[]): TriggerMatch {
+  return { frame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, originOwnerId: ev.sourceOwnerId, sourceColumnId: ev.columnId, effects };
+}
+
+/**
+ * Generic event scanner: resolve columns + owner, scan events, trigger on startFrame.
+ * Used by APPLY, CONSUME, RECEIVE, IS, BECOME.
+ */
+function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: string): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  const columns = resolveColumns(primaryCond);
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, verb);
+
+  for (const ev of ctx.events) {
+    if (columns) {
+      if (!columns.has(ev.columnId)) continue;
+    } else if (primaryCond.object === 'STATUS') {
+      // Generic STATUS fallback: exclude skill/infliction/reaction columns
+      if (REACTION_COLUMN_IDS.has(ev.columnId)) continue;
+      if (INFLICTION_COLUMN_IDS.has(ev.columnId)) continue;
+      if (SKIP_COLUMNS.has(ev.columnId)) continue;
+    } else {
+      continue;
+    }
+    if (!matchesOwner(ev.ownerId)) continue;
+    if (!checkSecondary(ctx, ev.startFrame)) continue;
+
+    matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+  }
+  return matches;
+}
+
+// ── PERFORM handler ──────────────────────────────────────────────────────────
+
+function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  const { matchesOwner, isAnyOperator } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'PERFORM');
+
+  if (primaryCond.object === 'FINAL_STRIKE') {
+    for (const ev of ctx.events) {
+      if (!matchesOwner(ev.ownerId)) continue;
+      if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+      if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
+
+      const triggerFrame = getFinalStrikeTriggerFrame(ev);
+      if (triggerFrame == null) continue;
+      if (!checkSecondary(ctx, triggerFrame)) continue;
+
+      matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+    }
+    return matches;
+  }
+
+  const matchingColumn = SKILL_OBJECT_TO_COLUMN[primaryCond.object ?? ''] ?? primaryCond.object;
+
+  for (const ev of ctx.events) {
+    if (!isAnyOperator && ev.ownerId !== ctx.operatorSlotId) continue;
+    if (isAnyOperator && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
+    if (ev.columnId !== matchingColumn) continue;
+
+    const triggerFrame = getFirstEventFrame(ev);
+    if (!checkSecondary(ctx, triggerFrame)) continue;
+
+    matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+  }
+  return matches;
+}
+
+// ── HAVE handler ─────────────────────────────────────────────────────────────
+
+function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  if (primaryCond.object !== 'STATUS' || !primaryCond.objectId) return matches;
+
+  const colId = statusNameToColumnId(primaryCond.objectId);
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'HAVE');
+
+  for (const ev of ctx.events) {
+    if (ev.columnId !== colId) continue;
+    if (!matchesOwner(ev.ownerId)) continue;
+
+    if (primaryCond.cardinality != null) {
+      if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, ev.startFrame)) continue;
+    }
+    if (!checkSecondary(ctx, ev.startFrame)) continue;
+
+    matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+  }
+  return matches;
+}
+
+// ── RECOVER handler ──────────────────────────────────────────────────────────
+
+function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'RECOVER');
+
+  if (primaryCond.object === 'SKILL_POINT') {
+    for (const ev of ctx.events) {
+      if (!matchesOwner(ev.ownerId)) continue;
+      if (!ev.segments) continue;
+      let cumulativeOffset = 0;
+      for (const seg of ev.segments) {
+        if (seg.frames) {
+          for (const frame of seg.frames) {
+            if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
+              const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
+              if (!checkSecondary(ctx, triggerFrame)) continue;
+              matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+            }
+          }
+        }
+        cumulativeOffset += seg.durationFrames;
+      }
+    }
+  }
+  return matches;
+}
+
+// ── IS / BECOME handlers ─────────────────────────────────────────────────────
+
+function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const colId = STATE_TO_REACTION_COLUMN[primaryCond.object ?? ''];
+  if (!colId) return [];
+
+  const matches: TriggerMatch[] = [];
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'IS');
+
+  for (const ev of ctx.events) {
+    if (ev.columnId !== colId) continue;
+    if (!matchesOwner(ev.ownerId)) continue;
+    if (!checkSecondary(ctx, ev.startFrame)) continue;
+    matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+  }
+  return matches;
+}
+
+function handleBecome(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return handleIs(primaryCond, ctx);
+}
+
+// ── APPLY / CONSUME / RECEIVE handlers ───────────────────────────────────────
+// All three scan the same column types (infliction/reaction/status).
+// The difference is semantic owner resolution:
+//   APPLY/CONSUME: subject = actor, event owner = recipient (use toObject)
+//   RECEIVE: subject = recipient, event owner = subject
+
+function handleApply(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return scanEvents(primaryCond, ctx, 'APPLY');
+}
+
+function handleConsume(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return scanEvents(primaryCond, ctx, 'CONSUME');
+}
+
+function handleReceive(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return scanEvents(primaryCond, ctx, 'RECEIVE');
+}
+
+// ── DEAL handler ─────────────────────────────────────────────────────────────
+// Scans skill events for frame ticks (damage frames).
+
+function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'DEAL');
+
+  for (const ev of ctx.events) {
+    if (!matchesOwner(ev.ownerId)) continue;
+    if (!ev.segments) continue;
+
+    let cumulativeOffset = 0;
+    for (const seg of ev.segments) {
+      if (seg.frames) {
+        for (const frame of seg.frames) {
+          const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
+          if (!checkSecondary(ctx, triggerFrame)) continue;
+          matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+        }
+      }
+      cumulativeOffset += seg.durationFrames;
+    }
+  }
+  return matches;
+}
+
+// ── HIT / DEFEAT handlers ────────────────────────────────────────────────────
+// Non-observable in a planner — generate periodic triggers every second.
+// Cooldown/stack system in deriveStatusEvents filters to actual procs.
+
+function handleHit(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return generatePeriodicTriggers(primaryCond, ctx);
+}
+
+function handleDefeat(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  return generatePeriodicTriggers(primaryCond, ctx);
+}
+
+function generatePeriodicTriggers(_primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const matches: TriggerMatch[] = [];
+  const synthetic = { ownerId: ctx.operatorSlotId, name: '' } as TimelineEvent;
+  for (let frame = 0; frame < TOTAL_FRAMES; frame += FPS) {
+    if (!checkSecondary(ctx, frame)) continue;
+    matches.push(makeMatch(frame, synthetic, ctx.clauseEffects));
+  }
+  return matches;
+}
+
+// ── Registry ─────────────────────────────────────────────────────────────────
+
+const VERB_HANDLER_REGISTRY = new Map<string, VerbHandler>([
+  ['PERFORM', { priority: 10, findMatches: handlePerform }],
+  ['APPLY',   { priority: 20, findMatches: handleApply }],
+  ['CONSUME', { priority: 25, findMatches: handleConsume }],
+  ['DEAL',    { priority: 30, findMatches: handleDeal }],
+  ['HIT',     { priority: 35, findMatches: handleHit }],
+  ['DEFEAT',  { priority: 40, findMatches: handleDefeat }],
+  ['RECEIVE', { priority: 50, findMatches: handleReceive }],
+  ['BECOME',  { priority: 55, findMatches: handleBecome }],
+  ['RECOVER', { priority: 60, findMatches: handleRecover }],
+  ['HAVE',    { priority: 70, findMatches: handleHave }],
+  ['IS',      { priority: 80, findMatches: handleIs }],
+]);
+
+// ── findTriggerMatches ───────────────────────────────────────────────────────
+
 /**
  * Find all trigger matches for a status event definition.
+ *
+ * Uses a verb-handler registry: each trigger clause's conditions are grouped
+ * by verb, the highest-priority verb is selected as primary, and its handler
+ * scans events for trigger frames. Remaining conditions are checked as
+ * secondary predicates at each candidate frame.
  */
-function findTriggerMatches(
-  def: StatusEventDef,
+/**
+ * Find all trigger matches for a set of trigger clauses against timeline events.
+ * Exported so combo window derivation can reuse the same verb-handler registry.
+ */
+export function findClauseTriggerMatches(
+  onTriggerClauses: readonly { conditions: Predicate[]; effects?: TriggerEffect[] }[],
   events: TimelineEvent[],
   operatorSlotId: string,
 ): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
 
-  // Empty triggerClause = no engine-created trigger.
-  // Statuses with empty triggerClause are either:
-  // - Talent/passive (handled by the TALENT type path, not here)
-  // - Frame-created (APPLY STATUS from skill frames)
-  // - Threshold-created (via another status's clause)
-  // None of these should produce a passive trigger at frame 0.
-  if (def.triggerClause.length === 0) {
-    return matches;
-  }
+  if (onTriggerClauses.length === 0) return matches;
 
-  for (const clause of def.triggerClause) {
-    // Classify conditions
-    const performConds = clause.conditions.filter(c => c.verb === 'PERFORM');
-    const haveConds = clause.conditions.filter(c => c.verb === 'HAVE');
-
-    if (performConds.length > 0) {
-      const performCond = performConds[0];
-      const isAnyOperator = (performCond.subject === 'OPERATOR' && (performCond as any).subjectDeterminer === 'ANY');
-      const isFinalStrike = performCond.object === 'FINAL_STRIKE';
-
-      if (isFinalStrike) {
-        // FINAL_STRIKE: scan basic attack events for Final Strike frames
-        for (const ev of events) {
-          if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
-          if (!isAnyOperator && ev.ownerId !== operatorSlotId) continue;
-          if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-          // Skip non-sequence basic attacks (Finisher, Dive)
-          if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
-
-          const triggerFrame = getFinalStrikeTriggerFrame(ev);
-          if (triggerFrame == null) continue;
-
-          const allHaveMet = haveConds.every(hc =>
-            checkPredicate(hc, events, operatorSlotId, triggerFrame)
-          );
-          if (!allHaveMet) continue;
-
-          matches.push({
-            frame: triggerFrame,
-            sourceOwnerId: ev.ownerId,
-            sourceSkillName: ev.name,
-            effects: clause.effects,
-          });
-        }
-      } else {
-        // Standard PERFORM trigger: find skill casts matching the object
-        const matchingSkillColumn = performCond.object === 'BATTLE_SKILL' ? 'battle'
-          : performCond.object === 'COMBO_SKILL' ? 'combo'
-          : performCond.object === 'ULTIMATE' ? 'ultimate'
-          : performCond.object;
-
-        for (const ev of events) {
-          if (!isAnyOperator && ev.ownerId !== operatorSlotId) continue;
-          if (isAnyOperator && (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID)) continue;
-          if (ev.columnId !== matchingSkillColumn) continue;
-
-          // Use first event frame tick as trigger point (e.g. battle skill hit frame),
-          // falling back to event start if no frame data exists
-          const triggerFrame = getFirstEventFrame(ev);
-
-          const allHaveMet = haveConds.every(hc =>
-            checkPredicate(hc, events, operatorSlotId, triggerFrame)
-          );
-          if (!allHaveMet) continue;
-
-          matches.push({
-            frame: triggerFrame,
-            sourceOwnerId: ev.ownerId,
-            sourceSkillName: ev.name,
-            effects: clause.effects,
-          });
-        }
-      }
-    } else if (haveConds.length > 0) {
-      // Pure HAVE trigger (e.g. ENEMY HAVE COMBUSTION, or THIS_OPERATOR HAVE STATUS X EXACTLY N):
-      // trigger on each matching status event start, but only if cardinality is satisfied.
-      const haveCond = haveConds[0];
-      if (haveCond.object === 'STATUS' && haveCond.objectId) {
-        const colId = statusNameToColumnId(haveCond.objectId);
-        for (const ev of events) {
-          if (ev.columnId !== colId) continue;
-          if (haveCond.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
-
-          // Check cardinality constraint if specified
-          if (haveCond.cardinality != null) {
-            if (!checkPredicate(haveCond, events, operatorSlotId, ev.startFrame)) continue;
-          }
-
-          matches.push({
-            frame: ev.startFrame,
-            sourceOwnerId: ev.ownerId,
-            sourceSkillName: ev.name,
-            effects: clause.effects,
-          });
-        }
-      }
-    } else {
-      // Classify other condition types
-      const recoverConds = clause.conditions.filter(c => c.verb === 'RECOVER');
-      const isConds = clause.conditions.filter(c => c.verb === 'IS');
-
-      if (recoverConds.length > 0) {
-        // RECOVER trigger (e.g. RECOVER SKILL_POINT): scan event segments for recovery frames
-        const recoverCond = recoverConds[0];
-        const isThisOperator = (recoverCond as any).subjectDeterminer === 'THIS';
-        const isSpRecovery = recoverCond.object === 'SKILL_POINT';
-
-        if (isSpRecovery) {
-          for (const ev of events) {
-            if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
-            if (isThisOperator && ev.ownerId !== operatorSlotId) continue;
-            if (!ev.segments) continue;
-            let cumulativeOffset = 0;
-            for (const seg of ev.segments) {
-              if (seg.frames) {
-                for (const frame of seg.frames) {
-                  if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
-                    matches.push({
-                      frame: ev.startFrame + cumulativeOffset + frame.offsetFrame,
-                      sourceOwnerId: ev.ownerId,
-                      sourceSkillName: ev.name,
-                      effects: clause.effects,
-                    });
-                  }
-                }
-              }
-              cumulativeOffset += seg.durationFrames;
-            }
-          }
-        }
-      } else if (isConds.length > 0) {
-        // IS trigger (e.g. ENEMY IS COMBUSTED): trigger on each matching reaction event
-        const isCond = isConds[0];
-        const reactionMap: Record<string, string> = {
-          COMBUSTED: 'combustion', SOLIDIFIED: 'solidification',
-          CORRODED: 'corrosion', ELECTRIFIED: 'electrification',
-        };
-        const colId = reactionMap[isCond.object ?? ''];
-        if (colId) {
-          for (const ev of events) {
-            if (ev.columnId !== colId) continue;
-            if (isCond.subject === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
-            matches.push({
-              frame: ev.startFrame,
-              sourceOwnerId: ev.ownerId,
-              sourceSkillName: ev.name,
-              effects: clause.effects,
-            });
-          }
-        }
+  for (const clause of onTriggerClauses) {
+    // Find the primary verb — the one with the lowest priority number
+    let primaryVerb: string | undefined;
+    let bestPriority = Infinity;
+    for (const cond of clause.conditions) {
+      const handler = VERB_HANDLER_REGISTRY.get(cond.verb as string);
+      if (handler && handler.priority < bestPriority) {
+        bestPriority = handler.priority;
+        primaryVerb = cond.verb as string;
       }
     }
+
+    if (!primaryVerb) continue;
+    const handler = VERB_HANDLER_REGISTRY.get(primaryVerb)!;
+    const primaryCond = clause.conditions.find(c => c.verb === primaryVerb)!;
+    const secondaryConditions = clause.conditions.filter(c => c !== primaryCond);
+
+    const ctx: VerbHandlerContext = {
+      events,
+      operatorSlotId,
+      secondaryConditions,
+      clauseEffects: clause.effects,
+    };
+
+    matches.push(...handler.findMatches(primaryCond, ctx));
   }
 
   // Deduplicate by frame (if multiple clauses match the same frame)
@@ -576,6 +834,30 @@ function findTriggerMatches(
     seen.add(m.frame);
     return true;
   }).sort((a, b) => a.frame - b.frame);
+}
+
+/**
+ * Check if a set of trigger clauses represents an "always available" combo
+ * (i.e., all conditions use verbs like HIT or HAVE that don't require specific
+ * event-based triggers — the combo window spans the entire timeline).
+ */
+const ALWAYS_AVAILABLE_VERBS = new Set(['HIT', 'HAVE']);
+export function isClauseAlwaysAvailable(
+  clauses: readonly { conditions: any[] }[],
+): boolean {
+  if (clauses.length === 0) return false;
+  return clauses.every(clause =>
+    clause.conditions.length > 0 &&
+    clause.conditions.every((c: any) => ALWAYS_AVAILABLE_VERBS.has(c.verb)),
+  );
+}
+
+function findTriggerMatches(
+  def: StatusEventDef,
+  events: TimelineEvent[],
+  operatorSlotId: string,
+): TriggerMatch[] {
+  return findClauseTriggerMatches(def.onTriggerClause ?? [], events, operatorSlotId);
 }
 
 // ── Derive events ───────────────────────────────────────────────────────────
@@ -603,7 +885,7 @@ function deriveStatusEvents(
   const empty: DeriveResult = { derived: [], absorbedInflictions: [] };
 
   // Check if ALL effects redirect output to a different status (e.g. talent triggers that produce MF)
-  const applySubEffect = def.triggerClause
+  const applySubEffect = (def.onTriggerClause ?? [])
     .flatMap(c => c.effects ?? [])
     .filter(e => e.verb === 'ALL')
     .flatMap(e => e.effects ?? [])
@@ -612,16 +894,17 @@ function deriveStatusEvents(
   if (applySubEffect?.objectId) {
     const json = getOperatorJson(ctx.operatorId);
     const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
-      .find(d => d.name === applySubEffect.objectId);
+      .find(d => d.properties.id === applySubEffect.objectId);
     if (targetDef) outputDef = targetDef;
   }
 
-  const duration = outputDef.properties?.duration ?? outputDef.duration;
-  if (!duration) return empty;
-  const durationFrames = getDurationFrames(duration);
-  const ownerId = resolveOwnerId(outputDef.target, operatorSlotId, ctx.operatorSlotMap, outputDef.targetDeterminer);
-  const columnId = statusNameToColumnId(outputDef.name);
-  const maxStacks = getMaxStacks(outputDef.stack.max, ctx.potential);
+  const durationFrames = outputDef.properties.duration ? getDurationFrames(outputDef.properties.duration) : TOTAL_FRAMES;
+  const ownerId = resolveOwnerId(outputDef.properties.target, operatorSlotId, ctx.operatorSlotMap, outputDef.properties.targetDeterminer);
+  const statusId = outputDef.properties.id ?? outputDef.properties.name;
+  if (!statusId) return empty;
+  const columnId = statusNameToColumnId(statusId);
+  const limitMap = outputDef.properties.statusLevel.limit;
+  const maxStacks = getMaxStacks(limitMap, ctx.potential);
 
   const triggers = findTriggerMatches(def, events, operatorSlotId);
   if (triggers.length === 0) return empty;
@@ -676,10 +959,10 @@ function deriveStatusEvents(
     }
 
     for (let ci = 0; ci < createCount; ci++) {
-      const evId = `${outputDef.name.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
+      const evId = `${outputDef.properties.id.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
 
       // For RESET stacks: clamp previous instances
-      if (outputDef.stack.verb === 'RESET' && derived.length > 0) {
+      if (outputDef.properties.statusLevel.statusLevelInteractionType === 'RESET' && derived.length > 0) {
         const prev = derived[derived.length - 1];
         const prevEnd = prev.startFrame + prev.activationDuration;
         if (trigger.frame < prevEnd) {
@@ -695,7 +978,7 @@ function deriveStatusEvents(
 
       const ev: TimelineEvent = {
         id: evId,
-        name: outputDef.name,
+        name: outputDef.properties.id,
         ownerId,
         columnId,
         startFrame: trigger.frame,
@@ -719,7 +1002,7 @@ function deriveStatusEvents(
             : durationFrames;
           const segData: EventSegmentData = {
             durationFrames: segDuration,
-            label: seg.name,
+            label: seg.properties?.name,
           };
           // Resolve per-segment susceptibility from segment clauses
           if (seg.clause) {
@@ -745,28 +1028,16 @@ function deriveStatusEvents(
       }
 
       // Legacy: susceptibility from flat config (e.g. skills JSON statusEvents)
-      if (!ev.susceptibility && outputDef.susceptibility) {
+      if (!ev.susceptibility && outputDef.properties.susceptibility) {
         const resolved: Record<string, number> = {};
-        for (const [element, values] of Object.entries(outputDef.susceptibility)) {
+        for (const [element, values] of Object.entries(outputDef.properties.susceptibility)) {
           const arr = values as number[];
-          const talentLevel = outputDef.minTalentLevel?.talent === 2
-            ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-            : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+          const talentLevel = 1; // TODO: resolve talent level from DSL
           resolved[element] = arr[Math.min(talentLevel, arr.length) - 1] ?? arr[0];
         }
         ev.susceptibility = resolved;
       }
 
-      // Legacy: statusValue from flat stats config (e.g. skills JSON statusEvents)
-      if (ev.statusValue == null && outputDef.stats && outputDef.stats.length > 0) {
-        const stat = outputDef.stats[0] as { perIntellect?: number[] };
-        if (stat.perIntellect) {
-          const talentLevel = outputDef.minTalentLevel?.talent === 2
-            ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-            : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
-          ev.statusValue = stat.perIntellect[Math.min(talentLevel, stat.perIntellect.length) - 1] ?? stat.perIntellect[0];
-        }
-      }
 
       derived.push(ev);
 
@@ -779,46 +1050,6 @@ function deriveStatusEvents(
           sourceOwnerId: trigger.sourceOwnerId,
           sourceSkillName: trigger.sourceSkillName,
         });
-      }
-
-      // p3TeamShare: create shared copies for all other team operators at reduced duration
-      if (outputDef.p3TeamShare && ctx.potential >= 3) {
-        const sharedDuration = Math.floor(durationFrames * outputDef.p3TeamShare.durationMultiplier);
-        const teamSlots = new Set<string>();
-        for (const e of events) {
-          if (e.ownerId !== ENEMY_OWNER_ID && e.ownerId !== COMMON_OWNER_ID && e.ownerId !== operatorSlotId) {
-            teamSlots.add(e.ownerId);
-          }
-        }
-        for (const teamSlotId of Array.from(teamSlots)) {
-          // RESET: clamp previous team copy
-          if (outputDef.stack.verb === 'RESET') {
-            const prev = derived.filter(d => d.ownerId === teamSlotId);
-            const last = prev[prev.length - 1];
-            if (last && trigger.frame < last.startFrame + last.activationDuration) {
-              const idx = derived.indexOf(last);
-              derived[idx] = {
-                ...last,
-                activationDuration: trigger.frame - last.startFrame,
-                eventStatus: EventStatusType.REFRESHED,
-                eventStatusOwnerId: operatorSlotId,
-                eventStatusSkillName: trigger.sourceSkillName,
-              };
-            }
-          }
-          derived.push({
-            id: `${evId}-share-${teamSlotId}`,
-            name: outputDef.name,
-            ownerId: teamSlotId,
-            columnId,
-            startFrame: trigger.frame,
-            activationDuration: sharedDuration,
-            activeDuration: 0,
-            cooldownDuration: 0,
-            sourceOwnerId: operatorSlotId,
-            sourceSkillName: trigger.sourceSkillName,
-          });
-        }
       }
     }
   }
@@ -835,14 +1066,14 @@ function evaluateThresholdClauses(
 ): TimelineEvent[] {
   if (!def.clause || def.clause.length === 0) return [];
 
-  const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
+  const maxStacks = getMaxStacks(def.properties.statusLevel.limit, ctx.potential);
   const thresholdDerived: TimelineEvent[] = [];
   let idCounter = 0;
 
   for (const clause of def.clause) {
     // Check for HAVE STACKS EXACTLY MAX condition
     const stackCond = clause.conditions.find(c =>
-      c.subject === 'THIS_EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
+      c.subject === 'EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
     );
     if (!stackCond) continue;
 
@@ -850,7 +1081,7 @@ function evaluateThresholdClauses(
 
     // Find frames where the stack count crosses the threshold
     const allStatusEvents = [...ctx.events, ...derivedEvents]
-      .filter(ev => ev.columnId === statusNameToColumnId(def.name) && ev.ownerId === resolveOwnerId(def.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.targetDeterminer))
+      .filter(ev => ev.columnId === statusNameToColumnId(def.properties.id) && ev.ownerId === resolveOwnerId(def.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, def.properties.targetDeterminer))
       .sort((a, b) => a.startFrame - b.startFrame);
 
     for (const ev of allStatusEvents) {
@@ -877,16 +1108,16 @@ function evaluateThresholdClauses(
           // Look for the target status def in the same operator's statusEvents
           const json = getOperatorJson(ctx.operatorId);
           const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
-            .find(d => d.name === targetStatusName);
+            .find(d => d.properties.id === targetStatusName);
 
           // Resolve owner from the target def's own target field (authoritative),
           // falling back to the clause's toObject
-          const targetField = targetDef?.target ?? effect.toObject;
-          const targetDet = targetDef?.targetDeterminer ?? (effect as any).toDeterminer;
+          const targetField = targetDef?.properties.target ?? effect.toObject;
+          const targetDet = targetDef?.properties.targetDeterminer ?? (effect as any).toDeterminer;
           const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, ctx.operatorSlotMap, targetDet ?? 'THIS');
 
           const targetDuration = targetDef
-            ? (targetDef.properties?.duration ?? targetDef.duration)
+            ? (targetDef.properties.duration)
             : undefined;
           const duration = targetDuration
             ? getDurationFrames(targetDuration)
@@ -904,7 +1135,7 @@ function evaluateThresholdClauses(
                 activationDuration: ev.startFrame - prev.startFrame,
                 eventStatus: EventStatusType.REFRESHED,
                 eventStatusOwnerId: ctx.operatorSlotId,
-                eventStatusSkillName: def.name,
+                eventStatusSkillName: def.properties.id,
               };
             }
           }
@@ -919,7 +1150,7 @@ function evaluateThresholdClauses(
             activeDuration: 0,
             cooldownDuration: 0,
             sourceOwnerId: ctx.operatorSlotId,
-            sourceSkillName: def.name,
+            sourceSkillName: def.properties.id,
           });
         }
       }
@@ -952,9 +1183,9 @@ function evaluateLifecycleForEvent(
     parentEventEndFrame: parentEndFrame,
   });
 
-  // onActivationClause: evaluate once at startFrame
-  if (def.onActivationClause) {
-    for (const clause of def.onActivationClause) {
+  // onEntryClause: evaluate once at startFrame
+  if (def.onEntryClause) {
+    for (const clause of def.onEntryClause) {
       const condCtx: ConditionContext = {
         events: result,
         frame: statusEv.startFrame,
@@ -969,9 +1200,9 @@ function evaluateLifecycleForEvent(
     }
   }
 
-  // reactiveTriggerClause: for each clause, find matching events during the status's active window
-  if (def.reactiveTriggerClause) {
-    for (const clause of def.reactiveTriggerClause) {
+  // onTriggerClause: for each clause, find matching events during the status's active window
+  if (def.onTriggerClause) {
+    for (const clause of def.onTriggerClause) {
       const receiveConds = clause.conditions.filter(
         (c: Predicate) => c.verb === 'RECEIVE'
       );
@@ -1007,10 +1238,10 @@ function evaluateLifecycleForEvent(
 }
 
 /**
- * Evaluate lifecycle clauses (onActivationClause, reactiveTriggerClause) on all
+ * Evaluate lifecycle clauses (onEntryClause, onTriggerClause) on all
  * status events in the timeline that match a statusEvent definition by name.
  *
- * This covers both engine-created statuses (from triggerClause) and frame-created
+ * This covers both engine-created statuses (from onTriggerClause) and frame-created
  * statuses (e.g. APPLY STATUS from skill frames).
  */
 function evaluateLifecycleClauses(
@@ -1022,16 +1253,16 @@ function evaluateLifecycleClauses(
 
   // Build a map of statusEvent defs that have lifecycle clauses
   const lifecycleDefs = allDefs.filter(d =>
-    (d.onActivationClause && d.onActivationClause.length > 0) ||
-    (d.reactiveTriggerClause && d.reactiveTriggerClause.length > 0)
+    (d.onEntryClause && d.onEntryClause.length > 0) ||
+    (d.onTriggerClause && d.onTriggerClause.length > 0)
   );
   if (lifecycleDefs.length === 0) return result;
 
   for (const def of lifecycleDefs) {
-    const columnId = statusNameToColumnId(def.name);
+    const columnId = statusNameToColumnId(def.properties.id);
 
     // Find all status events in the timeline matching this def
-    const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.name === def.name);
+    const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.name === def.properties.id);
 
     for (const statusEv of matchingEvents) {
       result = evaluateLifecycleForEvent(result, def, statusEv, operatorSlotMap);
@@ -1114,15 +1345,9 @@ export function deriveStatusesFromEngine(
     const defs = json.statusEvents as StatusEventDef[];
     for (const def of defs) {
       // Skip defs handled by the event queue (exchange statuses)
-      if (skipDefNames?.has(def.name)) continue;
+      if (skipDefNames?.has(def.properties.id)) continue;
 
       // Check talent level requirement
-      if (def.minTalentLevel) {
-        const talentLevel = def.minTalentLevel.talent === 1
-          ? (props?.operator.talentOneLevel ?? 0)
-          : (props?.operator.talentTwoLevel ?? 0);
-        if (talentLevel < def.minTalentLevel.minLevel) continue;
-      }
 
       const ctx: DeriveContext = {
         events: result,
@@ -1135,16 +1360,16 @@ export function deriveStatusesFromEngine(
 
       // TALENT type: create a permanent presence event on the operator's timeline.
       // The talent event is separate from the trigger effects (e.g. absorption → MF).
-      if (def.type === 'TALENT') {
-        const talentDuration = def.properties?.duration ?? def.duration;
+      if (def.properties.type === 'TALENT') {
+        const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
-        const talentOwnerId = resolveOwnerId(def.target, slotId, operatorSlotMap, def.targetDeterminer);
-        const talentColumnId = statusNameToColumnId(def.name);
+        const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
+        const talentColumnId = statusNameToColumnId(def.properties.id);
         // Only create if not already present
         if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           result.push({
-            id: `${def.name.toLowerCase()}-talent-${slotId}`,
-            name: def.name,
+            id: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            name: def.properties.id,
             ownerId: talentOwnerId,
             columnId: talentColumnId,
             startFrame: 0,
@@ -1152,7 +1377,7 @@ export function deriveStatusesFromEngine(
             activeDuration: 0,
             cooldownDuration: 0,
             sourceOwnerId: slotId,
-            sourceSkillName: def.name,
+            sourceSkillName: def.properties.id,
           });
         }
       }
@@ -1180,20 +1405,21 @@ export function deriveStatusesFromEngine(
   }
 
   // ── Weapon/gear effect derivation ────────────────────────────────────────
+
   const equipDefs: { slotId: string; def: StatusEventDef }[] = [];
   if (slotWeapons) {
     for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
       if (!weaponName) continue;
-      for (const def of getWeaponEffectDefs(weaponName) as StatusEventDef[]) {
-        equipDefs.push({ slotId, def });
+      for (const raw of getWeaponEffectDefs(weaponName)) {
+        equipDefs.push({ slotId, def: normalizeEquipDef(raw) });
       }
     }
   }
   if (slotGearSets) {
     for (const [slotId, gearSetType] of Object.entries(slotGearSets)) {
       if (!gearSetType) continue;
-      for (const def of getGearEffectDefs(gearSetType) as StatusEventDef[]) {
-        equipDefs.push({ slotId, def });
+      for (const raw of getGearEffectDefs(gearSetType)) {
+        equipDefs.push({ slotId, def: normalizeEquipDef(raw) });
       }
     }
   }
@@ -1211,21 +1437,21 @@ export function deriveStatusesFromEngine(
     };
     const { derived } = deriveStatusEvents(def, ctx);
     // Remap OTHER-targeted events to COMMON_OWNER_ID (team buff column)
-    const remapped = def.targetDeterminer === 'OTHER'
+    const remapped = def.properties.targetDeterminer === 'OTHER'
       ? derived.map(ev => ev.ownerId === slotId ? { ...ev, ownerId: COMMON_OWNER_ID } : ev)
       : derived;
     result = [...result, ...remapped];
   }
 
   // ── Second pass: lifecycle clause evaluation ──────────────────────────────
-  // After all triggerClause-derived statuses exist, evaluate onActivationClause
-  // and reactiveTriggerClause on ALL status events (engine-created and frame-created).
+  // After all onTriggerClause-derived statuses exist, evaluate onEntryClause
+  // and onTriggerClause on ALL status events (engine-created and frame-created).
   const allLifecycleDefs: StatusEventDef[] = [];
   for (const operatorId of getAllOperatorIds()) {
     const json = getOperatorJson(operatorId);
     if (!json?.statusEvents) continue;
     for (const def of json.statusEvents as StatusEventDef[]) {
-      if (def.onActivationClause?.length || def.reactiveTriggerClause?.length) {
+      if (def.onEntryClause?.length || def.onTriggerClause?.length) {
         allLifecycleDefs.push(def);
       }
     }
@@ -1297,24 +1523,16 @@ export function collectExchangeStatusTriggers(
     const potential = props?.operator.potential ?? 0;
 
     for (const def of json.statusEvents as StatusEventDef[]) {
-      if (!exchangeStatusNames.has(def.name)) continue;
+      if (!exchangeStatusNames.has(def.properties.id)) continue;
 
-      if (def.minTalentLevel) {
-        const talentLevel = def.minTalentLevel.talent === 1
-          ? (props?.operator.talentOneLevel ?? 0)
-          : (props?.operator.talentTwoLevel ?? 0);
-        if (talentLevel < def.minTalentLevel.minLevel) continue;
-      }
-
-      const duration = def.properties?.duration ?? def.duration;
-      if (!duration) continue;
+      const duration = def.properties.duration;
 
       contexts.push({
-        statusName: def.name,
-        columnId: statusNameToColumnId(def.name),
-        ownerId: resolveOwnerId(def.target, slotId, operatorSlotMap, def.targetDeterminer),
-        maxStacks: getMaxStacks(def.stack.max, potential),
-        durationFrames: getDurationFrames(duration),
+        statusName: def.properties.id,
+        columnId: statusNameToColumnId(def.properties.id),
+        ownerId: resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer),
+        maxStacks: getMaxStacks(def.properties.statusLevel.limit, potential),
+        durationFrames: duration ? getDurationFrames(duration) : TOTAL_FRAMES,
         operatorSlotId: slotId,
         operatorId,
         potential,
@@ -1341,7 +1559,7 @@ export function evaluateThresholdForExchange(
   const def = ctx._def;
   if (!def.clause || def.clause.length === 0) return [];
 
-  const maxStacks = getMaxStacks(def.stack.max, ctx.potential);
+  const maxStacks = getMaxStacks(def.properties.statusLevel.limit, ctx.potential);
   const result: TimelineEvent[] = [];
 
   const operatorSlotMap: Record<string, string> = {};
@@ -1353,7 +1571,7 @@ export function evaluateThresholdForExchange(
 
   for (const clause of def.clause) {
     const stackCond = clause.conditions.find(c =>
-      c.subject === 'THIS_EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
+      c.subject === 'EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
     );
     if (!stackCond) continue;
 
@@ -1366,15 +1584,15 @@ export function evaluateThresholdForExchange(
 
       const json = getOperatorJson(ctx.operatorId);
       const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
-        .find(d => d.name === targetStatusName);
+        .find(d => d.properties.id === targetStatusName);
 
-      const targetField = targetDef?.target ?? effect.toObject;
+      const targetField = targetDef?.properties.target ?? effect.toObject;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const targetDet = targetDef?.targetDeterminer ?? (effect as any).toDeterminer;
+      const targetDet = targetDef?.properties.targetDeterminer ?? (effect as any).toDeterminer;
       const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, operatorSlotMap, targetDet ?? 'THIS');
 
       const targetDuration = targetDef
-        ? (targetDef.properties?.duration ?? targetDef.duration)
+        ? (targetDef.properties.duration)
         : undefined;
       const duration = targetDuration ? getDurationFrames(targetDuration) : 2400;
       const targetColumnId = statusNameToColumnId(targetStatusName);
@@ -1387,7 +1605,7 @@ export function evaluateThresholdForExchange(
           prev.activationDuration = crossingFrame - prev.startFrame;
           prev.eventStatus = EventStatusType.REFRESHED;
           prev.eventStatusOwnerId = ctx.operatorSlotId;
-          prev.eventStatusSkillName = def.name;
+          prev.eventStatusSkillName = def.properties.id;
         }
       }
 
@@ -1401,7 +1619,7 @@ export function evaluateThresholdForExchange(
         activeDuration: 0,
         cooldownDuration: 0,
         sourceOwnerId: ctx.operatorSlotId,
-        sourceSkillName: def.name,
+        sourceSkillName: def.properties.id,
       });
     }
   }
@@ -1461,16 +1679,9 @@ export function collectAbsorptionContexts(
     const potential = props?.operator.potential ?? 0;
 
     for (const def of json.statusEvents as StatusEventDef[]) {
-      if (def.type !== 'TALENT') continue;
+      if (def.properties.type !== 'TALENT') continue;
 
-      if (def.minTalentLevel) {
-        const talentLevel = def.minTalentLevel.talent === 1
-          ? (props?.operator.talentOneLevel ?? 0)
-          : (props?.operator.talentTwoLevel ?? 0);
-        if (talentLevel < def.minTalentLevel.minLevel) continue;
-      }
-
-      for (const clause of def.triggerClause) {
+      for (const clause of def.onTriggerClause ?? []) {
         const performConds = clause.conditions.filter((c: Predicate) => c.verb === 'PERFORM');
         const haveConds = clause.conditions.filter((c: Predicate) => c.verb === 'HAVE');
         if (performConds.length === 0 || haveConds.length === 0) continue;
@@ -1490,19 +1701,18 @@ export function collectAbsorptionContexts(
         if (!applyEffect?.objectId) continue;
 
         const targetDef = (json.statusEvents as StatusEventDef[])
-          .find(d => d.name === applyEffect.objectId);
+          .find(d => d.properties.id === applyEffect.objectId);
         if (!targetDef) continue;
 
-        const duration = targetDef.properties?.duration ?? targetDef.duration;
-        if (!duration) continue;
+        const duration = targetDef.properties.duration;
 
         contexts.push({
           inflictionColumnId,
-          exchangeStatusName: targetDef.name,
-          exchangeColumnId: statusNameToColumnId(targetDef.name),
-          exchangeOwnerId: resolveOwnerId(targetDef.target, slotId, operatorSlotMap, targetDef.targetDeterminer),
-          exchangeMaxStacks: getMaxStacks(targetDef.stack.max, potential),
-          exchangeDurationFrames: getDurationFrames(duration),
+          exchangeStatusName: targetDef.properties.id,
+          exchangeColumnId: statusNameToColumnId(targetDef.properties.id),
+          exchangeOwnerId: resolveOwnerId(targetDef.properties.target, slotId, operatorSlotMap, targetDef.properties.targetDeterminer),
+          exchangeMaxStacks: getMaxStacks(targetDef.properties.statusLevel.limit, potential),
+          exchangeDurationFrames: duration ? getDurationFrames(duration) : TOTAL_FRAMES,
           operatorSlotId: slotId,
         });
       }
@@ -1569,31 +1779,18 @@ export function collectEngineTriggerEntries(
     const potential = props?.operator.potential ?? 0;
 
     for (const def of defs) {
-      if (skipDefNames?.has(def.name)) continue;
+      if (skipDefNames?.has(def.properties.id)) continue;
 
-      // Skip defs with FINAL_STRIKE triggers — handled by collectAbsorptionContexts
-      const hasFinalStrikeTrigger = def.triggerClause?.some(c =>
-        c.conditions.some((p: any) => (p.verb ?? p.verb) === 'PERFORM' && (p.object ?? p.object) === 'FINAL_STRIKE')
-      );
-      if (hasFinalStrikeTrigger) continue;
-
-      if (def.minTalentLevel) {
-        const talentLevel = def.minTalentLevel.talent === 1
-          ? (props?.operator.talentOneLevel ?? 0)
-          : (props?.operator.talentTwoLevel ?? 0);
-        if (talentLevel < def.minTalentLevel.minLevel) continue;
-      }
-
-      // TALENT type: permanent presence event
-      if (def.type === 'TALENT') {
-        const talentDuration = def.properties?.duration ?? def.duration;
+      // TALENT type: permanent presence event (check BEFORE final-strike skip)
+      if (def.properties.type === 'TALENT') {
+        const talentDuration = def.properties.duration;
         const talentDurationFrames = talentDuration ? getDurationFrames(talentDuration) : TOTAL_FRAMES;
-        const talentOwnerId = resolveOwnerId(def.target, slotId, operatorSlotMap, def.targetDeterminer);
-        const talentColumnId = statusNameToColumnId(def.name);
+        const talentOwnerId = resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer);
+        const talentColumnId = statusNameToColumnId(def.properties.id);
         if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           talentEvents.push({
-            id: `${def.name.toLowerCase()}-talent-${slotId}`,
-            name: def.name,
+            id: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            name: def.properties.id,
             ownerId: talentOwnerId,
             columnId: talentColumnId,
             startFrame: 0,
@@ -1601,14 +1798,20 @@ export function collectEngineTriggerEntries(
             activeDuration: 0,
             cooldownDuration: 0,
             sourceOwnerId: slotId,
-            sourceSkillName: def.name,
+            sourceSkillName: def.properties.id,
           });
         }
       }
 
-      if (!def.triggerClause || def.triggerClause.length === 0) continue;
+      // Skip defs with FINAL_STRIKE triggers — handled by collectAbsorptionContexts
+      const hasFinalStrikeTrigger = def.onTriggerClause?.some(c =>
+        c.conditions.some((p: any) => p.verb === 'PERFORM' && p.object === 'FINAL_STRIKE')
+      );
+      if (hasFinalStrikeTrigger) continue;
 
-      for (const clause of def.triggerClause) {
+      if (!def.onTriggerClause || def.onTriggerClause.length === 0) continue;
+
+      for (const clause of def.onTriggerClause) {
         const performConds = clause.conditions.filter(c => c.verb === 'PERFORM');
         const haveConds = clause.conditions.filter(c => c.verb === 'HAVE');
         const recoverConds = clause.conditions.filter(c => c.verb === 'RECOVER');
@@ -1705,20 +1908,20 @@ export function collectEngineTriggerEntries(
     for (const [slotId, weaponName] of Object.entries(slotWeapons)) {
       if (!weaponName) continue;
       const opId = slotOperatorMap ? Object.entries(slotOperatorMap).find(([s]) => s === slotId)?.[1] : undefined;
-      processDefsForSlot(slotId, opId ?? '', getWeaponEffectDefs(weaponName) as StatusEventDef[], true);
+      processDefsForSlot(slotId, opId ?? '', getWeaponEffectDefs(weaponName).map(normalizeEquipDef), true);
     }
   }
   if (slotGearSets) {
     for (const [slotId, gearSetType] of Object.entries(slotGearSets)) {
       if (!gearSetType) continue;
       const opId = slotOperatorMap ? Object.entries(slotOperatorMap).find(([s]) => s === slotId)?.[1] : undefined;
-      processDefsForSlot(slotId, opId ?? '', getGearEffectDefs(gearSetType) as StatusEventDef[], true);
+      processDefsForSlot(slotId, opId ?? '', getGearEffectDefs(gearSetType).map(normalizeEquipDef), true);
     }
   }
 
   const seen = new Set<string>();
   const deduped = entries.filter(e => {
-    const key = `${e.ctx.def.name}:${e.ctx.operatorSlotId}:${e.frame}`;
+    const key = `${e.ctx.def.properties.id}:${e.ctx.operatorSlotId}:${e.frame}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -1756,25 +1959,26 @@ export function evaluateEngineTrigger(
   if (applySubEffect?.objectId) {
     const json = getOperatorJson(ctx.operatorId);
     const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
-      .find(d => d.name === applySubEffect.objectId);
+      .find(d => d.properties.id === applySubEffect.objectId);
     if (targetDef) outputDef = targetDef;
   }
 
-  const duration = outputDef.properties?.duration ?? outputDef.duration;
-  if (!duration) return;
-  const durationFrames = getDurationFrames(duration);
-  const ownerId = resolveOwnerId(outputDef.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.targetDeterminer);
-  const columnId = statusNameToColumnId(outputDef.name);
-  const maxStacks = getMaxStacks(outputDef.stack.max, ctx.potential);
+  const durationFrames = outputDef.properties.duration ? getDurationFrames(outputDef.properties.duration) : TOTAL_FRAMES;
+  const ownerId = resolveOwnerId(outputDef.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.properties.targetDeterminer);
+  const eqStatusId = outputDef.properties.id ?? outputDef.properties.name;
+  if (!eqStatusId) return;
+  const columnId = statusNameToColumnId(eqStatusId);
+  const eqLimitMap = outputDef.properties.statusLevel.limit;
+  const maxStacks = getMaxStacks(eqLimitMap, ctx.potential);
 
   if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
 
-  const finalOwnerId = entry.isEquip && outputDef.targetDeterminer === 'OTHER'
+  const finalOwnerId = entry.isEquip && outputDef.properties.targetDeterminer === 'OTHER'
     ? COMMON_OWNER_ID : ownerId;
 
   const ev: TimelineEvent = {
-    id: `${outputDef.name.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
-    name: outputDef.name,
+    id: `${outputDef.properties.id.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
+    name: outputDef.properties.id,
     ownerId: finalOwnerId,
     columnId,
     startFrame: entry.frame,
@@ -1796,7 +2000,7 @@ export function evaluateEngineTrigger(
     let totalDuration = 0;
     for (const seg of outputDef.segments) {
       const segDuration = seg.properties?.duration ? getDurationFrames(seg.properties.duration) : durationFrames;
-      const segData: EventSegmentData = { durationFrames: segDuration, label: seg.name };
+      const segData: EventSegmentData = { durationFrames: segDuration, label: seg.properties?.name };
       if (seg.clause) {
         const segEv: TimelineEvent = { ...ev, susceptibility: undefined };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1811,25 +2015,14 @@ export function evaluateEngineTrigger(
     if (!ev.susceptibility && segments[0]?.susceptibility) ev.susceptibility = segments[0].susceptibility;
   }
 
-  if (!ev.susceptibility && outputDef.susceptibility) {
+  if (!ev.susceptibility && outputDef.properties.susceptibility) {
     const resolved: Record<string, number> = {};
-    for (const [element, values] of Object.entries(outputDef.susceptibility)) {
+    for (const [element, values] of Object.entries(outputDef.properties.susceptibility)) {
       const arr = values as number[];
-      const tl = outputDef.minTalentLevel?.talent === 2
-        ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-        : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
+      const tl = 1; // TODO: resolve talent level from DSL
       resolved[element] = arr[Math.min(tl, arr.length) - 1] ?? arr[0];
     }
     ev.susceptibility = resolved;
-  }
-  if (ev.statusValue == null && outputDef.stats && outputDef.stats.length > 0) {
-    const stat = outputDef.stats[0] as { perIntellect?: number[] };
-    if (stat.perIntellect) {
-      const tl = outputDef.minTalentLevel?.talent === 2
-        ? (ctx.loadoutProperties?.operator.talentTwoLevel ?? 0)
-        : (ctx.loadoutProperties?.operator.talentOneLevel ?? 0);
-      ev.statusValue = stat.perIntellect[Math.min(tl, stat.perIntellect.length) - 1] ?? stat.perIntellect[0];
-    }
   }
 
   addEventFn(ev);

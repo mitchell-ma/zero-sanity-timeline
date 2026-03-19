@@ -36,7 +36,7 @@ export interface GearRegistryEntry extends RegistryEntry<Gear> {
 // ─── Icon auto-discovery ────────────────────────────────────────────────────
 
 // Weapon icons
-const weaponIconContext = (require as any).context('../assets/weapons', false, /\.(png|webp)$/);
+const weaponIconContext = require.context('../assets/weapons', false, /\.(png|webp)$/);
 const WEAPON_ICONS: Record<string, string> = {};
 for (const key of weaponIconContext.keys()) {
   const match = key.match(/\.\/(.+)\.(png|webp)$/);
@@ -59,7 +59,7 @@ function getWeaponIcon(name: string): string | undefined {
 }
 
 // Operator icons
-const operatorIconContext = (require as any).context('../assets/operators', false, /_icon\.png$/);
+const operatorIconContext = require.context('../assets/operators', false, /_icon\.png$/);
 const OPERATOR_ICONS: Record<string, string> = {};
 for (const key of operatorIconContext.keys()) {
   const match = key.match(/\.\/(.+)_icon\.png$/);
@@ -78,7 +78,7 @@ function getOperatorIcon(name: string): string | undefined {
 }
 
 // Gear icons
-const gearIconContext = (require as any).context('../assets/gears', false, /\.(png|webp)$/);
+const gearIconContext = require.context('../assets/gears', false, /\.(png|webp)$/);
 const GEAR_ICONS: Record<string, string> = {};
 const GEAR_ICONS_LC: Record<string, string> = {};
 for (const key of gearIconContext.keys()) {
@@ -99,13 +99,13 @@ function getGearIcon(name: string): string | undefined {
 
 // ─── Operators ──────────────────────────────────────────────────────────────
 
-export const OPERATORS: RegistryEntry<any>[] = getAllOperatorIds().map(id => {
+export const OPERATORS: RegistryEntry<DataDrivenOperator | null>[] = getAllOperatorIds().map(id => {
   const json = getOperatorJson(id);
   if (!json) throw new Error(`No JSON data for operator: ${id}`);
   return {
-    name: json.name,
+    name: json.name as string,
     icon: getOperatorIcon(json.name),
-    rarity: json.operatorRarity,
+    rarity: json.operatorRarity as number,
     create: () => {
       const config = getOperatorConfig(id);
       return config ? new DataDrivenOperator(config, 90) : null;
@@ -125,7 +125,7 @@ export const WEAPONS: WeaponRegistryEntry[] = Object.entries(WEAPON_DATA).map(([
 
 // ─── Gear (auto-discovered from JSON) ───────────────────────────────────────
 
-const gearJsonContext = (require as any).context('../model/game-data/gears', false, /\.json$/);
+const gearJsonContext = require.context('../model/game-data/gears', false, /\.json$/);
 
 const gearEntries: GearRegistryEntry[] = [];
 for (const jsonKey of gearJsonContext.keys()) {

@@ -7,7 +7,7 @@
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType } from '../../consts/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
@@ -67,29 +67,36 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
 
 // ── Column resolution for status/infliction objectId ─────────────────────
 
-function resolveColumnId(object: string, objectId?: string, element?: string): string | undefined {
+function resolveColumnIds(object: string, objectId?: string, element?: string): string[] {
   if (object === 'STATUS' && objectId) {
-    return REACTION_TO_COLUMN[objectId]
-      ?? objectId.toLowerCase().replace(/_/g, '-');
+    if (REACTION_TO_COLUMN[objectId]) return [REACTION_TO_COLUMN[objectId]];
+    // Status column IDs may be raw SCREAMING_CASE (e.g. "FOCUS") or kebab-case
+    // (e.g. "melting-flame"). Return both forms so lookups match either convention.
+    const kebab = objectId.toLowerCase().replace(/_/g, '-');
+    return kebab !== objectId ? [objectId, kebab] : [objectId];
   }
   if (object === 'INFLICTION') {
     const el = objectId ?? element;
-    if (el) return ELEMENT_TO_INFLICTION_COLUMN[el];
+    if (el) { const c = ELEMENT_TO_INFLICTION_COLUMN[el]; return c ? [c] : []; }
+    return [];
   }
   if (object === 'REACTION' && objectId) {
-    return REACTION_TO_COLUMN[objectId];
+    const c = REACTION_TO_COLUMN[objectId]; return c ? [c] : [];
   }
-  return undefined;
+  return [];
 }
 
 // ── Evaluators ───────────────────────────────────────────────────────────
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
-  const columnId = resolveColumnId(cond.object, cond.objectId, cond.element);
-  if (!columnId) return false;
+  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.element);
+  if (columnIds.length === 0) return false;
 
   const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
-  const count = activeCountAtFrame(ctx.events, columnId, ownerId, ctx.frame);
+  let count = 0;
+  for (const colId of columnIds) {
+    count += activeCountAtFrame(ctx.events, colId, ownerId, ctx.frame);
+  }
 
   if (count === 0) return false;
 
@@ -116,6 +123,8 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     LIFTED: 'lift',
     KNOCKED_DOWN: 'knock-down',
     CRUSHED: 'crush',
+    NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
+    FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };
 
   if (cond.object === 'ACTIVE') {
@@ -138,12 +147,12 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
 
 function evaluateReceive(cond: Interaction, ctx: ConditionContext): boolean {
   // RECEIVE: check if a matching status/infliction/reaction event starts at exactly this frame.
-  const columnId = resolveColumnId(cond.object, cond.objectId, cond.element);
-  if (!columnId) return false;
+  const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.element);
+  if (columnIds.length === 0) return false;
 
   const ownerId = resolveOwnerId(cond.subject, ctx, cond.subjectDeterminer);
   return ctx.events.some(ev =>
-    ev.columnId === columnId &&
+    columnIds.includes(ev.columnId) &&
     (ownerId == null || ev.ownerId === ownerId) &&
     ev.startFrame === ctx.frame
   );

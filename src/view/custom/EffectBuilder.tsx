@@ -3,143 +3,16 @@
  * Renders a single DSL Effect as a form row: VERB [cardinality] [adjective] OBJECT [prepositions].
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
-import { VerbType, ObjectType, AdjectiveType, SubjectType, DeterminerType, OBJECT_ADJECTIVES, THRESHOLD_MAX, DURATION_END } from '../../consts/semantics';
-import type { Effect } from '../../consts/semantics';
+import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURATION_END,
+  VERB_LABELS, ADJECTIVE_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_ADJECTIVES,
+  EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WithValueVerb, WITH_PROPERTY_LABELS,
+  OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE } from '../../consts/semantics';
+import type { Effect, WithValue } from '../../consts/semantics';
+import { StatusIdSelect, InflictionIdSelect, ReactionIdSelect } from './InteractionBuilder';
 import SentenceSlot from './SentenceSlot';
+import CustomSelect from './CustomSelect';
 
-const VERB_LABELS: Record<VerbType, string> = {
-  [VerbType.ALL]: 'All',
-  [VerbType.ANY]: 'Any',
-  [VerbType.PERFORM]: 'Perform',
-  [VerbType.APPLY]: 'Apply',
-  [VerbType.CONSUME]: 'Consume',
-  [VerbType.DEFEAT]: 'Defeat',
-  [VerbType.HIT]: 'Hit',
-  [VerbType.RECOVER]: 'Recover',
-  [VerbType.OVERHEAL]: 'Overheal',
-  [VerbType.RETURN]: 'Return',
-  [VerbType.REFRESH]: 'Refresh',
-  [VerbType.EXTEND]: 'Extend',
-  [VerbType.MERGE]: 'Merge',
-  [VerbType.RESET]: 'Reset',
-  [VerbType.HAVE]: 'Have',
-  [VerbType.IS]: 'Is',
-  [VerbType.BECOME]: 'Become',
-  [VerbType.RECEIVE]: 'Receive',
-  [VerbType.IGNORE]: 'Ignore',
-  [VerbType.ENHANCE]: 'Enhance',
-  [VerbType.EXPERIENCE]: 'Experience',
-  [VerbType.DEAL]: 'Deal',
-};
-
-const OBJECT_LABELS: Partial<Record<ObjectType, string>> = {
-  [ObjectType.BASIC_ATTACK]: 'Basic Attack',
-  [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
-  [ObjectType.BATTLE_SKILL]: 'Battle Skill',
-  [ObjectType.COMBO_SKILL]: 'Combo Skill',
-  [ObjectType.ULTIMATE]: 'Ultimate',
-  [ObjectType.FINAL_STRIKE]: 'Final Strike',
-  [ObjectType.CRITICAL_HIT]: 'Critical Hit',
-  [ObjectType.DAMAGE]: 'Damage',
-  [ObjectType.STATUS]: 'Status',
-  [ObjectType.INFLICTION]: 'Infliction',
-  [ObjectType.REACTION]: 'Reaction',
-  [ObjectType.ARTS_REACTION]: 'Arts Reaction',
-  [ObjectType.STACKS]: 'Stacks',
-  [ObjectType.TIME_STOP]: 'Time Stop',
-  [ObjectType.GAME_TIME]: 'Game Time',
-  [ObjectType.REAL_TIME]: 'Real Time',
-  [ObjectType.SKILL_POINT]: 'Skill Point',
-  [ObjectType.ULTIMATE_ENERGY]: 'Ultimate Energy',
-  [ObjectType.STAGGER]: 'Stagger',
-  [ObjectType.COOLDOWN]: 'Cooldown',
-  [ObjectType.HP]: 'HP',
-  [ObjectType.OPERATOR]: 'Operator',
-  [ObjectType.ENEMY]: 'Enemy',
-};
-
-const ADJ_LABELS: Record<AdjectiveType, string> = {
-  [AdjectiveType.NONE]: '—',
-  [AdjectiveType.HEAT]: 'Heat',
-  [AdjectiveType.CRYO]: 'Cryo',
-  [AdjectiveType.NATURE]: 'Nature',
-  [AdjectiveType.ELECTRIC]: 'Electric',
-  [AdjectiveType.PHYSICAL]: 'Physical',
-  [AdjectiveType.COMBUSTION]: 'Combustion',
-  [AdjectiveType.SOLIDIFICATION]: 'Solidification',
-  [AdjectiveType.CORROSION]: 'Corrosion',
-  [AdjectiveType.ELECTRIFICATION]: 'Electrification',
-  [AdjectiveType.LIFTED]: 'Lifted',
-  [AdjectiveType.KNOCKED_DOWN]: 'Knocked Down',
-  [AdjectiveType.CRUSHED]: 'Crushed',
-  [AdjectiveType.COMBUSTED]: 'Combusted',
-  [AdjectiveType.CORRODED]: 'Corroded',
-  [AdjectiveType.ELECTRIFIED]: 'Electrified',
-  [AdjectiveType.SOLIDIFIED]: 'Solidified',
-  [AdjectiveType.BREACHED]: 'Breached',
-  [AdjectiveType.LIFT]: 'Lift',
-  [AdjectiveType.KNOCK_DOWN]: 'Knock Down',
-  [AdjectiveType.BREACH]: 'Breach',
-  [AdjectiveType.CRUSH]: 'Crush',
-  [AdjectiveType.FORCED]: 'Forced',
-  [AdjectiveType.NODE_STAGGERED]: 'Node Staggered',
-  [AdjectiveType.FULL_STAGGERED]: 'Full Staggered',
-  [AdjectiveType.COMBO]: 'Combo',
-  [AdjectiveType.DODGE]: 'Dodge',
-  [AdjectiveType.ANIMATION]: 'Animation',
-};
-
-const TARGET_LABELS: Record<string, string> = {
-  [SubjectType.OPERATOR]: 'Operator',
-  [SubjectType.ENEMY]: 'Enemy',
-};
-
-const DETERMINER_LABELS: Record<DeterminerType, string> = {
-  [DeterminerType.THIS]: 'This',
-  [DeterminerType.OTHER]: 'Other',
-  [DeterminerType.ALL]: 'All',
-  [DeterminerType.ANY]: 'Any',
-};
-
-// Effect verbs (subset relevant for effects — no state assertion verbs)
-const EFFECT_VERBS = [
-  VerbType.APPLY, VerbType.CONSUME,
-  VerbType.RECOVER, VerbType.RETURN,
-  VerbType.REFRESH, VerbType.EXTEND, VerbType.MERGE, VerbType.RESET, VerbType.IGNORE, VerbType.ENHANCE,
-  VerbType.PERFORM, VerbType.DEAL,
-  VerbType.ALL, VerbType.ANY,
-];
-
-function getObjectsForEffectVerb(verb: VerbType): ObjectType[] {
-  switch (verb) {
-    case VerbType.APPLY: return [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.TIME_STOP, ObjectType.STAGGER];
-    case VerbType.CONSUME: return [ObjectType.STACKS, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.ULTIMATE_ENERGY, ObjectType.SKILL_POINT, ObjectType.COOLDOWN];
-    case VerbType.RECOVER:
-    case VerbType.RETURN: return [ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP];
-    case VerbType.REFRESH:
-    case VerbType.EXTEND:
-    case VerbType.MERGE:
-    case VerbType.RESET: return [ObjectType.STACKS, ObjectType.COOLDOWN, ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION];
-    case VerbType.IGNORE: return [ObjectType.STATUS, ObjectType.ULTIMATE_ENERGY];
-    case VerbType.ENHANCE: return [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE];
-    case VerbType.PERFORM: return [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINAL_STRIKE, ObjectType.NORMAL_ATTACK];
-    case VerbType.DEAL: return [ObjectType.DAMAGE];
-    default: return Object.values(ObjectType);
-  }
-}
-
-// Which verbs need a TO preposition
-const NEEDS_TO = new Set([VerbType.APPLY, VerbType.RECOVER, VerbType.RETURN]);
-// Which verbs need a FROM preposition
-const NEEDS_FROM = new Set([VerbType.CONSUME]);
-// Which verbs need an ON preposition
-const NEEDS_ON = new Set([VerbType.EXTEND, VerbType.REFRESH, VerbType.MERGE, VerbType.IGNORE]);
-// Which objects need an objectId
-const NEEDS_ID = new Set<string>([ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.COOLDOWN]);
-// Which verbs support cardinality
-const NEEDS_CARDINALITY = new Set([VerbType.APPLY, VerbType.CONSUME, VerbType.RECOVER, VerbType.RETURN]);
-// Which verbs support FOR duration
-const NEEDS_DURATION = new Set([VerbType.APPLY]);
+import type { AdjectiveType } from '../../consts/semantics';
 
 interface EffectBuilderProps {
   value: Effect;
@@ -151,16 +24,8 @@ interface EffectBuilderProps {
 export default function EffectBuilder({ value, onChange, onRemove, compact }: EffectBuilderProps) {
   const objects = getObjectsForEffectVerb(value.verb);
   const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
-  const showAdjective = adjectives.length > 0;
-  const showObjectId = NEEDS_ID.has(value.object ?? ObjectType.STATUS);
-  const showTo = NEEDS_TO.has(value.verb);
-  const showFrom = NEEDS_FROM.has(value.verb);
-  const showOn = NEEDS_ON.has(value.verb);
-  const showCardinality = NEEDS_CARDINALITY.has(value.verb);
-  const showDuration = NEEDS_DURATION.has(value.verb) && value.object === ObjectType.TIME_STOP;
-  const showUntilEnd = value.verb === VerbType.EXTEND;
+  const vis = getEffectFieldVisibility(value);
   const isMax = value.cardinality === THRESHOLD_MAX;
-  const showQualifierRow = showTo || showFrom || showOn || showDuration || showUntilEnd;
 
   const update = (patch: Partial<Effect>) => onChange({ ...value, ...patch });
 
@@ -168,23 +33,20 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
     <div className={`interaction-builder${compact ? ' interaction-builder--compact' : ''}`}>
       <div className="interaction-row">
         {/* Verb — always visible */}
-        <select
-          className="ib-select ib-verb"
+        <CustomSelect
+          className="ib-verb"
           value={value.verb}
-          onChange={(e) => {
-            const newVerb = e.target.value as VerbType;
+          options={EFFECT_VERBS.map((v) => ({ value: v, label: VERB_LABELS[v] }))}
+          onChange={(v) => {
+            const newVerb = v as VerbType;
             const newObjects = getObjectsForEffectVerb(newVerb);
             const newObj = newObjects.includes(value.object ?? ObjectType.STATUS) ? value.object : newObjects[0];
             update({ verb: newVerb, object: newObj });
           }}
-        >
-          {EFFECT_VERBS.map((v) => (
-            <option key={v} value={v}>{VERB_LABELS[v]}</option>
-          ))}
-        </select>
+        />
 
         {/* Cardinality — slides in when verb needs it */}
-        <SentenceSlot active={showCardinality}>
+        <SentenceSlot active={vis.showCardinality}>
           <input
             className="ib-input ib-quantity"
             type={isMax ? 'text' : 'number'}
@@ -194,7 +56,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
               if (raw === 'MAX') {
-                update({ cardinality: THRESHOLD_MAX as any });
+                update({ cardinality: THRESHOLD_MAX });
               } else {
                 update({ cardinality: Number(e.target.value) || undefined });
               }
@@ -202,41 +64,56 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
           />
         </SentenceSlot>
 
-        {/* Adjective — slides in when object type has adjectives */}
-        <SentenceSlot active={showAdjective}>
-          <select
-            className="ib-select"
+        {/* Adjective — slides in when object type has adjectives (hidden for STATUS) */}
+        <SentenceSlot active={vis.showAdjective}>
+          <CustomSelect
             value={Array.isArray(value.adjective) ? value.adjective[0] ?? '' : value.adjective ?? ''}
-            onChange={(e) => update({ adjective: (e.target.value || undefined) as AdjectiveType | undefined })}
-          >
-            <option value="">—</option>
-            {adjectives.map((a) => (
-              <option key={a} value={a}>{ADJ_LABELS[a]}</option>
-            ))}
-          </select>
+            options={[
+              ...(OBJECT_REQUIRED_ADJECTIVE.has(value.object ?? '') ? [] : [{ value: '', label: '—' }]),
+              ...adjectives.map((a) => ({ value: a, label: ADJECTIVE_LABELS[a] })),
+            ]}
+            onChange={(v) => {
+              const adj = (v || OBJECT_DEFAULT_ADJECTIVE[value.object as ObjectType] || undefined) as AdjectiveType | undefined;
+              update({ adjective: adj });
+            }}
+          />
+        </SentenceSlot>
+
+        {/* Object ID — LEFT of the object dropdown */}
+        <SentenceSlot active={vis.showObjectId}>
+          {vis.showObjectIdIsStatus ? (
+            <StatusIdSelect value={value.objectId ?? ''} onChange={(id) => update({ objectId: id || undefined })} />
+          ) : vis.showObjectIdIsInfliction ? (
+            <InflictionIdSelect value={value.objectId ?? ''} onChange={(id) => update({ objectId: id || undefined })} />
+          ) : vis.showObjectIdIsReaction ? (
+            <ReactionIdSelect value={value.objectId ?? ''} onChange={(id) => update({ objectId: id || undefined })} />
+          ) : (
+            <input
+              className="ib-input ib-object-id"
+              type="text"
+              placeholder="ID"
+              value={value.objectId ?? ''}
+              onChange={(e) => update({ objectId: e.target.value || undefined })}
+            />
+          )}
         </SentenceSlot>
 
         {/* Object — always visible */}
-        <select
-          className="ib-select ib-object"
+        <CustomSelect
+          className="ib-object"
           value={value.object ?? ''}
-          onChange={(e) => update({ object: e.target.value as ObjectType })}
-        >
-          {objects.map((o) => (
-            <option key={o} value={o}>{OBJECT_LABELS[o] ?? o}</option>
-          ))}
-        </select>
-
-        {/* Object ID — slides in when object needs an identifier */}
-        <SentenceSlot active={showObjectId}>
-          <input
-            className="ib-input ib-object-id"
-            type="text"
-            placeholder="ID (e.g. MELTING_FLAME)"
-            value={value.objectId ?? ''}
-            onChange={(e) => update({ objectId: e.target.value || undefined })}
-          />
-        </SentenceSlot>
+          options={objects.map((o) => ({ value: o, label: OBJECT_LABELS[o] ?? o }))}
+          onChange={(v) => {
+            const newObj = v as ObjectType;
+            if (newObj === ObjectType.STATUS) {
+              update({ object: newObj, adjective: undefined });
+            } else if (OBJECT_DEFAULT_ADJECTIVE[newObj]) {
+              update({ object: newObj, adjective: value.adjective || OBJECT_DEFAULT_ADJECTIVE[newObj] });
+            } else {
+              update({ object: newObj });
+            }
+          }}
+        />
 
         {onRemove && (
           <button className="ib-remove" onClick={onRemove} title="Remove">&times;</button>
@@ -244,81 +121,57 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
       </div>
 
       {/* Preposition row — slides down when verb needs qualifiers */}
-      <SentenceSlot active={showQualifierRow} row>
+      <SentenceSlot active={vis.showQualifierRow} row>
         <div className="interaction-row interaction-row--qualifier">
-          <SentenceSlot active={showTo}>
-            <span className="ib-label">TO</span>
+          <SentenceSlot active={vis.showTo}>
+            <span className="ce-badge ce-badge--keyword">TO</span>
             <SentenceSlot active={value.toObject === SubjectType.OPERATOR}>
-              <select
-                className="ib-select ib-determiner"
+              <CustomSelect
+                className="ib-determiner"
                 value={value.toDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ toDeterminer: e.target.value as DeterminerType })}
-              >
-                {Object.values(DeterminerType).map((d) => (
-                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
-                ))}
-              </select>
+                options={Object.values(DeterminerType).map((d) => ({ value: d, label: DETERMINER_LABELS[d] }))}
+                onChange={(v) => update({ toDeterminer: v as DeterminerType })}
+              />
             </SentenceSlot>
-            <select
-              className="ib-select"
+            <CustomSelect
               value={value.toObject ?? ''}
-              onChange={(e) => update({ toObject: e.target.value || undefined })}
-            >
-              <option value="">—</option>
-              {Object.entries(TARGET_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>{label}</option>
-              ))}
-            </select>
+              options={[{ value: '', label: '—' }, ...Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))]}
+              onChange={(v) => update({ toObject: v || undefined })}
+            />
           </SentenceSlot>
-          <SentenceSlot active={showFrom}>
-            <span className="ib-label">FROM</span>
+          <SentenceSlot active={vis.showFrom}>
+            <span className="ce-badge ce-badge--keyword">FROM</span>
             <SentenceSlot active={value.fromObject === SubjectType.OPERATOR}>
-              <select
-                className="ib-select ib-determiner"
+              <CustomSelect
+                className="ib-determiner"
                 value={value.fromDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ fromDeterminer: e.target.value as DeterminerType })}
-              >
-                {Object.values(DeterminerType).map((d) => (
-                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
-                ))}
-              </select>
+                options={Object.values(DeterminerType).map((d) => ({ value: d, label: DETERMINER_LABELS[d] }))}
+                onChange={(v) => update({ fromDeterminer: v as DeterminerType })}
+              />
             </SentenceSlot>
-            <select
-              className="ib-select"
+            <CustomSelect
               value={value.fromObject ?? ''}
-              onChange={(e) => update({ fromObject: e.target.value || undefined })}
-            >
-              <option value="">—</option>
-              {Object.entries(TARGET_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>{label}</option>
-              ))}
-            </select>
+              options={[{ value: '', label: '—' }, ...Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))]}
+              onChange={(v) => update({ fromObject: v || undefined })}
+            />
           </SentenceSlot>
-          <SentenceSlot active={showOn}>
-            <span className="ib-label">ON</span>
+          <SentenceSlot active={vis.showOn}>
+            <span className="ce-badge ce-badge--keyword">ON</span>
             <SentenceSlot active={value.onObject === SubjectType.OPERATOR}>
-              <select
-                className="ib-select ib-determiner"
+              <CustomSelect
+                className="ib-determiner"
                 value={value.onDeterminer ?? DeterminerType.THIS}
-                onChange={(e) => update({ onDeterminer: e.target.value as DeterminerType })}
-              >
-                {Object.values(DeterminerType).map((d) => (
-                  <option key={d} value={d}>{DETERMINER_LABELS[d]}</option>
-                ))}
-              </select>
+                options={Object.values(DeterminerType).map((d) => ({ value: d, label: DETERMINER_LABELS[d] }))}
+                onChange={(v) => update({ onDeterminer: v as DeterminerType })}
+              />
             </SentenceSlot>
-            <select
-              className="ib-select"
+            <CustomSelect
               value={value.onObject ?? ''}
-              onChange={(e) => update({ onObject: e.target.value || undefined })}
-            >
-              <option value="">—</option>
-              {Object.entries(TARGET_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>{label}</option>
-              ))}
-            </select>
+              options={[{ value: '', label: '—' }, ...Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))]}
+              onChange={(v) => update({ onObject: v || undefined })}
+            />
           </SentenceSlot>
-          <SentenceSlot active={showUntilEnd}>
+          <SentenceSlot active={vis.showUntilEnd}>
             <label className="ib-checkbox">
               <input
                 type="checkbox"
@@ -328,8 +181,8 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               UNTIL END
             </label>
           </SentenceSlot>
-          <SentenceSlot active={showDuration}>
-            <span className="ib-label">FOR</span>
+          <SentenceSlot active={vis.showDuration}>
+            <span className="ce-badge ce-badge--keyword">FOR</span>
             <input
               className="ib-input"
               type="number"
@@ -338,13 +191,102 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               value={(value.with?.duration?.value as number) ?? 0}
               onChange={(e) => {
                 const dur = Number(e.target.value) || undefined;
-                update({ with: dur != null ? { ...value.with, duration: { verb: 'IS' as any, value: dur } } : value.with });
+                update({ with: dur != null ? { ...value.with, duration: { verb: WithValueVerb.IS, value: dur } } : value.with });
               }}
             />
             <span className="ib-label">s</span>
           </SentenceSlot>
         </div>
       </SentenceSlot>
+
+      {/* WITH properties — renders value/multiplier data from with preposition */}
+      {vis.withProperties.filter((p) => p !== 'duration').map((propKey) => {
+        const wv = value.with?.[propKey] as WithValue | undefined;
+        return (
+          <WithPropertyRow
+            key={propKey}
+            propKey={propKey}
+            withValue={wv}
+            onChange={(next) => {
+              update({ with: { ...value.with, [propKey]: next } });
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// ── WITH property row ──────────────────────────────────────────────────────
+
+function WithPropertyRow({ propKey, withValue, onChange }: {
+  propKey: string;
+  withValue: WithValue | undefined;
+  onChange: (wv: WithValue) => void;
+}) {
+  const label = WITH_PROPERTY_LABELS[propKey] ?? propKey;
+  const verb = withValue?.verb ?? WithValueVerb.IS;
+  const val = withValue?.value;
+
+  const updateVerb = (newVerb: WithValueVerb) => {
+    if (newVerb === WithValueVerb.BASED_ON) {
+      onChange({ verb: newVerb, object: 'SKILL_LEVEL', value: Array.isArray(val) ? val : Array(12).fill(val ?? 0) });
+    } else {
+      onChange({ verb: newVerb, value: Array.isArray(val) ? val[0] ?? 0 : val ?? 0 });
+    }
+  };
+
+  return (
+    <div className="interaction-row interaction-row--with">
+      <span className="ce-badge ce-badge--keyword">WITH</span>
+      <span className="ib-label">{label}</span>
+      <CustomSelect
+        className="ib-with-verb"
+        value={verb}
+        options={Object.values(WithValueVerb).map((v) => ({ value: v, label: v === WithValueVerb.IS ? 'is' : 'based on' }))}
+        onChange={(v) => updateVerb(v as WithValueVerb)}
+      />
+      {verb === WithValueVerb.IS ? (
+        <input
+          className="ib-input ib-with-value"
+          type="number"
+          step="any"
+          value={(val as number) ?? 0}
+          onChange={(e) => onChange({ ...withValue!, verb, value: Number(e.target.value) || 0 })}
+        />
+      ) : (
+        <>
+          <span className="ib-label">{withValue?.object ?? 'SKILL_LEVEL'}</span>
+          <table className="ib-level-table">
+            <thead>
+              <tr>
+                {(Array.isArray(val) ? val : Array(12).fill(0)).map((_, i) => (
+                  <th key={i}>{i + 1}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {(Array.isArray(val) ? val : Array(12).fill(0)).map((v, i) => (
+                  <td key={i}>
+                    <input
+                      className="ib-input ib-level-input"
+                      type="number"
+                      step="any"
+                      value={v}
+                      onChange={(e) => {
+                        const arr = Array.isArray(val) ? [...val] : Array(12).fill(0);
+                        arr[i] = Number(e.target.value) || 0;
+                        onChange({ ...withValue!, verb, value: arr });
+                      }}
+                    />
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }

@@ -52,9 +52,11 @@ import {
 function boundType<T extends new (level: number, type?: WeaponSkillType) => WeaponSkill>(
   Cls: T, type: WeaponSkillType,
 ): new (level: number) => WeaponSkill {
-  return class extends (Cls as any) {
-    constructor(level: number) { super(level, type); }
-  } as any;
+  // Proxy constructor: creates Cls with a bound type argument.
+  // Uses Object.setPrototypeOf to inherit the class prototype chain.
+  function BoundCtor(level: number) { return new Cls(level, type); }
+  Object.setPrototypeOf(BoundCtor.prototype, Cls.prototype);
+  return BoundCtor as unknown as new (level: number) => WeaponSkill;
 }
 
 // ── Skill factory ──────────────────────────────────────────────────────────────

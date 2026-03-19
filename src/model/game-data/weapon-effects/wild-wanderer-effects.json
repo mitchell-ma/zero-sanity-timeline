@@ -2,20 +2,62 @@
   "weaponName": "Wild Wanderer",
   "statusEvents": [
     {
-      "name": "WILD_WANDERER_WILDERNESS_CLUSTER",
-      "type": "WEAPON_EFFECT",
-      "originId": "WILD_WANDERER",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "Wilderness Cluster",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "ELECTRIC_DAMAGE_BONUS",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.08,
+                  "valueMax": 0.16
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "WILD_WANDERER_WILDERNESS_CLUSTER",
+        "name": "Wilderness Cluster",
+        "duration": {
+          "value": [
+            15
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "WILD_WANDERER",
+        "description": "Wilderness Cluster"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -25,28 +67,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "valueMin": 0.08,
-          "valueMax": 0.16
-        },
-        {
-          "stat": "ELECTRIC_DAMAGE_BONUS",
-          "valueMin": 0.08,
-          "valueMax": 0.16
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

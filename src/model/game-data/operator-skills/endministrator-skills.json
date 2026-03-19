@@ -1,6 +1,10 @@
 {
   "skillTypeMap": {
-    "BASIC_ATTACK": "DESTRUCTIVE_SEQUENCE",
+    "BASIC_ATTACK": {
+      "BATK": "DESTRUCTIVE_SEQUENCE",
+      "FINISHER": "DESTRUCTIVE_SEQUENCE_FINISHER",
+      "DIVE": "DESTRUCTIVE_SEQUENCE_DIVE"
+    },
     "BATTLE_SKILL": "CONSTRUCTIVE_SEQUENCE",
     "COMBO_SKILL": "SEALING_SEQUENCE",
     "ULTIMATE": "BOMBARDMENT_SEQUENCE"
@@ -36,89 +40,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.23,
+                          0.25,
+                          0.27,
+                          0.29,
+                          0.32,
+                          0.34,
+                          0.36,
+                          0.39,
+                          0.41,
+                          0.44,
+                          0.47,
+                          0.51
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.23,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.25,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.27,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.29,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.32,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.34,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.36,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.39,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.41,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.44,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.47,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.51,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           }
@@ -151,89 +107,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.27,
+                          0.3,
+                          0.32,
+                          0.35,
+                          0.38,
+                          0.41,
+                          0.43,
+                          0.46,
+                          0.49,
+                          0.52,
+                          0.56,
+                          0.61
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.27,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.3,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.32,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.35,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.38,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.41,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.43,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.46,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.49,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.52,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.56,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.61,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           }
@@ -266,89 +174,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.15,
+                          0.17,
+                          0.18,
+                          0.2,
+                          0.21,
+                          0.23,
+                          0.24,
+                          0.26,
+                          0.27,
+                          0.29,
+                          0.31,
+                          0.34
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.15,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.17,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.18,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.2,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.21,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.23,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.24,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.26,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.27,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.29,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.31,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.34,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           },
@@ -365,77 +225,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.15,
+                          0.17,
+                          0.18,
+                          0.2,
+                          0.21,
+                          0.23,
+                          0.24,
+                          0.26,
+                          0.27,
+                          0.29,
+                          0.31,
+                          0.34
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.15
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.2
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.21
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.23
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.24
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.26
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.27
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.29
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.31
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.34
+                ]
               }
             ]
           }
@@ -468,89 +288,41 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.11,
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.15,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 0
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.09,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.1,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.1,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.11,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.12,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.13,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.14,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.15,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.16,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.17,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.18,
-                "SKILL_POINT": 0
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.19,
-                "SKILL_POINT": 0
+                ]
               }
             ]
           },
@@ -567,77 +339,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.11,
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.15,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.09
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.11
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.12
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.15
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.19
+                ]
               }
             ]
           },
@@ -654,77 +386,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.11,
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.15,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.09
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.11
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.12
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.15
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.19
+                ]
               }
             ]
           },
@@ -741,77 +433,37 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 0
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.11,
+                          0.12,
+                          0.13,
+                          0.14,
+                          0.15,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.19
+                        ]
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.09
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.1
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.11
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.12
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.13
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.14
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.15
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.16
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.17
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.18
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.19
+                ]
               }
             ]
           }
@@ -844,101 +496,66 @@
                 "unit": "SECOND"
               }
             },
-            "effects": [
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 20
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 18
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.4,
+                          0.44,
+                          0.48,
+                          0.52,
+                          0.56,
+                          0.6,
+                          0.64,
+                          0.68,
+                          0.72,
+                          0.77,
+                          0.83,
+                          0.9
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 18
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 18
-                  }
-                }
-              }
-            ],
-            "multipliers": [
-              {
-                "level": 1,
-                "DAMAGE_MULTIPLIER": 0.4,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 2,
-                "DAMAGE_MULTIPLIER": 0.44,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 3,
-                "DAMAGE_MULTIPLIER": 0.48,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 4,
-                "DAMAGE_MULTIPLIER": 0.52,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 5,
-                "DAMAGE_MULTIPLIER": 0.56,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 6,
-                "DAMAGE_MULTIPLIER": 0.6,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 7,
-                "DAMAGE_MULTIPLIER": 0.64,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 8,
-                "DAMAGE_MULTIPLIER": 0.68,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 9,
-                "DAMAGE_MULTIPLIER": 0.72,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 10,
-                "DAMAGE_MULTIPLIER": 0.77,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 11,
-                "DAMAGE_MULTIPLIER": 0.83,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
-              },
-              {
-                "level": 12,
-                "DAMAGE_MULTIPLIER": 0.9,
-                "STAGGER": 18,
-                "SKILL_POINT": 20
+                ]
               }
             ]
           }
@@ -970,136 +587,104 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "CONSUME",
-            "object": "STATUS",
-            "objectId": "ORIGINIUM_CRYSTAL",
-            "toObject": "ENEMY"
-          },
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "CONSUME",
+                "object": "STATUS",
+                "objectId": "ORIGINIUM_CRYSTAL",
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.56,
+                      1.71,
+                      1.87,
+                      2.02,
+                      2.18,
+                      2.34,
+                      2.49,
+                      2.65,
+                      2.8,
+                      3,
+                      3.23,
+                      3.5
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "toObject": "ENEMY",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 10
-              }
-            }
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 1.56,
-            "STAGGER": 10
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 1.71,
-            "STAGGER": 10
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 1.87,
-            "STAGGER": 10
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 2.02,
-            "STAGGER": 10
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 2.18,
-            "STAGGER": 10
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 2.34,
-            "STAGGER": 10
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 2.49,
-            "STAGGER": 10
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 2.65,
-            "STAGGER": 10
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 2.8,
-            "STAGGER": 10
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 3,
-            "STAGGER": 10
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 3.23,
-            "STAGGER": 10
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 3.5,
-            "STAGGER": 10
+            ]
           }
         ]
       }
     ],
-    "effects": [
+    "originId": "endministrator",
+    "clause": [
       {
-        "verb": "CONSUME",
-        "object": "SKILL_POINT",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 100
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "CONSUME",
+            "object": "SKILL_POINT",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 100
+              }
+            }
+          },
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "THIS",
+            "toObject": "OPERATOR",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 6.5
+              }
+            }
+          },
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "ALL",
+            "toObject": "OPERATOR",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 6.5
+              }
+            }
           }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toDeterminer": "THIS",
-        "toObject": "OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 6.5
-          }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toDeterminer": "ALL",
-        "toObject": "OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 6.5
-          }
-        }
+        ]
       }
-    ],
-    "originId": "endministrator"
+    ]
   },
   "SEALING_SEQUENCE": {
     "name": "Sealing Sequence",
@@ -1117,7 +702,7 @@
         "timeInteractionType": "TIME_STOP"
       },
       "trigger": {
-        "triggerClause": [
+        "onTriggerClause": [
           {
             "conditions": [
               {
@@ -1147,166 +732,144 @@
             "unit": "SECOND"
           }
         },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 10
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.45,
+                      0.49,
+                      0.54,
+                      0.58,
+                      0.62,
+                      0.67,
+                      0.71,
+                      0.76,
+                      0.8,
+                      0.86,
+                      0.93,
+                      1
+                    ]
+                  },
+                  "atkScaleTrigger": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      1.78,
+                      1.96,
+                      2.13,
+                      2.31,
+                      2.49,
+                      2.67,
+                      2.84,
+                      3.02,
+                      3.2,
+                      3.42,
+                      3.69,
+                      4
+                    ]
+                  },
+                  "originumUltBreakScale": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      2.67,
+                      2.94,
+                      3.2,
+                      3.47,
+                      3.74,
+                      4,
+                      4.27,
+                      4.54,
+                      4.8,
+                      5.14,
+                      5.54,
+                      6
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "usp": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "duration": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4,
+                      4,
+                      4,
+                      4,
+                      4,
+                      4,
+                      4,
+                      4,
+                      4.5,
+                      4.5,
+                      5
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "originId": "endministrator",
+    "clause": [
+      {
+        "conditions": [],
         "effects": [
           {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
+            "verb": "CONSUME",
+            "object": "COOLDOWN",
             "with": {
               "cardinality": {
                 "verb": "IS",
-                "value": 0
+                "value": 16
               }
             }
           },
           {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "toObject": "ENEMY",
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "THIS",
+            "toObject": "OPERATOR",
             "with": {
-              "value": {
+              "cardinality": {
                 "verb": "IS",
                 "value": 10
               }
             }
           }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 0.45,
-            "atk_scale_trigger": 1.78,
-            "originum_ult_break_scale": 2.67,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 0.49,
-            "atk_scale_trigger": 1.96,
-            "originum_ult_break_scale": 2.94,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 0.54,
-            "atk_scale_trigger": 2.13,
-            "originum_ult_break_scale": 3.2,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 0.58,
-            "atk_scale_trigger": 2.31,
-            "originum_ult_break_scale": 3.47,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 0.62,
-            "atk_scale_trigger": 2.49,
-            "originum_ult_break_scale": 3.74,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 0.67,
-            "atk_scale_trigger": 2.67,
-            "originum_ult_break_scale": 4,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 0.71,
-            "atk_scale_trigger": 2.84,
-            "originum_ult_break_scale": 4.27,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 0.76,
-            "atk_scale_trigger": 3.02,
-            "originum_ult_break_scale": 4.54,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 0.8,
-            "atk_scale_trigger": 3.2,
-            "originum_ult_break_scale": 4.8,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 0.86,
-            "atk_scale_trigger": 3.42,
-            "originum_ult_break_scale": 5.14,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4.5
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 0.93,
-            "atk_scale_trigger": 3.69,
-            "originum_ult_break_scale": 5.54,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 4.5
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 1,
-            "atk_scale_trigger": 4,
-            "originum_ult_break_scale": 6,
-            "STAGGER": 10,
-            "usp": 10,
-            "DURATION": 5
-          }
         ]
       }
-    ],
-    "effects": [
-      {
-        "verb": "CONSUME",
-        "object": "COOLDOWN",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 16
-          }
-        }
-      },
-      {
-        "verb": "RECOVER",
-        "object": "ULTIMATE_ENERGY",
-        "toDeterminer": "THIS",
-        "toObject": "OPERATOR",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 10
-          }
-        }
-      }
-    ],
-    "originId": "endministrator"
+    ]
   },
   "BOMBARDMENT_SEQUENCE": {
     "name": "Bombardment Sequence",
@@ -1338,154 +901,122 @@
             "unit": "SECOND"
           }
         },
-        "effects": [
+        "clause": [
           {
-            "verb": "CONSUME",
-            "object": "STATUS",
-            "objectId": "ORIGINIUM_CRYSTAL",
-            "toObject": "ENEMY"
-          },
-          {
-            "verb": "RECOVER",
-            "object": "SKILL_POINT",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 0
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "CONSUME",
+                "object": "STATUS",
+                "objectId": "ORIGINIUM_CRYSTAL",
+                "toObject": "ENEMY"
+              },
+              {
+                "verb": "DEAL",
+                "object": "STAGGER",
+                "toObject": "ENEMY",
+                "with": {
+                  "value": {
+                    "verb": "IS",
+                    "value": 25
+                  }
+                }
+              },
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.56,
+                      3.91,
+                      4.27,
+                      4.62,
+                      4.98,
+                      5.33,
+                      5.69,
+                      6.04,
+                      6.4,
+                      6.84,
+                      7.38,
+                      8
+                    ]
+                  },
+                  "originumUltBreakScale": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      2.67,
+                      2.94,
+                      3.2,
+                      3.47,
+                      3.74,
+                      4,
+                      4.27,
+                      4.54,
+                      4.8,
+                      5.14,
+                      5.54,
+                      6
+                    ]
+                  },
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 25
+                  }
+                }
               }
-            }
-          },
-          {
-            "verb": "APPLY",
-            "object": "STAGGER",
-            "toObject": "ENEMY",
-            "with": {
-              "value": {
-                "verb": "IS",
-                "value": 25
-              }
-            }
-          }
-        ],
-        "multipliers": [
-          {
-            "level": 1,
-            "DAMAGE_MULTIPLIER": 3.56,
-            "originum_ult_break_scale": 2.67,
-            "STAGGER": 25
-          },
-          {
-            "level": 2,
-            "DAMAGE_MULTIPLIER": 3.91,
-            "originum_ult_break_scale": 2.94,
-            "STAGGER": 25
-          },
-          {
-            "level": 3,
-            "DAMAGE_MULTIPLIER": 4.27,
-            "originum_ult_break_scale": 3.2,
-            "STAGGER": 25
-          },
-          {
-            "level": 4,
-            "DAMAGE_MULTIPLIER": 4.62,
-            "originum_ult_break_scale": 3.47,
-            "STAGGER": 25
-          },
-          {
-            "level": 5,
-            "DAMAGE_MULTIPLIER": 4.98,
-            "originum_ult_break_scale": 3.74,
-            "STAGGER": 25
-          },
-          {
-            "level": 6,
-            "DAMAGE_MULTIPLIER": 5.33,
-            "originum_ult_break_scale": 4,
-            "STAGGER": 25
-          },
-          {
-            "level": 7,
-            "DAMAGE_MULTIPLIER": 5.69,
-            "originum_ult_break_scale": 4.27,
-            "STAGGER": 25
-          },
-          {
-            "level": 8,
-            "DAMAGE_MULTIPLIER": 6.04,
-            "originum_ult_break_scale": 4.54,
-            "STAGGER": 25
-          },
-          {
-            "level": 9,
-            "DAMAGE_MULTIPLIER": 6.4,
-            "originum_ult_break_scale": 4.8,
-            "STAGGER": 25
-          },
-          {
-            "level": 10,
-            "DAMAGE_MULTIPLIER": 6.84,
-            "originum_ult_break_scale": 5.14,
-            "STAGGER": 25
-          },
-          {
-            "level": 11,
-            "DAMAGE_MULTIPLIER": 7.38,
-            "originum_ult_break_scale": 5.54,
-            "STAGGER": 25
-          },
-          {
-            "level": 12,
-            "DAMAGE_MULTIPLIER": 8,
-            "originum_ult_break_scale": 6,
-            "STAGGER": 25
+            ]
           }
         ]
       }
     ],
-    "effects": [
+    "originId": "endministrator",
+    "clause": [
       {
-        "verb": "CONSUME",
-        "object": "ULTIMATE_ENERGY",
-        "with": {
-          "cardinality": {
-            "verb": "IS",
-            "value": 80
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "CONSUME",
+            "object": "ULTIMATE_ENERGY",
+            "with": {
+              "cardinality": {
+                "verb": "IS",
+                "value": 80
+              }
+            }
           }
-        }
+        ]
       }
-    ],
-    "originId": "endministrator"
+    ]
   },
   "statusEvents": [
     {
-      "name": "ORIGINIUM_CRYSTAL",
-      "target": "ENEMY",
-      "isNamedEvent": false,
-      "isForceApplied": false,
-      "stack": {
-        "max": {
-          "P0": 4,
-          "P1": 4,
-          "P2": 4,
-          "P3": 4,
-          "P4": 4,
-          "P5": 4
-        },
-        "instances": 4,
-        "verb": "NONE"
-      },
-      "triggerClause": [],
-      "stats": [],
       "properties": {
+        "id": "ORIGINIUM_CRYSTAL",
+        "name": "Originium Crystal",
         "duration": {
           "value": [
             -1
           ],
           "unit": "SECOND"
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 4
+          },
+          "statusLevelInteractionType": "NONE"
         }
       },
-      "originId": "endministrator"
+      "metadata": {
+        "originId": "endministrator"
+      },
+      "onTriggerClause": []
     }
   ]
 }

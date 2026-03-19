@@ -3,20 +3,49 @@
   "label": "LYNX",
   "statusEvents": [
     {
-      "name": "LYNX",
-      "type": "GEAR_EFFECT",
-      "originId": "LYNX",
-      "targetDeterminer": "OTHER",
-      "target": "OPERATOR",
-      "label": "LYNX",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "FINAL_DAMAGE_REDUCTION",
+              "toDeterminer": "OTHER",
+              "to": "OPERATOR",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "value": 0.15
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "GEAR_EFFECT",
+        "id": "LYNX",
+        "name": "LYNX",
+        "duration": {
+          "value": [
+            10
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "LYNX",
+        "description": "LYNX",
+        "note": "30% if treatment exceeds max HP"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,23 +56,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "FINAL_DAMAGE_REDUCTION",
-          "value": 0.15
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            10
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "30% if treatment exceeds max HP"
+      ]
     }
   ]
 }

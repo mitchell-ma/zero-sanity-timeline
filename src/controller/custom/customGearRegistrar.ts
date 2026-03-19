@@ -23,8 +23,8 @@ export function registerCustomGearSet(gearSet: CustomGearSet): void {
       gearCategory: piece.gearCategory,
       gearSetType: customGearSetType,
       create: () => new DataDrivenGear(
-        { name: piece.name, gearCategory: piece.gearCategory as string, defense: piece.defense, allLevels: piece.statsByRank as any },
-        customGearSetType as any,
+        { name: piece.name, gearCategory: piece.gearCategory as string, defense: piece.defense, allLevels: piece.statsByRank as Record<string, Record<string, number>> },
+        customGearSetType as string,
       ),
     };
     GEARS.push(entry);
@@ -63,9 +63,9 @@ export function deregisterCustomGearSet(gearSet: CustomGearSet): void {
 }
 
 /** Convert a custom gear set's effects to DSL StatusEventDef format. */
-function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: string): any[] {
+function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: string): Record<string, unknown>[] {
   if (!gearSet.setEffect?.effects) return [];
-  const defs: any[] = [];
+  const defs: Record<string, unknown>[] = [];
   const originId = gearSetType;
 
   for (const effect of gearSet.setEffect.effects) {
@@ -89,7 +89,7 @@ function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: stri
         instances: effect.maxStacks,
         verb: effect.maxStacks > 1 ? 'NONE' : 'RESET',
       },
-      triggerClause: effect.triggers.map((t: any) => ({ conditions: [t] })),
+      onTriggerClause: effect.triggers.map((t) => ({ conditions: [t] })),
       clause: [],
       buffs: effect.buffs,
       properties: { duration: { value: [effect.durationSeconds], unit: 'SECOND' } },

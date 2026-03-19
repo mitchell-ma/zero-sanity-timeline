@@ -1,4 +1,7 @@
 /**
+ * @jest-environment jsdom
+ */
+/**
  * Tests for the embed codec (share URL encoding/decoding).
  *
  * Validates: round-trip fidelity, delta encoding, sanitization of malicious input,
@@ -68,6 +71,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getBattleSkillSpCost: () => undefined,
   getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
 }));
 
 jest.mock('../model/game-data/weaponGameData', () => ({

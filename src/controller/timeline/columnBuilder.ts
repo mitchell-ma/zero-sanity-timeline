@@ -1,6 +1,6 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, STAGGER_FRAILTY_COLUMN_ID } from '../../model/channels';
+import { CombatSkillsType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { TACTICALS } from '../../utils/loadoutRegistry';
@@ -9,6 +9,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
+import type { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
 import { getFrameSequences, getSegmentLabels, getDelayedHitLabel, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
@@ -31,9 +32,9 @@ export interface Slot {
 
 
 /** Resolve a variant skill's display name from its JSON data + base skill label. */
-function resolveVariantDisplayName(varId: string, varSkill: Record<string, any>): string {
-  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillsType] ?? varSkill.name;
-  return formatSkillDisplayName(baseName, varSkill.enhancementTypes, varSkill.name);
+function resolveVariantDisplayName(varId: string, varSkill: Record<string, unknown>): string {
+  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillsType] ?? (varSkill.name as string);
+  return formatSkillDisplayName(baseName, (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes as string[] | undefined, varSkill.name as string | undefined);
 }
 
 const MIN_SLOT_COLS = 4;
@@ -62,29 +63,23 @@ export function buildColumns(
   for (const s of slots) {
     if (!s.operator) continue;
     const json = getOperatorJson(s.operator.id);
-    const statusEvents = json?.statusEvents as any[] | undefined;
+    const statusEvents = json?.statusEvents as Record<string, any>[] | undefined;
     if (statusEvents) {
       for (const se of statusEvents) {
-        if (se.p3TeamShare) {
-          const dur = se.duration?.value?.[0] ?? se.properties?.duration?.value?.[0] ?? 15;
+        const seProps = se.properties as Record<string, any> | undefined;
+        const target = se.target ?? seProps?.target;
+        const targetDeterminer = se.targetDeterminer ?? seProps?.targetDeterminer;
+        const seId = se.id ?? seProps?.id;
+        if (target === 'OPERATOR' && (!targetDeterminer || targetDeterminer === 'THIS') && seId) {
+          const seDur = seProps?.duration ?? se.duration;
+          const dur = seDur?.value?.[0] ?? seDur?.value ?? -1;
           const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-          teamStatusDefs.push({
-            sourceSlot: s,
-            statusName: se.name,
-            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
-            duration: durationFrames,
-            minPotentialForTeam: 3, // P3 required for team share
-          });
-        }
-        if (se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS')) {
-          const dur = se.properties?.duration?.value?.[0] ?? se.duration?.value?.[0] ?? -1;
-          const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-          const colId = (OPERATOR_COLUMNS as Record<string, string>)[se.name]
-            ?? se.name.toLowerCase().replace(/_/g, '-');
+          const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId]
+            ?? seId.toLowerCase().replace(/_/g, '-');
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: se.name,
-            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+            statusName: seId,
+            label: STATUS_LABELS[seId as StatusType] ?? seId,
             columnId: colId,
             duration: durationFrames,
             color: s.operator.color,
@@ -95,17 +90,19 @@ export function buildColumns(
     }
 
     // Scan weapon effect DSL defs
-    const addEquipDefs = (dslDefs: any[]) => {
+    const addEquipDefs = (dslDefs: Record<string, unknown>[]) => {
       for (const se of dslDefs) {
-        const dur = se.properties?.duration?.value?.[0] ?? 10;
+        const sePropsEquip = se.properties as Record<string, Record<string, unknown[]>> | undefined;
+        const dur = sePropsEquip?.duration?.value?.[0] as number ?? 10;
         const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-        const colId = se.name.toLowerCase().replace(/_/g, '-');
+        const equipId = se.id as string;
+        const colId = equipId.toLowerCase().replace(/_/g, '-');
         if (se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS')) {
           // Wielder-targeted → operator status micro-column
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: se.name,
-            label: se.label ?? se.name,
+            statusName: equipId,
+            label: (se.label as string) ?? equipId,
             columnId: colId,
             duration: durationFrames,
             color: s.operator!.color,
@@ -115,16 +112,16 @@ export function buildColumns(
           // Team-targeted → team weapon/gear column
           teamWeaponGearDefs.push({
             slotId: s.slotId,
-            statusName: se.name,
-            label: se.label ?? se.name,
+            statusName: equipId,
+            label: (se.label as string) ?? equipId,
             durationFrames,
             color: s.operator!.color,
           });
         } else if (se.target === 'ENEMY') {
           // Enemy-targeted → enemy status micro-column
           enemyWeaponGearDefs.push({
-            statusName: se.name,
-            label: se.label ?? se.name,
+            statusName: equipId,
+            label: (se.label as string) ?? equipId,
             color: s.operator!.color,
           });
         }
@@ -158,14 +155,7 @@ export function buildColumns(
     noAdd: true,
   });
 
-  // ── Dynamic team columns based on team composition ──────────────────────
   const teamTeamColumns = new Set<string>();
-  for (const slot of slots) {
-    const cap = slot.operator?.triggerCapability;
-    if (cap?.derivedTeamColumns) {
-      cap.derivedTeamColumns.forEach((c) => teamTeamColumns.add(c));
-    }
-  }
 
   if (teamTeamColumns.has('team-link')) {
     columns.push({
@@ -291,7 +281,7 @@ export function buildColumns(
   for (const slot of slots) {
     const op = slot.operator;
     const opJson = op ? getOperatorJson(op.id) : null;
-    const opSkills = (opJson?.skills ?? {}) as Record<string, any>;
+    const opSkills = (opJson?.skills ?? {}) as Record<string, Record<string, unknown>>;
     // Detect variants by presence of _ENHANCED/_EMPOWERED skill ID suffixes
     const basicName = op?.skills.basic?.name;
     const battleName = op?.skills.battle?.name;
@@ -383,7 +373,7 @@ export function buildColumns(
               defaultCooldownDuration: 0,
               segments: base.segments,
             };
-            col.eventVariants = [{ ...col.defaultEvent }];
+            col.eventVariants = [{ ...col.defaultEvent, enhancementType: EnhancementType.NORMAL }];
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED']) {
               const varId = skill.name + suffix;
@@ -392,14 +382,16 @@ export function buildColumns(
               const variantSeqs = getFrameSequences(op.id, varId);
               if (variantSeqs?.length) {
                 const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
+                const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
                 col.eventVariants.push({
                   name: varId,
                   displayName: resolveVariantDisplayName(varId, varSkill),
+                  enhancementType,
                   defaultActivationDuration: variantSeg.totalDurationFrames,
                   defaultActiveDuration: 0,
                   defaultCooldownDuration: 0,
                   segments: variantSeg.segments,
-                  ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
+                  ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 });
               }
             }
@@ -437,7 +429,7 @@ export function buildColumns(
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
             };
-            col.eventVariants = [{ ...col.defaultEvent! }];
+            col.eventVariants = [{ ...col.defaultEvent!, enhancementType: EnhancementType.NORMAL }];
             // Auto-discover variant skill IDs
             for (const suffix of ['_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED']) {
               const varId = skill.name + suffix;
@@ -452,7 +444,7 @@ export function buildColumns(
               const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { gaugeGain: gg, teamGaugeGain: tgg });
               // Apply frame modifications if defined on the variant
               if (varSkill.frameModifications) {
-                for (const fm of varSkill.frameModifications) {
+                for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; gaugeGain?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
                   const seg = variantSeg.segments[fm.segmentIndex];
                   const frame = seg?.frames?.[fm.frameIndex];
                   if (frame) {
@@ -466,13 +458,17 @@ export function buildColumns(
                   }
                 }
               }
+              const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED
+                : suffix === '_EMPOWERED' ? EnhancementType.EMPOWERED
+                : EnhancementType.ENHANCED; // ENHANCED_EMPOWERED treated as ENHANCED
               col.eventVariants!.push({
                 ...col.defaultEvent!,
                 name: varId,
                 displayName: resolveVariantDisplayName(varId, varSkill),
+                enhancementType,
                 defaultActivationDuration: variantSeg.totalDurationFrames,
                 segments: variantSeg.segments,
-                ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition } : {}),
+                ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 gaugeGain: gg,
                 teamGaugeGain: tgg,
               });
@@ -556,7 +552,7 @@ export function buildColumns(
             const ultName = op?.skills.ultimate?.name;
             const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
             // Use data-driven segments when the JSON has explicit segmentType metadata
-            const hasTypedSegments = ultSeqs?.length && ultSeqs.some(s => 'segmentType' in s && (s as any).segmentType);
+            const hasTypedSegments = ultSeqs?.length && ultSeqs.some(s => 'segmentType' in s && (s as SkillEventSequence & { segmentType?: string }).segmentType);
             if (hasTypedSegments) {
               const ultLabels = getSegmentLabels(op!.id, ultName!);
               const seg = SkillSegmentBuilder.buildSegments(ultSeqs!, { labels: ultLabels });
@@ -659,7 +655,7 @@ export function buildColumns(
     let statusColCount = 0;
     if (op) {
       // Collect micro-columns: own statuses + team-shared statuses from other operators
-      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: any }[] = [];
+      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: { name: string; defaultActivationDuration: number; defaultActiveDuration: number; defaultCooldownDuration: number } }[] = [];
       const matchIds: string[] = [];
       const ownDefs = operatorStatusMap.get(slot.slotId) ?? [];
       for (const def of ownDefs) {
@@ -753,9 +749,30 @@ export function buildColumns(
   const statusMicroColumns = [
     // Stagger frailty
     {
-      id: STAGGER_FRAILTY_COLUMN_ID,
-      label: 'STAGGER',
+      id: NODE_STAGGER_COLUMN_ID,
+      label: 'Stagger (Partial)',
       color: '#dd8844',
+      defaultEvent: {
+        name: 'Node Stagger',
+        defaultActivationDuration: 600,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
+    },
+    {
+      id: FULL_STAGGER_COLUMN_ID,
+      label: 'Stagger (Full)',
+      color: '#ee6633',
+      defaultEvent: {
+        name: 'Full Stagger',
+        defaultActivationDuration: 600,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
     },
     // Arts inflictions
     ...enemy.statuses.map((s) => ({
@@ -859,19 +876,19 @@ export function buildColumns(
       return slots.flatMap(s => {
         if (!s.operator) return [];
         const json = getOperatorJson(s.operator.id);
-        const statusEvents = json?.statusEvents as any[] | undefined;
+        const statusEvents = json?.statusEvents as Record<string, any>[] | undefined;
         if (!statusEvents) return [];
         return statusEvents
-          .filter((se: any) => se.target === 'ENEMY')
-          .filter((se: any) => {
-            const id = se.name.toLowerCase().replace(/_/g, '-');
+          .filter((se) => se.target === 'ENEMY')
+          .filter((se) => {
+            const id = (se.id as string).toLowerCase().replace(/_/g, '-');
             if (seen.has(id)) return false;
             seen.add(id);
             return true;
           })
-          .map((se: any) => ({
-            id: se.name.toLowerCase().replace(/_/g, '-'),
-            label: STATUS_LABELS[se.name as StatusType] ?? se.name,
+          .map((se) => ({
+            id: (se.id as string).toLowerCase().replace(/_/g, '-'),
+            label: STATUS_LABELS[se.id as StatusType] ?? se.id,
             color: s.operator!.color,
           }));
       });

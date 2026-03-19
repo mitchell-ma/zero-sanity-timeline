@@ -136,6 +136,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getBattleSkillSpCost: () => undefined,
     getSkillCategoryData: () => undefined,
     getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
+  getExchangeStatusConfig: () => ({}),
+  getExchangeStatusIds: () => new Set(),
   };
 });
 
@@ -698,7 +701,7 @@ describe('Laevatain damage calculation — Empowered additional hit + combustion
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  it('empowered additional hit → 57203', () => {
+  it('empowered additional hit → 57552', () => {
     // atk_scale_3 = 7.7 at lv12 × P2 EXTRA_SCALING ×1.5 = 11.55
     const mult = 7.7 * 1.5;
 
@@ -711,7 +714,7 @@ describe('Laevatain damage calculation — Empowered additional hit + combustion
       ...neutralParams(),
     });
 
-    expect(Math.round(damage)).toBe(57203);
+    expect(Math.round(damage)).toBe(57552);
   });
 
   it('forced combustion DOT tick → 2608', () => {

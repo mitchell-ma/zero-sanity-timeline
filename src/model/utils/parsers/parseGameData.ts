@@ -459,11 +459,11 @@ function assignMultipliersToFrames(
   if (extraUsp !== undefined && extraUsp > 0 && frames.length > 0) {
     const lastFrame = frames[frames.length - 1];
     if (!lastFrame.effects) lastFrame.effects = [];
-    const hasUltEffect = (lastFrame.effects as any[]).some((e: any) =>
+    const hasUltEffect = (lastFrame.effects as { verb: string; object: string }[]).some((e) =>
       e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
     );
     if (!hasUltEffect) {
-      (lastFrame.effects as any[]).push({
+      (lastFrame.effects as unknown[]).push({
         verb: 'RECOVER',
         object: 'ULTIMATE_ENERGY',
         with: { cardinality: { verb: 'IS', value: extraUsp } },
@@ -476,11 +476,11 @@ function assignMultipliersToFrames(
   if (uspDisplay !== undefined && uspDisplay > 0 && frames.length > 0) {
     const firstFrame = frames[0];
     if (!firstFrame.effects) firstFrame.effects = [];
-    const hasUltEffect = (firstFrame.effects as any[]).some((e: any) =>
+    const hasUltEffect = (firstFrame.effects as { verb: string; object: string }[]).some((e) =>
       e.verb === 'RECOVER' && e.object === 'ULTIMATE_ENERGY'
     );
     if (!hasUltEffect) {
-      (firstFrame.effects as any[]).push({
+      (firstFrame.effects as unknown[]).push({
         verb: 'RECOVER',
         object: 'ULTIMATE_ENERGY',
         with: { cardinality: { verb: 'IS', value: uspDisplay } },

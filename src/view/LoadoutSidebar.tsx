@@ -15,7 +15,7 @@ import type { ContentSelection } from '../consts/contentBrowserTypes';
 
 const ContentBrowserPanel = lazy(() => import('./custom/ContentBrowserPanel'));
 
-export type SidebarMode = 'loadouts' | 'custom' | null;
+export type SidebarMode = 'loadouts' | 'custom' | 'workbench' | null;
 
 interface LoadoutSidebarProps {
   tree: LoadoutTree;
@@ -32,6 +32,7 @@ interface LoadoutSidebarProps {
   onSelectContentItem?: (item: ContentSelection) => void;
   onCloneContentAsCustom?: (item: ContentSelection) => void;
   onEditCustomContent?: (item: ContentSelection) => void;
+  onOpenInWorkbench?: (item: ContentSelection) => void;
   onContentChanged?: () => void;
   contentRefreshKey?: number;
 }
@@ -71,6 +72,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onSelectContentItem,
   onCloneContentAsCustom,
   onEditCustomContent,
+  onOpenInWorkbench,
   onContentChanged,
   contentRefreshKey,
 }, ref) {
@@ -446,7 +448,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
 
   const rootNodes = getChildrenOf(tree, null);
 
-  const handleIconClick = (mode: 'loadouts' | 'custom') => {
+  const handleIconClick = (mode: 'loadouts' | 'custom' | 'workbench') => {
     if (sidebarMode === mode) {
       // Same icon clicked — collapse the panel
       onSidebarModeChange(null);
@@ -483,6 +485,15 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.33a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.83z"/>
+          </svg>
+        </button>
+        <button
+          className={`sidebar-mode-btn${sidebarMode === 'workbench' ? ' sidebar-mode-btn--active' : ''}`}
+          onClick={() => handleIconClick('workbench')}
+          title="Workbench"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
           </svg>
         </button>
       </div>
@@ -598,6 +609,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             onSelectItem={onSelectContentItem}
             onCloneAsCustom={onCloneContentAsCustom}
             onEditCustom={onEditCustomContent}
+            onOpenInWorkbench={onOpenInWorkbench}
             onContentChanged={onContentChanged}
             refreshKey={contentRefreshKey}
           />

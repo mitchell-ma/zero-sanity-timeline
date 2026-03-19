@@ -19,19 +19,20 @@ import { deriveComboActivationWindows, getFinalStrikeTriggerFrame } from './proc
 import type { SlotTriggerWiring } from './processComboSkill';
 import {
   deriveSPRecovery,
-  EXCHANGE_STATUS_COLUMN, ELEMENT_TO_INFLICTION_COLUMN,
+  ELEMENT_TO_INFLICTION_COLUMN,
   INFLICTION_DURATION, PHYSICAL_INFLICTION_DURATION, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
   TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
   EXCHANGE_EVENT_DURATION,
   resolveSusceptibility,
 } from './processInfliction';
+import { getExchangeStatusConfig, getExchangeStatusIds } from '../../model/event-frames/operatorJsonLoader';
 import {
   collectExchangeStatusTriggers, collectAbsorptionContexts, collectEngineTriggerEntries,
 } from './statusDerivationEngine';
 import type { ExchangeStatusQueueContext } from './statusDerivationEngine';
 import {
-  PRIORITY, EXCHANGE_STATUS_NAMES, MAX_INFLICTION_STACKS, CONSUME_STATUS_CONFIG,
+  PRIORITY, MAX_INFLICTION_STACKS, getConsumeStatusConfig,
 } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretor } from './eventInterpretor';
@@ -90,7 +91,7 @@ function collectFrameEffectEntries(
             if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
 
             if (statusEffect.target === TargetType.SELF) {
-              if (EXCHANGE_STATUS_COLUMN[statusEffect.status]) continue;
+              if (getExchangeStatusIds().has(statusEffect.status)) continue;
 
               const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
               if (teamColumnId) {
@@ -423,16 +424,16 @@ function collectConsumeEntries(
           const frame = seg.frames[fi];
           if (!frame.consumeStatus) continue;
 
-          const exchangeColumnId = EXCHANGE_STATUS_COLUMN[frame.consumeStatus];
-          if (exchangeColumnId) {
-            const ctx = contexts.find(c => c.columnId === exchangeColumnId && c.ownerId === event.ownerId);
+          const exchInfo = getExchangeStatusConfig()[frame.consumeStatus];
+          if (exchInfo) {
+            const ctx = contexts.find(c => c.columnId === exchInfo.columnId && c.ownerId === event.ownerId);
             if (ctx) {
               entries.push({
                 frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
                 priority: PRIORITY.CONSUME,
                 type: 'CONSUME',
                 statusName: frame.consumeStatus,
-                columnId: exchangeColumnId,
+                columnId: exchInfo.columnId,
                 ownerId: ctx.ownerId,
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
@@ -444,8 +445,8 @@ function collectConsumeEntries(
             }
           }
 
-          const config = CONSUME_STATUS_CONFIG[frame.consumeStatus];
-          if (config && !exchangeColumnId) {
+          const config = getConsumeStatusConfig()[frame.consumeStatus];
+          if (config && !exchInfo) {
             const targetOwnerId = config.targetOwnerId ?? event.ownerId;
             entries.push({
               frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
@@ -530,14 +531,14 @@ function collectAbsorptionFrameEntries(
           if (frame.absorbArtsInfliction) {
             const marker = frame.absorbArtsInfliction;
             const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
-            const exchangeColumnId = EXCHANGE_STATUS_COLUMN[marker.exchangeStatus];
-            if (inflictionColumnId && exchangeColumnId) {
+            const absExchInfo = getExchangeStatusConfig()[marker.exchangeStatus];
+            if (inflictionColumnId && absExchInfo) {
               entries.push({
                 frame: absFrame,
                 priority: PRIORITY.ABSORPTION_CHECK,
                 type: 'ABSORPTION_CHECK',
                 statusName: marker.exchangeStatus,
-                columnId: exchangeColumnId,
+                columnId: absExchInfo.columnId,
                 ownerId: event.ownerId,
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
@@ -547,7 +548,7 @@ function collectAbsorptionFrameEntries(
                 absorptionMarker: {
                   inflictionColumnId,
                   exchangeStatus: marker.exchangeStatus,
-                  exchangeColumnId,
+                  exchangeColumnId: absExchInfo.columnId,
                   maxAbsorb: marker.stacks,
                   eventId: event.id,
                   segmentIndex: si,
@@ -752,7 +753,7 @@ export function processEventQueue(
 
   const { entries: engineEntries, talentEvents } = collectEngineTriggerEntries(
     state.getRegisteredEvents(), loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-    EXCHANGE_STATUS_NAMES,
+    getExchangeStatusIds(),
   );
   state.registerEvents(talentEvents);
   state.extendAll();
@@ -762,7 +763,7 @@ export function processEventQueue(
   const stops = state.getStops();
 
   const exchangeContexts = collectExchangeStatusTriggers(
-    extLate, EXCHANGE_STATUS_NAMES, loadoutProperties, slotOperatorMap,
+    extLate, getExchangeStatusIds(), loadoutProperties, slotOperatorMap,
   );
   const absorptionContexts = collectAbsorptionContexts(
     extLate, loadoutProperties, slotOperatorMap,
@@ -836,7 +837,7 @@ export function processEventQueue(
     frame: e.frame,
     priority: PRIORITY.ENGINE_TRIGGER,
     type: 'ENGINE_TRIGGER' as const,
-    statusName: e.ctx.def.name,
+    statusName: e.ctx.def.properties.id,
     columnId: '',
     ownerId: e.ctx.operatorSlotId,
     sourceOwnerId: e.sourceOwnerId,

@@ -2,20 +2,47 @@
   "weaponName": "Long Road",
   "statusEvents": [
     {
-      "name": "LONG_ROAD_UNENDING_CYCLE",
-      "type": "WEAPON_EFFECT",
-      "originId": "LONG_ROAD",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Unending Cycle",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.12,
+                  "valueMax": 0.24
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "LONG_ROAD_UNENDING_CYCLE",
+        "name": "Unending Cycle",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "LONG_ROAD",
+        "description": "Unending Cycle"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,23 +53,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.12,
-          "valueMax": 0.24
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

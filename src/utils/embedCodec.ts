@@ -92,7 +92,7 @@ const KNOWN_ENEMY_IDS = new Set(ALL_ENEMIES.map(e => e.id));
 async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
   const cs = new CompressionStream('deflate-raw');
   const writer = cs.writable.getWriter();
-  writer.write(data as unknown as BufferSource);
+  writer.write(data as any);
   writer.close();
   const chunks: Uint8Array[] = [];
   const reader = cs.readable.getReader();
@@ -111,7 +111,7 @@ async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
 async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate-raw');
   const writer = ds.writable.getWriter();
-  writer.write(data as unknown as BufferSource);
+  writer.write(data as any);
   writer.close();
   const chunks: Uint8Array[] = [];
   const reader = ds.readable.getReader();
@@ -234,17 +234,17 @@ function applyStatDeltas(
     if (key.startsWith('operator.')) {
       const prop = key.slice('operator.'.length);
       if (opKeys.has(prop)) {
-        (result.operator as any)[prop] = sanitizeNum(val, 0, 90, (defaults.operator as any)[prop]);
+        (result.operator as unknown as Record<string, number>)[prop] = sanitizeNum(val, 0, 90, (defaults.operator as unknown as Record<string, number>)[prop]);
       }
     } else if (key.startsWith('skills.')) {
       const prop = key.slice('skills.'.length);
       if (skillKeys.has(prop)) {
-        (result.skills as any)[prop] = sanitizeNum(val, 0, 90, (defaults.skills as any)[prop]);
+        (result.skills as unknown as Record<string, number>)[prop] = sanitizeNum(val, 0, 90, (defaults.skills as unknown as Record<string, number>)[prop]);
       }
     } else if (key.startsWith('weapon.')) {
       const prop = key.slice('weapon.'.length);
       if (weaponKeys.has(prop)) {
-        (result.weapon as any)[prop] = sanitizeNum(val, 0, 90, (defaults.weapon as any)[prop]);
+        (result.weapon as unknown as Record<string, number>)[prop] = sanitizeNum(val, 0, 90, (defaults.weapon as unknown as Record<string, number>)[prop]);
       }
     } else if (key.startsWith('gear.')) {
       const rest = key.slice('gear.'.length);
@@ -267,7 +267,7 @@ function diffEnemyStats(
   const defaults = getDefaultEnemyStats(enemyId);
   const delta: Record<string, number> = {};
   for (const [key, val] of Object.entries(stats)) {
-    if (typeof val === 'number' && val !== (defaults as any)[key]) {
+    if (typeof val === 'number' && val !== (defaults as Record<string, number>)[key]) {
       delta[key] = val;
     }
   }
@@ -655,7 +655,7 @@ export async function decodeEmbed(
   if (embed.enD) {
     for (const [key, val] of Object.entries(embed.enD)) {
       if (typeof val === 'number' && Number.isFinite(val)) {
-        (enemyStats as any)[key] = val;
+        (enemyStats as Record<string, number>)[key] = val;
       }
     }
   }
@@ -681,7 +681,7 @@ export async function decodeEmbed(
       for (const [shortKey, longKey] of EQUIP_KEYS) {
         const val = delta.eq[shortKey];
         if (typeof val === 'string' && val.length > 0) {
-          (loadout as any)[longKey] = val;
+          (loadout as unknown as Record<string, string | null>)[longKey] = val;
         }
       }
     }

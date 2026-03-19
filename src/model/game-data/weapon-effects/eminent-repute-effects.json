@@ -2,20 +2,48 @@
   "weaponName": "Eminent Repute",
   "statusEvents": [
     {
-      "name": "EMINENT_REPUTE_DISCIPLINARIAN",
-      "type": "WEAPON_EFFECT",
-      "originId": "EMINENT_REPUTE",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Disciplinarian",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.05,
+                  "valueMax": 0.1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "EMINENT_REPUTE_DISCIPLINARIAN",
+        "name": "Disciplinarian",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "EMINENT_REPUTE",
+        "description": "Disciplinarian",
+        "note": "ATK bonus scales with consumed stacks; team gets half"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -27,24 +55,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "ATTACK_BONUS",
-          "valueMin": 0.05,
-          "valueMax": 0.1
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      },
-      "note": "ATK bonus scales with consumed stacks; team gets half"
+      ]
     }
   ]
 }

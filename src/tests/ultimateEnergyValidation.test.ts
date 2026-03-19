@@ -22,21 +22,18 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     to: 'toObject', from: 'fromObject',
     on: 'onObject', with: 'with', for: 'for',
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const expandKeys = (val: any): any => {
+  const expandKeys = (val: unknown): unknown => {
     if (val == null || typeof val !== 'object') return val;
     if (Array.isArray(val)) return val.map(expandKeys);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const out: Record<string, any> = {};
+    const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(val)) { out[KEY_EXPAND[k] ?? k] = expandKeys(v); }
     return out;
   };
-  const expandedStatuses = (statusesJson as any[]).map(expandKeys);
+  const expandedStatuses = (statusesJson as unknown[]).map(expandKeys);
   const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(talentJson.statusEvents ?? [])];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const skills: Record<string, any> = {};
-  for (const [key, val] of Object.entries(skillEntries as Record<string, any>)) {
-    skills[key] = { ...(val as any), id: key };
+  const skills: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(skillEntries as Record<string, unknown>)) {
+    skills[key] = { ...(val as Record<string, unknown>), id: key };
   }
   if (skTypeMap) {
     for (const [category, skillId] of Object.entries(skTypeMap as Record<string, string>)) {
@@ -70,7 +67,10 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getBattleSkillSpCost: () => undefined,
     getSkillCategoryData: () => undefined,
     getBasicAttackDurations: () => undefined,
+  getComboTriggerClause: () => undefined,
     getDelayedHitLabel: () => undefined,
+    getExchangeStatusConfig: () => ({}),
+    getExchangeStatusIds: () => new Set(),
   };
 });
 
@@ -91,7 +91,7 @@ jest.mock('../controller/operators/operatorRegistry', () => ({
 // eslint-disable-next-line import/first
 import { computeUltimateEnergyGraph, UltEnergyEvent } from '../controller/timeline/ultimateEnergyTimeline';
 // eslint-disable-next-line import/first
-import { preConsumptionValue, validateResources, hasEnhanceClauseAtFrame, checkVariantAvailability, validateEnhanced, validateRegularBasicDuringUltimate } from '../controller/timeline/eventValidator';
+import { preConsumptionValue, validateResources, hasEnhanceClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
 import { collectRawGaugeGains, applyGainEfficiency, collectNoGainWindows, RawGaugeGainEvent } from '../controller/timeline/ultimateEnergyController';
 // eslint-disable-next-line import/first
@@ -423,7 +423,7 @@ describe('hasEnhanceClauseAtFrame', () => {
     });
   }
 
-  const enhanceClause = [{ effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
+  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
 
   test('returns true when frame falls within a segment with ENHANCE clause', () => {
     const ev = ultWithSegments(0, [
@@ -506,7 +506,7 @@ describe('collectNoGainWindows', () => {
       segments: [
         {
           durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION,
-          clause: [{ effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
+          clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
         },
         { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE },
       ],
@@ -637,7 +637,11 @@ describe('collectRawGaugeGains — natural SP consumption', () => {
 // ── ENHANCE clause variant validation ──────────────────────────────────────
 describe('ENHANCE clause variant validation', () => {
   const SLOT = 'slot-0';
-  const enhanceClause = [{ effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
+  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
+  const enhanceAndDisableClause = [{ conditions: [], effects: [
+    { verb: 'ENHANCE', object: 'BASIC_ATTACK' },
+    { verb: 'DISABLE', adjective: 'NORMAL', object: 'BASIC_ATTACK' },
+  ] }];
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
@@ -645,7 +649,7 @@ describe('ENHANCE clause variant validation', () => {
       segments: [
         { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
         { durationFrames: 36, label: 'Stasis', segmentType: SegmentType.STASIS, clause: enhanceClause },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
+        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceAndDisableClause },
         { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
       ],
     });
@@ -670,20 +674,20 @@ describe('ENHANCE clause variant validation', () => {
     expect(result.disabled).toBe(true);
   });
 
-  test('regular basic is blocked during ENHANCE window', () => {
+  test('regular basic is blocked during DISABLE window', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, SKILL_COLUMNS.BASIC);
     expect(result.disabled).toBe(true);
-    expect(result.reason).toContain('enhanced');
+    expect(result.reason).toContain('NORMAL');
   });
 
-  test('regular basic is allowed outside ENHANCE window', () => {
+  test('regular basic is allowed outside DISABLE window', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 3000, SKILL_COLUMNS.BASIC);
     expect(result.disabled).toBe(false);
   });
 
-  test('finisher is allowed during ENHANCE window', () => {
+  test('finisher is allowed during DISABLE window', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FINISHER', SLOT, events, 500, SKILL_COLUMNS.BASIC);
     expect(result.disabled).toBe(false);
@@ -696,17 +700,21 @@ describe('ENHANCE clause variant validation', () => {
   });
 });
 
-// ── validateEnhanced / validateRegularBasicDuringUltimate ──────────────────
-describe('validateEnhanced and validateRegularBasic', () => {
+// ── validateEnhanced / validateDisabledVariants ──────────────────
+describe('validateEnhanced and validateDisabledVariants', () => {
   const SLOT = 'slot-0';
-  const enhanceClause = [{ effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
+  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
+  const disableClause = [{ conditions: [], effects: [
+    { verb: 'ENHANCE', object: 'BASIC_ATTACK' },
+    { verb: 'DISABLE', adjective: 'NORMAL', object: 'BASIC_ATTACK' },
+  ] }];
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
       segments: [
         { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
+        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: disableClause },
         { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
       ],
     });
@@ -735,7 +743,7 @@ describe('validateEnhanced and validateRegularBasic', () => {
       ultEvent(0),
       makeEvent({ id: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: 500 }),
     ];
-    const warnings = validateRegularBasicDuringUltimate(events);
+    const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(true);
   });
 
@@ -744,7 +752,7 @@ describe('validateEnhanced and validateRegularBasic', () => {
       ultEvent(0),
       makeEvent({ id: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: 3000 }),
     ];
-    const warnings = validateRegularBasicDuringUltimate(events);
+    const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);
   });
 
@@ -753,7 +761,7 @@ describe('validateEnhanced and validateRegularBasic', () => {
       ultEvent(0),
       makeEvent({ id: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FINISHER', startFrame: 500 }),
     ];
-    const warnings = validateRegularBasicDuringUltimate(events);
+    const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);
   });
 });

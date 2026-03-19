@@ -2,20 +2,58 @@
   "weaponName": "Forgeborn Scathe",
   "statusEvents": [
     {
-      "name": "FORGEBORN_SCATHE_BLAZING_WAIL",
-      "type": "WEAPON_EFFECT",
-      "originId": "FORGEBORN_SCATHE",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Blazing Wail",
-      "stack": {
-        "max": {
-          "P0": 1
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "BASIC_ATTACK_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.75,
+                  "valueMax": 2.1
+                }
+              }
+            },
+            {
+              "verb": "APPLY",
+              "object": "HEAT_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "IS",
+                  "valueMin": 0.16,
+                  "valueMax": 0.448
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "FORGEBORN_SCATHE_BLAZING_WAIL",
+        "name": "Blazing Wail",
+        "duration": {
+          "value": [
+            20
+          ],
+          "unit": "SECOND"
         },
-        "instances": 1,
-        "verb": "RESET"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 1
+          },
+          "statusLevelInteractionType": "RESET"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "FORGEBORN_SCATHE",
+        "description": "Blazing Wail"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,28 +64,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "BASIC_ATTACK_DAMAGE_BONUS",
-          "valueMin": 0.75,
-          "valueMax": 2.1
-        },
-        {
-          "stat": "HEAT_DAMAGE_BONUS",
-          "valueMin": 0.16,
-          "valueMax": 0.448
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }

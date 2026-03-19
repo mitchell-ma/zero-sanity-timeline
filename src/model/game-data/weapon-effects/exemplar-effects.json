@@ -2,20 +2,48 @@
   "weaponName": "Exemplar",
   "statusEvents": [
     {
-      "name": "EXEMPLAR_STACKED_HEW",
-      "type": "WEAPON_EFFECT",
-      "originId": "EXEMPLAR",
-      "targetDeterminer": "THIS",
-      "target": "OPERATOR",
-      "label": "Stacked Hew",
-      "stack": {
-        "max": {
-          "P0": 3
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "PHYSICAL_DAMAGE_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "STATUS_LEVEL",
+                  "valueMin": 0.1,
+                  "valueMax": 0.28
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "type": "WEAPON_EFFECT",
+        "id": "EXEMPLAR_STACKED_HEW",
+        "name": "Stacked Hew",
+        "duration": {
+          "value": [
+            30
+          ],
+          "unit": "SECOND"
         },
-        "instances": 3,
-        "verb": "NONE"
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "value": 3
+          },
+          "statusLevelInteractionType": "NONE"
+        }
       },
-      "triggerClause": [
+      "metadata": {
+        "originId": "EXEMPLAR",
+        "description": "Stacked Hew"
+      },
+      "onTriggerClause": [
         {
           "conditions": [
             {
@@ -26,24 +54,7 @@
             }
           ]
         }
-      ],
-      "clause": [],
-      "buffs": [
-        {
-          "stat": "PHYSICAL_DAMAGE_BONUS",
-          "valueMin": 0.1,
-          "valueMax": 0.28,
-          "perStack": true
-        }
-      ],
-      "properties": {
-        "duration": {
-          "value": [
-            30
-          ],
-          "unit": "SECOND"
-        }
-      }
+      ]
     }
   ]
 }
