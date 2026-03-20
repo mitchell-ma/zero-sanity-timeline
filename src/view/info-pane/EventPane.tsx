@@ -9,7 +9,7 @@ import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveC
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
-import { getLastController } from '../../controller/timeline/eventQueue';
+import { getLastController } from '../../controller/timeline/processInteractions';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';
@@ -527,10 +527,10 @@ function EventPane({
 
   // Use processed segments for events that only get segments during processing
   // (e.g. freeform reaction events). The raw event from undo history has none.
-  if (!event.segments && processedEvent?.segments) {
+  if (event.segments.length === 0 && processedEvent?.segments.length) {
     event = { ...event, segments: processedEvent.segments };
   }
-  const isSequenced = event.segments && event.segments.length > 0;
+  const isSequenced = event.segments.length > 0;
 
   // Resolve DSL semantic data for this event's skill
   const dslData = useMemo(() => {
@@ -1000,9 +1000,9 @@ function EventPane({
             ?? miniCol?.defaultEvent?.segments;
 
           if (operatorId && skillLevel != null) {
-            if (isSequenced && event.segments!.length > 0) {
-              for (let si = 0; si < event.segments!.length; si++) {
-                const seg = event.segments![si];
+            if (isSequenced && event.segments.length > 0) {
+              for (let si = 0; si < event.segments.length; si++) {
+                const seg = event.segments[si];
                 if (!seg.properties.name) continue;
                 const m = getSkillMultiplier(
                   operatorId,
@@ -1575,10 +1575,10 @@ function EventPane({
         ) : isSequenced ? (
           /* ── Standard sequenced event ── */
           <>
-            {(() => { let segCumOffset = 0; return event.segments!.map((seg, si) => {
+            {(() => { let segCumOffset = 0; return event.segments.map((seg, si) => {
               const segStartFrame = event.startFrame + segCumOffset;
               segCumOffset += seg.properties.duration;
-              const pSeg = processedEvent?.segments?.[si];
+              const pSeg = processedEvent?.segments[si];
               const isNumericLabel = seg.properties.name && /^\d+$/.test(seg.properties.name);
               const segName = seg.properties.name && !isNumericLabel ? seg.properties.name : null;
               const segLabel = segName
@@ -1614,7 +1614,7 @@ function EventPane({
                         segmentIndex={si}
                         durationFrames={seg.properties.duration}
                         onUpdate={onUpdate}
-                        segments={event.segments!}
+                        segments={event.segments}
                       />
                     )}
                     {segTotalMultiplier != null && (
@@ -1695,7 +1695,7 @@ function EventPane({
                                   offsetFrame={f.offsetFrame}
                                   maxOffset={Math.max(0, seg.properties.duration - 1)}
                                   onUpdate={onUpdate}
-                                  segments={event.segments!}
+                                  segments={event.segments}
                                 />
                               </div>
                             )}
@@ -1713,7 +1713,7 @@ function EventPane({
                                         value={(f.frameTypes ?? [EventFrameType.NORMAL])[0]}
                                         onChange={(e) => {
                                           const newEventFrameType = e.target.value as EventFrameType;
-                                          const newSegments = event.segments!.map((s, ssi) => {
+                                          const newSegments = event.segments.map((s, ssi) => {
                                             if (ssi !== si || !s.frames) return s;
                                             return { ...s, frames: s.frames.map((fr, ffi) =>
                                               ffi === fi ? { ...fr, frameTypes: [newEventFrameType] } : fr,
@@ -1747,7 +1747,7 @@ function EventPane({
                                         value={f.skillPointRecovery ?? 0}
                                         onChange={(e) => {
                                           const val = Math.max(0, Number(e.target.value) || 0);
-                                          const newSegments = event.segments!.map((s, ssi) => {
+                                          const newSegments = event.segments.map((s, ssi) => {
                                             if (ssi !== si || !s.frames) return s;
                                             return { ...s, frames: s.frames.map((fr, ffi) =>
                                               ffi === fi ? { ...fr, skillPointRecovery: val } : fr,
@@ -1765,7 +1765,7 @@ function EventPane({
                                         value={f.stagger ?? 0}
                                         onChange={(e) => {
                                           const val = Math.max(0, Number(e.target.value) || 0);
-                                          const newSegments = event.segments!.map((s, ssi) => {
+                                          const newSegments = event.segments.map((s, ssi) => {
                                             if (ssi !== si || !s.frames) return s;
                                             return { ...s, frames: s.frames.map((fr, ffi) =>
                                               ffi === fi ? { ...fr, stagger: val } : fr,
@@ -1791,7 +1791,7 @@ function EventPane({
                                         value={f.stagger ?? 0}
                                         onChange={(e) => {
                                           const val = Math.max(0, Number(e.target.value) || 0);
-                                          const newSegments = event.segments!.map((s, ssi) => {
+                                          const newSegments = event.segments.map((s, ssi) => {
                                             if (ssi !== si || !s.frames) return s;
                                             return { ...s, frames: s.frames.map((fr, ffi) =>
                                               ffi === fi ? { ...fr, stagger: val } : fr,

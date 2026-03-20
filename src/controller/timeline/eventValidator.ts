@@ -43,7 +43,7 @@ export function hasEnhanceClauseAtFrame(
   atFrame: number,
 ): boolean {
   for (const ev of events) {
-    if (ev.ownerId !== ownerId || !ev.segments) continue;
+    if (ev.ownerId !== ownerId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
@@ -70,7 +70,7 @@ function getDisableAdjectiveAtFrame(
   atFrame: number,
 ): string | null {
   for (const ev of events) {
-    if (ev.ownerId !== ownerId || !ev.segments) continue;
+    if (ev.ownerId !== ownerId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
@@ -657,11 +657,11 @@ export function isBlockedByTimeStop(
  * from its segments or default activation duration.
  */
 export function computeProspectiveRange(
-  defaultSkill: { defaultActivationDuration?: number; segments?: EventSegmentData[] } | null,
+  defaultSkill: { segments?: EventSegmentData[] } | null,
   atFrame?: number,
   timeStopRegions?: readonly TimeStopRegion[],
 ): number {
-  if (!defaultSkill?.segments) return defaultSkill?.defaultActivationDuration ?? 0;
+  if (!defaultSkill?.segments) return 0;
   if (!timeStopRegions || timeStopRegions.length === 0 || atFrame === undefined) {
     return computeSegmentsSpan(defaultSkill.segments);
   }
@@ -1021,7 +1021,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       let offset = ev.startFrame;
       for (const seg of ev.segments) {
         segStarts.push(offset);
@@ -1060,7 +1060,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
 
     // Collect all segment start frames
     const segStarts: number[] = [];
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       let offset = ev.startFrame;
       for (const seg of ev.segments) {
         segStarts.push(offset);

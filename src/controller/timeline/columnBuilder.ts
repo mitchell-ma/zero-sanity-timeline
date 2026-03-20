@@ -1,4 +1,4 @@
-import { Column, MiniTimeline, Operator, Enemy, VisibleSkills, getAnimationDurationFromSegments } from '../../consts/viewTypes';
+import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
@@ -171,9 +171,7 @@ export function buildColumns(
       derived: true,
       defaultEvent: {
         name: 'Link',
-        defaultActivationDuration: 2400, // 20 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 2400 } }], // 20 seconds at 120fps
       },
     });
   }
@@ -191,9 +189,7 @@ export function buildColumns(
       derived: true,
       defaultEvent: {
         name: 'Arts Amp',
-        defaultActivationDuration: 1440, // 12 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 1440 } }], // 12 seconds at 120fps
       },
     });
   }
@@ -211,9 +207,7 @@ export function buildColumns(
       derived: true,
       defaultEvent: {
         name: 'Shield',
-        defaultActivationDuration: 1800, // 15 seconds at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 1800 } }], // 15 seconds at 120fps
       },
     });
   }
@@ -257,9 +251,7 @@ export function buildColumns(
         color: tgb.color,
         defaultEvent: {
           name: tgb.label,
-          defaultActivationDuration: tgb.durationFrames,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
+          segments: [{ properties: { duration: tgb.durationFrames } }],
         },
       };
     });
@@ -308,15 +300,10 @@ export function buildColumns(
         eventVariants: [
           {
             name: CombatSkillsType.DASH,
-            defaultActivationDuration: DASH_FRAMES,
-            defaultActiveDuration: 0,
-            defaultCooldownDuration: 0,
+            segments: [{ properties: { duration: DASH_FRAMES } }],
           },
           {
             name: CombatSkillsType.DASH,
-            defaultActivationDuration: DODGE_FRAMES,
-            defaultActiveDuration: 0,
-            defaultCooldownDuration: 0,
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
             timeDependency: TimeDependency.REAL_TIME,
@@ -325,9 +312,7 @@ export function buildColumns(
         ],
         defaultEvent: {
           name: CombatSkillsType.DASH,
-          defaultActivationDuration: DASH_FRAMES,
-          defaultActiveDuration: 0,
-          defaultCooldownDuration: 0,
+          segments: [{ properties: { duration: DASH_FRAMES } }],
         },
       });
       slotHasCols = true;
@@ -347,9 +332,7 @@ export function buildColumns(
             skillElement: skill.element,
             defaultEvent: {
               name: skill.name,
-              defaultActivationDuration: skill.defaultActivationDuration,
-              defaultActiveDuration: skill.defaultActiveDuration,
-              defaultCooldownDuration: skill.defaultCooldownDuration,
+              segments: skill.defaultSegments,
               triggerCondition: skill.triggerCondition,
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
@@ -361,16 +344,12 @@ export function buildColumns(
           // Combo columns: use model's level-dependent cooldown + match activation windows
           if (skillType === SKILL_COLUMNS.COMBO) {
             col.matchColumnIds = [SKILL_COLUMNS.COMBO, 'comboActivationWindow'];
-            col.defaultEvent!.defaultCooldownDuration = skill.defaultCooldownDuration;
           }
           // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
           if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
             const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name));
             col.defaultEvent = {
               name: skill.name,
-              defaultActivationDuration: base.totalDurationFrames,
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
               segments: base.segments,
             };
             col.eventVariants = [{ ...col.defaultEvent, enhancementType: EnhancementType.NORMAL }];
@@ -383,13 +362,10 @@ export function buildColumns(
               if (variantSeqs?.length) {
                 const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
                 const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
-                col.eventVariants.push({
+                col.eventVariants!.push({
                   name: varId,
                   displayName: resolveVariantDisplayName(varId, varSkill),
                   enhancementType,
-                  defaultActivationDuration: variantSeg.totalDurationFrames,
-                  defaultActiveDuration: 0,
-                  defaultCooldownDuration: 0,
                   segments: variantSeg.segments,
                   ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 });
@@ -411,19 +387,13 @@ export function buildColumns(
               ? SkillSegmentBuilder.buildSegments(diveSeqs, { labels: ['Dive'] })
               : { totalDurationFrames: DIVE_FRAMES, segments: [{ properties: { duration: DIVE_FRAMES, name: 'Dive' }, frames: [{ offsetFrame: DIVE_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }] };
 
-            col.eventVariants.push(
+            col.eventVariants!.push(
               {
                 name: CombatSkillsType.FINISHER,
-                defaultActivationDuration: finSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
                 segments: finSeg.segments,
               },
               {
                 name: CombatSkillsType.DIVE,
-                defaultActivationDuration: diveSeg.totalDurationFrames,
-                defaultActiveDuration: 0,
-                defaultCooldownDuration: 0,
                 segments: diveSeg.segments,
               },
             );
@@ -437,9 +407,6 @@ export function buildColumns(
             col.defaultEvent = {
               ...col.defaultEvent!,
               name: skill.name,
-              defaultActivationDuration: baseSeg.totalDurationFrames,
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
               segments: baseSeg.segments,
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
@@ -481,7 +448,6 @@ export function buildColumns(
                 name: varId,
                 displayName: resolveVariantDisplayName(varId, varSkill),
                 enhancementType,
-                defaultActivationDuration: variantSeg.totalDurationFrames,
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
                 gaugeGain: gg,
@@ -495,9 +461,6 @@ export function buildColumns(
             const base = SkillSegmentBuilder.buildSegments(basicSeqs);
             col.defaultEvent = {
               name: skill.name,
-              defaultActivationDuration: base.totalDurationFrames,
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
               segments: base.segments,
             };
           }
@@ -506,13 +469,13 @@ export function buildColumns(
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
             const battleDelayLabel = getDelayedHitLabel(op!.id, battleName!);
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, delayedHitLabel: battleDelayLabel });
-            const battleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
+            const battleCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            const battleCd = battleCdSeg?.properties.duration ?? 0;
             const battleSegments = battleCd > 0
               ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
               : seg.segments;
             col.defaultEvent = {
               ...col.defaultEvent!,
-              defaultActivationDuration: seg.totalDurationFrames,
               segments: battleSegments,
             };
             // Empowered battle skill variant (e.g. Arclight's additional attack on Electrification)
@@ -521,27 +484,20 @@ export function buildColumns(
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs);
               const empoweredName = empoweredBattleId as CombatSkillsType;
-              const empBattleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
-              const empBaseSegs = empBattleCd > 0
-                ? [...seg.segments, { properties: { duration: empBattleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
+              const empBaseSegs = battleCd > 0
+                ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
                 : seg.segments;
-              const empVarSegs = empBattleCd > 0
-                ? [...empowered.segments, { properties: { duration: empBattleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
+              const empVarSegs = battleCd > 0
+                ? [...empowered.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
                 : empowered.segments;
               col.eventVariants = [
                 {
                   name: col.defaultEvent!.name!,
-                  defaultActivationDuration: seg.totalDurationFrames,
-                  defaultActiveDuration: 0,
-                  defaultCooldownDuration: 0,
                   segments: empBaseSegs,
                 },
                 {
                   name: empoweredName,
                   displayName: resolveVariantDisplayName(empoweredBattleId, opSkills[empoweredBattleId] ?? {}),
-                  defaultActivationDuration: empowered.totalDurationFrames,
-                  defaultActiveDuration: 0,
-                  defaultCooldownDuration: 0,
                   segments: empVarSegs,
                   triggerCondition: 'Requires: Empowered condition',
                 },
@@ -555,10 +511,10 @@ export function buildColumns(
             const comboLabels = getSegmentLabels(op!.id, comboName!);
             const comboDelayLabel = getDelayedHitLabel(op!.id, comboName!);
             const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, delayedHitLabel: comboDelayLabel });
-            const comboCd = skill.defaultCooldownDuration ?? 0;
+            const comboCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            const comboCd = comboCdSeg?.properties.duration ?? 0;
             col.defaultEvent = {
               ...col.defaultEvent!,
-              defaultActivationDuration: seg.totalDurationFrames,
               segments: [...seg.segments, { properties: { duration: comboCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }],
             };
           }
@@ -576,11 +532,15 @@ export function buildColumns(
                 segments: seg.segments,
               };
             } else {
-              const animDur = getAnimationDurationFromSegments(col.defaultEvent!.segments);
-              const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
-              const statisDur = Math.max(0, activationDur - animDur);
-              const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
-              const cooldownDur = col.defaultEvent!.defaultCooldownDuration ?? 0;
+              // Extract durations from the skill's defaultSegments
+              const defSegs = col.defaultEvent!.segments ?? [];
+              const animSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+              const activeSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
+              const cooldownSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const animDur = animSeg?.properties.duration ?? 0;
+              const activeDur = activeSeg?.properties.duration ?? 0;
+              const cooldownDur = cooldownSeg?.properties.duration ?? 0;
+              const statisDur = 0;
 
               let activeSegment: import('../../consts/viewTypes').EventSegmentData;
               if (ultSeqs?.length) {
@@ -615,12 +575,15 @@ export function buildColumns(
               for (const csId of linkedIds) {
                 const cs = allCustom.find((s) => s.id === csId);
                 if (!cs) continue;
+                const csCd = Math.round((cs.cooldownSeconds ?? 0) * FPS);
+                const csSegs: import('../../consts/viewTypes').EventSegmentData[] = [
+                  { properties: { duration: Math.round(cs.durationSeconds * FPS) } },
+                  ...(csCd > 0 ? [{ properties: { duration: csCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }] : []),
+                ];
                 col.eventVariants.push({
                   name: cs.id,
                   displayName: cs.name,
-                  defaultActivationDuration: Math.round(cs.durationSeconds * FPS),
-                  defaultActiveDuration: 0,
-                  defaultCooldownDuration: Math.round((cs.cooldownSeconds ?? 0) * FPS),
+                  segments: csSegs,
                   skillPointCost: cs.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT')?.value,
                 });
               }
@@ -656,9 +619,7 @@ export function buildColumns(
           matchColumnIds: ['tactical'],
           defaultEvent: {
             name: tactical.name,
-            defaultActivationDuration: TACTICAL_DURATION_FRAMES,
-            defaultActiveDuration: 0,
-            defaultCooldownDuration: 0,
+            segments: [{ properties: { duration: TACTICAL_DURATION_FRAMES } }],
           },
         });
         tacticalColCount++;
@@ -669,7 +630,7 @@ export function buildColumns(
     let statusColCount = 0;
     if (op) {
       // Collect micro-columns: own statuses + team-shared statuses from other operators
-      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: { name: string; defaultActivationDuration: number; defaultActiveDuration: number; defaultCooldownDuration: number } }[] = [];
+      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: { name: string; segments?: import('../../consts/viewTypes').EventSegmentData[] } }[] = [];
       const matchIds: string[] = [];
       const ownDefs = operatorStatusMap.get(slot.slotId) ?? [];
       for (const def of ownDefs) {
@@ -679,9 +640,7 @@ export function buildColumns(
           color: def.color,
           defaultEvent: {
             name: def.label,
-            defaultActivationDuration: def.duration,
-            defaultActiveDuration: 0,
-            defaultCooldownDuration: 0,
+            segments: [{ properties: { duration: def.duration } }],
           },
         });
         matchIds.push(def.columnId);
@@ -699,9 +658,7 @@ export function buildColumns(
             color: op.color,
             defaultEvent: {
               name: tsd.label,
-              defaultActivationDuration: tsd.duration,
-              defaultActiveDuration: 0,
-              defaultCooldownDuration: 0,
+              segments: [{ properties: { duration: tsd.duration } }],
             },
           });
           matchIds.push(tsd.statusName);
@@ -768,9 +725,7 @@ export function buildColumns(
       color: '#dd8844',
       defaultEvent: {
         name: 'Node Stagger',
-        defaultActivationDuration: 600,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 600 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -781,9 +736,7 @@ export function buildColumns(
       color: '#ee6633',
       defaultEvent: {
         name: 'Full Stagger',
-        defaultActivationDuration: 600,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 600 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -795,9 +748,7 @@ export function buildColumns(
       color: s.color,
       defaultEvent: {
         name: s.id,
-        defaultActivationDuration: 120,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -809,9 +760,7 @@ export function buildColumns(
       color: mc.color,
       defaultEvent: {
         name: mc.id,
-        defaultActivationDuration: 600, // 5s
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 600 } }], // 5s
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -823,9 +772,7 @@ export function buildColumns(
       color: '#c0c8d0',
       defaultEvent: {
         name: 'vulnerableInfliction',
-        defaultActivationDuration: 120,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -837,9 +784,7 @@ export function buildColumns(
       color: '#c0c8d0',
       defaultEvent: {
         name: PHYSICAL_STATUS_COLUMNS.LIFT,
-        defaultActivationDuration: 120,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -850,9 +795,7 @@ export function buildColumns(
       color: '#c0c8d0',
       defaultEvent: {
         name: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
-        defaultActivationDuration: 120,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -863,9 +806,7 @@ export function buildColumns(
       color: '#c0c8d0',
       defaultEvent: {
         name: PHYSICAL_STATUS_COLUMNS.CRUSH,
-        defaultActivationDuration: 120,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 120 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -876,9 +817,7 @@ export function buildColumns(
       color: '#c0c8d0',
       defaultEvent: {
         name: PHYSICAL_STATUS_COLUMNS.BREACH,
-        defaultActivationDuration: 1800,
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 1800 } }],
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -890,9 +829,7 @@ export function buildColumns(
       color: '#55aadd',
       defaultEvent: {
         name: StatusType.FOCUS,
-        defaultActivationDuration: 7200, // 60s at 120fps (Focus duration)
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 7200 } }], // 60s at 120fps (Focus duration)
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -903,9 +840,7 @@ export function buildColumns(
       color: '#cc8866',
       defaultEvent: {
         name: StatusType.SUSCEPTIBILITY,
-        defaultActivationDuration: 1800, // 15s at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 1800 } }], // 15s at 120fps
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },
@@ -916,9 +851,7 @@ export function buildColumns(
       color: '#cc6644',
       defaultEvent: {
         name: StatusType.FRAGILITY,
-        defaultActivationDuration: 1800, // 15s at 120fps
-        defaultActiveDuration: 0,
-        defaultCooldownDuration: 0,
+        segments: [{ properties: { duration: 1800 } }], // 15s at 120fps
         sourceOwnerId: USER_ID,
         sourceSkillName: 'Freeform',
       },

@@ -234,7 +234,7 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
     // In real-time model, startFrame is already real-time — no conversion needed.
     const realStart = ev.startFrame;
 
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       // ── Sequenced event (basic attacks, combos with segments) ─────────
       const segments: SegmentLayout[] = [];
       let runningOffset = 0; // tracks end of previous segment for implicit offsets

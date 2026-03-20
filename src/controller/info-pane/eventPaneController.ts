@@ -13,7 +13,7 @@ import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COL
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
-import { getLastController } from '../timeline/eventQueue';
+import { getLastController } from '../timeline/processInteractions';
 
 // ── JSON Skill Data Shapes ──────────────────────────────────────────────────
 

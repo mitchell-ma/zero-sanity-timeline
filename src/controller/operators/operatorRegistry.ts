@@ -6,8 +6,8 @@
  *
  * No hardcoded DISPLAY_CONFIGS — all display/timing data comes from JSON fields.
  */
-import { Operator as ViewOperator, SkillDef } from '../../consts/viewTypes';
-import { ElementType, OperatorClassType, ELEMENT_COLORS } from '../../consts/enums';
+import { Operator as ViewOperator, SkillDef, EventSegmentData } from '../../consts/viewTypes';
+import { ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
 import { Potential } from '../../consts/types';
 import {
   getOperatorJson,
@@ -118,40 +118,45 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const ultCooldown = timings.ultCd || (opJson.ultimateCooldownDuration != null
     ? dur(opJson.ultimateCooldownDuration as number) : 0);
 
-  const skillTimingConfigs: Record<string, {
-    defaultActivationDuration: number;
-    defaultActiveDuration: number;
-    defaultCooldownDuration: number;
+  // Build defaultSegments for each skill type
+  const buildSegments = (activation: number, active: number, cooldown: number, isUltimate?: boolean): EventSegmentData[] => {
+    const segs: EventSegmentData[] = [];
+    if (isUltimate) {
+      // Ultimate: animation (real-time) + active + cooldown (real-time)
+      if (activation > 0) segs.push({ properties: { duration: activation, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } });
+      if (active > 0) segs.push({ properties: { duration: active, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } });
+      if (cooldown > 0) segs.push({ properties: { duration: cooldown, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.COOLDOWN } });
+    } else {
+      if (activation > 0) segs.push({ properties: { duration: activation } });
+      if (cooldown > 0) segs.push({ properties: { duration: cooldown, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } });
+    }
+    return segs.length > 0 ? segs : [{ properties: { duration: activation || 24 } }];
+  };
+
+  const skillSegmentConfigs: Record<string, {
+    defaultSegments: EventSegmentData[];
     triggerCondition: string | null;
   }> = {
     basic: {
-      defaultActivationDuration: basicActivation,
-      defaultActiveDuration: 0,
-      defaultCooldownDuration: 0,
+      defaultSegments: buildSegments(basicActivation, 0, 0),
       triggerCondition: null,
     },
     battle: {
-      defaultActivationDuration: battleActivation,
-      defaultActiveDuration: 0,
-      defaultCooldownDuration: battleCooldown,
+      defaultSegments: buildSegments(battleActivation, 0, battleCooldown),
       triggerCondition: null,
     },
     combo: {
-      defaultActivationDuration: comboActivation,
-      defaultActiveDuration: 0,
-      defaultCooldownDuration: timings.comboCd,
+      defaultSegments: buildSegments(comboActivation, 0, timings.comboCd),
       triggerCondition: null,
     },
     ultimate: {
-      defaultActivationDuration: timings.ultAnimDur,
-      defaultActiveDuration: ultActiveDur,
-      defaultCooldownDuration: ultCooldown,
+      defaultSegments: buildSegments(timings.ultAnimDur, ultActiveDur, ultCooldown, true),
       triggerCondition: null,
     },
   };
 
   const skills: Record<string, SkillDef> = {};
-  for (const [key, timing] of Object.entries(skillTimingConfigs)) {
+  for (const [key, timing] of Object.entries(skillSegmentConfigs)) {
     const skillName = categoryToName[key] ?? key;
     const categoryKey = key === 'basic' ? 'BASIC_ATTACK' : key === 'battle' ? 'BATTLE_SKILL'
       : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';

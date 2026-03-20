@@ -281,7 +281,7 @@ export function buildDamageTableRows(
     const defaultSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
       ?? col.defaultEvent?.segments;
 
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       let segmentFrameOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];

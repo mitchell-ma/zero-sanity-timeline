@@ -24,7 +24,7 @@ export type ResourceGraphListener = (points: ResourcePoint[]) => void;
  *
  * The resource starts at `startValue`, regenerates at `regenPerFrame`,
  * and is clamped to [min, max]. Events on the underlying subtimeline
- * represent instant consumption costs — each event's `activationDuration`
+ * represent instant consumption costs — each event's segment duration
  * is used as the cost amount.
  *
  * Subclasses define the concrete resource parameters.

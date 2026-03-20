@@ -33,7 +33,7 @@ import { TimelineEvent } from '../consts/viewTypes';
 // eslint-disable-next-line import/first
 import { clampDeltaByResourceZones, clampDeltaByComboWindow } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { clampDeltaByOverlap } from '../controller/timeline/eventController';
+import { clampDeltaByOverlap } from '../controller/timeline/inputEventController';
 // eslint-disable-next-line import/first
 import type { ResourceZone } from '../controller/timeline/skillPointTimeline';
 // eslint-disable-next-line import/first

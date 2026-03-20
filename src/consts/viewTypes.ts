@@ -10,9 +10,8 @@ export interface SkillDef {
   description?: string;
   /** Element type of this skill (e.g. "PHYSICAL", "HEAT"). */
   element?: string;
-  defaultActivationDuration: number; // frames
-  defaultActiveDuration: number; // frames
-  defaultCooldownDuration: number; // frames
+  /** Default segments for this skill. Optional — defaults to a single segment with the activation duration. */
+  defaultSegments?: EventSegmentData[];
   triggerCondition: string | null;
   /** Ultimate gauge gained by this operator when skill is used. */
   gaugeGain?: number;
@@ -313,9 +312,7 @@ export interface MicroColumn {
   /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
   defaultEvent?: {
     name: string;
-    defaultActivationDuration: number;
-    defaultActiveDuration: number;
-    defaultCooldownDuration: number;
+    segments?: EventSegmentData[];
     /** Source operator ID for manually-created events (e.g. 'debugger'). */
     sourceOwnerId?: string;
     /** Source skill name for manually-created events (e.g. 'Debug'). */
@@ -344,11 +341,8 @@ export type MiniTimeline = {
   /** Default durations for new events created in this mini-timeline. */
   defaultEvent?: {
     name: string;
-    defaultActivationDuration: number;
-    defaultActiveDuration: number;
-    defaultCooldownDuration: number;
     triggerCondition?: string | null;
-    /** If present, the event is multi-sequence. */
+    /** Segment definitions for this event. */
     segments?: EventSegmentData[];
     /** Ultimate gauge gained by this operator. */
     gaugeGain?: number;
@@ -375,11 +369,8 @@ export type MiniTimeline = {
     displayName?: string;
     /** Enhancement tier of this variant (NORMAL for base skills, ENHANCED/EMPOWERED for upgraded). */
     enhancementType?: import('./enums').EnhancementType;
-    defaultActivationDuration: number;
-    defaultActiveDuration: number;
-    defaultCooldownDuration: number;
     triggerCondition?: string | null;
-    /** If present, the event is multi-sequence. */
+    /** Segment definitions for this variant. */
     segments?: EventSegmentData[];
     /** If true, this variant is disabled in the context menu. */
     disabled?: boolean;

@@ -44,8 +44,9 @@ import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDu
 import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
 import type { GearPieceData } from '../../model/game-data/gearSetDataLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
-import { GearSetType, GearCategory } from '../../consts/enums';
-import type { SkillType } from '../../consts/viewTypes';
+import { GearSetType, GearCategory, SegmentType } from '../../consts/enums';
+import type { SkillType, SkillDef } from '../../consts/viewTypes';
+import { computeSegmentsSpan } from '../../consts/viewTypes';
 import type { Interaction, Effect, Predicate } from '../../consts/semantics';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/info-pane/loadoutPaneController';
@@ -1004,7 +1005,7 @@ function SkillEntryCard({ entry, accent }: { entry: SkillEntryData; accent: stri
 function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
   operatorId: string;
   skillType: SkillType;
-  skill: { name: string; description?: string; element?: string; defaultActivationDuration: number; defaultActiveDuration: number; defaultCooldownDuration: number; skillPointCost?: number; gaugeGain?: number; teamGaugeGain?: number; spReturnNotes?: string[] };
+  skill: SkillDef;
 }) {
   const JSON_KEYS: Record<SkillType, string> = { basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' };
   const skillEntries = useMemo(
@@ -1032,9 +1033,22 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
 
       <div className="cv-field-grid">
         {skill.element && <Field label="Element" value={skill.element} />}
-        {skill.defaultActivationDuration > 0 && <Field label="Activation" value={`${fmtN(skill.defaultActivationDuration / 120)}s`} />}
-        {skill.defaultActiveDuration > 0 && <Field label="Active" value={`${fmtN(skill.defaultActiveDuration / 120)}s`} />}
-        {skill.defaultCooldownDuration > 0 && <Field label="Cooldown" value={`${fmtN(skill.defaultCooldownDuration / 120)}s`} />}
+        {(() => {
+          const segs = skill.defaultSegments ?? [];
+          const totalDur = computeSegmentsSpan(segs);
+          const activeSeg = segs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
+          const cooldownSeg = segs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+          const activeDur = activeSeg?.properties.duration ?? 0;
+          const cooldownDur = cooldownSeg?.properties.duration ?? 0;
+          const activationDur = totalDur - cooldownDur;
+          return (
+            <>
+              {activationDur > 0 && <Field label="Activation" value={`${fmtN(activationDur / 120)}s`} />}
+              {activeDur > 0 && <Field label="Active" value={`${fmtN(activeDur / 120)}s`} />}
+              {cooldownDur > 0 && <Field label="Cooldown" value={`${fmtN(cooldownDur / 120)}s`} />}
+            </>
+          );
+        })()}
         {skill.skillPointCost != null && <Field label="SP Cost" value={String(skill.skillPointCost)} />}
       </div>
 
@@ -1427,9 +1441,22 @@ function BuiltinSkillView({ id }: { id: string }) {
       )}
       <GSection title="Timings">
         <div className="cv-field-grid">
-          <Field label="Activation" value={`${skill.defaultActivationDuration}f (${(skill.defaultActivationDuration / 120).toFixed(2)}s)`} />
-          <Field label="Active" value={`${skill.defaultActiveDuration}f (${(skill.defaultActiveDuration / 120).toFixed(2)}s)`} />
-          <Field label="Cooldown" value={`${skill.defaultCooldownDuration}f (${(skill.defaultCooldownDuration / 120).toFixed(2)}s)`} />
+          {(() => {
+            const segs = skill.defaultSegments ?? [];
+            const totalDur = computeSegmentsSpan(segs);
+            const activeSeg = segs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
+            const cooldownSeg = segs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            const activeDur = activeSeg?.properties.duration ?? 0;
+            const cooldownDur = cooldownSeg?.properties.duration ?? 0;
+            const activationDur = totalDur - cooldownDur;
+            return (
+              <>
+                <Field label="Activation" value={`${activationDur}f (${(activationDur / 120).toFixed(2)}s)`} />
+                <Field label="Active" value={`${activeDur}f (${(activeDur / 120).toFixed(2)}s)`} />
+                <Field label="Cooldown" value={`${cooldownDur}f (${(cooldownDur / 120).toFixed(2)}s)`} />
+              </>
+            );
+          })()}
         </div>
       </GSection>
       <GSection title="Resources">

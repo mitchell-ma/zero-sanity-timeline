@@ -3,7 +3,7 @@
  * No React dependencies — these are pure functions that compute next state.
  */
 
-import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
+import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline } from '../consts/viewTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
 import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
@@ -12,7 +12,7 @@ import { BossEnemy } from '../model/enemies/bossEnemy';
 import { StatType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
 import { ARMORS, GLOVES, KITS } from '../utils/loadoutRegistry';
-import { filterEventsOnOperatorChange } from './timeline/eventController';
+import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
 import { GearSetType } from '../consts/enums';
 import type { Slot } from './timeline/columnBuilder';
@@ -273,16 +273,13 @@ export function computeDefaultResourceConfig(
 // ── Event default lookup ─────────────────────────────────────────────────────
 
 /**
- * Find the default durations/segments for an event from its column definition.
+ * Find the default segments for an event from its column definition.
  */
 export function findEventDefaults(
   ev: TimelineEvent,
   columns: (MiniTimeline | { type: 'placeholder' })[],
 ): {
   name?: string;
-  defaultActivationDuration: number;
-  defaultActiveDuration: number;
-  defaultCooldownDuration: number;
   segments?: import('../consts/viewTypes').EventSegmentData[];
   skillPointCost?: number;
 } | null {
@@ -343,14 +340,14 @@ export function attachDefaultSegments(
     // Truncate to sg length if pending overrides specify fewer segments (user removed some)
     const overrides = ev._pendingSegmentOverrides;
     const segCount = overrides?.sg ? overrides.sg.length : defaults.segments.length;
-    let segments = (ev.segments && !isPlaceholder)
+    let segments = !isPlaceholder
       ? ev.segments
       : defaults.segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
 
     // Apply pending overrides from share URL decode
     if (overrides) {
       // Deep-copy if we haven't already (when segments came from ev.segments)
-      if (ev.segments && !isPlaceholder) {
+      if (!isPlaceholder) {
         segments = segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
       }
       if (overrides.sg) {
@@ -366,11 +363,9 @@ export function attachDefaultSegments(
         }
       }
       const { _pendingSegmentOverrides, ...rest } = patched;
-      const span = computeSegmentsSpan(segments);
-      return { ...rest, segments, activationDuration: span };
+      return { ...rest, segments };
     }
 
-    const span = computeSegmentsSpan(segments);
-    return { ...patched, segments, activationDuration: span };
+    return { ...patched, segments };
   });
 }

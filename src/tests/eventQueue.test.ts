@@ -454,7 +454,7 @@ describe('Infliction Stack Cap (Queue Pipeline)', () => {
     const result = processInflictionEvents(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
-    // Consumed MF stacks should have activationDuration < original (clamped at consume frame)
+    // Consumed MF stacks should have duration < original (clamped at consume frame)
     for (const ev of consumed) {
       expect(eventDuration(ev)).toBeGreaterThan(0);
       // Duration should be clipped to the consume point, not the original full duration
@@ -931,7 +931,7 @@ describe('Freeform Inflictions', () => {
     expect(ev).toBeDefined();
 
     const frames = ev!.segments?.flatMap(s => s.frames ?? []) ?? [];
-    // Solidification: initial hit at 0, shatter at activationDuration
+    // Solidification: initial hit at 0, shatter at event end
     expect(frames.some(f => f.offsetFrame === 0)).toBe(true);
     expect(frames.some(f => f.offsetFrame === 2400)).toBe(true);
   });

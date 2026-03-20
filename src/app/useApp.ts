@@ -13,7 +13,7 @@ import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventDuration, eventEndFrame } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
@@ -31,7 +31,7 @@ import {
   buildValidColumnPairs,
   setCombatLoadout,
   hasSufficientSP,
-} from '../controller/timeline/eventController';
+} from '../controller/timeline/inputEventController';
 import { ComboSkillEventController } from '../controller/timeline/comboSkillEventController';
 import {
   serializeSheet,
@@ -895,7 +895,7 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
+    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
@@ -1065,9 +1065,6 @@ export function useApp() {
       if (!defaults) return prev;
       return prev.map((ev) => (ev.id === id ? {
         ...ev,
-        activationDuration: defaults.defaultActivationDuration,
-        activeDuration: defaults.defaultActiveDuration,
-        cooldownDuration: defaults.defaultCooldownDuration,
         ...(defaults.segments ? { segments: defaults.segments } : {}),
         ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
       } : ev));
@@ -1086,9 +1083,8 @@ export function useApp() {
         ...ev,
         segments: defaults.segments!.map((defSeg, i) => ({
           ...defSeg,
-          properties: { ...defSeg.properties, duration: ev.segments?.[i]?.properties.duration ?? defSeg.properties.duration },
+          properties: { ...defSeg.properties, duration: ev.segments[i]?.properties.duration ?? defSeg.properties.duration },
         })),
-        activationDuration: computeSegmentsSpan(defaults.segments!),
       } : ev));
     });
     setContextMenu(null);
@@ -1098,12 +1094,12 @@ export function useApp() {
   const handleResetFrames = useCallback((id: string) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === id);
-      if (!target?.segments) return prev;
+      if (!target) return prev;
       const defaults = findDefaults(target);
       if (!defaults?.segments) return prev;
       return prev.map((ev) => (ev.id === id ? {
         ...ev,
-        segments: ev.segments!.map((seg, i) => ({
+        segments: ev.segments.map((seg, i) => ({
           ...seg,
           frames: defaults.segments![i]?.frames ?? seg.frames,
         })),
@@ -1123,9 +1119,6 @@ export function useApp() {
         changed = true;
         return {
           ...ev,
-          activationDuration: defaults.defaultActivationDuration,
-          activeDuration: defaults.defaultActiveDuration,
-          cooldownDuration: defaults.defaultCooldownDuration,
           ...(defaults.segments ? { segments: defaults.segments } : {}),
           ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
         };
@@ -1140,8 +1133,8 @@ export function useApp() {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === eventId);
       if (!target) return prev;
-      const segments = target.segments ?? findEventDefaults(target, columns)?.segments;
-      if (!segments?.[segmentIndex]?.frames) return prev;
+      const segments = target.segments;
+      if (!segments[segmentIndex]?.frames) return prev;
       const newSegments = segments.map((seg, si) => {
         if (si !== segmentIndex) return seg;
         return { ...seg, frames: seg.frames?.filter((_, fi) => fi !== frameIndex) };
@@ -1162,8 +1155,7 @@ export function useApp() {
     setEvents((prev) => prev.map((ev) => {
       const toRemove = byEvent.get(ev.id);
       if (!toRemove) return ev;
-      const segments = ev.segments ?? findEventDefaults(ev, columns)?.segments;
-      if (!segments) return ev;
+      const segments = ev.segments;
       const removeSet = new Set(toRemove.map((r) => `${r.segmentIndex}-${r.frameIndex}`));
       const newSegments = segments.map((seg, si) => {
         if (!seg.frames) return seg;
@@ -1179,7 +1171,7 @@ export function useApp() {
   const handleAddSegment = useCallback((eventId: string, segmentLabel: string) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === eventId);
-      if (!target?.segments) return prev;
+      if (!target) return prev;
       const col = columns.find((c) =>
         c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
       );
@@ -1197,7 +1189,6 @@ export function useApp() {
       return prev.map((ev) => (ev.id === eventId ? {
         ...ev,
         segments: newSegments,
-        activationDuration: totalDuration,
         nonOverlappableRange: totalDuration,
       } : ev));
     });
@@ -1207,13 +1198,12 @@ export function useApp() {
   const handleRemoveSegment = useCallback((eventId: string, segmentIndex: number) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === eventId);
-      if (!target?.segments || target.segments.length <= 1) return prev;
+      if (!target || target.segments.length <= 1) return prev;
       const newSegments = target.segments.filter((_, si) => si !== segmentIndex);
       const totalDuration = computeSegmentsSpan(newSegments);
       return prev.map((ev) => (ev.id === eventId ? {
         ...ev,
         segments: newSegments,
-        activationDuration: totalDuration,
         nonOverlappableRange: totalDuration,
       } : ev));
     });
@@ -1224,7 +1214,7 @@ export function useApp() {
   const handleAddFrame = useCallback((eventId: string, segmentIndex: number, frameOffsetFrame: number) => {
     setEvents((prev) => {
       const target = prev.find((ev) => ev.id === eventId);
-      if (!target?.segments?.[segmentIndex]) return prev;
+      if (!target?.segments[segmentIndex]) return prev;
       const col = columns.find((c) =>
         c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
       );
@@ -1262,9 +1252,7 @@ export function useApp() {
   const handleMoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
     setEvents((prev) => prev.map((ev) => {
       if (ev.id !== eventId) return ev;
-      // Attach default segments from column definitions if the raw event doesn't have them
-      const segments = ev.segments ?? findEventDefaults(ev, columns)?.segments;
-      if (!segments) return ev;
+      const segments = ev.segments;
       const newSegments = segments.map((seg, si) => {
         if (si !== segmentIndex || !seg.frames) return seg;
         const newFrames = seg.frames.map((f, fi) =>

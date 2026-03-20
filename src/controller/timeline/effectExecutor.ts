@@ -29,7 +29,7 @@ import { LoadoutProperties } from '../../view/InformationPane';
 
 /** Information about a clamped (shortened/consumed) event. */
 export interface ClampInfo {
-  /** New activationDuration (shortened to clampFrame - startFrame). */
+  /** New duration in frames (shortened to clampFrame - startFrame). */
   newDuration: number;
   /** Status applied to the clamped event. */
   eventStatus: EventStatusType;

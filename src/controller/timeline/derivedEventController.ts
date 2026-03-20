@@ -26,6 +26,7 @@ import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../.
 import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
 import { resolveComboTriggerColumns } from './processComboSkill';
 import type { SlotTriggerWiring } from './processComboSkill';
+import type { TriggerAssociation } from '../configController';
 
 // ── Potential-effect constants ───────────────────────────────────────────────
 
@@ -50,8 +51,10 @@ export class DerivedEventController {
   private comboStops: { id: string; startFrame: number; animDur: number }[] = [];
   readonly output: TimelineEvent[] = [];
   private idCounter = 0;
+  private triggerAssociations: TriggerAssociation[];
 
-  constructor(baseEvents?: TimelineEvent[]) {
+  constructor(baseEvents?: TimelineEvent[], triggerAssociations?: TriggerAssociation[]) {
+    this.triggerAssociations = triggerAssociations ?? [];
     if (baseEvents) {
       this.registeredEvents = baseEvents;
       for (const ev of baseEvents) {
@@ -303,6 +306,22 @@ export class DerivedEventController {
   /** Get queue-created events (debug). */
   getQueueOutput(): readonly TimelineEvent[] {
     return this.output;
+  }
+
+  /**
+   * Check which trigger associations match a given event.
+   * Returns associations whose triggerClause conditions could be satisfied
+   * by the event's column/name/owner. Actual condition evaluation deferred to Phase 2.
+   */
+  checkTriggerAssociations(event: TimelineEvent): TriggerAssociation[] {
+    if (this.triggerAssociations.length === 0) return [];
+    return this.triggerAssociations.filter(assoc =>
+      assoc.triggerClause.some(clause =>
+        clause.conditions.some(cond =>
+          cond.object === event.name || cond.object === event.columnId
+        )
+      )
+    );
   }
 
   /** Get the base (pre-time-stop) activation duration for an event, or undefined if not extended. */

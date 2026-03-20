@@ -40,7 +40,7 @@ export interface EventPresentation {
   skillElement?: string;
   allSegmentLabels?: string[];
   allDefaultSegments?: EventSegmentData[];
-  /** If set, overrides the event's activationDuration for visual rendering only. */
+  /** If set, overrides the event's visual duration (in frames) for rendering only. */
   visualActivationDuration?: number;
 }
 
@@ -63,7 +63,7 @@ export function resolveEventColor(
   slotElementColors: Record<string, string>,
 ): string {
   if (col.type !== 'mini-timeline') return col.color;
-  const isSequenced = ev.segments && ev.segments.length > 0;
+  const isSequenced = ev.segments.length > 0;
   if (!isSequenced) return col.color;
   const skillElColor = col.skillElement
     ? ELEMENT_COLORS[col.skillElement as ElementType]
@@ -101,12 +101,12 @@ export function computeEventPresentation(
   },
 ): EventPresentation {
   const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
-  const isSequenced = ev.segments && ev.segments.length > 0;
+  const isSequenced = ev.segments.length > 0;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
 
-  const hasAnimationSegment = ev.segments?.some(s => s.metadata?.segmentType === SegmentType.ANIMATION) ?? false;
+  const hasAnimationSegment = ev.segments.some(s => s.metadata?.segmentType === SegmentType.ANIMATION);
   const variant = (col.type === 'mini-timeline' && (col.columnId === SKILL_COLUMNS.ULTIMATE || hasAnimationSegment)
     ? 'ultimate'
     : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced';

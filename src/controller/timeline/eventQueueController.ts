@@ -43,15 +43,7 @@ import {
 } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
-
-// ── Last-computed time-stop regions ──────────────────────────────────────────
-
-let lastController: DerivedEventController | null = null;
-
-/** Get the DerivedEventController from the most recent processEventQueue run. */
-export function getLastController(): DerivedEventController {
-  return lastController!;
-}
+import { getAllTriggerAssociations } from '../configController';
 
 // ── Frame effect collection ─────────────────────────────────────────────────
 
@@ -711,9 +703,10 @@ export function processEventQueue(
   slotWirings?: SlotTriggerWiring[],
   slotOperatorMap?: Record<string, string>,
   slotGearSets?: Record<string, string | undefined>,
-): TimelineEvent[] {
+): { events: TimelineEvent[]; controller: DerivedEventController } {
   // ── Phase 1: Register events (inline combo chaining + stop discovery) ────
-  const state = new DerivedEventController();
+  const triggerAssociations = getAllTriggerAssociations();
+  const state = new DerivedEventController(undefined, triggerAssociations);
   state.registerEvents(rawEvents);
   state.extendAll();
 
@@ -868,6 +861,5 @@ export function processEventQueue(
   state.cacheFramePositions();
   state.validateAll();
 
-  lastController = state;
-  return state.getRegisteredEvents();
+  return { events: state.getRegisteredEvents(), controller: state };
 }

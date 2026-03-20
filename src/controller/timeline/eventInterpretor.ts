@@ -622,7 +622,7 @@ export class EventInterpretor {
         statusName: ev.name, stackingMode: entry.stackingInteraction, id: ev.id,
         event: {
           ...(ev.susceptibility && { susceptibility: ev.susceptibility }),
-          ...(ev.segments && { segments: ev.segments }),
+          segments: ev.segments,
         },
       });
     }

@@ -9,7 +9,7 @@ import { EventStatusType } from '../../consts/enums';
 
 /**
  * Check if an event is active at a given frame.
- * An event is active from startFrame (inclusive) to startFrame + activationDuration (exclusive).
+ * An event is active from startFrame (inclusive) to startFrame + eventDuration (exclusive).
  */
 export function isActiveAtFrame(ev: TimelineEvent, frame: number) {
   return ev.startFrame <= frame && frame < eventEndFrame(ev);

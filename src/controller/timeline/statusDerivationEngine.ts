@@ -718,7 +718,6 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
   if (primaryCond.object === 'SKILL_POINT') {
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
-      if (!ev.segments) continue;
       let cumulativeOffset = 0;
       for (const seg of ev.segments) {
         if (seg.frames) {
@@ -786,7 +785,6 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 
   for (const ev of ctx.events) {
     if (!matchesOwner(ev.ownerId)) continue;
-    if (!ev.segments) continue;
 
     let cumulativeOffset = 0;
     for (const seg of ev.segments) {
@@ -1927,7 +1925,6 @@ export function collectEngineTriggerEntries(
             for (const ev of events) {
               if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
               if (isThis && ev.ownerId !== slotId) continue;
-              if (!ev.segments) continue;
               let cum = 0;
               for (const seg of ev.segments) {
                 if (seg.frames) {

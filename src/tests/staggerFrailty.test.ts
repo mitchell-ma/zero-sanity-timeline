@@ -18,7 +18,7 @@ import { NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, ENEMY_OWNER_ID, SKILL_C
 import { StatType, SegmentType, TimeDependency } from '../consts/enums';
 import { getStaggerMultiplier } from '../model/calculation/damageFormulas';
 import { FPS } from '../utils/timeline';
-import { TimelineEvent, eventDuration } from '../consts/viewTypes';
+import { TimelineEvent, eventDuration, durationSegment } from '../consts/viewTypes';
 
 // ── Mock operatorRegistry ────────────────────────────────────────────────────
 jest.mock('../controller/operators/operatorRegistry', () => ({
@@ -47,14 +47,12 @@ function makeStaggerTimeline(nodeCount: number, maxHp = 60, breakDurationSec = 5
   return { sub, stagger };
 }
 
-/** Add a stagger damage event to the subtimeline. activationDuration = damage value. */
+/** Add a stagger damage event to the subtimeline. Segment duration = damage value. */
 function addStaggerDamage(sub: Subtimeline, frame: number, damage: number) {
   sub.addEvent({
     name: 'stagger-hit',
     startFrame: frame,
-    activationDuration: damage,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: durationSegment(damage),
   });
 }
 

@@ -212,9 +212,6 @@ export function createEvent(
   atFrame: number,
   defaultSkill: {
     name?: string;
-    defaultActivationDuration?: number;
-    defaultActiveDuration?: number;
-    defaultCooldownDuration?: number;
     segments?: EventSegmentData[];
     gaugeGain?: number;
     teamGaugeGain?: number;
@@ -230,25 +227,17 @@ export function createEvent(
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
+  const segments = defaultSkill?.segments ?? durationSegment(120);
+  const span = computeSegmentsSpan(segments);
   return {
     id: genEventId(),
     name: defaultSkill?.name ?? columnId,
     ownerId,
     columnId,
     startFrame: atFrame,
-    segments: defaultSkill?.segments ?? durationSegment(defaultSkill?.defaultActivationDuration ?? 120),
+    segments,
     ...(isForced ? { isForced: true } : {}),
-    ...(defaultSkill?.segments ? {
-      nonOverlappableRange: computeSegmentsSpan(defaultSkill.segments),
-    } : {}),
-    ...(columnId === SKILL_COLUMNS.ULTIMATE && !defaultSkill?.segments ? {
-      nonOverlappableRange: (defaultSkill?.defaultActivationDuration ?? 120)
-        + (defaultSkill?.defaultActiveDuration ?? 0)
-        + (defaultSkill?.defaultCooldownDuration ?? 0),
-    } : {}),
-    ...(columnId === OPERATOR_COLUMNS.DASH ? {
-      nonOverlappableRange: defaultSkill?.defaultActivationDuration ?? 120,
-    } : {}),
+    ...(span > 0 ? { nonOverlappableRange: span } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),

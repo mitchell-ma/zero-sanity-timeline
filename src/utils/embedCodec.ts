@@ -16,7 +16,7 @@ import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateControll
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
-import { eventDuration, durationSegment } from '../consts/viewTypes';
+import { eventDuration, durationSegment, computeSegmentsSpan } from '../consts/viewTypes';
 import { SegmentType } from '../consts/enums';
 
 const EMBED_VERSION = 1;
@@ -279,9 +279,6 @@ function diffEnemyStats(
 // ── Event template lookup ───────────────────────────────────────────────────
 
 interface EventDefaults {
-  activationDuration: number;
-  activeDuration: number;
-  cooldownDuration: number;
   segments?: EventSegmentData[];
 }
 
@@ -289,32 +286,17 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
   for (const col of columns) {
     if (col.type !== 'mini-timeline') continue;
     if (col.defaultEvent?.name === skillName) {
-      return {
-        activationDuration: col.defaultEvent.defaultActivationDuration,
-        activeDuration: col.defaultEvent.defaultActiveDuration,
-        cooldownDuration: col.defaultEvent.defaultCooldownDuration,
-        segments: col.defaultEvent.segments,
-      };
+      return { segments: col.defaultEvent.segments };
     }
     if (col.eventVariants) {
       for (const v of col.eventVariants) {
         if (v.name === skillName) {
-          return {
-            activationDuration: v.defaultActivationDuration,
-            activeDuration: v.defaultActiveDuration,
-            cooldownDuration: v.defaultCooldownDuration,
-            segments: v.segments,
-          };
+          return { segments: v.segments };
         }
       }
     }
     if (col.columnId === columnId && col.defaultEvent) {
-      return {
-        activationDuration: col.defaultEvent.defaultActivationDuration,
-        activeDuration: col.defaultEvent.defaultActiveDuration,
-        cooldownDuration: col.defaultEvent.defaultCooldownDuration,
-        segments: col.defaultEvent.segments,
-      };
+      return { segments: col.defaultEvent.segments };
     }
   }
   return null;
@@ -395,15 +377,11 @@ export async function encodeEmbed(
     };
 
     const evDuration = eventDuration(ev);
+    const templateDuration = template?.segments ? computeSegmentsSpan(template.segments) : 0;
     if (template) {
-      if (evDuration !== template.activationDuration) compact.ad = evDuration;
-      // activeDuration and cooldownDuration are always 0 in the new model
-      if (0 !== template.activeDuration) compact.ac = 0;
-      if (0 !== template.cooldownDuration) compact.cd = 0;
+      if (evDuration !== templateDuration) compact.ad = evDuration;
     } else {
       compact.ad = evDuration;
-      compact.ac = 0;
-      compact.cd = 0;
     }
 
     if (ev.enemiesHit != null) compact.eh = ev.enemiesHit;
@@ -413,7 +391,7 @@ export async function encodeEmbed(
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
 
     // Encode ANIMATION segment duration so it survives round-trip even without column templates
-    const animSeg = origEv?.segments?.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+    const animSeg = origEv?.segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
     if (animSeg?.properties.duration) compact.an = animSeg.properties.duration;
 
     // Segment and frame deltas — compare original event's segments against template.
@@ -704,9 +682,8 @@ export async function decodeEmbed(
     const ownerId = SLOT_IDS[compact.o] ?? SLOT_IDS[0];
     const template = findEventTemplate(columns, compact.c, compact.s);
 
-    const totalDuration = (compact.ad ?? template?.activationDuration ?? 0)
-      + (compact.ac ?? template?.activeDuration ?? 0)
-      + (compact.cd ?? template?.cooldownDuration ?? 0);
+    const templateDuration = template?.segments ? computeSegmentsSpan(template.segments) : 0;
+    const totalDuration = compact.ad ?? templateDuration;
     const ev: TimelineEvent = {
       id: `ev-${i + 1}`,
       name: compact.s,

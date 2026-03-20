@@ -229,9 +229,6 @@ export function buildColumnContextMenu(
             atFrame,
             defaultSkill: {
               name: v.name,
-              defaultActivationDuration: v.defaultActivationDuration,
-              defaultActiveDuration: v.defaultActiveDuration,
-              defaultCooldownDuration: v.defaultCooldownDuration,
               ...(v.segments ? { segments: v.segments } : {}),
               ...(v.gaugeGain != null ? { gaugeGain: v.gaugeGain } : {}),
               ...(v.teamGaugeGain != null ? { teamGaugeGain: v.teamGaugeGain } : {}),
@@ -335,7 +332,7 @@ export function buildSegmentAddItems(
   interactionMode?: InteractionModeType,
 ): ContextMenuItem[] {
   const ev = events.find((e) => e.id === eventId);
-  if (!ev?.segments) return [];
+  if (!ev) return [];
   const col = columns.find((c): c is MiniTimeline =>
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const allSegments = col?.defaultEvent?.segments;
@@ -364,7 +361,7 @@ export function buildFrameAddItems(
   columns: Column[],
 ): ContextMenuItem[] {
   const ev = events.find((e) => e.id === eventId);
-  if (!ev?.segments?.[segmentIndex]) return [];
+  if (!ev?.segments[segmentIndex]) return [];
   const col = columns.find((c): c is MiniTimeline =>
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const seg = ev.segments[segmentIndex];

@@ -299,7 +299,7 @@ export function collectRawGaugeGains(
   for (const ev of events) {
     if (ev.columnId === SKILL_COLUMNS.BATTLE) {
       // Battle skills: gauge gain happens on the first frame of the event
-      const firstFrame = ev.segments?.[0]?.frames?.[0];
+      const firstFrame = ev.segments[0]?.frames?.[0];
       const gainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
       const naturalConsumed = naturalSpMap.get(ev.id) ?? 0;
       if (naturalConsumed > 0) {
@@ -312,7 +312,7 @@ export function collectRawGaugeGains(
         });
       }
       // Additional frame-level gauge gains (e.g. empowered battle skill extra ultimate recovery)
-      for (const seg of ev.segments ?? []) {
+      for (const seg of ev.segments) {
         for (const f of seg.frames ?? []) {
           if (f.gaugeGain && f.gaugeGain > 0) {
             gaugeEvents.push({
@@ -326,7 +326,7 @@ export function collectRawGaugeGains(
       }
     } else if (ev.columnId === SKILL_COLUMNS.COMBO) {
       // Combo skills: gauge gain from the first frame
-      const firstFrame = ev.segments?.[0]?.frames?.[0];
+      const firstFrame = ev.segments[0]?.frames?.[0];
       const selfGain = firstFrame?.gaugeGain ?? 0;
       const teamGain = firstFrame?.teamGaugeGain ?? 0;
       if (selfGain > 0 || teamGain > 0) {

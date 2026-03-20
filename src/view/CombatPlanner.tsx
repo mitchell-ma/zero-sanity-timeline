@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
-import { wouldOverlapNonOverlappable, clampDeltaByOverlap } from '../controller/timeline/eventController';
+import { wouldOverlapNonOverlappable, clampDeltaByOverlap } from '../controller/timeline/inputEventController';
 import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
 import { ENEMY_TIERS } from '../utils/enemies';
 import {
@@ -32,8 +32,8 @@ import {
   MiniTimeline,
   SelectedFrame,
   computeSegmentsSpan,
-  eventDuration,
   eventEndFrame,
+  durationSegment,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
@@ -1504,8 +1504,8 @@ export default function CombatPlanner({
         ],
       });
     } else {
-      const hasSegments = ev?.segments && ev.segments.length > 0;
-      const multiSegment = (ev?.segments?.length ?? 0) > 1;
+      const hasSegments = ev && ev.segments.length > 0;
+      const multiSegment = (ev?.segments.length ?? 0) > 1;
       const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
       const segAddItems = multiSegment && !isCombo
         ? buildSegmentAddItemsCtrl(eventId, events, columns, interactionMode).map(resolveMenuItemAction)
@@ -1580,8 +1580,8 @@ export default function CombatPlanner({
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
     const ev = events.find((ev) => ev.id === eventId);
-    const segLabel = ev?.segments?.[segmentIndex]?.properties.name;
-    const multiSegment = (ev?.segments?.length ?? 0) > 1;
+    const segLabel = ev?.segments[segmentIndex]?.properties.name;
+    const multiSegment = (ev?.segments.length ?? 0) > 1;
     const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
     const addSegItems = multiSegment && !isCombo
       ? buildSegmentAddItemsCtrl(eventId, events, columns, interactionMode).map(resolveMenuItemAction)
@@ -2055,7 +2055,7 @@ export default function CombatPlanner({
 
                   const buildEventBlockProps = (ev: TimelineEvent, pres: import('../controller/timeline/eventPresentationController').EventPresentation) => ({
                     event: pres.visualActivationDuration != null
-                      ? { ...ev, activationDuration: pres.visualActivationDuration, activeDuration: 0, cooldownDuration: 0 }
+                      ? { ...ev, segments: durationSegment(pres.visualActivationDuration) }
                       : ev,
                     zoom,
                     axis,

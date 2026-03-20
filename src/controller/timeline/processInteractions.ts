@@ -4,14 +4,24 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { LoadoutProperties } from '../../view/InformationPane';
-import { processEventQueue } from './eventQueue';
+import { processEventQueue } from './eventQueueController';
 import { mergeReactions, attachReactionFrames } from './processInfliction';
+import type { DerivedEventController } from './derivedEventController';
 
 // Re-export commonly used types and constants from sub-modules
 export type { TimeStopRegion } from './processTimeStop';
 export { collectTimeStopRegions, extendByTimeStops } from './processTimeStop';
 export type { SlotTriggerWiring } from './processComboSkill';
 export { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame, getFinalStrikeTriggerFrame, hasActiveEventInColumns } from './processComboSkill';
+
+// ── Last-computed controller ─────────────────────────────────────────────────
+
+let _lastController: DerivedEventController | null = null;
+
+/** Get the DerivedEventController from the most recent processInflictionEvents run. */
+export function getLastController(): DerivedEventController {
+  return _lastController!;
+}
 
 /**
  * Processes raw timeline events into renderable events.
@@ -29,12 +39,12 @@ export function processInflictionEvents(
   /** Slot ID → gear set type mapping for gear effect derivation. */
   slotGearSets?: Record<string, string | undefined>,
 ): TimelineEvent[] {
-  let events = processEventQueue(
+  const { events, controller } = processEventQueue(
     rawEvents, loadoutProperties, slotWeapons, slotWirings,
     slotOperatorMap, slotGearSets,
   );
+  _lastController = controller;
   // Merge overlapping same-type reactions (refresh + inherit max statusLevel),
   // then rebuild their segments with the merged stats.
-  events = attachReactionFrames(mergeReactions(events));
-  return events;
+  return attachReactionFrames(mergeReactions(events));
 }

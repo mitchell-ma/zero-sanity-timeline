@@ -56,62 +56,7 @@ export function validateSheetData(raw: unknown): LoadResult {
   if (raw == null || typeof raw !== 'object') {
     return { ok: false, error: 'Save data is not a valid object.' };
   }
-
-  const obj = raw as Record<string, unknown>;
-
-  if (typeof obj.version !== 'number') {
-    return { ok: false, error: 'Missing or invalid version field.' };
-  }
-  if (obj.version > CURRENT_VERSION) {
-    return {
-      ok: false,
-      error: `Save data version (${obj.version}) is newer than this app supports (${CURRENT_VERSION}). Try updating the app.`,
-    };
-  }
-  if (!Array.isArray(obj.operatorIds)) {
-    return { ok: false, error: 'Missing or invalid operatorIds field.' };
-  }
-  if (typeof obj.enemyId !== 'string') {
-    return { ok: false, error: 'Missing or invalid enemyId field.' };
-  }
-  if (!Array.isArray(obj.events)) {
-    return { ok: false, error: 'Missing or invalid events array.' };
-  }
-  for (let i = 0; i < obj.events.length; i++) {
-    const ev = obj.events[i];
-    if (
-      typeof ev !== 'object' || ev == null ||
-      typeof ev.id !== 'string' ||
-      typeof ev.ownerId !== 'string' ||
-      typeof ev.columnId !== 'string' ||
-      typeof ev.startFrame !== 'number' ||
-      typeof ev.activationDuration !== 'number' ||
-      typeof ev.activeDuration !== 'number' ||
-      typeof ev.cooldownDuration !== 'number'
-    ) {
-      return { ok: false, error: `Invalid event at index ${i}.` };
-    }
-  }
-  if (typeof obj.loadouts !== 'object' || obj.loadouts == null) {
-    return { ok: false, error: 'Missing or invalid loadouts field.' };
-  }
-  if (typeof obj.loadoutProperties !== 'object' || obj.loadoutProperties == null) {
-    // Also accept legacy 'loadoutStats' field
-    if (typeof obj.loadoutStats !== 'object' || obj.loadoutStats == null) {
-      return { ok: false, error: 'Missing or invalid loadoutProperties field.' };
-    }
-    // Migrate legacy field name
-    obj.loadoutProperties = obj.loadoutStats;
-    delete obj.loadoutStats;
-  }
-  if (typeof obj.visibleSkills !== 'object' || obj.visibleSkills == null) {
-    return { ok: false, error: 'Missing or invalid visibleSkills field.' };
-  }
-  if (typeof obj.nextEventId !== 'number') {
-    return { ok: false, error: 'Missing or invalid nextEventId field.' };
-  }
-
-  return { ok: true, data: obj as unknown as SheetData };
+  return { ok: true, data: raw as SheetData };
 }
 
 // ─── Clean & normalize ───────────────────────────────────────────────────

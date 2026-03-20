@@ -19,7 +19,7 @@ import {
   type WeaponFragilityEffect,
   type OperatorTalentFragility,
 } from '../timeline/eventsQueryService';
-import { getLastController } from '../timeline/eventQueue';
+import { getLastController } from '../timeline/processInteractions';
 import { getWeaponEffectDefs, resolveTargetDisplay } from '../../model/game-data/weaponGearEffectLoader';
 import { INFLICTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 import type { Slot } from '../timeline/columnBuilder';
@@ -120,7 +120,7 @@ function resolvePhysicalStatusStagger(
 ): void {
   for (const ev of events) {
     if (!PHYSICAL_STATUS_COLUMN_IDS.has(ev.columnId)) continue;
-    if (!ev.segments || !ev.sourceOwnerId) continue;
+    if (!ev.sourceOwnerId) continue;
 
     const artsIntensity = aggregatedStats[ev.sourceOwnerId]?.stats[StatType.ARTS_INTENSITY] ?? 0;
     const stagger = getPhysicalStatusStagger(ev.columnId as PhysicalStatusType, artsIntensity);

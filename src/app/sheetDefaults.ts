@@ -11,7 +11,7 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES, getDefaultLoadoutPropert
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
-import { setNextEventId, genEventId } from '../controller/timeline/eventController';
+import { setNextEventId, genEventId } from '../controller/timeline/inputEventController';
 import { IS_DEV } from '../consts/devFlags';
 
 export const NUM_SLOTS = 4;
