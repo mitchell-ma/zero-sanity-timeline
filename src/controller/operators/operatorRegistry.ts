@@ -86,7 +86,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     two?: { name: string; maxLevel: number };
     attributeIncrease?: { name: string; attribute: string };
   } | undefined;
-  const opSkills = opJson.skills as Record<string, any> | undefined;
+  const opSkills = opJson.skills as Record<string, Record<string, unknown>> | undefined;
 
   // Display color: always derived from element
   const color = ELEMENT_COLORS[elementType as ElementType] ?? '#888888';
@@ -123,7 +123,6 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     defaultActiveDuration: number;
     defaultCooldownDuration: number;
     triggerCondition: string | null;
-    animationDuration?: number;
   }> = {
     basic: {
       defaultActivationDuration: basicActivation,
@@ -142,14 +141,12 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
       defaultActiveDuration: 0,
       defaultCooldownDuration: timings.comboCd,
       triggerCondition: null,
-      animationDuration: timings.comboAnimDur,
     },
     ultimate: {
       defaultActivationDuration: timings.ultAnimDur,
       defaultActiveDuration: ultActiveDur,
       defaultCooldownDuration: ultCooldown,
       triggerCondition: null,
-      animationDuration: timings.ultAnimDur,
     },
   };
 
@@ -158,11 +155,10 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     const skillName = categoryToName[key] ?? key;
     const categoryKey = key === 'basic' ? 'BASIC_ATTACK' : key === 'battle' ? 'BATTLE_SKILL'
       : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';
-    const rawEntry = typeMap[categoryKey] as any;
-    const resolvedSkillId = typeof rawEntry === 'string' ? rawEntry
-      : rawEntry?.BATK ?? categoryKey;
+    const rawEntry: string | undefined = typeMap[categoryKey];
+    const resolvedSkillId = rawEntry ?? categoryKey;
     const catData = opSkills?.[resolvedSkillId];
-    const desc = catData?.description;
+    const desc = (catData?.properties as Record<string, unknown> | undefined)?.description as string | undefined;
     skills[key] = { name: skillName, element: elementType, ...timing, ...(desc ? { description: desc } : {}) };
   }
 
@@ -184,7 +180,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
 
   // SP return notes from JSON (resolve via skillTypeMap)
   const battleSkillId = typeMap.BATTLE_SKILL;
-  const spReturnNotes = battleSkillId ? opSkills?.[battleSkillId]?.spReturnNotes : undefined;
+  const spReturnNotes = (battleSkillId ? opSkills?.[battleSkillId]?.spReturnNotes : undefined) as string[] | undefined;
   if (skills.battle && spReturnNotes?.length) {
     skills.battle = { ...skills.battle, spReturnNotes };
   }
@@ -353,7 +349,7 @@ export function getUltimateEnergyCostForPotential(
 export function getOperatorConfig(operatorId: string): OperatorStatConfig | null {
   // Built-in operator JSON
   const json = getOperatorJson(operatorId);
-  if (json) return json as OperatorStatConfig;
+  if (json) return json as unknown as OperatorStatConfig;
 
   // Custom operator (id stored as custom_<id>, strip prefix for lookup)
   const customId = operatorId.startsWith('custom_') ? operatorId.slice(7) : operatorId;

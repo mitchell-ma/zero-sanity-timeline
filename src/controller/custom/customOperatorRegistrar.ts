@@ -23,12 +23,18 @@ const DEFAULT_SKILL: CustomCombatSkillDef = {
  * This bridges the CustomOperator type to the same operator JSON format
  * used by built-in operators.
  */
+/** Find the first skill of a given type, or return a default. */
+function findSkill(skills: CustomCombatSkillDef[], type: CombatSkillType): CustomCombatSkillDef {
+  return skills.find(s => s.combatSkillType === type) ?? { ...DEFAULT_SKILL, combatSkillType: type };
+}
+
 function customOperatorToJson(operator: CustomOperator): Record<string, unknown> {
-  const skills = operator.skills ?? {
-    basicAttack: { ...DEFAULT_SKILL, name: 'Basic Attack', combatSkillType: CombatSkillType.BASIC_ATTACK },
-    battleSkill: { ...DEFAULT_SKILL, name: 'Battle Skill', combatSkillType: CombatSkillType.BATTLE_SKILL },
-    comboSkill: { ...DEFAULT_SKILL, name: 'Combo Skill', combatSkillType: CombatSkillType.COMBO_SKILL },
-    ultimate: { ...DEFAULT_SKILL, name: 'Ultimate', combatSkillType: CombatSkillType.ULTIMATE, durationSeconds: 3 },
+  const skillArr = operator.skills ?? [];
+  const skills = {
+    basicAttack: findSkill(skillArr, CombatSkillType.BASIC_ATTACK),
+    battleSkill: findSkill(skillArr, CombatSkillType.BATTLE_SKILL),
+    comboSkill: findSkill(skillArr, CombatSkillType.COMBO_SKILL),
+    ultimate: findSkill(skillArr, CombatSkillType.ULTIMATE),
   };
   const json: Record<string, unknown> = {
     operatorType: operator.id.toUpperCase(),
@@ -67,7 +73,11 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         id: skills.battleSkill.name,
         duration: { value: skills.battleSkill.durationSeconds, unit: 'SECOND' },
         ...(skills.battleSkill.animationSeconds
-          ? { animation: { duration: { value: skills.battleSkill.animationSeconds, unit: 'SECOND' } } }
+          ? { segments: [{
+            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
+            properties: { name: 'Animation', duration: { value: skills.battleSkill.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            frames: [],
+          }] }
           : {}),
         ...(skills.battleSkill.resourceInteractions?.length
           ? { effects: skills.battleSkill.resourceInteractions.map(r => ({
@@ -83,7 +93,11 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
           ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
           : {}),
         ...(skills.comboSkill.animationSeconds
-          ? { animation: { duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' } } }
+          ? { segments: [{
+            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
+            properties: { name: 'Animation', duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            frames: [],
+          }] }
           : {}),
         // Combo trigger
         ...(operator.combo.onTriggerClause.length > 0 ? {
@@ -98,7 +112,11 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         id: skills.ultimate.name,
         duration: { value: skills.ultimate.durationSeconds, unit: 'SECOND' },
         ...(skills.ultimate.animationSeconds
-          ? { animation: { duration: { value: skills.ultimate.animationSeconds, unit: 'SECOND' } } }
+          ? { segments: [{
+            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
+            properties: { name: 'Animation', duration: { value: skills.ultimate.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            frames: [],
+          }] }
           : {}),
         effects: [
           { toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', cardinality: 300 },

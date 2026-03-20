@@ -1,6 +1,7 @@
-import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { TimelineEvent, getAnimationDuration } from '../../consts/viewTypes';
 import { TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
+import type { TimeStopRange } from './resourceTimeline';
 
 // ── Time-stop region types ──────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ export interface TimeStopRegion {
 }
 
 export function isTimeStopEvent(ev: TimelineEvent): boolean {
-  const anim = ev.animationDuration ?? 0;
+  const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
   return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
     (ev.columnId === 'dash' && !!ev.isPerfectDodge);
@@ -24,9 +25,20 @@ export function collectTimeStopRegions(events: TimelineEvent[]): readonly TimeSt
     if (!isTimeStopEvent(ev)) continue;
     stops.push({
       startFrame: ev.startFrame,
-      durationFrames: ev.animationDuration!,
+      durationFrames: getAnimationDuration(ev),
       eventId: ev.id,
     });
+  }
+  stops.sort((a, b) => a.startFrame - b.startFrame);
+  return stops;
+}
+
+/** Extract time-stop ranges (startFrame, endFrame) from processed events. */
+export function collectTimeStopRanges(events: ReadonlyArray<TimelineEvent>): TimeStopRange[] {
+  const stops: TimeStopRange[] = [];
+  for (const ev of events) {
+    if (!isTimeStopEvent(ev)) continue;
+    stops.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + getAnimationDuration(ev) });
   }
   stops.sort((a, b) => a.startFrame - b.startFrame);
   return stops;
@@ -113,7 +125,7 @@ export function applyTimeStopExtension(
     if (extended.has(ev.id)) return ev;
 
     const isOwn = isTimeStopEvent(ev);
-    const animDur = ev.animationDuration ?? 0;
+    const animDur = getAnimationDuration(ev);
 
     // Foreign stops = all stops except this event's own
     const foreignStops = isOwn
@@ -122,22 +134,22 @@ export function applyTimeStopExtension(
     if (foreignStops.length === 0) return ev;
 
     // ── Sequenced events ─────────────────────────────────────────────────
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       let rawOffset = 0;      // cumulative raw (base) offset — for animation boundary checks
       let derivedOffset = 0;  // cumulative derived offset — real start of next segment
       let changed = false;
       const newSegments = ev.segments.map((seg) => {
         const rawSegStart = rawOffset;
-        rawOffset += seg.durationFrames;
+        rawOffset += seg.properties.duration;
 
-        if (seg.timeDependency === TimeDependency.REAL_TIME || seg.durationFrames === 0) {
-          derivedOffset += seg.durationFrames;
+        if (seg.properties.timeDependency === TimeDependency.REAL_TIME || seg.properties.duration === 0) {
+          derivedOffset += seg.properties.duration;
           return seg;
         }
 
         // For time-stop events, segments within animation are not extended
-        if (isOwn && animDur > 0 && rawSegStart + seg.durationFrames <= animDur) {
-          derivedOffset += seg.durationFrames;
+        if (isOwn && animDur > 0 && rawSegStart + seg.properties.duration <= animDur) {
+          derivedOffset += seg.properties.duration;
           return seg;
         }
 
@@ -145,56 +157,27 @@ export function applyTimeStopExtension(
         if (isOwn && animDur > 0 && rawSegStart < animDur) {
           // Segment straddles animation boundary — only extend post-anim portion
           const animPortion = animDur - rawSegStart;
-          const postAnimPortion = seg.durationFrames - animPortion;
+          const postAnimPortion = seg.properties.duration - animPortion;
           ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
         } else {
           // Use derived offset for real start position, raw duration as base
-          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.durationFrames, foreignStops);
+          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.properties.duration, foreignStops);
         }
 
         derivedOffset += ext;
 
-        if (ext === seg.durationFrames) return seg;
+        if (ext === seg.properties.duration) return seg;
         changed = true;
-        return { ...seg, durationFrames: ext };
+        return { ...seg, properties: { ...seg.properties, duration: ext } };
       });
 
       if (!changed) return ev;
       extended.add(ev.id);
-      return {
-        ...ev,
-        activationDuration: computeSegmentsSpan(newSegments),
-        segments: newSegments,
-      };
+      return { ...ev, segments: newSegments };
     }
 
-    // ── 3-phase events ───────────────────────────────────────────────────
-    if (ev.timeDependency === TimeDependency.REAL_TIME) return ev;
-
-    let newActivation = ev.activationDuration;
-    let newActive = ev.activeDuration;
-
-    if (!isOwn || animDur <= 0) {
-      if (ev.activationDuration > 0) {
-        newActivation = extendByTimeStops(ev.startFrame, ev.activationDuration, foreignStops);
-      }
-      if (ev.activeDuration > 0) {
-        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
-      }
-    } else {
-      // Time-stop event: animation portion not extended, post-anim is
-      if (ev.activationDuration > animDur) {
-        const postAnim = ev.activationDuration - animDur;
-        newActivation = animDur + extendByTimeStops(ev.startFrame + animDur, postAnim, foreignStops);
-      }
-      if (ev.activeDuration > 0) {
-        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
-      }
-    }
-
-    if (newActivation === ev.activationDuration && newActive === ev.activeDuration) return ev;
-    extended.add(ev.id);
-    return { ...ev, activationDuration: newActivation, activeDuration: newActive };
+    // All events should have segments at this point
+    return ev;
   });
 
   return result;
@@ -212,11 +195,10 @@ export function resolveFramePositions(
   if (stops.length === 0) {
     // No time-stops: offsets unchanged, absoluteFrame = eventStart + cumulativeOffset + offsetFrame
     return events.map((ev) => {
-      if (!ev.segments) return ev;
       let cumulativeOffset = 0;
       const newSegments = ev.segments.map((seg) => {
         const segStart = cumulativeOffset;
-        cumulativeOffset += seg.durationFrames;
+        cumulativeOffset += seg.properties.duration;
         if (!seg.frames) return seg;
         return {
           ...seg,
@@ -232,12 +214,11 @@ export function resolveFramePositions(
   }
 
   return events.map((ev) => {
-    if (!ev.segments) return ev;
     const fStops = foreignStopsFor(ev, stops);
     let cumulativeOffset = 0;
     const newSegments = ev.segments.map((seg) => {
       const segStart = cumulativeOffset;
-      cumulativeOffset += seg.durationFrames;
+      cumulativeOffset += seg.properties.duration;
       if (!seg.frames) return seg;
       const segAbsStart = ev.startFrame + segStart;
       return {

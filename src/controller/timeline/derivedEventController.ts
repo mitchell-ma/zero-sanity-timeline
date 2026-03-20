@@ -15,8 +15,8 @@
  *
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
-import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillsType, EventStatusType, TimeDependency } from '../../consts/enums';
+import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
+import { CombatSkillsType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { REACTION_DURATION, buildReactionSegment, buildCorrosionSegments } from './processInfliction';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
@@ -75,12 +75,12 @@ export class DerivedEventController {
       let ev = events[i];
 
       // Combo chaining: truncate overlapping combo animations
-      if (ev.columnId === SKILL_COLUMNS.COMBO && (ev.animationDuration ?? 0) > 0) {
+      if (ev.columnId === SKILL_COLUMNS.COMBO && getAnimationDuration(ev) > 0) {
         ev = this.handleComboChaining(ev);
       }
 
       // Auto-build reaction segments for freeform reaction events
-      if (!ev.segments && REACTION_COLUMN_IDS.has(ev.columnId)) {
+      if (REACTION_COLUMN_IDS.has(ev.columnId)) {
         if (ev.columnId === REACTION_COLUMNS.CORROSION) {
           const segs = buildCorrosionSegments(ev);
           if (segs) ev = { ...ev, segments: segs };
@@ -123,10 +123,23 @@ export class DerivedEventController {
       const ultFrame = ult.startFrame;
       for (const ev of this.registeredEvents) {
         if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-        const activeEnd = ev.startFrame + ev.activationDuration + ev.activeDuration;
-        const cooldownEnd = activeEnd + ev.cooldownDuration;
+        // With segments, compute pre-cooldown and total duration
+        let preCooldownDur = 0;
+        let totalDur = 0;
+        for (const s of ev.segments) {
+          totalDur += s.properties.duration;
+          if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
+        }
+        const activeEnd = ev.startFrame + preCooldownDur;
+        const cooldownEnd = ev.startFrame + totalDur;
         if (ultFrame >= activeEnd && ultFrame < cooldownEnd) {
-          modified.set(ev.id, { ...ev, cooldownDuration: Math.max(0, ultFrame - activeEnd) });
+          // Truncate cooldown at ultimate cast frame
+          const newTotal = ultFrame - ev.startFrame;
+          modified.set(ev.id, { ...ev, segments: ev.segments.map(s => {
+            if (s.properties.name !== 'Cooldown') return s;
+            const cooldownRemaining = Math.max(0, newTotal - preCooldownDur);
+            return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
+          }) });
         }
       }
     }
@@ -153,12 +166,11 @@ export class DerivedEventController {
    */
   cacheFramePositions() {
     this.registeredEvents = this.registeredEvents.map(ev => {
-      if (!ev.segments) return ev;
       const fStops = this.foreignStopsFor(ev);
       let cumulativeOffset = 0;
       const newSegments = ev.segments.map(seg => {
         const segStart = cumulativeOffset;
-        cumulativeOffset += seg.durationFrames;
+        cumulativeOffset += seg.properties.duration;
         if (!seg.frames) return seg;
         const segAbsStart = ev.startFrame + segStart;
         if (this.stops.length === 0) {
@@ -184,10 +196,47 @@ export class DerivedEventController {
   }
 
   /**
-   * Validate that events starting inside time-stop regions are allowed.
-   * Attaches warnings to events that violate game rules.
+   * Validate events after processing:
+   * 1. Sibling events in the same column must not overlap.
+   * 2. Events starting inside time-stop regions must be allowed per game rules.
+   * Attaches warnings to events that violate these constraints.
    */
   validateAll() {
+    // ── Sibling overlap ───────────────────────────────────────────────────
+    // Group events by owner+column and check for overlaps using processed ranges.
+    {
+      const byKey = new Map<string, TimelineEvent[]>();
+      for (const ev of this.registeredEvents) {
+        const k = `${ev.ownerId}:${ev.columnId}:${ev.name}`;
+        const arr = byKey.get(k) ?? [];
+        arr.push(ev);
+        byKey.set(k, arr);
+      }
+
+      const overlapIds = new Set<string>();
+      for (const group of Array.from(byKey.values())) {
+        if (group.length < 2) continue;
+        const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const cur = sorted[i];
+          const next = sorted[i + 1];
+          const curRange = computeSegmentsSpan(cur.segments);
+          if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
+            overlapIds.add(cur.id);
+            overlapIds.add(next.id);
+          }
+        }
+      }
+
+      if (overlapIds.size > 0) {
+        this.registeredEvents = this.registeredEvents.map(ev => {
+          if (!overlapIds.has(ev.id)) return ev;
+          return { ...ev, warnings: [...(ev.warnings ?? []), 'Overlaps with another event in the same column'] };
+        });
+      }
+    }
+
+    // ── Time-stop start validation ────────────────────────────────────────
     if (this.stops.length === 0) return;
 
     const evById = new Map<string, TimelineEvent>();
@@ -256,6 +305,18 @@ export class DerivedEventController {
     return this.output;
   }
 
+  /** Get the base (pre-time-stop) activation duration for an event, or undefined if not extended. */
+  getBaseDuration(eventId: string): number | undefined {
+    return this.rawDurations.get(eventId);
+  }
+
+  /** Merge raw durations from another controller (e.g. queue controller into main state). */
+  mergeRawDurations(other: DerivedEventController) {
+    other.rawDurations.forEach((dur, id) => {
+      if (!this.rawDurations.has(id)) this.rawDurations.set(id, dur);
+    });
+  }
+
   /** Mark queue-created event IDs as extended (they're already in timeline-time). */
   markExtended(ids: string[]) {
     for (const id of ids) this.extendedIds.add(id);
@@ -292,11 +353,10 @@ export class DerivedEventController {
         const reactionColumnId = INFLICTION_TO_REACTION[columnId];
         if (reactionColumnId) {
           for (const consumed of otherActive) {
-            consumed.activationDuration = frame - consumed.startFrame;
+            setEventDuration(consumed, frame - consumed.startFrame);
             consumed.eventStatus = EventStatusType.CONSUMED;
             consumed.eventStatusOwnerId = source.ownerId;
             consumed.eventStatusSkillName = source.skillName;
-            trimSegments(consumed);
           }
           this.createReaction(reactionColumnId, ENEMY_OWNER_ID, frame, REACTION_DURATION, source, {
             id: `${options?.id ?? columnId}-reaction`,
@@ -310,9 +370,7 @@ export class DerivedEventController {
             ownerId,
             columnId,
             startFrame: frame,
-            activationDuration: 0,
-            activeDuration: 0,
-            cooldownDuration: 0,
+            segments: [{ properties: { duration: 0 } }],
             sourceOwnerId: source.ownerId,
             sourceSkillName: source.skillName,
             eventStatus: EventStatusType.CONSUMED,
@@ -330,13 +388,15 @@ export class DerivedEventController {
     const existing = this.stacks.get(key) ?? [];
     const active = this.activeEventsIn(columnId, ownerId, frame);
 
+    // Arts Burst: same-element arts infliction stacking (not cross-element, not physical)
+    const isArtsBurst = INFLICTION_COLUMN_IDS.has(columnId) && active.length > 0;
+
     if (active.length >= MAX_INFLICTION_STACKS) {
       const oldest = active[0];
-      oldest.activationDuration = frame - oldest.startFrame;
+      setEventDuration(oldest, frame - oldest.startFrame);
       oldest.eventStatus = EventStatusType.CONSUMED;
       oldest.eventStatusOwnerId = source.ownerId;
       oldest.eventStatusSkillName = source.skillName;
-      trimSegments(oldest);
     }
 
     const rawDur = durationFrames;
@@ -347,11 +407,10 @@ export class DerivedEventController {
       ownerId,
       columnId,
       startFrame: frame,
-      activationDuration: extendedDuration,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: extendedDuration } }],
       sourceOwnerId: source.ownerId,
       sourceSkillName: source.skillName,
+      ...(isArtsBurst && { isArtsBurst: true }),
     };
     this.rawDurations.set(ev.id, rawDur);
     existing.push(ev);
@@ -363,9 +422,9 @@ export class DerivedEventController {
     const remainingActive = this.activeEventsIn(columnId, ownerId, frame);
     for (const act of remainingActive) {
       if (act.id === ev.id) continue;
-      const actEnd = act.startFrame + act.activationDuration;
+      const actEnd = act.startFrame + eventDuration(act);
       if (newEnd > actEnd) {
-        act.activationDuration = newEnd - act.startFrame;
+        setEventDuration(act, newEnd - act.startFrame);
         act.eventStatus = EventStatusType.EXTENDED;
         act.eventStatusOwnerId = source.ownerId;
         act.eventStatusSkillName = source.skillName;
@@ -389,9 +448,7 @@ export class DerivedEventController {
       ownerId,
       columnId,
       startFrame: frame,
-      activationDuration: durationFrames,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: durationFrames } }],
       sourceOwnerId: source.ownerId,
       sourceSkillName: source.skillName,
       statusLevel: options?.statusLevel,
@@ -399,27 +456,25 @@ export class DerivedEventController {
       forcedReaction: options?.forcedReaction,
     };
 
-    const rawDur = ev.activationDuration;
-    ev.activationDuration = this.extendDuration(ev.startFrame, rawDur);
-
+    const rawDur = durationFrames;
+    setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur));
     const key = this.key(ev.columnId, ev.ownerId);
     const existing = this.stacks.get(key) ?? [];
     const active = existing.filter(r =>
       r.eventStatus !== EventStatusType.CONSUMED &&
       r.eventStatus !== EventStatusType.REFRESHED &&
-      r.startFrame <= ev.startFrame && ev.startFrame < r.startFrame + r.activationDuration
+      r.startFrame <= ev.startFrame && ev.startFrame < r.startFrame + eventDuration(r)
     );
 
     if (active.length > 0) {
       const prev = active[active.length - 1];
-      const prevEnd = prev.startFrame + prev.activationDuration;
+      const prevEnd = prev.startFrame + eventDuration(prev);
 
       if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-        prev.activationDuration = ev.startFrame - prev.startFrame;
+        setEventDuration(prev, ev.startFrame - prev.startFrame);
         prev.eventStatus = EventStatusType.REFRESHED;
         prev.eventStatusOwnerId = source.ownerId;
         prev.eventStatusSkillName = source.skillName;
-        trimSegments(prev);
 
         const prevStatusLevel = prev.statusLevel ?? 1;
         const prevStacks = prev.inflictionStacks ?? 1;
@@ -433,30 +488,28 @@ export class DerivedEventController {
           elapsedSeconds,
         ) * getCorrosionReductionMultiplier(oldArtsIntensity);
 
-        ev.activationDuration = Math.max(remainingOldDuration, ev.activationDuration);
+        setEventDuration(ev, Math.max(remainingOldDuration, eventDuration(ev)));
         ev.statusLevel = Math.max(prevStatusLevel, ev.statusLevel ?? 1);
         ev.inflictionStacks = Math.max(prevStacks, ev.inflictionStacks ?? 1);
         ev.reductionFloor = Math.max(oldReductionFloor, oldBaseReduction);
       } else {
-        const newEnd = ev.startFrame + ev.activationDuration;
+        const newEnd = ev.startFrame + eventDuration(ev);
         if (newEnd >= prevEnd) {
-          prev.activationDuration = ev.startFrame - prev.startFrame;
+          setEventDuration(prev, ev.startFrame - prev.startFrame);
           prev.eventStatus = EventStatusType.REFRESHED;
           prev.eventStatusOwnerId = source.ownerId;
           prev.eventStatusSkillName = source.skillName;
-          trimSegments(prev);
         }
       }
     }
 
-    if (!ev.segments) {
-      if (ev.columnId === REACTION_COLUMNS.CORROSION) {
-        const segs = buildCorrosionSegments(ev);
-        if (segs) ev.segments = segs;
-      } else {
-        const seg = buildReactionSegment(ev);
-        if (seg) ev.segments = [seg];
-      }
+    // Rebuild segments for reaction events (corrosion gets per-second segments, others get a single segment)
+    if (ev.columnId === REACTION_COLUMNS.CORROSION) {
+      const segs = buildCorrosionSegments(ev);
+      if (segs) ev.segments = segs;
+    } else {
+      const seg = buildReactionSegment(ev);
+      if (seg) ev.segments = [seg];
     }
 
     this.rawDurations.set(ev.id, rawDur);
@@ -492,9 +545,7 @@ export class DerivedEventController {
       ownerId,
       columnId,
       startFrame: frame,
-      activationDuration: durationFrames,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: durationFrames } }],
       sourceOwnerId: source.ownerId,
       sourceSkillName: source.skillName,
       ...options?.event,
@@ -504,11 +555,10 @@ export class DerivedEventController {
       // Subsume older: clamp all active, keep the new one
       const active = this.activeEventsIn(columnId, ownerId, frame);
       for (const act of active) {
-        act.activationDuration = frame - act.startFrame;
+        setEventDuration(act, frame - act.startFrame);
         act.eventStatus = EventStatusType.CONSUMED;
         act.eventStatusOwnerId = source.ownerId;
         act.eventStatusSkillName = source.skillName;
-        trimSegments(act);
       }
     }
 
@@ -532,11 +582,10 @@ export class DerivedEventController {
       .sort((a, b) => a.startFrame - b.startFrame);
     const toAbsorb = allActive.slice(0, count);
     for (const ev of toAbsorb) {
-      ev.activationDuration = frame - ev.startFrame;
+      setEventDuration(ev, frame - ev.startFrame);
       ev.eventStatus = EventStatusType.CONSUMED;
       ev.eventStatusOwnerId = source.ownerId;
       ev.eventStatusSkillName = source.skillName;
-      trimSegments(ev);
     }
     return toAbsorb.length;
   }
@@ -602,8 +651,7 @@ export class DerivedEventController {
    * combo time-stops. Truncations are applied in both directions.
    */
   private handleComboChaining(ev: TimelineEvent): TimelineEvent {
-    let animDur = ev.animationDuration!;
-    let activationDur = ev.activationDuration;
+    let animDur = getAnimationDuration(ev);
     const evEnd = ev.startFrame + animDur;
     let changed = false;
 
@@ -619,8 +667,7 @@ export class DerivedEventController {
           const reg = this.registeredEvents[regIdx];
           this.registeredEvents[regIdx] = {
             ...reg,
-            animationDuration: truncated,
-            activationDuration: Math.min(reg.activationDuration, truncated),
+            segments: setAnimationSegmentDuration(reg.segments, truncated),
           };
         }
         // Update the stop region
@@ -634,7 +681,6 @@ export class DerivedEventController {
       if (cs.startFrame > ev.startFrame && cs.startFrame < evEnd) {
         const truncated = cs.startFrame - ev.startFrame;
         animDur = truncated;
-        activationDur = Math.min(activationDur, truncated);
         changed = true;
         break;
       }
@@ -645,7 +691,10 @@ export class DerivedEventController {
     this.comboStops.sort((a, b) => a.startFrame - b.startFrame);
 
     if (changed) {
-      return { ...ev, animationDuration: animDur, activationDuration: activationDur };
+      return {
+        ...ev,
+        segments: setAnimationSegmentDuration(ev.segments, animDur),
+      };
     }
     return ev;
   }
@@ -658,7 +707,7 @@ export class DerivedEventController {
     this.registeredStopIds.add(ev.id);
     this.stops.push({
       startFrame: ev.startFrame,
-      durationFrames: ev.animationDuration!,
+      durationFrames: getAnimationDuration(ev),
       eventId: ev.id,
     });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
@@ -682,77 +731,53 @@ export class DerivedEventController {
    */
   private extendSingleEvent(ev: TimelineEvent): TimelineEvent {
     const isOwn = isTimeStopEvent(ev);
-    const animDur = ev.animationDuration ?? 0;
+    const animDur = getAnimationDuration(ev);
     const foreignStops = isOwn
       ? this.stops.filter(s => s.eventId !== ev.id)
       : this.stops;
     if (foreignStops.length === 0) return ev;
 
     // ── Segmented events ───────────────────────────────────────────────
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       let rawOffset = 0;
       let derivedOffset = 0;
       let changed = false;
       const newSegments = ev.segments.map(seg => {
         const rawSegStart = rawOffset;
-        rawOffset += seg.durationFrames;
+        rawOffset += seg.properties.duration;
 
-        if (seg.timeDependency === TimeDependency.REAL_TIME || seg.durationFrames === 0) {
-          derivedOffset += seg.durationFrames;
+        if (seg.properties.timeDependency === TimeDependency.REAL_TIME || seg.properties.duration === 0) {
+          derivedOffset += seg.properties.duration;
           return seg;
         }
 
-        if (isOwn && animDur > 0 && rawSegStart + seg.durationFrames <= animDur) {
-          derivedOffset += seg.durationFrames;
+        if (isOwn && animDur > 0 && rawSegStart + seg.properties.duration <= animDur) {
+          derivedOffset += seg.properties.duration;
           return seg;
         }
 
         let ext: number;
         if (isOwn && animDur > 0 && rawSegStart < animDur) {
           const animPortion = animDur - rawSegStart;
-          const postAnimPortion = seg.durationFrames - animPortion;
+          const postAnimPortion = seg.properties.duration - animPortion;
           ext = animPortion + extendByTimeStops(ev.startFrame + animDur, postAnimPortion, foreignStops);
         } else {
-          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.durationFrames, foreignStops);
+          ext = extendByTimeStops(ev.startFrame + derivedOffset, seg.properties.duration, foreignStops);
         }
 
         derivedOffset += ext;
-        if (ext === seg.durationFrames) return seg;
+        if (ext === seg.properties.duration) return seg;
         changed = true;
-        return { ...seg, durationFrames: ext };
+        return { ...seg, properties: { ...seg.properties, duration: ext } };
       });
 
       if (!changed) return ev;
       this.extendedIds.add(ev.id);
-      return { ...ev, activationDuration: computeSegmentsSpan(newSegments), segments: newSegments };
+      return { ...ev, segments: newSegments };
     }
 
-    // ── 3-phase events ─────────────────────────────────────────────────
-    if (ev.timeDependency === TimeDependency.REAL_TIME) return ev;
-
-    let newActivation = ev.activationDuration;
-    let newActive = ev.activeDuration;
-
-    if (!isOwn || animDur <= 0) {
-      if (ev.activationDuration > 0) {
-        newActivation = extendByTimeStops(ev.startFrame, ev.activationDuration, foreignStops);
-      }
-      if (ev.activeDuration > 0) {
-        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
-      }
-    } else {
-      if (ev.activationDuration > animDur) {
-        const postAnim = ev.activationDuration - animDur;
-        newActivation = animDur + extendByTimeStops(ev.startFrame + animDur, postAnim, foreignStops);
-      }
-      if (ev.activeDuration > 0) {
-        newActive = extendByTimeStops(ev.startFrame + newActivation, ev.activeDuration, foreignStops);
-      }
-    }
-
-    if (newActivation === ev.activationDuration && newActive === ev.activeDuration) return ev;
-    this.extendedIds.add(ev.id);
-    return { ...ev, activationDuration: newActivation, activeDuration: newActive };
+    // All events should have segments at this point
+    return ev;
   }
 
   private reExtendQueueEvents() {
@@ -762,7 +787,7 @@ export class DerivedEventController {
         if (ev.eventStatus === EventStatusType.EXTENDED) continue;
         const raw = this.rawDurations.get(ev.id);
         if (raw == null) continue;
-        ev.activationDuration = this.extendDuration(ev.startFrame, raw, ev.id);
+        setEventDuration(ev, this.extendDuration(ev.startFrame, raw, ev.id));
       }
     });
   }
@@ -774,12 +799,12 @@ export class DerivedEventController {
     const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
     for (const ev of queueEvents) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      if (ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration) result.push(ev);
+      if (ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev)) result.push(ev);
     }
     for (const ev of this.registeredEvents) {
       if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      if (ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration) result.push(ev);
+      if (ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev)) result.push(ev);
     }
     return result;
   }
@@ -796,9 +821,9 @@ export class DerivedEventController {
   // ── Generic event insertion ──────────────────────────────────────────────
 
   addEvent(ev: TimelineEvent) {
-    const rawDur = ev.activationDuration;
+    const rawDur = eventDuration(ev);
     if (rawDur > 0) {
-      ev.activationDuration = this.extendDuration(ev.startFrame, rawDur, ev.id);
+      setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur, ev.id));
     }
     this.rawDurations.set(ev.id, rawDur);
     const key = this.key(ev.columnId, ev.ownerId);
@@ -826,9 +851,9 @@ export class DerivedEventController {
     const queueEvents = this.stacks.get(this.key(columnId, ownerId)) ?? [];
     for (const ev of queueEvents) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      const end = ev.startFrame + ev.activationDuration;
+      const end = ev.startFrame + eventDuration(ev);
       if (ev.startFrame <= frame && frame < end) {
-        ev.activationDuration = frame - ev.startFrame;
+        setEventDuration(ev, frame - ev.startFrame);
         ev.eventStatus = status;
         ev.eventStatusOwnerId = source.ownerId;
         ev.eventStatusSkillName = source.skillName;
@@ -837,50 +862,20 @@ export class DerivedEventController {
     for (const ev of this.registeredEvents) {
       if (ev.columnId !== columnId || ev.ownerId !== ownerId) continue;
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      const end = ev.startFrame + ev.activationDuration;
+      const end = ev.startFrame + eventDuration(ev);
       if (ev.startFrame <= frame && frame < end) {
-        ev.activationDuration = frame - ev.startFrame;
+        setEventDuration(ev, frame - ev.startFrame);
         ev.eventStatus = status;
         ev.eventStatusOwnerId = source.ownerId;
         ev.eventStatusSkillName = source.skillName;
-        trimSegments(ev);
       }
     }
   }
 }
 
-/** Trim segments and frames that extend beyond the event's activationDuration. */
-function trimSegments(ev: TimelineEvent) {
-  if (!ev.segments) return;
-  let cumOffset = 0;
-  const trimmed = [];
-  for (const seg of ev.segments) {
-    if (cumOffset >= ev.activationDuration) break;
-    const remaining = ev.activationDuration - cumOffset;
-    if (seg.durationFrames <= remaining) {
-      // Segment fits entirely — but trim frames beyond activationDuration
-      if (seg.frames) {
-        const segStart = cumOffset;
-        const validFrames = seg.frames.filter(f => segStart + f.offsetFrame <= ev.activationDuration);
-        if (validFrames.length !== seg.frames.length) {
-          trimmed.push({ ...seg, frames: validFrames.length > 0 ? validFrames : undefined });
-        } else {
-          trimmed.push(seg);
-        }
-      } else {
-        trimmed.push(seg);
-      }
-      cumOffset += seg.durationFrames;
-    } else {
-      // Segment partially fits — clamp duration and trim frames
-      const clampedSeg = { ...seg, durationFrames: remaining };
-      if (seg.frames) {
-        clampedSeg.frames = seg.frames.filter(f => f.offsetFrame <= remaining);
-        if (clampedSeg.frames.length === 0) clampedSeg.frames = undefined;
-      }
-      trimmed.push(clampedSeg);
-      cumOffset += remaining;
-    }
-  }
-  ev.segments = trimmed.length > 0 ? trimmed : undefined;
+/** Set the ANIMATION segment's durationFrames, returning updated segments. */
+function setAnimationSegmentDuration(segments: EventSegmentData[], duration: number): EventSegmentData[] {
+  return segments.map(s =>
+    s.metadata?.segmentType === SegmentType.ANIMATION ? { ...s, properties: { ...s.properties, duration } } : s,
+  );
 }

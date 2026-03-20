@@ -1,5 +1,15 @@
 # Devlog
 
+## 2026-03-19
+- **Crit simulation mode** — damage calculator now supports randomized crit rolls per hit, in addition to always/never/expected crit modes, for more realistic rotation analysis
+- **Cumulative damage tracking** — skills with ramping or stacking damage (like Smouldering Fire's DoT) now correctly accumulate across hits
+- **Physical status split** — Lift, Knock Down, Breach, Crush, and Shatter are now tracked separately from arts reactions for clearer status timelines
+- **Operator editor redesign** — skills are now organized by type (Basic / Battle / Combo / Ultimate) with a flat scrollable layout, making it easier to view and edit all skill data at once
+- **Gear browser** — view gear set pieces, stats, set bonuses, and triggered effects directly in the customizer
+- **Stagger per hit** — the info pane now shows how much stagger each individual hit deals
+- Damage frame display now shows ATK multiplier per hit
+- Cleaned up and consolidated the custom content editor — removed the old separate wizard panels
+
 ## 2026-03-18
 - **Freeform mode** — new interaction mode lets you manually place inflictions and reactions on the enemy timeline, bypassing the normal skill-driven pipeline
 - **Unified customizer** — all custom content (operators, skills, weapons, gears, effects, statuses, talents) editable from a single sidebar panel with collapsible sections

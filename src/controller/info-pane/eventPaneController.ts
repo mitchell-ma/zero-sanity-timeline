@@ -1,18 +1,72 @@
 import { CombatSkillsType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
-import { TimelineEvent, Operator, Enemy, SkillType } from '../../consts/viewTypes';
+import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import {
   REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
 } from '../../consts/timelineColumnLabels';
 import { interactionToLabel } from '../../consts/semantics';
-import type { Interaction, Effect } from '../../consts/semantics';
+import type { Interaction, Effect, Predicate } from '../../consts/semantics';
 import { translateEffect } from '../../utils/semanticsTranslation';
 import type { TranslatedEffect } from '../../utils/semanticsTranslation';
 import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import { getLastController } from '../timeline/eventQueue';
+
+// ── JSON Skill Data Shapes ──────────────────────────────────────────────────
+
+/** Effect with optional potential gates and display name from JSON skill data. */
+interface JsonEffect extends Effect {
+  potentialMin?: number;
+  potentialMax?: number;
+  eventName?: string;
+}
+
+/** A single frame entry from skill JSON data. */
+interface JsonFrame {
+  clause?: Predicate[];
+  properties?: Record<string, { value: number | string; unit?: string }>;
+  metadata?: Record<string, unknown>;
+}
+
+/** A single segment entry from skill JSON data. */
+interface JsonSegment {
+  clause?: Predicate[];
+  effects?: Effect[];
+  frames?: JsonFrame[];
+  properties?: Record<string, { value: number | string; unit?: string }>;
+  metadata?: Record<string, unknown>;
+}
+
+/** A status event entry from skill JSON data. */
+export interface StatusEventDetail {
+  id?: string;
+  target?: string;
+  element?: string;
+  statusLevel?: { limit?: number | Record<string, unknown> };
+  clause?: Predicate[];
+  [key: string]: unknown;
+}
+
+/** A skill entry from operator skill JSON data. */
+interface JsonSkill {
+  originId?: string;
+  name?: string;
+  description?: string;
+  properties?: Record<string, { value: number | string; unit?: string }> & {
+    trigger?: {
+      description?: string;
+      onTriggerClause?: Predicate[];
+    };
+  };
+  clause?: Predicate[];
+  segments?: JsonSegment[];
+  frames?: JsonFrame[];
+  statusEvents?: StatusEventDetail[];
+  metadata?: Record<string, unknown>;
+}
 
 // ── Event Identity ──────────────────────────────────────────────────────────
 
@@ -102,7 +156,7 @@ export function resolveEventIdentity(
                 if (cond.verb === 'HAVE' && cond.object === 'STATUS' && cond.objectId) {
                   comboRequiresLabels.push(STATUS_LABELS[cond.objectId as StatusType] ?? cond.objectId);
                 } else {
-                  comboTriggerLabels.push(interactionToLabel(cond as Interaction));
+                  comboTriggerLabels.push(interactionToLabel(cond as unknown as Interaction));
                 }
               }
             }
@@ -190,7 +244,7 @@ export function resolveComboChain(
     e.columnId === COMBO_WINDOW_COLUMN_ID &&
     e.ownerId === event.ownerId &&
     event.startFrame >= e.startFrame &&
-    event.startFrame < e.startFrame + e.activationDuration,
+    event.startFrame < eventEndFrame(e),
   );
   if (!window?.sourceOwnerId) return null;
 
@@ -205,7 +259,7 @@ export function resolveComboChain(
   const isEnemyTrigger = triggerCol && (
     INFLICTION_COLUMN_IDS.has(triggerCol) ||
     PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol) ||
-    triggerCol === 'breach'
+    PHYSICAL_STATUS_COLUMN_IDS.has(triggerCol)
   );
 
   if (isEnemyTrigger) {
@@ -295,7 +349,7 @@ export interface ActiveModifier {
 /** Column IDs for status effects that are damage modifiers on the enemy. */
 const SUSCEPTIBILITY_COLUMNS = new Set<string>([StatusType.SUSCEPTIBILITY, StatusType.FOCUS]);
 function isActiveAt(ev: TimelineEvent, frame: number): boolean {
-  return ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration;
+  return ev.startFrame <= frame && frame < eventEndFrame(ev);
 }
 
 /**
@@ -477,9 +531,8 @@ export interface EventDslData {
  * Effects that are already represented by dedicated info pane sections
  * (SP cost) or are zero-value noise. Filter these from DSL display.
  */
-function isRedundantEffect(e: any): boolean {
-  const obj = e.object;
-  const verb = e.verb;
+function isRedundantEffect(e: Effect): boolean {
+  const { object: obj, verb } = e;
   // SP cost / ultimate energy cost shown in dedicated SP/Skill sections
   if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
   // Zero-value recoveries are noise
@@ -501,7 +554,7 @@ function isRedundantEffect(e: any): boolean {
  * Returns structured TranslatedEffect objects for natural-language rendering.
  */
 function resolveFrameEffects(
-  effects: any[],
+  effects: JsonEffect[],
   key: string,
   potential: number,
   outEffects: Record<string, TranslatedEffect[]>,
@@ -516,7 +569,7 @@ function resolveFrameEffects(
     if (e.potentialMax != null && potential > e.potentialMax) continue;
 
     // Use eventName for display when it differs from objectId
-    const displayEffect = e.eventName && e.eventName !== e.objectId
+    const displayEffect: Effect = e.eventName && e.eventName !== e.objectId
       ? { ...e, objectId: e.eventName }
       : e;
     resolved.push(translateEffect(displayEffect));
@@ -540,7 +593,8 @@ export function resolveEventDsl(
   if (!json?.skills) return null;
 
   // Look up skill data directly by skill ID
-  const skillCat = json.skills[skillName] as Record<string, any> | undefined;
+  const skills = json.skills as Record<string, JsonSkill>;
+  const skillCat = skills[skillName] as JsonSkill | undefined;
   if (!skillCat) return null;
 
   const predicates: ResolvedPredicate[] = [];
@@ -575,13 +629,13 @@ export function resolveEventDsl(
   }
 
   // Segment-level data
-  const segments: any[] = skillCat.segments ?? [];
+  const segments: JsonSegment[] = skillCat.segments ?? [];
   for (let si = 0; si < segments.length; si++) {
     const seg = segments[si];
 
     // Segment clause
     if (seg.clause && Array.isArray(seg.clause)) {
-      segmentPredicates[si] = seg.clause.map((pred: any) => ({
+      segmentPredicates[si] = seg.clause.map((pred: Predicate) => ({
         conditions: (pred.conditions ?? []).map((c: Interaction) => interactionToText(c)),
         effects: (pred.effects ?? []).map((e: Effect) => effectToText(e)),
       }));
@@ -593,33 +647,33 @@ export function resolveEventDsl(
     }
 
     // Frame-level effects from clause predicates (filtered by operator potential)
-    const frames: any[] = seg.frames ?? [];
+    const frames: JsonFrame[] = seg.frames ?? [];
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
-      const clauseEffects = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
+      const clauseEffects = (frame.clause ?? []).flatMap((p: Predicate) => p.effects ?? []);
       if (clauseEffects.length > 0) {
-        resolveFrameEffects(clauseEffects, `${si}-${fi}`, potential, frameEffects);
+        resolveFrameEffects(clauseEffects as JsonEffect[], `${si}-${fi}`, potential, frameEffects);
       }
     }
   }
 
   // Flat shape (single segment, no segments array)
   if (segments.length === 0 && skillCat.frames) {
-    const frames: any[] = skillCat.frames;
+    const frames: JsonFrame[] = skillCat.frames;
     for (let fi = 0; fi < frames.length; fi++) {
       const frame = frames[fi];
-      const clauseEffects = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
+      const clauseEffects = (frame.clause ?? []).flatMap((p: Predicate) => p.effects ?? []);
       if (clauseEffects.length > 0) {
-        resolveFrameEffects(clauseEffects, `0-${fi}`, potential, frameEffects);
+        resolveFrameEffects(clauseEffects as JsonEffect[], `0-${fi}`, potential, frameEffects);
       }
     }
   }
 
   // Skill-level effects from clause predicates
-  const skillClauseEffects = (skillCat.clause ?? []).flatMap((p: any) => p.effects ?? []);
+  const skillClauseEffects = (skillCat.clause ?? []).flatMap((p: Predicate) => p.effects ?? []);
   if (skillClauseEffects.length > 0) {
     const filtered = skillClauseEffects
-      .filter((e: any) => !isRedundantEffect(e))
+      .filter((e: Effect) => !isRedundantEffect(e))
       .map((e: Effect) => effectToText(e));
     if (filtered.length > 0) segmentEffects[-1] = filtered;
   }
@@ -648,24 +702,24 @@ export interface EventFullDetail {
   /** Skill-level properties (duration, etc.) */
   properties: Record<string, { value: number | string; unit?: string }> | null;
   /** Status event data if this skill has statusEvents */
-  statusEvents: any[] | null;
+  statusEvents: StatusEventDetail[] | null;
   /** Skill-level clause (raw predicates) */
-  clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
+  clause: Predicate[] | null;
   /** Segment details */
   segments: {
     index: number;
     properties: Record<string, { value: number | string; unit?: string }> | null;
-    clause: { conditions: Interaction[]; effects: Effect[] }[] | null;
-    metadata: Record<string, any> | null;
+    clause: Predicate[] | null;
+    metadata: Record<string, unknown> | null;
     frames: {
       index: number;
       properties: Record<string, { value: number | string; unit?: string }> | null;
-      clause: { conditions: any[]; effects: any[] }[] | null;
-      metadata: Record<string, any> | null;
+      clause: Predicate[] | null;
+      metadata: Record<string, unknown> | null;
     }[];
   }[];
   /** Metadata from JSON (dataSources, etc.) */
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   /** skillTypeMap entry for this skill (e.g. BASIC_ATTACK → FLAMING_CINDERS) */
   skillTypeMapping: string | null;
 }
@@ -682,11 +736,12 @@ export function resolveEventFullDetail(
   const json = getOperatorJson(operatorId);
   if (!json?.skills) return null;
 
-  const skillCat = json.skills[skillName] as Record<string, any> | undefined;
+  const skills = json.skills as Record<string, JsonSkill> & { skillTypeMap?: Record<string, string> };
+  const skillCat = skills[skillName] as JsonSkill | undefined;
   if (!skillCat) return null;
 
   // Find which skill type maps to this skill
-  const skillTypeMap = json.skills.skillTypeMap as Record<string, string> | undefined;
+  const skillTypeMap = skills.skillTypeMap;
   let skillTypeMapping: string | null = null;
   if (skillTypeMap) {
     for (const [type, id] of Object.entries(skillTypeMap)) {
@@ -695,12 +750,12 @@ export function resolveEventFullDetail(
   }
 
   const segments: EventFullDetail['segments'] = [];
-  const rawSegments: any[] = skillCat.segments ?? [];
+  const rawSegments: JsonSegment[] = skillCat.segments ?? [];
 
   for (let si = 0; si < rawSegments.length; si++) {
     const seg = rawSegments[si];
     const frames: EventFullDetail['segments'][0]['frames'] = [];
-    const rawFrames: any[] = seg.frames ?? [];
+    const rawFrames: JsonFrame[] = seg.frames ?? [];
 
     for (let fi = 0; fi < rawFrames.length; fi++) {
       const frame = rawFrames[fi];
@@ -744,14 +799,79 @@ export function resolveEventFullDetail(
 
   return {
     skillId: skillName,
-    originId: skillCat.originId ?? null,
-    name: skillCat.name ?? null,
-    description: skillCat.description ?? null,
+    originId: ((skillCat.metadata as Record<string, unknown>)?.originId as string) ?? null,
+    name: ((skillCat.properties as Record<string, unknown>)?.name as string) ?? null,
+    description: ((skillCat.properties as Record<string, unknown>)?.description as string) ?? null,
     properties: skillCat.properties ?? null,
     statusEvents: skillCat.statusEvents ?? null,
     clause: skillCat.clause ?? null,
     segments,
     metadata: skillCat.metadata ?? null,
     skillTypeMapping,
+  };
+}
+
+// ── Event Timing (base vs time-stop) ──────────────────────────────────────
+
+/** Per-phase duration pair: base (game-time) and with-time-stop (real-time). null means no difference. */
+export interface PhaseDuration {
+  base: number;
+  withTimeStop: number | null;
+}
+
+/** Resolved timing durations for the info pane. */
+export interface EventTimingData {
+  activation: PhaseDuration;
+  active: PhaseDuration;
+  cooldown: PhaseDuration;
+  animation: PhaseDuration | null;
+  total: PhaseDuration;
+}
+
+/**
+ * Resolve base and time-stop-extended durations for an event.
+ * Combines DerivedEventController's raw durations (for derived events) with
+ * processedEvent comparison (for user-placed events).
+ */
+export function resolveEventTiming(
+  event: TimelineEvent,
+  processedEvent?: TimelineEvent,
+): EventTimingData {
+  const controller = getLastController();
+
+  // Base activation: check controller's raw duration first (derived events),
+  // then fall back to the event's own segment duration (user-placed events).
+  const rawActivation = controller?.getBaseDuration(event.id);
+  const baseActivation = rawActivation ?? eventDuration(event);
+
+  // Extended activation: for derived events the event itself has the extended value;
+  // for user-placed events the processedEvent has it.
+  const extActivation = rawActivation != null
+    ? eventDuration(event)
+    : processedEvent ? eventDuration(processedEvent) : eventDuration(event);
+
+  const baseActive = 0;
+  const extActive = 0;
+
+  const baseCooldown = 0;
+  const extCooldown = 0;
+
+  const baseAnimation = getAnimationDuration(event) || null;
+  const extAnimation = (processedEvent ? getAnimationDuration(processedEvent) : 0) || getAnimationDuration(event) || null;
+
+  const baseTotal = baseActivation;
+  const extTotal = extActivation;
+
+  const mkPhase = (base: number, ext: number): PhaseDuration => ({
+    base,
+    withTimeStop: ext !== base ? ext : null,
+  });
+
+  return {
+    activation: mkPhase(baseActivation, extActivation),
+    active: mkPhase(baseActive, extActive),
+    cooldown: mkPhase(baseCooldown, extCooldown),
+    animation: baseAnimation != null ? mkPhase(baseAnimation, extAnimation ?? baseAnimation) : null,
+    total: mkPhase(baseTotal, extTotal),
   };
 }

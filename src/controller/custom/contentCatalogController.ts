@@ -5,6 +5,7 @@ import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowser
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
 import { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../../model/game-data/weaponGearEffectLoader';
+import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
@@ -134,9 +135,10 @@ export function getAllContentItems(): ContentBrowserItem[] {
     if (key === 'NONE' || seenSets.has(key)) continue;
     seenSets.add(key);
     const pieceCount = GEARS.filter((x) => x.gearSetType === key).length;
+    const setData = getGearSetData(key);
     items.push({
       id: key,
-      name: g.name.replace(/ (Heavy Armor|Light Armor|Exoskeleton|Gauntlets|Gloves|Poncho|Knife Kit|Radar|Tool Kit|Arm Kit|Combat Kit|Field Kit|Stealth Kit).*$/, ''),
+      name: setData?.name ?? g.name.replace(/ (Heavy Armor|Light Armor|Exoskeleton|Gauntlets|Gloves|Poncho|Knife Kit|Radar|Tool Kit|Arm Kit|Combat Kit|Field Kit|Stealth Kit).*$/, ''),
       category: ContentCategory.GEAR_SETS,
       source: 'builtin',
       meta: `${starStr(g.rarity)} \u00B7 ${pieceCount} pcs`,

@@ -8,6 +8,7 @@
  * a given event.
  */
 
+import { PhysicalStatusType } from '../../consts/enums';
 import { SkillType } from '../../consts/viewTypes';
 
 // ── Owner IDs ─────────────────────────────────────────────────────────────
@@ -70,17 +71,21 @@ export const PHYSICAL_INFLICTION_COLUMNS = {
 
 export const PHYSICAL_INFLICTION_COLUMN_IDS: Set<string> = new Set(Object.values(PHYSICAL_INFLICTION_COLUMNS));
 
-/** Column IDs for physical status lanes. */
+/**
+ * Column IDs for physical status lanes — use PhysicalStatusType enum values.
+ *
+ * Physical statuses are all triggered from Vulnerable infliction stacks,
+ * but which status is applied depends on the operator's skill (unlike arts
+ * where each element maps 1:1 to a reaction).
+ */
 export const PHYSICAL_STATUS_COLUMNS = {
-  BREACH: 'breach',
+  LIFT: PhysicalStatusType.LIFT,
+  KNOCK_DOWN: PhysicalStatusType.KNOCK_DOWN,
+  CRUSH: PhysicalStatusType.CRUSH,
+  BREACH: PhysicalStatusType.BREACH,
 } as const;
 
-/** Maps physical infliction columnId → physical status columnId. */
-export const PHYSICAL_INFLICTION_TO_STATUS: Record<string, string> = {
-  [PHYSICAL_INFLICTION_COLUMNS.VULNERABLE]: PHYSICAL_STATUS_COLUMNS.BREACH,
-};
-
-export const PHYSICAL_STATUS_COLUMN_IDS = new Set(Object.values(PHYSICAL_INFLICTION_TO_STATUS));
+export const PHYSICAL_STATUS_COLUMN_IDS = new Set<string>(Object.values(PHYSICAL_STATUS_COLUMNS));
 
 // ── Operator effect columns ───────────────────────────────────────────────
 

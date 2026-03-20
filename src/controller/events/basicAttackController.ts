@@ -85,6 +85,8 @@ export class SkillSegmentBuilder {
         if (dd) marker.dealDamage = dd;
         const gg = f.getGaugeGain();
         if (gg) marker.gaugeGain = gg;
+        const deps = f.getDependencyTypes();
+        if (deps.length > 0) marker.dependencyTypes = [...deps];
         return marker;
       });
 
@@ -126,21 +128,17 @@ export class SkillSegmentBuilder {
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
       const outOfBound = frames.filter(f => f.offsetFrame > durationFrames);
 
-      const segData: EventSegmentData = {
-        durationFrames,
-        label,
-        frames: inBound.length > 0 ? inBound : undefined,
-      };
       const seqRecord = seq as SkillEventSequence & { segmentType?: string; timeDependency?: string; clause?: EventSegmentData['clause'] };
-      if (seqRecord.segmentType) {
-        segData.segmentType = seqRecord.segmentType as SegmentType;
-      }
-      if (seqRecord.timeDependency) {
-        segData.timeDependency = seqRecord.timeDependency as TimeDependency;
-      }
-      if (seqRecord.clause) {
-        segData.clause = seqRecord.clause;
-      }
+      const segData: EventSegmentData = {
+        properties: {
+          duration: durationFrames,
+          name: label,
+          ...(seqRecord.timeDependency ? { timeDependency: seqRecord.timeDependency as TimeDependency } : {}),
+        },
+        ...(seqRecord.segmentType ? { metadata: { segmentType: seqRecord.segmentType as SegmentType } } : {}),
+        frames: inBound.length > 0 ? inBound : undefined,
+        ...(seqRecord.clause ? { clause: seqRecord.clause } : {}),
+      };
       segments.push(segData);
       totalDurationFrames += durationFrames;
 
@@ -149,8 +147,7 @@ export class SkillSegmentBuilder {
         const rebased = outOfBound.map(f => ({ ...f, offsetFrame: f.offsetFrame - durationFrames }));
         const impliedDuration = Math.max(...rebased.map(f => f.offsetFrame)) + 1;
         segments.push({
-          durationFrames: impliedDuration,
-          label: options?.delayedHitLabel ?? 'Delay',
+          properties: { duration: impliedDuration, name: options?.delayedHitLabel ?? 'Delay' },
           frames: rebased,
         });
         totalDurationFrames += impliedDuration;

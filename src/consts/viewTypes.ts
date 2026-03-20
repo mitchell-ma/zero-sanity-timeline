@@ -1,4 +1,4 @@
-import { DamageType, ElementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
+import { DamageType, ElementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
@@ -20,8 +20,6 @@ export interface SkillDef {
   teamGaugeGain?: number;
   /** Per-enemy-count gauge gain map (e.g. {1: 25, 2: 30, 3: 35}). */
   gaugeGainByEnemies?: Record<number, number>;
-  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates and combo skills. */
-  animationDuration?: number;
   /** SP cost for battle skills. */
   skillPointCost?: number;
   /** Description of SP return mechanics (potentials, talents, gear effects). */
@@ -131,6 +129,10 @@ export interface EventFrameMarker {
   damageType?: DamageType;
   /** Element of damage dealt by this frame (for coloring when no infliction). */
   damageElement?: string;
+  /** ATK multiplier for damage dealt by this frame (e.g. 1.2 = 120%). */
+  damageMultiplier?: number;
+  /** Stagger value dealt by this frame (pre-computed, ready for stagger gauge). */
+  staggerValue?: number;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
   /** Whether this frame duplicates the source infliction that triggered it. */
@@ -141,6 +143,10 @@ export interface EventFrameMarker {
   dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
   frameTypes?: EventFrameType[];
+  /** Frame dependency types (e.g. PREVIOUS_FRAME for cumulative DoT). */
+  dependencyTypes?: FrameDependencyType[];
+  /** Whether this frame scored a critical hit (runtime state for simulation mode). */
+  isCrit?: boolean;
   /** Template SP recovery for this frame when it is the final strike (from model data). */
   templateFinalStrikeSP?: number;
   /** Template stagger for this frame when it is the final strike (from model data). */
@@ -162,29 +168,33 @@ export interface SelectedFrame {
 
 /** A sequence segment within a multi-sequence event (e.g. basic attack chain). */
 export interface EventSegmentData {
-  /** Optional name for this segment. */
-  name?: string;
-  /** Duration of this segment in frames. */
-  durationFrames: number;
-  /**
-   * Offset from event start in frames. If absent, this segment starts at the
-   * end of the previous segment (ordered chronologically by offset + duration).
-   */
-  offset?: number;
-  /** Label for this segment (e.g. "1", "2"). */
-  label?: string;
+  metadata?: {
+    /** The phase type of this segment. Defaults to NORMAL. */
+    segmentType?: SegmentType;
+    /** Data sources this segment was derived from. */
+    dataSources?: string[];
+  };
+  properties: {
+    /** Duration of this segment in frames. */
+    duration: number;
+    /**
+     * Offset from event start in frames. If absent, this segment starts at the
+     * end of the previous segment (ordered chronologically by offset + duration).
+     */
+    offset?: number;
+    /** Display name for this segment (e.g. "1", "2", "Wind-up", "Cooldown"). */
+    name?: string;
+    /** Whether this segment's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
+    timeDependency?: TimeDependency;
+    /** How this segment interacts with other timelines (e.g. TIME_STOP). */
+    timeInteractionType?: string;
+  };
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
-  /** Whether this segment's duration is game-time or real-time dependent. Defaults to GAME_TIME. */
-  timeDependency?: TimeDependency;
-  /** The phase type of this segment. Defaults to NORMAL. */
-  segmentType?: SegmentType;
-  /** Per-segment susceptibility override (resolved scalar values). Used for multi-phase statuses like Empowered Focus. */
-  susceptibility?: Partial<Record<ElementType, number>>;
-  /** Status effect label for this segment (e.g. "-3.6 Res"). */
-  statusLabel?: string;
   /** Clause effects active during this segment (from JSON clause data). */
   clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
+  /** Catch-all for domain-specific fields not part of the core segment model. */
+  unknown?: Record<string, unknown>;
 }
 
 export interface TimelineEvent {
@@ -194,13 +204,8 @@ export interface TimelineEvent {
   ownerId: string;
   columnId: string;
   startFrame: number;
-  activationDuration: number;
-  activeDuration: number;
-  cooldownDuration: number;
-  /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. Ultimates and combo skills. */
-  animationDuration?: number;
-  /** If present, this event is multi-sequence. Segments replace the standard 3-phase layout. */
-  segments?: EventSegmentData[];
+  /** Required segment array — all event timing flows through segments. */
+  segments: EventSegmentData[];
   /** True for manually-added arts reaction events (not derived from infliction interactions). */
   isForced?: boolean;
   /** Arts reaction status level (1–4). Higher = stronger effect. */
@@ -221,7 +226,7 @@ export interface TimelineEvent {
   enemiesHit?: number;
   /** Susceptibility bonuses applied by this status event (e.g. Focus), keyed by ElementType → resolved percentage. */
   susceptibility?: Partial<Record<ElementType, number>>;
-  /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'breach'). */
+  /** For combo events: the trigger source's columnId (e.g. 'heatInfliction', 'BREACH'). */
   comboTriggerColumnId?: string;
   /** How this event interacts with other timelines (TIME_STOP for ultimates and perfect dodges, NONE otherwise). */
   timeInteraction?: string;
@@ -245,6 +250,8 @@ export interface TimelineEvent {
   forcedReaction?: boolean;
   /** Number of infliction stacks consumed to trigger this arts reaction (determines status level). */
   inflictionStacks?: number;
+  /** True if this infliction event was a same-element stack (Arts Burst). */
+  isArtsBurst?: boolean;
   /** Inherited reduction floor from a merged corrosion (resistance points). */
   reductionFloor?: number;
   /** Source operator's Arts Intensity at time of reaction (for corrosion scaling). */
@@ -349,8 +356,6 @@ export type MiniTimeline = {
     teamGaugeGain?: number;
     /** Per-enemy-count gauge gain map. */
     gaugeGainByEnemies?: Record<number, number>;
-    /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
-    animationDuration?: number;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
@@ -386,8 +391,6 @@ export type MiniTimeline = {
     teamGaugeGain?: number;
     /** Per-enemy-count gauge gain map. */
     gaugeGainByEnemies?: Record<number, number>;
-    /** Duration (frames) of the animation sub-phase (TIME_STOP) within activation. */
-    animationDuration?: number;
     /** How this event interacts with other timelines. */
     timeInteraction?: string;
     /** If true, this is a perfect dodge. */
@@ -432,10 +435,90 @@ export function computeSegmentsSpan(segments: readonly EventSegmentData[]): numb
   let running = 0;
   let maxEnd = 0;
   for (const s of segments) {
-    const off = s.offset != null ? s.offset : running;
-    const end = off + s.durationFrames;
+    const off = s.properties.offset != null ? s.properties.offset : running;
+    const end = off + s.properties.duration;
     if (end > maxEnd) maxEnd = end;
-    running = s.offset == null ? running + s.durationFrames : end;
+    running = s.properties.offset == null ? running + s.properties.duration : end;
   }
   return maxEnd;
+}
+
+/** Get animation duration (frames) from an event's ANIMATION segment. Returns 0 if none. */
+export function getAnimationDuration(ev: Pick<TimelineEvent, 'segments'>): number {
+  const seg = ev.segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+  return seg?.properties.duration ?? 0;
+}
+
+/** Get animation duration (frames) from a default event or variant definition's segments. Returns 0 if none. */
+export function getAnimationDurationFromSegments(segments: readonly EventSegmentData[] | undefined): number {
+  if (!segments) return 0;
+  const seg = segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+  return seg?.properties.duration ?? 0;
+}
+
+/** Get the total duration of an event from its segments. */
+export function eventDuration(ev: Pick<TimelineEvent, 'segments'>): number {
+  return computeSegmentsSpan(ev.segments);
+}
+
+/** Get the end frame (startFrame + total segment duration) of an event. */
+export function eventEndFrame(ev: Pick<TimelineEvent, 'startFrame' | 'segments'>): number {
+  return ev.startFrame + eventDuration(ev);
+}
+
+/** Create a single-segment array with the given duration. */
+export function durationSegment(duration: number): EventSegmentData[] {
+  return [{ properties: { duration } }];
+}
+
+/**
+ * Set the total duration of an event by mutating its segments.
+ * For single-segment events, directly sets the segment's duration.
+ * For multi-segment events, trims segments that extend beyond the target.
+ */
+export function setEventDuration(ev: TimelineEvent, duration: number) {
+  if (ev.segments.length === 0) {
+    ev.segments = [{ properties: { duration } }];
+    return;
+  }
+  if (ev.segments.length === 1) {
+    const seg = ev.segments[0];
+    const updated = { ...seg, properties: { ...seg.properties, duration } };
+    if (seg.frames) {
+      const validFrames = seg.frames.filter(f => f.offsetFrame <= duration);
+      updated.frames = validFrames.length > 0 ? validFrames : undefined;
+    }
+    ev.segments[0] = updated;
+    return;
+  }
+  // Multi-segment: trim segments that extend beyond the target duration
+  let cumOffset = 0;
+  const trimmed: EventSegmentData[] = [];
+  for (const seg of ev.segments) {
+    if (cumOffset >= duration) break;
+    const remaining = duration - cumOffset;
+    if (seg.properties.duration <= remaining) {
+      if (seg.frames) {
+        const segStart = cumOffset;
+        const validFrames = seg.frames.filter(f => segStart + f.offsetFrame <= duration);
+        if (validFrames.length !== seg.frames.length) {
+          trimmed.push({ ...seg, frames: validFrames.length > 0 ? validFrames : undefined });
+        } else {
+          trimmed.push(seg);
+        }
+      } else {
+        trimmed.push(seg);
+      }
+      cumOffset += seg.properties.duration;
+    } else {
+      const clampedSeg = { ...seg, properties: { ...seg.properties, duration: remaining } };
+      if (seg.frames) {
+        const validFrames = seg.frames.filter(f => f.offsetFrame <= remaining);
+        clampedSeg.frames = validFrames.length > 0 ? validFrames : undefined;
+      }
+      trimmed.push(clampedSeg);
+      cumOffset += remaining;
+    }
+  }
+  ev.segments = trimmed.length > 0 ? trimmed : [{ properties: { duration } }];
 }

@@ -41,9 +41,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: s
   return {
     name: 'TEST',
     ownerId: 'op-1',
-    activationDuration: 60,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: 60 } }],
     ...overrides,
   };
 }

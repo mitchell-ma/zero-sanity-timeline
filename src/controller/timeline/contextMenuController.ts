@@ -5,7 +5,7 @@
  * Returns arrays of ContextMenuItemDef with actionId+actionPayload instead of
  * closures, allowing the view to map actionIds to callbacks.
  */
-import { TimelineEvent, Column, MiniTimeline, ContextMenuItem } from '../../consts/viewTypes';
+import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { CombatSkillsType, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { SKILL_COLUMNS } from '../../model/channels';
@@ -66,7 +66,7 @@ export function buildColumnContextMenu(
   const checkOverlap = (ownerId: string, columnId: string, range: number) =>
     wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
 
-  const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions, col.defaultEvent?.animationDuration);
+  const timeStop = isBlockedByTimeStop(col.columnId, atFrame, timeStopRegions, getAnimationDurationFromSegments(col.defaultEvent?.segments));
   const inTimeStop = timeStop.blocked;
   const timeStopReason = timeStop.reason;
 
@@ -236,7 +236,6 @@ export function buildColumnContextMenu(
               ...(v.gaugeGain != null ? { gaugeGain: v.gaugeGain } : {}),
               ...(v.teamGaugeGain != null ? { teamGaugeGain: v.teamGaugeGain } : {}),
               ...(v.gaugeGainByEnemies ? { gaugeGainByEnemies: v.gaugeGainByEnemies } : {}),
-              ...(v.animationDuration != null ? { animationDuration: v.animationDuration } : {}),
               ...(v.timeInteraction ? { timeInteraction: v.timeInteraction } : {}),
               ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
               ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
@@ -341,14 +340,14 @@ export function buildSegmentAddItems(
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const allSegments = col?.defaultEvent?.segments;
   if (!allSegments || allSegments.length <= 1) return [];
-  const addable = allSegments.filter((s) => s.label);
+  const addable = allSegments.filter((s) => s.properties.name);
   if (addable.length === 0) return [];
   return addable.map((s) => {
-    const wouldOverlap = wouldSegmentAdditionOverlap(ev, s.durationFrames, events);
+    const wouldOverlap = wouldSegmentAdditionOverlap(ev, s.properties.duration, events);
     return {
-      label: `Add Sequence ${s.label}`,
+      label: `Add Sequence ${s.properties.name}`,
       actionId: 'addSegment',
-      actionPayload: { eventId, segmentLabel: s.label! },
+      actionPayload: { eventId, segmentLabel: s.properties.name! },
       disabled: interactionMode === InteractionModeType.STRICT && wouldOverlap,
       disabledReason: wouldOverlap ? 'Would overlap another event' : undefined,
     };
@@ -370,7 +369,7 @@ export function buildFrameAddItems(
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
   const seg = ev.segments[segmentIndex];
   const allDefaultSegs = col?.defaultEvent?.segments;
-  const defaultSeg = allDefaultSegs?.find((s) => s.label === seg.label) ?? allDefaultSegs?.[segmentIndex];
+  const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];
   const allFrames = defaultSeg?.frames;
   if (!allFrames || allFrames.length <= 0) return [];
   const presentOffsets = new Set((seg.frames ?? []).map((f) => f.offsetFrame));

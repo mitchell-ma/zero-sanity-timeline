@@ -3,22 +3,18 @@ import { Column, TimelineEvent, SelectedFrame, Enemy, ContextMenuItem } from '..
 import ContextMenu from './ContextMenu';
 import { frameToPx, timelineHeight, frameToTimeLabelPrecise, pxPerFrame, secondsToFrames } from '../utils/timeline';
 import {
-  buildDamageTableRows,
   buildDamageTableColumns,
   computeDamageStatistics,
   DamageTableRow,
 } from '../controller/calculation/damageTableBuilder';
 import { getModelEnemy } from '../controller/calculation/enemyRegistry';
-import { EventsQueryService, statToFragilityElements, type WeaponFragilityEffect, type OperatorTalentFragility } from '../controller/timeline/eventsQueryService';
-import { getLastController } from '../controller/timeline/eventQueue';
+import { runCalculation } from '../controller/calculation/calculationController';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
-import { CritMode, CombatSkillsType, ElementType, StatType } from '../consts/enums';
-import { getWeaponEffectDefs, resolveTargetDisplay } from '../model/game-data/weaponGearEffectLoader';
-import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES } from './InformationPane';
-import { OperatorLoadoutState, EMPTY_LOADOUT } from './OperatorLoadoutHeader';
+import { CritMode, CombatSkillsType } from '../consts/enums';
+import { LoadoutProperties } from './InformationPane';
+import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
 import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { SkillType } from '../consts/viewTypes';
@@ -104,11 +100,12 @@ function loadColOrder(): SheetCol[] {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NONE, CritMode.ALWAYS];
+const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.SIMULATION];
 const CRIT_MODE_LABELS: Record<CritMode, string> = {
   [CritMode.EXPECTED]: 'E[CRIT]',
-  [CritMode.NONE]: 'NO CRIT',
+  [CritMode.NEVER]: 'NO CRIT',
   [CritMode.ALWAYS]: 'MAX CRIT',
+  [CritMode.SIMULATION]: 'SIM',
 };
 
 function formatDamage(n: number): string {
@@ -344,72 +341,10 @@ export default function CombatSheet({
     return map;
   }, [slots]);
 
-  // Build aggregated stats per operator for corrosion Arts Intensity lookup
-  const aggregatedStats = useMemo(() => {
-    const result: Record<string, { stats: Record<StatType, number> }> = {};
-    for (const slot of slots) {
-      if (!slot.operator) continue;
-      const slotLoadout = loadouts?.[slot.slotId] ?? EMPTY_LOADOUT;
-      const slotStats = loadoutProperties[slot.slotId] ?? DEFAULT_LOADOUT_PROPERTIES;
-      const agg = aggregateLoadoutStats(slot.operator.id, slotLoadout, slotStats);
-      if (agg) {
-        result[slot.slotId] = { stats: agg.stats };
-      }
-    }
-    return result;
-  }, [slots, loadouts, loadoutProperties]);
-
-  // Pre-compute weapon fragility config
-  const weaponFragility = useMemo(() => {
-    const result: Record<string, WeaponFragilityEffect[]> = {};
-    for (const slot of slots) {
-      if (!slot.operator || !slot.weaponName) continue;
-      const defs = getWeaponEffectDefs(slot.weaponName);
-      if (defs.length === 0) continue;
-      const effects: WeaponFragilityEffect[] = [];
-      for (const def of defs) {
-        if (resolveTargetDisplay(def) !== 'enemy') continue;
-        for (const buff of (def.buffs ?? [])) {
-          const elements = statToFragilityElements(buff.stat as string);
-          if (elements) {
-            effects.push({ elements, bonus: buff.valueMax ?? buff.value ?? 0 });
-          }
-        }
-      }
-      if (effects.length > 0) {
-        result[slot.slotId] = effects;
-      }
-    }
-    return result;
-  }, [slots]);
-
-  // Pre-compute operator talent fragility
-  const talentFragility = useMemo(() => {
-    const effects: OperatorTalentFragility[] = [];
-    for (const slot of slots) {
-      if (!slot.operator) continue;
-      const stats = loadoutProperties[slot.slotId];
-      if (!stats) continue;
-      if (slot.operator.id === 'xaihi' && stats.operator.talentOneLevel >= 1) {
-        const bonus = stats.operator.talentOneLevel >= 2 ? 0.10 : 0.07;
-        effects.push({ elements: [ElementType.CRYO], bonus, requiredColumnId: 'cryoInfliction' });
-      }
-      if (slot.operator.id === 'endministrator' && stats.operator.talentTwoLevel >= 1) {
-        const bonus = stats.operator.talentTwoLevel >= 2 ? 0.20 : 0.10;
-        effects.push({ elements: [ElementType.PHYSICAL], bonus, requiredColumnId: 'originium-crystal' });
-      }
-    }
-    return effects;
-  }, [slots, loadoutProperties]);
-
-  const statusQuery = useMemo(
-    () => new EventsQueryService(getLastController(), staggerBreaks ?? [], loadoutProperties, aggregatedStats, weaponFragility, talentFragility),
+  const { rows } = useMemo(
+    () => runCalculation(events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [events, staggerBreaks, loadoutProperties, aggregatedStats, weaponFragility, talentFragility],
-  );
-  const rows = useMemo(
-    () => buildDamageTableRows(events, columns, slots, enemy, loadoutProperties, loadouts, statusQuery, critMode),
-    [events, columns, slots, enemy, loadoutProperties, loadouts, statusQuery, critMode],
+    [events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode],
   );
   const bossMaxHp = useMemo(() => {
     const model = getModelEnemy(enemy.id);

@@ -96,7 +96,7 @@ export function generateTacticalEvents(
 
     // Create the derived event
     const segment: EventSegmentData = {
-      durationFrames: config.durationFrames,
+      properties: { duration: config.durationFrames },
       frames: [{ offsetFrame: 0 }],
     };
 
@@ -106,9 +106,6 @@ export function generateTacticalEvents(
       ownerId: slotId,
       columnId: 'tactical',
       startFrame: triggerFrame,
-      activationDuration: config.durationFrames,
-      activeDuration: 0,
-      cooldownDuration: 0,
       segments: [segment],
       sourceOwnerId: slotId,
       sourceSkillName: config.name,

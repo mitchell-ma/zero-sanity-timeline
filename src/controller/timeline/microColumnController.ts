@@ -1,4 +1,4 @@
-import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
+import { TimelineEvent, Column, MiniTimeline, eventEndFrame } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 
 /**
@@ -34,7 +34,7 @@ export class MicroColumnController {
         for (const other of sorted) {
           if (other.id === ev.id) continue;
           if (other.eventStatus === EventStatusType.CONSUMED) continue;
-          const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
+          const otherEnd = eventEndFrame(other);
           if (other.startFrame <= ev.startFrame && otherEnd > ev.startFrame) {
             activeCount++;
           }
@@ -57,13 +57,13 @@ export class MicroColumnController {
     colEvents: TimelineEvent[],
     _typeOrder: Map<string, number>,
   ): { count: number; index: number } {
-    const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+    const evEnd = eventEndFrame(ev);
 
     // Collect distinct types that overlap with this event
     const overlappingTypes = new Set<string>([ev.columnId]);
     for (const other of colEvents) {
       if (other.id === ev.id) continue;
-      const otherEnd = other.startFrame + other.activationDuration + other.activeDuration + other.cooldownDuration;
+      const otherEnd = eventEndFrame(other);
       if (other.startFrame < evEnd && otherEnd > ev.startFrame) {
         overlappingTypes.add(other.columnId);
       }
@@ -149,7 +149,7 @@ export class MicroColumnController {
         (ev) => ev.ownerId === col.ownerId &&
           (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId) &&
           ev.startFrame <= atFrame &&
-          ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration > atFrame,
+          eventEndFrame(ev) > atFrame,
       );
       return activeAtFrame.length >= col.microColumns.length;
     }

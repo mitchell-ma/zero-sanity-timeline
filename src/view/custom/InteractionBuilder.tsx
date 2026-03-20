@@ -152,23 +152,23 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
       {vis.showTo && (
         <ul className="ce-ul">
           <li className="ce-li ce-li--last ce-li--leaf">
-            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ toObject: undefined, toDeterminer: undefined } as any)} title="Clear">&times;</button>
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ toObject: undefined, toDeterminer: undefined })} title="Clear">&times;</button>
             <div className="interaction-row">
               <span className="ce-badge ce-badge--keyword">TO</span>
-              <SentenceSlot active={(value as any).toObject === SubjectType.OPERATOR}>
+              <SentenceSlot active={value.toObject === SubjectType.OPERATOR}>
                 <CustomSelect
                   className="ib-determiner"
-                  value={(value as any).toDeterminer ?? ''}
+                  value={value.toDeterminer ?? ''}
                   placeholder="Determiner"
                   options={Object.values(DeterminerType).map((d) => ({ value: d, label: DETERMINER_LABELS[d] }))}
-                  onChange={(v) => update({ toDeterminer: v as DeterminerType } as any)}
+                  onChange={(v) => update({ toDeterminer: v as DeterminerType })}
                 />
               </SentenceSlot>
               <CustomSelect
-                value={(value as any).toObject ?? ''}
+                value={value.toObject ?? ''}
                 placeholder="Target"
                 options={Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))}
-                onChange={(v) => update({ toObject: v || undefined } as any)}
+                onChange={(v) => update({ toObject: v || undefined })}
               />
             </div>
           </li>
@@ -179,23 +179,23 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
       {vis.showFrom && (
         <ul className="ce-ul">
           <li className="ce-li ce-li--last ce-li--leaf">
-            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ fromObject: undefined, fromDeterminer: undefined } as any)} title="Clear">&times;</button>
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => update({ fromObject: undefined, fromDeterminer: undefined })} title="Clear">&times;</button>
             <div className="interaction-row">
               <span className="ce-badge ce-badge--keyword">FROM</span>
-              <SentenceSlot active={(value as any).fromObject === SubjectType.OPERATOR}>
+              <SentenceSlot active={value.fromObject === SubjectType.OPERATOR}>
                 <CustomSelect
                   className="ib-determiner"
-                  value={(value as any).fromDeterminer ?? ''}
+                  value={value.fromDeterminer ?? ''}
                   placeholder="Determiner"
                   options={Object.values(DeterminerType).map((d) => ({ value: d, label: DETERMINER_LABELS[d] }))}
-                  onChange={(v) => update({ fromDeterminer: v as DeterminerType } as any)}
+                  onChange={(v) => update({ fromDeterminer: v as DeterminerType })}
                 />
               </SentenceSlot>
               <CustomSelect
-                value={(value as any).fromObject ?? ''}
+                value={value.fromObject ?? ''}
                 placeholder="Source"
                 options={Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))}
-                onChange={(v) => update({ fromObject: v || undefined } as any)}
+                onChange={(v) => update({ fromObject: v || undefined })}
               />
             </div>
           </li>
@@ -290,11 +290,11 @@ function WithPropertyInput({ prop, value, update }: {
   value: InteractionOrEffect;
   update: (patch: Partial<InteractionOrEffect>) => void;
 }) {
-  const w = ((value as any).with ?? {}) as WithPreposition;
+  const w = (value.with ?? {}) as WithPreposition;
   const isBoolean = WITH_BOOLEAN_PROPERTIES.has(prop);
 
   const setWith = (next: WithPreposition) => {
-    update({ with: Object.keys(next).length > 0 ? next : undefined } as any);
+    update({ with: Object.keys(next).length > 0 ? next : undefined });
   };
 
   if (isBoolean) {

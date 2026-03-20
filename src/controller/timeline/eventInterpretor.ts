@@ -17,14 +17,17 @@ import {
   THRESHOLD_MAX,
   DURATION_END,
 } from '../../consts/semantics';
-import { TimelineEvent } from '../../consts/viewTypes';
-import { CombatSkillsType, ElementType, EventStatusType, StatusType, TargetType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
+import { CombatSkillsType, ElementType, EventStatusType, PhysicalStatusType, StatusType, TargetType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS } from '../../model/channels';
+import { FPS } from '../../utils/timeline';
+import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import { absoluteFrame, foreignStopsFor } from './processTimeStop';
-import { EXCHANGE_EVENT_DURATION, INFLICTION_DURATION, PHYSICAL_INFLICTION_DURATION, TEAM_STATUS_COLUMN, resolveSusceptibility } from './processInfliction';
+import { BREACH_DURATION, EXCHANGE_EVENT_DURATION, INFLICTION_DURATION, PHYSICAL_INFLICTION_DURATION, TEAM_STATUS_COLUMN, resolveSusceptibility } from './processInfliction';
+import { getPhysicalStatusBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { SlotTriggerWiring } from './processComboSkill';
 import { findClauseTriggerMatches } from './statusDerivationEngine';
 import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
@@ -57,10 +60,29 @@ function resolveReactionColumnId(adjective?: AdjectiveType | AdjectiveType[]) {
   return adj ? REACTION_TO_COLUMN[adj] : undefined;
 }
 
+const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
+
 function resolveStatusColumnId(objectId?: string) {
   if (!objectId) return 'unknown-status';
-  return REACTION_TO_COLUMN[objectId] ?? objectId.toLowerCase().replace(/_/g, '-');
+  if (REACTION_TO_COLUMN[objectId]) return REACTION_TO_COLUMN[objectId];
+  if (PHYSICAL_STATUS_VALUES.has(objectId)) return objectId;
+  return objectId.toLowerCase().replace(/_/g, '-');
 }
+
+function resolvePhysicalStatusColumnId(adjective?: AdjectiveType | AdjectiveType[]) {
+  const adj = Array.isArray(adjective) ? adjective[0] : adjective;
+  if (!adj || !PHYSICAL_STATUS_VALUES.has(adj as string)) return undefined;
+  return adj as string;
+}
+
+// ── Lift constants ──────────────────────────────────────────────────────────
+
+/** Duration of Lift / Knock Down status in frames (1 second at 120fps). */
+const LIFT_KNOCK_DOWN_DURATION = 1 * FPS;
+
+/** Lift / Knock Down damage multiplier (120% ATK). */
+const LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER = 1.2;
+
 
 const NOOP_VERBS = new Set<string>([
   VerbType.RECOVER, VerbType.RETURN, VerbType.DEAL, VerbType.HIT,
@@ -216,6 +238,7 @@ export class EventInterpretor {
           const col = resolveReactionColumnId(effect.adjective);
           return col ? this.controller.canApplyReaction(col, ownerId, ctx.frame) : false;
         }
+        if (effect.object === 'PHYSICAL_STATUS') return true;
         return true;
       case VerbType.CONSUME:
         if (effect.object === 'INFLICTION') {
@@ -264,6 +287,9 @@ export class EventInterpretor {
         statusLevel: typeof sl === 'number' ? sl : undefined,
       });
       return true;
+    }
+    if (effect.object === 'PHYSICAL_STATUS') {
+      return this.applyPhysicalStatus(effect, ctx);
     }
     if (effect.object === 'STAGGER') {
       const v = effect.with?.staggerValue?.value;
@@ -332,8 +358,8 @@ export class EventInterpretor {
       for (const ev of active) {
         if (ev.eventStatus === EventStatusType.CONSUMED) continue;
         const d = ctx.parentEventEndFrame - ev.startFrame;
-        if (d > ev.activationDuration) {
-          ev.activationDuration = d;
+        if (d > eventDuration(ev)) {
+          setEventDuration(ev, d);
           ev.eventStatus = EventStatusType.EXTENDED;
           ev.eventStatusOwnerId = ctx.sourceOwnerId;
           ev.eventStatusSkillName = ctx.sourceSkillName;
@@ -346,7 +372,7 @@ export class EventInterpretor {
     const frames = typeof ev2 === 'number' ? Math.round(ev2 * 120) : 0;
     for (const ev of active) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
-      ev.activationDuration += frames;
+      setEventDuration(ev, eventDuration(ev) + frames);
       ev.eventStatus = EventStatusType.EXTENDED;
       ev.eventStatusOwnerId = ctx.sourceOwnerId;
       ev.eventStatusSkillName = ctx.sourceSkillName;
@@ -386,6 +412,201 @@ export class EventInterpretor {
     return false;
   }
 
+  // ── Physical status logic (hardcoded engine mechanics) ─────────────────
+
+  /**
+   * APPLY PHYSICAL_STATUS — hardcoded Lift/Breach/etc. logic.
+   *
+   * Lift mechanic:
+   * - Always adds 1 Vulnerable stack.
+   * - If enemy already has Vulnerable OR isForced: also creates the Lift status
+   *   (1s duration, RESET stacking, 1 segment with damage + stagger at frame 0).
+   * - Damage: 120% ATK (physical).
+   * - Stagger: 10 × (1 + ArtsIntensity / 200).
+   */
+  private applyPhysicalStatus(effect: Effect, ctx: InterpretContext): boolean {
+    const columnId = resolvePhysicalStatusColumnId(effect.adjective);
+    if (!columnId) return false;
+
+    const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
+    const isForced = effect.with?.isForced?.value === 1;
+
+    if (columnId === PHYSICAL_STATUS_COLUMNS.LIFT
+      || columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
+      return this.applyLiftOrKnockDown(columnId, ctx.frame, source, isForced);
+    }
+
+    if (columnId === PHYSICAL_STATUS_COLUMNS.CRUSH) {
+      return this.applyCrush(ctx.frame, source);
+    }
+
+    if (columnId === PHYSICAL_STATUS_COLUMNS.BREACH) {
+      return this.applyBreach(ctx.frame, source);
+    }
+
+    return false;
+  }
+
+  /**
+   * Shared logic for Lift and Knock Down — identical mechanics:
+   * 120% ATK physical damage, 10 base stagger, 1s RESET, Vulnerable gate.
+   */
+  private applyLiftOrKnockDown(
+    columnId: string,
+    frame: number,
+    source: { ownerId: string; skillName: string },
+    isForced: boolean,
+  ): boolean {
+    const hasVulnerable = this.controller.activeCount(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+    ) > 0;
+
+    // Always add 1 Vulnerable stack
+    this.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      PHYSICAL_INFLICTION_DURATION, source,
+    );
+
+    // Status only triggers if enemy had Vulnerable OR isForced
+    if (!hasVulnerable && !isForced) return true;
+
+    const statusName = columnId as PhysicalStatusType;
+    const label = STATUS_LABELS[statusName];
+
+    this.controller.createStatus(
+      columnId, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+        statusName,
+        stackingMode: 'RESET',
+        id: `${columnId}-${source.ownerId}-${frame}`,
+        event: {
+          segments: [{
+            properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: label },
+            frames: [{
+              offsetFrame: 0,
+              damageElement: ElementType.PHYSICAL,
+              damageMultiplier: LIFT_KNOCK_DOWN_DAMAGE_MULTIPLIER,
+            }],
+          }],
+        },
+      },
+    );
+
+    return true;
+  }
+
+  /**
+   * Crush — consumes all Vulnerable stacks, deals damage scaling with stacks consumed.
+   *
+   * - No Vulnerable → add 1 Vulnerable stack, no Crush status
+   * - Vulnerable active → consume ALL stacks → create Crush event
+   *   with damageMultiplier based on stacks consumed (300%/450%/600%/750%)
+   * - No stagger, no forced variant
+   */
+  private applyCrush(
+    frame: number,
+    source: { ownerId: string; skillName: string },
+  ): boolean {
+    const vulnerableCount = this.controller.activeCount(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+    );
+
+    if (vulnerableCount === 0) {
+      // No Vulnerable → just add 1 stack
+      this.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+        PHYSICAL_INFLICTION_DURATION, source,
+      );
+      return true;
+    }
+
+    // Consume all Vulnerable stacks
+    const consumed = this.controller.consumeInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      vulnerableCount, source,
+    );
+
+    const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.CRUSH, consumed);
+
+    this.controller.createStatus(
+      PHYSICAL_STATUS_COLUMNS.CRUSH, ENEMY_OWNER_ID, frame, LIFT_KNOCK_DOWN_DURATION, source, {
+        statusName: PhysicalStatusType.CRUSH,
+        stackingMode: 'RESET',
+        id: `${PhysicalStatusType.CRUSH}-${source.ownerId}-${frame}`,
+        event: {
+          statusLevel: consumed,
+          segments: [{
+            properties: { duration: LIFT_KNOCK_DOWN_DURATION, name: STATUS_LABELS[PhysicalStatusType.CRUSH] },
+            frames: [{
+              offsetFrame: 0,
+              damageElement: ElementType.PHYSICAL,
+              damageMultiplier,
+            }],
+          }],
+        },
+      },
+    );
+
+    return true;
+  }
+
+  /**
+   * Breach — consumes all Vulnerable stacks, deals initial damage + applies
+   * a lingering fragility debuff (increased Physical DMG taken).
+   *
+   * - No Vulnerable → add 1 Vulnerable stack, no Breach status
+   * - Vulnerable active → consume ALL stacks → create Breach event
+   *   with duration and multiplier based on stacks consumed
+   *   (1→100%/12s, 2→150%/18s, 3→200%/24s, 4→250%/30s)
+   * - statusLevel is set for fragility lookup by EventsQueryService
+   * - No stagger, no forced variant
+   */
+  private applyBreach(
+    frame: number,
+    source: { ownerId: string; skillName: string },
+  ): boolean {
+    const vulnerableCount = this.controller.activeCount(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+    );
+
+    if (vulnerableCount === 0) {
+      this.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+        PHYSICAL_INFLICTION_DURATION, source,
+      );
+      return true;
+    }
+
+    const consumed = this.controller.consumeInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, frame,
+      vulnerableCount, source,
+    );
+
+    const statusLevel = Math.min(consumed, 4);
+    const damageMultiplier = getPhysicalStatusBaseMultiplier(PhysicalStatusType.BREACH, consumed);
+    const durationFrames = BREACH_DURATION[statusLevel] ?? BREACH_DURATION[1];
+
+    this.controller.createStatus(
+      PHYSICAL_STATUS_COLUMNS.BREACH, ENEMY_OWNER_ID, frame, durationFrames, source, {
+        statusName: PhysicalStatusType.BREACH,
+        stackingMode: 'RESET',
+        id: `${PhysicalStatusType.BREACH}-${source.ownerId}-${frame}`,
+        event: {
+          statusLevel,
+          segments: [{
+            properties: { duration: durationFrames, name: STATUS_LABELS[PhysicalStatusType.BREACH] },
+            frames: [{
+              offsetFrame: 0,
+              damageElement: ElementType.PHYSICAL,
+              damageMultiplier,
+            }],
+          }],
+        },
+      },
+    );
+
+    return true;
+  }
+
   // ── QueueFrame handlers (private) ──────────────────────────────────────
 
   private handleFrameEffect(entry: QueueFrame): QueueFrame[] {
@@ -393,11 +614,11 @@ export class EventInterpretor {
     const source = { ownerId: ev.sourceOwnerId ?? '', skillName: ev.sourceSkillName ?? '' };
 
     if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
-      this.controller.createReaction(ev.columnId, ev.ownerId, entry.frame, ev.activationDuration, source, {
+      this.controller.createReaction(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
         statusLevel: ev.statusLevel, inflictionStacks: ev.inflictionStacks, forcedReaction: ev.forcedReaction || ev.isForced, id: ev.id,
       });
     } else {
-      this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, ev.activationDuration, source, {
+      this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
         statusName: ev.name, stackingMode: entry.stackingInteraction, id: ev.id,
         event: {
           ...(ev.susceptibility && { susceptibility: ev.susceptibility }),
@@ -409,7 +630,7 @@ export class EventInterpretor {
     // Post-hook: LINK deferred CONSUME
     const newEntries: QueueFrame[] = [];
     if (ev.ownerId === COMMON_OWNER_ID && Object.values(TEAM_STATUS_COLUMN).includes(ev.columnId)) {
-      const statusEnd = ev.startFrame + ev.activationDuration;
+      const statusEnd = ev.startFrame + eventDuration(ev);
       const firstCast = this.baseEvents
         .filter(e => e.ownerId !== ENEMY_OWNER_ID && e.ownerId !== COMMON_OWNER_ID && CONSUMING_COLUMNS.has(e.columnId))
         .sort((a, b) => a.startFrame - b.startFrame)
@@ -537,11 +758,11 @@ export class EventInterpretor {
       trigger, [...this.baseEvents, ...this.controller.output],
       (col, owner, frame) => this.controller.activeCount(col, owner, frame),
       (ev) => {
-        const { id, name, ownerId, columnId, startFrame, activationDuration,
-          activeDuration, cooldownDuration, sourceOwnerId, sourceSkillName, ...extraProps } = ev;
-        this.controller.createStatus(columnId, ownerId, startFrame, activationDuration,
+        const { id, name, ownerId, columnId, startFrame,
+          segments, sourceOwnerId, sourceSkillName, ...extraProps } = ev;
+        this.controller.createStatus(columnId, ownerId, startFrame, eventDuration(ev),
           { ownerId: sourceOwnerId ?? '', skillName: sourceSkillName ?? '' },
-          { statusName: name, id, event: extraProps },
+          { statusName: name, id, event: { segments, ...extraProps } },
         );
       },
     );
@@ -550,7 +771,7 @@ export class EventInterpretor {
 
   private handleComboResolve(entry: QueueFrame): QueueFrame[] {
     const combo = entry.comboResolve?.comboEvent;
-    if (!combo?.segments || !this.slotWirings) return [];
+    if (!combo || !this.slotWirings) return [];
 
     const wiring = this.slotWirings.find(w => w.slotId === combo.ownerId);
     if (!wiring) return [];
@@ -574,6 +795,10 @@ export class EventInterpretor {
     }
     if (!triggerCol) return [];
 
+    this.controller.setComboTriggerColumnId(combo.id, triggerCol);
+
+    // Only generate source-mirrored inflictions for frames that explicitly
+    // declare APPLY SOURCE INFLICTION (duplicatesSourceInfliction flag).
     const isArts = INFLICTION_COLUMN_IDS.has(triggerCol);
     const fStops = foreignStopsFor(combo, this.controller.getStops());
     const newEntries: QueueFrame[] = [];
@@ -582,7 +807,9 @@ export class EventInterpretor {
       const seg = combo.segments[si];
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
-          const absF = absoluteFrame(combo.startFrame, cumOffset, seg.frames[fi].offsetFrame, fStops);
+          const frame = seg.frames[fi];
+          if (!frame.duplicatesSourceInfliction) continue;
+          const absF = absoluteFrame(combo.startFrame, cumOffset, frame.offsetFrame, fStops);
           newEntries.push({
             frame: absF, priority: PRIORITY.INFLICTION_CREATE, type: 'INFLICTION_CREATE',
             id: `${combo.id}-combo-${isArts ? 'inflict' : 'phys'}-${si}-${fi}`,
@@ -593,9 +820,8 @@ export class EventInterpretor {
           });
         }
       }
-      cumOffset += seg.durationFrames;
+      cumOffset += seg.properties.duration;
     }
-    this.controller.setComboTriggerColumnId(combo.id, triggerCol);
     return newEntries;
   }
 
@@ -605,11 +831,11 @@ export class EventInterpretor {
     if (this.controller.activeCount(columnId, ownerId, frame) !== ctx.maxStacks) return;
     const thresholdEvents = evaluateThresholdForExchange(ctx, frame, this.thresholdDerived, this.slotOperatorMap);
     for (const ev of thresholdEvents) {
-      const { id, name, ownerId: evOwner, columnId: evCol, startFrame, activationDuration,
-        activeDuration, cooldownDuration, sourceOwnerId, sourceSkillName, ...extraProps } = ev;
-      this.controller.createStatus(evCol, evOwner, startFrame, activationDuration,
+      const { id, name, ownerId: evOwner, columnId: evCol, startFrame,
+        segments, sourceOwnerId, sourceSkillName, ...extraProps } = ev;
+      this.controller.createStatus(evCol, evOwner, startFrame, eventDuration(ev),
         { ownerId: sourceOwnerId ?? '', skillName: sourceSkillName ?? '' },
-        { statusName: name, id, event: extraProps },
+        { statusName: name, id, event: { segments, ...extraProps } },
       );
       this.thresholdDerived.push(ev);
     }

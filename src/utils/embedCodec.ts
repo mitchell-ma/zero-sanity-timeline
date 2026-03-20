@@ -16,6 +16,8 @@ import { EnemyStats, getDefaultEnemyStats } from '../controller/appStateControll
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES } from '../utils/enemies';
 import type { TimelineEvent, Column, EventSegmentData } from '../consts/viewTypes';
+import { eventDuration, durationSegment } from '../consts/viewTypes';
+import { SegmentType } from '../consts/enums';
 
 const EMBED_VERSION = 1;
 
@@ -92,7 +94,7 @@ const KNOWN_ENEMY_IDS = new Set(ALL_ENEMIES.map(e => e.id));
 async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
   const cs = new CompressionStream('deflate-raw');
   const writer = cs.writable.getWriter();
-  writer.write(data as any);
+  writer.write(data as Uint8Array<ArrayBuffer>);
   writer.close();
   const chunks: Uint8Array[] = [];
   const reader = cs.readable.getReader();
@@ -111,7 +113,7 @@ async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
 async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate-raw');
   const writer = ds.writable.getWriter();
-  writer.write(data as any);
+  writer.write(data as Uint8Array<ArrayBuffer>);
   writer.close();
   const chunks: Uint8Array[] = [];
   const reader = ds.readable.getReader();
@@ -280,7 +282,6 @@ interface EventDefaults {
   activationDuration: number;
   activeDuration: number;
   cooldownDuration: number;
-  animationDuration?: number;
   segments?: EventSegmentData[];
 }
 
@@ -292,7 +293,6 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
         activationDuration: col.defaultEvent.defaultActivationDuration,
         activeDuration: col.defaultEvent.defaultActiveDuration,
         cooldownDuration: col.defaultEvent.defaultCooldownDuration,
-        animationDuration: col.defaultEvent.animationDuration,
         segments: col.defaultEvent.segments,
       };
     }
@@ -303,7 +303,6 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
             activationDuration: v.defaultActivationDuration,
             activeDuration: v.defaultActiveDuration,
             cooldownDuration: v.defaultCooldownDuration,
-            animationDuration: v.animationDuration,
             segments: v.segments,
           };
         }
@@ -314,7 +313,6 @@ function findEventTemplate(columns: Column[], columnId: string, skillName: strin
         activationDuration: col.defaultEvent.defaultActivationDuration,
         activeDuration: col.defaultEvent.defaultActiveDuration,
         cooldownDuration: col.defaultEvent.defaultCooldownDuration,
-        animationDuration: col.defaultEvent.animationDuration,
         segments: col.defaultEvent.segments,
       };
     }
@@ -396,16 +394,16 @@ export async function encodeEmbed(
       f: ev.startFrame,
     };
 
+    const evDuration = eventDuration(ev);
     if (template) {
-      if (ev.activationDuration !== template.activationDuration) compact.ad = ev.activationDuration;
-      if (ev.activeDuration !== template.activeDuration) compact.ac = ev.activeDuration;
-      if (ev.cooldownDuration !== template.cooldownDuration) compact.cd = ev.cooldownDuration;
-      if (ev.animationDuration !== template.animationDuration) compact.an = ev.animationDuration;
+      if (evDuration !== template.activationDuration) compact.ad = evDuration;
+      // activeDuration and cooldownDuration are always 0 in the new model
+      if (0 !== template.activeDuration) compact.ac = 0;
+      if (0 !== template.cooldownDuration) compact.cd = 0;
     } else {
-      compact.ad = ev.activationDuration;
-      compact.ac = ev.activeDuration;
-      compact.cd = ev.cooldownDuration;
-      if (ev.animationDuration) compact.an = ev.animationDuration;
+      compact.ad = evDuration;
+      compact.ac = 0;
+      compact.cd = 0;
     }
 
     if (ev.enemiesHit != null) compact.eh = ev.enemiesHit;
@@ -414,20 +412,26 @@ export async function encodeEmbed(
     if (ev.isForced) compact.fc = true;
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
 
+    // Encode ANIMATION segment duration so it survives round-trip even without column templates
+    const animSeg = origEv?.segments?.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+    if (animSeg?.properties.duration) compact.an = animSeg.properties.duration;
+
     // Segment and frame deltas — compare original event's segments against template.
-    // Only edited events have segments on the raw event; unedited events have none
-    // (default segments are attached at display time by attachDefaultSegments).
+    // Only edited events have meaningful segments; unedited events have a single
+    // placeholder segment (no name, frames, or metadata) that should be ignored.
     const origSegments = origEv?.segments;
+    const isPlaceholder = origSegments?.length === 1
+      && !origSegments[0].properties.name && !origSegments[0].frames && !origSegments[0].metadata;
     const templateSegments = template?.segments;
-    if (origSegments && templateSegments) {
+    if (origSegments && templateSegments && !isPlaceholder) {
       const minLen = Math.min(origSegments.length, templateSegments.length);
 
       // Check for segment duration differences
       let hasSegDiff = origSegments.length !== templateSegments.length;
       const segDurations: number[] = [];
       for (let si = 0; si < origSegments.length; si++) {
-        segDurations.push(origSegments[si].durationFrames);
-        if (si < templateSegments.length && origSegments[si].durationFrames !== templateSegments[si].durationFrames) {
+        segDurations.push(origSegments[si].properties.duration);
+        if (si < templateSegments.length && origSegments[si].properties.duration !== templateSegments[si].properties.duration) {
           hasSegDiff = true;
         }
       }
@@ -700,19 +704,26 @@ export async function decodeEmbed(
     const ownerId = SLOT_IDS[compact.o] ?? SLOT_IDS[0];
     const template = findEventTemplate(columns, compact.c, compact.s);
 
+    const totalDuration = (compact.ad ?? template?.activationDuration ?? 0)
+      + (compact.ac ?? template?.activeDuration ?? 0)
+      + (compact.cd ?? template?.cooldownDuration ?? 0);
     const ev: TimelineEvent = {
       id: `ev-${i + 1}`,
       name: compact.s,
       ownerId,
       columnId: compact.c,
       startFrame: compact.f,
-      activationDuration: compact.ad ?? template?.activationDuration ?? 0,
-      activeDuration: compact.ac ?? template?.activeDuration ?? 0,
-      cooldownDuration: compact.cd ?? template?.cooldownDuration ?? 0,
+      segments: durationSegment(totalDuration),
     };
 
-    if (compact.an != null) ev.animationDuration = compact.an;
-    else if (template?.animationDuration != null) ev.animationDuration = template.animationDuration;
+    // Legacy: convert compact.an (animationDuration) into an ANIMATION segment
+    if (compact.an != null) {
+      const segs = ev.segments;
+      const hasAnim = segs.some(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+      if (!hasAnim) {
+        ev.segments = [{ properties: { duration: compact.an, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION } }, ...segs];
+      }
+    }
 
     if (compact.eh != null) ev.enemiesHit = compact.eh;
     if (compact.sl != null) ev.statusLevel = compact.sl;
@@ -732,7 +743,7 @@ export async function decodeEmbed(
 
         if (compact.sg) {
           for (let si = 0; si < compact.sg.length && si < segments.length; si++) {
-            segments[si] = { ...segments[si], durationFrames: compact.sg[si] };
+            segments[si] = { ...segments[si], properties: { ...segments[si].properties, duration: compact.sg[si] } };
           }
         }
 

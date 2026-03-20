@@ -104,22 +104,24 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const expandKeys = (val: unknown): unknown => {
     if (val == null || typeof val !== 'object') return val;
     if (Array.isArray(val)) return val.map(expandKeys);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
     const out: Record<string, any> = {};
     for (const [k, v] of Object.entries(val)) {
       out[KEY_EXPAND[k] ?? k] = expandKeys(v);
     }
     return out;
   };
-  const expandedStatuses = (mockStatusesJson as any[]).map(s => expandKeys(s));
+  const expandedStatuses = (mockStatusesJson as unknown[]).map(s => expandKeys(s));
 
   const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
-  const laevatainSkills: Record<string, any> = {};
-  for (const [key, val] of Object.entries(skillEntries as Record<string, any>)) {
-    laevatainSkills[key] = { ...(val as Record<string, any>), id: key };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
+const laevatainSkills: Record<string, any> = {};
+  for (const [key, val] of Object.entries(skillEntries)) {
+    laevatainSkills[key] = { ...(val as Record<string, unknown>), id: key };
   }
   if (skTypeMap) {
     const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-    for (const [category, value] of Object.entries(skTypeMap as Record<string, any>)) {
+    for (const [category, value] of Object.entries(skTypeMap)) {
       if (typeof value === 'string') {
         if (laevatainSkills[value]) laevatainSkills[category] = laevatainSkills[value];
         for (const suffix of variantSuffixes) {
@@ -127,7 +129,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
           if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
         }
       } else if (typeof value === 'object' && value !== null) {
-        const batkId = value.BATK;
+        const batkId = (value as Record<string, string>).BATK;
         if (batkId && laevatainSkills[batkId]) laevatainSkills[category] = laevatainSkills[batkId];
         for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
           if (laevatainSkills[subId]) laevatainSkills[subKey] = laevatainSkills[subId];
@@ -142,7 +144,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     }
   }
   const mockJson = { ...mockOperatorJson, skills: laevatainSkills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
-  const json: Record<string, any> = { laevatain: mockJson };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
+const json: Record<string, any> = { laevatain: mockJson };
 
   const sequenceCache = new Map<string, unknown>();
 
@@ -247,12 +250,14 @@ const _KEY_EXPAND: Record<string, string> = {
 function _expandKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object') return val;
   if (Array.isArray(val)) return val.map(_expandKeys);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(val)) {
     out[_KEY_EXPAND[k] ?? k] = _expandKeys(v);
   }
   return out;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
 function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   const props = raw.properties ?? {};
   const meta = raw.metadata ?? {};
@@ -270,6 +275,7 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
       resolvedLimit = limit.value;
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON normalization
   const out: Record<string, any> = {
     id: props.id,
     ...(props.name ? { name: props.name } : {}),
@@ -296,14 +302,16 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   return out;
 }
 const { statusEvents: _skStatusEvents2, skillTypeMap: _skTypeMap2, ...laevatainSkillEntries2 } = laevatainSkillsJson;
-const _mergedStatusEvents = [...(laevatainStatusesJson as any[]).map(s => _expandKeys(_normalizeStatusEntry(s))), ...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
+const _mergedStatusEvents = [...(laevatainStatusesJson as unknown[]).map(s => _expandKeys(// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status data
+_normalizeStatusEntry(s as Record<string, any>))), ...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
 const laevatainSkillCategories: Record<string, any> = {};
-for (const [key, val] of Object.entries(laevatainSkillEntries2 as Record<string, any>)) {
-  laevatainSkillCategories[key] = { ...(val as Record<string, any>), id: key };
+for (const [key, val] of Object.entries(laevatainSkillEntries2)) {
+  laevatainSkillCategories[key] = { ...(val as Record<string, unknown>), id: key };
 }
 if (_skTypeMap2) {
   const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-  for (const [category, value] of Object.entries(_skTypeMap2 as Record<string, any>)) {
+  for (const [category, value] of Object.entries(_skTypeMap2)) {
     if (typeof value === 'string') {
       if (laevatainSkillCategories[value]) laevatainSkillCategories[category] = laevatainSkillCategories[value];
       for (const suffix of variantSuffixes) {
@@ -311,7 +319,7 @@ if (_skTypeMap2) {
         if (laevatainSkillCategories[variantSkillId]) laevatainSkillCategories[`${suffix}_${category}`] = laevatainSkillCategories[variantSkillId];
       }
     } else if (typeof value === 'object' && value !== null) {
-      const batkId = value.BATK;
+      const batkId = (value as Record<string, string>).BATK;
       if (batkId && laevatainSkillCategories[batkId]) laevatainSkillCategories[category] = laevatainSkillCategories[batkId];
       for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
         if (laevatainSkillCategories[subId]) laevatainSkillCategories[subKey] = laevatainSkillCategories[subId];
@@ -402,7 +410,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const battleFrames = rawSkills.BATTLE_SKILL.frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
     const mfEffect = firstFrameEffects.find(
-      (e: Record<string, any>) => e.verb === 'APPLY' && e.objectId === 'MELTING_FLAME'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectId === 'MELTING_FLAME'
     );
     expect(mfEffect).toBeDefined();
     expect(mfEffect.object).toBe('STATUS');
@@ -415,7 +423,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     const empoweredFrames = rawSkills.EMPOWERED_BATTLE_SKILL.frames;
     const firstFrameEffects = empoweredFrames[0].clause[0].effects;
     const dealDamageEffect = firstFrameEffects.find(
-      (e: Record<string, any>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
     );
     expect(dealDamageEffect).toBeDefined();
     expect(dealDamageEffect.with.duration.value).toBe(5);
@@ -450,9 +458,10 @@ describe('D. Combo Skill (Seethe) Triggers', () => {
 
   test('D5: Combo skill frame data includes stagger recovery', () => {
     const sequences = getSequences('COMBO_SKILL');
-    expect(sequences.length).toBeGreaterThan(0);
+    // segments[0] is ANIMATION (no frames), segments[1] has actual frames
+    expect(sequences.length).toBe(2);
 
-    const firstFrame = sequences[0].getFrames()[0];
+    const firstFrame = sequences[1].getFrames()[0];
     expect(firstFrame.getStagger()).toBe(10);
   });
 });
@@ -501,7 +510,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
 
   test('E6: Ultimate active duration is 15 seconds (from skill segments)', () => {
     const ultSkill = mockLaevatainJson.skills.TWILIGHT;
-    const activeSeg = ultSkill.segments.find((s: Record<string, any>) => s.metadata?.segmentType === 'ACTIVE');
+    const activeSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'ACTIVE');
     expect(activeSeg).toBeDefined();
     expect(activeSeg.properties.duration.value).toBe(15);
   });
@@ -509,7 +518,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
   test('E7: Ultimate energy cost is 300', () => {
     const ultSkill = mockLaevatainJson.skills.ULTIMATE;
     const energyCost = ultSkill.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.cardinality.value).toBe(300);
@@ -536,7 +545,7 @@ describe('F. Potentials', () => {
     expect(p1.name).toBe('Heart of Melting Flame');
 
     const spEffects = p1.effects.filter(
-      (e: Record<string, any>) => e.potentialEffectType === 'SKILL_PARAMETER' &&
+      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
         e.skillParameterModifier.parameterKey === 'SKILL_POINT'
     );
     expect(spEffects.length).toBe(2); // Normal and Enhanced
@@ -548,7 +557,7 @@ describe('F. Potentials', () => {
     const p0 = mockLaevatainJson.potentials[0];
     // Enhanced: ×1.2 on DAMAGE_MULTIPLIER
     const enhancedDmg = p0.effects.find(
-      (e: Record<string, any>) => e.potentialEffectType === 'SKILL_PARAMETER' &&
+      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
         e.skillParameterModifier.skillType === 'SMOULDERING_FIRE_ENHANCED' &&
         e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER'
     );
@@ -559,7 +568,7 @@ describe('F. Potentials', () => {
   test('F3: P3 Combustion reaction multiplier is x1.5', () => {
     const talentEffects = mockLaevatainJson.talentEffects;
     const p3Effect = talentEffects.find(
-      (e: Record<string, any>) => e.bonusType === 'REACTION_MULTIPLIER' && e.condition?.reactionType === 'COMBUSTION'
+      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.bonusType === 'REACTION_MULTIPLIER' && e.condition?.reactionType === 'COMBUSTION'
     );
     expect(p3Effect).toBeDefined();
     // BASED_ON [POTENTIAL] format: P0 = 1 (no bonus), P3 = 1.5
@@ -576,7 +585,7 @@ describe('F. Potentials', () => {
     expect(p4.level).toBe(4);
     expect(p4.name).toBe('Ice Cream Furnace');
     const costEffect = p4.effects.find(
-      (e: Record<string, any>) => e.potentialEffectType === 'SKILL_COST'
+      (e: Record<string, unknown>) => e.potentialEffectType === 'SKILL_COST'
     );
     expect(costEffect).toBeDefined();
     expect(costEffect.skillCostModifier.skillType).toBe('LAEVATAIN_TWILIGHT');
@@ -588,7 +597,7 @@ describe('F. Potentials', () => {
     expect(p5.level).toBe(5);
     expect(p5.name).toBe('Proof of Existence');
     const buffEffect = p5.effects.find(
-      (e: Record<string, any>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
+      (e: Record<string, unknown>) => e.potentialEffectType === 'BUFF_ATTACHMENT'
     );
     expect(buffEffect).toBeDefined();
     expect(buffEffect.buffAttachment.objectId).toBe('LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE');
@@ -597,7 +606,7 @@ describe('F. Potentials', () => {
   test('F6: P5 adds x1.2 damage multiplier to Flaming Cinders Enhanced', () => {
     const p5 = mockLaevatainJson.potentials[4];
     const dmgEffects = p5.effects.filter(
-      (e: Record<string, any>) => e.potentialEffectType === 'SKILL_PARAMETER' &&
+      (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
         e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER' &&
         e.skillParameterModifier.skillType === 'FLAMING_CINDERS_ENHANCED'
     );
@@ -618,19 +627,19 @@ describe('H. Cooldown Interactions', () => {
   const FPS = 120;
 
   function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
-    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+    return { name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   test('H1: Battle skill (Smouldering Fire) has no COOLDOWN effect', () => {
     const bs = mockLaevatainJson.skills.BATTLE_SKILL;
-    const cooldown = bs.effects?.find((e: Record<string, any>) => e.object === 'COOLDOWN');
+    const cooldown = bs.effects?.find((e: Record<string, unknown>) => e.object === 'COOLDOWN');
     expect(cooldown).toBeUndefined();
   });
 
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
     const cooldown = cs.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(10);
@@ -638,7 +647,7 @@ describe('H. Cooldown Interactions', () => {
 
   test('H3: Ultimate (Twilight) has 10s cooldown from skill segments', () => {
     const ultSkill = mockLaevatainJson.skills.TWILIGHT;
-    const cdSeg = ultSkill.segments.find((s: Record<string, any>) => s.metadata?.segmentType === 'COOLDOWN');
+    const cdSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value).toBe(10);
   });
@@ -649,7 +658,7 @@ describe('H. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
-      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // During cooldown
@@ -665,8 +674,7 @@ describe('H. Cooldown Interactions', () => {
     const totalRange = ultAnimation + ultActive + ultCooldown;
     const ult1 = makeEvent({
       id: 'ult-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
-      activationDuration: ultAnimation, activeDuration: ultActive,
-      cooldownDuration: ultCooldown, nonOverlappableRange: totalRange,
+      segments: [{ properties: { duration: ultAnimation } }], nonOverlappableRange: totalRange,
     });
     // During cooldown phase
     const cooldownStart = ultAnimation + ultActive;
@@ -679,7 +687,7 @@ describe('H. Cooldown Interactions', () => {
     const bsDuration = Math.round(2.2 * FPS); // 264 frames
     const bs1 = makeEvent({
       id: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
-      activationDuration: bsDuration, nonOverlappableRange: bsDuration,
+      segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
     expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
@@ -696,7 +704,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
   const SLOT_AKEKURI = 'slot-2';
 
   function makeEv(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
-    return { name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+    return { name: '', segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   function laevWiring(): SlotTriggerWiring {
@@ -713,6 +721,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
 
   test('K1: Laevatain final strike absorbs both original and mirrored heat inflictions', () => {
     const wirings = [laevWiring(), antalWiring(), akekuriWiring()];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [SLOT_LAEV]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };
@@ -720,34 +729,32 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
     // Focus on enemy (from Antal's battle skill)
     const focus = makeEv({
       id: 'focus-1', name: StatusType.FOCUS, ownerId: ENEMY_OWNER_ID,
-      columnId: 'focus', startFrame: 0, activationDuration: 60 * FPS,
+      columnId: 'focus', startFrame: 0, segments: [{ properties: { duration: 60 * FPS } }],
     });
     // Akekuri's heat infliction
     const akekuriHeat = makeEv({
       id: 'akekuri-heat-1', name: 'heatInfliction', ownerId: ENEMY_OWNER_ID,
-      columnId: 'heatInfliction', startFrame: 200, activationDuration: 20 * FPS,
+      columnId: 'heatInfliction', startFrame: 200, segments: [{ properties: { duration: 20 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI, sourceSkillName: 'BURST_OF_PASSION',
     });
     // Antal combo with comboTriggerColumnId set (mirrors heat)
     const antalCombo = makeEv({
       id: 'antal-combo-1', name: 'EMP_TEST_SITE', ownerId: SLOT_ANTAL,
       columnId: SKILL_COLUMNS.COMBO, startFrame: 400,
-      activationDuration: Math.round(0.8 * FPS),
       comboTriggerColumnId: 'heatInfliction',
       segments: [{
-        durationFrames: Math.round(0.8 * FPS),
-        frames: [{ offsetFrame: Math.round(0.7 * FPS) }],
+        properties: { duration: Math.round(0.8 * FPS) },
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
       }],
     });
     // Laevatain final strike after both heat inflictions exist
     const laevBasic = makeEv({
       id: 'laev-basic-1', name: 'FLAMING_CINDERS', ownerId: SLOT_LAEV,
       columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
-      activationDuration: 360,
-      segments: [
-        { durationFrames: 120, label: '1' },
-        { durationFrames: 120, label: '2' },
-        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+            segments: [
+        { properties: { duration: 120, name: '1' } },
+        { properties: { duration: 120, name: '2' } },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
       ],
     });
 
@@ -788,6 +795,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
 
   test('L1: Single freeform heat infliction + basic attack produces exactly 1 MF stack', () => {
     const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };
@@ -798,9 +806,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: INFLICTION_COLUMNS.HEAT,
       startFrame: 0,
-      activationDuration: 4800,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 4800 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -811,13 +817,10 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       ownerId: LAEV_SLOT,
       columnId: SKILL_COLUMNS.BASIC,
       startFrame: 100,
-      activationDuration: 360,
-      activeDuration: 0,
-      cooldownDuration: 0,
-      segments: [
-        { durationFrames: 120, label: '1' },
-        { durationFrames: 120, label: '2' },
-        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+            segments: [
+        { properties: { duration: 120, name: '1' } },
+        { properties: { duration: 120, name: '2' } },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
       ],
     };
 
@@ -839,6 +842,7 @@ describe('M. Normal basic attack without external infliction', () => {
 
   test('M1: Normal basic attack alone produces no heat infliction or MF', () => {
     const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };
@@ -849,13 +853,10 @@ describe('M. Normal basic attack without external infliction', () => {
       ownerId: LAEV_SLOT,
       columnId: SKILL_COLUMNS.BASIC,
       startFrame: 92,
-      activationDuration: 360,
-      activeDuration: 0,
-      cooldownDuration: 0,
-      segments: [
-        { durationFrames: 120, label: '1' },
-        { durationFrames: 120, label: '2' },
-        { durationFrames: 120, label: '3', frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+            segments: [
+        { properties: { duration: 120, name: '1' } },
+        { properties: { duration: 120, name: '2' } },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
       ],
     };
 
@@ -882,6 +883,7 @@ describe('N. Scorching Heart talent presence', () => {
 
   test('N1: SCORCHING_HEART talent event exists at frame 0 with full timeline duration', () => {
     const wirings: SlotTriggerWiring[] = [{ slotId: LAEV_SLOT, operatorId: 'laevatain' }];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial loadout for test
     const loadoutProps: Record<string, any> = {
       [LAEV_SLOT]: { operator: { talentOneLevel: 1, talentTwoLevel: 0, potential: 0 } },
     };

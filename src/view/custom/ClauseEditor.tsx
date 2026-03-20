@@ -24,9 +24,10 @@ interface ClauseEditorProps {
   initialValue?: Clause;
   onChange?: (clause: Clause) => void;
   conditionsOnly?: boolean;
+  readOnly?: boolean;
 }
 
-export default function ClauseEditor({ initialValue, onChange, conditionsOnly }: ClauseEditorProps) {
+export default function ClauseEditor({ initialValue, onChange, conditionsOnly, readOnly }: ClauseEditorProps) {
   const [clause, setClause] = useState<Clause>(initialValue ?? []);
 
   const update = useCallback((next: Clause) => {
@@ -49,7 +50,7 @@ export default function ClauseEditor({ initialValue, onChange, conditionsOnly }:
   };
 
   return (
-    <div className="ce-tree">
+    <div className={`ce-tree${readOnly ? ' ce-tree--readonly' : ''}`}>
       <div className="ce-root">
         <span className="ce-root-icon">{'\u25C8'}</span>
         <span className="ce-root-label">CLAUSE</span>
@@ -66,9 +67,11 @@ export default function ClauseEditor({ initialValue, onChange, conditionsOnly }:
             conditionsOnly={conditionsOnly}
           />
         ))}
-        <li className="ce-li ce-li--last ce-li--addrow">
-          <button className="ce-line-btn ce-line-btn--add" onClick={addPredicate} title="Add predicate">+</button>
-        </li>
+        {!readOnly && (
+          <li className="ce-li ce-li--last ce-li--addrow">
+            <button className="ce-line-btn ce-line-btn--add" onClick={addPredicate} title="Add predicate">+</button>
+          </li>
+        )}
       </ul>
     </div>
   );

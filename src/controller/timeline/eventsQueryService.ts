@@ -6,13 +6,14 @@
  * talent evaluation. All queries are frame-based and resolve against
  * the DerivedEventController's event data and time-stop regions.
  */
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { CombatSkillType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { StaggerBreak } from './staggerTimeline';
 import {
   ENEMY_OWNER_ID,
   FRAGILITY_COLUMN_PREFIX,
   INFLICTION_COLUMNS,
+  NODE_STAGGER_COLUMN_ID,
   OPERATOR_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
   REACTION_COLUMNS,
@@ -94,6 +95,7 @@ export class EventsQueryService {
   private cryoInflictionEvents: TimelineEvent[];
   private solidificationEvents: TimelineEvent[];
   private originiumCrystalEvents: TimelineEvent[];
+  private nodeStaggerEvents: TimelineEvent[];
   private staggerBreaks: readonly StaggerBreak[];
   private state: DerivedEventController;
   private loadoutProperties: Record<string, LoadoutProperties>;
@@ -133,6 +135,7 @@ export class EventsQueryService {
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
     this.originiumCrystalEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL);
+    this.nodeStaggerEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === NODE_STAGGER_COLUMN_ID);
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
@@ -149,32 +152,33 @@ export class EventsQueryService {
   }
 
   private isActive(ev: TimelineEvent, frame: number): boolean {
-    return ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration;
+    return ev.startFrame <= frame && frame < ev.startFrame + eventDuration(ev);
   }
 
   private resolveSegmentSusceptibility(ev: TimelineEvent, frame: number, element: ElementType): number {
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       const elapsed = this.gameTimeElapsed(ev.startFrame, frame);
       let segStart = 0;
       for (const seg of ev.segments) {
-        if (elapsed >= segStart && elapsed < segStart + seg.durationFrames) {
-          return seg.susceptibility?.[element] ?? ev.susceptibility?.[element] ?? 0;
+        if (elapsed >= segStart && elapsed < segStart + seg.properties.duration) {
+          const susc = seg.unknown?.susceptibility as Partial<Record<ElementType, number>> | undefined;
+          return susc?.[element] ?? ev.susceptibility?.[element] ?? 0;
         }
-        segStart += seg.durationFrames;
+        segStart += seg.properties.duration;
       }
     }
     return ev.susceptibility?.[element] ?? 0;
   }
 
   private resolveSegmentLabel(ev: TimelineEvent, frame: number): string {
-    if (ev.segments && ev.segments.length > 0) {
+    if (ev.segments.length > 0) {
       const elapsed = this.gameTimeElapsed(ev.startFrame, frame);
       let segStart = 0;
       for (const seg of ev.segments) {
-        if (elapsed >= segStart && elapsed < segStart + seg.durationFrames) {
-          return seg.label ?? ev.name ?? ev.columnId;
+        if (elapsed >= segStart && elapsed < segStart + seg.properties.duration) {
+          return seg.properties.name ?? ev.name ?? ev.columnId;
         }
-        segStart += seg.durationFrames;
+        segStart += seg.properties.duration;
       }
     }
     return ev.name ?? ev.columnId;
@@ -183,7 +187,8 @@ export class EventsQueryService {
   // ── Public API ──────────────────────────────────────────────────────────
 
   isStaggered(frame: number): boolean {
-    return this.staggerBreaks.some(b => frame >= b.startFrame && frame < b.endFrame);
+    return this.staggerBreaks.some(b => frame >= b.startFrame && frame < b.endFrame)
+      || this.nodeStaggerEvents.some(e => this.isActive(e, frame));
   }
 
   getSusceptibilityBonus(frame: number, element: ElementType): number {

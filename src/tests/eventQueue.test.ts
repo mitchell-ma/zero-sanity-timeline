@@ -10,8 +10,8 @@
  * - Cross-element reaction derivation inline with inflictions
  * - Shuffled event order produces identical results (drag invariance)
  */
-import { TimelineEvent, EventSegmentData } from '../consts/viewTypes';
-import { EventStatusType } from '../consts/enums';
+import { TimelineEvent, EventSegmentData, EventFrameMarker, eventDuration } from '../consts/viewTypes';
+import { EventStatusType, SegmentType, TimeDependency } from '../consts/enums';
 import { OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../model/channels';
 
 // ── Mock require.context before importing modules that use it ────────────────
@@ -28,28 +28,26 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const mockStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = mockSkillsJson;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'toObject', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
   const expandKeys = (val: any): any => {
     if (val == null || typeof val !== 'object') return val;
     if (Array.isArray(val)) return val.map(expandKeys);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
     const out = {} as Record<string, any>;
     for (const [k, v] of Object.entries(val)) {
       out[KEY_EXPAND[k] ?? k] = expandKeys(v);
     }
     return out;
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- status normalization
   const expandedStatuses = (mockStatusesJson as any[]).map((s: any) => expandKeys(s));
 
   const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const laevatainSkills = {} as Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const [key, val] of Object.entries(skillEntries as Record<string, any>)) {
-    laevatainSkills[key] = { ...val, id: key };
+  for (const [key, val] of Object.entries(skillEntries)) {
+    laevatainSkills[key] = { ...(val as Record<string, unknown>), id: key };
   }
   if (skTypeMap) {
     const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
@@ -62,12 +60,11 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     }
   }
   const mockJson = { ...mockOperatorJson, skills: laevatainSkills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const json = { laevatain: mockJson } as Record<string, any>;
-  const sequenceCache = new Map<string, any>();
+  const sequenceCache = new Map<string, unknown>();
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getOperatorJson: (id: string) => json[id],
     getAllOperatorIds: () => Object.keys(json),
     getSkillIds: (operatorId: string) => {
@@ -169,9 +166,7 @@ function battleSkillEvent(startFrame: number): TimelineEvent {
     ownerId: SLOT_ID,
     columnId: SKILL_COLUMNS.BATTLE,
     startFrame,
-    activationDuration: Math.round(2.2 * FPS),
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: Math.round(2.2 * FPS) } }],
   };
 }
 
@@ -181,10 +176,10 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
   const empDef = skillsJson['SMOULDERING_FIRE_EMPOWERED'];
   const duration = Math.round(empDef.properties.duration.value * FPS);
   const segments: EventSegmentData[] = [];
-  const frames: any[] = [];
+  const frames: EventFrameMarker[] = [];
   for (const f of empDef.frames) {
     const offset = Math.round(f.properties.offset.value * FPS);
-    const frameMarker: any = { offsetFrame: offset };
+    const frameMarker: EventFrameMarker = { offsetFrame: offset };
     for (const ef of (f.clause?.[0]?.effects ?? [])) {
       if (ef.verb === 'CONSUME' && ef.object === 'STATUS') {
         frameMarker.consumeStatus = ef.objectId;
@@ -192,7 +187,7 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
     }
     frames.push(frameMarker);
   }
-  segments.push({ durationFrames: duration, frames });
+  segments.push({ properties: { duration }, frames });
 
   return {
     id: `emp-battle-${eventIdCounter++}`,
@@ -200,10 +195,7 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
     ownerId: SLOT_ID,
     columnId: SKILL_COLUMNS.BATTLE,
     startFrame,
-    activationDuration: duration,
-    activeDuration: 0,
-    cooldownDuration: 0,
-    segments,
+        segments,
   };
 }
 
@@ -464,9 +456,9 @@ describe('Infliction Stack Cap (Queue Pipeline)', () => {
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     // Consumed MF stacks should have activationDuration < original (clamped at consume frame)
     for (const ev of consumed) {
-      expect(ev.activationDuration).toBeGreaterThan(0);
+      expect(eventDuration(ev)).toBeGreaterThan(0);
       // Duration should be clipped to the consume point, not the original full duration
-      expect(ev.startFrame + ev.activationDuration).toBeLessThanOrEqual(1500);
+      expect(ev.startFrame + eventDuration(ev)).toBeLessThanOrEqual(1500);
     }
   });
 
@@ -506,9 +498,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId,
       startFrame,
-      activationDuration: duration,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: duration } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -570,13 +560,13 @@ describe('Freeform Inflictions', () => {
     const heats = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.HEAT);
     expect(heats.length).toBe(1);
     expect(heats[0].eventStatus).toBe(EventStatusType.CONSUMED);
-    expect(heats[0].activationDuration).toBe(100); // clamped: 200 - 100
+    expect(eventDuration(heats[0])).toBe(100); // clamped: 200 - 100
 
     // Later infliction (nature) also consumed with zero duration
     const natures = result.filter(ev => ev.columnId === INFLICTION_COLUMNS.NATURE);
     expect(natures.length).toBe(1);
     expect(natures[0].eventStatus).toBe(EventStatusType.CONSUMED);
-    expect(natures[0].activationDuration).toBe(0);
+    expect(eventDuration(natures[0])).toBe(0);
   });
 
   test('F6: Freeform infliction interacts with another freeform of different element at same frame', () => {
@@ -619,7 +609,7 @@ describe('Freeform Inflictions', () => {
     // Heat should be active again (not consumed) since raw event was never mutated
     const heatResult = result2.find(ev => ev.id === heat.id)!;
     expect(heatResult.eventStatus).toBeUndefined();
-    expect(heatResult.activationDuration).toBe(2400);
+    expect(eventDuration(heatResult)).toBe(2400);
   });
 
   test('F9: Raw freeform events are not mutated across pipeline runs', () => {
@@ -630,9 +620,9 @@ describe('Freeform Inflictions', () => {
     processInflictionEvents([heat, nature]);
 
     // Original objects must be untouched (undo history integrity)
-    expect(heat.activationDuration).toBe(2400);
+    expect(eventDuration(heat)).toBe(2400);
     expect(heat.eventStatus).toBeUndefined();
-    expect(nature.activationDuration).toBe(2400);
+    expect(eventDuration(nature)).toBe(2400);
     expect(nature.eventStatus).toBeUndefined();
   });
 
@@ -671,7 +661,7 @@ describe('Freeform Inflictions', () => {
     const heats = filterByColumn(result, INFLICTION_COLUMNS.HEAT);
     expect(heats.length).toBe(1);
     expect(heats[0].id).toBe(heat.id);
-    expect(heats[0].activationDuration).toBe(2400);
+    expect(eventDuration(heats[0])).toBe(2400);
     expect(heats[0].eventStatus).toBeUndefined();
   });
 
@@ -682,9 +672,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 2400, // 20s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 2400 } }], // 20s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       forcedReaction: true,
@@ -695,9 +683,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 60, // 0.5s
-      activationDuration: 2400, // 20s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 2400 } }], // 20s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       forcedReaction: true,
@@ -709,7 +695,7 @@ describe('Freeform Inflictions', () => {
     const first = result.find(ev => ev.id === 'comb-1');
     expect(first).toBeDefined();
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
-    expect(first!.activationDuration).toBe(60);
+    expect(first!.segments[0].properties.duration).toBe(60);
 
     // Forced combustion has no initial hit. First DOT tick is at 120 (1s).
     // After clamping to 60 frames, no frames should remain.
@@ -724,9 +710,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       forcedReaction: true,
@@ -737,9 +721,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 60, // 0.5s
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       forcedReaction: true,
@@ -749,7 +731,7 @@ describe('Freeform Inflictions', () => {
     const first = result.find(ev => ev.id === 'comb-5s-1');
     expect(first).toBeDefined();
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
-    expect(first!.activationDuration).toBe(60); // clamped at 0.5s
+    expect(first!.segments[0].properties.duration).toBe(60); // clamped at 0.5s
 
     // Forced combustion: no initial hit, first DOT at 120 — past the 60-frame clamp.
     const firstFrames = first!.segments?.flatMap(s => s.frames ?? []) ?? [];
@@ -763,9 +745,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 60, // 0.5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 60 } }], // 0.5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       forcedReaction: true,
@@ -791,9 +771,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -803,9 +781,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 240, // 2s
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -816,7 +792,7 @@ describe('Freeform Inflictions', () => {
     const first = result.find(ev => ev.id === 'int-comb-1');
     expect(first).toBeDefined();
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
-    expect(first!.activationDuration).toBe(240); // clamped at 2s
+    expect(first!.segments[0].properties.duration).toBe(240); // clamped at 2s
 
     // Check ALL frame offsets on the first combustion
     const firstFrames = first!.segments?.flatMap(s => s.frames ?? []) ?? [];
@@ -847,9 +823,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true, // set by createEvent for enemy reaction events
@@ -860,9 +834,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 240, // 2s
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -873,7 +845,7 @@ describe('Freeform Inflictions', () => {
     const first = result.find(ev => ev.id === 'app-comb-1');
     expect(first).toBeDefined();
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
-    expect(first!.activationDuration).toBe(240); // clamped at 2s
+    expect(first!.segments[0].properties.duration).toBe(240); // clamped at 2s
 
     // isForced combustion: no initial hit, DOT ticks at 120, 240, ...
     // After clamp to 240 frames, tick at 120 fits, tick at 240 is at boundary (kept).
@@ -900,9 +872,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -927,9 +897,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600, // 5s
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }], // 5s
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -953,9 +921,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.SOLIDIFICATION,
       startFrame: 0,
-      activationDuration: 2400,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 2400 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -977,9 +943,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
     };
@@ -999,9 +963,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1012,9 +974,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 240, // 2s
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1024,9 +984,9 @@ describe('Freeform Inflictions', () => {
     const first = result.find(ev => ev.id === 'merge-1');
     const second = result.find(ev => ev.id === 'merge-2');
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
-    expect(first!.activationDuration).toBe(240);
+    expect(first!.segments[0].properties.duration).toBe(240);
     expect(second!.eventStatus).toBeUndefined();
-    expect(second!.activationDuration).toBe(600);
+    expect(second!.segments[0].properties.duration).toBe(600);
   });
 
   test('F25: Freeform reaction merge — raw events not mutated', () => {
@@ -1036,9 +996,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1049,9 +1007,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 240,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1059,9 +1015,9 @@ describe('Freeform Inflictions', () => {
 
     processInflictionEvents([comb1, comb2]);
     // Raw events must be untouched
-    expect(comb1.activationDuration).toBe(600);
+    expect(eventDuration(comb1)).toBe(600);
     expect(comb1.eventStatus).toBeUndefined();
-    expect(comb2.activationDuration).toBe(600);
+    expect(eventDuration(comb2)).toBe(600);
     expect(comb2.eventStatus).toBeUndefined();
   });
 
@@ -1074,9 +1030,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 0,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1087,9 +1041,7 @@ describe('Freeform Inflictions', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: REACTION_COLUMNS.COMBUSTION,
       startFrame: 240,
-      activationDuration: 600,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 600 } }],
       sourceOwnerId: USER_ID,
       sourceSkillName: 'Freeform',
       isForced: true,
@@ -1104,7 +1056,7 @@ describe('Freeform Inflictions', () => {
     const result2 = processInflictionEvents([comb1, comb2Dragged]);
     const first = result2.find(ev => ev.id === 'drag-undo-1')!;
     expect(first.eventStatus).toBeUndefined();
-    expect(first.activationDuration).toBe(600);
+    expect(eventDuration(first)).toBe(600);
   });
 
   // ── Events without sourceOwnerId normalized to USER_ID ─────────────────
@@ -1120,6 +1072,423 @@ describe('Freeform Inflictions', () => {
     );
     // Max 4 active (deque cap), 5th evicts oldest
     expect(activeHeats.length).toBe(4);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Combo skill infliction — data-driven via duplicatesSourceInfliction
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Combo skill infliction behavior', () => {
+  /** Laevatain Seethe — does NOT have APPLY SOURCE INFLICTION. */
+  function seetheCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
+    return {
+      id: `seethe-${eventIdCounter++}`,
+      name: 'SEETHE',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame,
+      comboTriggerColumnId,
+      segments: [
+        { properties: { duration: Math.round(0.566 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        {
+          properties: { duration: Math.round(1.37 * FPS) },
+          frames: [{ offsetFrame: Math.round(0.67 * FPS) }],
+        },
+      ],
+    };
+  }
+
+  /** Antal EMP Test Site — HAS APPLY SOURCE INFLICTION on its frame. */
+  function empTestSiteCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
+    return {
+      id: `emp-${eventIdCounter++}`,
+      name: 'EMP_TEST_SITE',
+      ownerId: 'slot-antal',
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame,
+      comboTriggerColumnId,
+      segments: [
+        { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        {
+          properties: { duration: Math.round(0.8 * FPS) },
+          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+        },
+      ],
+    };
+  }
+
+  test('G1: Seethe with heat trigger produces 0 enemy inflictions', () => {
+    const result = processInflictionEvents([seetheCombo(500, INFLICTION_COLUMNS.HEAT)]);
+    const enemyInflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(enemyInflictions.length).toBe(0);
+  });
+
+  test('G2: Seethe with corrosion trigger produces 0 enemy events', () => {
+    const result = processInflictionEvents([seetheCombo(500, 'corrosion')]);
+    const enemyEvents = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(enemyEvents.length).toBe(0);
+  });
+
+  test('G3: Seethe without trigger column produces 0 enemy events', () => {
+    const result = processInflictionEvents([seetheCombo(500)]);
+    const enemyEvents = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(enemyEvents.length).toBe(0);
+  });
+
+  test('G4: EMP Test Site with heat trigger produces exactly 1 heat infliction on enemy', () => {
+    const result = processInflictionEvents([empTestSiteCombo(500, INFLICTION_COLUMNS.HEAT)]);
+    const heatInflictions = result.filter(ev =>
+      ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID
+    );
+    expect(heatInflictions.length).toBe(1);
+    expect(heatInflictions[0].sourceOwnerId).toBe('slot-antal');
+    expect(heatInflictions[0].sourceSkillName).toBe('EMP_TEST_SITE');
+  });
+
+  test('G5: EMP Test Site without trigger column produces 0 enemy inflictions', () => {
+    const result = processInflictionEvents([empTestSiteCombo(500)]);
+    const enemyInflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
+    expect(enemyInflictions.length).toBe(0);
+  });
+
+  test('G6: Combo without duplicatesSourceInfliction does not mirror even with trigger column', () => {
+    // Wulfgard Frag Grenade Beta — has explicit APPLY HEAT INFLICTION (via applyArtsInfliction),
+    // NOT SOURCE mirroring. Simulated here as a combo without the flag.
+    const combo: TimelineEvent = {
+      id: `frag-${eventIdCounter++}`,
+      name: 'FRAG_GRENADE_BETA',
+      ownerId: 'slot-wulfgard',
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 500,
+      comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
+      segments: [
+        { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        {
+          properties: { duration: Math.round(1.0 * FPS) },
+          // No duplicatesSourceInfliction — has explicit applyArtsInfliction instead
+          frames: [{
+            offsetFrame: Math.round(0.5 * FPS),
+            applyArtsInfliction: { element: 'HEAT', stacks: 1 },
+          }],
+        },
+      ],
+    };
+    const result = processInflictionEvents([combo]);
+    const heatInflictions = result.filter(ev =>
+      ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID
+    );
+    // Exactly 1 infliction from explicit applyArtsInfliction, 0 from trigger mirroring
+    expect(heatInflictions.length).toBe(1);
+    expect(heatInflictions[0].sourceSkillName).toBe('FRAG_GRENADE_BETA');
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Sibling overlap warnings after time-stop extension
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Sibling overlap warnings', () => {
+  test('O1: Basic attacks displaced by combo timestop get overlap warnings', () => {
+    // Two basic attacks placed back-to-back, then a combo with timestop
+    // inserted before them — the timestop extends the first basic attack
+    // into the second's start frame.
+    const basic1: TimelineEvent = {
+      id: 'basic-overlap-1',
+      name: 'FLAMING_CINDERS',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 100,
+            segments: [{ properties: { duration: 200 }, frames: [{ offsetFrame: 50 }] }],
+    };
+    const basic2: TimelineEvent = {
+      id: 'basic-overlap-2',
+      name: 'FLAMING_CINDERS',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 300,
+            segments: [{ properties: { duration: 200 }, frames: [{ offsetFrame: 50 }] }],
+    };
+    // Combo with timestop at frame 150, animation duration 120 frames
+    // This extends basic1's game-time segments by 120 frames,
+    // pushing its end from 300 to 420 — overlapping basic2 at 300.
+    const combo: TimelineEvent = {
+      id: 'combo-ts',
+      name: 'SEETHE',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 150,
+            segments: [
+        { properties: { duration: 120, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { duration: 180 }, frames: [{ offsetFrame: 100 }] },
+      ],
+    };
+
+    const result = processInflictionEvents([basic1, combo, basic2]);
+
+    const b1 = result.find(ev => ev.id === 'basic-overlap-1');
+    const b2 = result.find(ev => ev.id === 'basic-overlap-2');
+    expect(b1).toBeDefined();
+    expect(b2).toBeDefined();
+    // Both should have overlap warnings
+    expect(b1!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+    expect(b2!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+  });
+
+  test('O2: Non-overlapping events have no warnings', () => {
+    const basic1: TimelineEvent = {
+      id: 'no-overlap-1',
+      name: 'FLAMING_CINDERS',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 0,
+            segments: [{ properties: { duration: 100 }, frames: [{ offsetFrame: 50 }] }],
+    };
+    const basic2: TimelineEvent = {
+      id: 'no-overlap-2',
+      name: 'FLAMING_CINDERS',
+      ownerId: SLOT_ID,
+      columnId: SKILL_COLUMNS.BASIC,
+      startFrame: 200,
+            segments: [{ properties: { duration: 100 }, frames: [{ offsetFrame: 50 }] }],
+    };
+
+    const result = processInflictionEvents([basic1, basic2]);
+    const b1 = result.find(ev => ev.id === 'no-overlap-1');
+    const b2 = result.find(ev => ev.id === 'no-overlap-2');
+    expect(b1!.warnings ?? []).toEqual([]);
+    expect(b2!.warnings ?? []).toEqual([]);
+  });
+
+  test('O3: Different event names in same column do NOT trigger overlap', () => {
+    // Two different statuses in the same column at the same time — valid coexistence
+    const status1: TimelineEvent = {
+      id: 'status-a',
+      name: 'STATUS_TYPE_A',
+      ownerId: SLOT_ID,
+      columnId: 'status-column',
+      startFrame: 0,
+      segments: [{ properties: { duration: 500 } }],
+    };
+    const status2: TimelineEvent = {
+      id: 'status-b',
+      name: 'STATUS_TYPE_B',
+      ownerId: SLOT_ID,
+      columnId: 'status-column',
+      startFrame: 100,
+      segments: [{ properties: { duration: 500 } }],
+    };
+
+    const result = processInflictionEvents([status1, status2]);
+    const s1 = result.find(ev => ev.id === 'status-a');
+    const s2 = result.find(ev => ev.id === 'status-b');
+    expect(s1!.warnings ?? []).toEqual([]);
+    expect(s2!.warnings ?? []).toEqual([]);
+  });
+
+  test('O4: Same event name overlapping in same column DOES trigger warning', () => {
+    const status1: TimelineEvent = {
+      id: 'same-name-1',
+      name: 'MELTING_FLAME',
+      ownerId: SLOT_ID,
+      columnId: 'melting-flame',
+      startFrame: 0,
+      segments: [{ properties: { duration: 500 } }],
+      nonOverlappableRange: 500,
+    };
+    const status2: TimelineEvent = {
+      id: 'same-name-2',
+      name: 'MELTING_FLAME',
+      ownerId: SLOT_ID,
+      columnId: 'melting-flame',
+      startFrame: 100,
+      segments: [{ properties: { duration: 500 } }],
+      nonOverlappableRange: 500,
+    };
+
+    const result = processInflictionEvents([status1, status2]);
+    const s1 = result.find(ev => ev.id === 'same-name-1');
+    const s2 = result.find(ev => ev.id === 'same-name-2');
+    expect(s1!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+    expect(s2!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Combo skill effect validation — all operators from real JSON
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Combo skill effects — all operators', () => {
+  /**
+   * Build a combo event from real JSON data for an operator.
+   * Reads the actual skill JSON to construct frames with correct markers.
+   */
+  function buildComboFromJson(
+    operatorFile: string,
+    ownerId: string,
+    startFrame: number,
+    comboTriggerColumnId?: string,
+  ): TimelineEvent {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const json = require(`../model/game-data/operator-skills/${operatorFile}`);
+    const comboId = json.skillTypeMap?.COMBO_SKILL;
+    const skill = json[comboId];
+    const animSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const mainSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType !== 'ANIMATION');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const animProps = animSeg?.properties as any;
+    const anim = Math.round((animProps?.duration?.value ?? 0.5) * FPS);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mainProps = mainSeg?.properties as any;
+    const mainDur = Math.round((mainProps?.duration?.value ?? 0.5) * FPS);
+    const dur = skill.properties?.duration?.value
+      ? Math.round(skill.properties.duration.value * FPS)
+      : mainDur;
+
+    const rawFrames = mainSeg?.frames ?? skill.frames ?? [];
+    const frames: EventFrameMarker[] = (rawFrames as Record<string, unknown>[]).map((f: Record<string, unknown>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const props = f.properties as any;
+      const offset = Math.round((props?.offset?.value ?? 0) * FPS);
+      const marker: EventFrameMarker = { offsetFrame: offset };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const effects = ((f.clause as any)?.[0]?.effects ?? []) as any[];
+      for (const ef of effects) {
+        const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
+        const isSource = adjectives.includes('SOURCE');
+        const elementAdj = adjectives.find((a: string) => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC'].includes(a));
+
+        if (ef.verb === 'APPLY' && isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
+          marker.duplicatesSourceInfliction = true;
+        }
+        if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementAdj) {
+          marker.applyArtsInfliction = { element: elementAdj, stacks: 1 };
+        }
+      }
+      return marker;
+    });
+
+    return {
+      id: `${comboId}-test`,
+      name: comboId,
+      ownerId,
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame,
+      comboTriggerColumnId,
+      segments: [
+        { properties: { duration: anim, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { duration: dur }, frames },
+      ],
+    };
+  }
+
+  /** Count enemy-owned events by column from processed results. */
+  function enemyEventsByColumn(result: TimelineEvent[]) {
+    const counts = new Map<string, number>();
+    for (const ev of result) {
+      if (ev.ownerId !== ENEMY_OWNER_ID) continue;
+      counts.set(ev.columnId, (counts.get(ev.columnId) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  // ── Combos that produce NO enemy inflictions (no APPLY INFLICTION, no SOURCE) ──
+
+  const noInflictionCombos: [string, string, string][] = [
+    ['akekuri-skills.json', 'slot-akekuri', 'FLASH_AND_DASH'],
+    ['alesh-skills.json', 'slot-alesh', 'AUGER_ANGLING'],
+    ['arclight-skills.json', 'slot-arclight', 'PEAL_OF_THUNDER'],
+    ['avywenna-skills.json', 'slot-avywenna', 'THUNDERLANCE_STRIKE'],
+    ['catcher-skills.json', 'slot-catcher', 'TIMELY_SUPPRESSION'],
+    ['chen-qianyu-skills.json', 'slot-chenqianyu', 'SOAR_TO_THE_STARS'],
+    ['da-pan-skills.json', 'slot-dapan', 'MORE_SPICE'],
+    ['ember-skills.json', 'slot-ember', 'FRONTLINE_SUPPORT'],
+    ['endministrator-skills.json', 'slot-endministrator', 'SEALING_SEQUENCE'],
+    ['estella-skills.json', 'slot-estella', 'DISTORTION'],
+    ['fluorite-skills.json', 'slot-fluorite', 'FREE_GIVEAWAY'],
+    ['gilberta-skills.json', 'slot-gilberta', 'MATRIX_DISPLACEMENT'],
+    ['laevatain-skills.json', 'slot-laevatain', 'SEETHE'],
+    ['last-rite-skills.json', 'slot-lastrite', 'WINTERS_DEVOURER'],
+    ['lifeng-skills.json', 'slot-lifeng', 'ASPECT_OF_WRATH'],
+    ['perlica-skills.json', 'slot-perlica', 'INSTANT_PROTOCOL_CHAIN'],
+    ['pogranichnik-skills.json', 'slot-pogranichnik', 'FULL_MOON_SLASH'],
+    ['snowshine-skills.json', 'slot-snowshine', 'POLAR_RESCUE'],
+    ['tangtang-skills.json', 'slot-tangtang', 'COMBO_SKILL'],
+    ['yvonne-skills.json', 'slot-yvonne', 'FLASHFREEZER'],
+  ];
+
+  for (const [file, slotId, skillId] of noInflictionCombos) {
+    test(`${skillId}: produces 0 enemy inflictions with heat trigger`, () => {
+      const combo = buildComboFromJson(file, slotId, 500, INFLICTION_COLUMNS.HEAT);
+      const result = processInflictionEvents([combo]);
+      const enemyCounts = enemyEventsByColumn(result);
+      expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
+      expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
+      expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);
+      expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
+    });
+  }
+
+  // ── Antal: APPLY SOURCE INFLICTION mirrors trigger ──
+
+  test('EMP_TEST_SITE: mirrors exactly 1 heat infliction with heat trigger', () => {
+    const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500, INFLICTION_COLUMNS.HEAT);
+    const result = processInflictionEvents([combo]);
+    const enemyCounts = enemyEventsByColumn(result);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
+  });
+
+  test('EMP_TEST_SITE: mirrors exactly 1 electric infliction with electric trigger', () => {
+    const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500, INFLICTION_COLUMNS.ELECTRIC);
+    const result = processInflictionEvents([combo]);
+    const enemyCounts = enemyEventsByColumn(result);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(1);
+  });
+
+  test('EMP_TEST_SITE: produces 0 inflictions without trigger column', () => {
+    const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500);
+    const result = processInflictionEvents([combo]);
+    const enemyCounts = enemyEventsByColumn(result);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
+  });
+
+  // ── Wulfgard: explicit APPLY HEAT INFLICTION (not SOURCE) ──
+
+  test('FRAG_GRENADE_BETA: produces exactly 1 heat infliction from explicit APPLY INFLICTION', () => {
+    const combo = buildComboFromJson('wulfgard-skills.json', 'slot-wulfgard', 500, INFLICTION_COLUMNS.HEAT);
+    const result = processInflictionEvents([combo]);
+    const enemyCounts = enemyEventsByColumn(result);
+    // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicatesSourceInfliction)
+    expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
+    // Verify it's from the explicit effect, not mirroring
+    const heat = result.find(ev => ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID)!;
+    expect(heat.sourceSkillName).toBe('FRAG_GRENADE_BETA');
+    expect(heat.id).toContain('-inflict-'); // from applyArtsInfliction path, not combo-inflict
+  });
+
+  // ── Xaihi: explicit APPLY CRYO INFLICTION ──
+
+  test('STRESS_TESTING: produces exactly 1 cryo infliction from explicit APPLY INFLICTION', () => {
+    const combo = buildComboFromJson('xaihi-skills.json', 'slot-xaihi', 500);
+    const result = processInflictionEvents([combo]);
+    const enemyCounts = enemyEventsByColumn(result);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(1);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);
+    expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
+    const cryo = result.find(ev => ev.columnId === INFLICTION_COLUMNS.CRYO && ev.ownerId === ENEMY_OWNER_ID)!;
+    expect(cryo.sourceSkillName).toBe('STRESS_TESTING');
   });
 });
 

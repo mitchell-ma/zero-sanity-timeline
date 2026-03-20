@@ -1,6 +1,6 @@
-import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
+import { Column, MiniTimeline, Operator, Enemy, VisibleSkills, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { CombatSkillsType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { TACTICALS } from '../../utils/loadoutRegistry';
@@ -63,23 +63,24 @@ export function buildColumns(
   for (const s of slots) {
     if (!s.operator) continue;
     const json = getOperatorJson(s.operator.id);
-    const statusEvents = json?.statusEvents as Record<string, any>[] | undefined;
+    const statusEvents = json?.statusEvents as Record<string, unknown>[] | undefined;
     if (statusEvents) {
       for (const se of statusEvents) {
-        const seProps = se.properties as Record<string, any> | undefined;
+        const seProps = se.properties as Record<string, unknown> | undefined;
         const target = se.target ?? seProps?.target;
         const targetDeterminer = se.targetDeterminer ?? seProps?.targetDeterminer;
         const seId = se.id ?? seProps?.id;
         if (target === 'OPERATOR' && (!targetDeterminer || targetDeterminer === 'THIS') && seId) {
-          const seDur = seProps?.duration ?? se.duration;
-          const dur = seDur?.value?.[0] ?? seDur?.value ?? -1;
+          const seDur = (seProps?.duration ?? se.duration) as { value?: number | number[] } | undefined;
+          const durVal = Array.isArray(seDur?.value) ? seDur.value[0] : seDur?.value;
+          const dur = durVal ?? -1;
           const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
-          const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId]
-            ?? seId.toLowerCase().replace(/_/g, '-');
+          const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId as string]
+            ?? (seId as string).toLowerCase().replace(/_/g, '-');
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
-            statusName: seId,
-            label: STATUS_LABELS[seId as StatusType] ?? seId,
+            statusName: seId as string,
+            label: STATUS_LABELS[seId as StatusType] ?? (seId as string),
             columnId: colId,
             duration: durationFrames,
             color: s.operator.color,
@@ -318,8 +319,8 @@ export function buildColumns(
             defaultCooldownDuration: 0,
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
-            animationDuration: DODGE_FRAMES,
             timeDependency: TimeDependency.REAL_TIME,
+            segments: [{ properties: { duration: DODGE_FRAMES, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } }],
           },
         ],
         defaultEvent: {
@@ -353,7 +354,6 @@ export function buildColumns(
               gaugeGain: skill.gaugeGain,
               teamGaugeGain: skill.teamGaugeGain,
               ...(skill.gaugeGainByEnemies ? { gaugeGainByEnemies: skill.gaugeGainByEnemies } : {}),
-              animationDuration: skill.animationDuration,
               ...(skillType === SKILL_COLUMNS.ULTIMATE && slot.potential != null ? { operatorPotential: slot.potential } : {}),
               ...(skillType === SKILL_COLUMNS.BATTLE && skill.skillPointCost != null ? { skillPointCost: skill.skillPointCost } : {}),
             },
@@ -395,21 +395,36 @@ export function buildColumns(
                 });
               }
             }
-            // Finisher + Dive (universal)
+            // Finisher + Dive — built from per-operator skills JSON when available
+            const rawTypeMap = opJson?.skillTypeMap as Record<string, unknown> | undefined;
+            const basicEntry = rawTypeMap?.BASIC_ATTACK as Record<string, string> | undefined;
+            const finisherId = basicEntry?.FINISHER;
+            const diveId = basicEntry?.DIVE;
+
+            const finSeqs = finisherId ? getFrameSequences(op.id, finisherId) : [];
+            const diveSeqs = diveId ? getFrameSequences(op.id, diveId) : [];
+
+            const finSeg = finSeqs.length
+              ? SkillSegmentBuilder.buildSegments(finSeqs, { labels: ['Finisher'] })
+              : { totalDurationFrames: FINISHER_FRAMES, segments: [{ properties: { duration: FINISHER_FRAMES, name: 'Finisher' }, frames: [{ offsetFrame: FINISHER_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }] };
+            const diveSeg = diveSeqs.length
+              ? SkillSegmentBuilder.buildSegments(diveSeqs, { labels: ['Dive'] })
+              : { totalDurationFrames: DIVE_FRAMES, segments: [{ properties: { duration: DIVE_FRAMES, name: 'Dive' }, frames: [{ offsetFrame: DIVE_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }] };
+
             col.eventVariants.push(
               {
                 name: CombatSkillsType.FINISHER,
-                defaultActivationDuration: FINISHER_FRAMES,
+                defaultActivationDuration: finSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
-                segments: [{ durationFrames: FINISHER_FRAMES, label: 'Finisher', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
+                segments: finSeg.segments,
               },
               {
                 name: CombatSkillsType.DIVE,
-                defaultActivationDuration: DIVE_FRAMES,
+                defaultActivationDuration: diveSeg.totalDurationFrames,
                 defaultActiveDuration: 0,
                 defaultCooldownDuration: 0,
-                segments: [{ durationFrames: DIVE_FRAMES, label: 'Dive', frames: [{ offsetFrame: 0, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }],
+                segments: diveSeg.segments,
               },
             );
           }
@@ -493,7 +508,7 @@ export function buildColumns(
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, delayedHitLabel: battleDelayLabel });
             const battleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
             const battleSegments = battleCd > 0
-              ? [...seg.segments, { durationFrames: battleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+              ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
               : seg.segments;
             col.defaultEvent = {
               ...col.defaultEvent!,
@@ -508,10 +523,10 @@ export function buildColumns(
               const empoweredName = empoweredBattleId as CombatSkillsType;
               const empBattleCd = col.defaultEvent!.defaultCooldownDuration ?? 0;
               const empBaseSegs = empBattleCd > 0
-                ? [...seg.segments, { durationFrames: empBattleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+                ? [...seg.segments, { properties: { duration: empBattleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
                 : seg.segments;
               const empVarSegs = empBattleCd > 0
-                ? [...empowered.segments, { durationFrames: empBattleCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }]
+                ? [...empowered.segments, { properties: { duration: empBattleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
                 : empowered.segments;
               col.eventVariants = [
                 {
@@ -544,7 +559,7 @@ export function buildColumns(
             col.defaultEvent = {
               ...col.defaultEvent!,
               defaultActivationDuration: seg.totalDurationFrames,
-              segments: [...seg.segments, { durationFrames: comboCd, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN, offset: 0 }],
+              segments: [...seg.segments, { properties: { duration: comboCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }],
             };
           }
           // Generic ultimate: build segments from JSON data or fall back to manual construction
@@ -561,7 +576,7 @@ export function buildColumns(
                 segments: seg.segments,
               };
             } else {
-              const animDur = col.defaultEvent!.animationDuration ?? 0;
+              const animDur = getAnimationDurationFromSegments(col.defaultEvent!.segments);
               const activationDur = col.defaultEvent!.defaultActivationDuration ?? 0;
               const statisDur = Math.max(0, activationDur - animDur);
               const activeDur = col.defaultEvent!.defaultActiveDuration ?? 0;
@@ -571,16 +586,16 @@ export function buildColumns(
               if (ultSeqs?.length) {
                 const ultLabels = getSegmentLabels(op!.id, ultName!);
                 const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
-                activeSegment = { ...seg.segments[0], durationFrames: activeDur > 0 ? activeDur : seg.segments[0].durationFrames, label: 'Active', segmentType: SegmentType.ACTIVE };
+                activeSegment = { ...seg.segments[0], properties: { ...seg.segments[0].properties, duration: activeDur > 0 ? activeDur : seg.segments[0].properties.duration, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } };
               } else {
-                activeSegment = { durationFrames: activeDur, label: 'Active', segmentType: SegmentType.ACTIVE };
+                activeSegment = { properties: { duration: activeDur, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } };
               }
 
               const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
-                { durationFrames: animDur, label: 'Animation', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.ANIMATION },
-                { durationFrames: statisDur, label: 'Statis', segmentType: SegmentType.NORMAL },
+                { properties: { duration: animDur, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+                { properties: { duration: statisDur, name: 'Statis' }, metadata: { segmentType: SegmentType.NORMAL } },
                 activeSegment,
-                { durationFrames: cooldownDur, label: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, segmentType: SegmentType.COOLDOWN },
+                { properties: { duration: cooldownDur, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.COOLDOWN } },
               ];
 
               col.defaultEvent = {
@@ -606,7 +621,6 @@ export function buildColumns(
                   defaultActivationDuration: Math.round(cs.durationSeconds * FPS),
                   defaultActiveDuration: 0,
                   defaultCooldownDuration: Math.round((cs.cooldownSeconds ?? 0) * FPS),
-                  animationDuration: cs.animationSeconds ? Math.round(cs.animationSeconds * FPS) : undefined,
                   skillPointCost: cs.resourceInteractions?.find((r) => r.resourceType === 'SKILL_POINT')?.value,
                 });
               }
@@ -818,11 +832,50 @@ export function buildColumns(
     },
     // Physical statuses
     {
-      id: 'breach',
-      label: 'BREACH',
+      id: PHYSICAL_STATUS_COLUMNS.LIFT,
+      label: STATUS_LABELS[StatusType.LIFT],
       color: '#c0c8d0',
       defaultEvent: {
-        name: 'breach',
+        name: PHYSICAL_STATUS_COLUMNS.LIFT,
+        defaultActivationDuration: 120,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
+    },
+    {
+      id: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+      label: STATUS_LABELS[StatusType.KNOCK_DOWN],
+      color: '#c0c8d0',
+      defaultEvent: {
+        name: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+        defaultActivationDuration: 120,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
+    },
+    {
+      id: PHYSICAL_STATUS_COLUMNS.CRUSH,
+      label: STATUS_LABELS[StatusType.CRUSH],
+      color: '#c0c8d0',
+      defaultEvent: {
+        name: PHYSICAL_STATUS_COLUMNS.CRUSH,
+        defaultActivationDuration: 120,
+        defaultActiveDuration: 0,
+        defaultCooldownDuration: 0,
+        sourceOwnerId: USER_ID,
+        sourceSkillName: 'Freeform',
+      },
+    },
+    {
+      id: PHYSICAL_STATUS_COLUMNS.BREACH,
+      label: STATUS_LABELS[StatusType.BREACH],
+      color: '#c0c8d0',
+      defaultEvent: {
+        name: PHYSICAL_STATUS_COLUMNS.BREACH,
         defaultActivationDuration: 1800,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
@@ -876,7 +929,7 @@ export function buildColumns(
       return slots.flatMap(s => {
         if (!s.operator) return [];
         const json = getOperatorJson(s.operator.id);
-        const statusEvents = json?.statusEvents as Record<string, any>[] | undefined;
+        const statusEvents = json?.statusEvents as Record<string, unknown>[] | undefined;
         if (!statusEvents) return [];
         return statusEvents
           .filter((se) => se.target === 'ENEMY')

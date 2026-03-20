@@ -10,8 +10,6 @@
     "ULTIMATE": "TEXTBOOK_ASSAULT"
   },
   "RIGID_INTERDICTION_BASIC": {
-    "name": "Basic Tactics",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -322,16 +320,22 @@
         "frames": []
       }
     ],
-    "originId": "catcher"
+    "properties": {
+      "name": "Basic Tactics",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "catcher"
+    }
   },
   "RIGID_INTERDICTION": {
-    "name": "Rigid Interdiction",
-    "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy.",
     "properties": {
       "duration": {
         "value": 3.17,
         "unit": "SECOND"
-      }
+      },
+      "name": "Rigid Interdiction",
+      "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Physical DMG and applies 1 stack of Vulnerability to the attacking enemy."
     },
     "frames": [
       {
@@ -415,7 +419,6 @@
         ]
       }
     ],
-    "originId": "catcher",
     "clause": [
       {
         "conditions": [],
@@ -456,23 +459,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "catcher"
+    }
   },
   "TIMELY_SUPPRESSION": {
-    "name": "Timely Suppression",
-    "description": "COMBO TRIGGER: When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below  HP. \nA powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized).\nDEF can further increase Shield points.",
     "properties": {
-      "duration": {
-        "value": 0.8,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -487,121 +480,10 @@
         ],
         "description": "Enemy charges up or operator below 40% HP",
         "windowFrames": 720
-      }
+      },
+      "name": "Timely Suppression",
+      "description": "COMBO TRIGGER: When an enemy starts charging up a skill, or when the controlled operator is attacked and falls below  HP. \nA powerful downward punch that deals Physical DMG to the enemy, while granting shields to self and another teammate (controlled operator prioritized).\nDEF can further increase Shield points."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.57,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1,
-                      1.1,
-                      1.2,
-                      1.3,
-                      1.4,
-                      1.5,
-                      1.6,
-                      1.7,
-                      1.8,
-                      1.93,
-                      2.08,
-                      2.25
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "shieldDefRate": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.25,
-                      2.7,
-                      3.15,
-                      3.6,
-                      3.825,
-                      4.05,
-                      4.275,
-                      4.5,
-                      4.725,
-                      4.84,
-                      4.95,
-                      5.06
-                    ]
-                  },
-                  "shieldBase": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      360,
-                      432,
-                      504,
-                      576,
-                      612,
-                      648,
-                      684,
-                      720,
-                      756,
-                      774,
-                      792,
-                      810
-                    ]
-                  },
-                  "shieldDuration": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "triggerHpRatio": {
-                    "verb": "IS",
-                    "value": 0.4
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "catcher",
     "clause": [
       {
         "conditions": [],
@@ -630,253 +512,157 @@
           }
         ]
       }
-    ]
-  },
-  "TEXTBOOK_ASSAULT": {
-    "name": "Textbook Assault",
-    "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect.",
-    "properties": {
-      "duration": {
-        "value": 3.43,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.3,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 1.53,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.3,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.89,
-                      0.98,
-                      1.07,
-                      1.16,
-                      1.25,
-                      1.34,
-                      1.43,
-                      1.51,
-                      1.6,
-                      1.72,
-                      1.85,
-                      2
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "poise1": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "poiseDisplay": {
-                    "verb": "IS",
-                    "value": 20
-                  },
-                  "weakScale": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.8,
-                      0.8,
-                      0.8,
-                      0.8,
-                      0.75,
-                      0.75,
-                      0.75,
-                      0.75,
-                      0.7,
-                      0.7,
-                      0.7
-                    ]
-                  },
-                  "weakDuration": {
-                    "verb": "IS",
-                    "value": 8
-                  },
-                  "weakratedisplay": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.2,
-                      0.2,
-                      0.2,
-                      0.2,
-                      0.2,
-                      0.25,
-                      0.25,
-                      0.25,
-                      0.25,
-                      0.3,
-                      0.3,
-                      0.3
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.07,
+                "unit": "SECOND"
               }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.13,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1,
+                          1.1,
+                          1.2,
+                          1.3,
+                          1.4,
+                          1.5,
+                          1.6,
+                          1.7,
+                          1.8,
+                          1.93,
+                          2.08,
+                          2.25
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "shieldDefRate": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.25,
+                          2.7,
+                          3.15,
+                          3.6,
+                          3.825,
+                          4.05,
+                          4.275,
+                          4.5,
+                          4.725,
+                          4.84,
+                          4.95,
+                          5.06
+                        ]
+                      },
+                      "shieldBase": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          360,
+                          432,
+                          504,
+                          576,
+                          612,
+                          648,
+                          684,
+                          720,
+                          756,
+                          774,
+                          792,
+                          810
+                        ]
+                      },
+                      "shieldDuration": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "triggerHpRatio": {
+                        "verb": "IS",
+                        "value": 0.4
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.2,
-                      1.32,
-                      1.44,
-                      1.56,
-                      1.68,
-                      1.8,
-                      1.92,
-                      2.04,
-                      2.16,
-                      2.31,
-                      2.49,
-                      2.7
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.83,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.84,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
-                  }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "catcher",
+    "metadata": {
+      "originId": "catcher"
+    }
+  },
+  "TEXTBOOK_ASSAULT": {
+    "properties": {
+      "name": "Textbook Assault",
+      "description": "Swings the greatsword to perform 2 consecutive slashes to deal Physical DMG and apply Weaken, followed by a powerful downward slam that deals massive Physical DMG and applies Knock Down to all enemies within the area of effect."
+    },
     "clause": [
       {
         "conditions": [],
@@ -893,6 +679,396 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.3,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 2.13,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.23,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.89,
+                          0.98,
+                          1.07,
+                          1.16,
+                          1.25,
+                          1.34,
+                          1.43,
+                          1.51,
+                          1.6,
+                          1.72,
+                          1.85,
+                          2
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "poise1": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "poiseDisplay": {
+                        "verb": "IS",
+                        "value": 20
+                      },
+                      "weakScale": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.8,
+                          0.8,
+                          0.8,
+                          0.8,
+                          0.75,
+                          0.75,
+                          0.75,
+                          0.75,
+                          0.7,
+                          0.7,
+                          0.7
+                        ]
+                      },
+                      "weakDuration": {
+                        "verb": "IS",
+                        "value": 8
+                      },
+                      "weakratedisplay": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.25,
+                          0.25,
+                          0.25,
+                          0.25,
+                          0.3,
+                          0.3,
+                          0.3
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.83,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.2,
+                          1.32,
+                          1.44,
+                          1.56,
+                          1.68,
+                          1.8,
+                          1.92,
+                          2.04,
+                          2.16,
+                          2.31,
+                          2.49,
+                          2.7
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.53,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.84,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "catcher"
+    }
+  },
+  "RIGID_INTERDICTION_BASIC_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Basic Tactics (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "catcher"
+    }
+  },
+  "RIGID_INTERDICTION_BASIC_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Basic Tactics (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "catcher"
+    }
   }
 }

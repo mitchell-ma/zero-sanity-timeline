@@ -6,7 +6,7 @@
  */
 
 import { EventFrameType } from '../../consts/enums';
-import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan } from '../../consts/viewTypes';
+import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -123,6 +123,87 @@ export function clampNonOverlappable(
   return Math.max(0, result);
 }
 
+/**
+ * Clamps a drag delta to prevent an event from overlapping siblings,
+ * with support for the invalid→revalidated state machine.
+ *
+ * If `overlapInvalidAtDragStart` contains this event, the event was already
+ * overlapping at drag start. Free movement is allowed until the target
+ * reaches a non-overlapping position, at which point the event is removed
+ * from the set and added to `overlapRevalidated` (clamped going forward).
+ */
+export function clampDeltaByOverlap(
+  clampedDelta: number,
+  eventId: string,
+  allEvents: TimelineEvent[],
+  startFrame: number,
+  draggedIds: Set<string>,
+  processedEvents?: readonly TimelineEvent[],
+  overlapInvalidAtDragStart?: Set<string>,
+  overlapRevalidated?: Set<string>,
+): number {
+  const ev = allEvents.find((e) => e.id === eventId);
+  if (!ev) return clampedDelta;
+  const evRange = getSibRange(ev, processedEvents);
+  if (evRange === 0) return clampedDelta;
+
+  const target = startFrame + clampedDelta;
+
+  // Collect non-dragged siblings in the same column
+  const siblings: { start: number; end: number }[] = [];
+  for (const sib of allEvents) {
+    if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (draggedIds.has(sib.id)) continue; // skip other dragged events
+    const sibRange = getSibRange(sib, processedEvents);
+    if (sibRange <= 0) continue;
+    siblings.push({ start: sib.startFrame, end: sib.startFrame + sibRange });
+  }
+  if (siblings.length === 0) return clampedDelta;
+
+  const wouldOverlap = (frame: number) =>
+    siblings.some((s) => frame < s.end && frame + evRange > s.start);
+
+  // Event was overlapping at drag start — allow free movement until it
+  // reaches a non-overlapping position.
+  if (overlapInvalidAtDragStart?.has(eventId)) {
+    if (wouldOverlap(target)) return clampedDelta; // still overlapping, free movement
+    // Target is now valid — transition to revalidated
+    overlapInvalidAtDragStart.delete(eventId);
+    overlapRevalidated?.add(eventId);
+    return clampedDelta; // current position is valid, no clamping needed
+  }
+
+  // Normal overlap clamping (including revalidated events)
+  if (!wouldOverlap(target)) return clampedDelta;
+
+  // Find the nearest valid position by clamping to sibling edges
+  if (clampedDelta >= 0) {
+    // Moving forward — stop just before the first blocking sibling
+    let best = clampedDelta;
+    for (const s of siblings) {
+      if (target + evRange > s.start && target < s.end) {
+        const edgeDelta = s.start - evRange - startFrame;
+        if (edgeDelta >= 0 || overlapRevalidated?.has(eventId)) {
+          best = Math.min(best, Math.max(0, edgeDelta));
+        }
+      }
+    }
+    return best;
+  } else {
+    // Moving backward — stop just after the first blocking sibling
+    let best = clampedDelta;
+    for (const s of siblings) {
+      if (target < s.end && target + evRange > s.start) {
+        const edgeDelta = s.end - startFrame;
+        if (edgeDelta <= 0 || overlapRevalidated?.has(eventId)) {
+          best = Math.max(best, Math.min(0, edgeDelta));
+        }
+      }
+    }
+    return best;
+  }
+}
+
 // ── Event creation ──────────────────────────────────────────────────────────
 
 export function createEvent(
@@ -138,7 +219,6 @@ export function createEvent(
     gaugeGain?: number;
     teamGaugeGain?: number;
     gaugeGainByEnemies?: Record<number, number>;
-    animationDuration?: number;
     operatorPotential?: number;
     timeInteraction?: string;
     isPerfectDodge?: boolean;
@@ -156,12 +236,9 @@ export function createEvent(
     ownerId,
     columnId,
     startFrame: atFrame,
-    activationDuration: defaultSkill?.defaultActivationDuration ?? 120,
-    activeDuration: defaultSkill?.defaultActiveDuration ?? 0,
-    cooldownDuration: defaultSkill?.defaultCooldownDuration ?? 0,
+    segments: defaultSkill?.segments ?? durationSegment(defaultSkill?.defaultActivationDuration ?? 120),
     ...(isForced ? { isForced: true } : {}),
     ...(defaultSkill?.segments ? {
-      segments: defaultSkill.segments,
       nonOverlappableRange: computeSegmentsSpan(defaultSkill.segments),
     } : {}),
     ...(columnId === SKILL_COLUMNS.ULTIMATE && !defaultSkill?.segments ? {
@@ -175,7 +252,6 @@ export function createEvent(
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),
-    ...(defaultSkill?.animationDuration ? { animationDuration: defaultSkill.animationDuration } : {}),
     ...(defaultSkill?.operatorPotential != null ? { operatorPotential: defaultSkill.operatorPotential } : {}),
     ...(defaultSkill?.timeInteraction ? { timeInteraction: defaultSkill.timeInteraction } : {}),
     ...(defaultSkill?.isPerfectDodge ? { isPerfectDodge: defaultSkill.isPerfectDodge } : {}),
@@ -201,8 +277,8 @@ export function isInUltimateAnimation(
   for (const ev of allEvents) {
     if (ev.id === excludeEventId) continue;
     if (ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
-    const animDur = ev.animationDuration;
-    if (!animDur || animDur <= 0) continue;
+    const animDur = getAnimationDuration(ev);
+    if (animDur <= 0) continue;
     if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
   }
   return false;
@@ -222,8 +298,8 @@ function clampToUltimateEdge(
   let result = desiredFrame;
   for (const ev of allEvents) {
     if (ev.id === target.id || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
-    const animDur = ev.animationDuration;
-    if (!animDur || animDur <= 0) continue;
+    const animDur = getAnimationDuration(ev);
+    if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
     if (result >= ev.startFrame && result < animEnd) {
       result = movingForward ? ev.startFrame - 1 : animEnd;
@@ -246,8 +322,8 @@ export function isInComboAnimation(
   for (const ev of allEvents) {
     if (ev.id === excludeEventId) continue;
     if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-    const animDur = ev.animationDuration;
-    if (!animDur || animDur <= 0) continue;
+    const animDur = getAnimationDuration(ev);
+    if (animDur <= 0) continue;
     if (frame >= ev.startFrame && frame < ev.startFrame + animDur) return true;
   }
   return false;
@@ -266,8 +342,8 @@ function clampToComboEdge(
   let result = desiredFrame;
   for (const ev of allEvents) {
     if (ev.id === target.id || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-    const animDur = ev.animationDuration;
-    if (!animDur || animDur <= 0) continue;
+    const animDur = getAnimationDuration(ev);
+    if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
     if (result >= ev.startFrame && result < animEnd) {
       result = movingForward ? ev.startFrame - 1 : animEnd;
@@ -320,23 +396,14 @@ export function validateUpdate(
   // ── Field-level clamping ──────────────────────────────────────────────────
   const clamped = { ...updates };
 
-  // Clamp durations to >= 0
-  if (clamped.activationDuration != null) clamped.activationDuration = Math.max(0, clamped.activationDuration);
-  if (clamped.activeDuration != null) clamped.activeDuration = Math.max(0, clamped.activeDuration);
-  if (clamped.cooldownDuration != null) clamped.cooldownDuration = Math.max(0, clamped.cooldownDuration);
+  // Clamp startFrame to >= 0
   if (clamped.startFrame != null) clamped.startFrame = Math.max(0, clamped.startFrame);
-
-  // Clamp animation duration to activation duration
-  if (clamped.animationDuration != null) {
-    const activation = clamped.activationDuration ?? target.activationDuration;
-    clamped.animationDuration = Math.max(0, Math.min(clamped.animationDuration, activation));
-  }
 
   // Clamp segment durations and inner frame offsets
   if (clamped.segments) {
     clamped.segments = clamped.segments.map((seg) => {
-      const dur = Math.max(1, seg.durationFrames);
-      const updated = { ...seg, durationFrames: dur };
+      const dur = Math.max(1, seg.properties.duration);
+      const updated = { ...seg, properties: { ...seg.properties, duration: dur } };
       if (updated.frames) {
         const maxOffset = Math.max(0, dur - 1);
         updated.frames = updated.frames
@@ -374,7 +441,7 @@ export function validateUpdate(
     const mfSource = processedEvents ?? allEvents;
     const mfCount = mfSource.filter(
       (e) => e.ownerId === merged.ownerId && e.columnId === OPERATOR_COLUMNS.MELTING_FLAME
-        && e.startFrame <= merged.startFrame && e.startFrame + e.activationDuration > merged.startFrame,
+        && e.startFrame <= merged.startFrame && eventEndFrame(e) > merged.startFrame,
     ).length;
     if (mfCount < 4) return null;
   }
@@ -382,8 +449,8 @@ export function validateUpdate(
   if (merged.name?.includes('ENHANCED') && !merged.name?.includes('EMPOWERED')) {
     const ultActive = allEvents.some(
       (e) => e.id !== merged.id && e.ownerId === merged.ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
-        && merged.startFrame >= e.startFrame + e.activationDuration
-        && merged.startFrame < e.startFrame + e.activationDuration + e.activeDuration,
+        && merged.startFrame >= e.startFrame + getAnimationDuration(e)
+        && merged.startFrame < eventEndFrame(e),
     );
     if (!ultActive) return null;
   }
@@ -399,10 +466,13 @@ export function validateMove(
   target: TimelineEvent,
   newStartFrame: number,
   processedEvents?: readonly TimelineEvent[] | null,
+  overlapExemptIds?: Set<string>,
 ): number {
   let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
   clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
-  clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
+  if (!overlapExemptIds?.has(target.id)) {
+    clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
+  }
   // Clamp non-ultimate events to the edge of ultimate animation regions
   if (target.columnId !== SKILL_COLUMNS.ULTIMATE) {
     clamped = clampToUltimateEdge(allEvents, target, clamped);
@@ -428,13 +498,14 @@ export function validateBatchMoveDelta(
   targetIds: string[],
   delta: number,
   processedEvents?: readonly TimelineEvent[] | null,
+  overlapExemptIds?: Set<string>,
 ): number {
   let clampedDelta = delta;
   for (const id of targetIds) {
     const target = allEvents.find((ev) => ev.id === id);
     if (!target) continue;
     const desired = target.startFrame + clampedDelta;
-    const clamped = validateMove(allEvents, target, desired, processedEvents);
+    const clamped = validateMove(allEvents, target, desired, processedEvents, overlapExemptIds);
     const effectiveDelta = clamped - target.startFrame;
     if (delta >= 0) {
       clampedDelta = Math.min(clampedDelta, effectiveDelta);

@@ -4,7 +4,7 @@ import {
 } from "./dataDrivenEventFrames";
 import { OPERATOR_COLUMNS } from '../channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
-import { validateStatusConfig } from '../game-data/statusConfigValidator';
+import { validateStatusConfig, validateSkillConfig } from '../game-data/statusConfigValidator';
 
 // ── Auto-discover operator + skill JSON files ────────────────────────────────
 
@@ -15,7 +15,7 @@ function filenameToCamelCase(filename: string): string {
 
 // Operator base configs: game-data/operators/*-operator.json
 const operatorContext = require.context('../game-data/operators', false, /-operator\.json$/);
-const OPERATOR_JSON: Record<string, Record<string, any>> = {};
+const OPERATOR_JSON: Record<string, Record<string, unknown>> = {};
 for (const key of operatorContext.keys()) {
   const filename = key.replace('./', '').replace('-operator.json', '');
   OPERATOR_JSON[filenameToCamelCase(filename)] = operatorContext(key);
@@ -23,7 +23,7 @@ for (const key of operatorContext.keys()) {
 
 // Skill configs: game-data/operator-skills/*-skills.json
 const skillContext = require.context('../game-data/operator-skills', false, /-skills\.json$/);
-const SKILL_JSON: Record<string, Record<string, any>> = {};
+const SKILL_JSON: Record<string, Record<string, unknown>> = {};
 for (const key of skillContext.keys()) {
   const filename = key.replace('./', '').replace('-skills.json', '');
   SKILL_JSON[filenameToCamelCase(filename)] = skillContext(key);
@@ -31,7 +31,7 @@ for (const key of skillContext.keys()) {
 
 // Talent configs: game-data/operator-talents/*-talents.json
 const talentContext = require.context('../game-data/operator-talents', false, /-talents\.json$/);
-const TALENT_JSON: Record<string, Record<string, any>> = {};
+const TALENT_JSON: Record<string, Record<string, unknown>> = {};
 for (const key of talentContext.keys()) {
   const filename = key.replace('./', '').replace('-talents.json', '');
   TALENT_JSON[filenameToCamelCase(filename)] = talentContext(key);
@@ -39,7 +39,7 @@ for (const key of talentContext.keys()) {
 
 // Status configs: game-data/operator-statuses/*-statuses.json
 const statusContext = require.context('../game-data/operator-statuses', false, /-statuses\.json$/);
-const STATUS_JSON: Record<string, any[]> = {};
+const STATUS_JSON: Record<string, Record<string, unknown>[]> = {};
 for (const key of statusContext.keys()) {
   const filename = key.replace('./', '').replace('-statuses.json', '');
   STATUS_JSON[filenameToCamelCase(filename)] = statusContext(key);
@@ -62,6 +62,14 @@ for (const [operatorId, talentJson] of Object.entries(TALENT_JSON)) {
   }
 }
 
+// Validate skill configs at load time
+for (const [operatorId, skillJson] of Object.entries(SKILL_JSON)) {
+  const errors = validateSkillConfig(skillJson, operatorId);
+  if (errors.length > 0) {
+    console.warn(`[skillValidator] ${operatorId}-skills.json:`, errors.map(e => `${e.path}: ${e.message}`).join('; '));
+  }
+}
+
 // ── Status key normalization ─────────────────────────────────────────────────
 
 /** Key mappings: short (operator-statuses) → long (engine-expected). */
@@ -74,11 +82,11 @@ const KEY_EXPAND: Record<string, string> = {
 };
 
 /** Recursively expand short keys in a JSON value. */
-function expandKeys(val: any): any {
+function expandKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object') return val;
   if (Array.isArray(val)) return val.map(expandKeys);
-  const out: Record<string, any> = {};
-  for (const [k, v] of Object.entries(val)) {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
     out[KEY_EXPAND[k] ?? k] = expandKeys(v);
   }
   return out;
@@ -100,17 +108,18 @@ function buildExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
 
   for (const statuses of Object.values(STATUS_JSON)) {
     for (const status of statuses) {
-      const expanded = expandKeys(status);
-      const props = expanded.properties;
+      const expanded = expandKeys(status) as Record<string, unknown>;
+      const props = expanded.properties as Record<string, unknown> | undefined;
       if (!props || props.type !== 'EXCHANGE') continue;
       const id = props.id as string;
       const columnId = (OPERATOR_COLUMNS as Record<string, string>)[id]
         ?? id.toLowerCase().replace(/_/g, '-');
       let durationFrames = permanentDuration;
-      if (props.duration) {
-        const val = Array.isArray(props.duration.value) ? props.duration.value[0] : props.duration.value;
+      const dur = props.duration as { value: number | number[]; unit: string } | undefined;
+      if (dur) {
+        const val = Array.isArray(dur.value) ? dur.value[0] : dur.value;
         if (val >= 0) {
-          durationFrames = props.duration.unit === 'SECOND' ? Math.round(val * FPS_LOAD) : val;
+          durationFrames = dur.unit === 'SECOND' ? Math.round(val * FPS_LOAD) : val;
         }
       }
       config[id] = { columnId, durationFrames };
@@ -139,20 +148,20 @@ export function getExchangeStatusIds(): ReadonlySet<string> {
 const sequenceCache = new Map<string, readonly DataDrivenSkillEventSequence[]>();
 
 /** Get the raw operator JSON for a given operator ID (includes skills merged in). */
-export function getOperatorJson(operatorId: string): Record<string, any> | undefined {
+export function getOperatorJson(operatorId: string): Record<string, unknown> | undefined {
   const base = OPERATOR_JSON[operatorId];
   if (!base) return undefined;
   const skills = SKILL_JSON[operatorId];
   if (!skills) return base;
   // Hoist non-skill keys (statusEvents, skillTypeMap) from skills JSON to top level
-  const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, any>;
+  const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, unknown>;
   // Merge status sources: operator-statuses JSONs (short keys → expanded) > skills JSON > talent JSON
   const operatorStatuses = (STATUS_JSON[operatorId] ?? []).map(expandKeys);
   const talentJson = TALENT_JSON[operatorId];
-  const talentStatusEvents = talentJson?.statusEvents as any[] | undefined;
+  const talentStatusEvents = talentJson?.statusEvents as unknown[] | undefined;
   const mergedStatusEvents = [
     ...operatorStatuses,
-    ...(statusEvents ?? []),
+    ...((statusEvents as unknown[]) ?? []),
     ...(talentStatusEvents ?? []),
   ];
   return {
@@ -164,12 +173,12 @@ export function getOperatorJson(operatorId: string): Record<string, any> | undef
 }
 
 /** Get the skill JSON for a given operator ID. */
-export function getSkillJson(operatorId: string): Record<string, any> | undefined {
+export function getSkillJson(operatorId: string): Record<string, unknown> | undefined {
   return SKILL_JSON[operatorId];
 }
 
 /** Get the operator-statuses JSON for a given operator ID. */
-export function getOperatorStatuses(operatorId: string): any[] | undefined {
+export function getOperatorStatuses(operatorId: string): Record<string, unknown>[] | undefined {
   return STATUS_JSON[operatorId];
 }
 
@@ -201,8 +210,8 @@ export function getSkillIds(operatorId: string): Set<string> {
  * Get the raw skill type map for an operator.
  * BASIC_ATTACK may be an object { BATK, FINISHER, DIVE }; other entries are strings.
  */
-export function getRawSkillTypeMap(operatorId: string): Record<string, any> {
-  return SKILL_JSON[operatorId]?.skillTypeMap ?? {};
+export function getRawSkillTypeMap(operatorId: string): Record<string, unknown> {
+  return (SKILL_JSON[operatorId]?.skillTypeMap as Record<string, unknown>) ?? {};
 }
 
 /**
@@ -213,7 +222,7 @@ export function getSkillTypeMap(operatorId: string): Record<string, string> {
   const raw = getRawSkillTypeMap(operatorId);
   const flat: Record<string, string> = {};
   for (const [key, val] of Object.entries(raw)) {
-    flat[key] = typeof val === 'string' ? val : val?.BATK ?? key;
+    flat[key] = typeof val === 'string' ? val : (val as Record<string, string> | undefined)?.BATK ?? key;
   }
   return flat;
 }
@@ -288,29 +297,47 @@ export function getDelayedHitLabel(
 ): string | undefined {
   const json = getOperatorJson(operatorId);
   if (!json) return undefined;
-  const skills = json.skills as Record<string, any> | undefined;
+  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
   if (!skills) return undefined;
   const skillData = skills[skillId];
-  return skillData?.properties?.delayedHitLabel;
+  return (skillData?.properties as Record<string, unknown> | undefined)?.delayedHitLabel as string | undefined;
 }
 
 /**
  * Get the combo skill's onTriggerClause from the skills JSON.
  * Resolves COMBO_SKILL → actual skill ID → properties.trigger.onTriggerClause.
  */
-export function getComboTriggerClause(operatorId: string): readonly { conditions: any[] }[] | undefined {
+export function getComboTriggerClause(operatorId: string): readonly { conditions: TriggerCondition[] }[] | undefined {
   const json = getOperatorJson(operatorId);
   if (!json) return undefined;
-  const skills = json.skills as Record<string, any> | undefined;
+  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
   const typeMap = getSkillTypeMap(operatorId);
   const comboSkillId = typeMap.COMBO_SKILL;
   if (!comboSkillId || !skills?.[comboSkillId]) return undefined;
-  return skills[comboSkillId].properties?.trigger?.onTriggerClause;
+  const props = skills[comboSkillId].properties as Record<string, unknown> | undefined;
+  const trigger = props?.trigger as Record<string, unknown> | undefined;
+  return trigger?.onTriggerClause as readonly { conditions: TriggerCondition[] }[] | undefined;
+}
+
+/** A trigger condition predicate as found in skill JSON trigger clauses. */
+export interface TriggerCondition {
+  subject: string;
+  verb: string;
+  object?: string;
+  objectId?: string;
+  negated?: boolean;
+  cardinalityConstraint?: string;
+  cardinality?: number | string;
+  element?: string;
+  adjective?: string;
+  subjectDeterminer?: string;
+  toObject?: string;
+  toDeterminer?: string;
 }
 
 /** Combo trigger info extracted from skills JSON. */
 export interface ComboTriggerInfo {
-  onTriggerClause: readonly { conditions: any[] }[];
+  onTriggerClause: readonly { conditions: TriggerCondition[] }[];
   description: string;
   windowFrames: number;
 }
@@ -322,16 +349,18 @@ export interface ComboTriggerInfo {
 export function getComboTriggerInfo(operatorId: string): ComboTriggerInfo | undefined {
   const json = getOperatorJson(operatorId);
   if (!json) return undefined;
-  const skills = json.skills as Record<string, any> | undefined;
+  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
   const typeMap = getSkillTypeMap(operatorId);
   const comboSkillId = typeMap.COMBO_SKILL;
   if (!comboSkillId || !skills?.[comboSkillId]) return undefined;
-  const trigger = skills[comboSkillId].properties?.trigger;
-  if (!trigger?.onTriggerClause?.length) return undefined;
+  const props = skills[comboSkillId].properties as Record<string, unknown> | undefined;
+  const trigger = props?.trigger as Record<string, unknown> | undefined;
+  const onTriggerClause = trigger?.onTriggerClause as readonly { conditions: TriggerCondition[] }[] | undefined;
+  if (!onTriggerClause?.length) return undefined;
   return {
-    onTriggerClause: trigger.onTriggerClause,
-    description: trigger.description ?? '',
-    windowFrames: trigger.windowFrames ?? 720,
+    onTriggerClause,
+    description: (trigger?.description as string) ?? '',
+    windowFrames: (trigger?.windowFrames as number) ?? 720,
   };
 }
 
@@ -363,12 +392,13 @@ export function getAllStatusIds(): StatusIdEntry[] {
 
   for (const operatorId of Object.keys(OPERATOR_JSON)) {
     const json = getOperatorJson(operatorId);
-    const statusEvents: any[] = json?.statusEvents ?? [];
+    const statusEvents = (json?.statusEvents ?? []) as Record<string, unknown>[];
     for (const se of statusEvents) {
-      const id = (se.id ?? se.name) as string | undefined;
+      const props = se.properties as Record<string, unknown> | undefined;
+      const id = ((props?.id ?? props?.name) as string | undefined);
       if (id && !seen.has(id)) {
         seen.add(id);
-        const displayName = se.name ?? se.displayName ?? STATUS_LABELS[id] ?? id;
+        const displayName = (props?.name ?? STATUS_LABELS[id] ?? id) as string;
         entries.push({ id, label: displayName });
       }
     }

@@ -14,7 +14,7 @@
 
 import { DamageType, ElementType } from '../../consts/enums';
 import { StatusLevel } from '../../consts/types';
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import {
   StatusDamageParams,
@@ -196,7 +196,7 @@ export function computeCombustionDamage(
   const dotMultiplier = getCombustionDotMultiplier(statusLevel);
   for (let i = 1; i <= COMBUSTION_TICKS; i++) {
     const tickFrame = reactionEvent.startFrame + i * FPS;
-    const reactionEndFrame = reactionEvent.startFrame + reactionEvent.activationDuration;
+    const reactionEndFrame = eventEndFrame(reactionEvent);
     if (tickFrame > reactionEndFrame) break;
 
     const dotBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, tickFrame, reactionEvent.sourceOwnerId);
@@ -233,7 +233,7 @@ export function computeSolidificationDamage(
   if (initial) ticks.push(initial);
 
   // Shatter at the end of the reaction duration
-  const shatterFrame = reactionEvent.startFrame + reactionEvent.activationDuration;
+  const shatterFrame = eventEndFrame(reactionEvent);
   const shatterMultiplier = getShatterBaseMultiplier(statusLevel);
   const shatterBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, shatterFrame, reactionEvent.sourceOwnerId);
   const shatterParams: StatusDamageParams = { ...shatterBase, statusBaseMultiplier: shatterMultiplier };

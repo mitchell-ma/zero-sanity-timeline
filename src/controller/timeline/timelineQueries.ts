@@ -4,7 +4,7 @@
  * Pure helpers for querying timeline event state at a given frame.
  * Used by the condition evaluator and effect executor.
  */
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventEndFrame } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 
 /**
@@ -12,7 +12,7 @@ import { EventStatusType } from '../../consts/enums';
  * An event is active from startFrame (inclusive) to startFrame + activationDuration (exclusive).
  */
 export function isActiveAtFrame(ev: TimelineEvent, frame: number) {
-  return ev.startFrame <= frame && frame < ev.startFrame + ev.activationDuration;
+  return ev.startFrame <= frame && frame < eventEndFrame(ev);
 }
 
 /**

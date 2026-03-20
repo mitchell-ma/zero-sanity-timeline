@@ -1,5 +1,5 @@
 import { Subtimeline } from './subtimeline';
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 
 /** A frame range where game-time is frozen (no regen). */
@@ -109,7 +109,7 @@ export abstract class ResourceTimeline {
 
   /** Extract the cost from an event. Override in subclasses for custom cost logic. */
   protected getCost(ev: TimelineEvent): number {
-    return ev.activationDuration;
+    return eventDuration(ev);
   }
 
   /** Clean up subscriptions. */

@@ -7,7 +7,7 @@
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType } from '../../consts/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { activeEventsAtFrame, activeCountAtFrame } from './timelineQueries';
 
@@ -119,10 +119,10 @@ function evaluateIs(cond: Interaction, ctx: ConditionContext): boolean {
     SOLIDIFIED: REACTION_COLUMNS.SOLIDIFICATION,
     CORRODED: REACTION_COLUMNS.CORROSION,
     ELECTRIFIED: REACTION_COLUMNS.ELECTRIFICATION,
-    BREACHED: 'breach',
-    LIFTED: 'lift',
-    KNOCKED_DOWN: 'knock-down',
-    CRUSHED: 'crush',
+    BREACHED: PHYSICAL_STATUS_COLUMNS.BREACH,
+    LIFTED: PHYSICAL_STATUS_COLUMNS.LIFT,
+    KNOCKED_DOWN: PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    CRUSHED: PHYSICAL_STATUS_COLUMNS.CRUSH,
     NODE_STAGGERED: NODE_STAGGER_COLUMN_ID,
     FULL_STAGGERED: FULL_STAGGER_COLUMN_ID,
   };

@@ -29,16 +29,19 @@ interface JsonClausePredicate {
 
 interface JsonFrame {
   clause?: JsonClausePredicate[];
+  properties?: { dependencyTypes?: string[] };
 }
 
 interface JsonSegment {
   name?: string;
   frames: JsonFrame[];
+  metadata?: { segmentType?: string };
 }
 
 interface JsonSkillCategory {
   segments?: JsonSegment[];
   frames?: JsonFrame[];
+  properties?: { dependencyTypes?: string[] };
 }
 
 interface JsonPotentialEffect {
@@ -68,6 +71,8 @@ interface CategoryMultiplierCache {
   perFrameMultipliers: number[][][];
   /** For ramping skills: DAMAGE_MULTIPLIER_INCREMENT per frame (the per-tick increment). */
   perFrameScale2?: number[][][];
+  /** Whether the skill uses PREVIOUS_FRAME dependency (cumulative DoT). */
+  hasPreviousFrameDependency?: boolean;
 }
 
 const cache = new Map<string, CategoryMultiplierCache>();
@@ -115,6 +120,8 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
 
   if (skillCat.segments) {
     for (const seg of skillCat.segments) {
+      // Skip ANIMATION segments (no frames, no damage data)
+      if (seg.metadata?.segmentType === 'ANIMATION') continue;
       segments.push({ frames: seg.frames ?? [], label: seg.name });
     }
   } else if (skillCat.frames) {
@@ -159,10 +166,15 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   const hasAnyMultiplier = segmentMultipliers.some(seg => seg.some(m => m !== 0));
   if (!hasAnyMultiplier) return null;
 
+  // Detect PREVIOUS_FRAME dependency from skill-level or frame-level properties
+  const hasPrevDep = skillCat.properties?.dependencyTypes?.includes('PREVIOUS_FRAME')
+    || (skillCat.frames ?? []).some(f => f.properties?.dependencyTypes?.includes('PREVIOUS_FRAME'));
+
   return {
     segmentMultipliers,
     perFrameMultipliers,
     ...(hasScale2 && { perFrameScale2 }),
+    ...(hasPrevDep && { hasPreviousFrameDependency: true }),
   };
 }
 
@@ -238,10 +250,11 @@ function getPotentialMultiplier(
 function resolveSkillKey(operatorId: string, skillName: string): string | null {
   const json = getOperatorJson(operatorId);
   if (!json?.skills) return null;
-  if (json.skills[skillName]) return skillName;
+  const skills = json.skills as Record<string, unknown>;
+  if (skills[skillName]) return skillName;
   // Empowered variants may not have their own entry — resolve to base
   const fallback = getEmpoweredFallback(skillName);
-  if (fallback && json.skills[fallback]) return skillName;
+  if (fallback && skills[fallback]) return skillName;
   return null;
 }
 
@@ -279,12 +292,16 @@ export function getSkillMultiplier(
 
 /**
  * Get per-tick multiplier for skills with non-uniform per-frame damage.
- * Used for ramping skills like Smouldering Fire where each tick does
- * increasing damage: base + increment × tickIndex.
+ *
+ * Supports two models:
+ * 1. Legacy ramping: DAMAGE_MULTIPLIER_INCREMENT (base + increment × tickIndex)
+ * 2. PREVIOUS_FRAME dependency: cumulative chain (frame0_mult + dotMult × tickIndex)
+ *    This produces the same result as the dependency chain when all multiplier
+ *    components are equal across frames (non-simulation crit modes).
  *
  * Returns null for skills with uniform frame distribution (most skills).
  */
-export function getPerTickMultiplier(
+export function getFrameMultiplier(
   operatorId: string,
   skillName: string,
   level: SkillLevel,
@@ -295,17 +312,31 @@ export function getPerTickMultiplier(
   if (!category) return null;
 
   const data = getCategoryCache(operatorId, category);
-  if (!data?.perFrameScale2) return null;
+  if (!data) return null;
 
-  // Only return per-tick if the skill has DAMAGE_MULTIPLIER_INCREMENT (ramping increment)
   const segIdx = 0; // Per-tick is only used for single-segment skills
-  const frameScale2 = data.perFrameScale2[segIdx];
-  if (!frameScale2?.[0]?.[level - 1]) return null;
-
-  const baseAtk = data.perFrameMultipliers[segIdx][0][level - 1];
-  const increment = frameScale2[0][level - 1];
-  const tickMult = baseAtk + increment * frameIndex;
-
   const potMod = getPotentialMultiplier(operatorId, skillName, potential);
-  return tickMult * potMod;
+
+  // Model 1: Legacy ramping with DAMAGE_MULTIPLIER_INCREMENT
+  if (data.perFrameScale2) {
+    const frameScale2 = data.perFrameScale2[segIdx];
+    if (frameScale2?.[0]?.[level - 1]) {
+      const baseAtk = data.perFrameMultipliers[segIdx][0][level - 1];
+      const increment = frameScale2[0][level - 1];
+      const tickMult = baseAtk + increment * frameIndex;
+      return tickMult * potMod;
+    }
+  }
+
+  // Model 2: PREVIOUS_FRAME dependency chain — return this frame's own multiplier only.
+  // The dependency chain accumulation happens in damageTableBuilder where each frame
+  // gets its own crit resolution.
+  if (data.hasPreviousFrameDependency) {
+    const frameMults = data.perFrameMultipliers[segIdx];
+    if (!frameMults?.[frameIndex]) return null;
+    const ownMult = frameMults[frameIndex][level - 1];
+    return ownMult * potMod;
+  }
+
+  return null;
 }

@@ -104,7 +104,7 @@ export const OPERATORS: RegistryEntry<DataDrivenOperator | null>[] = getAllOpera
   if (!json) throw new Error(`No JSON data for operator: ${id}`);
   return {
     name: json.name as string,
-    icon: getOperatorIcon(json.name),
+    icon: getOperatorIcon(json.name as string),
     rarity: json.operatorRarity as number,
     create: () => {
       const config = getOperatorConfig(id);

@@ -5,7 +5,8 @@
  * Each test validates a real game mechanic end-to-end through the
  * status derivation engine using actual JSON configs.
  */
-import { TimelineEvent } from '../consts/viewTypes';
+import { EventFrameType, PhysicalStatusType } from '../consts/enums';
+import { TimelineEvent, eventDuration } from '../consts/viewTypes';
 import { ENEMY_OWNER_ID, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../model/channels';
 import { FPS } from '../utils/timeline';
 
@@ -49,7 +50,7 @@ jest.mock('../view/InformationPane', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { deriveStatusesFromEngine } from '../controller/timeline/statusDerivationEngine';
+import { deriveStatusesFromEngine, findClauseTriggerMatches } from '../controller/timeline/statusDerivationEngine';
 // eslint-disable-next-line import/first
 import {
   registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs,
@@ -61,7 +62,7 @@ import {
 const SLOT = 'slot-0';
 
 function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
-  return { name: '', ownerId: SLOT, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+  return { name: '', ownerId: SLOT, segments: [{ properties: { duration: 0 } }], ...overrides };
 }
 
 function derive(events: TimelineEvent[], slotWeapons?: Record<string, string>, slotGearSets?: Record<string, string>) {
@@ -86,7 +87,7 @@ describe('Opus: The Living — APPLY REACTION trigger', () => {
       makeEvent({
         id: 'combustion-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.COMBUSTION, startFrame: 600,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: opusJson.weaponName });
@@ -94,7 +95,7 @@ describe('Opus: The Living — APPLY REACTION trigger', () => {
     expect(buffs.length).toBe(1);
     expect(buffs[0].ownerId).toBe(SLOT);
     expect(buffs[0].startFrame).toBe(600);
-    expect(buffs[0].activationDuration).toBe(20 * FPS);
+    expect(eventDuration(buffs[0])).toBe(20 * FPS);
   });
 
   test('two reactions at different frames produce 2 stacks (max)', () => {
@@ -102,12 +103,12 @@ describe('Opus: The Living — APPLY REACTION trigger', () => {
       makeEvent({
         id: 'combustion-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.COMBUSTION, startFrame: 600,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
       makeEvent({
         id: 'solidification-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.SOLIDIFICATION, startFrame: 1200,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: opusJson.weaponName });
@@ -120,17 +121,17 @@ describe('Opus: The Living — APPLY REACTION trigger', () => {
       makeEvent({
         id: 'combustion-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.COMBUSTION, startFrame: 600,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
       makeEvent({
         id: 'solidification-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.SOLIDIFICATION, startFrame: 700,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
       makeEvent({
         id: 'corrosion-1', ownerId: ENEMY_OWNER_ID,
         columnId: REACTION_COLUMNS.CORROSION, startFrame: 800,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: opusJson.weaponName });
@@ -140,7 +141,7 @@ describe('Opus: The Living — APPLY REACTION trigger', () => {
 
   test('no buff without reaction events', () => {
     const events = [
-      makeEvent({ id: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, startFrame: 0, activationDuration: 300 }),
+      makeEvent({ id: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, startFrame: 0, segments: [{ properties: { duration: 300 } }] }),
     ];
     const result = derive(events, { [SLOT]: opusJson.weaponName });
     const buffs = derivedEvents(result, events).filter(ev => ev.name === 'OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE');
@@ -161,7 +162,7 @@ describe('Khravengger — APPLY CRYO INFLICTION trigger', () => {
       makeEvent({
         id: 'cryo-1', ownerId: ENEMY_OWNER_ID,
         columnId: INFLICTION_COLUMNS.CRYO, startFrame: 300,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: khravenggerJson.weaponName });
@@ -175,7 +176,7 @@ describe('Khravengger — APPLY CRYO INFLICTION trigger', () => {
       makeEvent({
         id: 'heat-1', ownerId: ENEMY_OWNER_ID,
         columnId: INFLICTION_COLUMNS.HEAT, startFrame: 300,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: khravenggerJson.weaponName });
@@ -188,13 +189,13 @@ describe('Khravengger — APPLY CRYO INFLICTION trigger', () => {
       makeEvent({
         id: 'cryo-1', ownerId: ENEMY_OWNER_ID,
         columnId: INFLICTION_COLUMNS.CRYO, startFrame: 300,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
       // 15s (1800 frames) after first trigger — buff has expired
       makeEvent({
         id: 'cryo-2', ownerId: ENEMY_OWNER_ID,
         columnId: INFLICTION_COLUMNS.CRYO, startFrame: 2200,
-        activationDuration: 10 * FPS,
+        segments: [{ properties: { duration: 10 * FPS } }],
       }),
     ];
     const result = derive(events, { [SLOT]: khravenggerJson.weaponName });
@@ -217,8 +218,8 @@ describe('Swordmancer — APPLY STATUS trigger', () => {
     const events = [
       makeEvent({
         id: 'breach-1', ownerId: ENEMY_OWNER_ID,
-        columnId: 'breach', startFrame: 500,
-        activationDuration: 5 * FPS,
+        columnId: PhysicalStatusType.BREACH, startFrame: 500,
+        segments: [{ properties: { duration: 5 * FPS } }],
       }),
     ];
     const result = derive(events, undefined, { [SLOT]: swordmancerJson.gearSetType });
@@ -232,18 +233,18 @@ describe('Swordmancer — APPLY STATUS trigger', () => {
     const events = [
       makeEvent({
         id: 'breach-1', ownerId: ENEMY_OWNER_ID,
-        columnId: 'breach', startFrame: 500,
-        activationDuration: 5 * FPS,
+        columnId: PhysicalStatusType.BREACH, startFrame: 500,
+        segments: [{ properties: { duration: 5 * FPS } }],
       }),
       makeEvent({
         id: 'breach-2', ownerId: ENEMY_OWNER_ID,
-        columnId: 'breach', startFrame: 600,
-        activationDuration: 5 * FPS,
+        columnId: PhysicalStatusType.BREACH, startFrame: 600,
+        segments: [{ properties: { duration: 5 * FPS } }],
       }),
       makeEvent({
         id: 'breach-3', ownerId: ENEMY_OWNER_ID,
-        columnId: 'breach', startFrame: 2500,
-        activationDuration: 5 * FPS,
+        columnId: PhysicalStatusType.BREACH, startFrame: 2500,
+        segments: [{ properties: { duration: 5 * FPS } }],
       }),
     ];
     const result = derive(events, undefined, { [SLOT]: swordmancerJson.gearSetType });
@@ -269,7 +270,7 @@ describe('Former Finery — ENEMY HIT OPERATOR trigger', () => {
     expect(buffs.length).toBeGreaterThan(0);
     expect(buffs[0].startFrame).toBe(0);
     expect(buffs[0].ownerId).toBe(SLOT);
-    expect(buffs[0].activationDuration).toBe(15 * FPS);
+    expect(eventDuration(buffs[0])).toBe(15 * FPS);
   });
 
   test('15s cooldown spaces procs correctly', () => {
@@ -294,7 +295,7 @@ describe('AIC Light — OPERATOR DEFEAT ENEMY trigger', () => {
     const buffs = result.filter(ev => ev.name === 'AIC_LIGHT');
     expect(buffs.length).toBeGreaterThan(0);
     expect(buffs[0].ownerId).toBe(SLOT);
-    expect(buffs[0].activationDuration).toBe(5 * FPS);
+    expect(eventDuration(buffs[0])).toBe(5 * FPS);
   });
 
   test('RESET interaction: new proc clamps previous buff', () => {
@@ -302,7 +303,7 @@ describe('AIC Light — OPERATOR DEFEAT ENEMY trigger', () => {
     const buffs = result.filter(ev => ev.name === 'AIC_LIGHT');
     expect(buffs.length).toBeGreaterThanOrEqual(2);
     // With 5s duration and no cooldown, each proc should clamp the previous
-    expect(buffs[0].activationDuration).toBeLessThanOrEqual(buffs[1].startFrame - buffs[0].startFrame);
+    expect(eventDuration(buffs[0])).toBeLessThanOrEqual(buffs[1].startFrame - buffs[0].startFrame);
   });
 });
 
@@ -341,7 +342,7 @@ describe('APPLY CRYO INFLICTION — target filtering', () => {
     makeEvent({
       id: 'cryo-1', ownerId: ENEMY_OWNER_ID,
       columnId: INFLICTION_COLUMNS.CRYO, startFrame: 300,
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
     }),
   ];
 
@@ -373,5 +374,118 @@ describe('APPLY CRYO INFLICTION — target filtering', () => {
     const result = derive(cryoOnEnemy, { [SLOT]: WEAPON_NAME });
     const buffs = derivedEvents(result, cryoOnEnemy).filter(ev => ev.name === STATUS_ID);
     expect(buffs.length).toBe(0);
+  });
+});
+
+// ── PERFORM FINISHER / DIVE_ATTACK triggers ──────────────────────────────────
+// Verifies that the verb handler registry correctly matches finisher and dive
+// attack events via PERFORM FINISHER / PERFORM DIVE_ATTACK trigger conditions.
+
+describe('PERFORM FINISHER / DIVE_ATTACK triggers', () => {
+
+  function makeTriggerClause(object: string, determiner = 'THIS') {
+    return [{
+      conditions: [{
+        subjectDeterminer: determiner, subject: 'OPERATOR',
+        verb: 'PERFORM', object,
+      }],
+    }];
+  }
+
+  test('finisher event triggers PERFORM FINISHER match', () => {
+    const events = [
+      makeEvent({
+        id: 'fin-1', ownerId: SLOT,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        name: 'FINISHER',
+                segments: [{ properties: { duration: Math.round(1.5 * FPS), name: 'Finisher' }, frames: [{ offsetFrame: Math.round(1.5 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
+      }),
+    ];
+    const matches = findClauseTriggerMatches(makeTriggerClause('FINISHER'), events, SLOT);
+    expect(matches.length).toBe(1);
+    expect(matches[0].frame).toBe(600 + Math.round(1.5 * FPS));
+  });
+
+  test('dive event triggers PERFORM DIVE_ATTACK match', () => {
+    const events = [
+      makeEvent({
+        id: 'dive-1', ownerId: SLOT,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 300,
+        name: 'DIVE',
+                segments: [{ properties: { duration: Math.round(1 * FPS), name: 'Dive' }, frames: [{ offsetFrame: Math.round(1 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }],
+      }),
+    ];
+    const matches = findClauseTriggerMatches(makeTriggerClause('DIVE_ATTACK'), events, SLOT);
+    expect(matches.length).toBe(1);
+    expect(matches[0].frame).toBe(300 + Math.round(1 * FPS));
+  });
+
+  test('normal basic attack does NOT match PERFORM FINISHER or DIVE_ATTACK', () => {
+    const events = [
+      makeEvent({
+        id: 'basic-1', ownerId: SLOT,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 0,
+        name: 'FLAMING_CINDERS',
+        segments: [{ properties: { duration: 300 } }],
+      }),
+    ];
+    const finMatches = findClauseTriggerMatches(makeTriggerClause('FINISHER'), events, SLOT);
+    const diveMatches = findClauseTriggerMatches(makeTriggerClause('DIVE_ATTACK'), events, SLOT);
+    expect(finMatches.length).toBe(0);
+    expect(diveMatches.length).toBe(0);
+  });
+
+  test('finisher does NOT match PERFORM DIVE_ATTACK', () => {
+    const events = [
+      makeEvent({
+        id: 'fin-1', ownerId: SLOT,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        name: 'FINISHER',
+                segments: [{ properties: { duration: Math.round(1.5 * FPS), name: 'Finisher' }, frames: [{ offsetFrame: Math.round(1.5 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
+      }),
+    ];
+    const diveMatches = findClauseTriggerMatches(makeTriggerClause('DIVE_ATTACK'), events, SLOT);
+    expect(diveMatches.length).toBe(0);
+  });
+
+  test('dive does NOT match PERFORM FINISHER', () => {
+    const events = [
+      makeEvent({
+        id: 'dive-1', ownerId: SLOT,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 300,
+        name: 'DIVE',
+                segments: [{ properties: { duration: Math.round(1 * FPS), name: 'Dive' }, frames: [{ offsetFrame: Math.round(1 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }],
+      }),
+    ];
+    const finMatches = findClauseTriggerMatches(makeTriggerClause('FINISHER'), events, SLOT);
+    expect(finMatches.length).toBe(0);
+  });
+
+  test('different operator slot does NOT match THIS PERFORM FINISHER', () => {
+    const otherSlot = 'slot-1';
+    const events = [
+      makeEvent({
+        id: 'fin-other', ownerId: otherSlot,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        name: 'FINISHER',
+                segments: [{ properties: { duration: Math.round(1.5 * FPS), name: 'Finisher' }, frames: [{ offsetFrame: Math.round(1.5 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
+      }),
+    ];
+    const matches = findClauseTriggerMatches(makeTriggerClause('FINISHER', 'THIS'), events, SLOT);
+    expect(matches.length).toBe(0);
+  });
+
+  test('ANY operator matches finisher from different slot', () => {
+    const otherSlot = 'slot-1';
+    const events = [
+      makeEvent({
+        id: 'fin-other', ownerId: otherSlot,
+        columnId: SKILL_COLUMNS.BASIC, startFrame: 600,
+        name: 'FINISHER',
+                segments: [{ properties: { duration: Math.round(1.5 * FPS), name: 'Finisher' }, frames: [{ offsetFrame: Math.round(1.5 * FPS), skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }],
+      }),
+    ];
+    const matches = findClauseTriggerMatches(makeTriggerClause('FINISHER', 'ANY'), events, SLOT);
+    expect(matches.length).toBe(1);
   });
 });

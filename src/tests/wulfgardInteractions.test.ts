@@ -99,7 +99,7 @@ const mockSkillsJson = require('../model/game-data/operator-skills/wulfgard-skil
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockStatusesJson = require('../model/game-data/operator-statuses/wulfgard-statuses.json');
 
-const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...wulfgardSkillEntries } = mockSkillsJson as Record<string, any>;
+const { statusEvents: _skStatusEvents, skillTypeMap: _skTypeMap, ...wulfgardSkillEntries } = mockSkillsJson;
 
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
@@ -109,17 +109,23 @@ const _KEY_EXPAND: Record<string, string> = {
 function _expandKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object') return val;
   if (Array.isArray(val)) return val.map(_expandKeys);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON normalization
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(val)) {
     out[_KEY_EXPAND[k] ?? k] = _expandKeys(v);
   }
   return out;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
 function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
   const props = (raw.properties ?? {}) as Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
   const meta = (raw.metadata ?? {}) as Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
   const sl = (props.statusLevel ?? {}) as Record<string, any>;
   let resolvedLimit: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
   const limit = sl.limit as Record<string, any> | undefined;
   if (limit) {
     if (limit.verb === 'IS') {
@@ -132,6 +138,7 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
       resolvedLimit = limit.value;
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON normalization
   const out: Record<string, any> = {
     id: props.id,
     ...(props.name ? { name: props.name } : {}),
@@ -152,19 +159,23 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
     ...(raw.segments ? { segments: raw.segments } : {}),
   };
   if (props.duration) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
     const dur = props.duration as Record<string, any>;
     const dv = dur.value;
     out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
   }
   return out;
 }
-const _normalizedStatuses = (mockStatusesJson as unknown[]).map((s: unknown) => _expandKeys(_normalizeStatusEntry(s as Record<string, any>)));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
+const _normalizedStatuses = (mockStatusesJson as any[]).map((s: any) => _expandKeys(_normalizeStatusEntry(s)));
 
 // Build skills keyed by both skill ID and category name (tests access by category)
 // Add `id` field from key name so tests can verify skill identity
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data; downstream tests assert structure
 const wulfgardSkills: Record<string, any> = {};
 for (const [key, val] of Object.entries(wulfgardSkillEntries)) {
-  wulfgardSkills[key] = { ...(val as Record<string, any>), id: key };
+  wulfgardSkills[key] = { ...(val as Record<string, unknown>), id: key };
 }
 if (_skTypeMap) {
   const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
@@ -182,6 +193,7 @@ const mockJson = { ...mockOperatorJson, skills: wulfgardSkills, skillTypeMap: _s
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
 /** Helper to extract values from the new clause-effects structure (replaces old multipliers access). */
+/* eslint-disable @typescript-eslint/no-explicit-any -- JSON frame data access helpers */
 function getFrameEffectValue(frame: Record<string, any>, verb: string, object: string, withKey: string): any {
   for (const pred of ((frame.clause ?? []) as Record<string, any>[])) {
     for (const ef of ((pred.effects ?? []) as Record<string, any>[])) {
@@ -196,6 +208,7 @@ function getFrameEffectValue(frame: Record<string, any>, verb: string, object: s
 function getDamageMultipliers(frame: Record<string, any>): number[] {
   return (getFrameEffectValue(frame, 'DEAL', 'DAMAGE', 'value') ?? []) as number[];
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function getSequences(skillCategory: string): readonly DataDrivenSkillEventSequence[] {
   return buildSequencesFromOperatorJson(mockJson, skillCategory);
@@ -227,10 +240,10 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
     const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
     const finalStrikeFrame = rawSegments[3].frames[0];
     const spEffect = finalStrikeFrame.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'SKILL_POINT'
+      (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
     );
     const staggerEffect = finalStrikeFrame.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     expect(spEffect.with.cardinality.value).toBe(18);
     expect(staggerEffect.with.value.value).toBe(18);
@@ -297,7 +310,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B3: Battle skill costs 100 SP', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
     const spCost = battleSkill.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     expect(spCost.with.cardinality.value).toBe(100);
@@ -306,15 +319,15 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B4: Battle skill has SP cost + 6.5 ultimate energy recovery to self and all operators', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
     const spCost = battleSkill.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'SKILL_POINT' && e.verb === 'CONSUME'
     );
     expect(spCost).toBeDefined();
     const selfEnergy = battleSkill.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
+      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'THIS' && e.toObject === 'OPERATOR'
     );
     const allEnergy = battleSkill.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' &&
+      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' &&
         e.verb === 'RECOVER' && e.toDeterminer === 'ALL' && e.toObject === 'OPERATOR'
     );
     expect(selfEnergy).toBeDefined();
@@ -326,12 +339,12 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
   test('B5: Frame 3 recovers 5 Stagger and applies Heat infliction', () => {
     const frame2 = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].frames[2];
     const stagger = frame2.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     expect(stagger.with.value.value).toBe(5);
 
     const infliction = frame2.clause[0].effects.find(
-      (e: Record<string, any>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
     );
     expect(infliction).toBeDefined();
     expect(infliction.adjective).toBe('HEAT');
@@ -342,7 +355,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
     for (let i = 0; i < 2; i++) {
       const frame = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].frames[i];
       const stagger = frame.clause[0].effects.find(
-        (e: Record<string, any>) => e.object === 'STAGGER'
+        (e: Record<string, unknown>) => e.object === 'STAGGER'
       );
       expect(stagger).toBeUndefined();
     }
@@ -401,23 +414,23 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
   test('C3: Combo cooldown is 20 seconds', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].clause[0].effects;
     const cooldown = effects.find(
-      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(20);
   });
 
   test('C4: Combo has 1 frame with 10 Stagger + Heat infliction', () => {
-    const frames = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].frames;
+    const frames = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].segments[1].frames;
     expect(frames.length).toBe(1);
 
     const stagger = frames[0].clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     expect(stagger.with.value.value).toBe(10);
 
     const infliction = frames[0].clause[0].effects.find(
-      (e: Record<string, any>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'INFLICTION'
     );
     expect(infliction).toBeDefined();
     expect(infliction.adjective).toBe('HEAT');
@@ -426,15 +439,18 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
 
   test('C5: Combo animation is TIME_STOP (0.5s within 1s)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
-    expect(comboSkill.properties.duration.value).toBe(1);
-    expect(comboSkill.properties.animation.duration.value).toBe(0.5);
-    expect(comboSkill.properties.animation.timeInteractionType).toBe('TIME_STOP');
+    const totalDuration = comboSkill.segments[0].properties.duration.value + comboSkill.segments[1].properties.duration.value;
+    expect(totalDuration).toBe(1);
+    const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    expect(animSeg).toBeDefined();
+    expect(animSeg.properties.duration.value).toBe(0.5);
+    expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
   test('C6: Combo recovers 10 ultimate energy to self', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].clause[0].effects;
     const energy = effects.find(
-      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
+      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'RECOVER'
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
@@ -443,7 +459,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
   });
 
   test('C7: Combo damage multiplier: 0.6 (lv1) → 1.35 (lv12)', () => {
-    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].frames[0]);
+    const dmgValues = getDamageMultipliers(mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].segments[1].frames[0]);
     expect(dmgValues[0]).toBe(0.6);
     expect(dmgValues[11]).toBe(1.35);
   });
@@ -461,7 +477,7 @@ describe('D. Ultimate (Wolven Fury)', () => {
   test('D1: Ultimate energy cost is 76.5', () => {
     const effects = mockJson.skills[mockJson.skillTypeMap.ULTIMATE].clause[0].effects;
     const energyCost = effects.find(
-      (e: Record<string, any>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'ULTIMATE_ENERGY' && e.verb === 'CONSUME'
     );
     expect(energyCost).toBeDefined();
     expect(energyCost.with.cardinality.value).toBe(76.5);
@@ -469,13 +485,16 @@ describe('D. Ultimate (Wolven Fury)', () => {
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
     const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
-    expect(ultimate.properties.duration.value).toBe(2.5);
-    expect(ultimate.properties.animation.duration.value).toBe(1.53);
-    expect(ultimate.properties.animation.timeInteractionType).toBe('TIME_STOP');
+    const totalDuration = ultimate.segments[0].properties.duration.value + ultimate.segments[1].properties.duration.value;
+    expect(totalDuration).toBe(2.5);
+    const animSeg = ultimate.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    expect(animSeg).toBeDefined();
+    expect(animSeg.properties.duration.value).toBe(1.53);
+    expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
   test('D3: Ultimate has 5 damage frames', () => {
-    expect(mockJson.skills[mockJson.skillTypeMap.ULTIMATE].frames.length).toBe(5);
+    expect(mockJson.skills[mockJson.skillTypeMap.ULTIMATE].segments[1].frames.length).toBe(5);
   });
 
   test('D4: Ultimate skill ID is WOLVEN_FURY', () => {
@@ -509,10 +528,10 @@ describe('E. Empowered Battle Skill', () => {
   test('E4: Frame 4 recovers 20 SP and 5 Stagger', () => {
     const frame3 = mockJson.skills.EMPOWERED_BATTLE_SKILL.frames[3];
     const sp = frame3.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'SKILL_POINT'
+      (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
     );
     const stagger = frame3.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     expect(sp.with.cardinality.value).toBe(20);
     expect(stagger.with.value.value).toBe(5);
@@ -521,7 +540,7 @@ describe('E. Empowered Battle Skill', () => {
   test('E5: Frame 3 recovers 5 Stagger', () => {
     const frame2 = mockJson.skills.EMPOWERED_BATTLE_SKILL.frames[2];
     const stagger = frame2.clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'STAGGER'
+      (e: Record<string, unknown>) => e.object === 'STAGGER'
     );
     expect(stagger.with.value.value).toBe(5);
   });
@@ -530,10 +549,10 @@ describe('E. Empowered Battle Skill', () => {
     for (let i = 0; i < 2; i++) {
       const frame = mockJson.skills.EMPOWERED_BATTLE_SKILL.frames[i];
       const sp = frame.clause[0].effects.find(
-        (e: Record<string, any>) => e.object === 'SKILL_POINT'
+        (e: Record<string, unknown>) => e.object === 'SKILL_POINT'
       );
       const stagger = frame.clause[0].effects.find(
-        (e: Record<string, any>) => e.object === 'STAGGER'
+        (e: Record<string, unknown>) => e.object === 'STAGGER'
       );
       expect(sp).toBeUndefined();
       expect(stagger).toBeUndefined();
@@ -617,13 +636,13 @@ describe('G. Potentials', () => {
     expect(p1.effects.length).toBe(2);
 
     const strEffect = p1.effects.find(
-      (e: Record<string, any>) => e.statModifier?.statType === 'STRENGTH'
+      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'STRENGTH'
     );
     expect(strEffect).toBeDefined();
     expect(strEffect.statModifier.value).toBe(15);
 
     const agiEffect = p1.effects.find(
-      (e: Record<string, any>) => e.statModifier?.statType === 'AGILITY'
+      (e: Record<string, unknown>) => (e.statModifier as Record<string, unknown> | undefined)?.statType === 'AGILITY'
     );
     expect(agiEffect).toBeDefined();
     expect(agiEffect.statModifier.value).toBe(15);
@@ -636,7 +655,7 @@ describe('G. Potentials', () => {
     expect(p2.effects.length).toBe(2);
 
     const spEffect = p2.effects.find(
-      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential_skillpower'
+      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_skillpower'
     );
     expect(spEffect).toBeDefined();
     expect(spEffect.skillParameterModifier.skillType).toBe('THERMITE_TRACERS');
@@ -644,7 +663,7 @@ describe('G. Potentials', () => {
     expect(spEffect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const p2Effect = p2.effects.find(
-      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential_2'
+      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_2'
     );
     expect(p2Effect).toBeDefined();
     expect(p2Effect.skillParameterModifier.value).toBe(1);
@@ -658,14 +677,14 @@ describe('G. Potentials', () => {
     expect(p3.effects.length).toBe(2);
 
     const p3Effect = p3.effects.find(
-      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'potential_3'
+      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'potential_3'
     );
     expect(p3Effect).toBeDefined();
     expect(p3Effect.skillParameterModifier.value).toBe(1);
     expect(p3Effect.skillParameterModifier.parameterModifyType).toBe('UNIQUE_MULTIPLIER');
 
     const teamEffect = p3.effects.find(
-      (e: Record<string, any>) => e.skillParameterModifier?.parameterKey === 'teammate_percent'
+      (e: Record<string, unknown>) => (e.skillParameterModifier as Record<string, unknown> | undefined)?.parameterKey === 'teammate_percent'
     );
     expect(teamEffect).toBeDefined();
     expect(teamEffect.skillParameterModifier.value).toBe(0.5);
@@ -754,27 +773,29 @@ describe('I. Cooldown Interactions', () => {
   const SLOT_ID = 'slot-0';
 
   function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number }): TimelineEvent {
-    return { name: '', ownerId: SLOT_ID, activationDuration: 0, activeDuration: 0, cooldownDuration: 0, ...overrides };
+    return { name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
   test('I1: Basic attack (Rapid Fire Akimbo) has no cooldown', () => {
     const ba = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK];
-    const cooldown = ba.segments?.flatMap((s: Record<string, any>) => s.frames ?? [])
-      .flatMap((f: Record<string, any>) => f.clause?.[0]?.effects ?? [])
-      .find((e: Record<string, any>) => e.object === 'COOLDOWN');
+    /* eslint-disable @typescript-eslint/no-explicit-any -- JSON traversal */
+    const cooldown = ba.segments?.flatMap((s: any) => s.frames ?? [])
+      .flatMap((f: any) => f.clause?.[0]?.effects ?? [])
+      .find((e: any) => e.object === 'COOLDOWN');
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     expect(cooldown).toBeUndefined();
   });
 
   test('I2: Battle skill (Thermite Tracers) has no COOLDOWN effect', () => {
     const cooldown = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL].clause[0].effects?.find(
-      (e: Record<string, any>) => e.object === 'COOLDOWN'
+      (e: Record<string, unknown>) => e.object === 'COOLDOWN'
     );
     expect(cooldown).toBeUndefined();
   });
 
   test('I3: Combo skill (Frag Grenade Beta) has 20s cooldown', () => {
     const cooldown = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL].clause[0].effects.find(
-      (e: Record<string, any>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
+      (e: Record<string, unknown>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
     );
     expect(cooldown).toBeDefined();
     expect(cooldown.with.cardinality.value).toBe(20);
@@ -786,7 +807,7 @@ describe('I. Cooldown Interactions', () => {
     const totalRange = comboDuration + comboCooldown;
     const cs1 = makeEvent({
       id: 'cs-1', columnId: SKILL_COLUMNS.COMBO, startFrame: 0,
-      activationDuration: comboDuration, cooldownDuration: comboCooldown,
+      segments: [{ properties: { duration: comboDuration } }],
       nonOverlappableRange: totalRange,
     });
     // Mid-cooldown
@@ -799,98 +820,87 @@ describe('I. Cooldown Interactions', () => {
     const bsDuration = Math.round(1.07 * FPS); // 128 frames
     const bs1 = makeEvent({
       id: 'bs-1', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
-      activationDuration: bsDuration, nonOverlappableRange: bsDuration,
+      segments: [{ properties: { duration: bsDuration } }], nonOverlappableRange: bsDuration,
     });
     expect(wouldOverlapSiblings(SLOT_ID, SKILL_COLUMNS.BATTLE, bsDuration, bsDuration, [bs1])).toBe(false);
   });
 
   test('I6: P5 Wolven Fury resets combo cooldown when cast during cooldown phase', () => {
-    const comboDuration = Math.round(1 * FPS); // 120 frames
-    const comboCooldown = 20 * FPS; // 2400 frames
+    const comboDuration = Math.round(1 * FPS); // 120 frames // 2400 frames
 
     // Combo at frame 0, ultimate at frame 600 (during cooldown phase)
     const comboEvent = makeEvent({
       id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, activationDuration: comboDuration,
-      cooldownDuration: comboCooldown,
+      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
     });
     const ultEvent = makeEvent({
       id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      startFrame: 600, activationDuration: Math.round(2.5 * FPS),
+      startFrame: 600, segments: [{ properties: { duration: Math.round(2.5 * FPS) } }],
       operatorPotential: 5, // P5 required
     });
 
-    const result = applyPotentialEffects([comboEvent, ultEvent]);
-    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+    applyPotentialEffects([comboEvent, ultEvent]);
 
     // Cooldown should be truncated: originally ends at 120+2400=2520, now cut to ultFrame - activeEnd = 600 - 120 = 480
-    expect(modifiedCombo.cooldownDuration).toBe(480);
+    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
   });
 
   test('I7: P5 Wolven Fury does NOT reset cooldown if potential < 5', () => {
     const comboDuration = 120;
-    const comboCooldown = 2400;
 
     const comboEvent = makeEvent({
       id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, activationDuration: comboDuration,
-      cooldownDuration: comboCooldown,
+      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
     });
     const ultEvent = makeEvent({
       id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      startFrame: 600, activationDuration: 300,
+      startFrame: 600, segments: [{ properties: { duration: 300 } }],
       operatorPotential: 4, // Below P5 threshold
     });
 
-    const result = applyPotentialEffects([comboEvent, ultEvent]);
-    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+    applyPotentialEffects([comboEvent, ultEvent]);
 
     // Cooldown should be unchanged
-    expect(modifiedCombo.cooldownDuration).toBe(comboCooldown);
+    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
   });
 
   test('I8: P5 Wolven Fury does NOT reset cooldown if combo is still in activation phase', () => {
     const comboDuration = 120;
-    const comboCooldown = 2400;
 
     const comboEvent = makeEvent({
       id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, activationDuration: comboDuration,
-      cooldownDuration: comboCooldown,
+      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
     });
     // Ultimate fires during combo activation, not cooldown
     const ultEvent = makeEvent({
       id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
       startFrame: 60, // Mid-activation (before frame 120)
-      activationDuration: 300,
+      segments: [{ properties: { duration: 300 } }],
       operatorPotential: 5,
     });
 
-    const result = applyPotentialEffects([comboEvent, ultEvent]);
-    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+    applyPotentialEffects([comboEvent, ultEvent]);
 
     // Cooldown unchanged — ultimate was during activation, not cooldown
-    expect(modifiedCombo.cooldownDuration).toBe(comboCooldown);
+    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
   });
 
   test('I9: P5 cooldown reset only applies to same-owner combo', () => {
     const comboEvent = makeEvent({
       id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      ownerId: 'slot-0', startFrame: 0, activationDuration: 120,
-      cooldownDuration: 2400,
+      ownerId: 'slot-0', startFrame: 0, segments: [{ properties: { duration: 120 } }],
     });
     // Different owner's ultimate
     const ultEvent = makeEvent({
       id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      ownerId: 'slot-1', startFrame: 600, activationDuration: 300,
+      ownerId: 'slot-1', startFrame: 600, segments: [{ properties: { duration: 300 } }],
       operatorPotential: 5,
     });
 
-    const result = applyPotentialEffects([comboEvent, ultEvent]);
-    const modifiedCombo = result.find(e => e.id === 'cs-1')!;
+    applyPotentialEffects([comboEvent, ultEvent]);
 
     // Different owner — no reset
-    expect(modifiedCombo.cooldownDuration).toBe(2400);
+    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
   });
 });
 

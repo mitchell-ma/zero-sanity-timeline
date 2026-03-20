@@ -1,4 +1,4 @@
-import { CombatSkillsType, StatusType } from './enums';
+import { CombatSkillsType, PhysicalStatusType, StatusType } from './enums';
 import { SkillType } from './viewTypes';
 
 // ── Column header labels ────────────────────────────────────────────────────
@@ -66,6 +66,7 @@ export const STATUS_LABELS: Record<StatusType, string> = {
   [StatusType.KNOCK_DOWN]:      'Knock Down',
   [StatusType.CRUSH]:           'Crush',
   [StatusType.BREACH]:          'Breach',
+  [StatusType.SHATTER]:         'Shatter',
   // Gear set effects
   [StatusType.GEAR_BUFF]:       'Gear Buff',
   // Potential buffs
@@ -290,10 +291,16 @@ export const PHYSICAL_INFLICTION_MICRO_COLUMNS = [
 ];
 
 export const PHYSICAL_STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  breach: { label: 'Breach', color: '#c0c8d0' },
+  [PhysicalStatusType.LIFT]: { label: 'Lift', color: '#c0c8d0' },
+  [PhysicalStatusType.KNOCK_DOWN]: { label: 'Knock Down', color: '#c0c8d0' },
+  [PhysicalStatusType.CRUSH]: { label: 'Crush', color: '#c0c8d0' },
+  [PhysicalStatusType.BREACH]: { label: 'Breach', color: '#c0c8d0' },
 };
 
 
 export const PHYSICAL_STATUS_MICRO_COLUMNS = [
-  { id: 'breach', label: 'BREACH', color: '#c0c8d0' },
+  { id: PhysicalStatusType.LIFT, label: 'LIFT', color: '#c0c8d0' },
+  { id: PhysicalStatusType.KNOCK_DOWN, label: 'KD', color: '#c0c8d0' },
+  { id: PhysicalStatusType.CRUSH, label: 'CRUSH', color: '#c0c8d0' },
+  { id: PhysicalStatusType.BREACH, label: 'BREACH', color: '#c0c8d0' },
 ];

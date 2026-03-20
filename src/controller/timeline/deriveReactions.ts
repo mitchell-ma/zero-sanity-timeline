@@ -11,6 +11,7 @@
  * All inflictions (incoming + active same/other element) are consumed.
  */
 import type { TimelineEvent } from '../../consts/viewTypes';
+import { eventEndFrame, durationSegment, setEventDuration, eventDuration } from '../../consts/viewTypes';
 import { EventStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION } from '../../model/channels';
 
@@ -56,7 +57,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
       const clamp = clampMap.get(prev.id);
       const endFrame = clamp !== undefined
         ? clamp.frame
-        : prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
+        : eventEndFrame(prev);
 
       if (endFrame > incoming.startFrame) {
         activeOther.push(prev);
@@ -74,9 +75,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         ownerId: ENEMY_OWNER_ID,
         columnId: reactionColumnId,
         startFrame: incoming.startFrame,
-        activationDuration: REACTION_DURATION,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: durationSegment(REACTION_DURATION),
         sourceOwnerId: incoming.sourceOwnerId,
         sourceSkillName: incoming.sourceSkillName,
         statusLevel,
@@ -98,7 +97,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         if (removedIds.has(prev.id)) continue;
         if (clampMap.has(prev.id)) continue; // already clamped by other-element pass
         if (prev.eventStatus === EventStatusType.CONSUMED) continue;
-        const endFrame = prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
+        const endFrame = eventEndFrame(prev);
         if (endFrame > incoming.startFrame) {
           clampMap.set(prev.id, { frame: incoming.startFrame, source: reactionSource });
         }
@@ -116,16 +115,11 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
     const clamp = clampMap.get(ev.id);
     if (clamp !== undefined) {
       const available = Math.max(0, clamp.frame - ev.startFrame);
-      const clampedActive = Math.min(ev.activationDuration, available);
-      const remAfterActive = available - clampedActive;
-      const clampedActiveDur = Math.min(ev.activeDuration, remAfterActive);
-      const remAfterActiveDur = remAfterActive - clampedActiveDur;
-      const clampedCooldown = Math.min(ev.cooldownDuration, remAfterActiveDur);
+      const clampedDuration = Math.min(eventDuration(ev), available);
+      const clamped = { ...ev, segments: [...ev.segments] };
+      setEventDuration(clamped, clampedDuration);
       result.push({
-        ...ev,
-        activationDuration: clampedActive,
-        activeDuration: clampedActiveDur,
-        cooldownDuration: clampedCooldown,
+        ...clamped,
         eventStatus: EventStatusType.CONSUMED,
         eventStatusOwnerId: clamp.source.ownerId,
         eventStatusSkillName: clamp.source.skillName,

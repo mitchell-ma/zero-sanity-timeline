@@ -13,7 +13,7 @@ import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
-import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan } from '../consts/viewTypes';
+import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventDuration, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
 import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
@@ -70,7 +70,6 @@ import { useResourceGraphs } from './useResourceGraphs';
 import { useAutoSave } from './useAutoSave';
 import { LOADOUT_ROW_HEIGHT, FPS, TOTAL_FRAMES, frameToPx } from '../utils/timeline';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { TimeStopRange } from '../controller/timeline/resourceTimeline';
 import {
   UndoableState,
   EnemyStats,
@@ -84,7 +83,7 @@ import {
 } from '../controller/appStateController';
 import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../model/channels';
+import { SKILL_COLUMNS } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -445,24 +444,14 @@ export function useApp() {
     operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
   );
 
-  // Generate stagger frailty events from node crossings and full stagger breaks
-  const staggerFrailtyEvents = useMemo(() => {
-    const nodeRecoveryFrames = Math.round((enemyStats.staggerNodeRecoverySeconds ?? 0) * FPS);
-    return combatLoadout.commonSlot.stagger.generateFrailtyEvents(
-      nodeRecoveryFrames,
-      NODE_STAGGER_COLUMN_ID,
-      FULL_STAGGER_COLUMN_ID,
-      ENEMY_OWNER_ID,
-      'stagger-frailty',
-    );
+  // ─── Stagger sync (config + events + frailty, all in one controller call) ─
+  useMemo(() => {
+    combatLoadout.commonSlot.stagger.sync(processedEvents, enemyStats);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [combatLoadout, processedEvents, enemyStats.staggerNodeRecoverySeconds]);
+  }, [processedEvents, combatLoadout, enemyStats]);
 
-  const staggerBreaks = useMemo(
-    () => combatLoadout.commonSlot.stagger.getBreaks(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [combatLoadout, processedEvents],
-  );
+  const staggerFrailtyEvents = combatLoadout.commonSlot.stagger.frailtyEvents;
+  const staggerBreaks = combatLoadout.commonSlot.stagger.breaks;
 
   const allProcessedEventsRaw = useMemo(
     () => {
@@ -508,9 +497,7 @@ export function useApp() {
     const BUFFER_FRAMES = FPS * 30;
     let maxEnd = 0;
     for (const ev of allProcessedEvents) {
-      const dur = ev.segments
-        ? computeSegmentsSpan(ev.segments)
-        : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      const dur = computeSegmentsSpan(ev.segments);
       maxEnd = Math.max(maxEnd, ev.startFrame + dur);
     }
     return Math.min(TOTAL_FRAMES, Math.max(MIN_FRAMES, maxEnd + BUFFER_FRAMES));
@@ -617,6 +604,7 @@ export function useApp() {
       max: cfg.max,
       regenPerFrame: cfg.regenPerSecond / FPS,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resourceConfigs, combatLoadout, spKey]);
 
   // ─── Sync combat context to event controller ────────────────────────────
@@ -624,16 +612,7 @@ export function useApp() {
     setCombatLoadout(combatLoadout);
   }, [combatLoadout]);
 
-  // ─── Stagger sync effects ────────────────────────────────────────────────
-  useEffect(() => {
-    const stagger = combatLoadout.commonSlot.stagger;
-    stagger.setNodeCount(enemyStats.staggerNodes);
-    stagger.setBreakDuration(Math.round(enemyStats[StatType.STAGGER_RECOVERY] * FPS));
-    stagger.updateConfig({
-      max: enemyStats[StatType.STAGGER_HP],
-      startValue: enemyStats.staggerStartValue ?? 0,
-    });
-  }, [enemyStats, combatLoadout]);
+  // (Stagger sync handled by commonSlot.syncStaggerEvents above)
 
   useEffect(() => {
     const slotSpCosts = new Map<string, number>();
@@ -642,60 +621,14 @@ export function useApp() {
         slotSpCosts.set(slot.slotId, slot.operator.skills.battle?.skillPointCost ?? 100);
       }
     }
-    combatLoadout.commonSlot.syncSkillPointEvents(processedEvents, slotSpCosts);
+    combatLoadout.commonSlot.skillPoints.sync(processedEvents, slotSpCosts);
     // After sync, recompute runs synchronously — read the updated consumption log
     setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
-    setSpInsufficiencyZones(combatLoadout.commonSlot.spInsufficiencyZones);
+    setSpInsufficiencyZones(combatLoadout.commonSlot.skillPoints.insufficiencyZones);
   }, [processedEvents, combatLoadout, slots]);
 
-  // ─── Stagger event sync (must run synchronously before staggerFrailtyEvents) ─
-  useMemo(() => {
-    const staggerSub = combatLoadout.commonSlot.getSubtimeline(COMMON_COLUMN_IDS.STAGGER);
-    if (!staggerSub) return;
-    const staggerEvents: TimelineEvent[] = [];
-    for (const ev of processedEvents) {
-      if (!ev.segments) continue;
-      // For combo/ultimate events, the first segment starts after the animation time-stop
-      const animOffset = (ev.columnId === SKILL_COLUMNS.COMBO || ev.columnId === SKILL_COLUMNS.ULTIMATE)
-        ? (ev.animationDuration ?? 0) : 0;
-      let segOffset = 0;
-      for (const seg of ev.segments) {
-        if (seg.frames) {
-          for (const f of seg.frames) {
-            if (f.stagger && f.stagger > 0) {
-              const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
-              staggerEvents.push({
-                id: `${ev.id}-stagger-${frame}`,
-                name: 'stagger',
-                ownerId: ev.ownerId,
-                columnId: COMMON_COLUMN_IDS.STAGGER,
-                startFrame: frame,
-                activationDuration: f.stagger,
-                activeDuration: 0,
-                cooldownDuration: 0,
-              } as TimelineEvent);
-            }
-          }
-        }
-        segOffset += seg.durationFrames;
-      }
-    }
-    staggerSub.setEvents(staggerEvents.sort((a, b) => a.startFrame - b.startFrame));
-  }, [processedEvents, combatLoadout]);
 
-  useEffect(() => {
-    const stops: TimeStopRange[] = [];
-    for (const ev of processedEvents) {
-      const isTimeStop = (ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
-        (ev.columnId === 'dash' && ev.isPerfectDodge)) &&
-        ev.animationDuration && ev.animationDuration > 0;
-      if (isTimeStop) {
-        stops.push({ startFrame: ev.startFrame, endFrame: ev.startFrame + ev.animationDuration! });
-      }
-    }
-    stops.sort((a, b) => a.startFrame - b.startFrame);
-    combatLoadout.commonSlot.skillPoints.setTimeStops(stops);
-  }, [processedEvents, combatLoadout]);
+  // (Time-stops extracted inside skillPoints.sync() and stagger.sync())
 
   // ─── Ctrl+S to save, Escape to close info pane ─────────────────────────
   useEffect(() => {
@@ -962,7 +895,7 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; animationDuration?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
+    defaultSkill: { name?: string; defaultActivationDuration?: number; defaultActiveDuration?: number; defaultCooldownDuration?: number; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
@@ -978,16 +911,26 @@ export function useApp() {
           const processed = processedEventsRef.current;
           const mfCount = (processed ?? prev).filter(
             (e) => e.ownerId === ownerId && e.columnId === 'melting-flame'
-              && e.startFrame <= atFrame && e.startFrame + e.activationDuration > atFrame,
+              && e.startFrame <= atFrame && eventEndFrame(e) > atFrame,
           ).length;
           if (mfCount < 4) return prev;
         }
         // Enhanced battle skills require an active ultimate
         if (ev.name?.includes('ENHANCED') && !ev.name?.includes('EMPOWERED')) {
           const ultActive = prev.some(
-            (e) => e.ownerId === ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
-              && atFrame >= e.startFrame + e.activationDuration
-              && atFrame < e.startFrame + e.activationDuration + e.activeDuration,
+            (e) => {
+              if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
+              // Ultimate segments: [animation, statis, active, cooldown]
+              // "Active" phase starts after animation + statis
+              const segs = e.segments;
+              if (segs.length >= 3) {
+                const activationEnd = e.startFrame + segs[0].properties.duration + segs[1].properties.duration;
+                const activeEnd = activationEnd + segs[2].properties.duration;
+                return atFrame >= activationEnd && atFrame < activeEnd;
+              }
+              // Fallback: treat entire event as active
+              return atFrame >= e.startFrame && atFrame < eventEndFrame(e);
+            },
           );
           if (!ultActive) return prev;
         }
@@ -1021,7 +964,7 @@ export function useApp() {
   }, []);
 
 
-  const handleMoveEvent = useCallback((id: string, newStartFrame: number) => {
+  const handleMoveEvent = useCallback((id: string, newStartFrame: number, overlapExemptIds?: Set<string>) => {
     setEvents((prev) => {
       let target = prev.find((ev) => ev.id === id);
       if (!target && interactionModeRef.current !== InteractionModeType.STRICT) {
@@ -1038,7 +981,7 @@ export function useApp() {
         if (reaction) adjustedFrame = target.startFrame + (newStartFrame - reaction.startFrame);
       }
       const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
-      const clamped = validateMove(prev, target, adjustedFrame, processed);
+      const clamped = validateMove(prev, target, adjustedFrame, processed, overlapExemptIds);
       if (clamped === target.startFrame) return prev;
       const targetId = target.id;
       const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
@@ -1047,7 +990,7 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleMoveEvents = useCallback((ids: string[], delta: number) => {
+  const handleMoveEvents = useCallback((ids: string[], delta: number, overlapExemptIds?: Set<string>) => {
     if (delta === 0) return;
     setEvents((prev) => {
       const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
@@ -1064,7 +1007,7 @@ export function useApp() {
       const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.id === id));
       const idSet = new Set(rawIds);
       if (rawIds.length === 0) return prev;
-      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed);
+      const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed, overlapExemptIds);
       if (clampedDelta === 0) return prev;
       return prev.map((ev) => {
         if (!idSet.has(ev.id)) return ev;
@@ -1126,7 +1069,6 @@ export function useApp() {
         activeDuration: defaults.defaultActiveDuration,
         cooldownDuration: defaults.defaultCooldownDuration,
         ...(defaults.segments ? { segments: defaults.segments } : {}),
-        ...(defaults.animationDuration !== undefined ? { animationDuration: defaults.animationDuration } : {}),
         ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
       } : ev));
     });
@@ -1144,7 +1086,7 @@ export function useApp() {
         ...ev,
         segments: defaults.segments!.map((defSeg, i) => ({
           ...defSeg,
-          durationFrames: ev.segments?.[i]?.durationFrames ?? defSeg.durationFrames,
+          properties: { ...defSeg.properties, duration: ev.segments?.[i]?.properties.duration ?? defSeg.properties.duration },
         })),
         activationDuration: computeSegmentsSpan(defaults.segments!),
       } : ev));
@@ -1185,7 +1127,6 @@ export function useApp() {
           activeDuration: defaults.defaultActiveDuration,
           cooldownDuration: defaults.defaultCooldownDuration,
           ...(defaults.segments ? { segments: defaults.segments } : {}),
-          ...(defaults.animationDuration !== undefined ? { animationDuration: defaults.animationDuration } : {}),
           ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
         };
       });
@@ -1243,13 +1184,13 @@ export function useApp() {
         c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
       );
       if (col?.type !== 'mini-timeline') return prev;
-      const fullSeg = col.defaultEvent?.segments?.find((s) => s.label === segmentLabel);
+      const fullSeg = col.defaultEvent?.segments?.find((s) => s.properties.name === segmentLabel);
       if (!fullSeg) return prev;
-      const allLabels = col.defaultEvent!.segments!.map((s) => s.label);
+      const allLabels = col.defaultEvent!.segments!.map((s) => s.properties.name);
       const newSegments = [...target.segments, fullSeg];
       newSegments.sort((a, b) => {
-        const ai = allLabels.indexOf(a.label);
-        const bi = allLabels.indexOf(b.label);
+        const ai = allLabels.indexOf(a.properties.name);
+        const bi = allLabels.indexOf(b.properties.name);
         return ai - bi;
       });
       const totalDuration = computeSegmentsSpan(newSegments);
@@ -1290,7 +1231,7 @@ export function useApp() {
       if (col?.type !== 'mini-timeline') return prev;
       const seg = target.segments[segmentIndex];
       const allDefaultSegs = col.defaultEvent?.segments;
-      const defaultSeg = allDefaultSegs?.find((s) => s.label === seg.label) ?? allDefaultSegs?.[segmentIndex];
+      const defaultSeg = allDefaultSegs?.find((s) => s.properties.name === seg.properties.name) ?? allDefaultSegs?.[segmentIndex];
       const fullFrame = defaultSeg?.frames?.find((f) => f.offsetFrame === frameOffsetFrame);
       if (!fullFrame) return prev;
       if (seg.frames?.some((f) => f.offsetFrame === frameOffsetFrame)) return prev;

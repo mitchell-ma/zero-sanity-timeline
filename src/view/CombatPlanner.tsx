@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
-import { wouldOverlapNonOverlappable } from '../controller/timeline/eventController';
+import { wouldOverlapNonOverlappable, clampDeltaByOverlap } from '../controller/timeline/eventController';
 import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
 import { ENEMY_TIERS } from '../utils/enemies';
 import {
@@ -32,6 +32,8 @@ import {
   MiniTimeline,
   SelectedFrame,
   computeSegmentsSpan,
+  eventDuration,
+  eventEndFrame,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
 import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
@@ -71,6 +73,10 @@ interface DragState {
   monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
   lastAppliedDelta: number; // tracks the delta already applied to events (for incremental batch moves)
   resourceZonesSnapshot: Map<string, import('../controller/timeline/eventValidator').ResourceZone[]>; // Resource zones captured at drag start
+  invalidAtDragStart: Set<string>; // events that were already in an invalid zone at drag start — allowed free movement until valid
+  revalidated: Set<string>; // events that transitioned invalid→valid mid-drag — must not skip self-caused zones
+  overlapInvalidAtDragStart: Set<string>; // events that were already overlapping siblings at drag start — allowed free movement until non-overlapping
+  overlapRevalidated: Set<string>; // overlap-invalid events that reached a valid position mid-drag — must now respect overlap clamping
 }
 
 interface MarqueeState {
@@ -99,8 +105,8 @@ interface CombatPlannerProps {
   onToggleOrientation?: () => void;
   onToggleSkill: (slotId: string, skillType: string) => void;
   onAddEvent: (ownerId: string, columnId: string, atFrame: number, defaultSkill: object | null) => void;
-  onMoveEvent: (id: string, newStartFrame: number) => void;
-  onMoveEvents?: (ids: string[], delta: number) => void;
+  onMoveEvent: (id: string, newStartFrame: number, overlapExemptIds?: Set<string>) => void;
+  onMoveEvents?: (ids: string[], delta: number, overlapExemptIds?: Set<string>) => void;
   onContextMenu: (state: ContextMenuState | null) => void;
   onEditEvent: (id: string | null, context?: string) => void;
   onRemoveEvent: (id: string) => void;
@@ -773,9 +779,7 @@ export default function CombatPlanner({
         microColumnEventPositions.get(ev.id) ??
         columnPositions.get(`${ev.ownerId}-${ev.columnId}`);
       if (!colPos) continue;
-      const totalDur = ev.segments && ev.segments.length > 0
-        ? computeSegmentsSpan(ev.segments)
-        : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+      const totalDur = computeSegmentsSpan(ev.segments);
       const evFrameStart = bodyTop + frameToPx(ev.startFrame, zoomRef.current);
       const evFrameEnd = evFrameStart + durationToPx(totalDur, zoomRef.current);
       // In vertical: frame axis=Y, lane axis=X. In horizontal: frame axis=X, lane axis=Y
@@ -810,8 +814,7 @@ export default function CombatPlanner({
       if (!colPos) continue;
       // Column (lane axis) must overlap
       if (colPos.right <= rectLaneStart || colPos.left >= rectLaneEnd) continue;
-      const isUltimate = ev.columnId === SKILL_COLUMNS.ULTIMATE;
-      const baseOffset = isUltimate && ev.activeDuration > 0 ? ev.activationDuration : 0;
+      const baseOffset = 0;
       const evFramePx = bodyTop + frameToPx(ev.startFrame, z);
       let segOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
@@ -826,7 +829,7 @@ export default function CombatPlanner({
             }
           }
         }
-        segOffset += seg.durationFrames;
+        segOffset += seg.properties.duration;
       }
     }
     return result;
@@ -987,21 +990,47 @@ export default function CombatPlanner({
 
       // Resource zone clamping: prevent battle/ultimate events from being dragged
       // into resource-insufficient zones. Uses snapshot from drag start.
+      // Events that were already invalid at drag start get free movement until valid.
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         const resZones = dragRef.current.resourceZonesSnapshot;
+        const invalidSet = dragRef.current.invalidAtDragStart;
+        const revalidated = dragRef.current.revalidated;
         for (const eid of eventIds) {
           const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaByResourceZones(clampedDelta, eid, eventsRef.current, orig, resZones);
+          clampedDelta = clampDeltaByResourceZones(clampedDelta, eid, eventsRef.current, orig, resZones, invalidSet, revalidated);
         }
       }
 
       // Combo window clamping: keep combo events within their activation window.
+      // Events that were already outside windows at drag start get free movement.
       if (interactionModeRef.current === InteractionModeType.STRICT) {
+        const invalidSet = dragRef.current.invalidAtDragStart;
         for (const eid of eventIds) {
           const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, eventsRef.current, orig, eventsRef.current);
+          clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, eventsRef.current, orig, eventsRef.current, invalidSet);
         }
       }
+
+      // Overlap clamping: prevent events from overlapping siblings.
+      // Events that were already overlapping at drag start get free movement
+      // until they reach a non-overlapping position, then clamping kicks in.
+      if (interactionModeRef.current === InteractionModeType.STRICT) {
+        const overlapInvalid = dragRef.current.overlapInvalidAtDragStart;
+        const overlapReval = dragRef.current.overlapRevalidated;
+        const dragSet = new Set(eventIds);
+        for (const eid of eventIds) {
+          const orig = startFrames.get(eid) ?? 0;
+          clampedDelta = clampDeltaByOverlap(clampedDelta, eid, eventsRef.current, orig, dragSet, undefined, overlapInvalid, overlapReval);
+        }
+      }
+
+      // Events still overlap-invalid pass through validateMove's clampNonOverlappable
+      // unclamped (the drag handler manages their free→clamped transition).
+      // Revalidated events are already clamped by clampDeltaByOverlap above.
+      const overlapExempt = interactionModeRef.current === InteractionModeType.STRICT
+        && dragRef.current.overlapInvalidAtDragStart.size > 0
+        ? dragRef.current.overlapInvalidAtDragStart
+        : undefined;
 
       // Throttle the expensive move calls (triggers React state + interaction recalc).
       // Hover line stays at full rate below; only the controller dispatch is batched.
@@ -1009,12 +1038,12 @@ export default function CombatPlanner({
       throttledDragAction.current(() => {
         if (eventIds.length > 1 && onMoveEvents) {
           const incrementalDelta = clampedDelta - dragState.lastAppliedDelta;
-          onMoveEvents(eventIds, incrementalDelta);
+          onMoveEvents(eventIds, incrementalDelta, overlapExempt);
           dragState.lastAppliedDelta = clampedDelta;
         } else {
           for (const eid of eventIds) {
             const orig = startFrames.get(eid) ?? 0;
-            onMoveEvent(eid, orig + clampedDelta);
+            onMoveEvent(eid, orig + clampedDelta, overlapExempt);
           }
         }
       });
@@ -1184,21 +1213,68 @@ export default function CombatPlanner({
     dragMovedRef.current = false;
     onBatchStart?.();
 
+    // Compute which dragged events are already in an invalid zone (resource or
+    // combo). These events get free movement until they reach a valid position.
+    const computeInvalidSet = (draggedEvents: TimelineEvent[]) => {
+      const invalid = new Set<string>();
+      const liveZones = resourceZonesRef.current;
+      for (const de of draggedEvents) {
+        // Resource zone: check live zones (includes the event's own contribution)
+        if (de.columnId === SKILL_COLUMNS.BATTLE || de.columnId === SKILL_COLUMNS.ULTIMATE) {
+          const zones = liveZones.get(`${de.ownerId}:${de.columnId}`);
+          if (zones?.some((z) => de.startFrame >= z.start && de.startFrame < z.end)) {
+            invalid.add(de.id);
+          }
+        }
+        // Combo window: check if event is outside all combo windows
+        if (de.columnId === SKILL_COLUMNS.COMBO) {
+          const windows = eventsRef.current.filter(
+            (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerId === de.ownerId,
+          );
+          const inWindow = windows.some((w) => {
+            const duration = computeSegmentsSpan(w.segments);
+            return de.startFrame >= w.startFrame && de.startFrame < w.startFrame + duration;
+          });
+          if (!inWindow && windows.length > 0) {
+            invalid.add(de.id);
+          }
+        }
+      }
+      return invalid;
+    };
+
+    // Compute which dragged events are already overlapping siblings at drag start.
+    // These get free movement (through overlapping positions) until they reach
+    // a non-overlapping position, then overlap clamping kicks in.
+    const computeOverlapInvalidSet = (draggedEvents: TimelineEvent[]) => {
+      const invalid = new Set<string>();
+      for (const de of draggedEvents) {
+        if (wouldOverlapNonOverlappable(eventsRef.current, de, de.startFrame)) {
+          invalid.add(de.id);
+        }
+      }
+      return invalid;
+    };
+
     // If dragging a selected event, drag all selected events together
     if (selectedIds.has(eventId) && selectedIds.size > 1) {
       const startFrames = new Map<string, number>();
       const draggedIds: string[] = [];
+      const draggedEvents: TimelineEvent[] = [];
       for (const ev of events) {
         if (selectedIds.has(ev.id)) {
           draggedIds.push(ev.id);
           startFrames.set(ev.id, ev.startFrame);
+          draggedEvents.push(ev);
         }
       }
       const dragSet = new Set(draggedIds);
       const resZones = resourceGraphsRef.current
         ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
         : resourceZonesRef.current;
-      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
+      const invalidSet = computeInvalidSet(draggedEvents);
+      const overlapInvalid = computeOverlapInvalidSet(draggedEvents);
+      dragRef.current = { primaryId: eventId, eventIds: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     } else {
@@ -1211,7 +1287,10 @@ export default function CombatPlanner({
       const resZones = resourceGraphsRef.current
         ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
         : resourceZonesRef.current;
-      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones };
+      const draggedEv = events.find((e) => e.id === eventId);
+      const invalidSet = draggedEv ? computeInvalidSet([draggedEv]) : new Set<string>();
+      const overlapInvalid = draggedEv ? computeOverlapInvalidSet([draggedEv]) : new Set<string>();
+      dragRef.current = { primaryId: eventId, eventIds: [eventId], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventId]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     }
@@ -1230,7 +1309,7 @@ export default function CombatPlanner({
 
     // Compute bounds: must stay within segment [0, segDuration-1] and preserve order with neighbors
     const prevOffset = frameIndex > 0 ? seg.frames[frameIndex - 1].offsetFrame + 1 : 0;
-    const nextOffset = frameIndex < seg.frames.length - 1 ? seg.frames[frameIndex + 1].offsetFrame - 1 : seg.durationFrames - 1;
+    const nextOffset = frameIndex < seg.frames.length - 1 ? seg.frames[frameIndex + 1].offsetFrame - 1 : seg.properties.duration - 1;
 
     onBatchStart?.();
     frameDragRef.current = {
@@ -1501,7 +1580,7 @@ export default function CombatPlanner({
     if (rmbDraggedRef.current) return;
     onSelectedFramesChange?.([]);
     const ev = events.find((ev) => ev.id === eventId);
-    const segLabel = ev?.segments?.[segmentIndex]?.label;
+    const segLabel = ev?.segments?.[segmentIndex]?.properties.name;
     const multiSegment = (ev?.segments?.length ?? 0) > 1;
     const isCombo = ev?.columnId === SKILL_COLUMNS.COMBO;
     const addSegItems = multiSegment && !isCombo
@@ -1786,21 +1865,28 @@ export default function CombatPlanner({
               for (let i = 0; i < colEvents.length - 1; i++) {
                 const cur = colEvents[i];
                 const next = colEvents[i + 1];
-                const curEnd = cur.startFrame + cur.activationDuration + cur.activeDuration + cur.cooldownDuration;
+                const curEnd = eventEndFrame(cur);
                 if (curEnd > next.startFrame) {
                   const clampedTotal = next.startFrame - cur.startFrame;
-                  colEvents[i] = {
-                    ...cur,
-                    activationDuration: Math.min(cur.activationDuration, clampedTotal),
-                    activeDuration: Math.max(0, Math.min(cur.activeDuration, clampedTotal - cur.activationDuration)),
-                    cooldownDuration: Math.max(0, Math.min(cur.cooldownDuration, clampedTotal - cur.activationDuration - cur.activeDuration)),
-                  };
+                  const clampedEvent = { ...cur, segments: cur.segments.map(s => ({ ...s })) };
+                  // Trim segments to fit within clampedTotal
+                  let remaining = clampedTotal;
+                  clampedEvent.segments = cur.segments.map(s => {
+                    if (remaining <= 0) return { ...s, properties: { ...s.properties, duration: 0 } };
+                    const dur = Math.min(s.properties.duration, remaining);
+                    remaining -= dur;
+                    return { ...s, properties: { ...s.properties, duration: dur } };
+                  }).filter(s => s.properties.duration > 0);
+                  if (clampedEvent.segments.length === 0) {
+                    clampedEvent.segments = [{ properties: { duration: clampedTotal } }];
+                  }
+                  colEvents[i] = clampedEvent;
                 }
               }
             }
             // Viewport culling: only render events overlapping the visible frame range
             const visColEvents = colEvents.filter((ev) => {
-              const evEnd = ev.startFrame + ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+              const evEnd = eventEndFrame(ev);
               return evEnd >= visibleRange.startFrame && ev.startFrame <= visibleRange.endFrame;
             });
 
@@ -1901,7 +1987,7 @@ export default function CombatPlanner({
                   // Compute enabled zones from activation windows
                   const enabled: { start: number; end: number }[] = [];
                   for (const w of windowEvts) {
-                    enabled.push({ start: w.startFrame, end: w.startFrame + w.activationDuration });
+                    enabled.push({ start: w.startFrame, end: eventEndFrame(w) });
                   }
 
                   return (
@@ -2119,9 +2205,7 @@ export default function CombatPlanner({
           const colPos = colKey ? columnPositions.get(colKey) : undefined;
           if (!colPos) return null;
           const topPx = frameToPx(ghostFrame, zoom);
-          const totalDuration = src.segments
-            ? computeSegmentsSpan(src.segments)
-            : src.activationDuration + src.activeDuration + src.cooldownDuration;
+          const totalDuration = computeSegmentsSpan(src.segments);
           const heightPx = durationToPx(totalDuration, zoom);
           return (
             <div

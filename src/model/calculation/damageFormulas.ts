@@ -3,7 +3,7 @@ import {
   ElementType,
   EnemyTierType,
   StatType,
-  StatusType,
+  PhysicalStatusType,
 } from "../../consts/enums";
 import { StatusLevel, TalentLevel } from "../../consts/types";
 import { Enemy } from "../enemies/enemy";
@@ -233,23 +233,54 @@ export function getArtsIntensityMultiplier(artsIntensity: number): number {
 
 /**
  * Physical status base multipliers (percentage of ATK):
- * - Lift / Knock Down: 120%
- * - Crush: 150% + 150% per Vulnerable stack
+ * - Lift / Knock Down / Shatter: 120% (fixed)
+ * - Crush: 300% / 450% / 600% / 750% (scales with Vulnerable stacks consumed)
  * - Breach: 50% + 50% per Vulnerable stack
  */
+
+const CRUSH_MULTIPLIER: Record<number, number> = {
+  1: 3.0,
+  2: 4.5,
+  3: 6.0,
+  4: 7.5,
+};
+
 export function getPhysicalStatusBaseMultiplier(
-  statusType: StatusType.LIFT | StatusType.KNOCK_DOWN | StatusType.CRUSH | StatusType.BREACH,
+  statusType: PhysicalStatusType,
   vulnerableStacks: number,
 ): number {
   switch (statusType) {
-    case StatusType.LIFT:
-    case StatusType.KNOCK_DOWN:
+    case PhysicalStatusType.LIFT:
+    case PhysicalStatusType.KNOCK_DOWN:
+    case PhysicalStatusType.SHATTER:
       return 1.2;
-    case StatusType.CRUSH:
-      return 1.5 + 1.5 * vulnerableStacks;
-    case StatusType.BREACH:
+    case PhysicalStatusType.CRUSH:
+      return CRUSH_MULTIPLIER[Math.min(vulnerableStacks, 4)] ?? CRUSH_MULTIPLIER[1];
+    case PhysicalStatusType.BREACH:
       return 0.5 + 0.5 * vulnerableStacks;
   }
+}
+
+/**
+ * Physical status base stagger values.
+ * Lift / Knock Down: 10
+ */
+const PHYSICAL_STATUS_BASE_STAGGER: Partial<Record<PhysicalStatusType, number>> = {
+  [PhysicalStatusType.LIFT]: 10,
+  [PhysicalStatusType.KNOCK_DOWN]: 10,
+};
+
+/**
+ * Stagger dealt by a physical status, scaled by Arts Intensity.
+ *
+ * Stagger = BaseStagger × (1 + ArtsIntensity / 200)
+ */
+export function getPhysicalStatusStagger(
+  statusType: PhysicalStatusType,
+  artsIntensity: number,
+): number {
+  const base = PHYSICAL_STATUS_BASE_STAGGER[statusType] ?? 0;
+  return base * (1 + artsIntensity / 200);
 }
 
 /**

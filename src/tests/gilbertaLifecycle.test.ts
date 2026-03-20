@@ -18,8 +18,11 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap } = mockSkillsJson;
 
   // Normalize talent status entries (same as operatorJsonLoader.ts)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
   const normalizeStatusEntry = (raw: Record<string, any>): Record<string, any> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
     const props = (raw.properties ?? {}) as Record<string, any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
     const sl = (props.statusLevel ?? {}) as Record<string, any>;
     let resolvedLimit: unknown;
     const limit = sl.limit;
@@ -34,6 +37,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
         resolvedLimit = limit.value ?? limit;
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON normalization
     const out: Record<string, any> = {
       id: props.id,
       ...(props.name ? { name: props.name } : {}),
@@ -58,7 +62,8 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     return out;
   };
 
-  const normalizedTalentStatuses = (mockTalentJson.statusEvents ?? []).map((s: Record<string, any>) => normalizeStatusEntry(s));
+  const normalizedTalentStatuses = (mockTalentJson.statusEvents ?? []).map(// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+  (s: Record<string, any>) => normalizeStatusEntry(s));
   const mergedStatusEvents = [...(skStatusEvents ?? []), ...normalizedTalentStatuses];
   const mockJson = { skillTypeMap: skTypeMap, statusEvents: mergedStatusEvents };
 
@@ -132,7 +137,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
 
   test('applies 4% bonus to Guard/Caster at talent level 1', () => {
     const operators = [gilberta, guard, caster, striker];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: defaultProps,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,
@@ -147,7 +152,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
 
   test('applies 7% bonus at talent level 2', () => {
     const operators = [gilberta, guard, caster, striker];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: propsLevel2,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,
@@ -162,7 +167,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
 
   test('does not apply to Striker (ineligible class)', () => {
     const operators = [gilberta, guard, caster, striker];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: defaultProps,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,
@@ -176,7 +181,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
 
   test('does not apply to Gilberta herself', () => {
     const operators = [gilberta, guard, caster, striker];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: defaultProps,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,
@@ -190,7 +195,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
 
   test('returns empty when Gilberta is not on the team', () => {
     const operators = [guard, caster, striker, null];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: defaultProps,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,
@@ -205,7 +210,7 @@ describe("Messenger's Song — energy gain efficiency", () => {
   test('applies to Supporter class (but not Gilberta)', () => {
     const supporter = makeOp('other-supporter', 'SUPPORTER');
     const operators = [gilberta, supporter, caster, striker];
-    const loadoutProps: Record<string, any> = {
+    const loadoutProps: Record<string, LoadoutProperties> = {
       [GILBERTA_SLOT]: defaultProps,
       [GUARD_SLOT]: defaultProps,
       [CASTER_SLOT]: defaultProps,

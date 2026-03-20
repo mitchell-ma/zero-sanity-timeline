@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, forwardRef, lazy, Suspense } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   LoadoutTree,
@@ -11,11 +11,8 @@ import {
   moveNode,
   uniqueName,
 } from '../utils/loadoutStorage';
-import type { ContentSelection } from '../consts/contentBrowserTypes';
 
-const ContentBrowserPanel = lazy(() => import('./custom/ContentBrowserPanel'));
-
-export type SidebarMode = 'loadouts' | 'custom' | 'workbench' | null;
+export type SidebarMode = 'loadouts' | 'workbench' | null;
 
 interface LoadoutSidebarProps {
   tree: LoadoutTree;
@@ -28,13 +25,6 @@ interface LoadoutSidebarProps {
   onWarning?: (message: string) => void;
   sidebarMode: SidebarMode;
   onSidebarModeChange: (mode: SidebarMode) => void;
-  selectedContentItem?: ContentSelection | null;
-  onSelectContentItem?: (item: ContentSelection) => void;
-  onCloneContentAsCustom?: (item: ContentSelection) => void;
-  onEditCustomContent?: (item: ContentSelection) => void;
-  onOpenInWorkbench?: (item: ContentSelection) => void;
-  onContentChanged?: () => void;
-  contentRefreshKey?: number;
 }
 
 
@@ -68,13 +58,6 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
   onWarning,
   sidebarMode,
   onSidebarModeChange,
-  selectedContentItem,
-  onSelectContentItem,
-  onCloneContentAsCustom,
-  onEditCustomContent,
-  onOpenInWorkbench,
-  onContentChanged,
-  contentRefreshKey,
 }, ref) {
   const [filter, setFilter] = useState('');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -448,7 +431,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
 
   const rootNodes = getChildrenOf(tree, null);
 
-  const handleIconClick = (mode: 'loadouts' | 'custom' | 'workbench') => {
+  const handleIconClick = (mode: 'loadouts' | 'workbench') => {
     if (sidebarMode === mode) {
       // Same icon clicked — collapse the panel
       onSidebarModeChange(null);
@@ -476,15 +459,6 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-          </svg>
-        </button>
-        <button
-          className={`sidebar-mode-btn${sidebarMode === 'custom' ? ' sidebar-mode-btn--active' : ''}`}
-          onClick={() => handleIconClick('custom')}
-          title="Customization"
-        >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 000-1.42l-2.34-2.33a1.003 1.003 0 00-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.83z"/>
           </svg>
         </button>
         <button
@@ -602,19 +576,6 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         </div>
       )}
 
-      {sidebarMode === 'custom' && onSelectContentItem && (
-        <Suspense fallback={<div className="tl-loading" />}>
-          <ContentBrowserPanel
-            selectedItem={selectedContentItem ?? null}
-            onSelectItem={onSelectContentItem}
-            onCloneAsCustom={onCloneContentAsCustom}
-            onEditCustom={onEditCustomContent}
-            onOpenInWorkbench={onOpenInWorkbench}
-            onContentChanged={onContentChanged}
-            refreshKey={contentRefreshKey}
-          />
-        </Suspense>
-      )}
     </div>
   );
 });

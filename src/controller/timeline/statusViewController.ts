@@ -12,7 +12,7 @@
  *
  * Beyond 9 stacks, standard numbers are used (e.g. "Heat 10").
  */
-import { TimelineEvent, Column } from '../../consts/viewTypes';
+import { TimelineEvent, Column, eventEndFrame } from '../../consts/viewTypes';
 import { INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { formatSegmentShortName } from '../../utils/semanticsTranslation';
 import { getOperatorJson, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
@@ -129,7 +129,7 @@ export function computeStatusViewOverrides(
         let activeEarlier = 0;
         for (let j = 0; j < i; j++) {
           const prev = sorted[j];
-          const prevEnd = prev.startFrame + prev.activationDuration + prev.activeDuration + prev.cooldownDuration;
+          const prevEnd = eventEndFrame(prev);
           if (prevEnd > ev.startFrame) activeEarlier++;
         }
         const position = activeEarlier + 1;
@@ -143,7 +143,7 @@ export function computeStatusViewOverrides(
         // duration to end where the next one starts.
         if (i < sorted.length - 1) {
           const nextStart = sorted[i + 1].startFrame;
-          const totalDur = ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+          const totalDur = eventEndFrame(ev) - ev.startFrame;
           const evEnd = ev.startFrame + totalDur;
           if (nextStart < evEnd) {
             // Truncate: visual activation ends at next event's start

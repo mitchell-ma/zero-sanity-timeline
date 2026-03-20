@@ -1,5 +1,5 @@
-import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillsType } from '../../consts/enums';
+import { TimelineEvent, computeSegmentsSpan, getAnimationDuration } from '../../consts/viewTypes';
+import { CombatSkillsType, SegmentType } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './statusDerivationEngine';
@@ -23,8 +23,8 @@ export function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
   const comboStops: { id: string; startFrame: number; animDur: number }[] = [];
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-    const anim = ev.animationDuration;
-    if (!anim || anim <= 0) continue;
+    const anim = getAnimationDuration(ev);
+    if (anim <= 0) continue;
     comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur: anim });
   }
   if (comboStops.length <= 1) return events;
@@ -52,11 +52,10 @@ export function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
   return events.map((ev) => {
     const truncatedAnim = overrides.get(ev.id);
     if (truncatedAnim == null) return ev;
-    return {
-      ...ev,
-      animationDuration: truncatedAnim,
-      activationDuration: Math.min(ev.activationDuration, truncatedAnim),
-    };
+    const newSegments = ev.segments.map(s =>
+      s.metadata?.segmentType === SegmentType.ANIMATION ? { ...s, properties: { ...s.properties, duration: truncatedAnim } } : s,
+    );
+    return { ...ev, segments: newSegments };
   });
 }
 
@@ -83,13 +82,24 @@ export function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] 
     const ultFrame = ult.startFrame;
     for (const ev of events) {
       if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-      const activeEnd = ev.startFrame + ev.activationDuration + ev.activeDuration;
-      const cooldownEnd = activeEnd + ev.cooldownDuration;
+      // With segments, compute pre-cooldown and total duration
+      let preCooldownDur = 0;
+      let totalDur = 0;
+      for (const s of ev.segments) {
+        totalDur += s.properties.duration;
+        if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
+      }
+      const activeEnd = ev.startFrame + preCooldownDur;
+      const cooldownEnd = ev.startFrame + totalDur;
       // If the combo is in its cooldown phase when the ultimate is cast, reset it
       if (ultFrame >= activeEnd && ultFrame < cooldownEnd) {
         modified.set(ev.id, {
           ...ev,
-          cooldownDuration: Math.max(0, ultFrame - activeEnd),
+          segments: ev.segments.map(s => {
+            if (s.properties.name !== 'Cooldown') return s;
+            const cooldownRemaining = Math.max(0, ultFrame - ev.startFrame - preCooldownDur);
+            return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
+          }),
         });
       }
     }
@@ -159,19 +169,14 @@ export function deriveComboActivationWindows(
     const slotCombos = comboEventsBySlot.get(wiring.slotId);
     if (slotCombos) {
       const onCooldown = slotCombos.some((ce) => {
-        if (ce.segments && ce.segments.length > 0) {
-          let preCooldownDur = 0;
-          let totalDur = 0;
-          for (const s of ce.segments) {
-            totalDur += s.durationFrames;
-            if (s.label !== 'Cooldown') preCooldownDur += s.durationFrames;
-          }
-          const cooldownStart = ce.startFrame + preCooldownDur;
-          const cooldownEnd = ce.startFrame + totalDur;
-          return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
+        let preCooldownDur = 0;
+        let totalDur = 0;
+        for (const s of ce.segments) {
+          totalDur += s.properties.duration;
+          if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
         }
-        const cooldownStart = ce.startFrame + ce.activationDuration + ce.activeDuration;
-        const cooldownEnd = cooldownStart + ce.cooldownDuration;
+        const cooldownStart = ce.startFrame + preCooldownDur;
+        const cooldownEnd = ce.startFrame + totalDur;
         return triggerFrame > cooldownStart && triggerFrame < cooldownEnd;
       });
       if (onCooldown) return;
@@ -198,7 +203,7 @@ export function deriveComboActivationWindows(
   for (const wiring of slotWirings) {
     const clause = getComboTriggerClause(wiring.operatorId);
     if (!clause?.length) continue;
-    const matches = findClauseTriggerMatches(clause, events, wiring.slotId);
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops);
     for (const match of matches) {
       addWindowDirect(wiring, match.frame, match.sourceOwnerId, match.sourceSkillName, match.originOwnerId);
     }
@@ -227,13 +232,10 @@ export function deriveComboActivationWindows(
         ownerId: slotId,
         columnId: COMBO_WINDOW_COLUMN_ID,
         startFrame: w.startFrame,
-        activationDuration: duration,
-        activeDuration: 0,
-        cooldownDuration: 0,
         sourceOwnerId: w.sourceOwnerId,
         sourceSkillName: w.sourceSkillName,
         comboTriggerColumnId: w.sourceColumnId,
-        segments: [{ durationFrames: duration }],
+        segments: [{ properties: { duration } }],
       });
     }
   });
@@ -248,9 +250,7 @@ export function deriveComboActivationWindows(
 export function hasActiveEventInColumns(events: TimelineEvent[], columnIds: string[], frame: number): boolean {
   for (const ev of events) {
     if (!columnIds.includes(ev.columnId) && !columnIds.includes(ev.name)) continue;
-    const totalDuration = ev.segments
-      ? computeSegmentsSpan(ev.segments)
-      : ev.activationDuration + ev.activeDuration + ev.cooldownDuration;
+    const totalDuration = computeSegmentsSpan(ev.segments);
     if (frame >= ev.startFrame && frame < ev.startFrame + totalDuration) {
       return true;
     }
@@ -271,11 +271,11 @@ export function getFinalStrikeTriggerFrame(
   stops?: readonly TimeStopRegion[],
 ): number | null {
   const segs = event.segments;
-  if (!segs || segs.length < 2) return null;
+  if (segs.length < 2) return null;
 
   let offsetFrames = 0;
   for (let i = 0; i < segs.length - 1; i++) {
-    offsetFrames += segs[i].durationFrames;
+    offsetFrames += segs[i].properties.duration;
   }
 
   const lastSeg = segs[segs.length - 1];
@@ -318,7 +318,7 @@ export function resolveComboTriggerColumns(
     if (!clause?.length) continue;
     const info = getComboTriggerInfo(wiring.operatorId);
     const baseDuration = info?.windowFrames ?? 720;
-    const matches = findClauseTriggerMatches(clause, events, wiring.slotId);
+    const matches = findClauseTriggerMatches(clause, events, wiring.slotId, stops);
     for (const match of matches) {
       const extDuration = extendByTimeStops(match.frame, baseDuration, stops);
       if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
@@ -374,8 +374,5 @@ export function resolveComboTriggerColumns(
 
 /** Get the end frame of a combo activation window event. */
 export function comboWindowEndFrame(ev: TimelineEvent): number {
-  const duration = ev.segments
-    ? computeSegmentsSpan(ev.segments)
-    : ev.activationDuration;
-  return ev.startFrame + duration;
+  return ev.startFrame + computeSegmentsSpan(ev.segments);
 }

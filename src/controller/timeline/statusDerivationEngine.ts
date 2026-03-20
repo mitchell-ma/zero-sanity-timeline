@@ -13,13 +13,13 @@
  * - Stack threshold clauses (at max stacks → apply derived status)
  * - Stack interaction types: NONE (independent), RESET (refresh earlier)
  */
-import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
+import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { CombatSkillsType, EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getOperatorJson, getSkillIds, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
-import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
+import { getWeaponEffectDefs, getGearEffectDefs, NormalizedEffectDef } from '../../model/game-data/weaponGearEffectLoader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { ELEMENT_TO_INFLICTION_COLUMN } from './processInfliction';
 import { getFinalStrikeTriggerFrame } from './processComboSkill';
@@ -85,6 +85,11 @@ interface Predicate {
   objectId?: string;
   cardinalityConstraint?: string;
   cardinality?: number | string;
+  element?: string;
+  adjective?: string;
+  subjectDeterminer?: string;
+  toObject?: string;
+  toDeterminer?: string;
 }
 
 interface Effect {
@@ -92,6 +97,7 @@ interface Effect {
   object: string;
   objectId?: string;
   toObject?: string;
+  toDeterminer?: string;
 }
 
 interface TriggerEffect {
@@ -109,6 +115,27 @@ interface TriggerSubEffect {
   element?: string;
   fromObject?: string;
   toObject?: string;
+}
+
+/** Shape of a with-value block inside a clause effect (IS or BASED_ON). */
+interface ClauseWithValue {
+  verb: string;
+  object?: string | string[];
+  value: number | number[] | Record<string, unknown>;
+}
+
+/** Effect shape inside clause arrays: supports adjective + with block. */
+interface ClauseEffectEntry {
+  verb: string;
+  object: string;
+  adjective?: string;
+  with?: { value: ClauseWithValue };
+}
+
+/** A clause with conditions and clause-style effects (as used in resolveClauseEffectsFromClauses). */
+interface ResolvedClause {
+  conditions: Predicate[];
+  effects: ClauseEffectEntry[];
 }
 
 // ── Multi-dimensional BASED_ON resolver ──────────────────────────────────────
@@ -168,7 +195,7 @@ function resolveClauseDimensionKey(
  */
 function resolveClauseEffectsFromClauses(
   ev: TimelineEvent,
-  clauses: { conditions: any[]; effects: Record<string, any>[] }[],
+  clauses: ResolvedClause[],
   ctx: DeriveContext,
   def: StatusEventDef,
   skipConditional = true,
@@ -178,7 +205,7 @@ function resolveClauseEffectsFromClauses(
       if (skipConditional) {
         // Check if all conditions reference EVENT — those are threshold conditions
         // handled by evaluateThresholdClauses, so skip them here.
-        const hasThisEvent = clause.conditions.some((c: any) => c.subject === 'EVENT');
+        const hasThisEvent = clause.conditions.some((c: Predicate) => c.subject === 'EVENT');
         if (hasThisEvent) continue;
 
         // Non-EVENT conditions: evaluate them now
@@ -225,13 +252,14 @@ function resolveClauseEffectsFromClauses(
 
         // Multi-dimension: object is an array, value is a nested map
         if (Array.isArray(dims) && typeof val === 'object' && !Array.isArray(val)) {
-          let current: any = val;
+          let current: unknown = val;
           for (const dim of dims as string[]) {
             if (typeof current !== 'object' || current === null) return undefined;
-            const keys = Object.keys(current);
+            const currentObj = current as Record<string, unknown>;
+            const keys = Object.keys(currentObj);
             const key = resolveClauseDimensionKey(dim, ctx, def, keys);
             if (!key) return undefined;
-            current = current[key];
+            current = currentObj[key];
           }
           return typeof current === 'number' ? current : undefined;
         }
@@ -265,7 +293,7 @@ function resolveClauseEffectsFromClauses(
  * Delegates to resolveClauseEffectsFromClauses with the def's own clauses.
  */
 function resolveClauseEffects(ev: TimelineEvent, def: StatusEventDef, ctx: DeriveContext): void {
-  const clauses = def.clause as { conditions: any[]; effects: Record<string, any>[] }[] | undefined;
+  const clauses = def.clause as ResolvedClause[] | undefined;
   if (!clauses) return;
   resolveClauseEffectsFromClauses(ev, clauses, ctx, def);
 }
@@ -339,26 +367,39 @@ function resolveOwnerId(
 
 // ── Normalize weapon/gear effect defs into StatusEventDef shape ──────────────
 
-function normalizeEquipDef(raw: any): StatusEventDef {
-  const props = raw.properties ?? {};
-  const sl = props.statusLevel ?? {};
+function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
+  // Support both pre-normalized (top-level fields) and raw JSON (nested in properties)
+  const rp = raw.properties as Record<string, unknown> | undefined;
+  const id = raw.id ?? raw.name ?? (rp?.id as string) ?? (rp?.name as string) ?? '';
+  const name = raw.name ?? (rp?.name as string);
+  const target = raw.target ?? (rp?.target as string);
+  const targetDeterminer = raw.targetDeterminer ?? (rp?.targetDeterminer as string);
+  const sl = raw.statusLevel ?? (rp?.statusLevel as NormalizedEffectDef['statusLevel']);
+
+  const slLimit = sl?.limit as { verb?: string; value?: number } | undefined;
+  const statusLevel: StatusEventDef['properties']['statusLevel'] = {
+    limit: slLimit?.verb
+      ? { verb: slLimit.verb, value: slLimit.value ?? 1 }
+      : { verb: 'IS', value: 1 },
+    statusLevelInteractionType: sl?.statusLevelInteractionType ?? 'NONE',
+  };
+
   return {
     ...raw,
     properties: {
-      id: props.id ?? raw.name,
-      name: props.name ?? raw.name,
-      target: props.target,
-      targetDeterminer: props.targetDeterminer,
-      statusLevel: {
-        limit: sl.limit ?? { verb: 'IS', value: 1 },
-        statusLevelInteractionType: sl.statusLevelInteractionType ?? 'NONE',
-      },
-      duration: props.duration,
-      susceptibility: props.susceptibility,
-      cooldownSeconds: props.cooldownSeconds,
+      id,
+      name,
+      target,
+      targetDeterminer,
+      isForced: raw.isForced ?? (rp?.isForced as boolean),
+      enhancementTypes: raw.enhancementTypes ?? (rp?.enhancementTypes as string[]),
+      statusLevel,
+      duration: rp?.duration as StatusEventDef['properties']['duration'],
+      susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
+      cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
     },
-    onTriggerClause: raw.onTriggerClause ?? [],
-  };
+    onTriggerClause: raw.onTriggerClause as TriggerClause[] ?? [],
+  } as StatusEventDef;
 }
 
 // ── Max stacks by potential ─────────────────────────────────────────────────
@@ -440,6 +481,7 @@ interface VerbHandlerContext {
   operatorSlotId: string;
   secondaryConditions: Predicate[];
   clauseEffects?: TriggerEffect[];
+  stops?: readonly import('./processTimeStop').TimeStopRegion[];
 }
 
 type VerbHandlerFn = (primaryCond: Predicate, ctx: VerbHandlerContext) => TriggerMatch[];
@@ -475,7 +517,7 @@ const SKIP_COLUMNS = new Set<string>([
  * Returns undefined for generic STATUS (needs fallback scan logic).
  */
 function resolveColumns(cond: Predicate): Set<string> | undefined {
-  const el = (cond as any).element ?? (cond as any).adjective;
+  const el = cond.element ?? cond.adjective;
 
   switch (cond.object) {
     case 'REACTION':
@@ -491,6 +533,10 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
         const colId = ELEMENT_TO_INFLICTION_COLUMN[el];
         return colId ? new Set([colId]) : new Set();
       }
+      return new Set(INFLICTION_COLUMN_IDS);
+
+    case 'ARTS_BURST':
+      // Arts Burst events live in infliction columns, filtered by isArtsBurst flag in scanEvents
       return new Set(INFLICTION_COLUMN_IDS);
 
     case 'STATUS':
@@ -514,10 +560,10 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
  * For skill verbs (PERFORM, DEAL, RECOVER), the subject is the performer.
  */
 function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
-  const det = (cond as any).subjectDeterminer;
+  const det = cond.subjectDeterminer;
   const isAnyOperator = cond.subject === 'OPERATOR' && det === 'ANY';
-  const toObj = (cond as any).toObject;
-  const toDet = (cond as any).toDeterminer;
+  const toObj = cond.toObject;
+  const toDet = cond.toDeterminer;
 
   // Action verbs: event ownerId = recipient (toObject), not subject
   const isActionVerb = verb === 'APPLY' || verb === 'CONSUME';
@@ -578,6 +624,8 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
     } else {
       continue;
     }
+    // Arts Burst: only match infliction events flagged as same-element stacking
+    if (primaryCond.object === 'ARTS_BURST' && !ev.isArtsBurst) continue;
     if (!matchesOwner(ev.ownerId)) continue;
     if (!checkSecondary(ctx, ev.startFrame)) continue;
 
@@ -598,8 +646,24 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
       if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
       if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
 
-      const triggerFrame = getFinalStrikeTriggerFrame(ev);
+      const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
+      if (!checkSecondary(ctx, triggerFrame)) continue;
+
+      matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
+    }
+    return matches;
+  }
+
+  // FINISHER / DIVE_ATTACK — match events on basic column by skill name
+  if (primaryCond.object === 'FINISHER' || primaryCond.object === 'DIVE_ATTACK') {
+    const targetName = primaryCond.object === 'FINISHER' ? CombatSkillsType.FINISHER : CombatSkillsType.DIVE;
+    for (const ev of ctx.events) {
+      if (!matchesOwner(ev.ownerId)) continue;
+      if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+      if (ev.name !== targetName) continue;
+
+      const triggerFrame = getFirstEventFrame(ev);
       if (!checkSecondary(ctx, triggerFrame)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
@@ -666,7 +730,7 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
             }
           }
         }
-        cumulativeOffset += seg.durationFrames;
+        cumulativeOffset += seg.properties.duration;
       }
     }
   }
@@ -733,7 +797,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
           matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
         }
       }
-      cumulativeOffset += seg.durationFrames;
+      cumulativeOffset += seg.properties.duration;
     }
   }
   return matches;
@@ -795,6 +859,7 @@ export function findClauseTriggerMatches(
   onTriggerClauses: readonly { conditions: Predicate[]; effects?: TriggerEffect[] }[],
   events: TimelineEvent[],
   operatorSlotId: string,
+  stops?: readonly import('./processTimeStop').TimeStopRegion[],
 ): TriggerMatch[] {
   const matches: TriggerMatch[] = [];
 
@@ -822,6 +887,7 @@ export function findClauseTriggerMatches(
       operatorSlotId,
       secondaryConditions,
       clauseEffects: clause.effects,
+      stops,
     };
 
     matches.push(...handler.findMatches(primaryCond, ctx));
@@ -843,12 +909,12 @@ export function findClauseTriggerMatches(
  */
 const ALWAYS_AVAILABLE_VERBS = new Set(['HIT', 'HAVE']);
 export function isClauseAlwaysAvailable(
-  clauses: readonly { conditions: any[] }[],
+  clauses: readonly { conditions: readonly { verb: string }[] }[],
 ): boolean {
   if (clauses.length === 0) return false;
   return clauses.every(clause =>
     clause.conditions.length > 0 &&
-    clause.conditions.every((c: any) => ALWAYS_AVAILABLE_VERBS.has(c.verb)),
+    clause.conditions.every(c => ALWAYS_AVAILABLE_VERBS.has(c.verb)),
   );
 }
 
@@ -922,7 +988,7 @@ function deriveStatusEvents(
     // existing events in the timeline that match the output column
     const allDerived = [...priorDerived, ...derived];
     let activeAtFrame = allDerived.filter(ev => {
-      const end = ev.startFrame + ev.activationDuration;
+      const end = eventEndFrame(ev);
       return ev.startFrame <= trigger.frame && trigger.frame < end;
     }).length;
     // Always count existing events (frame-derived or from a previous derivation pass)
@@ -931,7 +997,7 @@ function deriveStatusEvents(
       ev.ownerId === ownerId &&
       ev.eventStatus !== EventStatusType.CONSUMED &&
       ev.startFrame <= trigger.frame &&
-      trigger.frame < ev.startFrame + ev.activationDuration
+      trigger.frame < eventEndFrame(ev)
     ).length;
     if (activeAtFrame >= maxStacks) continue;
 
@@ -948,7 +1014,7 @@ function deriveStatusEvents(
           ev.ownerId === ENEMY_OWNER_ID &&
           ev.columnId === inflictionCol &&
           ev.startFrame <= trigger.frame &&
-          trigger.frame < ev.startFrame + ev.activationDuration &&
+          trigger.frame < eventEndFrame(ev) &&
           ev.eventStatus !== EventStatusType.CONSUMED &&
           !absorbedIds.has(ev.id)
         ).sort((a, b) => a.startFrame - b.startFrame);
@@ -964,11 +1030,12 @@ function deriveStatusEvents(
       // For RESET stacks: clamp previous instances
       if (outputDef.properties.statusLevel.statusLevelInteractionType === 'RESET' && derived.length > 0) {
         const prev = derived[derived.length - 1];
-        const prevEnd = prev.startFrame + prev.activationDuration;
+        const prevEnd = eventEndFrame(prev);
         if (trigger.frame < prevEnd) {
+          const clampedPrev = { ...prev, segments: [...prev.segments] };
+          setEventDuration(clampedPrev, trigger.frame - prev.startFrame);
           derived[derived.length - 1] = {
-            ...prev,
-            activationDuration: trigger.frame - prev.startFrame,
+            ...clampedPrev,
             eventStatus: EventStatusType.REFRESHED,
             eventStatusOwnerId: trigger.sourceOwnerId,
             eventStatusSkillName: trigger.sourceSkillName,
@@ -982,9 +1049,7 @@ function deriveStatusEvents(
         ownerId,
         columnId,
         startFrame: trigger.frame,
-        activationDuration: durationFrames,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: durationSegment(durationFrames),
         sourceOwnerId: operatorSlotId,
         sourceSkillName: trigger.sourceSkillName,
       };
@@ -995,35 +1060,31 @@ function deriveStatusEvents(
       // Segment support: multi-phase statuses (e.g. Antal Focus: 20s Focus + 40s Empowered Focus)
       if (outputDef.segments && outputDef.segments.length > 0) {
         const segments: EventSegmentData[] = [];
-        let totalDuration = 0;
         for (const seg of outputDef.segments) {
           const segDuration = seg.properties?.duration
             ? getDurationFrames(seg.properties.duration)
             : durationFrames;
           const segData: EventSegmentData = {
-            durationFrames: segDuration,
-            label: seg.properties?.name,
+            properties: { duration: segDuration, name: seg.properties?.name },
           };
           // Resolve per-segment susceptibility from segment clauses
           if (seg.clause) {
             const segEv: TimelineEvent = { ...ev, susceptibility: undefined };
             resolveClauseEffectsFromClauses(
               segEv,
-              seg.clause as { conditions: any[]; effects: Record<string, any>[] }[],
+              seg.clause as ResolvedClause[],
               ctx, def, false,
             );
             if (segEv.susceptibility) {
-              segData.susceptibility = segEv.susceptibility as Record<string, number>;
+              segData.unknown = { ...segData.unknown, susceptibility: segEv.susceptibility };
             }
           }
           segments.push(segData);
-          totalDuration += segDuration;
         }
         ev.segments = segments;
-        ev.activationDuration = totalDuration;
         // Use first segment's susceptibility as event-level default
-        if (!ev.susceptibility && segments[0]?.susceptibility) {
-          ev.susceptibility = segments[0].susceptibility;
+        if (!ev.susceptibility && segments[0]?.unknown?.susceptibility) {
+          ev.susceptibility = segments[0].unknown.susceptibility as TimelineEvent['susceptibility'];
         }
       }
 
@@ -1089,7 +1150,7 @@ function evaluateThresholdClauses(
       let activeCount = 0;
       let countWithout = 0;
       for (const other of allStatusEvents) {
-        const otherEnd = other.startFrame + other.activationDuration;
+        const otherEnd = eventEndFrame(other);
         if (other.startFrame <= ev.startFrame && ev.startFrame < otherEnd) {
           activeCount++;
           if (other.id !== ev.id) countWithout++;
@@ -1113,7 +1174,7 @@ function evaluateThresholdClauses(
           // Resolve owner from the target def's own target field (authoritative),
           // falling back to the clause's toObject
           const targetField = targetDef?.properties.target ?? effect.toObject;
-          const targetDet = targetDef?.properties.targetDeterminer ?? (effect as any).toDeterminer;
+          const targetDet = targetDef?.properties.targetDeterminer ?? effect.toDeterminer;
           const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, ctx.operatorSlotMap, targetDet ?? 'THIS');
 
           const targetDuration = targetDef
@@ -1128,11 +1189,12 @@ function evaluateThresholdClauses(
           // Refresh: clamp previous instances of the target status
           if (thresholdDerived.length > 0) {
             const prev = thresholdDerived[thresholdDerived.length - 1];
-            const prevEnd = prev.startFrame + prev.activationDuration;
+            const prevEnd = eventEndFrame(prev);
             if (ev.startFrame < prevEnd && prev.columnId === targetColumnId) {
+              const clampedPrev = { ...prev, segments: [...prev.segments] };
+              setEventDuration(clampedPrev, ev.startFrame - prev.startFrame);
               thresholdDerived[thresholdDerived.length - 1] = {
-                ...prev,
-                activationDuration: ev.startFrame - prev.startFrame,
+                ...clampedPrev,
                 eventStatus: EventStatusType.REFRESHED,
                 eventStatusOwnerId: ctx.operatorSlotId,
                 eventStatusSkillName: def.properties.id,
@@ -1146,9 +1208,7 @@ function evaluateThresholdClauses(
             ownerId: targetOwnerId,
             columnId: targetColumnId,
             startFrame: ev.startFrame,
-            activationDuration: duration,
-            activeDuration: 0,
-            cooldownDuration: 0,
+            segments: durationSegment(duration),
             sourceOwnerId: ctx.operatorSlotId,
             sourceSkillName: def.properties.id,
           });
@@ -1170,7 +1230,7 @@ function evaluateLifecycleForEvent(
   operatorSlotMap: Record<string, string>,
 ): TimelineEvent[] {
   let result = events;
-  const parentEndFrame = statusEv.startFrame + statusEv.activationDuration;
+  const parentEndFrame = eventEndFrame(statusEv);
   const sourceOwnerId = statusEv.sourceOwnerId ?? statusEv.ownerId;
 
   const makeExecCtx = (frame: number): ExecutionContext => ({
@@ -1373,9 +1433,7 @@ export function deriveStatusesFromEngine(
             ownerId: talentOwnerId,
             columnId: talentColumnId,
             startFrame: 0,
-            activationDuration: talentDurationFrames,
-            activeDuration: 0,
-            cooldownDuration: 0,
+            segments: durationSegment(talentDurationFrames),
             sourceOwnerId: slotId,
             sourceSkillName: def.properties.id,
           });
@@ -1389,9 +1447,10 @@ export function deriveStatusesFromEngine(
         result = result.map(ev => {
           const absorption = absorbedInflictions.find(a => a.eventId === ev.id);
           if (!absorption) return ev;
+          const clamped = { ...ev, segments: [...ev.segments] };
+          setEventDuration(clamped, Math.max(0, absorption.clampFrame - ev.startFrame));
           return {
-            ...ev,
-            activationDuration: Math.max(0, absorption.clampFrame - ev.startFrame),
+            ...clamped,
             eventStatus: EventStatusType.CONSUMED,
             eventStatusOwnerId: absorption.sourceOwnerId,
             eventStatusSkillName: absorption.sourceSkillName,
@@ -1587,8 +1646,7 @@ export function evaluateThresholdForExchange(
         .find(d => d.properties.id === targetStatusName);
 
       const targetField = targetDef?.properties.target ?? effect.toObject;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const targetDet = targetDef?.properties.targetDeterminer ?? (effect as any).toDeterminer;
+      const targetDet = targetDef?.properties.targetDeterminer ?? effect.toDeterminer;
       const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, operatorSlotMap, targetDet ?? 'THIS');
 
       const targetDuration = targetDef
@@ -1600,9 +1658,9 @@ export function evaluateThresholdForExchange(
       // Refresh: clamp previous threshold events of same column
       for (const prev of previousThresholdEvents) {
         if (prev.columnId !== targetColumnId) continue;
-        const prevEnd = prev.startFrame + prev.activationDuration;
+        const prevEnd = eventEndFrame(prev);
         if (crossingFrame < prevEnd) {
-          prev.activationDuration = crossingFrame - prev.startFrame;
+          setEventDuration(prev, crossingFrame - prev.startFrame);
           prev.eventStatus = EventStatusType.REFRESHED;
           prev.eventStatusOwnerId = ctx.operatorSlotId;
           prev.eventStatusSkillName = def.properties.id;
@@ -1615,9 +1673,7 @@ export function evaluateThresholdForExchange(
         ownerId: targetOwnerId,
         columnId: targetColumnId,
         startFrame: crossingFrame,
-        activationDuration: duration,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: durationSegment(duration),
         sourceOwnerId: ctx.operatorSlotId,
         sourceSkillName: def.properties.id,
       });
@@ -1794,9 +1850,7 @@ export function collectEngineTriggerEntries(
             ownerId: talentOwnerId,
             columnId: talentColumnId,
             startFrame: 0,
-            activationDuration: talentDurationFrames,
-            activeDuration: 0,
-            cooldownDuration: 0,
+            segments: durationSegment(talentDurationFrames),
             sourceOwnerId: slotId,
             sourceSkillName: def.properties.id,
           });
@@ -1805,7 +1859,7 @@ export function collectEngineTriggerEntries(
 
       // Skip defs with FINAL_STRIKE triggers — handled by collectAbsorptionContexts
       const hasFinalStrikeTrigger = def.onTriggerClause?.some(c =>
-        c.conditions.some((p: any) => p.verb === 'PERFORM' && p.object === 'FINAL_STRIKE')
+        c.conditions.some((p: Predicate) => p.verb === 'PERFORM' && p.object === 'FINAL_STRIKE')
       );
       if (hasFinalStrikeTrigger) continue;
 
@@ -1824,8 +1878,7 @@ export function collectEngineTriggerEntries(
 
         if (performConds.length > 0) {
           const pc = performConds[0];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const isAny = pc.subject === 'OPERATOR' && (pc as any).subjectDeterminer === 'ANY';
+          const isAny = pc.subject === 'OPERATOR' && pc.subjectDeterminer === 'ANY';
 
           if (pc.object === 'FINAL_STRIKE') {
             for (const ev of events) {
@@ -1835,6 +1888,15 @@ export function collectEngineTriggerEntries(
               if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
               const f = getFinalStrikeTriggerFrame(ev);
               if (f != null) entries.push({ frame: f, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
+            }
+          } else if (pc.object === 'FINISHER' || pc.object === 'DIVE_ATTACK') {
+            const targetName = pc.object === 'FINISHER' ? CombatSkillsType.FINISHER : CombatSkillsType.DIVE;
+            for (const ev of events) {
+              if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
+              if (!isAny && ev.ownerId !== slotId) continue;
+              if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
+              if (ev.name !== targetName) continue;
+              entries.push({ frame: getFirstEventFrame(ev), sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip });
             }
           } else {
             const col = pc.object === 'BATTLE_SKILL' ? 'battle'
@@ -1860,8 +1922,7 @@ export function collectEngineTriggerEntries(
           }
         } else if (recoverConds.length > 0) {
           const rc = recoverConds[0];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const isThis = (rc as any).subjectDeterminer === 'THIS';
+          const isThis = rc.subjectDeterminer === 'THIS';
           if (rc.object === 'SKILL_POINT') {
             for (const ev of events) {
               if (ev.ownerId === ENEMY_OWNER_ID || ev.ownerId === COMMON_OWNER_ID) continue;
@@ -1876,7 +1937,7 @@ export function collectEngineTriggerEntries(
                     }
                   }
                 }
-                cum += seg.durationFrames;
+                cum += seg.properties.duration;
               }
             }
           }
@@ -1982,9 +2043,7 @@ export function evaluateEngineTrigger(
     ownerId: finalOwnerId,
     columnId,
     startFrame: entry.frame,
-    activationDuration: durationFrames,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: durationSegment(durationFrames),
     sourceOwnerId: ctx.operatorSlotId,
     sourceSkillName: entry.sourceSkillName,
   };
@@ -1997,22 +2056,18 @@ export function evaluateEngineTrigger(
 
   if (outputDef.segments && outputDef.segments.length > 0) {
     const segments: EventSegmentData[] = [];
-    let totalDuration = 0;
     for (const seg of outputDef.segments) {
       const segDuration = seg.properties?.duration ? getDurationFrames(seg.properties.duration) : durationFrames;
-      const segData: EventSegmentData = { durationFrames: segDuration, label: seg.properties?.name };
+      const segData: EventSegmentData = { properties: { duration: segDuration, name: seg.properties?.name } };
       if (seg.clause) {
         const segEv: TimelineEvent = { ...ev, susceptibility: undefined };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        resolveClauseEffectsFromClauses(segEv, seg.clause as any, deriveCtx, def, false);
-        if (segEv.susceptibility) segData.susceptibility = segEv.susceptibility as Record<string, number>;
+        resolveClauseEffectsFromClauses(segEv, seg.clause as ResolvedClause[], deriveCtx, def, false);
+        if (segEv.susceptibility) segData.unknown = { ...segData.unknown, susceptibility: segEv.susceptibility };
       }
       segments.push(segData);
-      totalDuration += segDuration;
     }
     ev.segments = segments;
-    ev.activationDuration = totalDuration;
-    if (!ev.susceptibility && segments[0]?.susceptibility) ev.susceptibility = segments[0].susceptibility;
+    if (!ev.susceptibility && segments[0]?.unknown?.susceptibility) ev.susceptibility = segments[0].unknown.susceptibility as TimelineEvent['susceptibility'];
   }
 
   if (!ev.susceptibility && outputDef.properties.susceptibility) {

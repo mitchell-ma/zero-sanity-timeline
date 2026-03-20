@@ -431,7 +431,7 @@ const validateStatusEntry = (entry: Record<string, unknown>, path: string) => {
   return errors;
 };
 
-// ── Public API ──────────────────────────────────────────────────────────────
+// ── Public API — Status configs ──────────────────────────────────────────────
 
 export const validateStatusConfig = (statuses: Record<string, unknown>[], operatorId: string) => {
   const errors: ValidationError[] = [];
@@ -446,5 +446,149 @@ export const validateStatusConfig = (statuses: Record<string, unknown>[], operat
     errors.push(...validateStatusEntry(statuses[i], `${operatorId}.${id}`));
   }
 
+  return errors;
+};
+
+// ── Skill config validation ────────────────────────────────────────────────
+//
+// Validates operator-skills JSON structure. Skills use the DSL clause format
+// with segments and frames. The `animation` property is deprecated — time-stop
+// animation must be expressed as an ANIMATION segment.
+
+const SKILL_TOP_KEYS = new Set([
+  'properties', 'clause', 'frames', 'segments',
+  'dataSources', 'skillTypeMap', 'frameModifications',
+  'metadata', 'frameTypes', 'statusEvents',
+]);
+
+const SKILL_PROPERTIES_KEYS = new Set([
+  'name', 'description',
+  'duration', 'trigger', 'hasDelayedHit', 'delayedHitLabel',
+  'enhancementTypes', 'dependencyTypes',
+]);
+
+/** Deprecated skill property keys with migration guidance. */
+const SKILL_LEGACY_PROPERTIES: Record<string, string> = {
+  animation: 'use an ANIMATION segment (segmentType: "ANIMATION") instead',
+  animationDuration: 'use an ANIMATION segment instead',
+};
+
+const SKILL_SEGMENT_KEYS = new Set([
+  'metadata', 'properties', 'clause', 'frames',
+]);
+
+const SKILL_SEGMENT_METADATA_KEYS = new Set([
+  'eventComponentType', 'segmentType', 'dataSources',
+]);
+
+const SKILL_SEGMENT_PROPERTIES_KEYS = new Set([
+  'name', 'duration', 'timeDependency', 'timeInteractionType', 'dependencyTypes',
+]);
+
+const SKILL_FRAME_KEYS = new Set([
+  'metadata', 'properties', 'clause', 'damageElement', 'frameTypes',
+]);
+
+const SKILL_FRAME_METADATA_KEYS = new Set([
+  'eventComponentType', 'dataSources',
+]);
+
+const SKILL_FRAME_PROPERTIES_KEYS = new Set([
+  'offset', 'dependencyTypes',
+]);
+
+const validateSkillFrame = (frame: Record<string, unknown>, path: string) => {
+  const errors: ValidationError[] = [];
+  errors.push(...checkKeys(frame, SKILL_FRAME_KEYS, path, 'skill frame'));
+  if (frame.metadata && typeof frame.metadata === 'object') {
+    errors.push(...checkKeys(frame.metadata as Record<string, unknown>, SKILL_FRAME_METADATA_KEYS, `${path}.metadata`, 'skill frame metadata'));
+  }
+  if (frame.properties && typeof frame.properties === 'object') {
+    errors.push(...checkKeys(frame.properties as Record<string, unknown>, SKILL_FRAME_PROPERTIES_KEYS, `${path}.properties`, 'skill frame properties'));
+  }
+  if (frame.clause !== undefined) {
+    errors.push(...validateClauseEntries(frame.clause, `${path}.clause`));
+  }
+  return errors;
+};
+
+const validateSkillSegment = (segment: Record<string, unknown>, path: string) => {
+  const errors: ValidationError[] = [];
+  errors.push(...checkKeys(segment, SKILL_SEGMENT_KEYS, path, 'skill segment'));
+  if (segment.metadata && typeof segment.metadata === 'object') {
+    errors.push(...checkKeys(segment.metadata as Record<string, unknown>, SKILL_SEGMENT_METADATA_KEYS, `${path}.metadata`, 'skill segment metadata'));
+  }
+  if (segment.properties && typeof segment.properties === 'object') {
+    errors.push(...checkKeys(segment.properties as Record<string, unknown>, SKILL_SEGMENT_PROPERTIES_KEYS, `${path}.properties`, 'skill segment properties'));
+    const sp = segment.properties as Record<string, unknown>;
+    if (sp.duration !== undefined) {
+      errors.push(...validateDuration(sp.duration, `${path}.properties.duration`));
+    }
+  }
+  if (segment.clause !== undefined) {
+    errors.push(...validateClauseEntries(segment.clause, `${path}.clause`));
+  }
+  if (segment.frames !== undefined) {
+    if (!Array.isArray(segment.frames)) {
+      errors.push({ path: `${path}.frames`, message: 'frames must be an array' });
+    } else {
+      for (let i = 0; i < segment.frames.length; i++) {
+        errors.push(...validateSkillFrame(segment.frames[i], `${path}.frames[${i}]`));
+      }
+    }
+  }
+  return errors;
+};
+
+const validateSkillCategory = (skill: Record<string, unknown>, path: string) => {
+  const errors: ValidationError[] = [];
+  errors.push(...checkKeys(skill, SKILL_TOP_KEYS, path, 'skill'));
+
+  if (skill.properties && typeof skill.properties === 'object') {
+    const props = skill.properties as Record<string, unknown>;
+    errors.push(...checkKeys(props, SKILL_PROPERTIES_KEYS, `${path}.properties`, 'skill properties', SKILL_LEGACY_PROPERTIES));
+    if (props.duration !== undefined) {
+      errors.push(...validateDuration(props.duration, `${path}.properties.duration`));
+    }
+  }
+
+  if (skill.clause !== undefined) {
+    errors.push(...validateClauseEntries(skill.clause, `${path}.clause`));
+  }
+
+  if (skill.frames !== undefined) {
+    if (!Array.isArray(skill.frames)) {
+      errors.push({ path: `${path}.frames`, message: 'frames must be an array' });
+    } else {
+      for (let i = 0; i < skill.frames.length; i++) {
+        errors.push(...validateSkillFrame(skill.frames[i], `${path}.frames[${i}]`));
+      }
+    }
+  }
+
+  if (skill.segments !== undefined) {
+    if (!Array.isArray(skill.segments)) {
+      errors.push({ path: `${path}.segments`, message: 'segments must be an array' });
+    } else {
+      for (let i = 0; i < skill.segments.length; i++) {
+        errors.push(...validateSkillSegment(skill.segments[i], `${path}.segments[${i}]`));
+      }
+    }
+  }
+
+  return errors;
+};
+
+/** Validate an operator-skills JSON file (keyed by skill ID, plus skillTypeMap). */
+export const validateSkillConfig = (
+  skillJson: Record<string, unknown>,
+  operatorId: string,
+): ValidationError[] => {
+  const errors: ValidationError[] = [];
+  for (const [key, value] of Object.entries(skillJson)) {
+    if (key === 'skillTypeMap') continue;
+    if (typeof value !== 'object' || value === null) continue;
+    errors.push(...validateSkillCategory(value as Record<string, unknown>, `${operatorId}.${key}`));
+  }
   return errors;
 };

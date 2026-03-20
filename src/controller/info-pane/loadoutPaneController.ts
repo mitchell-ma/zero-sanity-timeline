@@ -9,6 +9,12 @@ import { interpolateAttack } from '../../model/weapons/weapon';
 import { aggregateLoadoutStats, weaponSkillStat, AggregatedStats } from '../calculation/loadoutAggregator';
 import { getWeaponEffectDefs, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
 import { fmtN } from '../../utils/timeline';
+import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
+import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
+import type { Potential } from '../../consts/types';
+import type { SkillType } from '../../consts/viewTypes';
+import type { Clause } from '../../consts/semantics';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -130,7 +136,7 @@ export function resolveWeaponBreakdown(
 
     for (let ei = 0; ei < dslDefs.length; ei++) {
       const def = dslDefs[ei];
-      const maxStacks = def.statusLevel?.limit?.P0 ?? 1;
+      const maxStacks = def.statusLevel?.limit?.value ?? 1;
       const durationSeconds = resolveDurationSeconds(def);
 
       // Secondary attribute bonus
@@ -409,4 +415,247 @@ export function resolveAggregatedStats(
   });
 
   return { agg, attributes, otherStats };
+}
+
+// ── Skill Detail Data ──────────────────────────────────────────────────────
+
+export interface SkillMultiplierRow {
+  level: number;
+  value: number;
+}
+
+export interface SkillSegmentMultipliers {
+  segmentIndex: number;
+  segmentLabel?: string;
+  rows: SkillMultiplierRow[];
+}
+
+export interface SkillMultiplierGrid {
+  /** rows[potentialIndex][levelIndex] = multiplier */
+  potentials: number[];
+  levels: number[];
+  values: number[][];
+}
+
+export interface SkillDetailData {
+  skillId: string;
+  skillName: string;
+  description?: string;
+  element?: string;
+  /** Flat multiplier table (12 levels) for each segment — no potential variation */
+  segments: SkillSegmentMultipliers[];
+  /** Grid: rows = levels, columns = potentials that change multiplier */
+  grid: SkillMultiplierGrid | null;
+}
+
+export interface ComboTriggerDisplay {
+  description: string;
+  windowSeconds: number;
+}
+
+export interface UltimateEnergyDisplay {
+  baseCost: number;
+  adjustedCost: number;
+  gaugeGain?: number;
+  teamGaugeGain?: number;
+}
+
+const SKILL_TYPE_TO_JSON_KEY: Record<SkillType, string> = {
+  basic: 'BASIC_ATTACK',
+  battle: 'BATTLE_SKILL',
+  combo: 'COMBO_SKILL',
+  ultimate: 'ULTIMATE',
+};
+
+/**
+ * Resolve multiplier data for a skill, including per-segment tables
+ * and a potential×level grid when potentials affect multipliers.
+ */
+export function resolveSkillDetail(
+  operatorId: string,
+  skillType: SkillType,
+  potential: Potential,
+): SkillDetailData | null {
+  const typeMap = getSkillTypeMap(operatorId);
+  const jsonKey = SKILL_TYPE_TO_JSON_KEY[skillType];
+  const skillId = typeMap[jsonKey];
+  if (!skillId) return null;
+
+  // Build per-segment multiplier tables at current potential
+  const segments: SkillSegmentMultipliers[] = [];
+  let consecutiveEmpty = 0;
+  for (let seg = 0; seg < 20; seg++) {
+    const rows: SkillMultiplierRow[] = [];
+    for (let lvl = 1; lvl <= 12; lvl++) {
+      const val = getSkillMultiplier(operatorId, skillId, seg, lvl as 1, potential);
+      if (val == null && lvl === 1) break;
+      if (val != null) rows.push({ level: lvl, value: val });
+    }
+    if (rows.length === 0) {
+      consecutiveEmpty++;
+      if (consecutiveEmpty >= 3) break;
+      continue;
+    }
+    consecutiveEmpty = 0;
+    segments.push({ segmentIndex: seg, rows });
+  }
+
+  // Check if potentials affect multipliers — build a grid if so
+  let grid: SkillMultiplierGrid | null = null;
+  const potentialsWithDiff: number[] = [];
+  const baseVals: number[] = [];
+  for (let lvl = 1; lvl <= 12; lvl++) {
+    baseVals.push(getSkillMultiplier(operatorId, skillId, 0, lvl as 1, 0) ?? 0);
+  }
+  for (let p = 1; p <= 5; p++) {
+    const vals: number[] = [];
+    let differs = false;
+    for (let lvl = 1; lvl <= 12; lvl++) {
+      const v = getSkillMultiplier(operatorId, skillId, 0, lvl as 1, p as Potential) ?? 0;
+      vals.push(v);
+      if (Math.abs(v - baseVals[lvl - 1]) > 0.0001) differs = true;
+    }
+    if (differs) potentialsWithDiff.push(p);
+  }
+
+  if (potentialsWithDiff.length > 0) {
+    const allPots = [0, ...potentialsWithDiff];
+    const levels = Array.from({ length: 12 }, (_, i) => i + 1);
+    const values: number[][] = levels.map((lvl) =>
+      allPots.map((p) => getSkillMultiplier(operatorId, skillId, 0, lvl as 1, p as Potential) ?? 0)
+    );
+    grid = { potentials: allPots, levels, values };
+  }
+
+  return { skillId, skillName: skillId, segments, grid, description: undefined, element: undefined };
+}
+
+/** A sub-skill variant (BATK, FINISHER, DIVE) with its own multiplier data and clauses. */
+export interface SubSkillDetail {
+  variantKey: string;
+  variantLabel: string;
+  skillId: string;
+  skillName: string;
+  description?: string;
+  detail: SkillDetailData | null;
+  clause: Clause;
+}
+
+const BATK_VARIANT_LABELS: Record<string, string> = {
+  BATK: 'Normal Chain',
+  FINISHER: 'Finisher',
+  DIVE: 'Dive Attack',
+};
+
+/**
+ * Resolve all sub-skill variants for a given skill type.
+ * For BASIC_ATTACK, returns BATK/FINISHER/DIVE as separate entries.
+ * For other skill types, returns a single entry.
+ */
+export function resolveSubSkills(operatorId: string, skillType: SkillType): SubSkillDetail[] {
+  const rawMap = getRawSkillTypeMap(operatorId);
+  const jsonKey = ({ basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' } as const)[skillType];
+  const mapping = rawMap[jsonKey];
+  if (!mapping) return [];
+
+  const opJson = getOperatorJson(operatorId);
+  const skills = (opJson?.skills ?? {}) as Record<string, { name?: string; description?: string; clause?: Clause; segments?: unknown[]; frames?: unknown[] }>;
+
+  if (typeof mapping === 'string') {
+    const data = skills[mapping];
+    return [{
+      variantKey: skillType,
+      variantLabel: '',
+      skillId: mapping,
+      skillName: data?.name ?? mapping,
+      description: data?.description,
+      detail: resolveSkillDetailForId(operatorId, mapping, 0),
+      clause: (data?.clause ?? []) as Clause,
+    }];
+  }
+
+  // Object mapping: { BATK: id, FINISHER: id, DIVE: id }
+  const entries: SubSkillDetail[] = [];
+  const seenIds = new Set<string>();
+  for (const [variant, skillId] of Object.entries(mapping as Record<string, string>)) {
+    if (seenIds.has(skillId)) continue;
+    seenIds.add(skillId);
+    const data = skills[skillId];
+    if (!data) continue;
+    entries.push({
+      variantKey: variant,
+      variantLabel: BATK_VARIANT_LABELS[variant] ?? variant,
+      skillId,
+      skillName: data.name ?? skillId,
+      description: data.description,
+      detail: resolveSkillDetailForId(operatorId, skillId, 0),
+      clause: (data.clause ?? []) as Clause,
+    });
+  }
+  return entries;
+}
+
+/** Resolve multiplier data for a specific skill ID (not skill type). */
+function resolveSkillDetailForId(operatorId: string, skillId: string, potential: Potential): SkillDetailData | null {
+  const segments: SkillSegmentMultipliers[] = [];
+  let consecutiveEmpty = 0;
+  for (let seg = 0; seg < 20; seg++) {
+    const rows: SkillMultiplierRow[] = [];
+    for (let lvl = 1; lvl <= 12; lvl++) {
+      const val = getSkillMultiplier(operatorId, skillId, seg, lvl as 1, potential);
+      if (val == null && lvl === 1) break;
+      if (val != null) rows.push({ level: lvl, value: val });
+    }
+    if (rows.length === 0) {
+      consecutiveEmpty++;
+      if (consecutiveEmpty >= 3) break;
+      continue;
+    }
+    consecutiveEmpty = 0;
+    segments.push({ segmentIndex: seg, rows });
+  }
+  if (segments.length === 0) return null;
+  return { skillId, skillName: skillId, segments, grid: null, description: undefined, element: undefined };
+}
+
+/** Resolve the clause data for a skill type (top-level clause, not per-segment). */
+export function resolveSkillClause(operatorId: string, skillType: SkillType): Clause {
+  const typeMap = getSkillTypeMap(operatorId);
+  const jsonKey = ({ basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' } as const)[skillType];
+  const skillId = typeMap[jsonKey];
+  if (!skillId) return [];
+  const opJson = getOperatorJson(operatorId);
+  const skills = (opJson?.skills ?? {}) as Record<string, { clause?: Clause }>;
+  return (skills[skillId]?.clause ?? []) as Clause;
+}
+
+/**
+ * Resolve combo trigger display data for an operator.
+ */
+export function resolveComboTrigger(operatorId: string): ComboTriggerDisplay | null {
+  const info = getComboTriggerInfo(operatorId);
+  if (!info) return null;
+  return {
+    description: info.description,
+    windowSeconds: info.windowFrames / 120,
+  };
+}
+
+/**
+ * Resolve ultimate energy display data.
+ */
+export function resolveUltimateEnergy(
+  operatorId: string,
+  potential: Potential,
+  ultimateEnergyCost: number,
+  gaugeGain?: number,
+  teamGaugeGain?: number,
+): UltimateEnergyDisplay {
+  const adjustedCost = getUltimateEnergyCostForPotential(operatorId, potential) ?? ultimateEnergyCost;
+  return {
+    baseCost: ultimateEnergyCost,
+    adjustedCost,
+    gaugeGain,
+    teamGaugeGain,
+  };
 }

@@ -1,4 +1,4 @@
-import { TimelineEvent } from "../../consts/viewTypes";
+import { TimelineEvent, durationSegment } from "../../consts/viewTypes";
 
 export type SubtimelineListener = (events: TimelineEvent[]) => void;
 
@@ -59,9 +59,7 @@ export class Subtimeline {
       ownerId: this.ownerId,
       columnId: this.columnId,
       startFrame: params.startFrame,
-      activationDuration: params.activationDuration,
-      activeDuration: params.activeDuration,
-      cooldownDuration: params.cooldownDuration,
+      segments: durationSegment(params.activationDuration),
     };
     this.insertSorted(ev);
     this.notify();

@@ -1,7 +1,7 @@
 /**
  * Business logic for custom operator CRUD operations.
  */
-import { WeaponType, ElementType, CombatSkillType } from '../../consts/enums';
+import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '../../consts/enums';
 import { OperatorClassType } from '../../model/enums/operators';
 import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
 import type { CustomOperator } from '../../model/custom/customOperatorTypes';
@@ -81,40 +81,20 @@ export function getDefaultCustomOperator(): CustomOperator {
     operatorRarity: 6,
     mainAttributeType: 'STRENGTH',
     baseStats: {
-      lv1: { BASE_ATTACK: 50, BASE_HP: 800 } as any,
-      lv90: { BASE_ATTACK: 500, BASE_HP: 5000 } as any,
+      lv1: { BASE_ATTACK: 50, BASE_HP: 800 },
+      lv90: { BASE_ATTACK: 500, BASE_HP: 5000 },
     },
     potentials: [],
-    skills: {
-      basicAttack: {
-        name: 'Basic Attack',
-        combatSkillType: CombatSkillType.BASIC_ATTACK,
-        durationSeconds: 3,
-      },
-      battleSkill: {
-        name: 'Battle Skill',
-        combatSkillType: CombatSkillType.BATTLE_SKILL,
-        durationSeconds: 2,
-        resourceInteractions: [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: 100 }],
-      },
-      comboSkill: {
-        name: 'Combo Skill',
-        combatSkillType: CombatSkillType.COMBO_SKILL,
-        durationSeconds: 2,
-        cooldownSeconds: 15,
-        animationSeconds: 1,
-        timeInteractionType: 'TIME_STOP' as any,
-      },
-      ultimate: {
-        name: 'Ultimate',
-        combatSkillType: CombatSkillType.ULTIMATE,
-        durationSeconds: 15,
-        cooldownSeconds: 10,
-        animationSeconds: 2,
-        timeInteractionType: 'TIME_STOP' as any,
-        resourceInteractions: [{ resourceType: 'ULTIMATE_ENERGY', verb: 'CONSUME', value: 300 }],
-      },
-    },
+    skills: [
+      { name: 'Basic Attack', combatSkillType: CombatSkillType.BASIC_ATTACK, durationSeconds: 3 },
+      { name: 'Battle Skill', combatSkillType: CombatSkillType.BATTLE_SKILL, durationSeconds: 2,
+        resourceInteractions: [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: 100 }] },
+      { name: 'Combo Skill', combatSkillType: CombatSkillType.COMBO_SKILL, durationSeconds: 2,
+        cooldownSeconds: 15, animationSeconds: 1, timeInteractionType: TimeInteractionType.TIME_STOP },
+      { name: 'Ultimate', combatSkillType: CombatSkillType.ULTIMATE, durationSeconds: 15,
+        cooldownSeconds: 10, animationSeconds: 2, timeInteractionType: TimeInteractionType.TIME_STOP,
+        resourceInteractions: [{ resourceType: 'ULTIMATE_ENERGY', verb: 'CONSUME', value: 300 }] },
+    ],
     combo: {
       onTriggerClause: [{
         conditions: [{

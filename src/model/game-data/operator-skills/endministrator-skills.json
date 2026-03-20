@@ -10,8 +10,6 @@
     "ULTIMATE": "BOMBARDMENT_SEQUENCE"
   },
   "DESTRUCTIVE_SEQUENCE": {
-    "name": "Destructive Sequence",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -562,16 +560,22 @@
         ]
       }
     ],
-    "originId": "endministrator"
+    "properties": {
+      "name": "Destructive Sequence",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "endministrator"
+    }
   },
   "CONSTRUCTIVE_SEQUENCE": {
-    "name": "Constructive Sequence",
-    "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush.",
     "properties": {
       "duration": {
         "value": 0.8,
         "unit": "SECOND"
-      }
+      },
+      "name": "Constructive Sequence",
+      "description": "A forceful burst of Originium Arts that attacks enemies within the area of effect. Deals Physical DMG and applies Crush."
     },
     "frames": [
       {
@@ -643,7 +647,6 @@
         ]
       }
     ],
-    "originId": "endministrator",
     "clause": [
       {
         "conditions": [],
@@ -684,23 +687,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "endministrator"
+    }
   },
   "SEALING_SEQUENCE": {
-    "name": "Sealing Sequence",
-    "description": "COMBO TRIGGER: When another operator in the team deals DMG with combo skills. \nRushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG.",
     "properties": {
-      "duration": {
-        "value": 0.77,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -716,131 +709,10 @@
         ],
         "description": "Another operator casts combo skill",
         "windowFrames": 720
-      }
+      },
+      "name": "Sealing Sequence",
+      "description": "COMBO TRIGGER: When another operator in the team deals DMG with combo skills. \nRushes to the enemy's side to deal Physical DMG and attach Originium Crystals that temporarily seal them. Applying Physical Status or Vulnerability to the sealed enemy consumes the Originium Crystals and deals additional Physical DMG."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.77,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.45,
-                      0.49,
-                      0.54,
-                      0.58,
-                      0.62,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.8,
-                      0.86,
-                      0.93,
-                      1
-                    ]
-                  },
-                  "atkScaleTrigger": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.84,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
-                  },
-                  "originumUltBreakScale": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.67,
-                      2.94,
-                      3.2,
-                      3.47,
-                      3.74,
-                      4,
-                      4.27,
-                      4.54,
-                      4.8,
-                      5.14,
-                      5.54,
-                      6
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "duration": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4,
-                      4,
-                      4,
-                      4,
-                      4,
-                      4,
-                      4,
-                      4,
-                      4.5,
-                      4.5,
-                      5
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "endministrator",
     "clause": [
       {
         "conditions": [],
@@ -869,113 +741,167 @@
           }
         ]
       }
-    ]
-  },
-  "BOMBARDMENT_SEQUENCE": {
-    "name": "Bombardment Sequence",
-    "description": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG.",
-    "properties": {
-      "duration": {
-        "value": 1.83,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.467,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 1.67,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.27,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.27,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "CONSUME",
-                "object": "STATUS",
-                "objectId": "ORIGINIUM_CRYSTAL",
-                "toObject": "ENEMY"
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 25
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.56,
-                      3.91,
-                      4.27,
-                      4.62,
-                      4.98,
-                      5.33,
-                      5.69,
-                      6.04,
-                      6.4,
-                      6.84,
-                      7.38,
-                      8
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "originumUltBreakScale": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.67,
-                      2.94,
-                      3.2,
-                      3.47,
-                      3.74,
-                      4,
-                      4.27,
-                      4.54,
-                      4.8,
-                      5.14,
-                      5.54,
-                      6
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 25
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.45,
+                          0.49,
+                          0.54,
+                          0.58,
+                          0.62,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.8,
+                          0.86,
+                          0.93,
+                          1
+                        ]
+                      },
+                      "atkScaleTrigger": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.84,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      },
+                      "originumUltBreakScale": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.67,
+                          2.94,
+                          3.2,
+                          3.47,
+                          3.74,
+                          4,
+                          4.27,
+                          4.54,
+                          4.8,
+                          5.14,
+                          5.54,
+                          6
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "duration": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4,
+                          4,
+                          4,
+                          4,
+                          4,
+                          4,
+                          4,
+                          4,
+                          4.5,
+                          4.5,
+                          5
+                        ]
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "endministrator",
+    "metadata": {
+      "originId": "endministrator"
+    }
+  },
+  "BOMBARDMENT_SEQUENCE": {
+    "properties": {
+      "name": "Bombardment Sequence",
+      "description": "Bombards the ground with Originium Arts, dealing massive Physical DMG to all enemies within a fan-shaped area. If the enemy has Originium Crystals on them, this skill consumes the Originium Crystals and deals one more hit of Physical DMG."
+    },
     "clause": [
       {
         "conditions": [],
@@ -992,7 +918,127 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.467,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.363,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.203,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "CONSUME",
+                    "object": "STATUS",
+                    "objectId": "ORIGINIUM_CRYSTAL",
+                    "toObject": "ENEMY"
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 25
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.56,
+                          3.91,
+                          4.27,
+                          4.62,
+                          4.98,
+                          5.33,
+                          5.69,
+                          6.04,
+                          6.4,
+                          6.84,
+                          7.38,
+                          8
+                        ]
+                      },
+                      "originumUltBreakScale": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.67,
+                          2.94,
+                          3.2,
+                          3.47,
+                          3.74,
+                          4,
+                          4.27,
+                          4.54,
+                          4.8,
+                          5.14,
+                          5.54,
+                          6
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 25
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "endministrator"
+    }
   },
   "statusEvents": [
     {
@@ -1018,5 +1064,135 @@
       },
       "onTriggerClause": []
     }
-  ]
+  ],
+  "DESTRUCTIVE_SEQUENCE_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Destructive Sequence (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "endministrator"
+    }
+  },
+  "DESTRUCTIVE_SEQUENCE_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Destructive Sequence (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "endministrator"
+    }
+  }
 }

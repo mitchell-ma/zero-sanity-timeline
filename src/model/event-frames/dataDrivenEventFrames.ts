@@ -1,4 +1,4 @@
-import { ElementType, StatusType, TargetType } from "../../consts/enums";
+import { ElementType, FrameDependencyType, StatusType, TargetType } from "../../consts/enums";
 import { REACTION_COLUMNS } from "../channels";
 import {
   SkillEventFrame,
@@ -84,7 +84,7 @@ interface JsonClauseCondition {
 
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties?: { offset?: JsonDuration };
+  properties?: { offset?: JsonDuration; dependencyTypes?: string[] };
   clause?: JsonClausePredicate[];
   damageElement?: string;
 }
@@ -101,11 +101,11 @@ interface JsonSkillCategory {
   description?: string;
   properties?: {
     duration?: JsonDuration;
-    animation?: { duration: JsonDuration; timeInteractionType: string; dataSources?: string[] };
     trigger?: unknown;
     hasDelayedHit?: boolean;
     delayedHitLabel?: string;
     enhancementTypes?: string[];
+    dependencyTypes?: string[];
   };
   clause?: JsonClausePredicate[];
   frames?: JsonFrame[];
@@ -217,6 +217,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
+  private readonly _dependencyTypes: readonly FrameDependencyType[];
 
   constructor(frame: JsonFrame) {
     super();
@@ -379,6 +380,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
     this._duplicatesSourceInfliction = duplicatesSource;
+    this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as FrameDependencyType[];
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -397,6 +399,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }
+  getDependencyTypes(): readonly FrameDependencyType[] { return this._dependencyTypes; }
 }
 
 // ── DataDrivenSkillEventSequence ────────────────────────────────────────────
@@ -466,7 +469,7 @@ export function buildSequencesFromOperatorJson(
   const typeMap = operatorJson.skillTypeMap as Record<string, unknown> | undefined;
   const rawEntry = typeMap?.[skillCategoryKey];
   const resolvedKey = rawEntry
-    ? (typeof rawEntry === 'string' ? rawEntry : (rawEntry as any).BATK ?? skillCategoryKey)
+    ? (typeof rawEntry === 'string' ? rawEntry : (rawEntry as Record<string, string>).BATK ?? skillCategoryKey)
     : skillCategoryKey;
   // Try resolved key first, fall back to raw key
   const cat = skills[resolvedKey] ?? skills[skillCategoryKey];
@@ -483,9 +486,11 @@ function catDuration(cat?: JsonSkillCategory): number {
   return cat?.properties?.duration?.value ?? 0;
 }
 
-/** Get animation from a skill category. */
-function catAnimation(cat?: JsonSkillCategory) {
-  return cat?.properties?.animation;
+/** Get animation duration from a skill category's ANIMATION segment. */
+function catAnimationDur(cat?: JsonSkillCategory): number {
+  if (!cat?.segments) return 0;
+  const animSeg = cat.segments.find(s => s.metadata?.segmentType === 'ANIMATION');
+  return animSeg?.properties?.duration?.value ?? 0;
 }
 
 export interface SkillTimings {
@@ -512,8 +517,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
   const comboSkill = skills[typeMap?.COMBO_SKILL ?? 'COMBO_SKILL'];
   const comboDur = dur(catDuration(comboSkill));
   const comboCd = dur(findValue(comboSkill, 'COOLDOWN', 'CONSUME') ?? 0);
-  const comboAnim = catAnimation(comboSkill);
-  const comboAnimDur = dur(comboAnim?.duration?.value ?? 0.5);
+  const comboAnimDur = dur(catAnimationDur(comboSkill) || 0.5);
 
   // Ultimate — read from flat properties or derive from typed segments
   const ultimate = skills[typeMap?.ULTIMATE ?? 'ULTIMATE'];
@@ -536,10 +540,8 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
     ultActiveDurFromSegs = segDur('ACTIVE');
   } else {
     ultTotalDur = dur(catDuration(ultimate));
-    const ultAnim = catAnimation(ultimate);
-    ultAnimDur = ultAnim?.duration?.value != null
-      ? dur(ultAnim.duration.value)
-      : ultTotalDur;
+    const ultAnimRaw = catAnimationDur(ultimate);
+    ultAnimDur = ultAnimRaw > 0 ? dur(ultAnimRaw) : ultTotalDur;
     const ultCdRaw = findValue(ultimate, 'COOLDOWN', 'CONSUME');
     ultCdFrames = ultCdRaw != null ? dur(ultCdRaw) : 0;
   }
@@ -616,7 +618,6 @@ export interface SkillCategoryData {
   spCost: number;
   gaugeGain: number;
   cooldown: number;
-  animationTime: number;
   energyCost: number;
 }
 
@@ -642,7 +643,6 @@ export function getSkillCategoryData(
             ?? findValue(baseBattle, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF')
             ?? 0,
     cooldown: findValue(cat, 'COOLDOWN', 'CONSUME') ?? 0,
-    animationTime: catAnimation(cat)?.duration?.value ?? 0,
     energyCost: findValue(cat, 'ULTIMATE_ENERGY', 'CONSUME') ?? 0,
   };
 }

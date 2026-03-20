@@ -284,7 +284,6 @@ export function findEventDefaults(
   defaultActiveDuration: number;
   defaultCooldownDuration: number;
   segments?: import('../consts/viewTypes').EventSegmentData[];
-  animationDuration?: number;
   skillPointCost?: number;
 } | null {
   const col = (columns as MiniTimeline[]).find(
@@ -309,9 +308,12 @@ export function attachDefaultSegments(
   columns: (MiniTimeline | { type: 'placeholder' })[],
 ): TimelineEvent[] {
   return events.map((ev) => {
-    const needsSegments = !ev.segments || ev._pendingSegmentOverrides;
+    // A "placeholder" segment is a single segment with only a duration property (no name, frames, metadata)
+    const isPlaceholder = ev.segments.length === 1
+      && !ev.segments[0].properties.name && !ev.segments[0].frames && !ev.segments[0].metadata;
+    const needsSegments = isPlaceholder || ev._pendingSegmentOverrides;
     const needsDefaults = ev.skillPointCost === undefined || ev.gaugeGain === undefined
-      || ev.animationDuration === undefined || ev.timeInteraction === undefined;
+      || ev.timeInteraction === undefined;
     if (!needsSegments && !needsDefaults) return ev;
 
     const defaults = findEventDefaults(ev, columns);
@@ -321,7 +323,6 @@ export function attachDefaultSegments(
     if (defaults && needsDefaults) {
       const props: Partial<TimelineEvent> = {};
       if (ev.skillPointCost === undefined && defaults.skillPointCost != null) props.skillPointCost = defaults.skillPointCost;
-      if (ev.animationDuration === undefined && defaults.animationDuration != null) props.animationDuration = defaults.animationDuration;
       const ext = defaults as Record<string, unknown>;
       if (ev.gaugeGain === undefined && ext.gaugeGain != null) props.gaugeGain = ext.gaugeGain as number;
       if (ev.teamGaugeGain === undefined && ext.teamGaugeGain != null) props.teamGaugeGain = ext.teamGaugeGain as number;
@@ -330,7 +331,7 @@ export function attachDefaultSegments(
       if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
       if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;
       if (ev.nonOverlappableRange === undefined && defaults.segments) {
-        const span = defaults.segments.reduce((sum, s) => sum + s.durationFrames, 0);
+        const span = defaults.segments.reduce((sum, s) => sum + s.properties.duration, 0);
         props.nonOverlappableRange = span;
       }
       if (Object.keys(props).length > 0) patched = { ...ev, ...props };
@@ -342,19 +343,19 @@ export function attachDefaultSegments(
     // Truncate to sg length if pending overrides specify fewer segments (user removed some)
     const overrides = ev._pendingSegmentOverrides;
     const segCount = overrides?.sg ? overrides.sg.length : defaults.segments.length;
-    let segments = ev.segments
+    let segments = (ev.segments && !isPlaceholder)
       ? ev.segments
       : defaults.segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
 
     // Apply pending overrides from share URL decode
     if (overrides) {
       // Deep-copy if we haven't already (when segments came from ev.segments)
-      if (ev.segments) {
+      if (ev.segments && !isPlaceholder) {
         segments = segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
       }
       if (overrides.sg) {
         for (let si = 0; si < overrides.sg.length && si < segments.length; si++) {
-          segments[si] = { ...segments[si], durationFrames: overrides.sg[si] };
+          segments[si] = { ...segments[si], properties: { ...segments[si].properties, duration: overrides.sg[si] } };
         }
       }
       if (overrides.fo) {

@@ -10,8 +10,6 @@
     "ULTIMATE": "TWILIGHT"
   },
   "FLAMING_CINDERS": {
-    "name": "Flaming Cinders",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -546,16 +544,25 @@
         ]
       }
     ],
-    "originId": "laevatain"
+    "properties": {
+      "name": "Flaming Cinders",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "SMOULDERING_FIRE": {
-    "name": "Smouldering Fire",
-    "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active.",
     "properties": {
       "duration": {
         "value": 2.2,
         "unit": "SECOND"
-      }
+      },
+      "dependencyTypes": [
+        "PREVIOUS_FRAME"
+      ],
+      "name": "Smouldering Fire",
+      "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active."
     },
     "frames": [
       {
@@ -615,42 +622,6 @@
                       1.4
                     ]
                   },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.06,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1,
-                      0.11,
-                      0.11,
-                      0.12,
-                      0.13,
-                      0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
-                    ]
-                  },
                   "stagger": {
                     "verb": "IS",
                     "value": 10
@@ -688,7 +659,10 @@
           "offset": {
             "value": 0.85,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -708,24 +682,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -738,24 +694,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   },
                   "stagger": {
@@ -795,7 +733,10 @@
           "offset": {
             "value": 0.967,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -815,24 +756,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -845,24 +768,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -882,7 +787,10 @@
           "offset": {
             "value": 1.1,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -902,24 +810,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -932,24 +822,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -969,7 +841,10 @@
           "offset": {
             "value": 1.23,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -989,24 +864,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1019,24 +876,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1056,7 +895,10 @@
           "offset": {
             "value": 1.367,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1076,24 +918,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1106,24 +930,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1143,7 +949,10 @@
           "offset": {
             "value": 1.5,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1163,24 +972,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1193,24 +984,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1230,7 +1003,10 @@
           "offset": {
             "value": 1.63,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1250,24 +1026,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1280,24 +1038,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1317,7 +1057,10 @@
           "offset": {
             "value": 1.8,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1337,24 +1080,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1367,24 +1092,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1404,7 +1111,10 @@
           "offset": {
             "value": 1.93,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1424,24 +1134,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1454,24 +1146,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -1491,7 +1165,10 @@
           "offset": {
             "value": 2.067,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -1522,24 +1199,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -1553,24 +1212,6 @@
                       0.13,
                       0.14
                     ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
-                    ]
                   }
                 }
               }
@@ -1579,7 +1220,6 @@
         ]
       }
     ],
-    "originId": "laevatain",
     "clause": [
       {
         "conditions": [],
@@ -1619,26 +1259,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "SEETHE": {
-    "name": "Seethe",
-    "description": "COMBO TRIGGER: When an enemy suffers Combustion or Corrosion. \nFire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. \nIf the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit.",
     "properties": {
-      "duration": {
-        "value": 1.37,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.566,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP",
-        "dataSources": [
-          "SELF"
-        ]
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -1662,107 +1289,10 @@
         ],
         "description": "Enemy has Combustion or Corrosion",
         "windowFrames": 720
-      }
+      },
+      "name": "Seethe",
+      "description": "COMBO TRIGGER: When an enemy suffers Combustion or Corrosion. \nFire erupts beneath the feet of any enemy with Combustion or Corrosion, dealing Heat DMG to them. \nIf the skill hits the enemy, Laevatain gains 1 stack of Melting Flame and further gains Ultimate Energy per enemy hit."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.67,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STATUS",
-                "objectId": "MELTING_FLAME",
-                "toObject": "LAEVATAIN",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "RECOVER",
-                "object": "ULTIMATE_ENERGY",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 25
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.4,
-                      2.64,
-                      2.88,
-                      3.12,
-                      3.36,
-                      3.6,
-                      3.84,
-                      4.08,
-                      4.32,
-                      4.62,
-                      4.98,
-                      5.4
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "usp_1Display": {
-                    "verb": "IS",
-                    "value": 25
-                  },
-                  "usp_2Display": {
-                    "verb": "IS",
-                    "value": 30
-                  },
-                  "usp_3Display": {
-                    "verb": "IS",
-                    "value": 35
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "laevatain",
     "clause": [
       {
         "conditions": [],
@@ -1790,11 +1320,142 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 0.566,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.804,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.104,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "STATUS",
+                    "objectId": "MELTING_FLAME",
+                    "toObject": "LAEVATAIN",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "RECOVER",
+                    "object": "ULTIMATE_ENERGY",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 25
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.4,
+                          2.64,
+                          2.88,
+                          3.12,
+                          3.36,
+                          3.6,
+                          3.84,
+                          4.08,
+                          4.32,
+                          4.62,
+                          4.98,
+                          5.4
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "usp_1Display": {
+                        "verb": "IS",
+                        "value": 25
+                      },
+                      "usp_2Display": {
+                        "verb": "IS",
+                        "value": 30
+                      },
+                      "usp_3Display": {
+                        "verb": "IS",
+                        "value": 35
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "TWILIGHT": {
-    "name": "Twilight",
-    "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
     "segments": [
       {
         "metadata": {
@@ -1901,7 +1562,6 @@
         "frames": []
       }
     ],
-    "originId": "laevatain",
     "clause": [
       {
         "conditions": [],
@@ -1918,7 +1578,14 @@
           }
         ]
       }
-    ]
+    ],
+    "properties": {
+      "name": "Twilight",
+      "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction."
+    },
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "SMOULDERING_FIRE_ENHANCED": {
     "properties": {
@@ -2136,7 +1803,9 @@
         ]
       }
     ],
-    "originId": "laevatain"
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "SMOULDERING_FIRE_ENHANCED_EMPOWERED": {
     "properties": {
@@ -2402,6 +2071,9 @@
       },
       "enhancementTypes": [
         "EMPOWERED"
+      ],
+      "dependencyTypes": [
+        "PREVIOUS_FRAME"
       ]
     },
     "frames": [
@@ -2450,42 +2122,6 @@
                       1.4
                     ]
                   },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.06,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1,
-                      0.11,
-                      0.11,
-                      0.12,
-                      0.13,
-                      0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
-                    ]
-                  },
                   "stagger": {
                     "verb": "IS",
                     "value": 10
@@ -2523,7 +2159,10 @@
           "offset": {
             "value": 0.85,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -2543,24 +2182,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -2573,24 +2194,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   },
                   "stagger": {
@@ -2630,7 +2233,10 @@
           "offset": {
             "value": 0.967,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -2650,24 +2256,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -2680,24 +2268,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -2717,7 +2287,10 @@
           "offset": {
             "value": 1.1,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -2737,24 +2310,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -2767,24 +2322,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -2804,7 +2341,10 @@
           "offset": {
             "value": 1.23,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -2824,24 +2364,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -2854,24 +2376,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -2891,7 +2395,10 @@
           "offset": {
             "value": 1.367,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "GUARANTEED_HIT",
@@ -2911,24 +2418,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -2941,24 +2430,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -2978,95 +2449,11 @@
           "offset": {
             "value": 1.5,
             "unit": "SECOND"
-          }
-        },
-        "frameTypes": [
-          "GUARANTEED_HIT",
-          "PASSIVE"
-        ],
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.06,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1,
-                      0.11,
-                      0.11,
-                      0.12,
-                      0.13,
-                      0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
           ]
         },
-        "properties": {
-          "offset": {
-            "value": 1.63,
-            "unit": "SECOND"
-          }
-        },
         "frameTypes": [
           "GUARANTEED_HIT",
           "PASSIVE"
@@ -3085,24 +2472,6 @@
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
-                      0.62,
-                      0.68,
-                      0.75,
-                      0.81,
-                      0.87,
-                      0.93,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.2,
-                      1.29,
-                      1.4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
                       0.06,
                       0.07,
                       0.08,
@@ -3115,24 +2484,6 @@
                       0.12,
                       0.13,
                       0.14
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.42,
-                      3.76,
-                      4.1,
-                      4.45,
-                      4.79,
-                      5.13,
-                      5.47,
-                      5.81,
-                      6.16,
-                      6.58,
-                      7.1,
-                      7.7
                     ]
                   }
                 }
@@ -3152,7 +2503,10 @@
           "offset": {
             "value": 1.8,
             "unit": "SECOND"
-          }
+          },
+          "dependencyTypes": [
+            "PREVIOUS_FRAME"
+          ]
         },
         "frameTypes": [
           "INTERRUPTIBLE"
@@ -3161,6 +2515,32 @@
           {
             "conditions": [],
             "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "HEAT",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      3.42,
+                      3.76,
+                      4.1,
+                      4.45,
+                      4.79,
+                      5.13,
+                      5.47,
+                      5.81,
+                      6.16,
+                      6.58,
+                      7.1,
+                      7.7
+                    ]
+                  }
+                }
+              },
               {
                 "verb": "CONSUME",
                 "object": "STATUS",
@@ -3607,12 +2987,16 @@
     }
   },
   "FLAMING_CINDERS_FINISHER": {
-    "name": "Flaming Cinders (Finisher)",
-    "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
     "properties": {
       "enhancementTypes": [
         "FINISHER"
-      ]
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Flaming Cinders (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP."
     },
     "frames": [
       {
@@ -3621,7 +3005,7 @@
         },
         "properties": {
           "offset": {
-            "value": 0,
+            "value": 1.5,
             "unit": "SECOND"
           }
         },
@@ -3663,15 +3047,21 @@
         ]
       }
     ],
-    "originId": "laevatain"
+    "metadata": {
+      "originId": "laevatain"
+    }
   },
   "FLAMING_CINDERS_DIVE": {
-    "name": "Flaming Cinders (Dive)",
-    "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
     "properties": {
       "enhancementTypes": [
         "DIVE"
-      ]
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Flaming Cinders (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies."
     },
     "frames": [
       {
@@ -3680,7 +3070,7 @@
         },
         "properties": {
           "offset": {
-            "value": 0,
+            "value": 1,
             "unit": "SECOND"
           }
         },
@@ -3722,6 +3112,8 @@
         ]
       }
     ],
-    "originId": "laevatain"
+    "metadata": {
+      "originId": "laevatain"
+    }
   }
 }

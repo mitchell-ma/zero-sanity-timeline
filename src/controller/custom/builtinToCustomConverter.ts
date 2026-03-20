@@ -41,8 +41,8 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
       while (dslDefIdx < dslDefs.length) {
         const def = dslDefs[dslDefIdx];
         const target = resolveTargetDisplay(def);
-        const clauseEffects = ((def.clause ?? []) as any[]).flatMap((c: any) => (c.effects ?? []) as any[])
-          .filter((e: any) => e.verb === 'APPLY' && e.with?.value);
+        const clauseEffects = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as Record<string, unknown>[])
+          .filter((e) => e.verb === 'APPLY' && (e.with as Record<string, unknown>)?.value);
         skills.push({
           type: 'NAMED',
           label: def.name ?? def.description ?? '',
@@ -51,15 +51,15 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
             triggers: resolveTriggerInteractions(def),
             target: encodeLegacyTarget(legacyTargetToObjectType(target as 'wielder' | 'team' | 'enemy')),
             durationSeconds: resolveDurationSeconds(def),
-            maxStacks: def.statusLevel?.limit?.P0 ?? 1,
+            maxStacks: def.statusLevel?.limit?.value ?? 1,
             cooldownSeconds: def.cooldownSeconds ?? 0,
-            buffs: clauseEffects.map((e: any) => {
-              const wv = e.with.value;
+            buffs: clauseEffects.map((e) => {
+              const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
               const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
               return {
                 stat: e.object as string,
-                valueMin: wv.valueMin ?? wv.value ?? 0,
-                valueMax: wv.valueMax ?? wv.value ?? 0,
+                valueMin: (wv.valueMin as number) ?? (wv.value as number) ?? 0,
+                valueMax: (wv.valueMax as number) ?? (wv.value as number) ?? 0,
                 perStack,
               };
             }),
@@ -108,21 +108,21 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
     setEffect = {
       passiveStats: (passiveEntry?.passiveStats ?? {}) as Record<string, number>,
       effects: dslDefs.map((def) => {
-        const clauseEffects = ((def.clause ?? []) as any[]).flatMap((c: any) => (c.effects ?? []) as any[])
-          .filter((e: any) => e.verb === 'APPLY' && e.with?.value);
+        const clauseEffects = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as Record<string, unknown>[])
+          .filter((e) => e.verb === 'APPLY' && (e.with as Record<string, unknown>)?.value);
         return {
           label: def.name ?? def.description ?? '',
           triggers: resolveTriggerInteractions(def),
           target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
           durationSeconds: resolveDurationSeconds(def),
-          maxStacks: def.statusLevel?.limit?.P0 ?? 1,
+          maxStacks: def.statusLevel?.limit?.value ?? 1,
           cooldownSeconds: def.cooldownSeconds ?? 0,
-          buffs: clauseEffects.map((e: any) => {
-            const wv = e.with.value;
+          buffs: clauseEffects.map((e) => {
+            const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
             const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
             return {
               stat: e.object as string,
-              value: wv.value ?? wv.valueMin ?? 0,
+              value: (wv.value as number) ?? (wv.valueMin as number) ?? 0,
               perStack,
             };
           }),
@@ -166,6 +166,7 @@ export function operatorToCustomOperator(operatorId: string): CustomOperator | n
     mainAttributeType: '',
     baseStats: { lv1: { ...placeholderStats }, lv90: { ...placeholderStats } },
     potentials: [],
+    skills: [],
     combo: {
       onTriggerClause,
       description: info?.description ?? '',

@@ -10,8 +10,6 @@
     "ULTIMATE": "WOOLY_PARTY"
   },
   "ROCKY_WHISPERS": {
-    "name": "Rocky Whispers",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -463,16 +461,22 @@
         "frames": []
       }
     ],
-    "originId": "ardelia"
+    "properties": {
+      "name": "Rocky Whispers",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "ardelia"
+    }
   },
   "DOLLY_RUSH": {
-    "name": "Dolly Rush",
-    "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target.",
     "properties": {
       "duration": {
         "value": 1.57,
         "unit": "SECOND"
-      }
+      },
+      "name": "Dolly Rush",
+      "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target."
     },
     "frames": [
       {
@@ -662,7 +666,6 @@
         ]
       }
     ],
-    "originId": "ardelia",
     "clause": [
       {
         "conditions": [],
@@ -703,26 +706,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "ardelia"
+    }
   },
   "ERUPTION_COLUMN": {
-    "name": "Eruption Column",
-    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. \nLaunches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies.",
     "properties": {
-      "duration": {
-        "value": 0.77,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.729,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP",
-        "dataSources": [
-          "SELF"
-        ]
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -775,187 +765,10 @@
         "windowFrames": 720
       },
       "hasDelayedHit": true,
-      "delayedHitLabel": "Volcanic Cloud Explosion"
+      "delayedHitLabel": "Volcanic Cloud Explosion",
+      "name": "Eruption Column",
+      "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. \nLaunches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.67,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.45,
-                      0.49,
-                      0.54,
-                      0.58,
-                      0.62,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.8,
-                      0.86,
-                      0.93,
-                      1
-                    ]
-                  },
-                  "atkScaleBoom": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.11,
-                      1.22,
-                      1.33,
-                      1.44,
-                      1.55,
-                      1.67,
-                      1.78,
-                      1.89,
-                      2,
-                      2.14,
-                      2.3,
-                      2.5
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "durationCorrupt": {
-                    "verb": "IS",
-                    "value": 7
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.4,
-            "unit": "SECOND"
-          }
-        },
-        "frameTypes": [
-          "GUARANTEED_HIT",
-          "PASSIVE"
-        ],
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "REACTION",
-                "adjective": [
-                  "FORCED",
-                  "CORROSION"
-                ],
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 7
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.45,
-                      0.49,
-                      0.54,
-                      0.58,
-                      0.62,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.8,
-                      0.86,
-                      0.93,
-                      1
-                    ]
-                  },
-                  "atkScaleBoom": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.11,
-                      1.22,
-                      1.33,
-                      1.44,
-                      1.55,
-                      1.67,
-                      1.78,
-                      1.89,
-                      2,
-                      2.14,
-                      2.3,
-                      2.5
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "ardelia",
     "clause": [
       {
         "conditions": [],
@@ -984,489 +797,226 @@
           }
         ]
       }
-    ]
-  },
-  "WOOLY_PARTY": {
-    "name": "Wooly Party",
-    "description": "Ardelia enters a mobile channeling state and summons the aid of Mr. Dolly. Multiple copies of Mr. Dolly are thrown in random directions. Each copy deals Nature DMG when hitting the enemy. Each enemy can only take 1 damaging hit every s.",
-    "properties": {
-      "duration": {
-        "value": 6.97,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION",
           "dataSources": [
             "SELF"
           ]
         },
         "properties": {
-          "offset": {
-            "value": 0.3,
+          "name": "Animation",
+          "duration": {
+            "value": 0.729,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.041,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.45,
+                          0.49,
+                          0.54,
+                          0.58,
+                          0.62,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.8,
+                          0.86,
+                          0.93,
+                          1
+                        ]
+                      },
+                      "atkScaleBoom": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.11,
+                          1.22,
+                          1.33,
+                          1.44,
+                          1.55,
+                          1.67,
+                          1.78,
+                          1.89,
+                          2,
+                          2.14,
+                          2.3,
+                          2.5
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "durationCorrupt": {
+                        "verb": "IS",
+                        "value": 7
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+          },
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.671,
+                "unit": "SECOND"
               }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.9,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            },
+            "frameTypes": [
+              "GUARANTEED_HIT",
+              "PASSIVE"
+            ],
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.2,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS",
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.8,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.73,
-                      0.81,
-                      0.88,
-                      0.95,
-                      1.03,
-                      1.1,
-                      1.17,
-                      1.25,
-                      1.32,
-                      1.41,
-                      1.52,
-                      1.65
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.4,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS",
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.7,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.73,
-                      0.81,
-                      0.88,
-                      0.95,
-                      1.03,
-                      1.1,
-                      1.17,
-                      1.25,
-                      1.32,
-                      1.41,
-                      1.52,
-                      1.65
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 3
+                  {
+                    "verb": "APPLY",
+                    "object": "REACTION",
+                    "adjective": [
+                      "FORCED",
+                      "CORROSION"
+                    ],
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 7
+                      }
+                    }
                   },
-                  "effectProb": {
-                    "verb": "IS",
-                    "value": 0.1
-                  },
-                  "stagger": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2,
-                      2,
-                      2,
-                      2,
-                      2,
-                      2,
-                      2,
-                      2,
-                      2,
-                      3,
-                      3,
-                      3
-                    ]
-                  },
-                  "interval": {
-                    "verb": "IS",
-                    "value": 0.3
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.45,
+                          0.49,
+                          0.54,
+                          0.58,
+                          0.62,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.8,
+                          0.86,
+                          0.93,
+                          1
+                        ]
+                      },
+                      "atkScaleBoom": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.11,
+                          1.22,
+                          1.33,
+                          1.44,
+                          1.55,
+                          1.67,
+                          1.78,
+                          1.89,
+                          2,
+                          2.14,
+                          2.3,
+                          2.5
+                        ]
+                      }
+                    }
                   }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 3,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 6.7,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.73,
-                      0.81,
-                      0.88,
-                      0.95,
-                      1.03,
-                      1.1,
-                      1.17,
-                      1.25,
-                      1.32,
-                      1.41,
-                      1.52,
-                      1.65
-                    ]
-                  }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "ardelia",
+    "metadata": {
+      "originId": "ardelia"
+    }
+  },
+  "WOOLY_PARTY": {
+    "properties": {
+      "name": "Wooly Party",
+      "description": "Ardelia enters a mobile channeling state and summons the aid of Mr. Dolly. Multiple copies of Mr. Dolly are thrown in random directions. Each copy deals Nature DMG when hitting the enemy. Each enemy can only take 1 damaging hit every s."
+    },
     "clause": [
       {
         "conditions": [],
@@ -1483,7 +1033,503 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 4.47,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS",
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.73,
+                          0.81,
+                          0.88,
+                          0.95,
+                          1.03,
+                          1.1,
+                          1.17,
+                          1.25,
+                          1.32,
+                          1.41,
+                          1.52,
+                          1.65
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS",
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.73,
+                          0.81,
+                          0.88,
+                          0.95,
+                          1.03,
+                          1.1,
+                          1.17,
+                          1.25,
+                          1.32,
+                          1.41,
+                          1.52,
+                          1.65
+                        ]
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 3
+                      },
+                      "effectProb": {
+                        "verb": "IS",
+                        "value": 0.1
+                      },
+                      "stagger": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2,
+                          2,
+                          2,
+                          2,
+                          2,
+                          2,
+                          2,
+                          2,
+                          2,
+                          3,
+                          3,
+                          3
+                        ]
+                      },
+                      "interval": {
+                        "verb": "IS",
+                        "value": 0.3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.5,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 4.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.73,
+                          0.81,
+                          0.88,
+                          0.95,
+                          1.03,
+                          1.1,
+                          1.17,
+                          1.25,
+                          1.32,
+                          1.41,
+                          1.52,
+                          1.65
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ardelia"
+    }
   },
   "DOLLY_RUSH_EMPOWERED": {
     "properties": {
@@ -1613,5 +1659,135 @@
         ]
       }
     ]
+  },
+  "ROCKY_WHISPERS_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Rocky Whispers (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ardelia"
+    }
+  },
+  "ROCKY_WHISPERS_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Rocky Whispers (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ardelia"
+    }
   }
 }

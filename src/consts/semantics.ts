@@ -63,6 +63,8 @@ enum CoreNounType {
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE = "ULTIMATE",
   FINAL_STRIKE = "FINAL_STRIKE",
+  FINISHER = "FINISHER",
+  DIVE_ATTACK = "DIVE_ATTACK",
   CRITICAL_HIT = "CRITICAL_HIT",
 
   // Damage
@@ -74,6 +76,9 @@ enum CoreNounType {
   INFLICTION = "INFLICTION",
   REACTION = "REACTION",
   ARTS_REACTION = "ARTS_REACTION",
+  /** Same-element infliction stacking. Not directly applicable — triggered automatically. */
+  ARTS_BURST = "ARTS_BURST",
+  PHYSICAL_STATUS = "PHYSICAL_STATUS",
   /** Self-referential stack count within a stack reaction. */
   STACKS = "STACKS",
 
@@ -190,12 +195,12 @@ export enum PhysicalStatusType {
  * Defines which NounType/ObjectType values each verb can take as its object.
  */
 export const VERB_OBJECTS: Partial<Record<VerbType, string[]>> = {
-  [VerbType.APPLY]:      ['INFLICTION', 'REACTION', 'STATUS', 'STAGGER', 'TIME_STOP'],
+  [VerbType.APPLY]:      ['INFLICTION', 'REACTION', 'ARTS_BURST', 'PHYSICAL_STATUS', 'STATUS', 'STAGGER', 'TIME_STOP'],
   [VerbType.CONSUME]:    ['INFLICTION', 'REACTION', 'STATUS', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'COOLDOWN', 'STAGGER', 'STACKS'],
   [VerbType.RECOVER]:    ['SKILL_POINT', 'ULTIMATE_ENERGY', 'HP'],
   [VerbType.RETURN]:     ['SKILL_POINT'],
   [VerbType.DEAL]:       ['DAMAGE', 'STAGGER'],
-  [VerbType.PERFORM]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE', 'FINAL_STRIKE', 'NORMAL_ATTACK'],
+  [VerbType.PERFORM]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE', 'FINAL_STRIKE', 'FINISHER', 'DIVE_ATTACK', 'NORMAL_ATTACK'],
   [VerbType.HIT]:        ['ENEMY'],
   [VerbType.DEFEAT]:     ['ENEMY'],
   [VerbType.REFRESH]:    ['STATUS', 'INFLICTION', 'REACTION'],
@@ -292,6 +297,9 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   ],
   [ObjectType.STATUS]: [
     // Physical statuses (APPLY LIFT STATUS TO ENEMY)
+    AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
+  ],
+  [ObjectType.PHYSICAL_STATUS]: [
     AdjectiveType.LIFT, AdjectiveType.KNOCK_DOWN, AdjectiveType.BREACH, AdjectiveType.CRUSH,
   ],
   [ObjectType.TIME_STOP]: [
@@ -727,9 +735,11 @@ export const WITH_BOOLEAN_PROPERTIES = new Set(['isForced']);
  * If an object is in this map, the TO target is auto-set and not user-selectable.
  */
 export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
-  [ObjectType.STAGGER]:    SubjectType.ENEMY,
-  [ObjectType.INFLICTION]: SubjectType.ENEMY,
-  [ObjectType.REACTION]:   SubjectType.ENEMY,
+  [ObjectType.STAGGER]:        SubjectType.ENEMY,
+  [ObjectType.INFLICTION]:     SubjectType.ENEMY,
+  [ObjectType.REACTION]:       SubjectType.ENEMY,
+  [ObjectType.ARTS_BURST]:     SubjectType.ENEMY,
+  [ObjectType.PHYSICAL_STATUS]: SubjectType.ENEMY,
 };
 
 /**
@@ -738,11 +748,12 @@ export const OBJECT_FORCED_TARGET: Partial<Record<ObjectType, SubjectType>> = {
  */
 export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]>> = {
   [VerbType.APPLY]: {
-    [ObjectType.STATUS]:     ['duration', 'statusLevel'],
-    [ObjectType.INFLICTION]: ['statusLevel'],
-    [ObjectType.REACTION]:   [...Reaction.EDITABLE_PROPERTIES],
-    [ObjectType.TIME_STOP]:  ['duration'],
-    [ObjectType.STAGGER]:    ['value'],
+    [ObjectType.STATUS]:          ['duration', 'statusLevel'],
+    [ObjectType.INFLICTION]:      ['statusLevel'],
+    [ObjectType.REACTION]:        [...Reaction.EDITABLE_PROPERTIES],
+    [ObjectType.PHYSICAL_STATUS]: [...Reaction.EDITABLE_PROPERTIES],
+    [ObjectType.TIME_STOP]:       ['duration'],
+    [ObjectType.STAGGER]:         ['value'],
   },
   [VerbType.DEAL]: {
     [ObjectType.DAMAGE]:     ['value'],

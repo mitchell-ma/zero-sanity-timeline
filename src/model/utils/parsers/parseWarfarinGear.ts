@@ -166,10 +166,10 @@ function resolveStats(
     // "Main" / "Sub" = runtime-resolved attribute bonuses (like weapon's MAIN_ATTRIBUTE)
     // These resolve to the operator's main/secondary attribute at runtime.
     if (compositeAttr === 'Main') {
-      return [['PRIMARY_ATTRIBUTE_BONUS' as any, round(value)]];
+      return [['PRIMARY_ATTRIBUTE_BONUS', round(value)]];
     }
     if (compositeAttr === 'Sub') {
-      return [['SECONDARY_ATTRIBUTE_BONUS' as any, round(value)]];
+      return [['SECONDARY_ATTRIBUTE_BONUS', round(value)]];
     }
 
     // Unknown composite — warn and skip
@@ -286,22 +286,24 @@ async function fetchSetEffect(slug: string): Promise<{
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
-    const json = await res.json() as { data: Record<string, any> };
+    const json = await res.json() as { data: Record<string, unknown> };
     const data = json.data;
 
-    const suitTable = data.equipSuitTable;
+    const suitTable = data.equipSuitTable as Record<string, unknown> | undefined;
     if (!suitTable) return null;
 
-    const skillId = suitTable.skillID || '';
-    const piecesRequired = suitTable.equipCnt || 3;
-    const name = suitTable.suitName || '';
+    const skillId = (suitTable.skillID as string) || '';
+    const piecesRequired = (suitTable.equipCnt as number) || 3;
+    const name = (suitTable.suitName as string) || '';
 
     // Get description from skillPatchTable
     // Gear skillPatchTable has SkillPatchDataBundle directly at root (not keyed by skillId)
     let description = '';
-    const bundle = data.skillPatchTable?.SkillPatchDataBundle?.[0];
+    const patchTable = data.skillPatchTable as Record<string, unknown> | undefined;
+    const bundles = patchTable?.SkillPatchDataBundle as Record<string, unknown>[] | undefined;
+    const bundle = bundles?.[0];
     if (bundle) {
-      description = stripRichText(bundle.description);
+      description = stripRichText(bundle.description as string);
     }
 
     return { name, skillId, description, piecesRequired };
@@ -326,7 +328,7 @@ async function fetchGearList(): Promise<GearListItem[]> {
   console.log('Fetching gear list from Warfarin API...');
   const res = await fetch(GEAR_LIST_URL);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  const json = await res.json() as { meta: any; data: GearListItem[] };
+  const json = await res.json() as { meta: unknown; data: GearListItem[] };
   console.log(`  Found ${json.data.length} gear items`);
   return json.data;
 }

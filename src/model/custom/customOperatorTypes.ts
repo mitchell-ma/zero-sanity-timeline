@@ -27,12 +27,8 @@ export interface CustomOperator {
     lv90: Partial<Record<StatType | string, number>>;
   };
   potentials: CustomPotentialEntry[];
-  skills?: {
-    basicAttack: CustomCombatSkillDef;
-    battleSkill: CustomCombatSkillDef;
-    comboSkill: CustomCombatSkillDef;
-    ultimate: CustomCombatSkillDef;
-  };
+  /** All combat skills — grouped by combatSkillType in the UI. */
+  skills: CustomCombatSkillDef[];
   combo: {
     onTriggerClause: Predicate[];
     description: string;

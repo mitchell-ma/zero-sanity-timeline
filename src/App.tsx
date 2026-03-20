@@ -5,26 +5,35 @@ import { buildShareUrl, detectCustomContent } from './utils/embedCodec';
 import LoadoutSidebar from './view/LoadoutSidebar';
 import type { SidebarMode } from './view/LoadoutSidebar';
 import { ContentCategory } from './consts/contentBrowserTypes';
-import type { ContentSelection } from './consts/contentBrowserTypes';
-import { weaponToCustomWeapon, gearSetToCustomGearSet, operatorToCustomOperator } from './controller/custom/builtinToCustomConverter';
-import { ALL_OPERATORS, operatorWarnings } from './controller/operators/operatorRegistry';
+import { operatorWarnings } from './controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from './consts/timelineColumnLabels';
-import { createCustomWeapon, getDefaultCustomWeapon, updateCustomWeapon, getCustomWeapons } from './controller/custom/customWeaponController';
-import { createCustomGearSet, getDefaultCustomGearSet, updateCustomGearSet, getCustomGearSets } from './controller/custom/customGearController';
-import { createCustomOperator, getDefaultCustomOperator, updateCustomOperator, getCustomOperators } from './controller/custom/customOperatorController';
-import { createCustomSkill, getDefaultCustomSkill, updateCustomSkill, getCustomSkills } from './controller/custom/customSkillController';
-import { createCustomWeaponEffect, updateCustomWeaponEffect, getCustomWeaponEffects, getDefaultCustomWeaponEffect } from './controller/custom/customWeaponEffectController';
-import { createCustomGearEffect, updateCustomGearEffect, getCustomGearEffects, getDefaultCustomGearEffect } from './controller/custom/customGearEffectController';
-import { createCustomOperatorStatus, updateCustomOperatorStatus, getCustomOperatorStatuses, getDefaultCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
-import { createCustomOperatorTalent, updateCustomOperatorTalent, getCustomOperatorTalents, getDefaultCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
+import { createCustomWeapon, updateCustomWeapon } from './controller/custom/customWeaponController';
+import { createCustomGearSet, updateCustomGearSet } from './controller/custom/customGearController';
+import { createCustomOperator, updateCustomOperator } from './controller/custom/customOperatorController';
+import { createCustomSkill, updateCustomSkill } from './controller/custom/customSkillController';
+import { createCustomWeaponEffect, updateCustomWeaponEffect } from './controller/custom/customWeaponEffectController';
+import { createCustomGearEffect, updateCustomGearEffect } from './controller/custom/customGearEffectController';
+import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
+import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
-import { clearAllCustomContent } from './utils/customContentStorage';
-import { InteractionModeType } from './consts/enums';
-import type { GearSetType } from './consts/enums';
+import { InteractionModeType, CombatSkillsType, CombatSkillType } from './consts/enums';
+import { getAnimationDuration, eventDuration } from './consts/viewTypes';
+import type { SkillType } from './consts/viewTypes';
+import type { CustomWeapon } from './model/custom/customWeaponTypes';
+import type { CustomGearSet } from './model/custom/customGearTypes';
+import type { CustomOperator } from './model/custom/customOperatorTypes';
+import type { CustomSkill } from './model/custom/customSkillTypes';
+import type { CustomWeaponEffect } from './model/custom/customWeaponEffectTypes';
+import type { CustomGearEffect } from './model/custom/customGearEffectTypes';
+import type { CustomOperatorStatus } from './model/custom/customOperatorStatusTypes';
+import type { CustomOperatorTalent } from './model/custom/customOperatorTalentTypes';
 import ContextMenu from './view/ContextMenu';
 import WarningModal from './view/WarningModal';
 import ConfirmModal from './view/ConfirmModal';
 import './App.css';
+
+type CustomContentData = CustomWeapon | CustomGearSet | CustomOperator | CustomSkill
+  | CustomWeaponEffect | CustomGearEffect | CustomOperatorStatus | CustomOperatorTalent;
 
 const CombatPlanner = lazy(() => import('./view/CombatPlanner'));
 const CombatSheet = lazy(() => import('./view/CombatSheet'));
@@ -32,12 +41,6 @@ const InformationPane = lazy(() => import('./view/InformationPane'));
 const DevlogModal = lazy(() => import('./view/DevlogModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
-const CustomContentPanel = lazy(() => import('./view/custom/CustomContentPanel'));
-const ContentViewer = lazy(() => import('./view/custom/ContentViewer'));
-const CustomWeaponWizard = lazy(() => import('./view/custom/CustomWeaponWizard'));
-const CustomGearWizard = lazy(() => import('./view/custom/CustomGearWizard'));
-const CustomOperatorWizard = lazy(() => import('./view/custom/CustomOperatorWizard'));
-const CustomSkillWizard = lazy(() => import('./view/custom/CustomSkillWizard'));
 const ClauseEditorModal = lazy(() => import('./view/custom/ClauseEditorModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
 
@@ -45,7 +48,6 @@ const UI_STATE_KEY = 'zst-ui-state';
 
 interface UiState {
   sidebarMode: SidebarMode;
-  customPageActive: boolean;
 }
 
 function loadUiState(): UiState {
@@ -54,14 +56,14 @@ function loadUiState(): UiState {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        const mode = parsed.sidebarMode;
         return {
-          sidebarMode: parsed.sidebarMode === 'custom' ? 'custom' : parsed.sidebarMode === 'workbench' ? 'workbench' : 'loadouts',
-          customPageActive: !!parsed.customPageActive,
+          sidebarMode: mode === 'workbench' ? 'workbench' : 'loadouts',
         };
       }
     }
   } catch { /* ignore */ }
-  return { sidebarMode: 'loadouts', customPageActive: false };
+  return { sidebarMode: 'loadouts' };
 }
 
 function saveUiState(state: UiState): void {
@@ -74,12 +76,8 @@ export default function App() {
   const app = useApp();
   const [expandAnim, setExpandAnim] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => loadUiState().sidebarMode);
-  const [customPageActive, setCustomPageActive] = useState(() => loadUiState().customPageActive);
-  const [editingContent, setEditingContent] = useState<ContentSelection | null>(null);
-  const [pendingClone, setPendingClone] = useState<{ category: ContentCategory; data: any } | null>(null);
   const [workbenchOpen, setWorkbenchOpen] = useState(() => loadUiState().sidebarMode === 'workbench');
-  const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: any } | undefined>();
-  const [confirmClearCustom, setConfirmClearCustom] = useState(false);
+  const [workbenchInitial, setWorkbenchInitial] = useState<{ entityType: ContentCategory; data: CustomContentData } | undefined>();
   const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const bumpContentRefresh = useCallback(() => setContentRefreshKey((k) => k + 1), []);
   const draggedRef = useRef(false);
@@ -99,8 +97,8 @@ export default function App() {
 
   // Persist UI selection state on change
   useEffect(() => {
-    saveUiState({ sidebarMode, customPageActive });
-  }, [sidebarMode, customPageActive]);
+    saveUiState({ sidebarMode });
+  }, [sidebarMode]);
 
   const handleRestore = useCallback(() => {
     if (draggedRef.current) { draggedRef.current = false; return; }
@@ -110,140 +108,41 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.handleRestorePane]);
 
-  const isCustomPage = customPageActive;
 
-  const handleCloneContentAsCustom = useCallback((item: ContentSelection) => {
-    let cloned: any = null;
-    let targetCategory = item.category;
-    if (item.category === ContentCategory.WEAPONS) {
-      cloned = weaponToCustomWeapon(item.id);
-    } else if (item.category === ContentCategory.GEAR_SETS) {
-      cloned = gearSetToCustomGearSet(item.id as GearSetType);
-    } else if (item.category === ContentCategory.OPERATORS) {
-      cloned = operatorToCustomOperator(item.id);
-    } else if (item.category === ContentCategory.SKILLS) {
-      const parts = item.id.split(':');
-      const opId = parts[1];
-      const skillType = parts[2] as 'basic' | 'battle' | 'combo' | 'ultimate';
-      const op = ALL_OPERATORS.find((o: any) => o.id === opId);
-      if (op) {
-        const skill = op.skills[skillType];
-        const totalFrames = skill.defaultActivationDuration + skill.defaultActiveDuration;
-        cloned = {
-          id: `skill_clone_${Date.now()}`,
-          name: `${(COMBAT_SKILL_LABELS as any)[skill.name] || skill.name} (Clone)`,
-          combatSkillType: skillType === 'basic' ? 'BASIC_ATTACK' : skillType === 'battle' ? 'BATTLE_SKILL' : skillType === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE',
-          element: skill.element || undefined,
-          durationSeconds: Math.max(totalFrames / 120, 0.1),
-          cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
-          animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
-          description: skill.description,
-          resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: skill.skillPointCost }] : undefined,
-        };
-        targetCategory = ContentCategory.SKILLS;
-      }
-    }
-    if (cloned) {
-      setPendingClone({ category: targetCategory, data: cloned });
-      setEditingContent(null);
-    }
-  }, []);
-
-  const handleEditCustomContent = useCallback((item: ContentSelection) => {
-    if (item.id === '__new__') {
-      // Create new custom item
-      let newItem: any = null;
-      if (item.category === ContentCategory.OPERATORS) {
-        newItem = getDefaultCustomOperator();
-      } else if (item.category === ContentCategory.WEAPONS) {
-        newItem = getDefaultCustomWeapon();
-      } else if (item.category === ContentCategory.GEAR_SETS) {
-        newItem = getDefaultCustomGearSet();
-      } else if (item.category === ContentCategory.SKILLS) {
-        newItem = getDefaultCustomSkill();
-      } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
-        newItem = getDefaultCustomWeaponEffect();
-        setWorkbenchInitial({ entityType: item.category, data: newItem });
-        setWorkbenchOpen(true);
-        setSidebarMode('workbench');
-        return;
-      } else if (item.category === ContentCategory.GEAR_EFFECTS) {
-        newItem = getDefaultCustomGearEffect();
-        setWorkbenchInitial({ entityType: item.category, data: newItem });
-        setWorkbenchOpen(true);
-        setSidebarMode('workbench');
-        return;
-      } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
-        newItem = getDefaultCustomOperatorStatus();
-        setWorkbenchInitial({ entityType: item.category, data: newItem });
-        setWorkbenchOpen(true);
-        setSidebarMode('workbench');
-        return;
-      } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
-        newItem = getDefaultCustomOperatorTalent();
-        setWorkbenchInitial({ entityType: item.category, data: newItem });
-        setWorkbenchOpen(true);
-        setSidebarMode('workbench');
-        return;
-      }
-      if (newItem) {
-        setPendingClone({ category: item.category, data: newItem });
-        setEditingContent(null);
-      }
-    } else {
-      // New entity types open in workbench for editing
-      const workbenchCategories = new Set([
-        ContentCategory.WEAPON_EFFECTS,
-        ContentCategory.GEAR_EFFECTS,
-        ContentCategory.OPERATOR_STATUSES,
-        ContentCategory.OPERATOR_TALENTS,
-      ]);
-      if (workbenchCategories.has(item.category)) {
-        let existingData: any = null;
-        if (item.category === ContentCategory.WEAPON_EFFECTS) {
-          existingData = getCustomWeaponEffects().find((e) => e.id === item.id);
-        } else if (item.category === ContentCategory.GEAR_EFFECTS) {
-          existingData = getCustomGearEffects().find((e) => e.id === item.id);
-        } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
-          existingData = getCustomOperatorStatuses().find((s) => s.id === item.id);
-        } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
-          existingData = getCustomOperatorTalents().find((t) => t.id === item.id);
-        }
-        if (existingData) {
-          setWorkbenchInitial({ entityType: item.category, data: JSON.parse(JSON.stringify(existingData)) });
-          setWorkbenchOpen(true);
-          setSidebarMode('workbench');
-        }
-      } else {
-        // Edit existing custom item — select it so the CustomContentPanel shows it
-        setEditingContent(item);
-      }
-    }
-  }, []);
-
-  const handleWorkbenchSave = useCallback((type: ContentCategory, data: any): string[] => {
+  const handleWorkbenchSave = useCallback((type: ContentCategory, data: CustomContentData): string[] => {
     let errors: import('./utils/customContentStorage').ValidationError[] = [];
     const isEdit = workbenchInitial?.entityType === type && workbenchInitial?.data?.id === data.id;
     if (type === ContentCategory.OPERATORS) {
-      errors = isEdit ? updateCustomOperator(data.id, data) : createCustomOperator(data);
+      const d = data as CustomOperator;
+      errors = isEdit ? updateCustomOperator(d.id, d) : createCustomOperator(d);
     } else if (type === ContentCategory.WEAPONS) {
-      errors = isEdit ? updateCustomWeapon(data.id, data) : createCustomWeapon(data);
+      const d = data as CustomWeapon;
+      errors = isEdit ? updateCustomWeapon(d.id, d) : createCustomWeapon(d);
     } else if (type === ContentCategory.GEAR_SETS) {
-      errors = isEdit ? updateCustomGearSet(data.id, data) : createCustomGearSet(data);
+      const d = data as CustomGearSet;
+      errors = isEdit ? updateCustomGearSet(d.id, d) : createCustomGearSet(d);
     } else if (type === ContentCategory.SKILLS) {
-      errors = isEdit ? updateCustomSkill(data.id, data) : createCustomSkill(data);
+      const d = data as CustomSkill;
+      errors = isEdit ? updateCustomSkill(d.id, d) : createCustomSkill(d);
     } else if (type === ContentCategory.WEAPON_EFFECTS) {
-      errors = isEdit ? updateCustomWeaponEffect(data.id, data) : createCustomWeaponEffect(data);
+      const d = data as CustomWeaponEffect;
+      errors = isEdit ? updateCustomWeaponEffect(d.id, d) : createCustomWeaponEffect(d);
     } else if (type === ContentCategory.GEAR_EFFECTS) {
-      errors = isEdit ? updateCustomGearEffect(data.id, data) : createCustomGearEffect(data);
+      const d = data as CustomGearEffect;
+      errors = isEdit ? updateCustomGearEffect(d.id, d) : createCustomGearEffect(d);
     } else if (type === ContentCategory.OPERATOR_STATUSES) {
-      errors = isEdit ? updateCustomOperatorStatus(data.id, data) : createCustomOperatorStatus(data);
+      const d = data as CustomOperatorStatus;
+      errors = isEdit ? updateCustomOperatorStatus(d.id, d) : createCustomOperatorStatus(d);
     } else if (type === ContentCategory.OPERATOR_TALENTS) {
-      errors = isEdit ? updateCustomOperatorTalent(data.id, data) : createCustomOperatorTalent(data);
+      const d = data as CustomOperatorTalent;
+      errors = isEdit ? updateCustomOperatorTalent(d.id, d) : createCustomOperatorTalent(d);
     }
     if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-    setWorkbenchOpen(false);
-    setWorkbenchInitial(undefined);
+    // Only close workbench if it was opened with an initial item (from external trigger)
+    if (workbenchInitial) {
+      setWorkbenchOpen(false);
+      setWorkbenchInitial(undefined);
+    }
     bumpContentRefresh();
     return [];
   }, [workbenchInitial, bumpContentRefresh]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -257,30 +156,30 @@ export default function App() {
     if (!skillType) return;
 
     const id = `skill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const label = (COMBAT_SKILL_LABELS as any)[event.name] || event.name;
-    const skill: import('./model/custom/customSkillTypes').CustomSkill = {
+    const label = COMBAT_SKILL_LABELS[event.name as CombatSkillsType] || event.name;
+    const skill: CustomSkill = {
       id,
       name: `${label} (Custom)`,
-      combatSkillType: skillType as any,
-      durationSeconds: (event.activationDuration ?? 0) / 120,
-      cooldownSeconds: (event.cooldownDuration ?? 0) / 120 || undefined,
-      animationSeconds: (event.animationDuration ?? 0) / 120 || undefined,
+      combatSkillType: skillType as CombatSkillType,
+      durationSeconds: eventDuration(event) / 120,
+      cooldownSeconds: undefined,
+      animationSeconds: getAnimationDuration(event) / 120 || undefined,
     };
 
     const errors = createCustomSkill(skill);
     if (errors.length > 0) return;
 
-    addSkillLink(event.ownerId, event.columnId as any, id);
+    addSkillLink(event.ownerId, event.columnId as SkillType, id);
     bumpContentRefresh();
     app.bumpCustomSkillVersion();
   }, [bumpContentRefresh, app.bumpCustomSkillVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="app">
+    <div className="app" onContextMenu={(e) => e.preventDefault()}>
       <AppBar
         activeLoadoutName={app.loadoutTree.nodes.find((n) => n.id === app.activeLoadoutId)?.name ?? ''}
         onRenameLoadout={app.handleRenameActiveLoadout}
-        onClearLoadout={() => isCustomPage ? setConfirmClearCustom(true) : app.setConfirmClearLoadout(true)}
+        onClearLoadout={() => app.setConfirmClearLoadout(true)}
         onClearAll={() => app.setConfirmClearAll(true)}
         onExport={app.handleExport}
         onImport={app.handleImport}
@@ -293,8 +192,8 @@ export default function App() {
         onDevlog={() => app.setDevlogOpen(true)}
         onKeys={() => app.setKeysOpen((p) => !p)}
         onCustomContent={() => {
-          setCustomPageActive(true);
-          setSidebarMode('custom');
+          setWorkbenchOpen(true);
+          setSidebarMode('workbench');
         }}
         onClauseEditor={() => app.setClauseEditorOpen(true)}
         interactionMode={app.interactionMode}
@@ -318,51 +217,12 @@ export default function App() {
           onSidebarModeChange={(mode) => {
             setSidebarMode(mode);
             if (mode === 'loadouts') {
-              setCustomPageActive(false);
-              setEditingContent(null);
-              setPendingClone(null);
-              setWorkbenchOpen(false);
-            } else if (mode === 'custom') {
-              setCustomPageActive(true);
               setWorkbenchOpen(false);
             } else if (mode === 'workbench') {
-              setCustomPageActive(false);
               setWorkbenchOpen(true);
               if (!workbenchInitial) setWorkbenchInitial(undefined);
             }
           }}
-          selectedContentItem={editingContent}
-          onSelectContentItem={setEditingContent}
-          onCloneContentAsCustom={handleCloneContentAsCustom}
-          onEditCustomContent={handleEditCustomContent}
-          onOpenInWorkbench={(item) => {
-            // For V1 types, find existing data and open in workbench
-            let existingData: any = null;
-            if (item.category === ContentCategory.OPERATORS) {
-              existingData = getCustomOperators().find((o) => o.id === item.id);
-            } else if (item.category === ContentCategory.WEAPONS) {
-              existingData = getCustomWeapons().find((w) => w.id === item.id);
-            } else if (item.category === ContentCategory.GEAR_SETS) {
-              existingData = getCustomGearSets().find((g) => g.id === item.id);
-            } else if (item.category === ContentCategory.SKILLS) {
-              existingData = getCustomSkills().find((s) => s.id === item.id);
-            } else if (item.category === ContentCategory.WEAPON_EFFECTS) {
-              existingData = getCustomWeaponEffects().find((e) => e.id === item.id);
-            } else if (item.category === ContentCategory.GEAR_EFFECTS) {
-              existingData = getCustomGearEffects().find((e) => e.id === item.id);
-            } else if (item.category === ContentCategory.OPERATOR_STATUSES) {
-              existingData = getCustomOperatorStatuses().find((s) => s.id === item.id);
-            } else if (item.category === ContentCategory.OPERATOR_TALENTS) {
-              existingData = getCustomOperatorTalents().find((t) => t.id === item.id);
-            }
-            if (existingData) {
-              setWorkbenchInitial({ entityType: item.category, data: JSON.parse(JSON.stringify(existingData)) });
-              setWorkbenchOpen(true);
-              setSidebarMode('workbench');
-            }
-          }}
-          onContentChanged={bumpContentRefresh}
-          contentRefreshKey={contentRefreshKey}
         />
 
         {workbenchOpen && sidebarMode === 'workbench' ? (
@@ -377,171 +237,6 @@ export default function App() {
               onContentChanged={bumpContentRefresh}
               contentRefreshKey={contentRefreshKey}
             />
-          </Suspense>
-        ) : isCustomPage ? (
-          <Suspense fallback={<div className="tl-loading" style={{ flex: 1 }} />}>
-            {pendingClone ? (
-              pendingClone.category === ContentCategory.WEAPONS ? (
-                <CustomWeaponWizard
-                  initial={pendingClone.data}
-                  onSave={(weapon) => {
-                    const errors = createCustomWeapon(weapon);
-                    if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                    setPendingClone(null);
-                    bumpContentRefresh();
-                    return [];
-                  }}
-                  onCancel={() => setPendingClone(null)}
-                />
-              ) : pendingClone.category === ContentCategory.GEAR_SETS ? (
-                <CustomGearWizard
-                  initial={pendingClone.data}
-                  onSave={(gearSet) => {
-                    const errors = createCustomGearSet(gearSet);
-                    if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                    setPendingClone(null);
-                    bumpContentRefresh();
-                    return [];
-                  }}
-                  onCancel={() => setPendingClone(null)}
-                />
-              ) : pendingClone.category === ContentCategory.OPERATORS ? (
-                <CustomOperatorWizard
-                  initial={pendingClone.data}
-                  onSave={(operator) => {
-                    const errors = createCustomOperator(operator);
-                    if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                    setPendingClone(null);
-                    bumpContentRefresh();
-                    return [];
-                  }}
-                  onCancel={() => setPendingClone(null)}
-                />
-              ) : pendingClone.category === ContentCategory.SKILLS ? (
-                <CustomSkillWizard
-                  initial={pendingClone.data}
-                  onSave={(skill) => {
-                    const errors = createCustomSkill(skill);
-                    if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                    setPendingClone(null);
-                    bumpContentRefresh();
-                    return [];
-                  }}
-                  onCancel={() => setPendingClone(null)}
-                />
-              ) : null
-            ) : editingContent && editingContent.source === 'custom' ? (
-              (() => {
-                if (editingContent.category === ContentCategory.WEAPONS) {
-                  const cw = getCustomWeapons().find((w) => w.id === editingContent.id);
-                  if (!cw) return null;
-                  return (
-                    <CustomWeaponWizard
-                      initial={JSON.parse(JSON.stringify(cw))}
-                      onSave={(weapon) => {
-                        const errors = updateCustomWeapon(editingContent.id, weapon);
-                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                        bumpContentRefresh();
-                        return [];
-                      }}
-                      onCancel={() => setEditingContent(null)}
-                    />
-                  );
-                } else if (editingContent.category === ContentCategory.GEAR_SETS) {
-                  const cg = getCustomGearSets().find((g) => g.id === editingContent.id);
-                  if (!cg) return null;
-                  return (
-                    <CustomGearWizard
-                      initial={JSON.parse(JSON.stringify(cg))}
-                      onSave={(gearSet) => {
-                        const errors = updateCustomGearSet(editingContent.id, gearSet);
-                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                        bumpContentRefresh();
-                        return [];
-                      }}
-                      onCancel={() => setEditingContent(null)}
-                    />
-                  );
-                } else if (editingContent.category === ContentCategory.OPERATORS) {
-                  const co = getCustomOperators().find((o) => o.id === editingContent.id);
-                  if (!co) return null;
-                  return (
-                    <CustomOperatorWizard
-                      initial={JSON.parse(JSON.stringify(co))}
-                      onSave={(operator) => {
-                        const errors = updateCustomOperator(editingContent.id, operator);
-                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                        bumpContentRefresh();
-                        return [];
-                      }}
-                      onCancel={() => setEditingContent(null)}
-                    />
-                  );
-                } else if (editingContent.category === ContentCategory.SKILLS) {
-                  const cs = getCustomSkills().find((s) => s.id === editingContent.id);
-                  if (!cs) return null;
-                  return (
-                    <CustomSkillWizard
-                      initial={JSON.parse(JSON.stringify(cs))}
-                      onSave={(skill) => {
-                        const errors = updateCustomSkill(editingContent.id, skill);
-                        if (errors.length > 0) return errors.map((e) => `${e.field}: ${e.message}`);
-                        bumpContentRefresh();
-                        return [];
-                      }}
-                      onCancel={() => setEditingContent(null)}
-                    />
-                  );
-                }
-                return null;
-              })()
-            ) : editingContent && editingContent.source === 'builtin' ? (
-              <ContentViewer
-                selection={editingContent}
-                onCloneAsCustom={() => {
-                  let cloned: any = null;
-                  let targetCategory = editingContent.category;
-                  if (editingContent.category === ContentCategory.WEAPONS) {
-                    cloned = weaponToCustomWeapon(editingContent.id);
-                    targetCategory = ContentCategory.WEAPONS;
-                  } else if (editingContent.category === ContentCategory.GEAR_SETS) {
-                    cloned = gearSetToCustomGearSet(editingContent.id as GearSetType);
-                    targetCategory = ContentCategory.GEAR_SETS;
-                  } else if (editingContent.category === ContentCategory.OPERATORS) {
-                    cloned = operatorToCustomOperator(editingContent.id);
-                    targetCategory = ContentCategory.OPERATORS;
-                  } else if (editingContent.category === ContentCategory.SKILLS) {
-                    // id format: "skill:{operatorId}:{skillType}"
-                    const parts = editingContent.id.split(':');
-                    const opId = parts[1];
-                    const skillType = parts[2] as 'basic' | 'battle' | 'combo' | 'ultimate';
-                    const op = ALL_OPERATORS.find((o: any) => o.id === opId);
-                    if (op) {
-                      const skill = op.skills[skillType];
-                      const totalFrames = skill.defaultActivationDuration + skill.defaultActiveDuration;
-                      cloned = {
-                        id: `skill_clone_${Date.now()}`,
-                        name: `${(COMBAT_SKILL_LABELS as any)[skill.name] || skill.name} (Clone)`,
-                        combatSkillType: skillType === 'basic' ? 'BASIC_ATTACK' : skillType === 'battle' ? 'BATTLE_SKILL' : skillType === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE',
-                        element: skill.element || undefined,
-                        durationSeconds: Math.max(totalFrames / 120, 0.1),
-                        cooldownSeconds: skill.defaultCooldownDuration > 0 ? skill.defaultCooldownDuration / 120 : undefined,
-                        animationSeconds: skill.animationDuration ? skill.animationDuration / 120 : undefined,
-                        description: skill.description,
-                        resourceInteractions: skill.skillPointCost ? [{ resourceType: 'SKILL_POINT', verb: 'CONSUME', value: skill.skillPointCost }] : undefined,
-                      };
-                      targetCategory = ContentCategory.SKILLS;
-                    }
-                  }
-                  if (cloned) {
-                    setPendingClone({ category: targetCategory, data: cloned });
-                    setEditingContent(null);
-                  }
-                }}
-              />
-            ) : (
-              <CustomContentPanel embedded onContentChanged={bumpContentRefresh} />
-            )}
           </Suspense>
         ) : (
           <>
@@ -860,16 +555,6 @@ export default function App() {
         onClose={() => app.setConfirmClearAll(false)}
       />
 
-      <ConfirmModal
-        open={confirmClearCustom}
-        message="Delete ALL custom content (operators, weapons, gear sets, skills)? The page will reload."
-        confirmLabel="Clear Custom Content"
-        onConfirm={() => {
-          clearAllCustomContent();
-          window.location.reload();
-        }}
-        onClose={() => setConfirmClearCustom(false)}
-      />
     </div>
   );
 }

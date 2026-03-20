@@ -58,9 +58,11 @@ import { VerbType, DURATION_END, NounType } from '../consts/semantics';
 // eslint-disable-next-line import/first
 import type { Effect, Interaction } from '../consts/semantics';
 // eslint-disable-next-line import/first
+import { eventDuration } from '../consts/viewTypes';
+// eslint-disable-next-line import/first
 import type { TimelineEvent } from '../consts/viewTypes';
 // eslint-disable-next-line import/first
-import { EventStatusType } from '../consts/enums';
+import { EventStatusType, PhysicalStatusType } from '../consts/enums';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -68,9 +70,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: s
   return {
     name: 'TEST',
     startFrame: 0,
-    activationDuration: 2400,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: 2400 } }],
     ...overrides,
   };
 }
@@ -105,10 +105,10 @@ describe('EXTEND UNTIL END', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
 
     const effect: Effect = {
@@ -141,10 +141,10 @@ describe('EXTEND UNTIL END', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const effect: Effect = {
@@ -174,10 +174,10 @@ describe('EXTEND UNTIL END', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 300,
-      activationDuration: 300,
+      segments: [{ properties: { duration: 300 } }],
     });
 
     const effect: Effect = {
@@ -204,10 +204,10 @@ describe('EXTEND UNTIL END', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
 
     const effect: Effect = {
@@ -228,7 +228,7 @@ describe('EXTEND UNTIL END', () => {
     const result = applyMutations([liftEvent], mutations);
 
     expect(result).toHaveLength(1);
-    expect(result[0].activationDuration).toBe(1200);
+    expect(eventDuration(result[0])).toBe(1200);
     expect(result[0].eventStatus).toBe(EventStatusType.EXTENDED);
   });
 });
@@ -240,10 +240,10 @@ describe('RECEIVE condition', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 100,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
 
     const cond: Interaction = {
@@ -261,10 +261,10 @@ describe('RECEIVE condition', () => {
     const liftEvent = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 50,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
 
     const cond: Interaction = {
@@ -294,18 +294,18 @@ describe('RECEIVE condition', () => {
     const lift1 = makeEvent({
       id: 'lift-1',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 100,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
     const lift2 = makeEvent({
       id: 'lift-2',
       name: 'LIFT',
-      columnId: 'lift',
+      columnId: PhysicalStatusType.LIFT,
       ownerId: 'enemy',
       startFrame: 100,
-      activationDuration: 300,
+      segments: [{ properties: { duration: 300 } }],
     });
 
     const cond: Interaction = {
@@ -323,10 +323,10 @@ describe('RECEIVE condition', () => {
     const breachEvent = makeEvent({
       id: 'breach-1',
       name: 'BREACH',
-      columnId: 'breach',
+      columnId: PhysicalStatusType.BREACH,
       ownerId: 'enemy',
       startFrame: 100,
-      activationDuration: 600,
+      segments: [{ properties: { duration: 600 } }],
     });
 
     const cond: Interaction = {

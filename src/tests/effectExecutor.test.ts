@@ -19,6 +19,7 @@ import type { ConditionContext } from '../controller/timeline/conditionEvaluator
 import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, DeterminerType, WithValueVerb, matchInteraction, interactionToLabel } from '../consts/semantics';
 import type { Effect, Interaction } from '../consts/semantics';
 import { COMMON_OWNER_ID } from '../controller/slot/commonSlotController';
+import { eventDuration } from '../consts/viewTypes';
 import type { TimelineEvent } from '../consts/viewTypes';
 import { EventStatusType } from '../consts/enums';
 
@@ -28,9 +29,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: s
   return {
     name: 'TEST',
     startFrame: 0,
-    activationDuration: 2400,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: 2400 } }],
     ...overrides,
   };
 }
@@ -75,7 +74,7 @@ describe('APPLY effects', () => {
     expect(result.produced).toHaveLength(1);
     expect(result.produced[0].columnId).toBe('heatInfliction');
     expect(result.produced[0].ownerId).toBe('enemy');
-    expect(result.produced[0].activationDuration).toBe(1200); // 10s * 120fps
+    expect(eventDuration(result.produced[0])).toBe(1200); // 10s * 120fps
   });
 
   test('APPLY STATUS produces a status event', () => {
@@ -107,7 +106,7 @@ describe('APPLY effects', () => {
       columnId: 'melting-flame',
       ownerId: 'slot1',
       startFrame: i * 10,
-      activationDuration: 108000,
+      segments: [{ properties: { duration: 108000 } }],
     }));
     const effect: Effect = {
       verb: VerbType.APPLY,
@@ -131,7 +130,7 @@ describe('APPLY effects', () => {
       columnId: 'scorching-heart-effect',
       ownerId: 'slot1',
       startFrame: i * 10,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     }));
     const effect: Effect = {
       verb: VerbType.APPLY,
@@ -176,7 +175,7 @@ describe('CONSUME effects', () => {
       columnId: 'heatInfliction',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const effect: Effect = {
@@ -215,7 +214,7 @@ describe('CONSUME effects', () => {
       ownerId: 'slot1',
       name: 'MELTING_FLAME',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const effect: Effect = {
@@ -304,7 +303,7 @@ describe('ALL compound effects', () => {
       columnId: 'heatInfliction',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const effect: Effect = {
@@ -346,7 +345,7 @@ describe('ALL compound effects', () => {
       columnId: 'heatInfliction',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     }));
 
     const effect: Effect = {
@@ -394,7 +393,7 @@ describe('ANY compound effects', () => {
       columnId: 'combustion',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const effect: Effect = {
@@ -544,7 +543,7 @@ describe('Condition evaluation', () => {
       columnId: 'melting-flame',
       ownerId: 'slot1',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const conditions: Interaction[] = [{
@@ -578,7 +577,7 @@ describe('Condition evaluation', () => {
       columnId: 'melting-flame',
       ownerId: 'slot1',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     }));
 
     const conditions: Interaction[] = [{
@@ -605,7 +604,7 @@ describe('Condition evaluation', () => {
       columnId: 'combustion',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const conditions: Interaction[] = [{
@@ -636,7 +635,7 @@ describe('applyMutations', () => {
       columnId: 'heatInfliction',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
 
     const mutations: MutationSet = {
@@ -657,7 +656,7 @@ describe('applyMutations', () => {
 
     const result = applyMutations([existing], mutations);
     expect(result).toHaveLength(2);
-    expect(result[0].activationDuration).toBe(100);
+    expect(eventDuration(result[0])).toBe(100);
     expect(result[0].eventStatus).toBe(EventStatusType.CONSUMED);
     expect(result[1].name).toBe('MELTING_FLAME');
   });
@@ -954,7 +953,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       columnId: 'heatInfliction',
       ownerId: 'enemy',
       startFrame: 0,
-      activationDuration: 2400,
+      segments: [{ properties: { duration: 2400 } }],
     });
     const effect: Effect = {
       verb: VerbType.CONSUME,

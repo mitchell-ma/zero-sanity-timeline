@@ -86,9 +86,7 @@ function statusEvent(id: string, columnId: string, name: string, ownerId: string
     ownerId,
     columnId,
     startFrame,
-    activationDuration: durationFrames,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: durationFrames } }],
   };
 }
 

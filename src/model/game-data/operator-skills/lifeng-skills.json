@@ -10,8 +10,6 @@
     "ULTIMATE": "HEART_OF_THE_UNMOVING"
   },
   "RUINATION": {
-    "name": "Ruination",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -416,16 +414,22 @@
         "frames": []
       }
     ],
-    "originId": "lifeng"
+    "properties": {
+      "name": "Ruination",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "lifeng"
+    }
   },
   "TURBID_AVATAR": {
-    "name": "Turbid Avatar",
-    "description": "Swings the polearm multiple times to deal 2 hits of Physical DMG, then slams the ground to deal Physical DMG and Knock Down to all enemies in the area of effect. \nIf the enemy struck by the last hit of this skill has no Vulnerability stacks, apply Physical Susceptibility to the said enemy instead.",
     "properties": {
       "duration": {
         "value": 2.23,
         "unit": "SECOND"
-      }
+      },
+      "name": "Turbid Avatar",
+      "description": "Swings the polearm multiple times to deal 2 hits of Physical DMG, then slams the ground to deal Physical DMG and Knock Down to all enemies in the area of effect. \nIf the enemy struck by the last hit of this skill has no Vulnerability stacks, apply Physical Susceptibility to the said enemy instead."
     },
     "frames": [
       {
@@ -661,7 +665,6 @@
         ]
       }
     ],
-    "originId": "lifeng",
     "clause": [
       {
         "conditions": [],
@@ -702,23 +705,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "lifeng"
+    }
   },
   "ASPECT_OF_WRATH": {
-    "name": "Aspect of Wrath",
-    "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. \nUnleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link.",
     "properties": {
-      "duration": {
-        "value": 1.67,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -734,128 +727,10 @@
         ],
         "description": "Final Strike on enemy with Breach",
         "windowFrames": 720
-      }
-    },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.63,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.47,
-                      0.51,
-                      0.56,
-                      0.61,
-                      0.65,
-                      0.7,
-                      0.75,
-                      0.79,
-                      0.84,
-                      0.9,
-                      0.97,
-                      1.05
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              }
-            ]
-          }
-        ]
       },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.67,
-                      1.83,
-                      2,
-                      2.17,
-                      2.33,
-                      2.5,
-                      2.67,
-                      2.83,
-                      3,
-                      3.21,
-                      3.46,
-                      3.75
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "lifeng",
+      "name": "Aspect of Wrath",
+      "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with Physical Susceptibility or Breach. \nUnleashes an aspect that performs a spear thrust to deal Physical DMG and grants Link."
+    },
     "clause": [
       {
         "conditions": [],
@@ -884,21 +759,181 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.17,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.13,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.47,
+                          0.51,
+                          0.56,
+                          0.61,
+                          0.65,
+                          0.7,
+                          0.75,
+                          0.79,
+                          0.84,
+                          0.9,
+                          0.97,
+                          1.05
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.1,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.67,
+                          1.83,
+                          2,
+                          2.17,
+                          2.33,
+                          2.5,
+                          2.67,
+                          2.83,
+                          3,
+                          3.21,
+                          3.46,
+                          3.75
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lifeng"
+    }
   },
   "HEART_OF_THE_UNMOVING": {
-    "name": "Heart of the Unmoving",
-    "description": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG.",
     "properties": {
-      "animation": {
-        "duration": {
-          "value": 1.867,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
+      "name": "Heart of the Unmoving",
+      "description": "Unleashes an aspect that performs an Immovable Vajra Slam. The Slam deals Physical DMG and applies Knock Down to all enemies in a large area of effect (AOE), and pulls enemies towards the center of the AOE. After a while, the Slam unleashes one more hit that deals massive Physical DMG and applies another Knock Down to enemies still within its AOE.\nIf the skill consumes a Link, then it deals an additional hit of massive Physical DMG."
     },
     "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.867,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
       {
         "metadata": {
           "eventComponentType": "SEGMENT",
@@ -1071,7 +1106,6 @@
         ]
       }
     ],
-    "originId": "lifeng",
     "clause": [
       {
         "conditions": [],
@@ -1088,6 +1122,139 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "lifeng"
+    }
+  },
+  "RUINATION_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Ruination (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lifeng"
+    }
+  },
+  "RUINATION_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Ruination (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lifeng"
+    }
   }
 }

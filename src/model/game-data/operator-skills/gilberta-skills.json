@@ -10,8 +10,6 @@
     "ULTIMATE": "GRAVITY_FIELD"
   },
   "BEAM_COHESION_ARTS": {
-    "name": "Arcane Staff: Beam Cohesion Arts",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -557,16 +555,22 @@
         "frames": []
       }
     ],
-    "originId": "gilberta"
+    "properties": {
+      "name": "Arcane Staff: Beam Cohesion Arts",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Nature DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "gilberta"
+    }
   },
   "GRAVITY_MODE": {
-    "name": "Arcane Staff: Gravity Mode",
-    "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect.",
     "properties": {
       "duration": {
         "value": 4.1,
         "unit": "SECOND"
-      }
+      },
+      "name": "Arcane Staff: Gravity Mode",
+      "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect."
     },
     "frames": [
       {
@@ -694,7 +698,6 @@
         ]
       }
     ],
-    "originId": "gilberta",
     "clause": [
       {
         "conditions": [],
@@ -735,23 +738,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "gilberta"
+    }
   },
   "MATRIX_DISPLACEMENT": {
-    "name": "Arcane Staff: Matrix Displacement",
-    "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. \nA quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies.",
     "properties": {
-      "duration": {
-        "value": 1.77,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -793,77 +786,10 @@
         ],
         "description": "Any Arts Reaction applied",
         "windowFrames": 720
-      }
+      },
+      "name": "Arcane Staff: Matrix Displacement",
+      "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. \nA quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.4,
-                      1.54,
-                      1.68,
-                      1.82,
-                      1.96,
-                      2.1,
-                      2.24,
-                      2.38,
-                      2.52,
-                      2.7,
-                      2.91,
-                      3.15
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "gilberta",
     "clause": [
       {
         "conditions": [],
@@ -892,175 +818,113 @@
           }
         ]
       }
-    ]
-  },
-  "GRAVITY_FIELD": {
-    "name": "Arcane Staff: Gravity Field",
-    "description": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off.",
-    "properties": {
-      "duration": {
-        "value": 2.13,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 2,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.27,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.1,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 20
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.4,
+                          1.54,
+                          1.68,
+                          1.82,
+                          1.96,
+                          2.1,
+                          2.24,
+                          2.38,
+                          2.52,
+                          2.7,
+                          2.91,
+                          3.15
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "NATURE",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "STATUS",
-                "objectId": "ANOMALOUS_GRAVITY_FIELD",
-                "toObject": "ENEMY",
-                "with": {
-                  "duration": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5,
-                      5
-                    ]
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.33,
-                      3.67,
-                      4,
-                      4.33,
-                      4.67,
-                      5,
-                      5.34,
-                      5.67,
-                      6,
-                      6.42,
-                      6.92,
-                      7.5
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 20
-                  },
-                  "spellVulnerableRate": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.18,
-                      0.18,
-                      0.18,
-                      0.22,
-                      0.22,
-                      0.22,
-                      0.26,
-                      0.26,
-                      0.26,
-                      0.3,
-                      0.3,
-                      0.3
-                    ]
-                  },
-                  "moveSpeedScalar": {
-                    "verb": "IS",
-                    "value": 0.8
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "spellVulnerablePerstack": {
-                    "verb": "IS",
-                    "value": 0.1
-                  },
-                  "spellVulnerable_4stack": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.252,
-                      0.252,
-                      0.252,
-                      0.308,
-                      0.308,
-                      0.308,
-                      0.364,
-                      0.364,
-                      0.364,
-                      0.42,
-                      0.42,
-                      0.42
-                    ]
-                  }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "gilberta",
+    "metadata": {
+      "originId": "gilberta"
+    }
+  },
+  "GRAVITY_FIELD": {
+    "properties": {
+      "name": "Arcane Staff: Gravity Field",
+      "description": "Creates an Anomalous Gravity Field that instantly deals 1 hit of Nature DMG and applies Nature Infliction to enemies caught in the field. Targets in the Anomalous Gravity Field also suffer from Slow and Arts Susceptibility. The effect of Arts Susceptibility is further increased based on the number of active Vulnerability stacks on the target. \nIf a target in the field is Lifted, the Lifted status will persist until the field wears off."
+    },
     "clause": [
       {
         "conditions": [],
@@ -1077,7 +941,189 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.13,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "NATURE",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "STATUS",
+                    "objectId": "ANOMALOUS_GRAVITY_FIELD",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "duration": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5,
+                          5
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.33,
+                          3.67,
+                          4,
+                          4.33,
+                          4.67,
+                          5,
+                          5.34,
+                          5.67,
+                          6,
+                          6.42,
+                          6.92,
+                          7.5
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 20
+                      },
+                      "spellVulnerableRate": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.18,
+                          0.18,
+                          0.18,
+                          0.22,
+                          0.22,
+                          0.22,
+                          0.26,
+                          0.26,
+                          0.26,
+                          0.3,
+                          0.3,
+                          0.3
+                        ]
+                      },
+                      "moveSpeedScalar": {
+                        "verb": "IS",
+                        "value": 0.8
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "spellVulnerablePerstack": {
+                        "verb": "IS",
+                        "value": 0.1
+                      },
+                      "spellVulnerable_4stack": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.252,
+                          0.252,
+                          0.252,
+                          0.308,
+                          0.308,
+                          0.308,
+                          0.364,
+                          0.364,
+                          0.364,
+                          0.42,
+                          0.42,
+                          0.42
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "gilberta"
+    }
   },
   "statusEvents": [
     {
@@ -1215,5 +1261,135 @@
         }
       ]
     }
-  ]
+  ],
+  "BEAM_COHESION_ARTS_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Arcane Staff: Beam Cohesion Arts (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "gilberta"
+    }
+  },
+  "BEAM_COHESION_ARTS_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Arcane Staff: Beam Cohesion Arts (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "NATURE",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "gilberta"
+    }
+  }
 }

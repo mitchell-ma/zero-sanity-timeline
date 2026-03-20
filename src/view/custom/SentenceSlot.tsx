@@ -73,7 +73,7 @@ export default function SentenceSlot({ active, children, className, row }: Sente
 
   return (
     <Tag
-      ref={ref as any}
+      ref={ref as React.RefObject<HTMLDivElement>}
       className={`${baseClass} ${animClass} ${className ?? ''}`.trim()}
       onAnimationEnd={handleAnimationEnd}
     >

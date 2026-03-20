@@ -45,7 +45,9 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     }
   }
   const merged = { ...opJson, skills, skillTypeMap: skTypeMap, ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}) };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const json: Record<string, any> = { laevatain: merged };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sequence cache
   const seqCache = new Map<string, any>();
   return {
     getOperatorJson: (id: string) => json[id],
@@ -196,13 +198,9 @@ describe('Ultimate Energy Validation', () => {
       ownerId: SLOT_ID,
       columnId: SKILL_COLUMNS.BATTLE,
       startFrame: 400,
-      activationDuration: 132,
-      activeDuration: 0,
-      cooldownDuration: 0,
       skillPointCost: 100,
       segments: [{
-        durationFrames: 132,
-        label: 'Battle',
+        properties: { duration: 132, name: 'Battle' },
         frames: [
           { offsetFrame: 24, skillPointRecovery: 0, stagger: 0 },
           { offsetFrame: 100, skillPointRecovery: 0, stagger: 0, absoluteFrame: lastHitFrame, gaugeGain: 15 },
@@ -216,9 +214,7 @@ describe('Ultimate Energy Validation', () => {
       ownerId: SLOT_ID,
       columnId: SKILL_COLUMNS.ULTIMATE,
       startFrame: lastHitFrame,
-      activationDuration: 249,
-      activeDuration: 1800,
-      cooldownDuration: 1200,
+      segments: [{ properties: { duration: 249 } }],
     } as TimelineEvent;
 
     const events = [battleEvent, ultEvent];
@@ -288,13 +284,9 @@ describe('Ultimate Energy Validation', () => {
       ownerId: SLOT_ID,
       columnId: SKILL_COLUMNS.BATTLE,
       startFrame: 400,
-      activationDuration: 132,
-      activeDuration: 0,
-      cooldownDuration: 0,
       skillPointCost: 100,
       segments: [{
-        durationFrames: 132,
-        label: 'Battle',
+        properties: { duration: 132, name: 'Battle' },
         frames: [
           { offsetFrame: 100, skillPointRecovery: 0, stagger: 0, absoluteFrame: lastHitFrame, gaugeGain: 15 },
         ],
@@ -307,9 +299,7 @@ describe('Ultimate Energy Validation', () => {
       ownerId: SLOT_ID,
       columnId: SKILL_COLUMNS.ULTIMATE,
       startFrame: lastHitFrame,
-      activationDuration: 249,
-      activeDuration: 1800,
-      cooldownDuration: 1200,
+      segments: [{ properties: { duration: 249 } }],
     } as TimelineEvent;
 
     const events = [battleEvent, ultEvent];
@@ -402,9 +392,7 @@ describe('preConsumptionValue — MAX-at-frame logic', () => {
 function makeEvent(overrides: Partial<TimelineEvent> & { id: string; ownerId: string; columnId: string; startFrame: number }): TimelineEvent {
   return {
     name: '',
-    activationDuration: 0,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: 0 } }],
     ...overrides,
   } as TimelineEvent;
 }
@@ -427,10 +415,10 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns true when frame falls within a segment with ENHANCE clause', () => {
     const ev = ultWithSegments(0, [
-      { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-      { durationFrames: 36, label: 'Stasis', segmentType: SegmentType.STASIS, clause: enhanceClause },
-      { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
-      { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
+      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
+      { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
+      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
+      { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
     ]);
     // During Animation (0-248)
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 100)).toBe(true);
@@ -442,10 +430,10 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false during Cooldown (no ENHANCE clause)', () => {
     const ev = ultWithSegments(0, [
-      { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-      { durationFrames: 36, label: 'Stasis', segmentType: SegmentType.STASIS, clause: enhanceClause },
-      { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
-      { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
+      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
+      { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
+      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
+      { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
     ]);
     // During Cooldown (2085-3284)
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 2100)).toBe(false);
@@ -453,15 +441,15 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false before ultimate starts', () => {
     const ev = ultWithSegments(1000, [
-      { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-      { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
+      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
+      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
     ]);
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 500)).toBe(false);
   });
 
   test('returns false for wrong enhance object type', () => {
     const ev = ultWithSegments(0, [
-      { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
+      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
     ]);
     // ENHANCE BASIC_ATTACK doesn't match BATTLE_SKILL
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATTLE_SKILL', 500)).toBe(false);
@@ -469,7 +457,7 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false for different owner', () => {
     const ev = ultWithSegments(0, [
-      { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceClause },
+      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
     ]);
     expect(hasEnhanceClauseAtFrame([ev], 'slot-1', 'BASIC_ATTACK', 500)).toBe(false);
   });
@@ -488,10 +476,10 @@ describe('collectNoGainWindows', () => {
     const ev = makeEvent({
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
       segments: [
-        { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION },
-        { durationFrames: 36, label: 'Stasis', segmentType: SegmentType.STASIS },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE },
-        { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
+        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS } },
+        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } },
+        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
       ],
     });
     const windows = collectNoGainWindows([ev], SLOT);
@@ -505,10 +493,10 @@ describe('collectNoGainWindows', () => {
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
       segments: [
         {
-          durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION,
+          properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION },
           clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
         },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE },
+        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } },
       ],
     });
     const windows = collectNoGainWindows([ev], SLOT);
@@ -522,7 +510,7 @@ describe('collectNoGainWindows', () => {
     const ev = makeEvent({
       id: 'ult-1', ownerId: 'slot-1', columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
       segments: [
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE },
+        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } },
       ],
     });
     const windows = collectNoGainWindows([ev], SLOT);
@@ -533,7 +521,7 @@ describe('collectNoGainWindows', () => {
     const ev = makeEvent({
       id: 'battle-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
       segments: [
-        { durationFrames: 100, label: 'Battle', segmentType: SegmentType.ACTIVE },
+        { properties: { duration: 100, name: 'Battle' }, metadata: { segmentType: SegmentType.ACTIVE } },
       ],
     });
     const windows = collectNoGainWindows([ev], SLOT);
@@ -543,7 +531,7 @@ describe('collectNoGainWindows', () => {
   test('fallback for non-segmented ultimate events', () => {
     const ev = makeEvent({
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 100,
-      activationDuration: 249, activeDuration: 1800,
+      segments: [{ properties: { duration: 249 } }],
     });
     const windows = collectNoGainWindows([ev], SLOT);
     expect(windows.length).toBe(1);
@@ -557,7 +545,7 @@ describe('collectRawGaugeGains — natural SP consumption', () => {
     const ev = makeEvent({
       id: 'battle-1', ownerId: 'slot-0', columnId: SKILL_COLUMNS.BATTLE, startFrame: 500,
       skillPointCost: 100,
-      segments: [{ durationFrames: 132, label: 'Battle' }],
+      segments: [{ properties: { duration: 132, name: 'Battle' } }],
     });
     const gains = collectRawGaugeGains([ev]);
     // SP starts at 200 (all natural), cost 100 → 100 natural consumed
@@ -572,7 +560,7 @@ describe('collectRawGaugeGains — natural SP consumption', () => {
       id: 'battle-1', ownerId: 'slot-0', columnId: SKILL_COLUMNS.BATTLE, startFrame: 400,
       skillPointCost: 100,
       segments: [{
-        durationFrames: 132, label: 'Battle',
+        properties: { duration: 132, name: 'Battle' },
         frames: [
           { offsetFrame: 100, skillPointRecovery: 0, stagger: 0, absoluteFrame: 500, gaugeGain: 15 },
         ],
@@ -596,14 +584,14 @@ describe('collectRawGaugeGains — natural SP consumption', () => {
       id: 'battle-1', ownerId: 'slot-0', columnId: SKILL_COLUMNS.BATTLE, startFrame: 0,
       skillPointCost: 100,
       segments: [{
-        durationFrames: 200, label: 'B1',
+        properties: { duration: 200, name: 'B1' },
         frames: [{ offsetFrame: 100, skillPointRecovery: 50, stagger: 0, absoluteFrame: 100 }],
       }],
     });
     const ev2 = makeEvent({
       id: 'battle-2', ownerId: 'slot-0', columnId: SKILL_COLUMNS.BATTLE, startFrame: 200,
       skillPointCost: 100,
-      segments: [{ durationFrames: 132, label: 'B2' }],
+      segments: [{ properties: { duration: 132, name: 'B2' } }],
     });
     const gains = collectRawGaugeGains([ev1 as unknown as TimelineEvent, ev2 as unknown as TimelineEvent]);
     // First battle: first frame absoluteFrame=100, so SP gain is at frame 100
@@ -622,7 +610,7 @@ describe('collectRawGaugeGains — natural SP consumption', () => {
     const ev = makeEvent({
       id: 'combo-1', ownerId: 'slot-0', columnId: SKILL_COLUMNS.COMBO, startFrame: 300,
       segments: [{
-        durationFrames: 164, label: 'Combo',
+        properties: { duration: 164, name: 'Combo' },
         frames: [{ offsetFrame: 50, skillPointRecovery: 0, stagger: 0, absoluteFrame: 350, gaugeGain: 20, teamGaugeGain: 10 }],
       }],
     });
@@ -647,10 +635,10 @@ describe('ENHANCE clause variant validation', () => {
     return makeEvent({
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
       segments: [
-        { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-        { durationFrames: 36, label: 'Stasis', segmentType: SegmentType.STASIS, clause: enhanceClause },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: enhanceAndDisableClause },
-        { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
+        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
+        { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
+        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceAndDisableClause },
+        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
       ],
     });
   }
@@ -713,9 +701,9 @@ describe('validateEnhanced and validateDisabledVariants', () => {
     return makeEvent({
       id: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
       segments: [
-        { durationFrames: 249, label: 'Animation', segmentType: SegmentType.ANIMATION, clause: enhanceClause },
-        { durationFrames: 1800, label: 'Active', segmentType: SegmentType.ACTIVE, clause: disableClause },
-        { durationFrames: 1200, label: 'Cooldown', segmentType: SegmentType.COOLDOWN },
+        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
+        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: disableClause },
+        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
       ],
     });
   }

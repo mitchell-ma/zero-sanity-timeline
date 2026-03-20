@@ -10,8 +10,6 @@
     "ULTIMATE": "EXPLODING_BLITZ"
   },
   "SEEK_AND_HUNT": {
-    "name": "Seek and Hunt",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -421,16 +419,22 @@
         ]
       }
     ],
-    "originId": "arclight"
+    "properties": {
+      "name": "Seek and Hunt",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "arclight"
+    }
   },
   "TEMPESTUOUS_ARC": {
-    "name": "Tempestuous Arc",
-    "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP.",
     "properties": {
       "duration": {
         "value": 1.2,
         "unit": "SECOND"
-      }
+      },
+      "name": "Tempestuous Arc",
+      "description": "Instantly blinks to the enemy's side to deal 2 slashes that deal some Physical DMG. If the enemy has active Electrification, consume the Electrification to unleash an additional attack that deals Electric DMG and recovers some SP."
     },
     "frames": [
       {
@@ -565,7 +569,6 @@
         ]
       }
     ],
-    "originId": "arclight",
     "clause": [
       {
         "conditions": [],
@@ -606,23 +609,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "arclight"
+    }
   },
   "PEAL_OF_THUNDER": {
-    "name": "Peal of Thunder",
-    "description": "COMBO TRIGGER: When an enemy suffers Electrification or after an enemy's Electrification is consumed. \nBlinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP.",
     "properties": {
-      "duration": {
-        "value": 0.9,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -637,199 +630,10 @@
         ],
         "description": "Enemy has or consumed Electrification",
         "windowFrames": 720
-      }
+      },
+      "name": "Peal of Thunder",
+      "description": "COMBO TRIGGER: When an enemy suffers Electrification or after an enemy's Electrification is consumed. \nBlinks to the enemy's side to unleash a flurry of slashes that deals Physical DMG and recovers some SP."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.57,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.52,
-                      0.57,
-                      0.62,
-                      0.67,
-                      0.73,
-                      0.78,
-                      0.83,
-                      0.88,
-                      0.93,
-                      1,
-                      1.07,
-                      1.17
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "skillPoint": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      8,
-                      8,
-                      8,
-                      8,
-                      8,
-                      9,
-                      9,
-                      9,
-                      9,
-                      10,
-                      10,
-                      10
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.7,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.52,
-                      0.57,
-                      0.62,
-                      0.67,
-                      0.73,
-                      0.78,
-                      0.83,
-                      0.88,
-                      0.93,
-                      1,
-                      1.07,
-                      1.17
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.83,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 8
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.52,
-                      0.57,
-                      0.62,
-                      0.67,
-                      0.73,
-                      0.78,
-                      0.83,
-                      0.88,
-                      0.93,
-                      1,
-                      1.07,
-                      1.17
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "arclight",
     "clause": [
       {
         "conditions": [],
@@ -858,21 +662,252 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.4,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.07,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.52,
+                          0.57,
+                          0.62,
+                          0.67,
+                          0.73,
+                          0.78,
+                          0.83,
+                          0.88,
+                          0.93,
+                          1,
+                          1.07,
+                          1.17
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "skillPoint": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          8,
+                          8,
+                          8,
+                          8,
+                          8,
+                          9,
+                          9,
+                          9,
+                          9,
+                          10,
+                          10,
+                          10
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.52,
+                          0.57,
+                          0.62,
+                          0.67,
+                          0.73,
+                          0.78,
+                          0.83,
+                          0.88,
+                          0.93,
+                          1,
+                          1.07,
+                          1.17
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.33,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 8
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.52,
+                          0.57,
+                          0.62,
+                          0.67,
+                          0.73,
+                          0.78,
+                          0.83,
+                          0.88,
+                          0.93,
+                          1,
+                          1.07,
+                          1.17
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "arclight"
+    }
   },
   "EXPLODING_BLITZ": {
-    "name": "Exploding Blitz",
-    "description": "Performs a short forward dash while wreathed in arcs of electricity to deal Electric DMG and apply Electric Infliction to all enemies in the path. The lingering arcs explode after a short while, dealing another hit of Electric DMG. If the enemy has active Electric Infliction, consume the Electric Infliction and forcibly apply Electrification.",
     "properties": {
-      "animation": {
-        "duration": {
-          "value": 1.9,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
+      "name": "Exploding Blitz",
+      "description": "Performs a short forward dash while wreathed in arcs of electricity to deal Electric DMG and apply Electric Infliction to all enemies in the path. The lingering arcs explode after a short while, dealing another hit of Electric DMG. If the enemy has active Electric Infliction, consume the Electric Infliction and forcibly apply Electrification."
     },
     "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.9,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
       {
         "metadata": {
           "eventComponentType": "SEGMENT",
@@ -1051,7 +1086,6 @@
         ]
       }
     ],
-    "originId": "arclight",
     "clause": [
       {
         "conditions": [],
@@ -1068,7 +1102,10 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "arclight"
+    }
   },
   "TEMPESTUOUS_ARC_EMPOWERED": {
     "properties": {
@@ -1330,5 +1367,135 @@
         }
       ]
     }
-  ]
+  ],
+  "SEEK_AND_HUNT_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Seek and Hunt (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "arclight"
+    }
+  },
+  "SEEK_AND_HUNT_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Seek and Hunt (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "arclight"
+    }
+  }
 }

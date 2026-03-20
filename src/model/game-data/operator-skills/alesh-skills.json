@@ -10,8 +10,6 @@
     "ULTIMATE": "ONE_MONSTER_CATCH"
   },
   "ROD_CASTING": {
-    "name": "Basic Rod Casting",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -421,16 +419,22 @@
         ]
       }
     ],
-    "originId": "alesh"
+    "properties": {
+      "name": "Basic Rod Casting",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "alesh"
+    }
   },
   "UNCONVENTIONAL_LURE": {
-    "name": "Unconventional Lure",
-    "description": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies.",
     "properties": {
       "duration": {
         "value": 1.67,
         "unit": "SECOND"
-      }
+      },
+      "name": "Unconventional Lure",
+      "description": "Hooks a block of ice and slams it to deal Physical DMG to the enemy target. When hitting a target with Cryo Infliction, Alesh consumes all of the target's Cryo Infliction stacks, forcibly applies Solidification to the target, and recovers some SP based on the number of stacks consumed. This SP recovery effect can only trigger 1 time, even if the skill hits multiple enemies."
     },
     "frames": [
       {
@@ -568,7 +572,6 @@
         ]
       }
     ],
-    "originId": "alesh",
     "clause": [
       {
         "conditions": [],
@@ -609,23 +612,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "alesh"
+    }
   },
   "AUGER_ANGLING": {
-    "name": "Auger Angling",
-    "description": "COMBO TRIGGER: When the Arts Reaction or Originium Crystals of a nearby target is consumed. \nOpens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP.",
     "properties": {
-      "duration": {
-        "value": 1.3,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -640,167 +633,10 @@
         ],
         "description": "Arts Reaction or Crystals consumed nearby",
         "windowFrames": 720
-      }
+      },
+      "name": "Auger Angling",
+      "description": "COMBO TRIGGER: When the Arts Reaction or Originium Crystals of a nearby target is consumed. \nOpens an angling hole beneath the enemy that deals Physical DMG and recovers some SP. The skill has a chance to hook a Rare Fin that greatly increases the DMG dealt and recovers some more SP."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.27,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.33,
-                      0.37,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.53,
-                      0.57,
-                      0.6,
-                      0.64,
-                      0.69,
-                      0.75
-                    ]
-                  },
-                  "atkScale_1ex": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.53,
-                      0.59,
-                      0.64,
-                      0.69,
-                      0.75,
-                      0.8,
-                      0.85,
-                      0.91,
-                      0.96,
-                      1.03,
-                      1.11,
-                      1.2
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1,
-                      1.1,
-                      1.2,
-                      1.3,
-                      1.4,
-                      1.5,
-                      1.6,
-                      1.7,
-                      1.8,
-                      1.93,
-                      2.08,
-                      2.25
-                    ]
-                  },
-                  "atkScale_2ex": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.6,
-                      1.76,
-                      1.92,
-                      2.08,
-                      2.24,
-                      2.4,
-                      2.56,
-                      2.72,
-                      2.88,
-                      3.08,
-                      3.32,
-                      3.6
-                    ]
-                  },
-                  "skillPoint": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      12,
-                      12,
-                      12,
-                      12,
-                      13,
-                      13,
-                      15
-                    ]
-                  },
-                  "atbSp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "prob": {
-                    "verb": "IS",
-                    "value": 0.1
-                  },
-                  "uspNormal": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "alesh",
     "clause": [
       {
         "conditions": [],
@@ -829,151 +665,203 @@
           }
         ]
       }
-    ]
-  },
-  "ONE_MONSTER_CATCH": {
-    "name": "One Monster Catch!",
-    "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated.",
-    "properties": {
-      "duration": {
-        "value": 3.2,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2.583,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 3,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.8,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.77,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "CRYO",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.36,
-                      4.79,
-                      5.23,
-                      5.66,
-                      6.1,
-                      6.53,
-                      6.97,
-                      7.41,
-                      7.84,
-                      8.39,
-                      9.04,
-                      9.8
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "atbUp": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      12,
-                      12,
-                      12,
-                      12,
-                      12,
-                      12,
-                      12,
-                      12,
-                      12,
-                      15,
-                      15,
-                      15
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 20
-                  },
-                  "atbMax": {
-                    "verb": "IS",
-                    "value": 100
-                  },
-                  "skillPoint": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      25,
-                      25,
-                      25
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.33,
+                          0.37,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.53,
+                          0.57,
+                          0.6,
+                          0.64,
+                          0.69,
+                          0.75
+                        ]
+                      },
+                      "atkScale_1ex": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.53,
+                          0.59,
+                          0.64,
+                          0.69,
+                          0.75,
+                          0.8,
+                          0.85,
+                          0.91,
+                          0.96,
+                          1.03,
+                          1.11,
+                          1.2
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1,
+                          1.1,
+                          1.2,
+                          1.3,
+                          1.4,
+                          1.5,
+                          1.6,
+                          1.7,
+                          1.8,
+                          1.93,
+                          2.08,
+                          2.25
+                        ]
+                      },
+                      "atkScale_2ex": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.6,
+                          1.76,
+                          1.92,
+                          2.08,
+                          2.24,
+                          2.4,
+                          2.56,
+                          2.72,
+                          2.88,
+                          3.08,
+                          3.32,
+                          3.6
+                        ]
+                      },
+                      "skillPoint": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          12,
+                          12,
+                          12,
+                          12,
+                          13,
+                          13,
+                          15
+                        ]
+                      },
+                      "atbSp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "prob": {
+                        "verb": "IS",
+                        "value": 0.1
+                      },
+                      "uspNormal": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "alesh",
+    "metadata": {
+      "originId": "alesh"
+    }
+  },
+  "ONE_MONSTER_CATCH": {
+    "properties": {
+      "name": "One Monster Catch!",
+      "description": "Alesh hooks a fin of unbelievable size and slams it to deal Cryo DMG and apply Cryo Infliction to enemies in a large area of effect in front of him. He recovers some SP on hit, with additional SP gained for each target defeated."
+    },
     "clause": [
       {
         "conditions": [],
@@ -990,7 +878,165 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2.583,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.617,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.417,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "CRYO",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.36,
+                          4.79,
+                          5.23,
+                          5.66,
+                          6.1,
+                          6.53,
+                          6.97,
+                          7.41,
+                          7.84,
+                          8.39,
+                          9.04,
+                          9.8
+                        ]
+                      },
+                      "atbUp": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          12,
+                          12,
+                          12,
+                          12,
+                          12,
+                          12,
+                          12,
+                          12,
+                          12,
+                          15,
+                          15,
+                          15
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 20
+                      },
+                      "atbMax": {
+                        "verb": "IS",
+                        "value": 100
+                      },
+                      "skillPoint": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          25,
+                          25,
+                          25
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "alesh"
+    }
   },
   "UNCONVENTIONAL_LURE_EMPOWERED": {
     "properties": {
@@ -1046,5 +1092,135 @@
         ]
       }
     ]
+  },
+  "ROD_CASTING_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Basic Rod Casting (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "alesh"
+    }
+  },
+  "ROD_CASTING_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Basic Rod Casting (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "alesh"
+    }
   }
 }

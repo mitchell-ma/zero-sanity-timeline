@@ -10,8 +10,6 @@
     "ULTIMATE": "FRIGID_SNOWFIELD"
   },
   "HYPOTHERMIC_ASSAULT": {
-    "name": "Hypothermic Assault",
-    "description": "BASIC ATTACK: \nAn attack with up to 3 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -317,16 +315,22 @@
         "frames": []
       }
     ],
-    "originId": "snowshine"
+    "properties": {
+      "name": "Hypothermic Assault",
+      "description": "BASIC ATTACK: \nAn attack with up to 3 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "snowshine"
+    }
   },
   "SATURATED_DEFENSE": {
-    "name": "Saturated Defense",
-    "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker.",
     "properties": {
       "duration": {
         "value": 4.5,
         "unit": "SECOND"
-      }
+      },
+      "name": "Saturated Defense",
+      "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker."
     },
     "frames": [
       {
@@ -410,7 +414,6 @@
         ]
       }
     ],
-    "originId": "snowshine",
     "clause": [
       {
         "conditions": [],
@@ -451,23 +454,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "snowshine"
+    }
   },
   "POLAR_RESCUE": {
-    "name": "Polar Rescue",
-    "description": "COMBO TRIGGER: After controlled operator gets attacked and drops below  HP. \nSnowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. \nThe attribute of Will increases the amount of HP treatment.",
     "properties": {
-      "duration": {
-        "value": 0.5,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -485,10 +478,10 @@
         ],
         "description": "Controlled operator drops below 60% HP",
         "windowFrames": 720
-      }
+      },
+      "name": "Polar Rescue",
+      "description": "COMBO TRIGGER: After controlled operator gets attacked and drops below  HP. \nSnowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. \nThe attribute of Will increases the amount of HP treatment."
     },
-    "frames": [],
-    "originId": "snowshine",
     "clause": [
       {
         "conditions": [],
@@ -517,133 +510,46 @@
           }
         ]
       }
-    ]
-  },
-  "FRIGID_SNOWFIELD": {
-    "name": "Frigid Snowfield",
-    "description": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration.",
-    "properties": {
-      "duration": {
-        "value": 2.37,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.983,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 2.07,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.5,
             "unit": "SECOND"
           }
         },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 15
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2,
-                      2.2,
-                      2.4,
-                      2.6,
-                      2.8,
-                      3,
-                      3.2,
-                      3.4,
-                      3.6,
-                      3.85,
-                      4.15,
-                      4.5
-                    ]
-                  },
-                  "atkScaleLoop": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.29,
-                      0.32,
-                      0.35,
-                      0.37,
-                      0.4,
-                      0.43,
-                      0.46,
-                      0.49,
-                      0.52,
-                      0.55,
-                      0.6,
-                      0.65
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      20,
-                      20,
-                      20
-                    ]
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "interval": {
-                    "verb": "IS",
-                    "value": 0.5
-                  },
-                  "forstAllowCount": {
-                    "verb": "IS",
-                    "value": 2
-                  }
-                }
-              }
-            ]
-          }
-        ]
+        "frames": []
       }
     ],
-    "originId": "snowshine",
+    "metadata": {
+      "originId": "snowshine"
+    }
+  },
+  "FRIGID_SNOWFIELD": {
+    "properties": {
+      "name": "Frigid Snowfield",
+      "description": "Leaps into mid-air with a jetpack before slamming down with her shield to deal massive Cryo DMG to enemies in the area of effect. Also generates a Snow Zone (lasting several seconds) that deals Cryo DMG over time to enemies. The Snow Zone forcibly applies Solidification to enemies caught within it for a certain duration."
+    },
     "clause": [
       {
         "conditions": [],
@@ -660,6 +566,276 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.983,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.387,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.087,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2,
+                          2.2,
+                          2.4,
+                          2.6,
+                          2.8,
+                          3,
+                          3.2,
+                          3.4,
+                          3.6,
+                          3.85,
+                          4.15,
+                          4.5
+                        ]
+                      },
+                      "atkScaleLoop": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.29,
+                          0.32,
+                          0.35,
+                          0.37,
+                          0.4,
+                          0.43,
+                          0.46,
+                          0.49,
+                          0.52,
+                          0.55,
+                          0.6,
+                          0.65
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          20,
+                          20,
+                          20
+                        ]
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "interval": {
+                        "verb": "IS",
+                        "value": 0.5
+                      },
+                      "forstAllowCount": {
+                        "verb": "IS",
+                        "value": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "snowshine"
+    }
+  },
+  "HYPOTHERMIC_ASSAULT_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Hypothermic Assault (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "snowshine"
+    }
+  },
+  "HYPOTHERMIC_ASSAULT_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Hypothermic Assault (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "snowshine"
+    }
   }
 }

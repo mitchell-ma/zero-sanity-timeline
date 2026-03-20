@@ -21,8 +21,8 @@
  *    - Source event move causes combo's derived inflictions to update element
  *    - Combo outside window produces no derived inflictions
  */
-import { TimelineEvent } from '../consts/viewTypes';
-import { StatusType } from '../consts/enums';
+import { TimelineEvent, eventDuration } from '../consts/viewTypes';
+import { StatusType, SegmentType, TimeDependency } from '../consts/enums';
 import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
 
 function mockGetTriggerFromJson(id: string) {
@@ -77,7 +77,7 @@ const SLOT_LAEV = 'slot-0';
 
 function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: string; startFrame: number; ownerId: string }): TimelineEvent {
   return {
-    name: '', activationDuration: 0, activeDuration: 0, cooldownDuration: 0,
+    name: '', segments: [{ properties: { duration: 0 } }],
     ...overrides,
   };
 }
@@ -98,7 +98,7 @@ function makeFocusEvent(startFrame: number, durationFrames: number): TimelineEve
     ownerId: ENEMY_OWNER_ID,
     columnId: 'focus',
     startFrame,
-    activationDuration: durationFrames,
+    segments: [{ properties: { duration: durationFrames } }],
   });
 }
 
@@ -110,9 +110,8 @@ function makeLaevBattle(startFrame: number): TimelineEvent {
     ownerId: SLOT_LAEV,
     columnId: SKILL_COLUMNS.BATTLE,
     startFrame,
-    activationDuration: FPS, // 1s
     segments: [{
-      durationFrames: FPS,
+      properties: { duration: FPS },
       frames: [{
         offsetFrame: Math.round(0.67 * FPS),
         applyArtsInfliction: { element: 'HEAT', stacks: 1 },
@@ -129,7 +128,7 @@ function makeHeatInfliction(startFrame: number): TimelineEvent {
     ownerId: ENEMY_OWNER_ID,
     columnId: INFLICTION_COLUMNS.HEAT,
     startFrame,
-    activationDuration: 20 * FPS,
+    segments: [{ properties: { duration: 20 * FPS } }],
     sourceOwnerId: SLOT_LAEV,
     sourceSkillName: 'FLAMING_CINDERS',
   });
@@ -143,13 +142,14 @@ function makeAntalCombo(startFrame: number, comboTriggerColumnId: string): Timel
     ownerId: SLOT_ANTAL,
     columnId: SKILL_COLUMNS.COMBO,
     startFrame,
-    activationDuration: Math.round(0.8 * FPS),
-    animationDuration: Math.round(0.5 * FPS),
     comboTriggerColumnId,
-    segments: [{
-      durationFrames: Math.round(0.8 * FPS),
-      frames: [{ offsetFrame: Math.round(0.7 * FPS) }],
-    }],
+    segments: [
+      { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+      {
+        properties: { duration: Math.round(0.8 * FPS) },
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+      },
+    ],
   });
 }
 
@@ -228,9 +228,8 @@ describe('B. ComboSkillEventController.resolveComboTriggerColumnId', () => {
       ownerId,
       columnId: COMBO_WINDOW_COLUMN_ID,
       startFrame,
-      activationDuration: durationFrames,
       comboTriggerColumnId: triggerCol,
-      segments: [{ durationFrames }],
+      segments: [{ properties: { duration: durationFrames } }],
     });
   }
 
@@ -294,11 +293,11 @@ describe('C. Pipeline integration', () => {
     expect(processedCombo).toBeDefined();
     expect(processedCombo!.comboTriggerColumnId).toBe('heatInfliction');
 
-    // Should have derived a heat infliction from the combo
+    // Antal has APPLY SOURCE INFLICTION — should mirror the resolved trigger
     const derivedInflictions = processed.filter(
       (e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`),
     );
-    expect(derivedInflictions.length).toBeGreaterThan(0);
+    expect(derivedInflictions.length).toBe(1);
     expect(derivedInflictions[0].columnId).toBe('heatInfliction');
   });
 
@@ -311,7 +310,7 @@ describe('C. Pipeline integration', () => {
       ownerId: ENEMY_OWNER_ID,
       columnId: 'heatInfliction',
       startFrame: 220,
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_LAEV,
       sourceSkillName: 'FLAMING_CINDERS',
     });
@@ -393,7 +392,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'focus',
       startFrame: 80, // offset ~0.67s from Antal battle skill at frame 0
-      activationDuration: 60 * FPS, // 60s Focus duration
+      segments: [{ properties: { duration: 60 * FPS } }], // 60s Focus duration
       sourceOwnerId: ANTAL_SLOT,
       sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
     });
@@ -405,7 +404,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'heatInfliction',
       startFrame: 400, // some time after Focus is active
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI,
       sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -431,7 +430,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'focus',
       startFrame: 80,
-      activationDuration: 200, // short Focus — expires at frame 280
+      segments: [{ properties: { duration: 200 } }], // short Focus — expires at frame 280
       sourceOwnerId: ANTAL_SLOT,
       sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
     });
@@ -442,7 +441,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'heatInfliction',
       startFrame: 400, // after Focus expired at 280
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI,
       sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -466,7 +465,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'heatInfliction',
       startFrame: 400,
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI,
       sourceSkillName: 'BURST_OF_PASSION',
     });
@@ -489,7 +488,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'focus',
       startFrame: 0,
-      activationDuration: 60 * FPS,
+      segments: [{ properties: { duration: 60 * FPS } }],
       sourceOwnerId: ANTAL_SLOT,
     });
 
@@ -499,7 +498,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'heatInfliction',
       startFrame: 400,
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: SLOT_AKEKURI,
     });
 
@@ -512,7 +511,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
     );
     expect(antalWindows.length).toBe(1);
-    expect(antalWindows[0].activationDuration).toBe(720);
+    expect(eventDuration(antalWindows[0])).toBe(720);
   });
 
   test('D5: Antal self-infliction does not trigger her own combo window', () => {
@@ -523,7 +522,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'focus',
       startFrame: 0,
-      activationDuration: 60 * FPS,
+      segments: [{ properties: { duration: 60 * FPS } }],
       sourceOwnerId: ANTAL_SLOT,
     });
 
@@ -533,7 +532,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       ownerId: ENEMY_OWNER_ID,
       columnId: 'electricInfliction',
       startFrame: 400,
-      activationDuration: 10 * FPS,
+      segments: [{ properties: { duration: 10 * FPS } }],
       sourceOwnerId: ANTAL_SLOT, // Antal's own infliction
       sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
     });

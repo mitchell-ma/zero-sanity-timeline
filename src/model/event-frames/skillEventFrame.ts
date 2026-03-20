@@ -1,4 +1,4 @@
-import { ElementType, StatusType, TargetType } from "../../consts/enums";
+import { ElementType, FrameDependencyType, StatusType, TargetType } from "../../consts/enums";
 
 /** Arts infliction applied by a frame tick. */
 export interface FrameArtsInfliction {
@@ -143,6 +143,12 @@ export abstract class SkillEventFrame {
 
   /** Ultimate gauge gained on this frame, or 0. */
   getGaugeGain(): number { return 0; }
+
+  /** Frame dependency types (e.g. PREVIOUS_FRAME for cumulative DoT). */
+  getDependencyTypes(): readonly FrameDependencyType[] { return []; }
+
+  /** Whether this frame scored a critical hit (runtime state for simulation mode). */
+  isCrit = false;
 
   /** Whether this frame grants any skill points. */
   hasSkillPointRecovery(): boolean { return this.getSkillPointRecovery() > 0; }

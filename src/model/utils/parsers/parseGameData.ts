@@ -130,7 +130,6 @@ interface SegmentData {
 interface SkillCategoryData {
   properties?: {
     duration?: { value: number; unit: string };
-    animation?: unknown;
   };
   frames?: FrameData[];
   segments?: SegmentData[];
@@ -509,7 +508,7 @@ async function runEndAxisParser(
 ): Promise<{ operatorType: string; skills: Record<string, unknown> } | null> {
   try {
     const { parseEndAxisOperator } = await import('./parseEndAxisGameData');
-    return await parseEndAxisOperator(roster as any[], gamedataId);
+    return await parseEndAxisOperator(roster as Parameters<typeof parseEndAxisOperator>[0], gamedataId);
   } catch (err) {
     console.warn(`  End-Axis parser failed for ${gamedataId}: ${(err as Error).message}`);
     return null;
@@ -659,8 +658,10 @@ async function parseOne(slug: string, roster: unknown[]) {
     const skills = merged.skills as Record<string, Record<string, unknown>>;
     for (const [categoryKey, desc] of Object.entries(skillDescriptions)) {
       if (skills[categoryKey]) {
-        skills[categoryKey].name = desc.name;
-        skills[categoryKey].description = desc.description;
+        if (!skills[categoryKey].properties) skills[categoryKey].properties = {};
+        const props = skills[categoryKey].properties as Record<string, unknown>;
+        props.name = desc.name;
+        props.description = desc.description;
       }
     }
     console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
@@ -746,8 +747,10 @@ async function parseAll(roster: unknown[]) {
       const skills = merged.skills as Record<string, Record<string, unknown>>;
       for (const [categoryKey, desc] of Object.entries(skillDescriptions)) {
         if (skills[categoryKey]) {
-          skills[categoryKey].name = desc.name;
-          skills[categoryKey].description = desc.description;
+          if (!skills[categoryKey].properties) skills[categoryKey].properties = {};
+          const props = skills[categoryKey].properties as Record<string, unknown>;
+          props.name = desc.name;
+          props.description = desc.description;
         }
       }
       console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
@@ -772,8 +775,8 @@ async function parseAll(roster: unknown[]) {
     saveOperator(operatorType, merged);
     results.push({
       key: operatorType,
-      hasLevels: !!(merged as any).allLevels,
-      skillCount: Object.keys((merged as any).skills ?? {}).length,
+      hasLevels: !!merged.allLevels,
+      skillCount: Object.keys((merged.skills as Record<string, unknown>) ?? {}).length,
     });
   }
 

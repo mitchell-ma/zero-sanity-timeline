@@ -211,26 +211,40 @@ Event (skill activation — e.g., one use of Battle Skill)
 ```
 
 - **Event**: The top-level skill activation. Each skill category is one event type.
-- **Segment**: A phase within an event. Basic attacks have explicit segments (one per sequence in the attack chain). Ultimates have explicit segments for each phase (Animation, Stasis, Active, Cooldown). All other skills are **single-segment events by default** — their flat `duration` + `frames[]` structure is shorthand for one implicit segment containing all frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation).
+- **Segment**: A phase within an event. Basic attacks have explicit segments (one per sequence in the attack chain). Ultimates and combo skills have explicit segments for each phase (Animation, Stasis, Active, Cooldown). Battle skills and single-phase skills are **single-segment events by default** — their flat `duration` + `frames[]` structure is shorthand for one implicit segment containing all frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation). The ANIMATION segment type (`segmentType: "ANIMATION"`) denotes the time-stop phase.
 - **Frame**: A single hit or tick within a segment. Frames carry timing (`offset`), resource interactions (SP, stagger), status interactions (inflictions), and per-level multipliers.
 
 Warfarin multiplier data is scoped to the **segment level** — each Warfarin skill ID (e.g., `attack1`, `attack2`, `normal_skill`) corresponds to one segment. Within a segment, `atk_scale` is the per-frame multiplier, and `display_atk_scale` is the approximate total across all frames in that segment.
 
 ### Skill Name and Description
 
-The four main skill categories (BASIC_ATTACK, BATTLE_SKILL, COMBO_SKILL, ULTIMATE) include `name` and `description` fields sourced from the Warfarin API.
+The four main skill categories (BASIC_ATTACK, BATTLE_SKILL, COMBO_SKILL, ULTIMATE) include `name` and `description` fields inside `properties`, sourced from the Warfarin API.
 
 ```json
 {
-  "name": "Smouldering Fire",
-  "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG..."
+  "properties": {
+    "name": "Smouldering Fire",
+    "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG..."
+  }
 }
 ```
 
-- `name`: Display name of the skill
-- `description`: Full skill description with rich text tags stripped
+- `properties.name`: Display name of the skill
+- `properties.description`: Full skill description with rich text tags stripped
 
 Variant skill categories (ENHANCED_*, EMPOWERED_*) share descriptions with their base skills and do not have separate name/description fields.
+
+### Skill Origin
+
+Each skill includes a `metadata` object with an `originId` field pointing to the operator's camelCase ID:
+
+```json
+{
+  "metadata": {
+    "originId": "laevatain"
+  }
+}
+```
 
 ### Duration
 
@@ -459,16 +473,26 @@ The element type of the damage is determined by the operator's `elementType` (or
 
 ### Animation
 
-Skills with time-manipulating animations (ultimate cinematics, combo time stops) use:
+Skills with time-manipulating animations (ultimate cinematics, combo time stops) use an ANIMATION segment:
 
 ```json
-"animation": {
-  "duration": { "value": 2.07, "unit": "SECOND" },
-  "timeInteractionType": "TIME_STOP"
+{
+  "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION" },
+  "properties": {
+    "name": "Animation",
+    "duration": { "value": 2.07, "unit": "SECOND" },
+    "timeDependency": "REAL_TIME",
+    "timeInteractionType": "TIME_STOP"
+  },
+  "frames": []
 }
 ```
 
+- `segmentType`: Must be `"ANIMATION"` — identifies this as the time-stop animation phase
+- `timeDependency`: `"REAL_TIME"` — animation is not affected by other time-stops
 - `timeInteractionType`: `TimeInteractionType` enum — `TIME_STOP`, `TIME_DELAY`, or `NONE`
+
+> **`animation` as a skill-level property is not allowed.** All animation timing must be expressed as an ANIMATION segment within the skill's `segments[]` array.
 
 ### Skill Category Shapes
 
@@ -552,11 +576,10 @@ Multi-segment event — uses explicit `segments` array when a skill has multiple
 
 #### COMBO_SKILL
 
-Single-segment combo skills use the flat format. Multi-segment (e.g., Ardelia's combo + explosion) use explicit `segments`.
+Combo skills use `segments[]` with an ANIMATION segment followed by a main segment containing the hit frames.
 
 ```json
 {
-  "duration": { "value": 1.37, "unit": "SECOND" },
   "resourceInteractions": [
     { "resourceType": "COOLDOWN", "interactionType": "CONSUME", "value": 10 },
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 25, "target": "SELF",
@@ -564,27 +587,62 @@ Single-segment combo skills use the flat format. Multi-segment (e.g., Ardelia's 
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "RECOVER", "value": 30, "target": "SELF",
       "conditions": { "enemiesHitThreshold": 2 } }
   ],
-  "animation": {
-    "duration": { "value": 0.566, "unit": "SECOND" },
-    "timeInteractionType": "TIME_STOP"
-  },
-  "frames": [...]
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION" },
+      "properties": {
+        "name": "Animation",
+        "duration": { "value": 0.566, "unit": "SECOND" },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": { "duration": { "value": 0.804, "unit": "SECOND" } },
+      "frames": [...]
+    }
+  ]
 }
 ```
 
 #### ULTIMATE
 
+Ultimates use typed `segments[]` with ANIMATION, STASIS, ACTIVE, and COOLDOWN phases:
+
 ```json
 {
-  "duration": { "value": 2.37, "unit": "SECOND" },
   "resourceInteractions": [
     { "resourceType": "ULTIMATE_ENERGY", "interactionType": "CONSUME", "value": 300 }
   ],
-  "animation": {
-    "duration": { "value": 2.07, "unit": "SECOND" },
-    "timeInteractionType": "TIME_STOP"
-  },
-  "frames": []
+  "segments": [
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION" },
+      "properties": {
+        "name": "Animation",
+        "duration": { "value": 2.07, "unit": "SECOND" },
+        "timeDependency": "REAL_TIME",
+        "timeInteractionType": "TIME_STOP"
+      },
+      "frames": []
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "STASIS" },
+      "properties": { "name": "Stasis", "duration": { "value": 0.3, "unit": "SECOND" } },
+      "frames": []
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ACTIVE" },
+      "properties": { "name": "Active", "duration": { "value": 15, "unit": "SECOND" } },
+      "frames": []
+    },
+    {
+      "metadata": { "eventComponentType": "SEGMENT", "segmentType": "COOLDOWN" },
+      "properties": { "name": "Cooldown", "duration": { "value": 10, "unit": "SECOND" }, "timeDependency": "REAL_TIME" },
+      "frames": []
+    }
+  ]
 }
 ```
 
@@ -786,11 +844,18 @@ The `skillOverrides` field stores manually verified corrections that take preced
 ```json
 "skillOverrides": {
   "COMBO_SKILL": {
-    "animation": {
-      "duration": { "value": 0.729, "unit": "SECOND" },
-      "timeInteractionType": "TIME_STOP",
-      "dataSources": ["SELF"]
-    }
+    "segments": [
+      {
+        "metadata": { "eventComponentType": "SEGMENT", "segmentType": "ANIMATION", "dataSources": ["SELF"] },
+        "properties": {
+          "name": "Animation",
+          "duration": { "value": 0.729, "unit": "SECOND" },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      }
+    ]
   },
   "ULTIMATE": {
     "frames": [...],
@@ -805,7 +870,8 @@ The `skillOverrides` field stores manually verified corrections that take preced
 - Parsers always update `skills` (base data) but **never modify** `skillOverrides`
 - At read time, `skillOverrides` values take precedence over `skills` via deep merge
 - When new source data conflicts with an override, the parser logs a warning — the new source may be more accurate and the override should be re-verified
-- Override granularity: category-level properties (`animation`, `duration`), frame arrays, or segment arrays
+- Override granularity: category-level properties (`duration`), frame arrays, or segment arrays
+- **`animation` is not a valid property key** — animation timing must be an ANIMATION segment
 
 ---
 

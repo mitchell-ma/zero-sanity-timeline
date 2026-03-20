@@ -54,10 +54,13 @@ interface Segment {
   metadata: {
     eventComponentType: string;
     dataSources: string[];
+    segmentType?: string;
   };
   properties: {
     duration: Duration;
     name?: string;
+    timeDependency?: string;
+    timeInteractionType?: string;
   };
   frames: Frame[];
 }
@@ -65,7 +68,6 @@ interface Segment {
 interface SkillCategory {
   properties?: {
     duration?: Duration;
-    animation?: { duration: Duration; timeInteractionType: string };
   };
   effects?: Effect[];
   frames?: Frame[];
@@ -396,11 +398,12 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
   const result: SkillCategory = {
     properties: {
       duration: dur(char.link_duration),
-      animation: {
-        duration: dur(0.5),
-        timeInteractionType: 'TIME_STOP',
-      },
     },
+    segments: [{
+      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
+      properties: { duration: dur(0.5), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+      frames: [],
+    }],
     frames,
   };
 
@@ -466,13 +469,13 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
     const result: SkillCategory = { segments };
     if (effects.length > 0) result.effects = effects;
 
-    // Animation time-stop
+    // Animation time-stop — prepend ANIMATION segment
     if (char.ultimate_animationTime) {
-      if (!result.properties) result.properties = {};
-      result.properties.animation = {
-        duration: dur(char.ultimate_animationTime),
-        timeInteractionType: 'TIME_STOP',
-      };
+      segments.unshift({
+        metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
+        properties: { duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+        frames: [],
+      });
     }
 
     return result;
@@ -489,11 +492,12 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
   if (effects.length > 0) result.effects = effects;
 
   if (char.ultimate_animationTime) {
-    if (!result.properties) result.properties = {};
-    result.properties.animation = {
-      duration: dur(char.ultimate_animationTime),
-      timeInteractionType: 'TIME_STOP',
-    };
+    if (!result.segments) result.segments = [];
+    result.segments.unshift({
+      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
+      properties: { duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+      frames: [],
+    });
   }
 
   return result;

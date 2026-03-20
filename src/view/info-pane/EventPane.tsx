@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
-import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan } from '../../consts/viewTypes';
+import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
-import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail } from '../../controller/info-pane/eventPaneController';
+import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail, resolveEventTiming } from '../../controller/info-pane/eventPaneController';
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueue';
-import { getSkillMultiplier, getPerTickMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
+import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
+import type { SkillLevel, Potential } from '../../consts/types';
 import { type TranslatedEffect } from '../../utils/semanticsTranslation';
 
 function formatSegNum(index: number): string {
@@ -287,11 +288,9 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
         <div style={DETAIL_LABEL}>Event Timing (frames)</div>
         <div style={DETAIL_VALUE}>
           <div>startFrame: <span style={{ color: 'var(--text-primary)' }}>{event.startFrame}</span></div>
-          <div>activationDuration: <span style={{ color: 'var(--text-primary)' }}>{event.activationDuration}</span></div>
-          <div>activeDuration: <span style={{ color: 'var(--text-primary)' }}>{event.activeDuration}</span></div>
-          <div>cooldownDuration: <span style={{ color: 'var(--text-primary)' }}>{event.cooldownDuration}</span></div>
-          {event.animationDuration != null && (
-            <div>animationDuration: <span style={{ color: 'var(--text-primary)' }}>{event.animationDuration}</span></div>
+          <div>duration: <span style={{ color: 'var(--text-primary)' }}>{eventDuration(event)}</span></div>
+          {getAnimationDuration(event) > 0 && (
+            <div>animationDuration: <span style={{ color: 'var(--text-primary)' }}>{getAnimationDuration(event)}</span></div>
           )}
         </div>
 
@@ -361,11 +360,11 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                   Segment {seg.index + 1}
                   {seg.properties?.duration && (
                     <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
-                      {' '}— {(seg.properties.duration as any).value}{(seg.properties.duration as any).unit ? `${(seg.properties.duration as any).unit.toLowerCase().replace('second', 's')}` : ''}
+                      {' '}— {seg.properties.duration.value}{seg.properties.duration.unit ? `${seg.properties.duration.unit.toLowerCase().replace('second', 's')}` : ''}
                     </span>
                   )}
-                  {seg.metadata?.dataSources && (
-                    <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> [{seg.metadata.dataSources.join(', ')}]</span>
+                  {Array.isArray(seg.metadata?.dataSources) && (
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> [{(seg.metadata!.dataSources as string[]).join(', ')}]</span>
                   )}
                 </div>
 
@@ -390,11 +389,11 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                         <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>
                           FRAME {frame.index + 1}
                           {frame.properties?.offset && (
-                            <span> @ {(frame.properties.offset as any).value}{(frame.properties.offset as any).unit ? `${(frame.properties.offset as any).unit.toLowerCase().replace('second', 's')}` : ''}</span>
+                            <span> @ {frame.properties.offset.value}{frame.properties.offset.unit ? `${frame.properties.offset.unit.toLowerCase().replace('second', 's')}` : ''}</span>
                           )}
                         </div>
                         {frame.clause && frame.clause.length > 0 && (
-                          frame.clause.flatMap((p: any) => p.effects ?? []).map((e: any, i: number) => <EffectLine key={i} effect={e} />)
+                          frame.clause.flatMap((p) => p.effects ?? []).map((e, i) => <EffectLine key={i} effect={e} />)
                         )}
                       </div>
                     ))}
@@ -422,7 +421,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                 {se.clause && se.clause.length > 0 && (
                   <div style={{ marginTop: 2 }}>
                     <div style={{ ...DETAIL_MONO, color: 'var(--text-muted)', fontSize: 9 }}>CLAUSE</div>
-                    {se.clause.map((pred: any, pi: number) => (
+                    {se.clause.map((pred: { conditions?: Interaction[]; effects?: Effect[] }, pi: number) => (
                       <div key={pi} style={{ paddingLeft: 4, borderLeft: '2px solid rgba(255,221,68,0.1)' }}>
                         {pred.conditions?.map((c: Interaction, ci: number) => <InteractionLine key={ci} interaction={c} />)}
                         {pred.effects?.map((e: Effect, ei: number) => <EffectLine key={ei} effect={e} />)}
@@ -508,12 +507,14 @@ function EventPane({
 
   /** Format a duration (game-time metadata), with optional time-stop adjusted value on a separate line. */
   const dualDuration = (_startFrame: number, durationFrames: number, label?: string, processedDurationFrames?: number): React.ReactNode => {
-    const base = `${framesToSeconds(durationFrames)}s (${durationFrames}f)`;
     const hasTimeStop = processedDurationFrames != null && processedDurationFrames !== durationFrames;
+    const baseStr = `${framesToSeconds(durationFrames)}s (${durationFrames}f)`;
+    const baseLabel = label ? `${label}${hasTimeStop ? ' (base)' : ''}` : (hasTimeStop ? '(base)' : '');
+    const tsLabel = label ? `${label} (time stop)` : '(time stop)';
     return <>
-      <div>{label ? `${label}: ` : ''}{base}</div>
+      <div>{baseLabel ? `${baseLabel}: ` : ''}{baseStr}</div>
       {hasTimeStop && (
-        <div>{label ? `${label} (time-stop): ` : '(time-stop): '}{framesToSeconds(processedDurationFrames!)}s ({processedDurationFrames}f)</div>
+        <div>{tsLabel}: {framesToSeconds(processedDurationFrames!)}s ({processedDurationFrames}f)</div>
       )}
     </>;
   };
@@ -564,10 +565,10 @@ function EventPane({
     }
   }, [selectedFrames]);
 
-  const [activeSec,     setActiveSec]     = useState(framesToSeconds(event.activationDuration));
-  const [animSec,       setAnimSec]       = useState(framesToSeconds(event.animationDuration ?? 0));
-  const [activePhaseSec,     setActivePhaseSec]     = useState(framesToSeconds(event.activeDuration));
-  const [cooldownSec,   setCooldownSec]   = useState(framesToSeconds(event.cooldownDuration));
+  const [activeSec,     setActiveSec]     = useState(framesToSeconds(eventDuration(event)));
+  const [animSec,       setAnimSec]       = useState(framesToSeconds(getAnimationDuration(event)));
+  const [activePhaseSec,     setActivePhaseSec]     = useState(framesToSeconds(0));
+  const [cooldownSec,   setCooldownSec]   = useState(framesToSeconds(0));
   const [startWholeSec, setStartWholeSec] = useState(String(Math.floor(event.startFrame / FPS)));
   const [startModFrame, setStartModFrame] = useState(String(event.startFrame % FPS));
 
@@ -577,34 +578,39 @@ function EventPane({
     if (focusedRef.current) return;
     setStartWholeSec(String(Math.floor(event.startFrame / FPS)));
     setStartModFrame(String(event.startFrame % FPS));
-    setActiveSec(framesToSeconds(event.activationDuration));
-    setAnimSec(framesToSeconds(event.animationDuration ?? 0));
-    setActivePhaseSec(framesToSeconds(event.activeDuration));
-    setCooldownSec(framesToSeconds(event.cooldownDuration));
-  }, [event.id, event.startFrame, event.activationDuration, event.animationDuration, event.activeDuration, event.cooldownDuration]);
+    setActiveSec(framesToSeconds(eventDuration(event)));
+    setAnimSec(framesToSeconds(getAnimationDuration(event)));
+    setActivePhaseSec(framesToSeconds(0));
+    setCooldownSec(framesToSeconds(0));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id, event.startFrame, event.segments]);
 
   const computedStartFrame = Math.max(0, (parseInt(startWholeSec) || 0) * FPS + (parseInt(startModFrame) || 0));
 
   const commit = () => {
     const toFrames = (v: string) => secondsToFrames(isNaN(Number(v)) ? 0 : Number(v));
 
-    if (isSequenced) {
-      onUpdate(event.id, {
-        startFrame: computedStartFrame,
-        activationDuration: toFrames(activeSec),
-        activeDuration: toFrames(activePhaseSec),
-        cooldownDuration: toFrames(cooldownSec),
-        ...(event.columnId === SKILL_COLUMNS.ULTIMATE ? { animationDuration: toFrames(animSec) } : {}),
-      });
-    } else {
-      onUpdate(event.id, {
-        startFrame: computedStartFrame,
-        activationDuration: toFrames(activeSec),
-        activeDuration: toFrames(activePhaseSec),
-        cooldownDuration: toFrames(cooldownSec),
-        ...(event.columnId === SKILL_COLUMNS.ULTIMATE ? { animationDuration: toFrames(animSec) } : {}),
-      });
-    }
+    // For ultimates, update the ANIMATION segment duration instead of a top-level field
+    const animSegmentUpdate = event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments
+      ? {
+          segments: event.segments.map((seg) =>
+            seg.metadata?.segmentType === SegmentType.ANIMATION
+              ? { ...seg, properties: { ...seg.properties, duration: toFrames(animSec) } }
+              : seg,
+          ),
+        }
+      : {};
+
+    const newDuration = toFrames(activeSec);
+    const newSegments = animSegmentUpdate.segments
+      ?? (event.segments.length === 1
+        ? [{ ...event.segments[0], properties: { ...event.segments[0].properties, duration: newDuration } }]
+        : event.segments);
+
+    onUpdate(event.id, {
+      startFrame: computedStartFrame,
+      segments: newSegments,
+    });
   };
 
   const handleFocus = () => { focusedRef.current = true; };
@@ -613,23 +619,17 @@ function EventPane({
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
   };
 
-  const totalDurationFrames = isSequenced
-    ? computeSegmentsSpan(event.segments!)
-    : event.activationDuration + event.activeDuration + event.cooldownDuration;
+  const timing = resolveEventTiming(event, processedEvent);
 
-  const processedTotalDurationFrames = processedEvent
-    ? (processedEvent.segments && processedEvent.segments.length > 0
-        ? computeSegmentsSpan(processedEvent.segments)
-        : processedEvent.activationDuration + processedEvent.activeDuration + processedEvent.cooldownDuration)
-    : totalDurationFrames;
+  const totalDurationFrames = timing.total.base;
+  const processedTotalDurationFrames = timing.total.withTimeStop ?? timing.total.base;
+  const hasTimeStopDiff = timing.total.withTimeStop != null;
 
-  const hasTimeStopDiff = processedTotalDurationFrames !== totalDurationFrames;
-
-  // Per-phase processed durations (for time-stop display)
-  const pActivation = processedEvent?.activationDuration;
-  const pActive = processedEvent?.activeDuration;
-  const pCooldown = processedEvent?.cooldownDuration;
-  const pAnimation = processedEvent?.animationDuration;
+  const pActivation = timing.activation.withTimeStop ?? undefined;
+  const pActive = timing.active.withTimeStop ?? undefined;
+  const pCooldown = timing.cooldown.withTimeStop ?? undefined;
+  const pAnimation = timing.animation?.withTimeStop ?? undefined;
+  const baseActivation = timing.activation.base;
 
 
 
@@ -1003,19 +1003,19 @@ function EventPane({
             if (isSequenced && event.segments!.length > 0) {
               for (let si = 0; si < event.segments!.length; si++) {
                 const seg = event.segments![si];
-                if (!seg.label) continue;
+                if (!seg.properties.name) continue;
                 const m = getSkillMultiplier(
                   operatorId,
                   event.name as CombatSkillsType,
                   si,
-                  skillLevel as any,
-                  (stats?.operator.potential ?? 0) as any,
+                  skillLevel as SkillLevel,
+                  (stats?.operator.potential ?? 0) as Potential,
                 );
                 if (m != null) {
-                  const isNumeric = /^\d+$/.test(seg.label);
+                  const isNumeric = /^\d+$/.test(seg.properties.name!);
                   const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames?.length ?? 1;
                   segMultipliers.push({
-                    label: seg.name ?? (isNumeric ? `Seq ${seg.label}` : seg.label),
+                    label: seg.properties.name ?? (isNumeric ? `Seq ${seg.properties.name}` : seg.properties.name!),
                     value: m,
                     maxFrames,
                   });
@@ -1026,30 +1026,36 @@ function EventPane({
                 operatorId,
                 event.name as CombatSkillsType,
                 undefined,
-                skillLevel as any,
-                (stats?.operator.potential ?? 0) as any,
+                skillLevel as SkillLevel,
+                (stats?.operator.potential ?? 0) as Potential,
               );
               if (overallMultiplier != null && defaultSegs) {
                 overallMaxFrames = defaultSegs.reduce((sum, s) => sum + (s.frames?.length ?? 0), 0);
               }
               // Check if this skill has per-tick ramping multipliers
-              const tick0 = getPerTickMultiplier(
+              const tick0 = getFrameMultiplier(
                 operatorId,
                 event.name as CombatSkillsType,
-                skillLevel as any,
-                (stats?.operator.potential ?? 0) as any,
+                skillLevel as SkillLevel,
+                (stats?.operator.potential ?? 0) as Potential,
                 0,
               );
               if (tick0 != null && overallMaxFrames > 1) {
-                const tick1 = getPerTickMultiplier(
+                const tick1 = getFrameMultiplier(
                   operatorId,
                   event.name as CombatSkillsType,
-                  skillLevel as any,
-                  (stats?.operator.potential ?? 0) as any,
+                  skillLevel as SkillLevel,
+                  (stats?.operator.potential ?? 0) as Potential,
                   1,
                 );
-                perTickBase = tick0;
-                perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
+                if (tick1 != null && tick1 < tick0) {
+                  // PREVIOUS_FRAME dependency: tick0 is base hit, tick1 is DoT per tick
+                  perTickBase = tick0;
+                  perTickIncrement = tick1;
+                } else {
+                  perTickBase = tick0;
+                  perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
+                }
                 perTickFrames = overallMaxFrames;
               }
             }
@@ -1212,9 +1218,7 @@ function EventPane({
 
         {(() => {
           if (!allProcessedEvents || event.ownerId === ENEMY_OWNER_ID) return null;
-          const totalDuration = event.segments
-            ? computeSegmentsSpan(event.segments)
-            : event.activationDuration;
+          const totalDuration = computeSegmentsSpan(event.segments);
           const mods = resolveActiveModifiers(event.startFrame, event.startFrame + totalDuration, allProcessedEvents);
           if (mods.length === 0) return null;
           return (
@@ -1332,7 +1336,7 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Animation</span>
               <div className="edit-info-text">
-                {dualDuration(event.startFrame, event.animationDuration ?? 0, undefined, pAnimation)}
+                {dualDuration(event.startFrame, getAnimationDuration(event), undefined, pAnimation)}
               </div>
             </div>
 
@@ -1340,8 +1344,8 @@ function EventPane({
               <span className="edit-section-label">Statis</span>
               <div className="edit-info-text">
                 {dualDuration(
-                  event.startFrame + (event.animationDuration ?? 0),
-                  event.activationDuration - (event.animationDuration ?? 0),
+                  event.startFrame + getAnimationDuration(event),
+                  baseActivation - getAnimationDuration(event),
                   undefined,
                   pActivation != null && pAnimation != null ? pActivation - (pAnimation ?? 0) : undefined,
                 )}
@@ -1351,13 +1355,14 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Active Phase</span>
               <div className="edit-info-text">
-                {dualDuration(event.startFrame + event.activationDuration, event.activeDuration, undefined, pActive)}
+                {dualDuration(event.startFrame + (event.segments.length >= 3 ? event.segments[0].properties.duration + event.segments[1].properties.duration : eventDuration(event)), event.segments.length >= 3 ? event.segments[2].properties.duration : 0, undefined, pActive)}
               </div>
-              {event.segments!.map((seg, si) => {
-                const ultSegName = seg.name ?? (seg.label ? seg.label : null);
+              {event.segments.map((seg, si) => {
+                const ultSegName = seg.properties.name ?? null;
                 const ultSegHeader = ultSegName
                   ? `${ultSegName} (${formatSegNum(si)})`
-                  : event.segments!.length > 1 ? formatSegNum(si) : null;
+                  : event.segments.length > 1 ? formatSegNum(si) : null;
+                const segOffsetFrames = event.segments.slice(0, si).reduce((acc, s) => acc + s.properties.duration, 0);
                 return seg.frames && seg.frames.length > 0 && (
                   <div key={si} style={{ marginTop: 6 }}>
                     {ultSegHeader && (
@@ -1382,7 +1387,7 @@ function EventPane({
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
                           {verbose >= 1 && (() => {
-                            const absFrame = event.startFrame + event.activationDuration + f.offsetFrame;
+                            const absFrame = event.startFrame + segOffsetFrames + f.offsetFrame;
                             return (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
                                 @ {frameToDetailLabel(absFrame)} (F{absFrame})
@@ -1430,12 +1435,12 @@ function EventPane({
               })}
             </div>
 
-            {event.cooldownDuration > 0 && (
+            {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Cooldown</span>
                 <div style={{ padding: '4px 6px' }}>
                   <div className="edit-info-text">
-                    {dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, undefined, pCooldown)}
+                    {dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, undefined, pCooldown)}
                   </div>
                 </div>
               </div>
@@ -1456,11 +1461,12 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Active Phase</span>
               <DurationField label="Duration" value={activePhaseSec} onChange={setActivePhaseSec} onCommit={handleBlur} />
-              {event.segments!.map((seg, si) => {
-                const ultEditSegName = seg.name ?? (seg.label ? seg.label : null);
+              {event.segments.map((seg, si) => {
+                const ultEditSegName = seg.properties.name ?? null;
                 const ultEditSegHeader = ultEditSegName
                   ? `${ultEditSegName} (${formatSegNum(si)})`
-                  : event.segments!.length > 1 ? formatSegNum(si) : null;
+                  : event.segments.length > 1 ? formatSegNum(si) : null;
+                const editSegOffsetFrames = event.segments.slice(0, si).reduce((acc, s) => acc + s.properties.duration, 0);
                 return seg.frames && seg.frames.length > 0 && (
                   <div key={si} style={{ marginTop: 6 }}>
                     {ultEditSegHeader && (
@@ -1485,7 +1491,7 @@ function EventPane({
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
                           {verbose >= 1 && (() => {
-                            const absFrame = event.startFrame + event.activationDuration + f.offsetFrame;
+                            const absFrame = event.startFrame + editSegOffsetFrames + f.offsetFrame;
                             return (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
                                 @ {frameToDetailLabel(absFrame)} (F{absFrame})
@@ -1498,7 +1504,7 @@ function EventPane({
                               segmentIndex={si}
                               frameIndex={fi}
                               offsetFrame={f.offsetFrame}
-                              maxOffset={event.activeDuration}
+                              maxOffset={seg.properties.duration}
                               onUpdate={onUpdate}
                               segments={event.segments}
                             />
@@ -1543,7 +1549,7 @@ function EventPane({
               })}
             </div>
 
-            {event.cooldownDuration > 0 && (
+            {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && (
               <div className="edit-panel-section">
                 <span className="edit-section-label">Cooldown</span>
                 <div style={{ padding: '4px 6px' }}>
@@ -1557,11 +1563,11 @@ function EventPane({
               <div className="edit-info-text">
                 {dualDuration(
                   event.startFrame,
-                  event.activationDuration + event.activeDuration + event.cooldownDuration,
+                  totalDurationFrames,
                   'Total',
-                  processedEvent ? processedEvent.activationDuration + processedEvent.activeDuration + processedEvent.cooldownDuration : undefined,
+                  hasTimeStopDiff ? processedTotalDurationFrames : undefined,
                 )}
-                <div>Frames: {event.animationDuration ?? 0} / {event.activationDuration - (event.animationDuration ?? 0)} / {event.activeDuration} / {event.cooldownDuration}</div>
+                <div>Frames: {event.segments.map(s => s.properties.duration).join(' / ')}</div>
               </div>
             </div>
           </>
@@ -1571,10 +1577,10 @@ function EventPane({
           <>
             {(() => { let segCumOffset = 0; return event.segments!.map((seg, si) => {
               const segStartFrame = event.startFrame + segCumOffset;
-              segCumOffset += seg.durationFrames;
+              segCumOffset += seg.properties.duration;
               const pSeg = processedEvent?.segments?.[si];
-              const isNumericLabel = seg.label && /^\d+$/.test(seg.label);
-              const segName = seg.name ?? (seg.label && !isNumericLabel ? seg.label : null);
+              const isNumericLabel = seg.properties.name && /^\d+$/.test(seg.properties.name);
+              const segName = seg.properties.name && !isNumericLabel ? seg.properties.name : null;
               const segLabel = segName
                 ? `${segName} (${formatSegNum(si)})`
                 : formatSegNum(si);
@@ -1594,19 +1600,19 @@ function EventPane({
                   <div style={{ padding: '4px 6px' }}>
                     {verbose >= 1 && (
                       <div className="edit-info-text" style={{ marginBottom: 2 }}>
-                        <div>@ {frameToDetailLabel(segStartFrame)} — {frameToDetailLabel(segStartFrame + seg.durationFrames)}</div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>F{segStartFrame}–F{segStartFrame + seg.durationFrames}</div>
+                        <div>@ {frameToDetailLabel(segStartFrame)} — {frameToDetailLabel(segStartFrame + seg.properties.duration)}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>F{segStartFrame}–F{segStartFrame + seg.properties.duration}</div>
                       </div>
                     )}
                     {(readOnly || isDerived) ? (
                       <div className="edit-info-text">
-                        {dualDuration(segStartFrame, seg.durationFrames, 'Duration', pSeg?.durationFrames)}
+                        {dualDuration(segStartFrame, seg.properties.duration, 'Duration', pSeg?.properties.duration)}
                       </div>
                     ) : (
                       <SegmentDurationField
                         eventId={event.id}
                         segmentIndex={si}
-                        durationFrames={seg.durationFrames}
+                        durationFrames={seg.properties.duration}
                         onUpdate={onUpdate}
                         segments={event.segments!}
                       />
@@ -1629,20 +1635,20 @@ function EventPane({
                         )}
                       </div>
                     )}
-                    {(seg.segmentType || seg.timeDependency) && (
+                    {(seg.metadata?.segmentType || seg.properties.timeDependency) && (
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
-                        {seg.segmentType && seg.segmentType !== SegmentType.NORMAL && (
-                          <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{seg.segmentType}</div>
+                        {seg.metadata?.segmentType && seg.metadata.segmentType !== SegmentType.NORMAL && (
+                          <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{seg.metadata.segmentType}</div>
                         )}
-                        {seg.timeDependency && (
-                          <div><span style={{ color: 'var(--text-muted)' }}>Time: </span>{seg.timeDependency}</div>
+                        {seg.properties.timeDependency && (
+                          <div><span style={{ color: 'var(--text-muted)' }}>Time: </span>{seg.properties.timeDependency}</div>
                         )}
                       </div>
                     )}
-                    {seg.statusLabel && (
+                    {(seg.unknown?.statusLabel as string | undefined) && (
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
                         <span style={{ color: 'var(--text-muted)' }}>Effect: </span>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: '#66cc88' }}>{seg.statusLabel}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: '#66cc88' }}>{seg.unknown!.statusLabel as string}</span>
                       </div>
                     )}
                     {dslData?.segmentEffects[si] && (
@@ -1687,7 +1693,7 @@ function EventPane({
                                   segmentIndex={si}
                                   frameIndex={fi}
                                   offsetFrame={f.offsetFrame}
-                                  maxOffset={Math.max(0, seg.durationFrames - 1)}
+                                  maxOffset={Math.max(0, seg.properties.duration - 1)}
                                   onUpdate={onUpdate}
                                   segments={event.segments!}
                                 />
@@ -1860,10 +1866,10 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Summary</span>
               <div className="edit-info-text" style={{ paddingLeft: 6 }}>
-                <div>Segments: {event.segments!.length}</div>
-                {dualDuration(event.startFrame, totalDurationFrames, 'Time', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
-                {event.columnId === SKILL_COLUMNS.ULTIMATE && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active phase', pActive)}
-                {event.cooldownDuration > 0 && dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, 'Cooldown', pCooldown)}
+                <div>Segments: {event.segments.length}</div>
+                {dualDuration(event.startFrame, totalDurationFrames, 'Duration', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
+                {event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments.length >= 3 && event.segments[2].properties.duration > 0 && dualDuration(event.startFrame + event.segments[0].properties.duration + event.segments[1].properties.duration, event.segments[2].properties.duration, 'Active phase', pActive)}
+                {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, 'Cooldown', pCooldown)}
               </div>
             </div>
           </>
@@ -1871,22 +1877,22 @@ function EventPane({
           <div className="edit-panel-section">
             <span className="edit-section-label">Duration</span>
             <div className="edit-info-text">
-              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.animationDuration != null && event.animationDuration > 0 &&
-                dualDuration(event.startFrame, event.animationDuration, 'Animation', pAnimation)
+              {event.columnId === SKILL_COLUMNS.ULTIMATE && getAnimationDuration(event) > 0 &&
+                dualDuration(event.startFrame, getAnimationDuration(event), 'Animation', pAnimation)
               }
               {event.columnId === SKILL_COLUMNS.ULTIMATE ? (
                 dualDuration(
-                  event.startFrame + (event.animationDuration ?? 0),
-                  event.activationDuration - (event.animationDuration ?? 0),
+                  event.startFrame + getAnimationDuration(event),
+                  baseActivation - getAnimationDuration(event),
                   'Statis',
                   pActivation != null && pAnimation != null ? pActivation - (pAnimation ?? 0) : undefined,
                 )
               ) : (
-                dualDuration(event.startFrame, event.activationDuration, 'Time', pActivation)
+                dualDuration(event.startFrame, baseActivation, 'Duration', pActivation)
               )}
-              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.activeDuration > 0 && dualDuration(event.startFrame + event.activationDuration, event.activeDuration, 'Active', pActive)}
-              {event.cooldownDuration > 0 && dualDuration(event.startFrame + event.activationDuration + event.activeDuration, event.cooldownDuration, 'Cooldown', pCooldown)}
-              {(event.activeDuration > 0 || event.cooldownDuration > 0) && dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
+              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments.length >= 3 && event.segments[2].properties.duration > 0 && dualDuration(event.startFrame + event.segments[0].properties.duration + event.segments[1].properties.duration, event.segments[2].properties.duration, 'Active', pActive)}
+              {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, 'Cooldown', pCooldown)}
+              {event.segments.length > 1 && dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
             </div>
           </div>
         ) : event.columnId === 'dash' ? (
@@ -1894,7 +1900,7 @@ function EventPane({
             <span className="edit-section-label">Duration</span>
             <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
             <div className="edit-info-text" style={{ marginTop: 4 }}>
-              <div>{event.activationDuration}f</div>
+              <div>{eventDuration(event)}f</div>
             </div>
           </div>
         ) : (
@@ -1928,9 +1934,9 @@ function EventPane({
             <div className="edit-panel-section">
               <span className="edit-section-label">Info</span>
               <div className="edit-info-text">
-                {dualDuration(event.startFrame, event.activationDuration, 'Time', pActivation)}
+                {dualDuration(event.startFrame, baseActivation, 'Duration', pActivation)}
                 {dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
-                <div>Frames: {event.activationDuration} / {event.activeDuration} / {event.cooldownDuration}</div>
+                <div>Frames: {event.segments.map(s => s.properties.duration).join(' / ')}</div>
               </div>
             </div>
           </>
@@ -1963,9 +1969,8 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
   const derivedSegs = processedEvent.segments ?? [];
 
   const hasSegDiff = rawSegs.length !== derivedSegs.length
-    || rawSegs.some((s, i) => s.durationFrames !== derivedSegs[i]?.durationFrames);
-  const hasDurationDiff = event.activationDuration !== processedEvent.activationDuration
-    || event.activeDuration !== processedEvent.activeDuration;
+    || rawSegs.some((s, i) => s.properties.duration !== derivedSegs[i]?.properties.duration);
+  const hasDurationDiff = eventDuration(event) !== eventDuration(processedEvent);
 
   const fmt = (f: number) => `${framesToSeconds(f)}s (${f}f)`;
   const fmtAbs = (f: number) => `${f} (${framesToSeconds(f)}s, f${f % 120})`;
@@ -1981,10 +1986,8 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         <div>id: {event.id}</div>
         <div>startFrame: {event.startFrame} ({framesToSeconds(event.startFrame)}s, f{event.startFrame % 120})</div>
         <div>columnId: {event.columnId}</div>
-        {event.animationDuration != null && <div>animationDuration: {fmt(event.animationDuration)}</div>}
-        <DebugDiffRow label="activationDuration" raw={event.activationDuration} derived={processedEvent.activationDuration} />
-        <DebugDiffRow label="activeDuration" raw={event.activeDuration} derived={processedEvent.activeDuration} />
-        <div>cooldownDuration: {fmt(event.cooldownDuration)}</div>
+        {getAnimationDuration(event) > 0 && <div>animationDuration: {fmt(getAnimationDuration(event))}</div>}
+        <DebugDiffRow label="duration" raw={eventDuration(event)} derived={eventDuration(processedEvent)} />
         {event.timeInteraction != null && <div>timeInteraction: {event.timeInteraction}</div>}
         {event.timeStop != null && <div>timeStop: {event.timeStop}</div>}
         {event.timeDependency != null && <div>timeDependency: {event.timeDependency}</div>}
@@ -1999,18 +2002,19 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       </div>
 
       {/* Time-stop region */}
-      {event.animationDuration != null && event.animationDuration > 0 && (
+      {getAnimationDuration(event) > 0 && (
         event.columnId === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO ||
         (event.columnId === 'dash' && event.isPerfectDodge)
       ) && (() => {
         const rawStart = event.startFrame;
-        const rawEnd = rawStart + event.animationDuration!;
-        const procEnd = rawStart + (processedEvent.animationDuration ?? event.animationDuration!);
+        const rawAnimDur = getAnimationDuration(event);
+        const rawEnd = rawStart + rawAnimDur;
+        const procEnd = rawStart + (getAnimationDuration(processedEvent) || rawAnimDur);
         const hasAbsDiff = procEnd !== rawEnd;
         return (
           <div style={{ marginBottom: 6 }}>
             <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>Time Stop</div>
-            <div>duration: {fmt(event.animationDuration!)}</div>
+            <div>duration: {fmt(rawAnimDur)}</div>
             <div>raw: {fmtAbs(rawStart)} → {fmtAbs(rawEnd)}</div>
             {hasAbsDiff && (
               <div style={{ color: 'var(--gold)' }}>abs: {fmtAbs(rawStart)} → {fmtAbs(procEnd)}</div>
@@ -2027,18 +2031,18 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
           </div>
           {derivedSegs.map((dSeg, si) => {
             const rSeg = rawSegs[si];
-            const segStart = processedEvent.startFrame + derivedSegs.slice(0, si).reduce((s, seg) => s + seg.durationFrames, 0);
+            const segStart = processedEvent.startFrame + derivedSegs.slice(0, si).reduce((s, seg) => s + seg.properties.duration, 0);
             return (
               <div key={si} style={{ marginBottom: 6, paddingLeft: 8, borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ color: 'var(--text-primary)' }}>
-                  [{si}] {dSeg.label ?? `Seg ${si + 1}`} @ {fmtAbs(segStart)}
+                  [{si}] {dSeg.properties.name ?? `Seg ${si + 1}`} @ {fmtAbs(segStart)}
                 </div>
                 <DebugDiffRow
                   label="durationFrames"
-                  raw={rSeg?.durationFrames}
-                  derived={dSeg.durationFrames}
+                  raw={rSeg?.properties.duration}
+                  derived={dSeg.properties.duration}
                 />
-                {dSeg.timeDependency != null && <div>timeDependency: {dSeg.timeDependency}</div>}
+                {dSeg.properties.timeDependency != null && <div>timeDependency: {dSeg.properties.timeDependency}</div>}
 
                 {/* Frames */}
                 {dSeg.frames && dSeg.frames.length > 0 && (
@@ -2062,7 +2066,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                                 abs: {fmtAbs(dFrame.absoluteFrame)}
                               </span>
                               {rFrame && (() => {
-                                const rawAbs = event.startFrame + (rawSegs.slice(0, si).reduce((s, seg) => s + seg.durationFrames, 0)) + rFrame.offsetFrame;
+                                const rawAbs = event.startFrame + (rawSegs.slice(0, si).reduce((s, seg) => s + seg.properties.duration, 0)) + rFrame.offsetFrame;
                                 return rawAbs !== dFrame.absoluteFrame ? (
                                   <span style={{ color: 'var(--gold)' }}>
                                     {' '}(raw: {fmtAbs(rawAbs)}, +{fmt(dFrame.absoluteFrame - rawAbs)})
@@ -2148,7 +2152,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
                 <span style={{ color }}>{ev.ownerId}:{ev.columnId}</span>
                 {' '}<span style={{ color: 'var(--text-muted)' }}>({label})</span>
                 {' '}@ {ev.startFrame}f
-                {' '}<span style={{ color: 'var(--text-muted)' }}>[{fmt(ev.activationDuration)}]</span>
+                {' '}<span style={{ color: 'var(--text-muted)' }}>[{fmt(eventDuration(ev))}]</span>
                 {ev.eventStatus && <span style={{ color: 'var(--gold)' }}> ({ev.eventStatus})</span>}
               </div>
               {children.sort((a, b) => a.startFrame - b.startFrame).map((child) => renderRow(child, depth + 1))}
@@ -2227,7 +2231,7 @@ function PipelineTimeline() {
       frame: ev.startFrame,
       type: 'QUEUE',
       label: ev.columnId,
-      detail: `${ev.id} [${fmt(ev.activationDuration)}]${ev.eventStatus ? ` (${ev.eventStatus})` : ''}`,
+      detail: `${ev.id} [${fmt(eventDuration(ev))}]${ev.eventStatus ? ` (${ev.eventStatus})` : ''}`,
       color: ev.eventStatus === EventStatusType.CONSUMED ? '#666' : '#dd8844',
     });
   }

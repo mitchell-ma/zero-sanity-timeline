@@ -10,8 +10,6 @@
     "ULTIMATE": "BLADE_GALE"
   },
   "SOARING_BREAK": {
-    "name": "Soaring Break",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -515,16 +513,22 @@
         ]
       }
     ],
-    "originId": "chenQianyu"
+    "properties": {
+      "name": "Soaring Break",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "chenQianyu"
+    }
   },
   "ASCENDING_STRIKE": {
-    "name": "Ascending Strike",
-    "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift.",
     "properties": {
       "duration": {
         "value": 0.83,
         "unit": "SECOND"
-      }
+      },
+      "name": "Ascending Strike",
+      "description": "Performs an uppercut slash at the target enemy, dealing Physical DMG and Lift."
     },
     "frames": [
       {
@@ -612,7 +616,6 @@
         ]
       }
     ],
-    "originId": "chenQianyu",
     "clause": [
       {
         "conditions": [],
@@ -653,23 +656,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "chenQianyu"
+    }
   },
   "SOAR_TO_THE_STARS": {
-    "name": "Soar to the Stars",
-    "description": "COMBO TRIGGER: When an enemy becomes Vulnerable. \nA slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way.",
     "properties": {
-      "duration": {
-        "value": 0.77,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -686,73 +679,10 @@
         ],
         "description": "Enemy becomes Vulnerable",
         "windowFrames": 720
-      }
+      },
+      "name": "Soar to the Stars",
+      "description": "COMBO TRIGGER: When an enemy becomes Vulnerable. \nA slashing dash that passes through the target enemy and deals Physical DMG and Lift to all enemies along the way."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.57,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.2,
-                      1.32,
-                      1.44,
-                      1.56,
-                      1.68,
-                      1.8,
-                      1.92,
-                      2.04,
-                      2.16,
-                      2.31,
-                      2.49,
-                      2.7
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "chenQianyu",
     "clause": [
       {
         "conditions": [],
@@ -781,512 +711,109 @@
           }
         ]
       }
-    ]
-  },
-  "BLADE_GALE": {
-    "name": "Blade Gale",
-    "description": "A 7-sequence slash attack that deals Physical DMG with each sequence to the target enemy. The final slash sequence deals even more DMG.",
-    "properties": {
-      "duration": {
-        "value": 3.73,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.63,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 1.93,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.27,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 15
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  },
-                  "poiseStart": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "poiseFinal": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.07,
+                "unit": "SECOND"
               }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.2,
+                          1.32,
+                          1.44,
+                          1.56,
+                          1.68,
+                          1.8,
+                          1.92,
+                          2.04,
+                          2.16,
+                          2.31,
+                          2.49,
+                          2.7
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.267,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.4,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.67,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 3.43,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.55,
-                      5,
-                      5.45,
-                      5.91,
-                      6.36,
-                      6.82,
-                      7.27,
-                      7.73,
-                      8.18,
-                      8.75,
-                      9.43,
-                      10.23
-                    ]
-                  }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "chenQianyu",
+    "metadata": {
+      "originId": "chenQianyu"
+    }
+  },
+  "BLADE_GALE": {
+    "properties": {
+      "name": "Blade Gale",
+      "description": "A 7-sequence slash attack that deals Physical DMG with each sequence to the target enemy. The final slash sequence deals even more DMG."
+    },
     "clause": [
       {
         "conditions": [],
@@ -1303,6 +830,655 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.63,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 2.1,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.3,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      },
+                      "poiseStart": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "poiseFinal": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.47,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.637,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.77,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.9,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.04,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.8,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.55,
+                          5,
+                          5.45,
+                          5.91,
+                          6.36,
+                          6.82,
+                          7.27,
+                          7.73,
+                          8.18,
+                          8.75,
+                          9.43,
+                          10.23
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "chenQianyu"
+    }
+  },
+  "SOARING_BREAK_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 2.5,
+        "unit": "SECOND"
+      },
+      "name": "Soaring Break (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 2.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "chenQianyu"
+    }
+  },
+  "SOARING_BREAK_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Soaring Break (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "chenQianyu"
+    }
   }
 }

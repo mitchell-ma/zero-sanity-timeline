@@ -8,7 +8,7 @@
  * exchange statuses, combo windows, frame positions, validation — happens here.
  * processInteractions.ts is a thin wrapper that delegates to this module.
  */
-import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
+import { TimelineEvent, EventSegmentData, eventDuration } from '../../consts/viewTypes';
 import { CombatSkillsType, ElementType, StatusType, TargetType } from '../../consts/enums';
 import type { Interaction } from '../../consts/semantics';
 import { evaluateConditions } from './conditionEvaluator';
@@ -20,7 +20,7 @@ import type { SlotTriggerWiring } from './processComboSkill';
 import {
   deriveSPRecovery,
   ELEMENT_TO_INFLICTION_COLUMN,
-  INFLICTION_DURATION, PHYSICAL_INFLICTION_DURATION, REACTION_DURATION,
+  INFLICTION_DURATION, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
   TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
   EXCHANGE_EVENT_DURATION,
@@ -38,7 +38,7 @@ import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretor } from './eventInterpretor';
 import { PriorityQueue } from './priorityQueue';
 import {
-  ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS,
+  ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMN_IDS,
   OPERATOR_COLUMNS, SKILL_COLUMNS, REACTION_COLUMN_IDS,
 } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -70,7 +70,7 @@ function collectFrameEffectEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+    if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -95,7 +95,7 @@ function collectFrameEffectEntries(
 
               const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
               if (teamColumnId) {
-                const ultActiveEnd = event.startFrame + event.activationDuration + event.activeDuration;
+                const ultActiveEnd = event.startFrame + eventDuration(event);
                 let linkDuration = Math.max(0, ultActiveEnd - absFrame);
                 if (pot >= 5) linkDuration += P5_LINK_EXTENSION_FRAMES;
                 entries.push({
@@ -116,9 +116,7 @@ function collectFrameEffectEntries(
                     ownerId: COMMON_OWNER_ID,
                     columnId: teamColumnId,
                     startFrame: absFrame,
-                    activationDuration: linkDuration,
-                    activeDuration: 0,
-                    cooldownDuration: 0,
+                    segments: [{ properties: { duration: linkDuration } }],
                     sourceOwnerId: event.ownerId,
                     sourceSkillName: event.name,
                   },
@@ -130,10 +128,12 @@ function collectFrameEffectEntries(
 
               if (statusEffect.segments && statusEffect.segments.length > 0) {
                 segments = statusEffect.segments.map(seg => ({
-                  durationFrames: seg.durationFrames,
-                  label: seg.name,
+                  properties: {
+                    duration: seg.durationFrames,
+                    name: seg.name,
+                  },
                   ...(seg.susceptibility && {
-                    susceptibility: resolveSusceptibility(seg.susceptibility, event.columnId, event.ownerId, loadoutProperties),
+                    unknown: { susceptibility: resolveSusceptibility(seg.susceptibility, event.columnId, event.ownerId, loadoutProperties) },
                   }),
                 }));
                 const firstSeg = statusEffect.segments[0];
@@ -163,9 +163,7 @@ function collectFrameEffectEntries(
                   ownerId: ENEMY_OWNER_ID,
                   columnId: statusEffect.status,
                   startFrame: absFrame,
-                  activationDuration: statusEffect.durationFrames,
-                  activeDuration: 0,
-                  cooldownDuration: 0,
+                  segments: [{ properties: { duration: statusEffect.durationFrames } }],
                   sourceOwnerId: event.ownerId,
                   sourceSkillName: event.name,
                   ...(susceptibility && { susceptibility }),
@@ -197,9 +195,7 @@ function collectFrameEffectEntries(
                   ownerId: ENEMY_OWNER_ID,
                   columnId: reactionColumnId,
                   startFrame: absFrame,
-                  activationDuration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
-                  activeDuration: 0,
-                  cooldownDuration: 0,
+                  segments: [{ properties: { duration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION } }],
                   statusLevel: frame.applyForcedReaction.statusLevel,
                   sourceOwnerId: event.ownerId,
                   sourceSkillName: event.name,
@@ -210,7 +206,7 @@ function collectFrameEffectEntries(
           }
         }
       }
-      cumulativeOffset += seg.durationFrames;
+      cumulativeOffset += seg.properties.duration;
     }
   }
 
@@ -236,9 +232,7 @@ function collectFrameEffectEntries(
         ownerId: ENEMY_OWNER_ID,
         columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
         startFrame: event.startFrame,
-        activationDuration: EXCHANGE_EVENT_DURATION,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: [{ properties: { duration: EXCHANGE_EVENT_DURATION } }],
         sourceOwnerId: event.ownerId,
         sourceSkillName: event.name,
       },
@@ -285,14 +279,14 @@ function collectInflictionEntries(
         sourceOwnerId: event.sourceOwnerId ?? event.ownerId,
         sourceSkillName: event.sourceSkillName ?? event.name,
         maxStacks: MAX_INFLICTION_STACKS,
-        durationFrames: event.activationDuration,
+        durationFrames: eventDuration(event),
         operatorSlotId: event.ownerId,
       });
       continue;
     }
 
     // Skill events: scan frame markers
-    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+    if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -305,7 +299,7 @@ function collectInflictionEntries(
 
           if (frame.applyArtsInfliction) {
             const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
-            if (columnId && columnId !== event.comboTriggerColumnId) {
+            if (columnId) {
               entries.push({
                 frame: absFrame,
                 priority: PRIORITY.INFLICTION_CREATE,
@@ -322,45 +316,32 @@ function collectInflictionEntries(
               });
             }
           }
-        }
-      }
-      cumulativeOffset += seg.durationFrames;
-    }
 
-    // Combo events: inflictions matching trigger source at each tick
-    if (event.comboTriggerColumnId && event.segments) {
-      const triggerCol = event.comboTriggerColumnId;
-      const isArts = INFLICTION_COLUMN_IDS.has(triggerCol);
-      const isPhysical = PHYSICAL_INFLICTION_COLUMN_IDS.has(triggerCol);
-      if (isArts || isPhysical) {
-        const fStopsCombo = foreignStopsFor(event, stops);
-        let cumOffset = 0;
-        for (let si = 0; si < event.segments.length; si++) {
-          const seg = event.segments[si];
-          if (seg.frames) {
-            for (let fi = 0; fi < seg.frames.length; fi++) {
-              const frame = seg.frames[fi];
-              const absFrame = absoluteFrame(event.startFrame, cumOffset, frame.offsetFrame, fStopsCombo);
+          // APPLY SOURCE INFLICTION: mirror the combo's trigger infliction
+          if (frame.duplicatesSourceInfliction && event.comboTriggerColumnId) {
+            const triggerCol = event.comboTriggerColumnId;
+            if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
               entries.push({
                 frame: absFrame,
                 priority: PRIORITY.INFLICTION_CREATE,
                 type: 'INFLICTION_CREATE',
-                id: `${event.id}-combo-${isArts ? 'inflict' : 'phys'}-${si}-${fi}`,
+                id: `${event.id}-combo-inflict-${si}-${fi}`,
                 statusName: triggerCol,
                 columnId: triggerCol,
                 ownerId: ENEMY_OWNER_ID,
                 sourceOwnerId: event.ownerId,
                 sourceSkillName: event.name,
                 maxStacks: MAX_INFLICTION_STACKS,
-                durationFrames: isArts ? INFLICTION_DURATION : PHYSICAL_INFLICTION_DURATION,
+                durationFrames: INFLICTION_DURATION,
                 operatorSlotId: event.ownerId,
               });
             }
           }
-          cumOffset += seg.durationFrames;
         }
       }
+      cumulativeOffset += seg.properties.duration;
     }
+
   }
 
   return entries;
@@ -391,12 +372,9 @@ function collectFreeformReactionEntries(
       sourceOwnerId: ev.sourceOwnerId,
       sourceSkillName: ev.sourceSkillName ?? ev.name,
       maxStacks: 0,
-      durationFrames: ev.activationDuration,
+      durationFrames: eventDuration(ev),
       operatorSlotId: ev.ownerId,
-      derivedEvent: {
-        ...ev,
-        segments: undefined, // let createReaction build fresh segments
-      },
+      derivedEvent: ev, // createReaction will rebuild segments
     });
   }
   return entries;
@@ -413,7 +391,7 @@ function collectConsumeEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
+    if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -464,7 +442,7 @@ function collectConsumeEntries(
           }
         }
       }
-      cumulativeOffset += seg.durationFrames;
+      cumulativeOffset += seg.properties.duration;
     }
   }
 
@@ -517,7 +495,7 @@ function collectAbsorptionFrameEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+    if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -579,7 +557,7 @@ function collectAbsorptionFrameEntries(
           }
         }
       }
-      cumulativeOffset += seg.durationFrames;
+      cumulativeOffset += seg.properties.duration;
     }
   }
 
@@ -599,7 +577,7 @@ function collectConsumeReactionEntries(
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    if (!event.segments || event.ownerId === ENEMY_OWNER_ID) continue;
+    if (event.ownerId === ENEMY_OWNER_ID) continue;
     const fStops = foreignStopsFor(event, stops);
     let cumOffset = 0;
     for (const seg of event.segments) {
@@ -668,7 +646,7 @@ function collectConsumeReactionEntries(
           }
         }
       }
-      cumOffset += seg.durationFrames;
+      cumOffset += seg.properties.duration;
     }
   }
 
@@ -794,7 +772,7 @@ export function processEventQueue(
 
   seed(collectFrameEffectEntries(extLate, loadoutProperties, stops));
   for (const ev of extLate) {
-    if (ev.columnId === SKILL_COLUMNS.COMBO && !ev.comboTriggerColumnId && ev.segments) {
+    if (ev.columnId === SKILL_COLUMNS.COMBO && !ev.comboTriggerColumnId) {
       seed([{
         frame: ev.startFrame,
         priority: PRIORITY.COMBO_RESOLVE,
@@ -884,6 +862,7 @@ export function processEventQueue(
   }
   const queueEventsToRegister = queueEvents.filter(ev => !freeformIds.has(ev.id));
   state.registerEvents([...queueEventsToRegister, ...comboWindows]);
+  state.mergeRawDurations(interpretor.controller);
 
   // ── Phase 8: Resolve frame positions & validate ─────────────────────────
   state.cacheFramePositions();

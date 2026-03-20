@@ -115,6 +115,7 @@ const { attachDefaultSegments } = require('../controller/appStateController');
 const { EMPTY_LOADOUT } = require('../view/OperatorLoadoutHeader');
 const { DEFAULT_LOADOUT_PROPERTIES } = require('../view/InformationPane');
 const { uniqueName } = require('../utils/loadoutStorage');
+const { eventDuration } = require('../consts/viewTypes');
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -170,9 +171,7 @@ describe('embedCodec', () => {
             ownerId: 'slot-0',
             columnId: 'battle',
             startFrame: 360,
-            activationDuration: 188,
-            activeDuration: 0,
-            cooldownDuration: 0,
+            segments: [{ properties: { duration: 188 } }],
           },
           {
             id: 'ev-2',
@@ -180,10 +179,7 @@ describe('embedCodec', () => {
             ownerId: 'slot-3',
             columnId: 'combo',
             startFrame: 720,
-            activationDuration: 92,
-            activeDuration: 0,
-            cooldownDuration: 0,
-            animationDuration: 60,
+                        segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
           },
         ],
         nextEventId: 3,
@@ -195,10 +191,11 @@ describe('embedCodec', () => {
       expect(decoded.events).toHaveLength(2);
       expect(decoded.events[0].name).toBe('FLAMING_CINDERS');
       expect(decoded.events[0].startFrame).toBe(360);
-      expect(decoded.events[0].activationDuration).toBe(188);
+      expect(eventDuration(decoded.events[0])).toBe(188);
       expect(decoded.events[1].name).toBe('ERUPTION_COLUMN');
       expect(decoded.events[1].ownerId).toBe('slot-3');
-      expect(decoded.events[1].animationDuration).toBe(60);
+      const animSeg = decoded.events[1].segments?.find(s => s.metadata?.segmentType === 'ANIMATION');
+      expect(animSeg?.properties.duration).toBe(60);
     });
 
     test('loadout stats deltas round-trip', async () => {
@@ -273,9 +270,7 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'battle',
           startFrame: 360,
-          activationDuration: 188,
-          activeDuration: 0,
-          cooldownDuration: 0,
+          segments: [{ properties: { duration: 188 } }],
         }],
       });
 
@@ -314,9 +309,7 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'battle',
           startFrame: 99999,
-          activationDuration: -50,
-          activeDuration: 0,
-          cooldownDuration: 0,
+          segments: [{ properties: { duration: -50 } }],
         }],
       });
 
@@ -324,7 +317,7 @@ describe('embedCodec', () => {
       const decoded = await decodeEmbed(encoded, []);
 
       expect(decoded.events[0].startFrame).toBeLessThanOrEqual(14400);
-      expect(decoded.events[0].activationDuration).toBeGreaterThanOrEqual(0);
+      expect(eventDuration(decoded.events[0])).toBeGreaterThanOrEqual(0);
     });
 
     test('control characters are stripped from strings', async () => {
@@ -363,9 +356,9 @@ describe('embedCodec', () => {
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
         segments: [
-          { name: 'N1', durationFrames: 60, label: '1', frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-          { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 30 }] },
-          { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
+          { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
+          { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
+          { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
         ],
       },
     };
@@ -378,9 +371,7 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 120,
-          activationDuration: 300,
-          activeDuration: 0,
-          cooldownDuration: 0,
+          segments: [{ properties: { duration: 300 } }],
           // No segments on the raw event — unedited
         }],
       });
@@ -389,9 +380,9 @@ describe('embedCodec', () => {
       const decoded = await decodeEmbed(encoded, [segmentColumn]);
 
       expect(decoded.events[0].startFrame).toBe(120);
-      expect(decoded.events[0].activationDuration).toBe(300);
-      // No segments stored — unedited event relies on template reattachment
-      expect(decoded.events[0].segments).toBeUndefined();
+      expect(eventDuration(decoded.events[0])).toBe(300);
+      // No edited segments stored — unedited event has a plain duration segment
+      expect(decoded.events[0].segments).toHaveLength(1);
     });
 
     test('edited segment durations round-trip', async () => {
@@ -402,13 +393,10 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 120,
-          activationDuration: 320,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          segments: [
-            { name: 'N1', durationFrames: 80, label: '1', frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-            { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 30 }] },
-            { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
+                    segments: [
+            { properties: { duration: 80, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
+            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
+            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
           ],
         }],
       });
@@ -418,9 +406,9 @@ describe('embedCodec', () => {
 
       expect(decoded.events[0].segments).toBeDefined();
       expect(decoded.events[0].segments).toHaveLength(3);
-      expect(decoded.events[0].segments[0].durationFrames).toBe(80); // edited
-      expect(decoded.events[0].segments[1].durationFrames).toBe(80); // unchanged
-      expect(decoded.events[0].segments[2].durationFrames).toBe(100); // unchanged
+      expect(decoded.events[0].segments[0].properties.duration).toBe(80); // edited
+      expect(decoded.events[0].segments[1].properties.duration).toBe(80); // unchanged
+      expect(decoded.events[0].segments[2].properties.duration).toBe(100); // unchanged
     });
 
     test('edited frame offsets round-trip', async () => {
@@ -431,13 +419,10 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 120,
-          activationDuration: 300,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          segments: [
-            { name: 'N1', durationFrames: 60, label: '1', frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
-            { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 30 }] },
-            { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 80 }] },
+                    segments: [
+            { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
+            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
+            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 80 }] },
           ],
         }],
       });
@@ -463,13 +448,10 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 0,
-          activationDuration: 300,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          segments: [
-            { name: 'N1', durationFrames: 60, label: '1', frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-            { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 40 }] },
-            { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
+                    segments: [
+            { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
+            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 40 }] },
+            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
           ],
         }],
       });
@@ -485,9 +467,9 @@ describe('embedCodec', () => {
       expect(decoded.events[0].segments[2].frames[0].offsetFrame).toBe(50);
       expect(decoded.events[0].segments[2].frames[1].offsetFrame).toBe(75);
       // Segment durations unchanged
-      expect(decoded.events[0].segments[0].durationFrames).toBe(60);
-      expect(decoded.events[0].segments[1].durationFrames).toBe(80);
-      expect(decoded.events[0].segments[2].durationFrames).toBe(100);
+      expect(decoded.events[0].segments[0].properties.duration).toBe(60);
+      expect(decoded.events[0].segments[1].properties.duration).toBe(80);
+      expect(decoded.events[0].segments[2].properties.duration).toBe(100);
     });
 
     test('edited frame offsets survive cleanSheetData + encode/decode', async () => {
@@ -502,13 +484,10 @@ describe('embedCodec', () => {
         ownerId: 'slot-0',
         columnId: 'basic',
         startFrame: 0,
-        activationDuration: 300,
-        activeDuration: 0,
-        cooldownDuration: 0,
-        segments: [
-          { name: 'N1', durationFrames: 60, label: '1', frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
-          { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 40 }] },
-          { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
+                segments: [
+          { properties: { duration: 60, name: '1' }, frames: [{ offsetFrame: 20 }, { offsetFrame: 45 }] },
+          { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 40 }] },
+          { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
         ],
       };
 
@@ -541,9 +520,7 @@ describe('embedCodec', () => {
         ownerId: 'slot-0',
         columnId: 'basic',
         startFrame: 0,
-        activationDuration: 300,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: [{ properties: { duration: 300 } }],
         // NO segments — this is how raw events look before any edit
       };
 
@@ -581,13 +558,10 @@ describe('embedCodec', () => {
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 0,
-          activationDuration: 330,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          segments: [
-            { name: 'N1', durationFrames: 90, label: '1', frames: [{ offsetFrame: 25 }, { offsetFrame: 55 }] },
-            { name: 'N2', durationFrames: 80, label: '2', frames: [{ offsetFrame: 30 }] },
-            { name: 'N3', durationFrames: 100, label: '3', frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
+                    segments: [
+            { properties: { duration: 90, name: '1' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 55 }] },
+            { properties: { duration: 80, name: '2' }, frames: [{ offsetFrame: 30 }] },
+            { properties: { duration: 100, name: '3' }, frames: [{ offsetFrame: 50 }, { offsetFrame: 75 }] },
           ],
         }],
       });
@@ -597,7 +571,7 @@ describe('embedCodec', () => {
 
       expect(decoded.events[0].segments).toBeDefined();
       // N1 duration: 60 → 90
-      expect(decoded.events[0].segments[0].durationFrames).toBe(90);
+      expect(decoded.events[0].segments[0].properties.duration).toBe(90);
       // N1 frame 0: 20 → 25
       expect(decoded.events[0].segments[0].frames[0].offsetFrame).toBe(25);
       // N1 frame 1: 45 → 55
@@ -701,11 +675,11 @@ describe('full state round-trip (current state → share → load → assert equ
         skillPointCost: undefined,
         gaugeGain: 5,
         segments: [
-          { name: 'N1', durationFrames: 48, label: '1', frames: [{ offsetFrame: 15 }, { offsetFrame: 35 }] },
-          { name: 'N2', durationFrames: 52, label: '2', frames: [{ offsetFrame: 20 }] },
-          { name: 'N3', durationFrames: 60, label: '3', frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
-          { name: 'N4', durationFrames: 40, label: '4', frames: [{ offsetFrame: 18 }] },
-          { name: 'N5', durationFrames: 40, label: '5', frames: [{ offsetFrame: 20 }] },
+          { properties: { duration: 48, name: '1' }, frames: [{ offsetFrame: 15 }, { offsetFrame: 35 }] },
+          { properties: { duration: 52, name: '2' }, frames: [{ offsetFrame: 20 }] },
+          { properties: { duration: 60, name: '3' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
+          { properties: { duration: 40, name: '4' }, frames: [{ offsetFrame: 18 }] },
+          { properties: { duration: 40, name: '5' }, frames: [{ offsetFrame: 20 }] },
         ],
       },
     },
@@ -725,7 +699,7 @@ describe('full state round-trip (current state → share → load → assert equ
         skillPointCost: 100,
         gaugeGain: 10,
         segments: [
-          { durationFrames: 264, frames: [
+          { properties: { duration: 264 }, frames: [
             { offsetFrame: 30 }, { offsetFrame: 45 }, { offsetFrame: 60 },
             { offsetFrame: 75 }, { offsetFrame: 90 }, { offsetFrame: 105 },
             { offsetFrame: 120 }, { offsetFrame: 135 }, { offsetFrame: 155 },
@@ -747,7 +721,7 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActivationDuration: 92,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        animationDuration: 60,
+        segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
         timeInteraction: 'TIME_STOP',
         gaugeGain: 15,
         teamGaugeGain: 5,
@@ -766,7 +740,7 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActivationDuration: 180,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        animationDuration: 120,
+        segments: [{ properties: { duration: 120, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
         timeInteraction: 'TIME_STOP',
       },
     },
@@ -785,13 +759,10 @@ describe('full state round-trip (current state → share → load → assert equ
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 0,
-          activationDuration: 160,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          segments: [
-            { name: 'N1', durationFrames: 48, label: '1', frames: [{ offsetFrame: 18 }, { offsetFrame: 35 }] },
-            { name: 'N2', durationFrames: 52, label: '2', frames: [{ offsetFrame: 20 }] },
-            { name: 'N3', durationFrames: 60, label: '3', frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
+                    segments: [
+            { properties: { duration: 48, name: '1' }, frames: [{ offsetFrame: 18 }, { offsetFrame: 35 }] },
+            { properties: { duration: 52, name: '2' }, frames: [{ offsetFrame: 20 }] },
+            { properties: { duration: 60, name: '3' }, frames: [{ offsetFrame: 25 }, { offsetFrame: 45 }] },
           ],
         },
         // Battle skill with edited frame offset and SP cost
@@ -801,12 +772,9 @@ describe('full state round-trip (current state → share → load → assert equ
           ownerId: 'slot-0',
           columnId: 'battle',
           startFrame: 240,
-          activationDuration: 264,
-          activeDuration: 0,
-          cooldownDuration: 0,
           skillPointCost: 100,
           segments: [
-            { durationFrames: 264, frames: [
+            { properties: { duration: 264 }, frames: [
               { offsetFrame: 33 }, { offsetFrame: 45 }, { offsetFrame: 60 },
               { offsetFrame: 75 }, { offsetFrame: 90 }, { offsetFrame: 105 },
               { offsetFrame: 120 }, { offsetFrame: 135 }, { offsetFrame: 155 },
@@ -821,10 +789,7 @@ describe('full state round-trip (current state → share → load → assert equ
           ownerId: 'slot-0',
           columnId: 'combo',
           startFrame: 600,
-          activationDuration: 92,
-          activeDuration: 0,
-          cooldownDuration: 0,
-          animationDuration: 60,
+                    segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
           timeInteraction: 'TIME_STOP',
         },
         // Unedited basic attack (no segments on raw event)
@@ -834,9 +799,7 @@ describe('full state round-trip (current state → share → load → assert equ
           ownerId: 'slot-0',
           columnId: 'basic',
           startFrame: 720,
-          activationDuration: 240,
-          activeDuration: 0,
-          cooldownDuration: 0,
+          segments: [{ properties: { duration: 240 } }],
         },
       ],
       loadouts: {
@@ -884,7 +847,7 @@ describe('full state round-trip (current state → share → load → assert equ
 
     // ── Assertions: edited basic attack segments (truncated N1–N3) ──────
     expect(resolved[0].segments).toHaveLength(3);
-    expect(resolved[0].segments[0].durationFrames).toBe(48);
+    expect(resolved[0].segments[0].properties.duration).toBe(48);
     expect(resolved[0].segments[0].frames[0].offsetFrame).toBe(18); // edited from 15
     expect(resolved[0].segments[0].frames[1].offsetFrame).toBe(35); // unchanged
     expect(resolved[0].segments[1].frames[0].offsetFrame).toBe(20); // unchanged
@@ -899,7 +862,8 @@ describe('full state round-trip (current state → share → load → assert equ
     expect(resolved[1].skillPointCost).toBe(100);
 
     // ── Assertions: combo skill properties ──────────────────────────────
-    expect(resolved[2].animationDuration).toBe(60);
+    const comboAnimSeg = resolved[2].segments?.find(s => s.metadata?.segmentType === 'ANIMATION');
+    expect(comboAnimSeg?.properties.duration).toBe(60);
     expect(resolved[2].timeInteraction).toBe('TIME_STOP');
     // gaugeGain/teamGaugeGain reattached from column definition
     expect(resolved[2].gaugeGain).toBe(15);

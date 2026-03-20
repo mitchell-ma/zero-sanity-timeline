@@ -7,7 +7,7 @@
 import { SegmentType, StatType } from '../../consts/enums';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../../view/InformationPane';
-import { Operator, TimelineEvent } from '../../consts/viewTypes';
+import { Operator, TimelineEvent, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { aggregateLoadoutStats } from '../calculation/loadoutAggregator';
 import { UltEnergyEvent } from './ultimateEnergyTimeline';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
@@ -179,7 +179,7 @@ export function resolveMessengersSongBonuses(
 
   // Read clause effects from the talent JSON
   const opJson = getOperatorJson('gilberta');
-  const statusEvents = opJson?.statusEvents as { id: string; clause?: { conditions: Record<string, any>[]; effects: Record<string, any>[] }[] }[] | undefined;
+  const statusEvents = opJson?.statusEvents as { id: string; clause?: { conditions: Record<string, unknown>[]; effects: Record<string, unknown>[] }[] }[] | undefined;
   const msDef = statusEvents?.find(se => se.id === 'MESSENGERS_SONG');
   if (!msDef?.clause) return {};
 
@@ -193,7 +193,8 @@ export function resolveMessengersSongBonuses(
       if (verb !== 'APPLY' || object !== 'ENERGY_GAIN_EFFICIENCY') continue;
 
       const targetClass = effect.to as string;
-      const wp = (effect.with ?? effect.with)?.value;
+      const withObj = effect.with as Record<string, unknown> | undefined;
+      const wp = withObj?.value as Record<string, unknown> | undefined;
       if (!wp || !targetClass) continue;
 
       const value = resolveBasedOnValue(wp, { potential, talentLevel });
@@ -236,7 +237,7 @@ function computeNaturalSpConsumption(events: TimelineEvent[]): Map<string, numbe
 
     // SP returns from frame-level skillPointRecovery
     if (ev.segments) {
-      const animOffset = ev.animationDuration ?? 0;
+      const animOffset = getAnimationDuration(ev);
       let segOffset = 0;
       for (const seg of ev.segments) {
         if (seg.frames) {
@@ -247,7 +248,7 @@ function computeNaturalSpConsumption(events: TimelineEvent[]): Map<string, numbe
             }
           }
         }
-        segOffset += seg.durationFrames;
+        segOffset += seg.properties.duration;
       }
     }
   }
@@ -395,22 +396,26 @@ export function collectNoGainWindows(
   const windows: { start: number; end: number }[] = [];
   for (const ev of events) {
     if (ev.ownerId !== slotId || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
-    if (ev.segments) {
-      let cursor = ev.startFrame;
-      for (const seg of ev.segments) {
-        const isActive = seg.segmentType === SegmentType.ACTIVE;
-        const ignoresUlt = seg.clause?.some(c =>
-          c.effects.some(e => e.verb === 'IGNORE' && e.object === 'ULTIMATE_ENERGY')
-        );
-        if (isActive || ignoresUlt) {
-          windows.push({ start: cursor, end: cursor + seg.durationFrames });
-        }
-        cursor += seg.durationFrames;
+    let cursor = ev.startFrame;
+    let foundTypedSegment = false;
+    for (const seg of ev.segments) {
+      const isActive = seg.metadata?.segmentType === SegmentType.ACTIVE;
+      const ignoresUlt = seg.clause?.some(c =>
+        c.effects.some(e => e.verb === 'IGNORE' && e.object === 'ULTIMATE_ENERGY')
+      );
+      if (isActive || ignoresUlt) {
+        windows.push({ start: cursor, end: cursor + seg.properties.duration });
+        foundTypedSegment = true;
+      } else if (seg.metadata?.segmentType) {
+        foundTypedSegment = true;
       }
-    } else {
-      // Fallback for non-segmented events
-      const start = ev.startFrame + ev.activationDuration;
-      windows.push({ start, end: start + ev.activeDuration });
+      cursor += seg.properties.duration;
+    }
+    // Fallback for events with no typed segments — treat event duration as animation,
+    // then assume an 1800-frame active window after it
+    if (!foundTypedSegment) {
+      const start = ev.startFrame + eventDuration(ev);
+      windows.push({ start, end: start + 1800 });
     }
   }
   return windows;

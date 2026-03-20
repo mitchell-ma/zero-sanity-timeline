@@ -55,6 +55,8 @@ import { Column, MiniTimeline } from '../consts/viewTypes';
 import { TimelineSourceType } from '../consts/enums';
 // eslint-disable-next-line import/first
 import { OPERATOR_COLUMNS } from '../model/channels';
+// eslint-disable-next-line import/first
+import { Slot } from '../controller/timeline/columnBuilder';
 
 function miniTimeline(key: string, ownerId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
   return {
@@ -224,7 +226,7 @@ describe('buildCollapsedColumns', () => {
     const slots = [
       { slotId: 'slot1', operator: { id: 'laevatain', name: 'Laevatain', color: '#f00' } },
       { slotId: 'slot2', operator: { id: 'akekuri', name: 'Akekuri', color: '#0f0' } },
-    ] as any[];
+    ] as Slot[];
 
     const collapsed = buildCollapsedColumns(tableColumns, slots);
     expect(collapsed).toHaveLength(2);
@@ -242,7 +244,7 @@ describe('buildCollapsedColumns', () => {
     const slots = [
       { slotId: 'slot1', operator: { id: 'laevatain', name: 'Laevatain', color: '#f00' } },
       { slotId: 'slot2', operator: { id: 'akekuri', name: 'Akekuri', color: '#0f0' } },
-    ] as any[];
+    ] as Slot[];
 
     const collapsed = buildCollapsedColumns(tableColumns, slots);
     // Column order follows iteration order of tableColumns (slot2 appears first)

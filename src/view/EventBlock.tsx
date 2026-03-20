@@ -1,6 +1,6 @@
 import React from 'react';
 import { frameToPx, durationToPx, pxPerFrame, TOTAL_FRAMES } from '../utils/timeline';
-import { TimelineEvent, EventFrameMarker } from "../consts/viewTypes";
+import { TimelineEvent, EventFrameMarker, getAnimationDuration, eventDuration } from "../consts/viewTypes";
 import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, STATUS_ELEMENT } from '../consts/enums';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
@@ -129,7 +129,11 @@ function EventBlock({
   eventLayout,
   axis = VERTICAL_AXIS,
 }: EventBlockProps) {
-  const { id, startFrame, activationDuration, activeDuration, cooldownDuration, segments, animationDuration } = event;
+  const { id, startFrame, segments } = event;
+  const activationDuration = eventDuration(event);
+  const activeDuration = 0;
+  const cooldownDuration = 0;
+  const animationDuration = getAnimationDuration(event);
   const displayLabel = isAutoFinisher ? 'Finisher' : label;
 
   // ── Layout-aware positioning ────────────────────────────────────────────────
@@ -167,10 +171,10 @@ function EventBlock({
     if (!layout) {
       let running = 0;
       for (const s of segments) {
-        const off = s.offset != null ? s.offset : running;
-        const end = off + s.durationFrames;
+        const off = s.properties.offset != null ? s.properties.offset : running;
+        const end = off + s.properties.duration;
         if (end > fallbackTotal) fallbackTotal = end;
-        running = s.offset == null ? running + s.durationFrames : end;
+        running = s.properties.offset == null ? running + s.properties.duration : end;
       }
     }
     const totalHeight = layout
@@ -190,13 +194,13 @@ function EventBlock({
       const seg = segments[i];
       const segLayout = layout?.segments?.[i];
       // Use explicit offset if present, otherwise chain from previous segment
-      const segOffset = seg.offset != null ? seg.offset : offsetFrames;
+      const segOffset = seg.properties.offset != null ? seg.properties.offset : offsetFrames;
 
       const segH = segLayout
         ? durationToPx(segLayout.realDuration, zoom)
-        : durationToPx(seg.durationFrames, zoom);
+        : durationToPx(seg.properties.duration, zoom);
 
-      if (segH <= 0) { offsetFrames = seg.offset == null ? offsetFrames + seg.durationFrames : segOffset + seg.durationFrames; continue; }
+      if (segH <= 0) { offsetFrames = seg.properties.offset == null ? offsetFrames + seg.properties.duration : segOffset + seg.properties.duration; continue; }
 
       const segTopPx = segLayout
         ? durationToPx(segLayout.realOffset, zoom)
@@ -204,14 +208,14 @@ function EventBlock({
 
       const isFirst = i === 0;
       const isLast = i === segments.length - 1;
-      const isCooldown = seg.segmentType === SegmentType.COOLDOWN;
+      const isCooldown = seg.metadata?.segmentType === SegmentType.COOLDOWN;
       const alpha = passive ? 0.15 : isCooldown ? 0.15 : 0.55 + (i % 2) * 0.15;
       const borderRadius = segmentRadius(axis, isFirst, isLast);
 
       const segAbsStart = segLayout
         ? layout!.realStartFrame + segLayout.realOffset
         : startFrame + segOffset;
-      const segAbsDur = segLayout ? segLayout.realDuration : seg.durationFrames;
+      const segAbsDur = segLayout ? segLayout.realDuration : seg.properties.duration;
       const segHover = isSegmentHovered(segAbsStart, segAbsDur);
       const segLabelHover = segHover ? hoverLabelStyle(segAbsStart) : undefined;
 
@@ -231,8 +235,8 @@ function EventBlock({
           }}
           onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
         >
-          {(passive || segH > 14) && (seg.label || (isFirst && displayLabel)) && (
-            <span className="event-block-label" style={{ ...(passive ? {} : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }), ...segLabelHover }}>{toDisplayLabel(seg.label) ?? displayLabel}</span>
+          {(passive || segH > 14) && (seg.properties.name || (isFirst && displayLabel)) && (
+            <span className="event-block-label" style={{ ...(passive ? {} : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }), ...segLabelHover }}>{toDisplayLabel(seg.properties.name) ?? displayLabel}</span>
           )}
           {/* Frame diamonds */}
           {/* eslint-disable-next-line no-loop-func */}
@@ -262,8 +266,8 @@ function EventBlock({
       );
 
       // Advance running offset
-      if (seg.offset == null) offsetFrames += seg.durationFrames;
-      else offsetFrames = segOffset + seg.durationFrames;
+      if (seg.properties.offset == null) offsetFrames += seg.properties.duration;
+      else offsetFrames = segOffset + seg.properties.duration;
     }
 
     return (
@@ -303,37 +307,37 @@ function EventBlock({
   // to avoid the activationDuration = sum(all segments) issue after time-stop extension.
   const ultSegs = variant === SKILL_COLUMNS.ULTIMATE && segments && segments.length >= 4 ? segments : null;
 
-  const hasActive   = ultSegs ? ultSegs[2].durationFrames > 0 : activeDuration > 0;
-  const hasCooldown = ultSegs ? ultSegs[3].durationFrames > 0 : cooldownDuration > 0;
+  const hasActive   = ultSegs ? ultSegs[2].properties.duration > 0 : activeDuration > 0;
+  const hasCooldown = ultSegs ? ultSegs[3].properties.duration > 0 : cooldownDuration > 0;
 
   const phases = layout?.phases;
   const activationH = ultSegs
-    ? durationToPx(ultSegs[0].durationFrames + ultSegs[1].durationFrames, zoom)
+    ? durationToPx(ultSegs[0].properties.duration + ultSegs[1].properties.duration, zoom)
     : (phases
         ? durationToPx(phases.realActivationDuration, zoom)
         : durationToPx(Math.min(activationDuration, TOTAL_FRAMES - startFrame), zoom));
   const activePhaseH = hasActive
     ? (ultSegs
-        ? durationToPx(ultSegs[2].durationFrames, zoom)
+        ? durationToPx(ultSegs[2].properties.duration, zoom)
         : (phases
             ? durationToPx(phases.realActiveDuration, zoom)
             : durationToPx(activeDuration, zoom)))
     : 0;
   const coolH = hasCooldown
     ? (ultSegs
-        ? durationToPx(ultSegs[3].durationFrames, zoom)
+        ? durationToPx(ultSegs[3].properties.duration, zoom)
         : durationToPx(phases?.realCooldownDuration ?? cooldownDuration, zoom))
     : 0;
 
   // Animation sub-phase within activation (TIME_STOP portion)
   const hasAnimation = ultSegs
-    ? ultSegs[0].durationFrames > 0
-    : ((variant === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO) && animationDuration != null && animationDuration > 0 && animationDuration <= activationDuration);
+    ? ultSegs[0].properties.duration > 0
+    : ((variant === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO) && animationDuration > 0 && animationDuration <= activationDuration);
   const animH = ultSegs
-    ? durationToPx(ultSegs[0].durationFrames, zoom)
-    : (hasAnimation ? durationToPx(phases?.realAnimationDuration ?? animationDuration!, zoom) : 0);
+    ? durationToPx(ultSegs[0].properties.duration, zoom)
+    : (hasAnimation ? durationToPx(phases?.realAnimationDuration ?? animationDuration, zoom) : 0);
   const postAnimH = ultSegs
-    ? durationToPx(ultSegs[1].durationFrames, zoom)
+    ? durationToPx(ultSegs[1].properties.duration, zoom)
     : (hasAnimation ? activationH - animH : 0);
 
   const topPx = layout
@@ -351,16 +355,16 @@ function EventBlock({
   // Compute absolute frame ranges for phase hover highlighting
   const realStart = layout ? layout.realStartFrame : startFrame;
   const animDur = ultSegs
-    ? ultSegs[0].durationFrames
-    : (hasAnimation ? (phases?.realAnimationDuration ?? animationDuration!) : 0);
+    ? ultSegs[0].properties.duration
+    : (hasAnimation ? (phases?.realAnimationDuration ?? animationDuration) : 0);
   const activationDur = ultSegs
-    ? ultSegs[0].durationFrames + ultSegs[1].durationFrames
+    ? ultSegs[0].properties.duration + ultSegs[1].properties.duration
     : (phases ? phases.realActivationDuration : Math.min(activationDuration, TOTAL_FRAMES - startFrame));
   const activeDur = hasActive
-    ? (ultSegs ? ultSegs[2].durationFrames : (phases ? phases.realActiveDuration : activeDuration))
+    ? (ultSegs ? ultSegs[2].properties.duration : (phases ? phases.realActiveDuration : activeDuration))
     : 0;
   const coolDur = hasCooldown
-    ? (ultSegs ? ultSegs[3].durationFrames : (phases?.realCooldownDuration ?? cooldownDuration))
+    ? (ultSegs ? ultSegs[3].properties.duration : (phases?.realCooldownDuration ?? cooldownDuration))
     : 0;
 
   const animSegHover = hasAnimation && isSegmentHovered(realStart, animDur);
@@ -432,7 +436,7 @@ function EventBlock({
             )}
             {actFrames?.map((f, fi) => {
 
-              const framePx = durationToPx((f.derivedOffsetFrame ?? f.offsetFrame) - (animationDuration ?? 0), zoom);
+              const framePx = durationToPx((f.derivedOffsetFrame ?? f.offsetFrame) - animationDuration, zoom);
               if (framePx < 0 || framePx > postAnimH) return null;
               const isSelected = selectedFrames?.some((sf) => sf.segmentIndex === 1 && sf.frameIndex === fi) ?? false;
               const frameAbsReal = f.absoluteFrame ?? (startFrame + f.offsetFrame);

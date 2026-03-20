@@ -132,12 +132,29 @@ export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.ELECTRIC]: '#e8c840',
 };
 
-export enum StatusType {
-  // ── Arts reactions (also in REACTION_STATUS_TYPES — not pure statuses) ─────
+/** Arts reactions — triggered by arts infliction combinations. */
+export enum ArtsReactionType {
   COMBUSTION = "COMBUSTION",
   SOLIDIFICATION = "SOLIDIFICATION",
   CORROSION = "CORROSION",
   ELECTRIFICATION = "ELECTRIFICATION",
+}
+
+/** Physical statuses — triggered by physical reactions (stagger consumption). */
+export enum PhysicalStatusType {
+  LIFT = "LIFT",
+  KNOCK_DOWN = "KNOCK_DOWN",
+  BREACH = "BREACH",
+  CRUSH = "CRUSH",
+  SHATTER = "SHATTER",
+}
+
+/** All built-in reaction types = arts reactions + physical statuses. */
+export type ReactionType = ArtsReactionType | PhysicalStatusType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionType = { ...ArtsReactionType, ...PhysicalStatusType } as typeof ArtsReactionType & typeof PhysicalStatusType;
+
+enum _StatusType {
   // ── Operator buffs ─────────────────────────────────────────────────────────
   MELTING_FLAME = "MELTING_FLAME",
   THUNDERLANCE = "THUNDERLANCE",
@@ -164,11 +181,6 @@ export enum StatusType {
   WEAKEN = "WEAKEN",
   DMG_REDUCTION = "DMG_REDUCTION",
   PROTECTION = "PROTECTION",
-  // ── Physical statuses ───────────────────────────────────────────────────────
-  LIFT = "LIFT",
-  KNOCK_DOWN = "KNOCK_DOWN",
-  CRUSH = "CRUSH",
-  BREACH = "BREACH",
   // ── Potential buffs ───────────────────────────────────────────────────────
   LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE = "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
   AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK = "AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK",
@@ -190,6 +202,10 @@ export enum StatusType {
   YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER = "YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER",
   POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE = "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
 }
+
+export type StatusType = _StatusType | ReactionType;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const StatusType = { ..._StatusType, ...ReactionType } as typeof _StatusType & typeof ArtsReactionType & typeof PhysicalStatusType;
 
 /** Damage formula multiplier factor that a status contributes to. */
 export enum DamageFactorType {
@@ -239,10 +255,11 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.DMG_REDUCTION]: DamageFactorType.DMG_REDUCTION,
   [StatusType.PROTECTION]: DamageFactorType.PROTECTION,
   // Physical statuses
-  [StatusType.LIFT]: DamageFactorType.STAGGER,
-  [StatusType.KNOCK_DOWN]: DamageFactorType.STAGGER,
-  [StatusType.CRUSH]: DamageFactorType.NONE,
-  [StatusType.BREACH]: DamageFactorType.FRAGILITY,
+  [PhysicalStatusType.LIFT]: DamageFactorType.STAGGER,
+  [PhysicalStatusType.KNOCK_DOWN]: DamageFactorType.STAGGER,
+  [PhysicalStatusType.CRUSH]: DamageFactorType.NONE,
+  [PhysicalStatusType.BREACH]: DamageFactorType.FRAGILITY,
+  [PhysicalStatusType.SHATTER]: DamageFactorType.NONE,
   // Team passives
   [StatusType.MESSENGERS_SONG]: DamageFactorType.NONE,
   // Potential buffs
@@ -284,28 +301,6 @@ export enum PhysicalInflictionType {
 export type InflictionType = ArtsInflictionType | PhysicalInflictionType;
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InflictionType = { ...ArtsInflictionType, ...PhysicalInflictionType } as typeof ArtsInflictionType & typeof PhysicalInflictionType;
-
-/** Arts reactions — triggered by arts infliction combinations. */
-export enum ArtsReactionType {
-  COMBUSTION = "COMBUSTION",
-  SOLIDIFICATION = "SOLIDIFICATION",
-  CORROSION = "CORROSION",
-  ELECTRIFICATION = "ELECTRIFICATION",
-}
-
-/** Physical statuses — triggered by physical reactions (stagger consumption). */
-export enum PhysicalStatusType {
-  LIFT = "LIFT",
-  KNOCK_DOWN = "KNOCK_DOWN",
-  BREACH = "BREACH",
-  CRUSH = "CRUSH",
-  SHATTER = "SHATTER",
-}
-
-/** All built-in reaction types = arts reactions + physical statuses. */
-export type ReactionType = ArtsReactionType | PhysicalStatusType;
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReactionType = { ...ArtsReactionType, ...PhysicalStatusType } as typeof ArtsReactionType & typeof PhysicalStatusType;
 
 export { OperatorClassType } from '../model/enums/operators';
 
@@ -670,14 +665,21 @@ export enum EnemyLocationType {
 }
 
 export enum CritMode {
+  NEVER = 'NEVER',
   EXPECTED = 'EXPECTED',
-  NONE = 'NONE',
   ALWAYS = 'ALWAYS',
+  SIMULATION = 'SIMULATION',
 }
 
 export enum DamageType {
   NORMAL = 'NORMAL',
   DAMAGE_OVER_TIME = 'DAMAGE_OVER_TIME',
+}
+
+export enum FrameDependencyType {
+  SEGMENT = 'SEGMENT',
+  FIRST_FRAME = 'FIRST_FRAME',
+  PREVIOUS_FRAME = 'PREVIOUS_FRAME',
 }
 
 

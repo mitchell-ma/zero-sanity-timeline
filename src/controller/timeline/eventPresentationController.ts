@@ -5,8 +5,8 @@
  * CombatPlanner replaces buildBaseEventProps + inline overrides with a single
  * call to computeEventPresentation().
  */
-import { TimelineEvent, Column, EventSegmentData } from '../../consts/viewTypes';
-import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType } from '../../consts/enums';
+import { TimelineEvent, Column, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
+import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, SegmentType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
 import { SKILL_COLUMNS } from '../../model/channels';
@@ -18,7 +18,7 @@ import { aggregateEventWarnings } from './eventValidationController';
 import type { StatusViewOverride } from './statusViewController';
 
 function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEvent[]): boolean {
-  const endFrame = windowEv.startFrame + windowEv.activationDuration;
+  const endFrame = eventEndFrame(windowEv);
   return events.some((ev) =>
     ev.columnId === SKILL_COLUMNS.COMBO &&
     ev.ownerId === windowEv.ownerId &&
@@ -106,7 +106,8 @@ export function computeEventPresentation(
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
 
-  const variant = (col.type === 'mini-timeline' && col.columnId === SKILL_COLUMNS.ULTIMATE
+  const hasAnimationSegment = ev.segments?.some(s => s.metadata?.segmentType === SegmentType.ANIMATION) ?? false;
+  const variant = (col.type === 'mini-timeline' && (col.columnId === SKILL_COLUMNS.ULTIMATE || hasAnimationSegment)
     ? 'ultimate'
     : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced';
 
@@ -118,9 +119,16 @@ export function computeEventPresentation(
   const color = resolveEventColor(ev, col, slotElementColors);
 
   // Aggregate warnings — infliction-only for micro-column events, full for single-column
-  const comboWarning = isWindow
+  const validationWarning = isWindow
     ? null
     : aggregateEventWarnings(ev.id, validationMaps);
+  // Include warnings from the event queue processing (e.g. time-stop overlap)
+  const eventWarnings = ev.warnings && ev.warnings.length > 0
+    ? ev.warnings.join('\n')
+    : null;
+  const comboWarning = validationWarning && eventWarnings
+    ? `${validationWarning}\n${eventWarnings}`
+    : validationWarning ?? eventWarnings;
 
   const striped = col.type === 'mini-timeline'
     && col.columnId === SKILL_COLUMNS.COMBO
@@ -142,7 +150,7 @@ export function computeEventPresentation(
   if (!isWindow && col.type === 'mini-timeline') {
     const variantSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
       ?? col.defaultEvent?.segments;
-    allSegmentLabels = variantSegs?.map((s) => s.label!);
+    allSegmentLabels = variantSegs?.map((s) => s.properties.name!);
     allDefaultSegments = variantSegs;
   }
 

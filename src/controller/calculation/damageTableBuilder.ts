@@ -6,11 +6,11 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillsType, CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, FrameDependencyType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
-import { getSkillMultiplier, getPerTickMultiplier } from './jsonMultiplierEngine';
+import { getSkillMultiplier, getFrameMultiplier } from './jsonMultiplierEngine';
 import { evaluateTalentBonuses, evaluateTalentAttackBonus } from './talentBonusEngine';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { aggregateLoadoutStats } from './loadoutAggregator';
@@ -285,11 +285,13 @@ export function buildDamageTableRows(
       let segmentFrameOffset = 0;
       for (let si = 0; si < ev.segments.length; si++) {
         const seg = ev.segments[si];
-        const segLabel = seg.label ?? `Seg ${si + 1}`;
+        const segLabel = seg.properties.name ?? `Seg ${si + 1}`;
 
         if (seg.frames) {
           // Max frames from default segment (not current, which may have deletions)
           const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames.length;
+          // Track resolved damage per frame index for PREVIOUS_FRAME dependency chain
+          const resolvedFrameDamage: (number | null)[] = [];
 
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
@@ -312,7 +314,7 @@ export function buildDamageTableRows(
                 isPerTick = true;
               } else {
                 // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
-                const perTickMult = getPerTickMultiplier(
+                const perTickMult = getFrameMultiplier(
                   operatorId,
                   ev.name as CombatSkillsType,
                   skillLevel,
@@ -428,13 +430,24 @@ export function buildDamageTableRows(
 
                 // Crit multiplier based on crit mode (DOT frames cannot crit)
                 const isDot = frame.damageType === DamageType.DAMAGE_OVER_TIME;
-                const expectedCrit = isDot
-                  ? 1
-                  : critMode === CritMode.ALWAYS
+                const canCrit = !isDot;
+                let frameCrit: boolean | undefined;
+                let expectedCrit: number;
+                if (!canCrit) {
+                  expectedCrit = 1;
+                } else if (critMode === CritMode.ALWAYS) {
+                  expectedCrit = getCritMultiplier(true, opData.critDamage + talentCritDmgBonus);
+                } else if (critMode === CritMode.NEVER) {
+                  expectedCrit = 1;
+                } else if (critMode === CritMode.SIMULATION) {
+                  frameCrit = Math.random() < opData.critRate;
+                  frame.isCrit = frameCrit;
+                  expectedCrit = frameCrit
                     ? getCritMultiplier(true, opData.critDamage + talentCritDmgBonus)
-                    : critMode === CritMode.NONE
-                      ? 1
-                      : getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
+                    : 1;
+                } else {
+                  expectedCrit = getExpectedCritMultiplier(opData.critRate, opData.critDamage + talentCritDmgBonus);
+                }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
                 const isFinisher = ev.name === CombatSkillsType.FINISHER;
@@ -509,8 +522,19 @@ export function buildDamageTableRows(
                 };
 
                 damage = calculateDamage(params);
+
+                // PREVIOUS_FRAME dependency: accumulate previous frame's resolved damage
+                const hasPrevDep = frame.dependencyTypes?.includes(FrameDependencyType.PREVIOUS_FRAME);
+                if (hasPrevDep && fi > 0) {
+                  const prevDamage = resolvedFrameDamage[fi - 1];
+                  if (prevDamage != null && damage != null) {
+                    damage += prevDamage;
+                  }
+                }
               }
             }
+
+            resolvedFrameDamage[fi] = damage;
 
             rows.push({
               key: `${ev.id}-s${si}-f${fi}`,
@@ -524,7 +548,7 @@ export function buildDamageTableRows(
               frameIndex: fi,
               damage,
               multiplier,
-              segmentLabel: seg.label,
+              segmentLabel: seg.properties.name,
               skillName: ev.name,
               hpRemaining: null, // computed after sorting
               params,
@@ -532,7 +556,7 @@ export function buildDamageTableRows(
             });
           }
         }
-        segmentFrameOffset += seg.durationFrames;
+        segmentFrameOffset += seg.properties.duration;
       }
     }
   }

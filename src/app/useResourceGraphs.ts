@@ -32,34 +32,34 @@ export function useResourceGraphs(
   const [spGraphs, setSpGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
 
   useEffect(() => {
-    const sp = combatLoadout.commonSlot.skillPoints;
+    const spCtrl = combatLoadout.commonSlot.skillPoints;
     const key = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
     const update = (points: ReadonlyArray<ResourcePoint>) => {
       setSpGraphs((prev) => {
         const next = new Map(prev);
-        next.set(key, { points, min: sp.min, max: sp.max, wasted: sp.wastedSP });
+        next.set(key, { points, min: spCtrl.min, max: spCtrl.max, wasted: spCtrl.wastedSP });
         return next;
       });
     };
-    update(sp.getGraph());
-    return sp.onGraphChange(update);
+    update(spCtrl.getGraph());
+    return spCtrl.onGraphChange(update);
   }, [combatLoadout]);
 
   // ── Stagger graphs (from CommonSlot stagger timeline) ──────────────────
   const [staggerGraphs, setStaggerGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
 
   useEffect(() => {
-    const st = combatLoadout.commonSlot.stagger;
+    const stCtrl = combatLoadout.commonSlot.stagger;
     const key = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
     const update = (points: ReadonlyArray<ResourcePoint>) => {
       setStaggerGraphs((prev) => {
         const next = new Map(prev);
-        next.set(key, { points, min: st.min, max: st.max });
+        next.set(key, { points, min: stCtrl.min, max: stCtrl.max });
         return next;
       });
     };
-    update(st.getGraph());
-    return st.onGraphChange(update);
+    update(stCtrl.getGraph());
+    return stCtrl.onGraphChange(update);
   }, [combatLoadout]);
 
   // ── Ultimate energy graphs + tactical events ────────────────────────────

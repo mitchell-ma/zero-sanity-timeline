@@ -8,7 +8,7 @@
  * - Create / edit / delete custom items inline
  * - Associate leaf entities (skills, effects) with operators
  */
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ContentCategory } from '../../consts/contentBrowserTypes';
 import type { ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { getAllContentItems } from '../../controller/custom/contentCatalogController';
@@ -29,16 +29,29 @@ import { getDefaultCustomGearEffect, getCustomGearEffects } from '../../controll
 import { getDefaultCustomOperatorStatus, getCustomOperatorStatuses } from '../../controller/custom/customOperatorStatusController';
 import { getDefaultCustomOperatorTalent, getCustomOperatorTalents } from '../../controller/custom/customOperatorTalentController';
 import { addSkillLink, removeSkillLink, getLinksForOperator } from '../../controller/custom/customSkillLinkController';
+import { deleteCustomOperator } from '../../controller/custom/customOperatorController';
+import { deleteCustomWeapon } from '../../controller/custom/customWeaponController';
+import { deleteCustomGearSet } from '../../controller/custom/customGearController';
+import { deleteCustomSkill } from '../../controller/custom/customSkillController';
+import { deleteCustomWeaponEffect } from '../../controller/custom/customWeaponEffectController';
+import { deleteCustomGearEffect } from '../../controller/custom/customGearEffectController';
+import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
+import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
 import { WEAPON_DATA } from '../../model/weapons/weaponData';
-import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
+import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
+import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
+import type { GearPieceData } from '../../model/game-data/gearSetDataLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
+import { GearSetType, GearCategory } from '../../consts/enums';
 import type { SkillType } from '../../consts/viewTypes';
-import type { Interaction, Effect } from '../../consts/semantics';
-import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
-import { resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
+import type { Interaction, Effect, Predicate } from '../../consts/semantics';
+import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/info-pane/loadoutPaneController';
+import { buildSkillEntries, SkillEntrySection, type SkillEntryData } from './OperatorEventEditor';
+import { fmtN } from '../../utils/timeline';
+import type { CustomStatusEventDef } from '../../model/custom/customStatusEventTypes';
 import UnifiedCustomizerRail from './UnifiedCustomizerRail';
 import WeaponSection from './sections/WeaponSection';
 import GearSetSection from './sections/GearSetSection';
@@ -52,10 +65,9 @@ import OperatorTalentSection from './sections/OperatorTalentSection';
 const CATEGORY_TITLES: Partial<Record<ContentCategory, string>> = {
   [ContentCategory.OPERATORS]: 'Operators',
   [ContentCategory.WEAPONS]: 'Weapons',
-  [ContentCategory.GEAR_SETS]: 'Gear Sets',
+  [ContentCategory.GEAR_SETS]: 'Gears',
   [ContentCategory.SKILLS]: 'Skills',
   [ContentCategory.WEAPON_EFFECTS]: 'Weapon Effects',
-  [ContentCategory.GEAR_EFFECTS]: 'Gear Effects',
   [ContentCategory.OPERATOR_STATUSES]: 'Operator Statuses',
   [ContentCategory.OPERATOR_TALENTS]: 'Operator Talents',
 };
@@ -71,7 +83,9 @@ const ASSOCIABLE_CATEGORIES = new Set([
   ContentCategory.OPERATOR_TALENTS,
 ]);
 
-function getDefaultData(category: ContentCategory): any {
+type CustomData = CustomWeapon | CustomGearSet | CustomOperator | CustomSkill | CustomWeaponEffect | CustomGearEffect | CustomOperatorStatus | CustomOperatorTalent;
+
+function getDefaultData(category: ContentCategory): CustomData | null {
   switch (category) {
     case ContentCategory.OPERATORS: return getDefaultCustomOperator();
     case ContentCategory.WEAPONS: return getDefaultCustomWeapon();
@@ -85,7 +99,7 @@ function getDefaultData(category: ContentCategory): any {
   }
 }
 
-function findCustomData(category: ContentCategory, id: string): any {
+function findCustomData(category: ContentCategory, id: string): CustomData | undefined | null {
   switch (category) {
     case ContentCategory.OPERATORS: return getCustomOperators().find((o) => o.id === id);
     case ContentCategory.WEAPONS: return getCustomWeapons().find((w) => w.id === id);
@@ -102,8 +116,8 @@ function findCustomData(category: ContentCategory, id: string): any {
 type PanelMode = 'browse' | 'view' | 'edit';
 
 interface Props {
-  initial?: { entityType: ContentCategory; data: any };
-  onSave: (type: ContentCategory, data: any) => string[];
+  initial?: { entityType: ContentCategory; data: CustomData };
+  onSave: (type: ContentCategory, data: CustomData) => string[];
   onCancel: () => void;
   onContentChanged?: () => void;
   contentRefreshKey?: number;
@@ -116,7 +130,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
   const [filter, setFilter] = useState('');
   const [selectedItem, setSelectedItem] = useState<ContentBrowserItem | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>(initial ? 'edit' : 'browse');
-  const [editData, setEditData] = useState<any>(initial?.data ? JSON.parse(JSON.stringify(initial.data)) : null);
+  const [editData, setEditData] = useState<CustomData | null>(initial?.data ? JSON.parse(JSON.stringify(initial.data)) : null);
   const [editOriginalId, setEditOriginalId] = useState<string | undefined>(initial?.data?.id);
   const [errors, setErrors] = useState<string[]>([]);
   const [localRefreshKey, setLocalRefreshKey] = useState(0);
@@ -124,10 +138,72 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
   // Association state
   const [showAssociatePanel, setShowAssociatePanel] = useState(false);
 
+  // Context menu state
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; item: ContentBrowserItem } | null>(null);
+  const ctxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const dismiss = (e: MouseEvent) => {
+      if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) setCtxMenu(null);
+    };
+    document.addEventListener('mousedown', dismiss);
+    return () => document.removeEventListener('mousedown', dismiss);
+  }, [ctxMenu]);
+
   const bumpLocal = useCallback(() => {
     setLocalRefreshKey((k) => k + 1);
     onContentChanged?.();
   }, [onContentChanged]);
+
+  const handleEditItem = useCallback((item: ContentBrowserItem) => {
+    if (item.source !== 'custom') return;
+    const data = findCustomData(item.category, item.id);
+    if (!data) return;
+    setEditData(JSON.parse(JSON.stringify(data)));
+    setEditOriginalId(item.id);
+    setPanelMode('edit');
+    setErrors([]);
+  }, []);
+
+  const handleDeleteCustomItem = useCallback((item: ContentBrowserItem) => {
+    switch (item.category) {
+      case ContentCategory.OPERATORS: deleteCustomOperator(item.id); break;
+      case ContentCategory.WEAPONS: deleteCustomWeapon(item.id); break;
+      case ContentCategory.GEAR_SETS: deleteCustomGearSet(item.id); break;
+      case ContentCategory.SKILLS: deleteCustomSkill(item.id); break;
+      case ContentCategory.WEAPON_EFFECTS: deleteCustomWeaponEffect(item.id); break;
+      case ContentCategory.GEAR_EFFECTS: deleteCustomGearEffect(item.id); break;
+      case ContentCategory.OPERATOR_STATUSES: deleteCustomOperatorStatus(item.id); break;
+      case ContentCategory.OPERATOR_TALENTS: deleteCustomOperatorTalent(item.id); break;
+    }
+    if (selectedItem?.id === item.id) {
+      setSelectedItem(null);
+      setPanelMode('browse');
+    }
+    bumpLocal();
+  }, [selectedItem, bumpLocal]);
+
+  const handleCtxAction = useCallback((action: 'delete' | 'duplicate' | 'edit') => {
+    if (!ctxMenu) return;
+    const item = ctxMenu.item;
+    setCtxMenu(null);
+    if (action === 'edit' && item.source === 'custom') {
+      handleEditItem(item);
+    } else if (action === 'delete' && item.source === 'custom') {
+      handleDeleteCustomItem(item);
+    } else if (action === 'duplicate' && item.source === 'builtin') {
+      // Clone inline — same logic as handleCloneItem
+      const data = getDefaultData(item.category);
+      if (!data) return;
+      (data as { name: string }).name = `${item.name} (Clone)`;
+      (data as { id: string }).id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      setEditData(data);
+      setEditOriginalId(undefined);
+      setPanelMode('edit');
+      setErrors([]);
+    }
+  }, [ctxMenu, handleDeleteCustomItem, handleEditItem]);
 
   // Item list for the current entity type
   const items = useMemo(() => {
@@ -171,23 +247,13 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
     setErrors([]);
   }, [entityType]);
 
-  const handleEditItem = useCallback((item: ContentBrowserItem) => {
-    if (item.source !== 'custom') return;
-    const data = findCustomData(item.category, item.id);
-    if (!data) return;
-    setEditData(JSON.parse(JSON.stringify(data)));
-    setEditOriginalId(item.id);
-    setPanelMode('edit');
-    setErrors([]);
-  }, []);
-
   const handleCloneItem = useCallback((item: ContentBrowserItem) => {
     // Clone a builtin item as a new custom item
     // For builtins, we just create a default with the same name
     const data = getDefaultData(item.category);
     if (!data) return;
-    data.name = `${item.name} (Clone)`;
-    data.id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    (data as { name: string }).name = `${item.name} (Clone)`;
+    (data as { id: string }).id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     setEditData(data);
     setEditOriginalId(undefined);
     setPanelMode('edit');
@@ -216,7 +282,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
 
   // Operator list for association
   const allOperators = useMemo(() => {
-    const builtins = ALL_OPERATORS.map((op: any) => ({ id: op.id, name: op.name, source: 'builtin' as const }));
+    const builtins = ALL_OPERATORS.map((op) => ({ id: op.id, name: op.name, source: 'builtin' as const }));
     const customs = getCustomOperators().map((op) => ({ id: `custom_${op.id}`, name: op.name, source: 'custom' as const }));
     return [...builtins, ...customs];
   }, [localRefreshKey, contentRefreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -329,6 +395,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
                   key={item.id}
                   className={`uc-list-item${selectedItem?.id === item.id && selectedItem?.source === item.source ? ' uc-list-item--active' : ''}`}
                   onClick={() => handleSelectItem(item)}
+                  onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, item }); }}
                 >
                   {item.color && <span className="uc-list-dot" style={{ background: item.color }} />}
                   <span className="uc-list-item-name">{item.name}</span>
@@ -345,6 +412,7 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
                   key={item.id}
                   className={`uc-list-item${selectedItem?.id === item.id && selectedItem?.source === item.source ? ' uc-list-item--active' : ''}`}
                   onClick={() => handleSelectItem(item)}
+                  onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, item }); }}
                 >
                   {item.color && <span className="uc-list-dot" style={{ background: item.color }} />}
                   <span className="uc-list-item-name">{item.name}</span>
@@ -358,6 +426,25 @@ export default function UnifiedCustomizer({ initial, onSave, onCancel, onContent
           )}
         </div>
       </div>
+
+      {/* ── Context menu ─────────────────────────────────────── */}
+      {ctxMenu && (
+        <div
+          ref={ctxRef}
+          className="uc-ctx-menu"
+          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+        >
+          {ctxMenu.item.source === 'custom' && (
+            <>
+              <button className="uc-ctx-item" onMouseDown={(e) => { e.stopPropagation(); handleCtxAction('edit'); }}>Edit</button>
+              <button className="uc-ctx-item uc-ctx-item--danger" onMouseDown={(e) => { e.stopPropagation(); handleCtxAction('delete'); }}>Delete</button>
+            </>
+          )}
+          {ctxMenu.item.source === 'builtin' && (
+            <button className="uc-ctx-item" onMouseDown={(e) => { e.stopPropagation(); handleCtxAction('duplicate'); }}>Duplicate as Custom</button>
+          )}
+        </div>
+      )}
 
       {/* ── Right panel: View or Edit ─────────────────────────── */}
       <div className="uc-body">
@@ -431,7 +518,7 @@ function AssociationPanel({ itemId, category, operators, onChanged }: {
 
   const handleUnlink = useCallback((operatorId: string, skillCategory: string) => {
     if (!isSkill) return;
-    removeSkillLink(operatorId, skillCategory as any, itemId);
+    removeSkillLink(operatorId, skillCategory as SkillType, itemId);
     onChanged();
   }, [isSkill, itemId, onChanged]);
 
@@ -534,12 +621,12 @@ function starStr(n: number): string { return `${n}\u2605`; }
 
 // ── Custom item views ────────────────────────────────────────────────────────
 
-function CustomDataView({ data, category }: { data: any; category: ContentCategory }) {
+function CustomDataView({ data, category }: { data: CustomData; category: ContentCategory }) {
   switch (category) {
-    case ContentCategory.OPERATORS: return <CustomOperatorView data={data} />;
-    case ContentCategory.WEAPONS: return <CustomWeaponView data={data} />;
-    case ContentCategory.GEAR_SETS: return <CustomGearSetView data={data} />;
-    case ContentCategory.SKILLS: return <CustomSkillView data={data} />;
+    case ContentCategory.OPERATORS: return <CustomOperatorView data={data as CustomOperator} />;
+    case ContentCategory.WEAPONS: return <CustomWeaponView data={data as CustomWeapon} />;
+    case ContentCategory.GEAR_SETS: return <CustomGearSetView data={data as CustomGearSet} />;
+    case ContentCategory.SKILLS: return <CustomSkillView data={data as CustomSkill} />;
     case ContentCategory.WEAPON_EFFECTS:
     case ContentCategory.GEAR_EFFECTS:
     case ContentCategory.OPERATOR_STATUSES:
@@ -570,31 +657,27 @@ function CustomOperatorView({ data }: { data: CustomOperator }) {
           {Object.entries(data.baseStats.lv90).map(([k, v]) => <Field key={k} label={k.replace(/_/g, ' ')} value={String(v)} />)}
         </div>
       </GSection>
-      {data.skills && (
-        <GSection title="Skills">
-          {(['basicAttack', 'battleSkill', 'comboSkill', 'ultimate'] as const).map((key) => {
-            const skill = data.skills?.[key];
-            if (!skill) return null;
-            return (
-              <div key={key} className="cv-effect-card">
-                <div className="cv-effect-name">{skill.name || key}</div>
-                <div className="cv-skill-type-badge">{key}</div>
-                <div className="cv-field-grid">
-                  {skill.element && <Field label="Element" value={skill.element} />}
-                  <Field label="Duration" value={`${skill.durationSeconds}s`} />
-                  {skill.cooldownSeconds != null && <Field label="Cooldown" value={`${skill.cooldownSeconds}s`} />}
-                </div>
-                {skill.multipliers && skill.multipliers.length > 0 && (
-                  <div className="cv-buffs">
-                    <span className="cv-label">Multipliers:</span>
-                    {skill.multipliers.map((m, i) => (
-                      <span key={i} className="cv-buff-tag">{m.label}: [{m.values.slice(0, 3).join(', ')}...]</span>
-                    ))}
-                  </div>
-                )}
+      {data.skills && data.skills.length > 0 && (
+        <GSection title={`Skills (${data.skills.length})`}>
+          {data.skills.map((skill, i) => (
+            <div key={i} className="cv-effect-card">
+              <div className="cv-effect-name">{skill.name || `Skill ${i + 1}`}</div>
+              <div className="cv-skill-type-badge">{skill.combatSkillType.replace(/_/g, ' ')}</div>
+              <div className="cv-field-grid">
+                {skill.element && <Field label="Element" value={skill.element} />}
+                <Field label="Duration" value={`${skill.durationSeconds}s`} />
+                {skill.cooldownSeconds != null && <Field label="Cooldown" value={`${skill.cooldownSeconds}s`} />}
               </div>
-            );
-          })}
+              {skill.multipliers && skill.multipliers.length > 0 && (
+                <div className="cv-buffs">
+                  <span className="cv-label">Multipliers:</span>
+                  {skill.multipliers.map((m, mi) => (
+                    <span key={mi} className="cv-buff-tag">{m.label}: [{m.values.slice(0, 3).join(', ')}...]</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </GSection>
       )}
       <GSection title="Combo Trigger">
@@ -604,8 +687,8 @@ function CustomOperatorView({ data }: { data: CustomOperator }) {
           {data.combo.onTriggerClause.length > 0 && (
             <div className="cv-triggers">
               <span className="cv-label">Conditions:</span>
-              {data.combo.onTriggerClause.map((pred: any, i: number) => (
-                <span key={i}>{pred.conditions?.map((c: any, ci: number) => <code key={ci} className="cv-trigger-tag">{interactionToText(c)}</code>)}</span>
+              {data.combo.onTriggerClause.map((pred, i) => (
+                <span key={i}>{pred.conditions?.map((c, ci) => <code key={ci} className="cv-trigger-tag">{interactionToText(c)}</code>)}</span>
               ))}
             </div>
           )}
@@ -792,7 +875,7 @@ function CustomSkillView({ data }: { data: CustomSkill }) {
 }
 
 /** Reusable card for a CustomStatusEventDef. */
-function StatusEventCard({ se }: { se: any }) {
+function StatusEventCard({ se }: { se: CustomStatusEventDef }) {
   return (
     <div className="cv-effect-card">
       <div className="cv-effect-name">{se.name || '(unnamed)'}</div>
@@ -807,15 +890,15 @@ function StatusEventCard({ se }: { se: any }) {
       {se.stats && se.stats.length > 0 && (
         <div className="cv-buffs">
           <span className="cv-label">Stats:</span>
-          {se.stats.map((s: any, i: number) => (
-            <span key={i} className="cv-buff-tag">{s.statType.replace(/_/g, ' ')} [{(s.value ?? []).join(', ')}]</span>
+          {se.stats.map((s, i) => (
+            <span key={i} className="cv-buff-tag">{String(s.statType).replace(/_/g, ' ')} [{(s.value ?? []).join(', ')}]</span>
           ))}
         </div>
       )}
       {se.clause && se.clause.length > 0 && (
         <div className="cv-clause-conditions">
           <span className="cv-label">Clause:</span>
-          {se.clause.map((pred: any, pi: number) => (
+          {se.clause.map((pred, pi) => (
             <div key={pi}>
               {(pred.conditions ?? []).map((c: Interaction, ci: number) => <code key={ci} className="cv-trigger-tag">{interactionToText(c)}</code>)}
               {pred.effects && pred.effects.length > 0 && (
@@ -828,7 +911,7 @@ function StatusEventCard({ se }: { se: any }) {
       {se.onTriggerClause && se.onTriggerClause.length > 0 && (
         <div className="cv-clause-conditions">
           <span className="cv-label">Trigger:</span>
-          {se.onTriggerClause.map((pred: any, pi: number) => (
+          {se.onTriggerClause.map((pred, pi) => (
             <div key={pi}>
               {(pred.conditions ?? []).map((c: Interaction, ci: number) => <code key={ci} className="cv-trigger-tag">{interactionToText(c)}</code>)}
             </div>
@@ -839,10 +922,13 @@ function StatusEventCard({ se }: { se: any }) {
   );
 }
 
-function CustomGenericView({ data }: { data: any }) {
-  const statusEvents = data.statusEvents ?? (data.statusEvent ? [data.statusEvent] : []);
-  const scalarEntries = Object.entries(data).filter(([k, v]) => k !== 'statusEvents' && k !== 'statusEvent' && k !== 'passiveStats' && typeof v !== 'object');
-  const passiveStats = data.passiveStats ? Object.entries(data.passiveStats) : [];
+function CustomGenericView({ data }: { data: CustomData }) {
+  const rec = data as unknown as Record<string, unknown>;
+  const seArr = rec.statusEvents as CustomStatusEventDef[] | undefined;
+  const seSingle = rec.statusEvent as CustomStatusEventDef | undefined;
+  const statusEvents: CustomStatusEventDef[] = seArr ?? (seSingle ? [seSingle] : []);
+  const scalarEntries = Object.entries(rec).filter(([k, v]) => k !== 'statusEvents' && k !== 'statusEvent' && k !== 'passiveStats' && typeof v !== 'object');
+  const passiveStats = rec.passiveStats ? Object.entries(rec.passiveStats as Record<string, unknown>) : [];
 
   return (
     <>
@@ -860,7 +946,7 @@ function CustomGenericView({ data }: { data: any }) {
       )}
       {statusEvents.length > 0 && (
         <GSection title={`Status Events (${statusEvents.length})`}>
-          {statusEvents.map((se: any, i: number) => <StatusEventCard key={i} se={se} />)}
+          {statusEvents.map((se, i) => <StatusEventCard key={i} se={se} />)}
         </GSection>
       )}
     </>
@@ -876,14 +962,110 @@ function BuiltinDataView({ item }: { item: ContentBrowserItem }) {
     case ContentCategory.GEAR_SETS: return <BuiltinGearSetView id={item.id} />;
     case ContentCategory.SKILLS: return <BuiltinSkillView id={item.id} />;
     case ContentCategory.WEAPON_EFFECTS: return <BuiltinWeaponEffectView id={item.id} />;
-    case ContentCategory.GEAR_EFFECTS: return <BuiltinGearEffectView id={item.id} />;
+    case ContentCategory.GEAR_EFFECTS: return <BuiltinGearSetView id={item.id.replace(/^gse:/, '')} />;
     case ContentCategory.TALENTS: return <BuiltinTalentView id={item.id} />;
     default: return null;
   }
 }
 
+const ELEMENT_COLORS: Record<string, string> = {
+  HEAT: '#f08030', ELECTRIC: '#a080f0', CRYO: '#60c8f0',
+  NATURE: '#70c050', PHYSICAL: '#c0c0c0', AETHER: '#e0b060',
+};
+
+function SkillEntryCard({ entry, accent }: { entry: SkillEntryData; accent: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      className={`cv-effect-card cv-skill-card${expanded ? ' cv-skill-card--expanded' : ''}`}
+      style={{ borderLeftColor: accent }}
+    >
+      <div className="cv-skill-card-header" onClick={() => setExpanded(!expanded)}>
+        <div style={{ minWidth: 0 }}>
+          <div className="cv-effect-name">{entry.label}</div>
+          {entry.subLabel && (
+            <div className="cv-skill-type-badge" style={{ marginTop: 2, marginBottom: 0 }}>{entry.subLabel}</div>
+          )}
+        </div>
+        <div className={`cv-skill-card-chevron${expanded ? ' cv-skill-card-chevron--open' : ''}`}>&#9662;</div>
+      </div>
+      {expanded && (
+        <div className="cv-skill-card-body oee">
+          <div className="oee-body">
+            <SkillEntrySection entry={entry} readOnly defaultOpen />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
+  operatorId: string;
+  skillType: SkillType;
+  skill: { name: string; description?: string; element?: string; defaultActivationDuration: number; defaultActiveDuration: number; defaultCooldownDuration: number; skillPointCost?: number; gaugeGain?: number; teamGaugeGain?: number; spReturnNotes?: string[] };
+}) {
+  const JSON_KEYS: Record<SkillType, string> = { basic: 'BASIC_ATTACK', battle: 'BATTLE_SKILL', combo: 'COMBO_SKILL', ultimate: 'ULTIMATE' };
+  const skillEntries = useMemo(
+    () => buildSkillEntries(operatorId, JSON_KEYS[skillType]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [operatorId, skillType],
+  );
+
+  const comboTrigger = useMemo(
+    () => skillType === 'combo' ? resolveComboTrigger(operatorId) : null,
+    [operatorId, skillType],
+  );
+
+  const op = ALL_OPERATORS.find((o) => o.id === operatorId);
+  const ultEnergy = useMemo(
+    () => skillType === 'ultimate' && op ? resolveUltimateEnergy(operatorId, 0, op.ultimateEnergyCost, skill.gaugeGain, skill.teamGaugeGain) : null,
+    [operatorId, skillType, op, skill.gaugeGain, skill.teamGaugeGain],
+  );
+
+  const accent = (skill.element ? ELEMENT_COLORS[skill.element] : undefined) ?? op?.color ?? 'var(--text-muted)';
+
+  return (
+    <GSection title={SKILL_TYPE_LABELS[skillType] ?? skillType}>
+      {skill.description && <div className="cv-effect-desc">{skill.description}</div>}
+
+      <div className="cv-field-grid">
+        {skill.element && <Field label="Element" value={skill.element} />}
+        {skill.defaultActivationDuration > 0 && <Field label="Activation" value={`${fmtN(skill.defaultActivationDuration / 120)}s`} />}
+        {skill.defaultActiveDuration > 0 && <Field label="Active" value={`${fmtN(skill.defaultActiveDuration / 120)}s`} />}
+        {skill.defaultCooldownDuration > 0 && <Field label="Cooldown" value={`${fmtN(skill.defaultCooldownDuration / 120)}s`} />}
+        {skill.skillPointCost != null && <Field label="SP Cost" value={String(skill.skillPointCost)} />}
+      </div>
+
+      {comboTrigger && (
+        <div className="cv-effect-card">
+          <div className="cv-effect-name" style={{ fontSize: '0.625rem', letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>Combo Trigger</div>
+          <div className="cv-effect-desc">{comboTrigger.description}</div>
+          <Field label="Window" value={`${fmtN(comboTrigger.windowSeconds)}s`} />
+        </div>
+      )}
+
+      {ultEnergy && (
+        <div className="cv-effect-card">
+          <div className="cv-effect-name" style={{ fontSize: '0.625rem', letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>Ultimate Energy</div>
+          <div className="cv-field-grid">
+            <Field label="Energy Cost" value={String(ultEnergy.adjustedCost)} />
+            {ultEnergy.gaugeGain != null && ultEnergy.gaugeGain > 0 && <Field label="Gauge Gain" value={String(ultEnergy.gaugeGain)} />}
+            {ultEnergy.teamGaugeGain != null && ultEnergy.teamGaugeGain > 0 && <Field label="Team Gauge" value={String(ultEnergy.teamGaugeGain)} />}
+          </div>
+        </div>
+      )}
+
+      {skillEntries.map((entry) => (
+        <SkillEntryCard key={entry.id} entry={entry} accent={accent} />
+      ))}
+    </GSection>
+  );
+}
+
 function BuiltinOperatorView({ id }: { id: string }) {
-  const op = ALL_OPERATORS.find((o: any) => o.id === id) as any;
+  const op = ALL_OPERATORS.find((o) => o.id === id);
   if (!op) return null;
 
   return (
@@ -893,45 +1075,7 @@ function BuiltinOperatorView({ id }: { id: string }) {
         <Field label="Role" value={op.role} />
         <Field label="Element" value={op.element} />
         <Field label="Weapon Types" value={op.weaponTypes?.join(', ')} />
-        <Field label="Ultimate Energy" value={String(op.ultimateEnergyCost)} />
       </div>
-
-      <GSection title="Default Loadout">
-        <div className="cv-field-grid">
-          <Field label="Weapon" value={op.weapon} />
-          <Field label="Armor" value={op.armor} />
-          <Field label="Gloves" value={op.gloves} />
-          <Field label="Kit 1" value={op.kit1} />
-          <Field label="Kit 2" value={op.kit2} />
-          <Field label="Food" value={op.food} />
-          <Field label="Tactical" value={op.tactical} />
-        </div>
-      </GSection>
-
-      <GSection title="Skills">
-        {Object.entries(op.skills).map(([key, skill]: [string, any]) => {
-          const label = (COMBAT_SKILL_LABELS as any)[skill.name] || skill.name;
-          return (
-            <div key={key} className="cv-effect-card">
-              <div className="cv-effect-card-header">
-                <div className="cv-effect-name">{label}</div>
-              </div>
-              <div className="cv-skill-type-badge">{SKILL_TYPE_LABELS[key] ?? key}</div>
-              {skill.description && <div className="cv-effect-desc">{skill.description}</div>}
-              <div className="cv-field-grid">
-                {skill.element && <Field label="Element" value={skill.element} />}
-                <Field label="Activation" value={`${skill.defaultActivationDuration}f`} />
-                <Field label="Active" value={`${skill.defaultActiveDuration}f`} />
-                <Field label="Cooldown" value={`${skill.defaultCooldownDuration}f`} />
-                {skill.animationDuration != null && <Field label="Animation" value={`${skill.animationDuration}f`} />}
-                {skill.skillPointCost != null && <Field label="SP Cost" value={String(skill.skillPointCost)} />}
-                {skill.gaugeGain != null && <Field label="Gauge Gain" value={String(skill.gaugeGain)} />}
-                {skill.teamGaugeGain != null && <Field label="Team Gauge" value={String(skill.teamGaugeGain)} />}
-              </div>
-            </div>
-          );
-        })}
-      </GSection>
 
       <GSection title="Talents">
         {[1, 2].map((slot) => {
@@ -954,17 +1098,14 @@ function BuiltinOperatorView({ id }: { id: string }) {
         })}
       </GSection>
 
-      {(() => {
-        const comboInfo = getComboTriggerInfo(op.id);
-        return comboInfo && (
-          <GSection title="Combo Trigger">
-            <div className="cv-effect-card">
-              <div className="cv-effect-desc">{comboInfo.description}</div>
-              <Field label="Window" value={`${comboInfo.windowFrames}f (${(comboInfo.windowFrames / 120).toFixed(1)}s)`} />
-            </div>
-          </GSection>
-        );
-      })()}
+      {(['basic', 'battle', 'combo', 'ultimate'] as const).map((skillType) => (
+        <BuiltinOperatorSkillSection
+          key={skillType}
+          operatorId={id}
+          skillType={skillType}
+          skill={op.skills[skillType]}
+        />
+      ))}
 
       {op.potentialDescriptions && op.potentialDescriptions.length > 0 && (
         <GSection title="Potentials">
@@ -1001,25 +1142,25 @@ function BuiltinWeaponView({ id }: { id: string }) {
       </GSection>
       {dslDefs.length > 0 && (
         <GSection title="Triggered Effects">
-          {dslDefs.map((def: any, i: number) => (
+          {dslDefs.map((def, i: number) => (
             <div key={i} className="cv-effect-card">
               <div className="cv-effect-name">{def.label ?? def.name}</div>
               <div className="cv-field-grid">
                 <Field label="Target" value={resolveTargetDisplay(def)} />
                 <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
                 <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
-                {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
+                {(def.cooldownSeconds ?? 0) > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
               </div>
               {resolveTriggerInteractions(def).length > 0 && (
                 <div className="cv-triggers">
                   <span className="cv-label">Triggers:</span>
-                  {resolveTriggerInteractions(def).map((t: any, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
+                  {resolveTriggerInteractions(def).map((t, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
                 </div>
               )}
-              {def.buffs?.length > 0 && (
+              {def.buffs && def.buffs.length > 0 && (
                 <div className="cv-buffs">
                   <span className="cv-label">Buffs:</span>
-                  {def.buffs.map((b: any, j: number) => (
+                  {def.buffs.map((b, j: number) => (
                     <span key={j} className="cv-buff-tag">{b.stat} {b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}{b.perStack ? ' /stack' : ''}</span>
                   ))}
                 </div>
@@ -1033,58 +1174,214 @@ function BuiltinWeaponView({ id }: { id: string }) {
   );
 }
 
-function BuiltinGearSetView({ id }: { id: string }) {
-  const pieces = GEARS.filter((g) => g.gearSetType === id);
-  const passiveEntry = getGearSetEffects(id as any);
-  const dslDefs = getGearEffectDefs(id);
-  if (pieces.length === 0) return null;
+/** Format a stat value: percentages get %, integers stay as-is. */
+function formatStatVal(key: string, val: number): string {
+  const PCT_STATS = new Set([
+    'HEAT_DAMAGE_BONUS', 'NATURE_DAMAGE_BONUS', 'CRYO_DAMAGE_BONUS', 'ELECTRIC_DAMAGE_BONUS',
+    'PHYSICAL_DAMAGE_BONUS', 'ARTS_DAMAGE_BONUS', 'SKILL_DAMAGE_BONUS',
+    'BASIC_ATTACK_DAMAGE_BONUS', 'BATTLE_SKILL_DAMAGE_BONUS', 'COMBO_SKILL_DAMAGE_BONUS',
+    'ULTIMATE_DAMAGE_BONUS', 'CRITICAL_RATE', 'CRITICAL_DAMAGE',
+    'ATTACK_BONUS', 'STRENGTH_BONUS', 'AGILITY_BONUS', 'INTELLECT_BONUS', 'WILL_BONUS',
+    'HP_BONUS', 'TREATMENT_BONUS', 'FINAL_DAMAGE_REDUCTION',
+    'STAGGER_EFFICIENCY_BONUS', 'ULTIMATE_GAIN_EFFICIENCY', 'COMBO_SKILL_COOLDOWN_REDUCTION',
+  ]);
+  if (PCT_STATS.has(key) || (val > 0 && val < 1)) return `${(val * 100).toFixed(1)}%`;
+  if (Number.isInteger(val)) return String(val);
+  return val.toFixed(1);
+}
+
+const GEAR_CATEGORY_ORDER = [GearCategory.ARMOR, GearCategory.GLOVES, GearCategory.KIT];
+const GEAR_CATEGORY_LABELS: Record<string, string> = {
+  [GearCategory.ARMOR]: 'Armor',
+  [GearCategory.GLOVES]: 'Gloves',
+  [GearCategory.KIT]: 'Kit',
+};
+
+function GearPieceCard({ piece, icon }: { piece: GearPieceData; icon?: string }) {
+  const ranks = Object.keys(piece.allLevels).sort((a, b) => Number(a) - Number(b));
+  const statKeys = ranks.length > 0 ? Object.keys(piece.allLevels[ranks[0]]) : [];
 
   return (
-    <>
-      <GSection title={`Pieces (${pieces.length})`}>
-        {pieces.map((p) => (
-          <div key={p.name} className="cv-subsection">
-            <span className="cv-piece-name">{p.name}</span>
-            <span className="cv-piece-meta">{starStr(p.rarity)} {p.gearCategory}</span>
+    <div className="gs-piece-card">
+      <div className="gs-piece-body">
+        {icon && (
+          <div className="gs-piece-icon-wrap">
+            <img className="gs-piece-icon" src={icon} alt={piece.name} />
           </div>
-        ))}
-      </GSection>
-      {passiveEntry && Object.keys(passiveEntry.passiveStats).length > 0 && (
-        <GSection title="Passive Stats (3-piece)">
-          <div className="cv-field-grid">
-            {Object.entries(passiveEntry.passiveStats).map(([stat, val]) => <Field key={stat} label={stat.replace(/_/g, ' ')} value={String(val)} />)}
+        )}
+        <div className="gs-piece-info">
+          <div className="gs-piece-header">
+            <div className="gs-piece-name">{piece.name}</div>
           </div>
-        </GSection>
-      )}
-      {dslDefs.length > 0 && (
-        <GSection title="Triggered Effects">
-          {dslDefs.map((def: any, i: number) => (
-            <div key={i} className="cv-effect-card">
-              <div className="cv-effect-name">{def.label ?? def.name}</div>
-              <div className="cv-field-grid">
-                <Field label="Target" value={resolveTargetDisplay(def)} />
-                <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
-                <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
+          <div className="gs-piece-meta">DEF {piece.defense}</div>
+          {statKeys.length > 0 && (
+            <div className="gs-piece-stats">
+              <div className="gs-piece-stat-row gs-piece-stat-header">
+                <span className="gs-piece-stat-name" />
+                <span className="gs-piece-stat-vals">
+                  {ranks.map((r) => <span key={r} className="gs-rank-label">R{r}</span>)}
+                </span>
               </div>
-              {resolveTriggerInteractions(def).length > 0 && (
-                <div className="cv-triggers">
-                  <span className="cv-label">Triggers:</span>
-                  {resolveTriggerInteractions(def).map((t: any, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
+              {statKeys.map((stat) => (
+                <div key={stat} className="gs-piece-stat-row">
+                  <span className="gs-piece-stat-name">{stat.replace(/_/g, ' ')}</span>
+                  <span className="gs-piece-stat-vals">
+                    {ranks.map((r, ri) => (
+                      <span key={r} className={ri === ranks.length - 1 ? 'gs-piece-stat-max' : ''}>
+                        {formatStatVal(stat, piece.allLevels[r][stat])}
+                      </span>
+                    ))}
+                  </span>
                 </div>
-              )}
-              {def.buffs?.length > 0 && (
-                <div className="cv-buffs">
-                  <span className="cv-label">Buffs:</span>
-                  {def.buffs.map((b: any, j: number) => (
-                    <span key={j} className="cv-buff-tag">{b.stat} {b.value}{b.perStack ? ' /stack' : ''}</span>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
-          ))}
-        </GSection>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const GEAR_TAB_ABBREV: Record<string, string> = {
+  [GearCategory.ARMOR]: 'ARM',
+  [GearCategory.GLOVES]: 'GLV',
+  [GearCategory.KIT]: 'KIT',
+};
+
+function BuiltinGearSetView({ id }: { id: string }) {
+  const gearSetData = getGearSetData(id);
+  const registryPieces = GEARS.filter((g) => g.gearSetType === id);
+  const passiveEntry = getGearSetEffects(id as GearSetType);
+  const dslDefs = getGearEffectDefs(id);
+  const [activeTab, setActiveTab] = useState<string>(GearCategory.ARMOR);
+
+  // Convert vertical wheel to horizontal scroll in the pieces area
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth) return;
+      e.preventDefault();
+      el.scrollBy({ left: e.deltaY || e.deltaX });
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, [activeTab]);
+
+  if (registryPieces.length === 0 && !gearSetData) return null;
+
+  const pieces = [...(gearSetData?.pieces ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const piecesByCategory: Record<string, GearPieceData[]> = {};
+  for (const p of pieces) {
+    if (!piecesByCategory[p.gearCategory]) piecesByCategory[p.gearCategory] = [];
+    piecesByCategory[p.gearCategory].push(p);
+  }
+
+  // Build icon lookup from registry
+  const iconMap: Record<string, string | undefined> = {};
+  for (const rp of registryPieces) {
+    iconMap[rp.name] = rp.icon;
+  }
+
+  const hasPassive = passiveEntry && Object.keys(passiveEntry.passiveStats).length > 0;
+  const hasTriggered = dslDefs.length > 0;
+  const setDesc = gearSetData?.setEffect?.description;
+  const activePieces = piecesByCategory[activeTab] ?? [];
+
+  return (
+    <div className="gs-root">
+      {/* ── Set Effect Section ───────────────────────────────────── */}
+      {(hasPassive || hasTriggered || setDesc) && (
+        <div className="gs-effect-section">
+          <div className="gs-section-label">Set Effect <span className="gs-section-badge">{gearSetData?.setEffect?.piecesRequired ?? 3}-Piece</span></div>
+
+          {setDesc && (
+            <div className="gs-set-desc">{setDesc}</div>
+          )}
+
+          {hasPassive && (
+            <div className="gs-passive-block">
+              <div className="gs-passive-label">Permanent Stats</div>
+              <div className="gs-passive-stats">
+                {Object.entries(passiveEntry!.passiveStats).map(([stat, val]) => (
+                  <div key={stat} className="gs-passive-stat">
+                    <span className="gs-passive-stat-name">{stat.replace(/_/g, ' ')}</span>
+                    <span className="gs-passive-stat-val">+{formatStatVal(stat, val as number)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasTriggered && (
+            <div className="gs-triggered-block">
+              <div className="gs-passive-label">Triggered Effects</div>
+              {dslDefs.map((def, i: number) => (
+                <div key={i} className="gs-trigger-card">
+                  <div className="gs-trigger-name">{def.label ?? def.name}</div>
+                  <div className="gs-trigger-meta">
+                    <span className="gs-trigger-tag">{resolveTargetDisplay(def)}</span>
+                    <span className="gs-trigger-tag">{resolveDurationSeconds(def)}s</span>
+                    {(def.stack?.max?.P0 ?? 1) > 1 && <span className="gs-trigger-tag">max {def.stack?.max?.P0} stacks</span>}
+                  </div>
+                  {resolveTriggerInteractions(def).length > 0 && (
+                    <div className="cv-triggers">
+                      <span className="cv-label">When:</span>
+                      {resolveTriggerInteractions(def).map((t, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
+                    </div>
+                  )}
+                  {def.clause && def.clause.length > 0 && (
+                    <div className="cv-triggers">
+                      <span className="cv-label">Effect:</span>
+                      {def.clause.flatMap((c, ci) =>
+                        (c.effects ?? []).map((e, ei) => (
+                          <code key={`${ci}-${ei}`} className="cv-trigger-tag">{effectToText(e as unknown as Effect)}</code>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {def.buffs && def.buffs.length > 0 && (
+                    <div className="cv-buffs">
+                      <span className="cv-label">Buffs:</span>
+                      {def.buffs.map((b, j: number) => (
+                        <span key={j} className="cv-buff-tag">{b.stat.replace(/_/g, ' ')} +{b.value}{b.perStack ? ' /stack' : ''}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
-    </>
+
+      {/* ── Rail + Horizontal Scroll ─────────────────────────── */}
+      <div className="gs-pieces-area">
+        <div className="gs-tab-rail">
+          {GEAR_CATEGORY_ORDER.map((cat) => {
+            const count = piecesByCategory[cat]?.length ?? 0;
+            if (count === 0) return null;
+            return (
+              <button
+                key={cat}
+                className={`gs-tab-btn${activeTab === cat ? ' gs-tab-btn--active' : ''}`}
+                onClick={() => setActiveTab(cat)}
+                title={GEAR_CATEGORY_LABELS[cat]}
+              >
+                <span className="gs-tab-abbrev">{GEAR_TAB_ABBREV[cat]}</span>
+                <span className="gs-tab-count">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="gs-scroll-area" ref={scrollRef}>
+          {activePieces.map((p) => (
+            <GearPieceCard key={p.gearType} piece={p} icon={iconMap[p.name]} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1093,26 +1390,27 @@ function BuiltinSkillView({ id }: { id: string }) {
   if (parts.length < 3) return null;
   const opId = parts[1];
   const skillType = parts[2] as SkillType;
-  const op = ALL_OPERATORS.find((o: any) => o.id === opId) as any;
+  const op = ALL_OPERATORS.find((o) => o.id === opId);
   if (!op) return null;
   const skill = op.skills?.[skillType];
   if (!skill) return null;
 
   const opJson = getOperatorJson(opId);
   const jsonKey = SKILL_TYPE_TO_JSON_KEY[skillType];
-  const skillJson = opJson?.skills?.[jsonKey] as Record<string, any> | undefined;
+  const skillsMap = opJson?.skills as Record<string, Record<string, unknown>> | undefined;
+  const skillJson = skillsMap?.[jsonKey];
 
   // Variants
-  const variants: { key: string; data: Record<string, any> }[] = [];
-  if (opJson?.skills) {
-    for (const [k, v] of Object.entries(opJson.skills)) {
-      if (k !== jsonKey && k.includes(jsonKey)) variants.push({ key: k, data: v as Record<string, any> });
+  const variants: { key: string; data: Record<string, unknown> }[] = [];
+  if (skillsMap) {
+    for (const [k, v] of Object.entries(skillsMap)) {
+      if (k !== jsonKey && k.includes(jsonKey)) variants.push({ key: k, data: v });
     }
   }
 
   const hasSegments = skillJson?.segments && Array.isArray(skillJson.segments) && skillJson.segments.length > 0;
   const hasFrames = skillJson?.frames && Array.isArray(skillJson.frames) && skillJson.frames.length > 0;
-  const statusEvents: Record<string, any>[] = opJson?.statusEvents ?? [];
+  const statusEvents = (opJson?.statusEvents ?? []) as Record<string, unknown>[];
 
   return (
     <>
@@ -1132,7 +1430,6 @@ function BuiltinSkillView({ id }: { id: string }) {
           <Field label="Activation" value={`${skill.defaultActivationDuration}f (${(skill.defaultActivationDuration / 120).toFixed(2)}s)`} />
           <Field label="Active" value={`${skill.defaultActiveDuration}f (${(skill.defaultActiveDuration / 120).toFixed(2)}s)`} />
           <Field label="Cooldown" value={`${skill.defaultCooldownDuration}f (${(skill.defaultCooldownDuration / 120).toFixed(2)}s)`} />
-          {skill.animationDuration != null && <Field label="Animation" value={`${skill.animationDuration}f`} />}
         </div>
       </GSection>
       <GSection title="Resources">
@@ -1145,14 +1442,14 @@ function BuiltinSkillView({ id }: { id: string }) {
 
       {hasSegments && (
         <GSection title="Combo Chain">
-          {(skillJson!.segments as any[]).map((seg, si) => {
-            const dur = seg.duration;
+          {(skillJson!.segments as Record<string, unknown>[]).map((seg, si) => {
+            const dur = seg.duration as { value: number; unit: string } | undefined;
             const durVal = dur?.value ?? 0;
             const durStr = dur ? `${durVal}${dur.unit === 'FRAME' ? 'f' : 's'}` : '';
-            const frames: any[] = seg.frames ?? [];
-            const effects: Effect[] = (seg.clause ?? []).flatMap((p: any) => p.effects ?? []);
-            const stats: any[] = seg.stats ?? [];
-            const segName = seg.name ? seg.name : (si < HIT_NAMES.length ? HIT_NAMES[si] : `Hit ${si + 1}`);
+            const frames = (seg.frames ?? []) as Record<string, unknown>[];
+            const effects: Effect[] = ((seg.clause ?? []) as Predicate[]).flatMap((p: Predicate) => p.effects ?? []);
+            const stats = (seg.stats ?? []) as { statType: string; value: number | number[] }[];
+            const segName = seg.name ? String(seg.name) : (si < HIT_NAMES.length ? HIT_NAMES[si] : `Hit ${si + 1}`);
             return (
               <div key={si} className="cv-chain-segment">
                 <div className="cv-chain-segment-header">
@@ -1169,13 +1466,13 @@ function BuiltinSkillView({ id }: { id: string }) {
                 )}
                 {stats.length > 0 && (
                   <div className="cv-field-grid cv-chain-stats">
-                    {stats.map((s: any, i: number) => <Field key={i} label={s.statType} value={Array.isArray(s.value) ? s.value.join(', ') : String(s.value)} />)}
+                    {stats.map((s, i) => <Field key={i} label={s.statType} value={Array.isArray(s.value) ? s.value.join(', ') : String(s.value)} />)}
                   </div>
                 )}
                 {frames.length > 0 && (
                   <div className="cv-chain-frames">
-                    {frames.map((f: any, fi: number) => {
-                      const offset = f.offset;
+                    {frames.map((f, fi) => {
+                      const offset = f.offset as { value: number; unit: string } | undefined;
                       const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
                       return (
                         <div key={fi} className="cv-frame-card">
@@ -1197,10 +1494,10 @@ function BuiltinSkillView({ id }: { id: string }) {
       {hasFrames && !hasSegments && (
         <GSection title="Frame Data">
           <div className="cv-frame-timeline">
-            {(skillJson!.frames as any[]).map((frame, fi) => {
-              const offset = frame.offset;
+            {(skillJson!.frames as Record<string, unknown>[]).map((frame, fi) => {
+              const offset = frame.offset as { value: number; unit: string } | undefined;
               const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
-              const fEffects: Effect[] = (frame.clause ?? []).flatMap((p: any) => p.effects ?? []);
+              const fEffects: Effect[] = ((frame.clause ?? []) as Predicate[]).flatMap((p: Predicate) => p.effects ?? []);
               return (
                 <div key={fi} className="cv-frame-card">
                   <div className="cv-frame-header">
@@ -1222,7 +1519,7 @@ function BuiltinSkillView({ id }: { id: string }) {
       {variants.length > 0 && (
         <GSection title="Variants">
           {variants.map((v) => {
-            const vEffects: Effect[] = (v.data.clause ?? []).flatMap((p: any) => p.effects ?? []);
+            const vEffects: Effect[] = ((v.data.clause ?? []) as Predicate[]).flatMap((p: Predicate) => p.effects ?? []);
             return (
               <div key={v.key} className="cv-variant-card">
                 <div className="cv-variant-header">{v.key.replace(/_/g, ' ')}</div>
@@ -1241,11 +1538,12 @@ function BuiltinSkillView({ id }: { id: string }) {
       {statusEvents.length > 0 && (
         <GSection title="Operator Status Events">
           {statusEvents.map((se, i) => {
-            const dur = se.duration ?? se.properties?.duration;
+            const props = se.properties as Record<string, unknown> | undefined;
+            const dur = (se.duration ?? props?.duration) as { value: number | number[]; unit: string } | undefined;
             const durStr = dur ? (Array.isArray(dur.value) ? dur.value.join(', ') : dur.value) + (dur.unit === 'FRAME' ? 'f' : 's') : '';
             return (
               <div key={i} className="cv-effect-card">
-                <div className="cv-effect-name">{se.id}</div>
+                <div className="cv-effect-name">{String(se.id)}</div>
                 <div className="cv-field-grid">
                   <Field label="Target" value={String(se.target ?? '').replace(/_/g, ' ')} />
                   <Field label="Element" value={String(se.element ?? 'NONE')} />
@@ -1267,69 +1565,26 @@ function BuiltinWeaponEffectView({ id }: { id: string }) {
 
   return (
     <>
-      {defs.map((def: any, i: number) => (
+      {defs.map((def, i: number) => (
         <div key={i} className="cv-effect-card">
           <div className="cv-effect-name">{def.label ?? def.name}</div>
           <div className="cv-field-grid">
             <Field label="Target" value={resolveTargetDisplay(def)} />
             <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
             <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
-            {def.cooldownSeconds > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
+            {(def.cooldownSeconds ?? 0) > 0 && <Field label="Cooldown" value={`${def.cooldownSeconds}s`} />}
           </div>
           {resolveTriggerInteractions(def).length > 0 && (
             <div className="cv-triggers">
               <span className="cv-label">Triggers:</span>
-              {resolveTriggerInteractions(def).map((t: any, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
+              {resolveTriggerInteractions(def).map((t, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
             </div>
           )}
-          {def.buffs?.length > 0 && (
+          {def.buffs && def.buffs.length > 0 && (
             <div className="cv-buffs">
               <span className="cv-label">Buffs:</span>
-              {def.buffs.map((b: any, j: number) => (
+              {def.buffs.map((b, j: number) => (
                 <span key={j} className="cv-buff-tag">{b.stat} {b.valueMin != null ? `${b.valueMin}\u2013${b.valueMax}` : b.value}{b.perStack ? ' /stack' : ''}</span>
-              ))}
-            </div>
-          )}
-          {def.note && <div className="cv-note">{def.note}</div>}
-        </div>
-      ))}
-    </>
-  );
-}
-
-function BuiltinGearEffectView({ id }: { id: string }) {
-  const gearSetType = id.replace(/^gse:/, '');
-  const passiveEntry = getGearSetEffects(gearSetType as any);
-  const dslDefs = getGearEffectDefs(gearSetType);
-
-  return (
-    <>
-      {passiveEntry && Object.keys(passiveEntry.passiveStats).length > 0 && (
-        <GSection title="Passive Stats">
-          <div className="cv-field-grid">
-            {Object.entries(passiveEntry.passiveStats).map(([stat, val]) => <Field key={stat} label={stat.replace(/_/g, ' ')} value={String(val)} />)}
-          </div>
-        </GSection>
-      )}
-      {dslDefs.map((def: any, i: number) => (
-        <div key={i} className="cv-effect-card">
-          <div className="cv-effect-name">{def.label ?? def.name}</div>
-          <div className="cv-field-grid">
-            <Field label="Target" value={resolveTargetDisplay(def)} />
-            <Field label="Duration" value={`${resolveDurationSeconds(def)}s`} />
-            <Field label="Max Stacks" value={String(def.stack?.max?.P0 ?? 1)} />
-          </div>
-          {resolveTriggerInteractions(def).length > 0 && (
-            <div className="cv-triggers">
-              <span className="cv-label">Triggers:</span>
-              {resolveTriggerInteractions(def).map((t: any, j: number) => <code key={j} className="cv-trigger-tag">{interactionToText(t)}</code>)}
-            </div>
-          )}
-          {def.buffs?.length > 0 && (
-            <div className="cv-buffs">
-              <span className="cv-label">Buffs:</span>
-              {def.buffs.map((b: any, j: number) => (
-                <span key={j} className="cv-buff-tag">{b.stat} {b.value}{b.perStack ? ' /stack' : ''}</span>
               ))}
             </div>
           )}
@@ -1345,7 +1600,7 @@ function BuiltinTalentView({ id }: { id: string }) {
   if (parts.length < 3) return null;
   const opId = parts[1];
   const slot = parseInt(parts[2], 10);
-  const op = ALL_OPERATORS.find((o: any) => o.id === opId) as any;
+  const op = ALL_OPERATORS.find((o) => o.id === opId);
   if (!op) return null;
 
   const maxLevel = slot === 1 ? op.maxTalentOneLevel : op.maxTalentTwoLevel;

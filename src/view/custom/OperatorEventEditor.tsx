@@ -13,6 +13,27 @@ import type { CombatSkillsType } from '../../consts/enums';
 import type { Clause } from '../../consts/semantics';
 import ClauseEditor from './ClauseEditor';
 
+/** Shape for JSON skill/segment/frame/status data flowing through the editor. */
+export interface JsonSkillData {
+  [key: string]: unknown;
+  clause?: Clause;
+  segments?: JsonSkillData[];
+  frames?: JsonSkillData[];
+  duration?: { value: number; unit: string };
+  offset?: { value: number; unit: string };
+  properties?: { name?: string; description?: string; duration?: { value: number; unit: string }; offset?: { value: number; unit: string } };
+  metadata?: { dataSources?: string[]; originId?: string };
+  dataSources?: string[];
+  statusLevel?: JsonSkillData;
+  onTriggerClause?: Clause;
+  onEntryClause?: Clause;
+  onExitClause?: Clause;
+  id?: string;
+  element?: string;
+  target?: string;
+  isForced?: boolean;
+}
+
 interface Props {
   operatorId: string;
   onBack?: () => void;
@@ -40,6 +61,60 @@ const BATK_VARIANT_LABELS: Record<string, string> = {
   DIVE: 'Dive Attack',
 };
 
+export interface SkillEntryData {
+  id: string;
+  label: string;
+  data: JsonSkillData;
+  subLabel?: string;
+}
+
+/** Build skill entry list for a single category (BASIC_ATTACK, BATTLE_SKILL, etc.) including variants. */
+export function buildSkillEntries(
+  operatorId: string,
+  categoryKey: string,
+): SkillEntryData[] {
+  const opJson = getOperatorJson(operatorId);
+  if (!opJson) return [];
+  const skills = (opJson.skills ?? {}) as Record<string, JsonSkillData>;
+  const skillTypeMap = getRawSkillTypeMap(operatorId);
+  const mapping = skillTypeMap[categoryKey];
+  if (!mapping) return [];
+
+  const entries: SkillEntryData[] = [];
+
+  if (typeof mapping === 'string') {
+    const data = skills[mapping];
+    if (data) {
+      entries.push({ id: mapping, label: COMBAT_SKILL_LABELS[mapping as CombatSkillsType] || data.properties?.name || mapping, data });
+    }
+    for (const [key, val] of Object.entries(skills)) {
+      if (key !== mapping && key.startsWith(mapping + '_')) {
+        const suffix = key.slice(mapping.length + 1);
+        entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: suffix.replace(/_/g, ' ') });
+      }
+    }
+  } else if (typeof mapping === 'object') {
+    const seenIds = new Set<string>();
+    for (const [variant, skillId] of Object.entries(mapping)) {
+      if (seenIds.has(skillId as string)) continue;
+      seenIds.add(skillId as string);
+      const data = skills[skillId as string];
+      if (data) {
+        entries.push({ id: skillId as string, label: COMBAT_SKILL_LABELS[skillId as CombatSkillsType] || (data as JsonSkillData).properties?.name as string || (skillId as string), data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
+      }
+      for (const [key, val] of Object.entries(skills)) {
+        if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
+          seenIds.add(key);
+          const suffix = key.slice((skillId as string).length + 1);
+          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
 export default function OperatorEventEditor({ operatorId, onBack }: Props) {
   const op = ALL_OPERATORS.find((o) => o.id === operatorId);
   const opJson = useMemo(() => getOperatorJson(operatorId), [operatorId]);
@@ -49,13 +124,13 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
     return <div className="oee-empty">Operator not found</div>;
   }
 
-  const skills = (opJson.skills ?? {}) as Record<string, any>;
-  const statusEvents = (opJson.statusEvents ?? []) as any[];
+  const skills = (opJson.skills ?? {}) as Record<string, JsonSkillData>;
+  const statusEvents = (opJson.statusEvents ?? []) as JsonSkillData[];
 
   // Group skills by category using skillTypeMap
   const skillCategories = SKILL_CATEGORY_ORDER.map((cat) => {
     const mapping = skillTypeMap[cat];
-    const entries: { id: string; label: string; data: any; subLabel?: string }[] = [];
+    const entries: { id: string; label: string; data: JsonSkillData; subLabel?: string }[] = [];
 
     if (!mapping) return { category: cat, entries };
 
@@ -63,7 +138,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
       // Simple mapping: one skill ID
       const data = skills[mapping];
       if (data) {
-        const displayLabel = COMBAT_SKILL_LABELS[mapping as CombatSkillsType] || data.name || mapping;
+        const displayLabel = COMBAT_SKILL_LABELS[mapping as CombatSkillsType] || data.properties?.name || mapping;
         entries.push({ id: mapping, label: displayLabel, data });
       }
       // Also find variants (ENHANCED_, EMPOWERED_)
@@ -71,7 +146,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
         if (key !== mapping && key.startsWith(mapping + '_')) {
           const suffix = key.slice(mapping.length + 1);
           const variantLabel = suffix.replace(/_/g, ' ');
-          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as any).name || key, data: val, subLabel: variantLabel });
+          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: variantLabel });
         }
       }
     } else if (typeof mapping === 'object') {
@@ -82,7 +157,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
         seenIds.add(skillId as string);
         const data = skills[skillId as string];
         if (data) {
-          const displayLabel = COMBAT_SKILL_LABELS[skillId as CombatSkillsType] || (data as any).name || (skillId as string);
+          const displayLabel = COMBAT_SKILL_LABELS[skillId as CombatSkillsType] || (data as JsonSkillData).properties?.name as string || (skillId as string);
           entries.push({ id: skillId as string, label: displayLabel, data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
         }
         // Variants of this BATK skill (ENHANCED_, etc.)
@@ -90,7 +165,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
           if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
             seenIds.add(key);
             const suffix = key.slice((skillId as string).length + 1);
-            entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as any).name || key, data: val, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
+            entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
           }
         }
       }
@@ -153,11 +228,11 @@ function CategorySection({ title, children, defaultOpen }: {
 
 // ── Skill entry section ─────────────────────────────────────────────────────
 
-function SkillEntrySection({ entry }: { entry: { id: string; label: string; data: any; subLabel?: string } }) {
-  const [open, setOpen] = useState(false);
+export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { id: string; label: string; data: JsonSkillData; subLabel?: string }; readOnly?: boolean; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
   const data = entry.data;
-  const segments: any[] = data.segments ?? [];
-  const frames: any[] = data.frames ?? [];
+  const segments = data.segments ?? [];
+  const frames = data.frames ?? [];
   const clause: Clause = data.clause ?? [];
   const hasContent = segments.length > 0 || frames.length > 0 || clause.length > 0;
 
@@ -173,29 +248,29 @@ function SkillEntrySection({ entry }: { entry: { id: string; label: string; data
       {open && (
         <div className="oee-entry-body">
           {/* Skill-level metadata */}
-          {data.name && (
+          {data.properties?.name && (
             <div className="oee-meta-row">
               <span className="oee-meta-label">Name</span>
-              <span className="oee-meta-value">{data.name}</span>
+              <span className="oee-meta-value">{data.properties?.name}</span>
             </div>
           )}
-          {data.description && (
+          {data.properties?.description && (
             <div className="oee-meta-row oee-meta-row--desc">
               <span className="oee-meta-label">Description</span>
-              <span className="oee-meta-value oee-meta-desc">{data.description}</span>
+              <span className="oee-meta-value oee-meta-desc">{data.properties?.description}</span>
             </div>
           )}
 
           {/* Skill-level clause */}
           {clause.length > 0 && (
-            <ClauseSection title="Skill Clause" clause={clause} />
+            <ClauseSection title="Skill Clause" clause={clause} readOnly={readOnly} />
           )}
 
           {/* Segments (basic attack combo chain) */}
           {segments.length > 0 && (
             <div className="oee-segments">
               {segments.map((seg, si) => (
-                <SegmentSection key={si} segment={seg} index={si} />
+                <SegmentSection key={si} segment={seg} index={si} readOnly={readOnly} />
               ))}
             </div>
           )}
@@ -204,7 +279,7 @@ function SkillEntrySection({ entry }: { entry: { id: string; label: string; data
           {frames.length > 0 && segments.length === 0 && (
             <div className="oee-frames">
               {frames.map((frame, fi) => (
-                <FrameSection key={fi} frame={frame} index={fi} />
+                <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
               ))}
             </div>
           )}
@@ -218,12 +293,12 @@ function SkillEntrySection({ entry }: { entry: { id: string; label: string; data
 
 const HIT_NAMES = ['Hit 1', 'Hit 2', 'Hit 3', 'Hit 4', 'Hit 5', 'Hit 6', 'Hit 7', 'Hit 8'];
 
-function SegmentSection({ segment, index }: { segment: any; index: number }) {
+function SegmentSection({ segment, index, readOnly }: { segment: JsonSkillData; index: number; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
-  const name = segment.name || (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`);
+  const name = segment.properties?.name || (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`);
   const dur = segment.properties?.duration ?? segment.duration;
   const durStr = dur ? `${dur.value}${dur.unit === 'FRAME' ? 'f' : 's'}` : '';
-  const frames: any[] = segment.frames ?? [];
+  const frames = segment.frames ?? [];
   const clause: Clause = segment.clause ?? [];
 
   return (
@@ -239,12 +314,12 @@ function SegmentSection({ segment, index }: { segment: any; index: number }) {
         <div className="oee-segment-body">
           {/* Segment-level clause */}
           {clause.length > 0 && (
-            <ClauseSection title="Segment Clause" clause={clause} />
+            <ClauseSection title="Segment Clause" clause={clause} readOnly={readOnly} />
           )}
 
           {/* Frames within segment */}
           {frames.map((frame, fi) => (
-            <FrameSection key={fi} frame={frame} index={fi} />
+            <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
           ))}
         </div>
       )}
@@ -254,7 +329,7 @@ function SegmentSection({ segment, index }: { segment: any; index: number }) {
 
 // ── Frame section ───────────────────────────────────────────────────────────
 
-function FrameSection({ frame, index }: { frame: any; index: number }) {
+function FrameSection({ frame, index, readOnly }: { frame: JsonSkillData; index: number; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const offset = frame.properties?.offset ?? frame.offset;
   const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
@@ -274,7 +349,7 @@ function FrameSection({ frame, index }: { frame: any; index: number }) {
 
       {open && hasClause && (
         <div className="oee-frame-body">
-          <ClauseSection title="Frame Clause" clause={clause} />
+          <ClauseSection title="Frame Clause" clause={clause} readOnly={readOnly} />
         </div>
       )}
     </div>
@@ -283,17 +358,18 @@ function FrameSection({ frame, index }: { frame: any; index: number }) {
 
 // ── Status entry section ────────────────────────────────────────────────────
 
-function StatusEntrySection({ status, index }: { status: any; index: number }) {
+function StatusEntrySection({ status, index }: { status: JsonSkillData; index: number }) {
   const [open, setOpen] = useState(false);
-  const statusId = status.id ?? status.name ?? `Status ${index + 1}`;
-  const element = status.element ?? 'NONE';
+  const statusProps = status.properties as Record<string, unknown> | undefined;
+  const statusId = (statusProps?.id as string) ?? (statusProps?.name as string) ?? `Status ${index + 1}`;
+  const element = (statusProps?.element as string) ?? 'NONE';
   const sl = status.statusLevel ?? {};
   const onTriggerClause: Clause = status.onTriggerClause ?? [];
   const clause: Clause = status.clause ?? [];
   const onEntryClause: Clause = status.onEntryClause ?? [];
   const onExitClause: Clause = status.onExitClause ?? [];
-  const segments: any[] = status.segments ?? [];
-  const originId = status.originId ?? '';
+  const segments = status.segments ?? [];
+  const originId = (status.metadata?.originId as string) ?? '';
 
   const limitRaw = sl.limit;
   const limitStr = typeof limitRaw === 'object' && limitRaw !== null
@@ -315,7 +391,7 @@ function StatusEntrySection({ status, index }: { status: any; index: number }) {
           <div className="oee-meta-grid">
             <div className="oee-meta-row">
               <span className="oee-meta-label">Interaction</span>
-              <span className="oee-meta-value">{sl.statusLevelInteractionType ?? 'NONE'}</span>
+              <span className="oee-meta-value">{String(sl.statusLevelInteractionType ?? 'NONE')}</span>
             </div>
             <div className="oee-meta-row">
               <span className="oee-meta-label">Max Stacks</span>
@@ -371,10 +447,11 @@ function StatusEntrySection({ status, index }: { status: any; index: number }) {
 
 // ── Clause section (wraps ClauseEditor with a label) ────────────────────────
 
-function ClauseSection({ title, clause, conditionsOnly }: {
+function ClauseSection({ title, clause, conditionsOnly, readOnly }: {
   title: string;
   clause: Clause;
   conditionsOnly?: boolean;
+  readOnly?: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -396,6 +473,7 @@ function ClauseSection({ title, clause, conditionsOnly }: {
             initialValue={clause}
             onChange={handleChange}
             conditionsOnly={conditionsOnly}
+            readOnly={readOnly}
           />
         </div>
       )}

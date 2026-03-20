@@ -10,8 +10,6 @@
     "ULTIMATE": "SHIELDGUARD_BANNER"
   },
   "ALL_OUT_OFFENSIVE": {
-    "name": "All-Out Offensive",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -703,16 +701,22 @@
         ]
       }
     ],
-    "originId": "pogranichnik"
+    "properties": {
+      "name": "All-Out Offensive",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher attack that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "pogranichnik"
+    }
   },
   "THE_PULVERIZING_FRONT": {
-    "name": "The Pulverizing Front",
-    "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets.",
     "properties": {
       "duration": {
         "value": 1.5,
         "unit": "SECOND"
-      }
+      },
+      "name": "The Pulverizing Front",
+      "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets."
     },
     "frames": [
       {
@@ -894,7 +898,6 @@
         ]
       }
     ],
-    "originId": "pogranichnik",
     "clause": [
       {
         "conditions": [],
@@ -935,23 +938,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "pogranichnik"
+    }
   },
   "FULL_MOON_SLASH": {
-    "name": "Full Moon Slash",
-    "description": "COMBO TRIGGER: When Crush or Breach consumes the enemy's Vulnerability stack(s). \nPerforms a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. \nConsuming 4 stacks of Vulnerability enhances the 3rd slash sequence.",
     "properties": {
-      "duration": {
-        "value": 2.2,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -968,409 +961,10 @@
         ],
         "description": "Crush or Breach consumes Vulnerability",
         "windowFrames": 720
-      }
+      },
+      "name": "Full Moon Slash",
+      "description": "COMBO TRIGGER: When Crush or Breach consumes the enemy's Vulnerability stack(s). \nPerforms a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. \nConsuming 4 stacks of Vulnerability enhances the 3rd slash sequence."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.77,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 3
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.42,
-                      0.46,
-                      0.5,
-                      0.55,
-                      0.59,
-                      0.63,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.81,
-                      0.87,
-                      0.95
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.54,
-                      0.59,
-                      0.65,
-                      0.7,
-                      0.76,
-                      0.81,
-                      0.86,
-                      0.92,
-                      0.97,
-                      1.04,
-                      1.12,
-                      1.22
-                    ]
-                  },
-                  "atkScale3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.66,
-                      0.73,
-                      0.79,
-                      0.86,
-                      0.92,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.19,
-                      1.27,
-                      1.37,
-                      1.49
-                    ]
-                  },
-                  "atkScale4": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.32,
-                      1.45,
-                      1.58,
-                      1.72,
-                      1.85,
-                      1.98,
-                      2.11,
-                      2.24,
-                      2.38,
-                      2.54,
-                      2.74,
-                      2.97
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "atb1": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "atb2": {
-                    "verb": "IS",
-                    "value": 7
-                  },
-                  "atb3": {
-                    "verb": "IS",
-                    "value": 13
-                  },
-                  "atb4": {
-                    "verb": "IS",
-                    "value": 23
-                  },
-                  "poise1": {
-                    "verb": "IS",
-                    "value": 3
-                  },
-                  "poise3": {
-                    "verb": "IS",
-                    "value": 4
-                  },
-                  "poise4": {
-                    "verb": "IS",
-                    "value": 9
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.23,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 3
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.42,
-                      0.46,
-                      0.5,
-                      0.55,
-                      0.59,
-                      0.63,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.81,
-                      0.87,
-                      0.95
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.54,
-                      0.59,
-                      0.65,
-                      0.7,
-                      0.76,
-                      0.81,
-                      0.86,
-                      0.92,
-                      0.97,
-                      1.04,
-                      1.12,
-                      1.22
-                    ]
-                  },
-                  "atkScale3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.66,
-                      0.73,
-                      0.79,
-                      0.86,
-                      0.92,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.19,
-                      1.27,
-                      1.37,
-                      1.49
-                    ]
-                  },
-                  "atkScale4": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.32,
-                      1.45,
-                      1.58,
-                      1.72,
-                      1.85,
-                      1.98,
-                      2.11,
-                      2.24,
-                      2.38,
-                      2.54,
-                      2.74,
-                      2.97
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.03,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 23
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 9
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.42,
-                      0.46,
-                      0.5,
-                      0.55,
-                      0.59,
-                      0.63,
-                      0.67,
-                      0.71,
-                      0.76,
-                      0.81,
-                      0.87,
-                      0.95
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.54,
-                      0.59,
-                      0.65,
-                      0.7,
-                      0.76,
-                      0.81,
-                      0.86,
-                      0.92,
-                      0.97,
-                      1.04,
-                      1.12,
-                      1.22
-                    ]
-                  },
-                  "atkScale3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.66,
-                      0.73,
-                      0.79,
-                      0.86,
-                      0.92,
-                      0.99,
-                      1.06,
-                      1.12,
-                      1.19,
-                      1.27,
-                      1.37,
-                      1.49
-                    ]
-                  },
-                  "atkScale4": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.32,
-                      1.45,
-                      1.58,
-                      1.72,
-                      1.85,
-                      1.98,
-                      2.11,
-                      2.24,
-                      2.38,
-                      2.54,
-                      2.74,
-                      2.97
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "pogranichnik",
     "clause": [
       {
         "conditions": [],
@@ -1399,225 +993,445 @@
           }
         ]
       }
-    ]
-  },
-  "SHIELDGUARD_BANNER": {
-    "name": "Shieldguard Banner, Forward",
-    "description": "Summons 4 Shieldguards to advance and push all enemies along the way towards the target, dealing Physical DMG while generating 5 points of Steel Oath. After an enemy suffers a Physical Status or takes DMG from Pogranichnik's combo skill, Pogranichnik consumes 1 point of Steel Oath and summons 1 Shieldguard to harass the said enemy, dealing Physical DMG and recovering some SP. When the last Steel Oath point is consumed, all 4 Shieldguards will initiate a Decisive Assault that deals massive Physical DMG to the target while recovering plenty of SP.",
-    "properties": {
-      "duration": {
-        "value": 3,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2.47,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 2.47,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.7,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.27,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 3
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.54,
+                          0.59,
+                          0.65,
+                          0.7,
+                          0.76,
+                          0.81,
+                          0.86,
+                          0.92,
+                          0.97,
+                          1.04,
+                          1.12,
+                          1.22
+                        ]
+                      },
+                      "atkScale3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.66,
+                          0.73,
+                          0.79,
+                          0.86,
+                          0.92,
+                          0.99,
+                          1.06,
+                          1.12,
+                          1.19,
+                          1.27,
+                          1.37,
+                          1.49
+                        ]
+                      },
+                      "atkScale4": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.32,
+                          1.45,
+                          1.58,
+                          1.72,
+                          1.85,
+                          1.98,
+                          2.11,
+                          2.24,
+                          2.38,
+                          2.54,
+                          2.74,
+                          2.97
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "atb1": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "atb2": {
+                        "verb": "IS",
+                        "value": 7
+                      },
+                      "atb3": {
+                        "verb": "IS",
+                        "value": 13
+                      },
+                      "atb4": {
+                        "verb": "IS",
+                        "value": 23
+                      },
+                      "poise1": {
+                        "verb": "IS",
+                        "value": 3
+                      },
+                      "poise3": {
+                        "verb": "IS",
+                        "value": 4
+                      },
+                      "poise4": {
+                        "verb": "IS",
+                        "value": 9
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+          },
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.73,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 3
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.54,
+                          0.59,
+                          0.65,
+                          0.7,
+                          0.76,
+                          0.81,
+                          0.86,
+                          0.92,
+                          0.97,
+                          1.04,
+                          1.12,
+                          1.22
+                        ]
+                      },
+                      "atkScale3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.66,
+                          0.73,
+                          0.79,
+                          0.86,
+                          0.92,
+                          0.99,
+                          1.06,
+                          1.12,
+                          1.19,
+                          1.27,
+                          1.37,
+                          1.49
+                        ]
+                      },
+                      "atkScale4": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.32,
+                          1.45,
+                          1.58,
+                          1.72,
+                          1.85,
+                          1.98,
+                          2.11,
+                          2.24,
+                          2.38,
+                          2.54,
+                          2.74,
+                          2.97
+                        ]
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+          },
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.53,
+                "unit": "SECOND"
               }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            },
+            "clause": [
               {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 23
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 9
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.54,
+                          0.59,
+                          0.65,
+                          0.7,
+                          0.76,
+                          0.81,
+                          0.86,
+                          0.92,
+                          0.97,
+                          1.04,
+                          1.12,
+                          1.22
+                        ]
+                      },
+                      "atkScale3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.66,
+                          0.73,
+                          0.79,
+                          0.86,
+                          0.92,
+                          0.99,
+                          1.06,
+                          1.12,
+                          1.19,
+                          1.27,
+                          1.37,
+                          1.49
+                        ]
+                      },
+                      "atkScale4": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.32,
+                          1.45,
+                          1.58,
+                          1.72,
+                          1.85,
+                          1.98,
+                          2.11,
+                          2.24,
+                          2.38,
+                          2.54,
+                          2.74,
+                          2.97
+                        ]
+                      }
+                    }
                   }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 30
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 15
-                  }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "pogranichnik",
+    "metadata": {
+      "originId": "pogranichnik"
+    }
+  },
+  "SHIELDGUARD_BANNER": {
+    "properties": {
+      "name": "Shieldguard Banner, Forward",
+      "description": "Summons 4 Shieldguards to advance and push all enemies along the way towards the target, dealing Physical DMG while generating 5 points of Steel Oath. After an enemy suffers a Physical Status or takes DMG from Pogranichnik's combo skill, Pogranichnik consumes 1 point of Steel Oath and summons 1 Shieldguard to harass the said enemy, dealing Physical DMG and recovering some SP. When the last Steel Oath point is consumed, all 4 Shieldguards will initiate a Decisive Assault that deals massive Physical DMG to the target while recovering plenty of SP."
+    },
     "clause": [
       {
         "conditions": [],
@@ -1634,6 +1448,368 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2.47,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.53,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.06,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.06,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.06,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.06,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.06,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 30
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "pogranichnik"
+    }
+  },
+  "ALL_OUT_OFFENSIVE_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "All-Out Offensive (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "pogranichnik"
+    }
+  },
+  "ALL_OUT_OFFENSIVE_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "All-Out Offensive (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "pogranichnik"
+    }
   }
 }

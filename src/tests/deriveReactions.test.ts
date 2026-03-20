@@ -32,9 +32,7 @@ function infliction(
     ownerId: ENEMY_OWNER_ID,
     columnId,
     startFrame,
-    activationDuration: Math.round(durationSeconds * FPS),
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: Math.round(durationSeconds * FPS) } }],
     sourceOwnerId: 'slot-0',
     ...opts,
   };
@@ -329,9 +327,7 @@ describe('deriveReactions', () => {
       ownerId: 'slot-0',
       columnId: 'battle',
       startFrame: 0,
-      activationDuration: 240,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: [{ properties: { duration: 240 } }],
     };
 
     const events = [

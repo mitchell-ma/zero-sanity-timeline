@@ -4,11 +4,12 @@
  * Validates combo windows, resource availability (SP / ultimate energy),
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
-import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan } from '../../consts/viewTypes';
+import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import { CombatSkillsType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
+import type { Interaction, Predicate } from '../../consts/semantics';
 import { COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
@@ -45,7 +46,7 @@ export function hasEnhanceClauseAtFrame(
     if (ev.ownerId !== ownerId || !ev.segments) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
-      const segEnd = cursor + seg.durationFrames;
+      const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         if (seg.clause.some(c => c.effects.some(e => e.verb === 'ENHANCE' && e.object === enhanceObject))) {
           return true;
@@ -72,7 +73,7 @@ function getDisableAdjectiveAtFrame(
     if (ev.ownerId !== ownerId || !ev.segments) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
-      const segEnd = cursor + seg.durationFrames;
+      const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         for (const c of seg.clause) {
           for (const e of c.effects) {
@@ -93,8 +94,8 @@ function getDisableAdjectiveAtFrame(
 export function computeTimeStopRegions(events: TimelineEvent[]): TimeStopRegion[] {
   const stops: TimeStopRegion[] = [];
   for (const ev of events) {
-    const anim = ev.animationDuration;
-    if (!anim || anim <= 0) continue;
+    const anim = getAnimationDuration(ev);
+    if (anim <= 0) continue;
     const isTimeStop = ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
       (ev.columnId === 'dash' && ev.isPerfectDodge);
     if (!isTimeStop) continue;
@@ -351,6 +352,12 @@ export function computeResourceInsufficiencyZones(
  * Clamps a drag delta to prevent resource-gated events (battle, ultimate) from
  * landing in resource-insufficient zones. Skips zones that contain the event's
  * drag-start position (self-caused). Returns the clamped delta.
+ *
+ * If `invalidAtDragStart` contains this event, the event was already in an
+ * invalid zone when the drag began. In that case, free movement is allowed
+ * until the target reaches a valid position (outside all zones), at which
+ * point the event is moved to `revalidated` and normal clamping resumes
+ * WITHOUT the self-caused zone exemption (so it can't re-enter any zone).
  */
 export function clampDeltaByResourceZones(
   clampedDelta: number,
@@ -358,6 +365,8 @@ export function clampDeltaByResourceZones(
   events: TimelineEvent[],
   startFrame: number,
   resourceZones: Map<string, ResourceZone[]>,
+  invalidAtDragStart?: Set<string>,
+  revalidated?: Set<string>,
 ): number {
   const ev = events.find((e) => e.id === eventId);
   if (!ev || (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE)) return clampedDelta;
@@ -366,10 +375,36 @@ export function clampDeltaByResourceZones(
 
   const target = startFrame + clampedDelta;
 
+  // Event was invalid at drag start — allow free movement through zones
+  // until the target reaches a valid (non-zone) position.
+  if (invalidAtDragStart?.has(eventId)) {
+    const inZone = zones.some((z) => target >= z.start && target < z.end);
+    if (inZone) return clampedDelta; // still in a zone, free movement
+    // Target is now valid — transition: block ALL zones including the original
+    invalidAtDragStart.delete(eventId);
+    revalidated?.add(eventId);
+    return clampedDelta; // current position is valid, no clamping needed
+  }
+
+  // Whether to skip the self-caused zone exemption (revalidated events must
+  // be blocked from every zone, including the one at their drag-start origin).
+  const skipSelfExemption = revalidated?.has(eventId);
+
   for (const zone of zones) {
-    // Skip zones containing the event's drag-start position (self-caused)
-    if (startFrame >= zone.start && startFrame < zone.end) continue;
+    // Skip zones containing the event's drag-start position (self-caused),
+    // unless the event was revalidated mid-drag.
+    if (!skipSelfExemption && startFrame >= zone.start && startFrame < zone.end) continue;
     if (target >= zone.start && target < zone.end) {
+      if (skipSelfExemption) {
+        // Revalidated event: startFrame is inside the zone, so the normal
+        // Math.max(0,...)/Math.min(0,...) would snap back to startFrame.
+        // Instead, clamp to whichever zone boundary the target is closer to.
+        const distToStart = target - zone.start + 1;
+        const distToEnd = zone.end - target;
+        return distToStart <= distToEnd
+          ? zone.start - 1 - startFrame
+          : zone.end - startFrame;
+      }
       if (clampedDelta >= 0) {
         // Dragging down (later) → stop just before zone
         return Math.max(0, zone.start - 1 - startFrame);
@@ -485,6 +520,11 @@ export function isDuplicatePlacementInResourceZone(
  * Clamps a drag delta to keep a combo event within its activation window.
  * Uses the processed events to find combo windows for the event's owner.
  * Non-combo events pass through unchanged.
+ *
+ * If `invalidAtDragStart` contains this event, the event was outside all
+ * combo windows when the drag began. In that case, free movement is allowed
+ * until the target enters a window, at which point the event is removed
+ * from the set and clamped within that window going forward.
  */
 export function clampDeltaByComboWindow(
   clampedDelta: number,
@@ -492,6 +532,7 @@ export function clampDeltaByComboWindow(
   events: TimelineEvent[],
   startFrame: number,
   processedEvents: readonly TimelineEvent[],
+  invalidAtDragStart?: Set<string>,
 ): number {
   const ev = events.find((e) => e.id === eventId);
   if (!ev || ev.columnId !== SKILL_COLUMNS.COMBO) {
@@ -503,23 +544,45 @@ export function clampDeltaByComboWindow(
   );
   if (windows.length === 0) return clampedDelta;
 
-  // Compute window end frame using segments if available (same as comboWindowEndFrame)
-  const windowEndFrame = (w: TimelineEvent) => {
-    const duration = w.segments
-      ? computeSegmentsSpan(w.segments)
-      : w.activationDuration;
-    return w.startFrame + duration;
-  };
+  // Compute window end frame using segments
+  const windowEndFrame = (w: TimelineEvent) => eventEndFrame(w);
 
-  // Find the window the event started in
-  const origWindow = windows.find((w) => {
-    return startFrame >= w.startFrame && startFrame < windowEndFrame(w);
-  });
+  const target = startFrame + clampedDelta;
+
+  // Event was invalid at drag start (outside all windows) — allow free
+  // movement until the target enters a window, then clamp within it.
+  if (invalidAtDragStart?.has(eventId)) {
+    const targetWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
+    if (!targetWindow) return clampedDelta; // still outside, free movement
+    // Entered a window — transition to clamped mode
+    invalidAtDragStart.delete(eventId);
+    const wStart = targetWindow.startFrame;
+    const wEnd = windowEndFrame(targetWindow);
+    if (target < wStart) return wStart - startFrame;
+    if (target >= wEnd) return wEnd - 1 - startFrame;
+    return clampedDelta;
+  }
+
+  // Find the window the event started in, or fall back to the window the
+  // target is currently in (handles post-transition from invalid state).
+  // Third fallback: a window crossed between startFrame and target (overshoot).
+  let origWindow = windows.find((w) => startFrame >= w.startFrame && startFrame < windowEndFrame(w));
+  if (!origWindow) {
+    origWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
+  }
+  if (!origWindow) {
+    // Target overshot past a window — find the closest window between
+    // startFrame and target so we clamp to its boundary instead of escaping.
+    origWindow = windows.find((w) => {
+      const wEnd = windowEndFrame(w);
+      return (startFrame < w.startFrame && wEnd <= target)
+        || (startFrame >= wEnd && w.startFrame >= target);
+    });
+  }
   if (!origWindow) return clampedDelta;
 
   const windowStart = origWindow.startFrame;
   const windowEnd = windowEndFrame(origWindow);
-  const target = startFrame + clampedDelta;
 
   if (target < windowStart) {
     return windowStart - startFrame;
@@ -546,9 +609,7 @@ export function wouldOverlapSiblings(
   if (range <= 0) return false;
   return events.some((sib) => {
     if (sib.ownerId !== ownerId || sib.columnId !== columnId) return false;
-    const sibRange = sib.segments
-      ? computeSegmentsSpan(sib.segments)
-      : (sib.nonOverlappableRange ?? 0);
+    const sibRange = sib.nonOverlappableRange ?? computeSegmentsSpan(sib.segments);
     if (sibRange > 0 && atFrame >= sib.startFrame && atFrame < sib.startFrame + sibRange) return true;
     if (sib.startFrame >= atFrame && sib.startFrame < atFrame + range) return true;
     return false;
@@ -607,11 +668,10 @@ export function computeProspectiveRange(
   // Walk segments, extending game-time segments by time-stop overlap
   let cursor = atFrame;
   for (const s of defaultSkill.segments) {
-    if (s.timeDependency === TimeDependency.REAL_TIME) {
-      cursor += s.durationFrames;
+    if (s.properties.timeDependency === TimeDependency.REAL_TIME) {
+      cursor += s.properties.duration;
     } else {
-      // extendByTimeStops only reads startFrame/durationFrames; safe to cast
-      cursor += extendByTimeStops(cursor, s.durationFrames, timeStopRegions as any);
+      cursor += extendByTimeStops(cursor, s.properties.duration, timeStopRegions as unknown as readonly import('./processTimeStop').TimeStopRegion[]);
     }
   }
   return cursor - atFrame;
@@ -648,7 +708,7 @@ export function checkComboWindowAvailability(
     (ev) => ev.columnId === COMBO_WINDOW_COLUMN_ID && ev.ownerId === ownerId,
   );
   const matchingWindow = windowEvents.find((w) => {
-    const endFrame = w.startFrame + w.activationDuration;
+    const endFrame = eventEndFrame(w);
     return atFrame >= w.startFrame && atFrame < endFrame;
   });
 
@@ -659,7 +719,7 @@ export function checkComboWindowAvailability(
   const windowConsumed = events.some((ev) =>
     ev.columnId === SKILL_COLUMNS.COMBO && ev.ownerId === ownerId &&
     ev.startFrame >= matchingWindow.startFrame &&
-    ev.startFrame < matchingWindow.startFrame + matchingWindow.activationDuration,
+    ev.startFrame < eventEndFrame(matchingWindow),
   );
 
   if (windowConsumed) {
@@ -688,7 +748,7 @@ export function validateSegmentContiguity(
 
   // Segment-level contiguity
   if (allSegmentLabels && allSegmentLabels.length > 1 && segments.length < allSegmentLabels.length) {
-    const presentLabels = new Set(segments.map((s) => s.label));
+    const presentLabels = new Set(segments.map((s) => s.properties.name));
     const indices = allSegmentLabels
       .map((l, i) => presentLabels.has(l) ? i : -1)
       .filter((i) => i >= 0);
@@ -705,7 +765,7 @@ export function validateSegmentContiguity(
   if (allDefaultSegments) {
     for (let si = 0; si < segments.length; si++) {
       const seg = segments[si];
-      const defaultSeg = allDefaultSegments.find((ds) => ds.label === seg.label) ?? allDefaultSegments[si];
+      const defaultSeg = allDefaultSegments.find((ds) => ds.properties.name === seg.properties.name) ?? allDefaultSegments[si];
       const allFrameOffsets = defaultSeg?.frames?.map((f) => f.offsetFrame) ?? [];
       const presentOffsets = new Set((seg.frames ?? []).map((f) => f.offsetFrame));
       if (allFrameOffsets.length > 0 && presentOffsets.size < allFrameOffsets.length) {
@@ -719,7 +779,7 @@ export function validateSegmentContiguity(
           const missingNums = allFrameOffsets
             .map((o, i) => presentOffsets.has(o) ? null : i + 1)
             .filter((n) => n !== null);
-          warnings.push(`Sequence ${seg.label ?? si + 1}: non-contiguous frames (missing: ${missingNums.join(', ')})`);
+          warnings.push(`Sequence ${seg.properties.name ?? si + 1}: non-contiguous frames (missing: ${missingNums.join(', ')})`);
         }
       }
     }
@@ -800,11 +860,11 @@ export function checkVariantAvailability(
     const opId = slot?.operator?.id;
     if (opId) {
       const opJson = getOperatorJson(opId);
-      const statusEvents = opJson?.statusEvents as any[] | undefined;
+      const statusEvents = opJson?.statusEvents as { target?: string; targetDeterminer?: string; isNamedEvent?: boolean; name?: string; stack?: { max?: Record<string, number> } }[] | undefined;
       const statusDef = statusEvents?.find(
-        (se: any) => se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS') && se.isNamedEvent && se.stack,
+        (se) => se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS') && se.isNamedEvent && se.stack,
       );
-      if (statusDef) {
+      if (statusDef && statusDef.stack && statusDef.name) {
         const potKey = `P${slot?.potential ?? 0}`;
         const maxStacks = statusDef.stack.max?.[potKey] ?? statusDef.stack.max?.P0 ?? 4;
         const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.name]
@@ -815,7 +875,7 @@ export function checkVariantAvailability(
             ev.ownerId === ownerId &&
             ev.columnId === colId &&
             ev.startFrame <= atFrame &&
-            ev.startFrame + ev.activationDuration > atFrame,
+            eventEndFrame(ev) > atFrame,
         ).length;
         if (activeCount < maxStacks) {
           return { disabled: true, reason: `Requires max ${statusLabel} (${activeCount}/${maxStacks})` };
@@ -852,7 +912,7 @@ export function validateComboWindows(
       continue;
     }
     const matchingWindow = ownerWindows.find((w) => {
-      const endFrame = w.startFrame + w.activationDuration;
+      const endFrame = eventEndFrame(w);
       return ev.startFrame >= w.startFrame && ev.startFrame < endFrame;
     });
     if (!matchingWindow) {
@@ -879,7 +939,7 @@ export function validateComboWindows(
         continue;
       }
       const matchingWindow = ownerWindows.find((w) => {
-        const endFrame = w.startFrame + w.activationDuration;
+        const endFrame = eventEndFrame(w);
         return ev.startFrame >= w.startFrame && ev.startFrame < endFrame;
       });
       if (!matchingWindow) {
@@ -941,7 +1001,7 @@ export function validateEmpowered(events: TimelineEvent[]): Map<string, string> 
         mf.ownerId === ev.ownerId &&
         mf.columnId === 'melting-flame' &&
         mf.startFrame <= ev.startFrame &&
-        mf.startFrame + mf.activationDuration > ev.startFrame,
+        eventEndFrame(mf) > ev.startFrame,
     );
     if (mfEvents.length < 4) {
       map.set(ev.id, `Requires max Melting Flame stacks (${mfEvents.length}/4)`);
@@ -965,7 +1025,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
       let offset = ev.startFrame;
       for (const seg of ev.segments) {
         segStarts.push(offset);
-        offset += seg.durationFrames;
+        offset += seg.properties.duration;
       }
     } else {
       segStarts.push(ev.startFrame);
@@ -1004,7 +1064,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
       let offset = ev.startFrame;
       for (const seg of ev.segments) {
         segStarts.push(offset);
-        offset += seg.durationFrames;
+        offset += seg.properties.duration;
       }
     } else {
       segStarts.push(ev.startFrame);
@@ -1025,10 +1085,10 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
  * Searches all skill categories for segments with a matching name and a clause,
  * or for a skill category with a matching id and a clause.
  */
-function getVariantClause(operatorId: string, variantName: string): any[] | null {
+function getVariantClause(operatorId: string, variantName: string): Predicate[] | null {
   const json = getOperatorJson(operatorId);
   if (!json?.skills) return null;
-  for (const cat of Object.values(json.skills) as any[]) {
+  for (const cat of Object.values(json.skills) as { id?: string; clause?: Predicate[]; segments?: { name?: string; clause?: Predicate[] }[] }[]) {
     // Check skill category-level clause (matched by id)
     if (cat.id === variantName && cat.clause) return cat.clause;
     // Check segment-level clauses (matched by name, case-insensitive)
@@ -1046,7 +1106,7 @@ interface ClauseContext {
 }
 
 /** Evaluate a single interaction condition against the current state. */
-function evaluateCondition(cond: any, ctx: ClauseContext): boolean {
+function evaluateCondition(cond: Interaction, ctx: ClauseContext): boolean {
   let result = true;
   if (cond.verb === 'IS' && cond.object === 'ACTIVE') {
     if (cond.subjectProperty === 'ULTIMATE') {
@@ -1062,10 +1122,10 @@ function evaluateCondition(cond: any, ctx: ClauseContext): boolean {
  * Returns { pass: true } if any predicate's conditions all hold,
  * or { pass: false, reason } if none pass.
  */
-function evaluateClause(clause: any[], ctx: ClauseContext): { pass: boolean; reason?: string } {
+function evaluateClause(clause: Predicate[], ctx: ClauseContext): { pass: boolean; reason?: string } {
   for (const pred of clause) {
     if (!pred.conditions?.length) continue;
-    const allMet = pred.conditions.every((c: any) => evaluateCondition(c, ctx));
+    const allMet = pred.conditions.every((c) => evaluateCondition(c, ctx));
     if (allMet) return { pass: true };
   }
   // Build reason from first predicate's failed conditions
@@ -1122,9 +1182,9 @@ export function getEffectiveStaggerWindows(
   for (const ev of events) {
     if (
       (ev.columnId === NODE_STAGGER_COLUMN_ID || ev.columnId === FULL_STAGGER_COLUMN_ID)
-      && ev.activationDuration > 0
+      && eventDuration(ev) > 0
     ) {
-      const endFrame = ev.startFrame + ev.activationDuration;
+      const endFrame = eventEndFrame(ev);
       // Skip if already covered by a computed break
       const covered = staggerBreaks.some(
         (b) => ev.startFrame >= b.startFrame && endFrame <= b.endFrame,
@@ -1281,7 +1341,7 @@ export function validateInflictionStacks(events: TimelineEvent[]): Map<string, s
       for (let j = 0; j < sorted.length; j++) {
         if (j === i) continue;
         if (map.has(sorted[j].id)) continue; // already flagged as excess
-        const endFrame = sorted[j].startFrame + sorted[j].activationDuration;
+        const endFrame = eventEndFrame(sorted[j]);
         if (sorted[j].startFrame <= incoming.startFrame && endFrame > incoming.startFrame) {
           activeCount++;
         }

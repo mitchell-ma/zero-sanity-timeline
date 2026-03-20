@@ -1068,6 +1068,97 @@
   line-height: 1.4;
 }
 
+/* ─── Gallery Skill Cards ─────────────────────────── */
+.cv-skill-card {
+  border-left: 3px solid var(--text-muted);
+  cursor: default;
+}
+.cv-skill-card--expanded {
+  background: var(--bg-elevated);
+}
+.cv-skill-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.cv-skill-card-header:hover {
+  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+}
+.cv-skill-card-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.cv-skill-card-chevron--open {
+  transform: rotate(180deg);
+}
+.cv-skill-card-body {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cv-skill-card-sub {
+  margin-top: 0.25rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--border-dim);
+}
+.cv-skill-card-sub-label {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+/* ─── Multiplier Tables (gallery) ────────────────── */
+.cv-mult-scroll {
+  overflow-x: auto;
+  margin-top: 0.25rem;
+}
+.cv-mult-table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  border: 1px solid var(--border-dim);
+}
+.cv-mult-table--wide {
+  width: 100%;
+}
+.cv-mult-table th {
+  font-weight: 700;
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  padding: 0.375rem 0.375rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-dim);
+  background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+}
+.cv-mult-table td {
+  padding: 0.375rem 0.375rem;
+  text-align: center;
+  color: var(--text-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-dim) 50%, transparent);
+}
+.cv-mult-row-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  border-right: 1px solid var(--border-dim);
+  padding-left: 0.5rem;
+  padding-right: 0.75rem;
+}
+
 .cv-inline-meta {
   font-family: var(--font-mono);
   font-size: 0.625rem;
@@ -4637,6 +4728,14 @@
   transition: border-color 0.1s, background 0.1s;
   -moz-appearance: textfield;
 }
+.wz-field-label-fixed {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.375rem 0.5rem;
+  border: 1px solid transparent;
+  text-transform: capitalize;
+}
 .wz-field > input::-webkit-inner-spin-button,
 .wz-field > input::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -5312,6 +5411,14 @@
 }
 [data-theme="light"] .ce-tree {
   --ce-line: #c4c4ca;
+}
+.ce-tree--readonly .ce-line-btn,
+.ce-tree--readonly .ce-add,
+.ce-tree--readonly .ce-li--addrow {
+  display: none;
+}
+.ce-tree--readonly {
+  pointer-events: none;
 }
 
 /* ── Root node ── */
@@ -6554,6 +6661,40 @@
   text-align: center;
 }
 
+/* ── Context menu ────────────────────────────────────────────────────── */
+.uc-ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 10rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-med);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 0.25rem 0;
+}
+.uc-ctx-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.uc-ctx-item:hover {
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+}
+.uc-ctx-item--danger {
+  color: var(--red, #e05555);
+}
+.uc-ctx-item--danger:hover {
+  background: color-mix(in srgb, var(--red, #e05555) 15%, transparent);
+}
+
 /* ── Right panel (view/edit) ────────────────────────────────────────────── */
 .uc-body {
   flex: 1;
@@ -6823,4 +6964,736 @@
 .uc-vs-sub .uc-vf {
   border-bottom: none;
   padding: 0.125rem 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   OPERATOR SECTION — Linear Form Layout
+══════════════════════════════════════════════════════════ */
+
+.ops-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Section divider ─────────────────────────────────── */
+.ops-section {
+  padding: 0;
+}
+.ops-section + .ops-section {
+  margin-top: 0.25rem;
+}
+.ops-section-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.25rem 0;
+  margin-bottom: 0.625rem;
+  border-bottom: 1px solid var(--border-med);
+}
+.ops-section-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ops-section-trailing {
+  margin-left: auto;
+}
+.ops-section-body {
+  padding: 0 0 0.75rem;
+}
+
+/* ── Generic field layout ────────────────────────────── */
+.ops-row {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin-bottom: 0.375rem;
+}
+.ops-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
+  flex: 1;
+}
+.ops-field--grow {
+  flex: 2;
+}
+.ops-field-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.ops-field input,
+.ops-field select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.5rem;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+}
+.ops-field input:focus,
+.ops-field select:focus {
+  border-color: var(--border-bright);
+  background: var(--bg-elevated);
+}
+.ops-field input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.ops-field input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+.ops-field input::-webkit-inner-spin-button,
+.ops-field input::-webkit-outer-spin-button {
+  opacity: 0;
+}
+
+/* Input with unit suffix */
+.ops-input-unit {
+  display: flex;
+  align-items: stretch;
+}
+.ops-input-unit input {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-right: none;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.5rem;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.ops-input-unit input:focus {
+  border-color: var(--border-bright);
+  background: var(--bg-elevated);
+}
+.ops-input-unit input::-webkit-inner-spin-button,
+.ops-input-unit input::-webkit-outer-spin-button {
+  opacity: 0;
+}
+.ops-unit {
+  display: flex;
+  align-items: center;
+  padding: 0 0.375rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ops-input-unit--compact {
+  max-width: 7rem;
+}
+.ops-input-unit--compact input {
+  width: 4rem;
+}
+
+/* ── Weapon pill selector ────────────────────────────── */
+.ops-weapon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.375rem;
+}
+.ops-pill-group {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+.ops-pill {
+  padding: 0.1875rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ops-pill:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-med);
+}
+.ops-pill--active {
+  background: color-mix(in srgb, var(--blue) 20%, transparent);
+  border-color: var(--blue);
+  color: var(--text-bright);
+}
+
+/* Rarity buttons */
+.ops-rarity-group {
+  display: flex;
+  gap: 0.1875rem;
+}
+.ops-rarity-btn {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ops-rarity-btn:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-med);
+}
+.ops-rarity-btn--active {
+  background: color-mix(in srgb, #f0a040 20%, transparent);
+  border-color: #f0a040;
+  color: #f0a040;
+}
+
+/* ── Micro button (+ / ×) ────────────────────────────── */
+.ops-btn-micro {
+  width: 1.375rem;
+  height: 1.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+.ops-btn-micro:hover {
+  color: var(--text-bright);
+  border-color: var(--border-med);
+  background: var(--bg-elevated);
+}
+.ops-btn-micro--dim {
+  border-color: transparent;
+}
+.ops-btn-micro--dim:hover {
+  border-color: var(--border-dim);
+  color: var(--red);
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.ops-empty {
+  padding: 0.5rem 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* ── Stats ───────────────────────────────────────────── */
+.ops-stats-pair {
+  display: flex;
+  gap: 1.25rem;
+}
+.ops-stat-block {
+  flex: 1;
+  min-width: 0;
+}
+.ops-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+.ops-stat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.ops-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.ops-stat-name {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 6rem;
+}
+.ops-stat-name--fixed {
+  color: var(--text-secondary);
+}
+.ops-stat-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-dim);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.25rem;
+  min-width: 6rem;
+  flex: 1;
+  outline: none;
+}
+.ops-stat-name-input:focus {
+  border-bottom-color: var(--border-bright);
+  color: var(--text-bright);
+}
+.ops-stat-name-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.ops-stat-val {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0.125rem 0.375rem;
+  width: 5rem;
+  text-align: right;
+  outline: none;
+}
+.ops-stat-val:focus {
+  border-color: var(--border-bright);
+  background: var(--bg-elevated);
+}
+.ops-stat-val::-webkit-inner-spin-button,
+.ops-stat-val::-webkit-outer-spin-button {
+  opacity: 0;
+}
+
+/* ── Skill tabs ──────────────────────────────────────── */
+.ops-skill-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.625rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.ops-skill-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.0625rem;
+  padding: 0.375rem 0.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ops-skill-tab:hover {
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+}
+.ops-skill-tab--active {
+  color: var(--text-bright);
+  border-bottom-color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 6%, transparent);
+}
+.ops-skill-tab-abbrev {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+.ops-skill-tab--active .ops-skill-tab-abbrev {
+  opacity: 1;
+  color: var(--blue);
+}
+.ops-skill-tab-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Skill tab count badge */
+.ops-skill-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  margin-left: 0.25rem;
+  padding: 0 0.25rem;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.ops-skill-tab--active .ops-skill-tab-count {
+  background: color-mix(in srgb, var(--blue) 25%, transparent);
+  color: var(--blue);
+}
+
+/* ── Skill card (wraps each skill in the list) ───────── */
+.ops-skill-card {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-card);
+}
+.ops-skill-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
+}
+.ops-skill-card-index {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 0.0625rem 0.3125rem;
+  flex-shrink: 0;
+}
+.ops-skill-card-name {
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Skill form ──────────────────────────────────────── */
+.ops-skill-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+}
+
+/* ── Add skill button ────────────────────────────────── */
+.ops-add-skill-btn {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0;
+  margin-top: 0.25rem;
+  background: none;
+  border: 1px dashed var(--border-dim);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ops-add-skill-btn:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-med);
+  background: var(--bg-card);
+}
+
+/* ── Combo trigger block (inside Combo tab) ──────────── */
+.ops-combo-trigger-block {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-card);
+}
+
+/* ── Sub-sections (segments, multipliers, clause) ────── */
+.ops-sub-section {
+  margin-top: 0.5rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--border-dim);
+}
+.ops-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+}
+.ops-sub-label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Segment cards */
+.ops-segment-card {
+  margin-bottom: 0.25rem;
+  padding: 0.3125rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+}
+.ops-segment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.ops-segment-index {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 0.0625rem 0.3125rem;
+  flex-shrink: 0;
+}
+.ops-segment-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.125rem 0.25rem;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+.ops-segment-name-input:focus {
+  border-bottom-color: var(--border-dim);
+}
+.ops-segment-name-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Multiplier cards */
+.ops-mult-card {
+  margin-bottom: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+}
+.ops-mult-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+}
+.ops-mult-label-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.125rem 0.25rem;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+.ops-mult-label-input:focus {
+  border-bottom-color: var(--border-dim);
+}
+.ops-mult-label-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.ops-mult-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.125rem;
+}
+.ops-mult-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.0625rem;
+}
+.ops-mult-lv {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  color: var(--text-muted);
+}
+.ops-mult-cell input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0.125rem 0.1875rem;
+  width: 100%;
+  text-align: center;
+  outline: none;
+}
+.ops-mult-cell input:focus {
+  border-color: var(--border-bright);
+}
+.ops-mult-cell input::-webkit-inner-spin-button,
+.ops-mult-cell input::-webkit-outer-spin-button {
+  opacity: 0;
+}
+
+/* ── Combo trigger ───────────────────────────────────── */
+.ops-trigger-row {
+  margin-bottom: 0.25rem;
+}
+
+/* ── Potentials ──────────────────────────────────────── */
+.ops-potential-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+}
+.ops-potential-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 0.125rem 0.375rem;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.ops-potential-desc {
+  flex: 3;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  outline: none;
+  min-width: 0;
+}
+.ops-potential-desc:focus {
+  border-color: var(--border-bright);
+  background: var(--bg-elevated);
+}
+.ops-potential-desc::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.ops-potential-type {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.375rem;
+  outline: none;
+  min-width: 0;
+}
+.ops-potential-type:focus {
+  border-color: var(--border-bright);
+}
+.ops-potential-type::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Status event cards ──────────────────────────────── */
+.ops-status-card {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+}
+.ops-status-card .wz-subsection {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+.ops-status-card .wz-subsection-header {
+  padding: 0.25rem 0;
+}
+
+/* ── IdField integration — match ops styling ─────────── */
+.ops-root .wz-field > span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.ops-root .wz-field > input {
+  border-radius: 0;
+  border-color: var(--border-dim);
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.5rem;
+}
+.ops-root .wz-field > input:focus {
+  border-color: var(--border-bright);
+  background: var(--bg-elevated);
+}
+
+/* ── StatusEventFields integration ───────────────────── */
+.ops-root .wz-subsection {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+.ops-root .wz-field {
+  gap: 0.1875rem;
+}
+.ops-root .wz-field > input,
+.ops-root .wz-field > select {
+  border-radius: 0;
+  border-color: var(--border-dim);
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.5rem;
+}
+.ops-root .wz-subsection-header {
+  padding: 0.375rem 0 0.25rem;
+  font-size: 0.6875rem;
+}
+.ops-root .wz-subsection-header > span {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Responsive: narrow viewport ─────────────────────── */
+@media (max-width: 720px) {
+  .ops-stats-pair {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .ops-mult-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }

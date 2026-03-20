@@ -482,7 +482,7 @@ function buildNamedLevelEntry(
   durationValue: number | undefined,
   maxStacks: number | undefined,
 ) {
-  const entry: Record<string, any> = { level };
+  const entry: Record<string, unknown> = { level };
 
   // Permanent stats: var refs found in the permanent section
   for (const { key, value } of bb) {
@@ -495,7 +495,7 @@ function buildNamedLevelEntry(
 
   // Conditional stats: var refs found in the conditional section
   if (triggerConditions.length > 0 && conditionalVarRefs.size > 0) {
-    const conditional: Record<string, any> = {
+    const conditional: Record<string, unknown> = {
       triggerConditions,
       triggerSources,
     };

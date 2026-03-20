@@ -10,8 +10,6 @@
     "ULTIMATE": "SQUAD_ON_ME"
   },
   "SWORD_OF_ASPIRATION": {
-    "name": "Sword of Aspiration",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -442,16 +440,22 @@
         "frames": []
       }
     ],
-    "originId": "akekuri"
+    "properties": {
+      "name": "Sword of Aspiration",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "akekuri"
+    }
   },
   "BURST_OF_PASSION": {
-    "name": "Burst of Passion",
-    "description": "A frontal slash that deals Heat DMG and applies Heat Infliction.",
     "properties": {
       "duration": {
         "value": 1.33,
         "unit": "SECOND"
-      }
+      },
+      "name": "Burst of Passion",
+      "description": "A frontal slash that deals Heat DMG and applies Heat Infliction."
     },
     "frames": [
       {
@@ -529,7 +533,6 @@
         ]
       }
     ],
-    "originId": "akekuri",
     "clause": [
       {
         "conditions": [],
@@ -570,26 +573,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "akekuri"
+    }
   },
   "FLASH_AND_DASH": {
-    "name": "Flash and Dash",
-    "description": "COMBO TRIGGER: When an enemy becomes Staggered or hits a Stagger Node. \nPerforms a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP.",
     "properties": {
-      "duration": {
-        "value": 1.27,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.488,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP",
-        "dataSources": [
-          "SELF"
-        ]
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -613,159 +603,10 @@
         ],
         "description": "Enemy reaches Stagger Node or Full Stagger",
         "windowFrames": 720
-      }
-    },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.73,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "skillPoint": {
-                    "verb": "IS",
-                    "value": 7.5
-                  }
-                }
-              }
-            ]
-          }
-        ]
       },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.03,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "cardinality": {
-                    "verb": "IS",
-                    "value": 7.5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "akekuri",
+      "name": "Flash and Dash",
+      "description": "COMBO TRIGGER: When an enemy becomes Staggered or hits a Stagger Node. \nPerforms a returning dash with 2 thrust sequences, with each sequence dealing Physical DMG and recovering some SP."
+    },
     "clause": [
       {
         "conditions": [],
@@ -794,26 +635,198 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION",
+          "dataSources": [
+            "SELF"
+          ]
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 0.488,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.782,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.242,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "skillPoint": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.542,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "cardinality": {
+                        "verb": "IS",
+                        "value": 7.5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "akekuri"
+    }
   },
   "SQUAD_ON_ME": {
-    "name": "SQUAD! ON ME!",
-    "description": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP.",
     "properties": {
-      "duration": {
-        "value": 4.3,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.683,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
+      "name": "SQUAD! ON ME!",
+      "description": "Enters a channeling state and fires 3 Rallying Flares. Each firing recovers some SP."
     },
-    "frames": [],
-    "originId": "akekuri",
     "clause": [
       {
         "conditions": [],
@@ -830,6 +843,169 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.683,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 2.617,
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
+      }
+    ],
+    "metadata": {
+      "originId": "akekuri"
+    }
+  },
+  "SWORD_OF_ASPIRATION_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Sword of Aspiration (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "akekuri"
+    }
+  },
+  "SWORD_OF_ASPIRATION_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Sword of Aspiration (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "akekuri"
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Subtimeline } from './subtimeline';
 import { ResourceTimeline, ResourcePoint } from './resourceTimeline';
-import { TimelineEvent } from '../../consts/viewTypes';
+import { TimelineEvent, eventDuration, durationSegment } from '../../consts/viewTypes';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 
 const DEFAULT_STAGGER_HP = 60;
@@ -90,7 +90,7 @@ export class StaggerTimeline extends ResourceTimeline {
 
   /** Negate cost so stagger damage increases the meter value. */
   protected getCost(ev: TimelineEvent): number {
-    return -ev.activationDuration;
+    return -eventDuration(ev);
   }
 
   /**
@@ -130,7 +130,7 @@ export class StaggerTimeline extends ResourceTimeline {
       const prevValue = value;
 
       // Apply stagger damage
-      value = Math.min(this.max, value + ev.activationDuration);
+      value = Math.min(this.max, value + eventDuration(ev));
 
       if (value !== prevValue || ev.startFrame !== lastFrame) {
         if (prevValue !== points[points.length - 1].value || ev.startFrame !== points[points.length - 1].frame) {
@@ -210,15 +210,15 @@ export class StaggerTimeline extends ResourceTimeline {
     const events: TimelineEvent[] = [];
 
     for (const crossing of this.cachedNodeCrossings) {
+      const endFrame = this.frameAfterEffectiveFrames(crossing.frame, nodeRecoveryFrames);
+      const activationDuration = endFrame - crossing.frame;
       events.push({
         id: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
         name: 'Node Stagger',
         ownerId,
         columnId: nodeColumnId,
         startFrame: crossing.frame,
-        activationDuration: nodeRecoveryFrames,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: durationSegment(activationDuration),
       });
     }
 
@@ -230,9 +230,7 @@ export class StaggerTimeline extends ResourceTimeline {
         ownerId,
         columnId: fullColumnId,
         startFrame: brk.startFrame,
-        activationDuration: duration,
-        activeDuration: 0,
-        cooldownDuration: 0,
+        segments: durationSegment(duration),
       });
     }
 

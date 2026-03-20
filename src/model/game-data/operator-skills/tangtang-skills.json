@@ -10,8 +10,6 @@
     "ULTIMATE": "ULTIMATE"
   },
   "BASIC_ATTACK": {
-    "name": "I'LL BLOW YOUR MIND!",
-    "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -166,16 +164,22 @@
         ]
       }
     ],
-    "originId": "tangtang"
+    "properties": {
+      "name": "I'LL BLOW YOUR MIND!",
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "tangtang"
+    }
   },
   "BATTLE_SKILL": {
-    "name": "IMA WAVERIDAAH!",
-    "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG.",
     "properties": {
       "duration": {
         "value": 1.867,
         "unit": "SECOND"
-      }
+      },
+      "name": "IMA WAVERIDAAH!",
+      "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG."
     },
     "frames": [
       {
@@ -337,7 +341,6 @@
         ]
       }
     ],
-    "originId": "tangtang",
     "clause": [
       {
         "conditions": [],
@@ -378,97 +381,16 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "tangtang"
+    }
   },
   "COMBO_SKILL": {
-    "name": "RIVER, TO ME!",
-    "description": "COMBO TRIGGER: When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time.",
     "properties": {
-      "duration": {
-        "value": 1.65,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
+      "name": "RIVER, TO ME!",
+      "description": "COMBO TRIGGER: When applying Cryo Infliction or dealing Arts Burst DMG to an enemy.\nTangtang unleashes a powerful jet stream that penetrates all enemies in its path, deals Cryo DMG to them, and creates a Whirlpool.\nUp to 2 Whirlpools can exist in the battlefield at any time."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.95,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.067,
-                      1.173,
-                      1.28,
-                      1.387,
-                      1.494,
-                      1.6,
-                      1.707,
-                      1.814,
-                      1.92,
-                      2.054,
-                      2.214,
-                      2.4
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "durationWater": {
-                    "verb": "IS",
-                    "value": 30
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "tangtang",
     "clause": [
       {
         "conditions": [],
@@ -497,118 +419,117 @@
           }
         ]
       }
-    ]
-  },
-  "ULTIMATE": {
-    "name": "DA CHIEF SEES YOU!",
-    "description": "Tangtang opens her eyepatch and unleashes an OLDEN STARE from her eye that temporarily locks down, immobilizes, and deals Cryo DMG over time to enemies within its area of effect.\nWhen the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG to enemies in its area of effect.\nIf the controlled operator performs a dive attack in the OLDEN STARE pattern, its evolution ends and the rogue wave is summoned immediately to deal even more Cryo DMG.",
-    "properties": {
-      "duration": {
-        "value": 2.9,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2.73,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 2.8,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.15,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.45,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.178,
-                      0.196,
-                      0.213,
-                      0.231,
-                      0.249,
-                      0.267,
-                      0.284,
-                      0.302,
-                      0.32,
-                      0.342,
-                      0.369,
-                      0.4
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.778,
-                      1.956,
-                      2.134,
-                      2.311,
-                      2.489,
-                      2.667,
-                      2.845,
-                      3.023,
-                      3.2,
-                      3.423,
-                      3.689,
-                      4
-                    ]
-                  },
-                  "atkScale_3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.111,
-                      3.422,
-                      3.734,
-                      4.045,
-                      4.356,
-                      4.667,
-                      4.978,
-                      5.289,
-                      5.6,
-                      5.989,
-                      6.456,
-                      7
-                    ]
-                  },
-                  "poise2": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "poise3": {
-                    "verb": "IS",
-                    "value": 20
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.067,
+                          1.173,
+                          1.28,
+                          1.387,
+                          1.494,
+                          1.6,
+                          1.707,
+                          1.814,
+                          1.92,
+                          2.054,
+                          2.214,
+                          2.4
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "durationWater": {
+                        "verb": "IS",
+                        "value": 30
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "tangtang",
+    "metadata": {
+      "originId": "tangtang"
+    }
+  },
+  "ULTIMATE": {
+    "properties": {
+      "name": "DA CHIEF SEES YOU!",
+      "description": "Tangtang opens her eyepatch and unleashes an OLDEN STARE from her eye that temporarily locks down, immobilizes, and deals Cryo DMG over time to enemies within its area of effect.\nWhen the OLDEN STARE stops evolving, a rogue wave comes crashing down to deal massive Cryo DMG to enemies in its area of effect.\nIf the controlled operator performs a dive attack in the OLDEN STARE pattern, its evolution ends and the rogue wave is summoned immediately to deal even more Cryo DMG."
+    },
     "clause": [
       {
         "conditions": [],
@@ -625,6 +546,261 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2.73,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.17,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.07,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.178,
+                          0.196,
+                          0.213,
+                          0.231,
+                          0.249,
+                          0.267,
+                          0.284,
+                          0.302,
+                          0.32,
+                          0.342,
+                          0.369,
+                          0.4
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.778,
+                          1.956,
+                          2.134,
+                          2.311,
+                          2.489,
+                          2.667,
+                          2.845,
+                          3.023,
+                          3.2,
+                          3.423,
+                          3.689,
+                          4
+                        ]
+                      },
+                      "atkScale_3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.111,
+                          3.422,
+                          3.734,
+                          4.045,
+                          4.356,
+                          4.667,
+                          4.978,
+                          5.289,
+                          5.6,
+                          5.989,
+                          6.456,
+                          7
+                        ]
+                      },
+                      "poise2": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "poise3": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "tangtang"
+    }
+  },
+  "BASIC_ATTACK_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "I'LL BLOW YOUR MIND! (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "CRYO",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "tangtang"
+    }
+  },
+  "BASIC_ATTACK_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "I'LL BLOW YOUR MIND! (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "CRYO",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "tangtang"
+    }
   }
 }

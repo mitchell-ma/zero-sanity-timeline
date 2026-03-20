@@ -17,8 +17,8 @@ import {
   AdjectiveType,
   DURATION_END,
 } from '../../consts/semantics';
-import { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType } from '../../consts/enums';
+import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from '../../consts/viewTypes';
+import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
@@ -134,10 +134,13 @@ const REACTION_TO_COLUMN: Record<string, string> = {
   ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
 };
 
+const PHYSICAL_STATUS_VALUES = new Set<string>(Object.values(PhysicalStatusType));
+
 function resolveStatusColumnId(objectId?: string): string {
   if (!objectId) return 'unknown-status';
-  return REACTION_TO_COLUMN[objectId]
-    ?? objectId.toLowerCase().replace(/_/g, '-');
+  if (REACTION_TO_COLUMN[objectId]) return REACTION_TO_COLUMN[objectId];
+  if (PHYSICAL_STATUS_VALUES.has(objectId)) return objectId;
+  return objectId.toLowerCase().replace(/_/g, '-');
 }
 
 function resolveInflictionColumnId(adjective?: AdjectiveType | AdjectiveType[]): string | undefined {
@@ -171,9 +174,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
       ownerId,
       columnId,
       startFrame: ctx.frame,
-      activationDuration: duration,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: durationSegment(duration),
       sourceOwnerId: ctx.sourceOwnerId,
       sourceSkillName: ctx.sourceSkillName,
     };
@@ -193,9 +194,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
       ownerId,
       columnId,
       startFrame: ctx.frame,
-      activationDuration: duration,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: durationSegment(duration),
       sourceOwnerId: ctx.sourceOwnerId,
       sourceSkillName: ctx.sourceSkillName,
     };
@@ -217,9 +216,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
       ownerId,
       columnId,
       startFrame: ctx.frame,
-      activationDuration: duration,
-      activeDuration: 0,
-      cooldownDuration: 0,
+      segments: durationSegment(duration),
       sourceOwnerId: ctx.sourceOwnerId,
       sourceSkillName: ctx.sourceSkillName,
       statusLevel: typeof statusLevel === 'number' ? statusLevel : undefined,
@@ -340,7 +337,7 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (effect.until === DURATION_END && ctx.parentEventEndFrame != null) {
     for (const target of targets) {
       const untilDuration = ctx.parentEventEndFrame - target.startFrame;
-      if (untilDuration <= target.activationDuration) continue; // don't shorten
+      if (untilDuration <= eventDuration(target)) continue; // don't shorten
       result.clamped.set(target.id, {
         newDuration: untilDuration,
         eventStatus: EventStatusType.EXTENDED,
@@ -357,7 +354,7 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
 
   for (const target of targets) {
     result.clamped.set(target.id, {
-      newDuration: target.activationDuration + extensionFrames,
+      newDuration: eventDuration(target) + extensionFrames,
       eventStatus: EventStatusType.EXTENDED,
       sourceOwnerId: ctx.sourceOwnerId,
       sourceSkillName: ctx.sourceSkillName,
@@ -565,13 +562,14 @@ export function applyMutations(events: readonly TimelineEvent[], mutations: Muta
   const result = events.map(ev => {
     const clamp = mutations.clamped.get(ev.id);
     if (!clamp) return ev;
-    return {
+    const clamped = {
       ...ev,
-      activationDuration: clamp.newDuration,
       eventStatus: clamp.eventStatus,
       eventStatusOwnerId: clamp.sourceOwnerId,
       eventStatusSkillName: clamp.sourceSkillName,
     };
+    setEventDuration(clamped, clamp.newDuration);
+    return clamped;
   });
   result.push(...mutations.produced);
   return result;

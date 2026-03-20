@@ -10,8 +10,6 @@
     "ULTIMATE": "TREMOLO"
   },
   "AUDIO_NOISE": {
-    "name": "Audio Noise",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -369,16 +367,22 @@
         "frames": []
       }
     ],
-    "originId": "estella"
+    "properties": {
+      "name": "Audio Noise",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "estella"
+    }
   },
   "ONOMATOPOEIA": {
-    "name": "Onomatopoeia",
-    "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path.",
     "properties": {
       "duration": {
         "value": 1.5,
         "unit": "SECOND"
-      }
+      },
+      "name": "Onomatopoeia",
+      "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path."
     },
     "frames": [
       {
@@ -456,7 +460,6 @@
         ]
       }
     ],
-    "originId": "estella",
     "clause": [
       {
         "conditions": [],
@@ -497,23 +500,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "estella"
+    }
   },
   "DISTORTION": {
-    "name": "Distortion",
-    "description": "COMBO TRIGGER: When an enemy suffers Solidification. \nQuickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility.",
     "properties": {
-      "duration": {
-        "value": 0.67,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -528,117 +521,10 @@
         ],
         "description": "Enemy has Solidification",
         "windowFrames": 720
-      }
+      },
+      "name": "Distortion",
+      "description": "COMBO TRIGGER: When an enemy suffers Solidification. \nQuickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.63,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.6,
-                      1.76,
-                      1.92,
-                      2.08,
-                      2.24,
-                      2.4,
-                      2.56,
-                      2.72,
-                      2.88,
-                      3.08,
-                      3.32,
-                      3.6
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.8,
-                      3.08,
-                      3.36,
-                      3.64,
-                      3.92,
-                      4.2,
-                      4.48,
-                      4.76,
-                      5.04,
-                      5.39,
-                      5.81,
-                      6.3
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "rate": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.1,
-                      0.15,
-                      0.15,
-                      0.15
-                    ]
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 6
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "estella",
     "clause": [
       {
         "conditions": [],
@@ -667,92 +553,153 @@
           }
         ]
       }
-    ]
-  },
-  "TREMOLO": {
-    "name": "Tremolo",
-    "description": "Estella expends all her strength to unleash a powerful slam of the spear shaft, dealing Physical DMG to all enemies in a circular area around self. To enemies with Physical Susceptibility, the skill forcibly applies Lift to them.",
-    "properties": {
-      "duration": {
-        "value": 2,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.8,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 1.8,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.17,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.13,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4.89,
-                      5.38,
-                      5.86,
-                      6.35,
-                      6.84,
-                      7.33,
-                      7.82,
-                      8.31,
-                      8.8,
-                      9.41,
-                      10.14,
-                      11
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "stagger": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      15,
-                      20,
-                      20,
-                      20
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.6,
+                          1.76,
+                          1.92,
+                          2.08,
+                          2.24,
+                          2.4,
+                          2.56,
+                          2.72,
+                          2.88,
+                          3.08,
+                          3.32,
+                          3.6
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.8,
+                          3.08,
+                          3.36,
+                          3.64,
+                          3.92,
+                          4.2,
+                          4.48,
+                          4.76,
+                          5.04,
+                          5.39,
+                          5.81,
+                          6.3
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "rate": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.15,
+                          0.15,
+                          0.15
+                        ]
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 6
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "estella",
+    "metadata": {
+      "originId": "estella"
+    }
+  },
+  "TREMOLO": {
+    "properties": {
+      "name": "Tremolo",
+      "description": "Estella expends all her strength to unleash a powerful slam of the spear shaft, dealing Physical DMG to all enemies in a circular area around self. To enemies with Physical Susceptibility, the skill forcibly applies Lift to them."
+    },
     "clause": [
       {
         "conditions": [],
@@ -769,6 +716,235 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.8,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.2,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.89,
+                          5.38,
+                          5.86,
+                          6.35,
+                          6.84,
+                          7.33,
+                          7.82,
+                          8.31,
+                          8.8,
+                          9.41,
+                          10.14,
+                          11
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          20,
+                          20,
+                          20
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "estella"
+    }
+  },
+  "AUDIO_NOISE_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Audio Noise (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "estella"
+    }
+  },
+  "AUDIO_NOISE_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Audio Noise (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "estella"
+    }
   }
 }

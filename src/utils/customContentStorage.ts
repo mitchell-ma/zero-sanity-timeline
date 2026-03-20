@@ -304,13 +304,13 @@ export function validateCustomOperator(
   }
 
   if (operator.skills) {
-    for (const key of ['basicAttack', 'battleSkill', 'comboSkill', 'ultimate'] as const) {
-      const skill = operator.skills[key];
+    for (let i = 0; i < operator.skills.length; i++) {
+      const skill = operator.skills[i];
       if (!skill.name.trim()) {
-        errors.push({ field: `skills.${key}.name`, message: `${key} name is required` });
+        errors.push({ field: `skills[${i}].name`, message: `Skill "${skill.combatSkillType}" name is required` });
       }
       if (skill.durationSeconds <= 0) {
-        errors.push({ field: `skills.${key}.durationSeconds`, message: `${key} duration must be positive` });
+        errors.push({ field: `skills[${i}].durationSeconds`, message: `Skill "${skill.name || skill.combatSkillType}" duration must be positive` });
       }
     }
   }

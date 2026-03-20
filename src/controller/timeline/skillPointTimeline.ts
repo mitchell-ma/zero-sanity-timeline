@@ -1,6 +1,7 @@
 import { Subtimeline } from './subtimeline';
 import { ResourceTimeline, ResourcePoint } from './resourceTimeline';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import { eventDuration } from '../../consts/viewTypes';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
 /** A frame range where a resource is below the required threshold. */
@@ -71,7 +72,7 @@ export class SkillPointTimeline extends ResourceTimeline {
 
       if (ev.name === 'sp-return') {
         // Return event: add to returned pool, capped so total ≤ max
-        const returnAmount = ev.activationDuration;
+        const returnAmount = eventDuration(ev);
         const headroom = Math.max(0, this.max - naturalPool - returnedPool);
         const actualReturn = Math.min(returnAmount, headroom);
         wasted += returnAmount - actualReturn;

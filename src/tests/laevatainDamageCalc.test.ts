@@ -10,9 +10,12 @@
  * No consumable, no tactical.
  */
 import { StatType, EnemyTierType } from '../consts/enums';
+import type { LoadoutProperties } from '../view/InformationPane';
+import type { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
+import type { TalentLevel } from '../consts/types';
 import { aggregateLoadoutStats } from '../controller/calculation/loadoutAggregator';
 import { evaluateTalentAttackBonus } from '../controller/calculation/talentBonusEngine';
-import { getSkillMultiplier, getPerTickMultiplier } from '../controller/calculation/jsonMultiplierEngine';
+import { getSkillMultiplier, getFrameMultiplier } from '../controller/calculation/jsonMultiplierEngine';
 import {
   calculateDamage,
   getDefenseMultiplier,
@@ -59,12 +62,15 @@ jest.mock('../utils/loadoutRegistry', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const nsJson = require('../model/game-data/gears/no-set.json');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON data
   const findPiece = (json: any, name: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON
     const p = json.pieces.find((x: any) => x.name === name);
     if (!p) throw new Error(`Gear piece "${name}" not found`);
     return p;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON
   const gearEntry = (name: string, json: any, pieceName: string) => ({
     name,
     rarity: json.rarity,
@@ -102,8 +108,10 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const skillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   const { statusEvents: skStatusEvents, ...skillCategories } = skillsJson;
   const merged = { ...opJson, skills: skillCategories, ...(skStatusEvents ? { statusEvents: skStatusEvents } : {}) };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const json: Record<string, any> = { laevatain: merged };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sequence cache
   const sequenceCache = new Map<string, any>();
 
   return {
@@ -151,6 +159,7 @@ jest.mock('../model/game-data/weaponGameData', () => {
   const t11Json = require('../model/game-data/weapons/tarr-11.json');
   const allWeapons = [fsJson, t11Json];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon skill data
   const si = new Map<string, any[]>();
   for (const w of allWeapons) {
     for (const s of w.skills) {
@@ -169,11 +178,13 @@ jest.mock('../model/game-data/weaponGameData', () => {
     getSkillValues: (skillType: string, statKey: string) => {
       const levels = si.get(skillType);
       if (!levels) return [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon level data
       return levels.map((e: any) => e[statKey] as number);
     },
     getConditionalValues: (skillType: string, statKey: string, condIndex = 0) => {
       const levels = si.get(skillType);
       if (!levels) return [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon level data
       return levels.map((e: any) => e.conditionalStats?.[condIndex]?.[statKey] as number);
     },
     getConditionalScalar: (skillType: string, key: string, condIndex = 0) => {
@@ -243,7 +254,7 @@ const POTENTIAL = 5 as Potential;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildCalcContext(loadout: any, loadoutProperties: any) {
+function buildCalcContext(loadout: OperatorLoadoutState, loadoutProperties: LoadoutProperties) {
   const agg = aggregateLoadoutStats(OPERATOR_ID, loadout, loadoutProperties);
   if (!agg) throw new Error('aggregateLoadoutStats returned null');
 
@@ -366,10 +377,10 @@ describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () 
   }));
 
   test.each(cases)('$label', ({ tickIndex, expected }) => {
-    const perTickMult = getPerTickMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
+    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
     expect(perTickMult).not.toBeNull();
 
-    const damage = calculateDamage({
+    const ownDamage = calculateDamage({
       attack: totalAttack,
       baseMultiplier: perTickMult!,
       attributeBonus,
@@ -378,7 +389,26 @@ describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () 
       ...neutralParams(),
     });
 
-    expect(Math.round(damage)).toBe(expected);
+    // PREVIOUS_FRAME dependency: accumulate previous frames' damage
+    let accumulated = ownDamage;
+    if (tickIndex > 0) {
+      // Recompute previous tick's accumulated damage (same params, so chain is additive)
+      let prevAccum = 0;
+      for (let i = 0; i <= tickIndex - 1; i++) {
+        const prevMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, i)!;
+        prevAccum += calculateDamage({
+          attack: totalAttack,
+          baseMultiplier: prevMult,
+          attributeBonus,
+          multiplierGroup,
+          defenseMultiplier,
+          ...neutralParams(),
+        });
+      }
+      accumulated = ownDamage + prevAccum;
+    }
+
+    expect(Math.round(accumulated)).toBe(expected);
   });
 });
 
@@ -532,21 +562,33 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
   }));
 
   test.each(bsCases)('$label', ({ tickIndex, expected }) => {
-    const perTickMult = getPerTickMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
+    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, tickIndex);
     expect(perTickMult).not.toBeNull();
 
     const bsMultiplierGroup = getDamageBonus(0, 0, 0, 0);
-
-    const damage = calculateDamage({
+    const dmgParams = {
       attack: totalAttack,
       baseMultiplier: perTickMult!,
       attributeBonus,
       multiplierGroup: bsMultiplierGroup,
       defenseMultiplier,
       ...neutralParams(),
-    });
+    };
 
-    expect(Math.round(damage)).toBe(expected);
+    const ownDamage = calculateDamage(dmgParams);
+
+    // PREVIOUS_FRAME dependency: accumulate previous frames' damage
+    let accumulated = ownDamage;
+    if (tickIndex > 0) {
+      let prevAccum = 0;
+      for (let i = 0; i <= tickIndex - 1; i++) {
+        const prevMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE', SKILL_LEVEL, POTENTIAL, i)!;
+        prevAccum += calculateDamage({ ...dmgParams, baseMultiplier: prevMult });
+      }
+      accumulated = ownDamage + prevAccum;
+    }
+
+    expect(Math.round(accumulated)).toBe(expected);
   });
 
   it('combo skill (Seethe) → 2548', () => {
@@ -620,7 +662,7 @@ describe('Laevatain damage calculation — Enhanced battle skill (during ultimat
   });
 
   it('hit 1 (DAMAGE_MULTIPLIER) → 19732', () => {
-    const perTickMult = getPerTickMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE_ENHANCED', SKILL_LEVEL, POTENTIAL, 0);
+    const perTickMult = getFrameMultiplier(OPERATOR_ID, 'SMOULDERING_FIRE_ENHANCED', SKILL_LEVEL, POTENTIAL, 0);
     expect(perTickMult).not.toBeNull();
 
     const damage = calculateDamage({
@@ -656,7 +698,7 @@ describe('Laevatain damage calculation — Enhanced battle skill (during ultimat
     // Scorching Heart (talent lv3) ignores 20 Heat Resistance → resMult += 0.20
     const potMod = 1.2;
     const atkScale3 = 9 * potMod;
-    const shIgnoredRes = getScorchingHeartIgnoredResistance(3 as any);
+    const shIgnoredRes = getScorchingHeartIgnoredResistance(3 as TalentLevel);
     const resistanceMultiplier = 1.0 + shIgnoredRes / 100;
 
     const damage = calculateDamage({

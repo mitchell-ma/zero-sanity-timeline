@@ -10,8 +10,6 @@
     "ULTIMATE": "VIGIL_SERVICES"
   },
   "DANCE_OF_RIME": {
-    "name": "Dance of Rime",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -416,16 +414,22 @@
         "frames": []
       }
     ],
-    "originId": "lastRite"
+    "properties": {
+      "name": "Dance of Rime",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "lastRite"
+    }
   },
   "ESOTERIC_LEGACY": {
-    "name": "Esoteric Legacy of Seš'qa",
-    "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence.",
     "properties": {
       "duration": {
         "value": 0.5,
         "unit": "SECOND"
-      }
+      },
+      "name": "Esoteric Legacy of Seš'qa",
+      "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence."
     },
     "frames": [
       {
@@ -498,7 +502,6 @@
         ]
       }
     ],
-    "originId": "lastRite",
     "clause": [
       {
         "conditions": [],
@@ -527,23 +530,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "lastRite"
+    }
   },
   "WINTERS_DEVOURER": {
-    "name": "Winter's Devourer",
-    "description": "COMBO TRIGGER: When an enemy has  or more Cryo Infliction stacks. \nEncases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite.",
     "properties": {
-      "duration": {
-        "value": 2.17,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -558,204 +551,10 @@
         ],
         "description": "Enemy has 3+ Cryo Infliction stacks",
         "windowFrames": 720
-      }
-    },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.43,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.71,
-                      0.78,
-                      0.85,
-                      0.92,
-                      0.99,
-                      1.07,
-                      1.14,
-                      1.21,
-                      1.28,
-                      1.37,
-                      1.47,
-                      1.6
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.71,
-                      0.78,
-                      0.85,
-                      0.92,
-                      0.99,
-                      1.07,
-                      1.14,
-                      1.21,
-                      1.28,
-                      1.37,
-                      1.47,
-                      1.6
-                    ]
-                  },
-                  "atkScale3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.07,
-                      1.17,
-                      1.28,
-                      1.39,
-                      1.49,
-                      1.6,
-                      1.71,
-                      1.81,
-                      1.92,
-                      2.05,
-                      2.21,
-                      2.4
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "uspBase": {
-                    "verb": "IS",
-                    "value": 40
-                  },
-                  "count": {
-                    "verb": "IS",
-                    "value": 3
-                  }
-                }
-              }
-            ]
-          }
-        ]
       },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 15
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.71,
-                      0.78,
-                      0.85,
-                      0.92,
-                      0.99,
-                      1.07,
-                      1.14,
-                      1.21,
-                      1.28,
-                      1.37,
-                      1.47,
-                      1.6
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.71,
-                      0.78,
-                      0.85,
-                      0.92,
-                      0.99,
-                      1.07,
-                      1.14,
-                      1.21,
-                      1.28,
-                      1.37,
-                      1.47,
-                      1.6
-                    ]
-                  },
-                  "atkScale3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.07,
-                      1.17,
-                      1.28,
-                      1.39,
-                      1.49,
-                      1.6,
-                      1.71,
-                      1.81,
-                      1.92,
-                      2.05,
-                      2.21,
-                      2.4
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "lastRite",
+      "name": "Winter's Devourer",
+      "description": "COMBO TRIGGER: When an enemy has  or more Cryo Infliction stacks. \nEncases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite."
+    },
     "clause": [
       {
         "conditions": [],
@@ -784,267 +583,240 @@
           }
         ]
       }
-    ]
-  },
-  "VIGIL_SERVICES": {
-    "name": "Vigil Services",
-    "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
-    "properties": {
-      "duration": {
-        "value": 4.67,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 2.867,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 2.87,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.67,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ]
+                      },
+                      "atkScale3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.07,
+                          1.17,
+                          1.28,
+                          1.39,
+                          1.49,
+                          1.6,
+                          1.71,
+                          1.81,
+                          1.92,
+                          2.05,
+                          2.21,
+                          2.4
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "uspBase": {
+                        "verb": "IS",
+                        "value": 40
+                      },
+                      "count": {
+                        "verb": "IS",
+                        "value": 3
+                      }
+                    }
                   }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.84,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.56,
-                      3.91,
-                      4.27,
-                      4.62,
-                      4.98,
-                      5.33,
-                      5.69,
-                      6.04,
-                      6.4,
-                      6.84,
-                      7.38,
-                      8
-                    ]
-                  },
-                  "poise1": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "poise2": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
+                ]
               }
             ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 3.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+          },
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.84,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
-                  },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.56,
-                      3.91,
-                      4.27,
-                      4.62,
-                      4.98,
-                      5.33,
-                      5.69,
-                      6.04,
-                      6.4,
-                      6.84,
-                      7.38,
-                      8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.6,
+                "unit": "SECOND"
               }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 4.47,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.84,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 15
+                      }
+                    }
                   },
-                  "damageMultiplierIncrement": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.56,
-                      3.91,
-                      4.27,
-                      4.62,
-                      4.98,
-                      5.33,
-                      5.69,
-                      6.04,
-                      6.4,
-                      6.84,
-                      7.38,
-                      8
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.71,
+                          0.78,
+                          0.85,
+                          0.92,
+                          0.99,
+                          1.07,
+                          1.14,
+                          1.21,
+                          1.28,
+                          1.37,
+                          1.47,
+                          1.6
+                        ]
+                      },
+                      "atkScale3": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.07,
+                          1.17,
+                          1.28,
+                          1.39,
+                          1.49,
+                          1.6,
+                          1.71,
+                          1.81,
+                          1.92,
+                          2.05,
+                          2.21,
+                          2.4
+                        ]
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "lastRite",
+    "metadata": {
+      "originId": "lastRite"
+    }
+  },
+  "VIGIL_SERVICES": {
+    "properties": {
+      "name": "Vigil Services",
+      "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills."
+    },
     "clause": [
       {
         "conditions": [],
@@ -1061,6 +833,410 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 2.867,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1.803,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.003,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.84,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.56,
+                          3.91,
+                          4.27,
+                          4.62,
+                          4.98,
+                          5.33,
+                          5.69,
+                          6.04,
+                          6.4,
+                          6.84,
+                          7.38,
+                          8
+                        ]
+                      },
+                      "poise1": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "poise2": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.633,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.84,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.56,
+                          3.91,
+                          4.27,
+                          4.62,
+                          4.98,
+                          5.33,
+                          5.69,
+                          6.04,
+                          6.4,
+                          6.84,
+                          7.38,
+                          8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.603,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.84,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      },
+                      "damageMultiplierIncrement": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.56,
+                          3.91,
+                          4.27,
+                          4.62,
+                          4.98,
+                          5.33,
+                          5.69,
+                          6.04,
+                          6.4,
+                          6.84,
+                          7.38,
+                          8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lastRite"
+    }
+  },
+  "DANCE_OF_RIME_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Dance of Rime (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "CRYO",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lastRite"
+    }
+  },
+  "DANCE_OF_RIME_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Dance of Rime (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "CRYO",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "lastRite"
+    }
   }
 }

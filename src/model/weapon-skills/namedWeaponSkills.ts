@@ -8,7 +8,7 @@ const sv = getSkillValues;
 const cv = getConditionalValues;
 
 function durationSeconds(skillType: string, condIndex = 0): number {
-  return (getConditionalScalar(skillType, "duration", condIndex) as any)?.value ?? 0;
+  return (getConditionalScalar(skillType, "duration", condIndex) as Record<string, number> | undefined)?.value ?? 0;
 }
 function maxStacks(skillType: string, condIndex = 0): number {
   return (getConditionalScalar(skillType, "maxStacks", condIndex) as number) ?? 1;

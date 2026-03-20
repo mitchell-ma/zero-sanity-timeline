@@ -22,7 +22,7 @@ export interface NormalizedEffectDef {
   targetDeterminer: string;
   originId?: string;
   statusLevel: {
-    limit: Record<string, number>;
+    limit: { verb: string; value: number };
     statusLevelInteractionType: string;
   };
   onTriggerClause: { conditions: Interaction[] }[];
@@ -104,20 +104,11 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
   const props = (raw.properties ?? {}) as Record<string, unknown>;
   const sl = (props.statusLevel ?? {}) as Record<string, unknown>;
 
-  // Resolve statusLevel.limit from DSL value to per-potential map
-  let resolvedLimit: Record<string, number> | undefined;
+  // Pass through statusLevel.limit as { verb, value } DSL format
   const limit = sl.limit as { verb?: string; value?: unknown } | undefined;
-  if (limit) {
-    if (limit.verb === 'IS') {
-      const v = limit.value as number;
-      resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
-    } else if (limit.verb === 'BASED_ON' && Array.isArray(limit.value)) {
-      const arr = limit.value as number[];
-      resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
-    } else {
-      resolvedLimit = limit as unknown as Record<string, number>;
-    }
-  }
+  const resolvedLimit = limit
+    ? { verb: limit.verb ?? 'IS', value: (limit.value as number) ?? 1 }
+    : { verb: 'IS', value: 1 };
 
   const { target, targetDeterminer } = inferTarget(raw);
 
@@ -131,7 +122,7 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     targetDeterminer,
     originId: raw.originId as string | undefined,
     statusLevel: {
-      limit: resolvedLimit ?? { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+      limit: resolvedLimit,
       statusLevelInteractionType: (sl.statusLevelInteractionType as string) ?? 'NONE',
     },
     onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],

@@ -10,8 +10,6 @@
     "ULTIMATE": "RE_IGNITED_OATH"
   },
   "SWORD_ART_OF_ASSAULT": {
-    "name": "Sword Art of Assault",
-    "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
     "segments": [
       {
         "metadata": {
@@ -322,16 +320,22 @@
         "frames": []
       }
     ],
-    "originId": "ember"
+    "properties": {
+      "name": "Sword Art of Assault",
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "metadata": {
+      "originId": "ember"
+    }
   },
   "FORWARD_MARCH": {
-    "name": "Forward March",
-    "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. \nIf Ember takes DMG from enemies during casting, the slam deals more Stagger when it hits.",
     "properties": {
       "duration": {
         "value": 1.7,
         "unit": "SECOND"
-      }
+      },
+      "name": "Forward March",
+      "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. \nIf Ember takes DMG from enemies during casting, the slam deals more Stagger when it hits."
     },
     "frames": [
       {
@@ -456,7 +460,6 @@
         ]
       }
     ],
-    "originId": "ember",
     "clause": [
       {
         "conditions": [],
@@ -497,23 +500,13 @@
           }
         ]
       }
-    ]
+    ],
+    "metadata": {
+      "originId": "ember"
+    }
   },
   "FRONTLINE_SUPPORT": {
-    "name": "Frontline Support",
-    "description": "COMBO TRIGGER: When the controlled operator is attacked. \nLeaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment.",
     "properties": {
-      "duration": {
-        "value": 1.27,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 0.5,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      },
       "trigger": {
         "onTriggerClause": [
           {
@@ -528,113 +521,10 @@
         ],
         "description": "Controlled operator is attacked",
         "windowFrames": 720
-      }
+      },
+      "name": "Frontline Support",
+      "description": "COMBO TRIGGER: When the controlled operator is attacked. \nLeaps at the target enemy and unleashes a heavy slam that deals Physical DMG and Knock Down while giving HP treatment to the controlled operator. The attribute of Will increases the amount of HP treatment."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.87,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.02,
-                      1.12,
-                      1.22,
-                      1.33,
-                      1.43,
-                      1.53,
-                      1.63,
-                      1.73,
-                      1.84,
-                      1.96,
-                      2.12,
-                      2.3
-                    ]
-                  },
-                  "healBase": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      300,
-                      360,
-                      420,
-                      480,
-                      510,
-                      540,
-                      570,
-                      600,
-                      630,
-                      645,
-                      660,
-                      675
-                    ]
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "willAdditive": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.7,
-                      0.84,
-                      0.98,
-                      1.12,
-                      1.19,
-                      1.26,
-                      1.33,
-                      1.4,
-                      1.47,
-                      1.51,
-                      1.54,
-                      1.58
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "originId": "ember",
     "clause": [
       {
         "conditions": [],
@@ -663,100 +553,149 @@
           }
         ]
       }
-    ]
-  },
-  "RE_IGNITED_OATH": {
-    "name": "Re-Ignited Oath",
-    "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP.",
-    "properties": {
-      "duration": {
-        "value": 1.67,
-        "unit": "SECOND"
-      },
-      "animation": {
-        "duration": {
-          "value": 1.63,
-          "unit": "SECOND"
-        },
-        "timeInteractionType": "TIME_STOP"
-      }
-    },
-    "frames": [
+    ],
+    "segments": [
       {
         "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
         },
         "properties": {
-          "offset": {
-            "value": 1.67,
+          "name": "Animation",
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.77,
             "unit": "SECOND"
           }
         },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.37,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "TARGET",
-                "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      2.89,
-                      3.18,
-                      3.47,
-                      3.76,
-                      4.04,
-                      4.33,
-                      4.62,
-                      4.91,
-                      5.2,
-                      5.56,
-                      5.99,
-                      6.5
-                    ]
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
                   },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 25
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "hpPercent": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.18,
-                      0.18,
-                      0.18,
-                      0.2,
-                      0.2,
-                      0.2,
-                      0.22,
-                      0.22,
-                      0.22,
-                      0.25,
-                      0.25,
-                      0.25
-                    ]
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.02,
+                          1.12,
+                          1.22,
+                          1.33,
+                          1.43,
+                          1.53,
+                          1.63,
+                          1.73,
+                          1.84,
+                          1.96,
+                          2.12,
+                          2.3
+                        ]
+                      },
+                      "healBase": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          300,
+                          360,
+                          420,
+                          480,
+                          510,
+                          540,
+                          570,
+                          600,
+                          630,
+                          645,
+                          660,
+                          675
+                        ]
+                      },
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "willAdditive": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.7,
+                          0.84,
+                          0.98,
+                          1.12,
+                          1.19,
+                          1.26,
+                          1.33,
+                          1.4,
+                          1.47,
+                          1.51,
+                          1.54,
+                          1.58
+                        ]
+                      }
+                    }
                   }
-                }
+                ]
               }
             ]
           }
         ]
       }
     ],
-    "originId": "ember",
+    "metadata": {
+      "originId": "ember"
+    }
+  },
+  "RE_IGNITED_OATH": {
+    "properties": {
+      "name": "Re-Ignited Oath",
+      "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP."
+    },
     "clause": [
       {
         "conditions": [],
@@ -773,6 +712,243 @@
           }
         ]
       }
-    ]
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ANIMATION"
+        },
+        "properties": {
+          "name": "Animation",
+          "duration": {
+            "value": 1.63,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME",
+          "timeInteractionType": "TIME_STOP"
+        },
+        "frames": []
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 0.04,
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.04,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "TARGET",
+                    "with": {
+                      "value": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2.89,
+                          3.18,
+                          3.47,
+                          3.76,
+                          4.04,
+                          4.33,
+                          4.62,
+                          4.91,
+                          5.2,
+                          5.56,
+                          5.99,
+                          6.5
+                        ]
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 25
+                      },
+                      "duration": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "hpPercent": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.18,
+                          0.18,
+                          0.18,
+                          0.2,
+                          0.2,
+                          0.2,
+                          0.22,
+                          0.22,
+                          0.22,
+                          0.25,
+                          0.25,
+                          0.25
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ember"
+    }
+  },
+  "SWORD_ART_OF_ASSAULT_FINISHER": {
+    "properties": {
+      "enhancementTypes": [
+        "FINISHER"
+      ],
+      "duration": {
+        "value": 1.5,
+        "unit": "SECOND"
+      },
+      "name": "Sword Art of Assault (Finisher)",
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      4,
+                      4.4,
+                      4.8,
+                      5.2,
+                      5.6,
+                      6,
+                      6.4,
+                      6.8,
+                      7.2,
+                      7.7,
+                      8.3,
+                      9
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "FINISHER"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ember"
+    }
+  },
+  "SWORD_ART_OF_ASSAULT_DIVE": {
+    "properties": {
+      "enhancementTypes": [
+        "DIVE"
+      ],
+      "duration": {
+        "value": 1,
+        "unit": "SECOND"
+      },
+      "name": "Sword Art of Assault (Dive)",
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+    },
+    "frames": [
+      {
+        "metadata": {
+          "eventComponentType": "FRAME"
+        },
+        "properties": {
+          "offset": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "DEAL",
+                "adjective": "PHYSICAL",
+                "object": "DAMAGE",
+                "to": "TARGET",
+                "with": {
+                  "value": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.8,
+                      0.88,
+                      0.96,
+                      1.04,
+                      1.12,
+                      1.2,
+                      1.28,
+                      1.36,
+                      1.44,
+                      1.54,
+                      1.66,
+                      1.8
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "frameTypes": [
+          "DIVE"
+        ]
+      }
+    ],
+    "metadata": {
+      "originId": "ember"
+    }
   }
 }

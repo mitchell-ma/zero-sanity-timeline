@@ -34,11 +34,11 @@ jest.mock('../view/InformationPane', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { TimelineEvent } from '../consts/viewTypes';
+import { TimelineEvent, eventDuration } from '../consts/viewTypes';
 // eslint-disable-next-line import/first
-import { EventStatusType } from '../consts/enums';
+import { ElementType, EventStatusType, PhysicalStatusType } from '../consts/enums';
 // eslint-disable-next-line import/first
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
 // eslint-disable-next-line import/first
 import { DerivedEventController } from '../controller/timeline/derivedEventController';
 // eslint-disable-next-line import/first
@@ -74,9 +74,7 @@ function makeInflictionEvent(columnId: string, startFrame: number, duration = 12
     ownerId: ENEMY_OWNER_ID,
     columnId,
     startFrame,
-    activationDuration: duration,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: duration } }],
   };
 }
 
@@ -87,9 +85,7 @@ function makeStatusEvent(columnId: string, ownerId: string, startFrame: number, 
     ownerId,
     columnId,
     startFrame,
-    activationDuration: duration,
-    activeDuration: 0,
-    cooldownDuration: 0,
+    segments: [{ properties: { duration: duration } }],
   };
 }
 
@@ -134,7 +130,7 @@ describe('EventInterpretor: APPLY', () => {
     expect(interp.controller.output.length).toBe(1);
     expect(interp.controller.output[0].columnId).toBe('focus');
     expect(interp.controller.output[0].ownerId).toBe('op-1');
-    expect(interp.controller.output[0].activationDuration).toBe(1200);
+    expect(eventDuration(interp.controller.output[0])).toBe(1200);
   });
 
   test('APPLY COMBUSTION REACTION creates reaction event', () => {
@@ -243,7 +239,7 @@ describe('EventInterpretor: CONSUME', () => {
     const result = interp.interpret(effect, ctx);
     expect(result).toBe(true);
     expect(status.eventStatus).toBe(EventStatusType.CONSUMED);
-    expect(status.activationDuration).toBe(50); // 100 - 50
+    expect(eventDuration(status)).toBe(50); // 100 - 50
     consoleSpy.mockRestore();
   });
 
@@ -558,5 +554,640 @@ describe('EventInterpretor: interpretEffects', () => {
     expect(interp.controller.output.length).toBe(2);
     expect(interp.controller.output[0].columnId).toBe(INFLICTION_COLUMNS.HEAT);
     expect(interp.controller.output[1].columnId).toBe(INFLICTION_COLUMNS.HEAT);
+  });
+});
+
+// ── APPLY LIFT PHYSICAL_STATUS tests ──────────────────────────────────────
+
+describe('EventInterpretor: APPLY LIFT PHYSICAL_STATUS', () => {
+  const liftEffect: Effect = {
+    verb: VerbType.APPLY,
+    object: ObjectType.PHYSICAL_STATUS,
+    adjective: AdjectiveType.LIFT,
+    toObject: NounType.ENEMY,
+  };
+
+  test('no Vulnerable → adds Vulnerable only, no Lift status', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    const result = interp.interpret(liftEffect, ctx);
+    expect(result).toBe(true);
+
+    // Should create 1 Vulnerable infliction, no Lift status
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const liftEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(liftEvents.length).toBe(0);
+  });
+
+  test('Vulnerable active → adds Vulnerable + creates Lift status', () => {
+    const interp = makeInterpretor();
+
+    // Pre-seed a Vulnerable infliction on the enemy
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    const result = interp.interpret(liftEffect, ctx);
+    expect(result).toBe(true);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const liftEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+
+    // 1 pre-seeded Vulnerable + 1 new Vulnerable from Lift
+    expect(vulnEvents.length).toBe(2);
+    // Lift status created
+    expect(liftEvents.length).toBe(1);
+    expect(liftEvents[0].ownerId).toBe(ENEMY_OWNER_ID);
+    expect(eventDuration(liftEvents[0])).toBe(120); // 1 second
+    expect(liftEvents[0].name).toBe(PhysicalStatusType.LIFT);
+  });
+
+  test('Lift status has 1 segment with damage frame at offset 0', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(liftEffect, ctx);
+
+    const liftEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+    expect(liftEvents.length).toBe(1);
+
+    const segments = liftEvents[0].segments;
+    expect(segments).toBeDefined();
+    expect(segments!.length).toBe(1);
+    expect(segments![0].properties.duration).toBe(120);
+    expect(segments![0].properties.name).toBe('Lift');
+    expect(segments![0].frames!.length).toBe(1);
+    expect(segments![0].frames![0].offsetFrame).toBe(0);
+    expect(segments![0].frames![0].damageElement).toBe(ElementType.PHYSICAL);
+    expect(segments![0].frames![0].damageMultiplier).toBe(1.2);
+  });
+
+  test('forced Lift → Vulnerable + Lift status even without existing Vulnerable', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    const forcedLift: Effect = {
+      ...liftEffect,
+      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+    };
+
+    const result = interp.interpret(forcedLift, ctx);
+    expect(result).toBe(true);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const liftEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+
+    expect(vulnEvents.length).toBe(1);
+    expect(liftEvents.length).toBe(1);
+  });
+
+  test('second Lift resets previous (RESET stacking)', () => {
+    const interp = makeInterpretor();
+
+    // Pre-seed Vulnerable
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    // First Lift at frame 100
+    const ctx1 = makeCtx(interp, { frame: 100 });
+    interp.interpret(liftEffect, ctx1);
+
+    // Second Lift at frame 160 (within first Lift's duration)
+    const ctx2 = makeCtx(interp, { frame: 160 });
+    interp.interpret(liftEffect, ctx2);
+
+    const liftEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.LIFT,
+    );
+
+    // Both Lift events created, first one should be REFRESHED
+    expect(liftEvents.length).toBe(2);
+    const first = liftEvents[0];
+    const second = liftEvents[1];
+    expect(first.eventStatus).toBe(EventStatusType.REFRESHED);
+    expect(second.startFrame).toBe(160);
+    expect(eventDuration(second)).toBe(120);
+  });
+
+  test('Lift always adds Vulnerable even when triggering status', () => {
+    const interp = makeInterpretor();
+
+    // Pre-seed 1 Vulnerable
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(liftEffect, ctx);
+
+    // Count all Vulnerable events (pre-seeded + new from Lift)
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    expect(vulnEvents.length).toBe(2);
+  });
+});
+
+// ── APPLY KNOCK_DOWN PHYSICAL_STATUS tests ────────────────────────────────
+
+describe('EventInterpretor: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
+  const knockDownEffect: Effect = {
+    verb: VerbType.APPLY,
+    object: ObjectType.PHYSICAL_STATUS,
+    adjective: AdjectiveType.KNOCK_DOWN,
+    toObject: NounType.ENEMY,
+  };
+
+  test('no Vulnerable → adds Vulnerable only, no Knock Down status', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    interp.interpret(knockDownEffect, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(kdEvents.length).toBe(0);
+  });
+
+  test('Vulnerable active → adds Vulnerable + creates Knock Down status', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(knockDownEffect, ctx);
+
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    expect(kdEvents.length).toBe(1);
+    expect(eventDuration(kdEvents[0])).toBe(120);
+    expect(kdEvents[0].name).toBe(PhysicalStatusType.KNOCK_DOWN);
+    expect(kdEvents[0].segments![0].properties.name).toBe('Knock Down');
+    expect(kdEvents[0].segments![0].frames![0].damageMultiplier).toBe(1.2);
+  });
+
+  test('forced Knock Down bypasses Vulnerable check', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    const forced: Effect = {
+      ...knockDownEffect,
+      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+    };
+
+    interp.interpret(forced, ctx);
+
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    expect(kdEvents.length).toBe(1);
+  });
+
+  test('Knock Down has 1 segment with physical damage frame at offset 0', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(knockDownEffect, ctx);
+
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    const segments = kdEvents[0].segments;
+    expect(segments).toBeDefined();
+    expect(segments!.length).toBe(1);
+    expect(segments![0].properties.duration).toBe(120);
+    expect(segments![0].frames!.length).toBe(1);
+    expect(segments![0].frames![0].offsetFrame).toBe(0);
+    expect(segments![0].frames![0].damageElement).toBe(ElementType.PHYSICAL);
+    expect(segments![0].frames![0].damageMultiplier).toBe(1.2);
+  });
+
+  test('second Knock Down resets previous (RESET stacking)', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx1 = makeCtx(interp, { frame: 100 });
+    interp.interpret(knockDownEffect, ctx1);
+
+    const ctx2 = makeCtx(interp, { frame: 160 });
+    interp.interpret(knockDownEffect, ctx2);
+
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    expect(kdEvents.length).toBe(2);
+    expect(kdEvents[0].eventStatus).toBe(EventStatusType.REFRESHED);
+    expect(kdEvents[1].startFrame).toBe(160);
+    expect(eventDuration(kdEvents[1])).toBe(120);
+  });
+
+  test('always adds Vulnerable even when status triggers', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(knockDownEffect, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    expect(vulnEvents.length).toBe(2);
+  });
+
+  test('forced Knock Down also adds Vulnerable', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    const forced: Effect = {
+      ...knockDownEffect,
+      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+    };
+
+    interp.interpret(forced, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const kdEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(kdEvents.length).toBe(1);
+  });
+});
+
+// ── APPLY CRUSH PHYSICAL_STATUS tests ─────────────────────────────────────
+
+describe('EventInterpretor: APPLY CRUSH PHYSICAL_STATUS', () => {
+  const crushEffect: Effect = {
+    verb: VerbType.APPLY,
+    object: ObjectType.PHYSICAL_STATUS,
+    adjective: AdjectiveType.CRUSH,
+    toObject: NounType.ENEMY,
+  };
+
+  test('no Vulnerable → adds Vulnerable only, no Crush status', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    interp.interpret(crushEffect, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(crushEvents.length).toBe(0);
+  });
+
+  test('1 Vulnerable → consumes it, creates Crush with 300% multiplier', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    // Vulnerable consumed
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    expect(vulnEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
+
+    // Crush created with 300% multiplier
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(crushEvents.length).toBe(1);
+    expect(crushEvents[0].segments![0].frames![0].damageMultiplier).toBe(3.0);
+    expect(crushEvents[0].statusLevel).toBe(1);
+  });
+
+  test('2 Vulnerable → consumes all, creates Crush with 450% multiplier', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 2; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(crushEvents.length).toBe(1);
+    expect(crushEvents[0].segments![0].frames![0].damageMultiplier).toBe(4.5);
+    expect(crushEvents[0].statusLevel).toBe(2);
+  });
+
+  test('3 Vulnerable → consumes all, creates Crush with 600% multiplier', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 3; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(crushEvents.length).toBe(1);
+    expect(crushEvents[0].segments![0].frames![0].damageMultiplier).toBe(6.0);
+    expect(crushEvents[0].statusLevel).toBe(3);
+  });
+
+  test('4 Vulnerable → consumes all, creates Crush with 750% multiplier', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 4; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(crushEvents.length).toBe(1);
+    expect(crushEvents[0].segments![0].frames![0].damageMultiplier).toBe(7.5);
+    expect(crushEvents[0].statusLevel).toBe(4);
+  });
+
+  test('Crush does not add Vulnerable when consuming', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    // Only the pre-seeded Vulnerable (now consumed), no new ones added
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(vulnEvents[0].eventStatus).toBe(EventStatusType.CONSUMED);
+  });
+
+  test('Crush has 1 segment with physical damage frame at offset 0', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    const segments = crushEvents[0].segments;
+    expect(segments!.length).toBe(1);
+    expect(segments![0].properties.duration).toBe(120);
+    expect(segments![0].properties.name).toBe('Crush');
+    expect(segments![0].frames!.length).toBe(1);
+    expect(segments![0].frames![0].offsetFrame).toBe(0);
+    expect(segments![0].frames![0].damageElement).toBe(ElementType.PHYSICAL);
+  });
+
+  test('Crush has no stagger value', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(crushEffect, ctx);
+
+    const crushEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.CRUSH,
+    );
+    expect(crushEvents[0].segments![0].frames![0].staggerValue).toBeUndefined();
+  });
+});
+
+// ── APPLY BREACH PHYSICAL_STATUS tests ────────────────────────────────────
+
+describe('EventInterpretor: APPLY BREACH PHYSICAL_STATUS', () => {
+  const breachEffect: Effect = {
+    verb: VerbType.APPLY,
+    object: ObjectType.PHYSICAL_STATUS,
+    adjective: AdjectiveType.BREACH,
+    toObject: NounType.ENEMY,
+  };
+
+  test('no Vulnerable → adds Vulnerable only, no Breach status', () => {
+    const interp = makeInterpretor();
+    const ctx = makeCtx(interp);
+
+    interp.interpret(breachEffect, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(vulnEvents.length).toBe(1);
+    expect(breachEvents.length).toBe(0);
+  });
+
+  test('1 Vulnerable → consumes, Breach with 100% multiplier and 12s duration', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(breachEvents.length).toBe(1);
+    expect(breachEvents[0].statusLevel).toBe(1);
+    expect(eventDuration(breachEvents[0])).toBe(1440); // 12s
+    expect(breachEvents[0].segments![0].properties.duration).toBe(1440);
+    expect(breachEvents[0].segments![0].frames![0].damageMultiplier).toBe(1.0);
+  });
+
+  test('2 Vulnerable → 150% multiplier and 18s duration', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 2; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(breachEvents[0].statusLevel).toBe(2);
+    expect(eventDuration(breachEvents[0])).toBe(2160); // 18s
+    expect(breachEvents[0].segments![0].frames![0].damageMultiplier).toBe(1.5);
+  });
+
+  test('3 Vulnerable → 200% multiplier and 24s duration', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 3; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(breachEvents[0].statusLevel).toBe(3);
+    expect(eventDuration(breachEvents[0])).toBe(2880); // 24s
+    expect(breachEvents[0].segments![0].frames![0].damageMultiplier).toBe(2.0);
+  });
+
+  test('4 Vulnerable → 250% multiplier and 30s duration', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 4; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(breachEvents[0].statusLevel).toBe(4);
+    expect(eventDuration(breachEvents[0])).toBe(3600); // 30s
+    expect(breachEvents[0].segments![0].frames![0].damageMultiplier).toBe(2.5);
+  });
+
+  test('consumes all Vulnerable, does not add new stacks', () => {
+    const interp = makeInterpretor();
+    for (let i = 0; i < 3; i++) {
+      interp.controller.createInfliction(
+        PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50 + i, 2400,
+        { ownerId: 'op-1', skillName: 'SETUP' },
+      );
+    }
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const vulnEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_INFLICTION_COLUMNS.VULNERABLE,
+    );
+    // All 3 pre-seeded, all consumed, no new ones
+    expect(vulnEvents.length).toBe(3);
+    for (const v of vulnEvents) {
+      expect(v.eventStatus).toBe(EventStatusType.CONSUMED);
+    }
+  });
+
+  test('Breach segment has physical damage frame at offset 0', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    const seg = breachEvents[0].segments![0];
+    expect(seg.properties.name).toBe('Breach');
+    expect(seg.frames!.length).toBe(1);
+    expect(seg.frames![0].offsetFrame).toBe(0);
+    expect(seg.frames![0].damageElement).toBe(ElementType.PHYSICAL);
+  });
+
+  test('Breach has no stagger', () => {
+    const interp = makeInterpretor();
+    interp.controller.createInfliction(
+      PHYSICAL_INFLICTION_COLUMNS.VULNERABLE, ENEMY_OWNER_ID, 50, 2400,
+      { ownerId: 'op-1', skillName: 'SETUP' },
+    );
+
+    const ctx = makeCtx(interp);
+    interp.interpret(breachEffect, ctx);
+
+    const breachEvents = interp.controller.output.filter(
+      ev => ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH,
+    );
+    expect(breachEvents[0].segments![0].frames![0].staggerValue).toBeUndefined();
   });
 });
