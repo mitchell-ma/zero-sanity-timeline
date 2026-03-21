@@ -34,7 +34,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "SMOULDERING_FIRE_ENHANCED",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.2,
             "parameterModifyType": "UNIQUE_MULTIPLIER"
           }
@@ -143,7 +143,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "FLAMING_CINDERS_ENHANCED",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.2,
             "parameterModifyType": "UNIQUE_MULTIPLIER"
           }

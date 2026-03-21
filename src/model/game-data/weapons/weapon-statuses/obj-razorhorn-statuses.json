@@ -1,0 +1,82 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.12,
+                  0.144,
+                  0.168,
+                  0.192,
+                  0.216,
+                  0.24,
+                  0.264,
+                  0.288,
+                  0.336
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS",
+      "name": "Conquest of Icy Peaks",
+      "description": "vs Cryo/Solid DMG +8-16%; consume Solidification → ATK buff",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "OBJ_RAZORHORN",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

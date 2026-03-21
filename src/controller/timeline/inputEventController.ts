@@ -7,11 +7,35 @@
 
 import { EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
 import { hasEnhanceClauseAtFrame } from './eventValidator';
-import type { CombatLoadout } from '../combat-loadout/combatLoadout';
+import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
+
+// ── Event classification ─────────────────────────────────────────────────────
+
+/**
+ * Classify raw events into input events (operator skills) and derived events
+ * (freeform user-placed inflictions/reactions on the enemy).
+ *
+ * Input events go into DEC.registerEvents (registeredEvents).
+ * Derived events are seeded into DEC via addEvent by the interpreter.
+ */
+export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: TimelineEvent[]; derivedEvents: TimelineEvent[] } {
+  const inputEvents: TimelineEvent[] = [];
+  const derivedEvents: TimelineEvent[] = [];
+  for (const ev of rawEvents) {
+    if (ev.ownerId === ENEMY_OWNER_ID && ev.sourceOwnerId === USER_ID
+      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId))) {
+      derivedEvents.push(ev);
+    } else {
+      inputEvents.push(ev);
+    }
+  }
+  return { inputEvents, derivedEvents };
+}
 
 // ── ID generation ───────────────────────────────────────────────────────────
 
@@ -19,9 +43,9 @@ let _id = 1;
 
 // ── Combat context ──────────────────────────────────────────────────────────
 
-let _combatLoadout: CombatLoadout | null = null;
+let _combatLoadout: CombatLoadoutController | null = null;
 
-export function setCombatLoadout(ctx: CombatLoadout | null): void {
+export function setCombatLoadout(ctx: CombatLoadoutController | null): void {
   _combatLoadout = ctx;
 }
 

@@ -1,0 +1,713 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  28.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  44,
+                  44,
+                  44,
+                  44
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  29,
+                  29,
+                  29,
+                  29
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BASE_ATTACK",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16.2,
+                  16.2,
+                  16.2,
+                  16.2
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_JACKET",
+      "name": "Roving Msgr Jacket",
+      "type": "ARMOR",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  40
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  61,
+                  61,
+                  61,
+                  61
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41,
+                  41,
+                  41,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "HP_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.147,
+                  0.147,
+                  0.147,
+                  0.147
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_JACKET_T1",
+      "name": "Roving Msgr Jacket T1",
+      "type": "ARMOR",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21.6
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  33,
+                  33,
+                  33,
+                  33
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  22,
+                  22,
+                  22,
+                  22
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.0972222222,
+                  0.0972222222,
+                  0.0972222222,
+                  0.0972222222
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_FISTS",
+      "name": "Roving Msgr Fists",
+      "type": "GLOVES",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  30
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  46,
+                  46,
+                  46,
+                  46
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  30,
+                  30,
+                  30,
+                  30
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1225,
+                  0.1225,
+                  0.1225,
+                  0.1225
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_FISTS_T1",
+      "name": "Roving Msgr Fists T1",
+      "type": "GLOVES",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  10.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  21,
+                  21,
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.21,
+                  0.21,
+                  0.21,
+                  0.21
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_FLASHLIGHT",
+      "name": "Roving Msgr Flashlight",
+      "type": "KIT",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  10.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  21,
+                  21,
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.105,
+                  0.105,
+                  0.105,
+                  0.105
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_GYRO",
+      "name": "Roving Msgr Gyro",
+      "type": "KIT",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  23,
+                  23,
+                  23,
+                  23
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  15,
+                  15,
+                  15,
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.294,
+                  0.294,
+                  0.294,
+                  0.294
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_FLASHLIGHT_T1",
+      "name": "Roving Msgr Flashlight T1",
+      "type": "KIT",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  23,
+                  23,
+                  23,
+                  23
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  15,
+                  15,
+                  15,
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.3675,
+                  0.3675,
+                  0.3675,
+                  0.3675
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_FLASHLIGHT_T2",
+      "name": "Roving Msgr Flashlight T2",
+      "type": "KIT",
+      "gearSet": "ROVING_MSGR"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  23,
+                  23,
+                  23,
+                  23
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  15,
+                  15,
+                  15,
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.147,
+                  0.147,
+                  0.147,
+                  0.147
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ROVING_MSGR_GYRO_T1",
+      "name": "Roving Msgr Gyro T1",
+      "type": "KIT",
+      "gearSet": "ROVING_MSGR"
+    }
+  }
+]

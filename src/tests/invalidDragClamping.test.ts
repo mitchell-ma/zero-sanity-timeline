@@ -37,9 +37,8 @@ import { clampDeltaByOverlap } from '../controller/timeline/inputEventController
 // eslint-disable-next-line import/first
 import type { ResourceZone } from '../controller/timeline/skillPointTimeline';
 // eslint-disable-next-line import/first
-import { SKILL_COLUMNS } from '../model/channels';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 // eslint-disable-next-line import/first
-import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

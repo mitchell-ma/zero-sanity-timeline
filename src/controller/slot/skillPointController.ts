@@ -7,7 +7,11 @@
  * zones for battle skill columns.
  */
 import { TimelineEvent, getAnimationDuration, durationSegment } from '../../consts/viewTypes';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID } from '../../model/channels';
+import { absoluteFrame, foreignStopsFor } from '../timeline/processTimeStop';
+import type { TimeStopRegion } from '../timeline/processTimeStop';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline, ResourceZone, SkillPointConsumptionHistory } from '../timeline/skillPointTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
@@ -134,5 +138,60 @@ export class SkillPointController {
 
   destroy(): void {
     this.timeline.destroy();
+  }
+
+  /**
+   * Derive SP recovery events from skill frame markers and perfect dodge events.
+   * Returns the input events array with SP recovery events appended.
+   */
+  static deriveSPRecoveryEvents(events: TimelineEvent[], stops: readonly TimeStopRegion[] = []): TimelineEvent[] {
+    const derived: TimelineEvent[] = [];
+
+    for (const event of events) {
+      if (event.ownerId === ENEMY_OWNER_ID) continue;
+
+      const fStops = foreignStopsFor(event, stops);
+      let cumulativeOffset = 0;
+      for (let si = 0; si < event.segments.length; si++) {
+        const seg = event.segments[si];
+        if (seg.frames) {
+          for (let fi = 0; fi < seg.frames.length; fi++) {
+            const frame = seg.frames[fi];
+            if ((frame.skillPointRecovery ?? 0) > 0) {
+              derived.push({
+                id: `${event.id}-sp-${si}-${fi}`,
+                name: 'sp-recovery',
+                ownerId: COMMON_OWNER_ID,
+                columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+                startFrame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
+                segments: [{ properties: { duration: -(frame.skillPointRecovery!) } }],
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+              });
+            }
+          }
+        }
+        cumulativeOffset += seg.properties.duration;
+      }
+    }
+
+    // Perfect dodge dash events → SP recovery
+    for (const event of events) {
+      if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
+        derived.push({
+          id: `${event.id}-sp-dodge`,
+          name: 'sp-recovery',
+          ownerId: COMMON_OWNER_ID,
+          columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+          startFrame: event.startFrame,
+          segments: [{ properties: { duration: -GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery } }],
+          sourceOwnerId: event.ownerId,
+          sourceSkillName: event.name,
+        });
+      }
+    }
+
+    if (derived.length === 0) return events;
+    return [...events, ...derived];
   }
 }

@@ -2,11 +2,10 @@
  * InputEventController — unified pipeline orchestrator for the event queue.
  *
  * Receives raw user-placed events, extracts frame markers, seeds the queue,
- * and runs the EventInterpretor to produce all derived events.
+ * and runs the EventInterpretorController to produce all derived events.
  *
  * ALL game mechanics processing — time-stop resolution, infliction derivation,
  * exchange statuses, combo windows, frame positions, validation — happens here.
- * processInteractions.ts is a thin wrapper that delegates to this module.
  */
 import { TimelineEvent, EventSegmentData, eventDuration } from '../../consts/viewTypes';
 import { CombatSkillsType, ElementType, StatusType, TargetType } from '../../consts/enums';
@@ -16,34 +15,35 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { DerivedEventController } from './derivedEventController';
 import { deriveComboActivationWindows, getFinalStrikeTriggerFrame } from './processComboSkill';
-import type { SlotTriggerWiring } from './processComboSkill';
+import type { SlotTriggerWiring } from './eventQueueTypes';
 import {
-  deriveSPRecovery,
-  ELEMENT_TO_INFLICTION_COLUMN,
-  INFLICTION_DURATION, REACTION_DURATION,
-  FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
-  TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
   EXCHANGE_EVENT_DURATION,
   resolveSusceptibility,
 } from './processInfliction';
+import { SkillPointController } from '../slot/skillPointController';
 import { getExchangeStatusConfig, getExchangeStatusIds } from '../../model/event-frames/operatorJsonLoader';
 import {
   collectExchangeStatusTriggers, collectAbsorptionContexts, collectEngineTriggerEntries,
-} from './statusDerivationEngine';
-import type { ExchangeStatusQueueContext } from './statusDerivationEngine';
+} from './statusTriggerCollector';
+import type { ExchangeStatusQueueContext } from './statusTriggerCollector';
 import {
   PRIORITY, MAX_INFLICTION_STACKS, getConsumeStatusConfig,
 } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
-import { EventInterpretor } from './eventInterpretor';
+import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import {
-  ENEMY_OWNER_ID, USER_ID, INFLICTION_COLUMN_IDS,
+  ELEMENT_TO_INFLICTION_COLUMN,
+  ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS,
+  INFLICTION_DURATION, REACTION_DURATION,
+  FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
+  TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
   OPERATOR_COLUMNS, SKILL_COLUMNS, REACTION_COLUMN_IDS,
 } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
-import { getAllTriggerAssociations } from '../configController';
+import { getAllTriggerAssociations } from '../gameDataController';
+import { classifyEvents } from './inputEventController';
 
 // ── Frame effect collection ─────────────────────────────────────────────────
 
@@ -252,32 +252,11 @@ function collectFrameEffectEntries(
 function collectInflictionEntries(
   events: TimelineEvent[],
   stops: readonly TimeStopRegion[],
-  freeformInflictionIds: Set<string>,
 ): QueueFrame[] {
   const entries: QueueFrame[] = [];
 
   for (const event of events) {
-    // Freeform inflictions: enemy-owned, infliction column, placed by user
-    if (event.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(event.columnId) && event.sourceOwnerId === USER_ID) {
-      freeformInflictionIds.add(event.id);
-      entries.push({
-        frame: event.startFrame,
-        priority: PRIORITY.INFLICTION_CREATE,
-        type: 'INFLICTION_CREATE',
-        id: event.id,
-        statusName: event.columnId,
-        columnId: event.columnId,
-        ownerId: event.ownerId,
-        sourceOwnerId: event.sourceOwnerId ?? event.ownerId,
-        sourceSkillName: event.sourceSkillName ?? event.name,
-        maxStacks: MAX_INFLICTION_STACKS,
-        durationFrames: eventDuration(event),
-        operatorSlotId: event.ownerId,
-      });
-      continue;
-    }
-
-    // Skill events: scan frame markers
+    // Only skill events (freeform inflictions are classified separately by InputEventController)
     if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
@@ -336,39 +315,6 @@ function collectInflictionEntries(
 
   }
 
-  return entries;
-}
-
-/**
- * Collect FRAME_EFFECT entries for freeform-placed reaction events.
- * Same pattern as freeform inflictions: raw events stay in `state` for undo/drag,
- * queue entries create derived copies that go through createReaction (merge logic).
- */
-function collectFreeformReactionEntries(
-  events: TimelineEvent[],
-  freeformReactionIds: Set<string>,
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-  for (const ev of events) {
-    if (ev.ownerId !== ENEMY_OWNER_ID) continue;
-    if (!REACTION_COLUMN_IDS.has(ev.columnId)) continue;
-    if (ev.sourceOwnerId !== USER_ID) continue;
-    freeformReactionIds.add(ev.id);
-    entries.push({
-      frame: ev.startFrame,
-      priority: PRIORITY.FRAME_EFFECT,
-      type: 'FRAME_EFFECT',
-      statusName: ev.columnId,
-      columnId: ev.columnId,
-      ownerId: ev.ownerId,
-      sourceOwnerId: ev.sourceOwnerId,
-      sourceSkillName: ev.sourceSkillName ?? ev.name,
-      maxStacks: 0,
-      durationFrames: eventDuration(ev),
-      operatorSlotId: ev.ownerId,
-      derivedEvent: ev, // createReaction will rebuild segments
-    });
-  }
   return entries;
 }
 
@@ -694,79 +640,92 @@ function collectCryoConsumptionEntries(
   return entries;
 }
 
-// ── Main orchestrator ───────────────────────────────────────────────────────
+// ── EventQueueController ─────────────────────────────────────────────────────
 
-export function processEventQueue(
-  rawEvents: TimelineEvent[],
+/**
+ * EventQueueController — seeds the priority queue and runs the interpreter.
+ * Receives a single DEC (with input events already registered) and derived
+ * events (freeform inflictions/reactions to seed via addEvent).
+ *
+ * Linear chain: InputEventController → EventQueueController → EventInterpretorController → DerivedEventController
+ */
+export function runEventQueue(
+  state: DerivedEventController,
+  derivedEvents: TimelineEvent[],
   loadoutProperties?: Record<string, LoadoutProperties>,
   slotWeapons?: Record<string, string | undefined>,
-  slotWirings?: SlotTriggerWiring[],
   slotOperatorMap?: Record<string, string>,
   slotGearSets?: Record<string, string | undefined>,
-): { events: TimelineEvent[]; controller: DerivedEventController } {
-  // ── Phase 1: Register events (inline combo chaining + stop discovery) ────
-  const triggerAssociations = getAllTriggerAssociations();
-  const state = new DerivedEventController(undefined, triggerAssociations);
-  state.registerEvents(rawEvents);
-  state.extendAll();
-
-  // ── Phase 2: Resolve combo trigger columns + potential effects ────────────
-  if (slotWirings && slotWirings.length > 0) {
-    state.resolveComboTriggers(slotWirings);
-  }
-  state.applyPotentialEffects();
-
-  // ── Phase 3: SP recovery + talent events ─────────────────────────────────
-  // deriveSPRecovery returns [...events, ...derived]; extract only the new events
-  const withSPRecovery = deriveSPRecovery(state.getRegisteredEvents(), state.getStops());
-  const spEvents = withSPRecovery.slice(state.getRegisteredEvents().length);
-  state.registerEvents(spEvents);
-
-  const { entries: engineEntries, talentEvents } = collectEngineTriggerEntries(
-    state.getRegisteredEvents(), loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-    getExchangeStatusIds(),
-  );
-  state.registerEvents(talentEvents);
-  state.extendAll();
-
-  // ── Phase 5: Collect queue contexts ──────────────────────────────────────
-  const extLate = state.getRegisteredEvents();
+): void {
+  const slotWirings = state.getSlotWirings();
+  const registeredEvents = state.getRegisteredEvents();
   const stops = state.getStops();
 
+  // Collect trigger contexts from configs
+  const { entries: engineEntries } = collectEngineTriggerEntries(
+    registeredEvents, loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
+    getExchangeStatusIds(),
+  );
   const exchangeContexts = collectExchangeStatusTriggers(
-    extLate, getExchangeStatusIds(), loadoutProperties, slotOperatorMap,
+    registeredEvents, getExchangeStatusIds(), loadoutProperties, slotOperatorMap,
   );
   const absorptionContexts = collectAbsorptionContexts(
-    extLate, loadoutProperties, slotOperatorMap,
+    registeredEvents, loadoutProperties, slotOperatorMap,
   );
 
-  // ── Phase 6: Seed and run the priority queue ─────────────────────────────
+  // ── Seed priority queue ───────────────────────────────────────────────────
   const queue = new PriorityQueue<QueueFrame>((a, b) =>
     a.frame !== b.frame ? a.frame - b.frame : a.priority - b.priority
   );
   const seed = (entries: QueueFrame[]) => { for (const e of entries) queue.insert(e); };
 
-  // Collect freeform events (inflictions + reactions). Their IDs are tracked so
-  // they can be excluded from the queue controller's base events (the raw events
-  // stay in `state` for undo/drag) and re-derived via the queue.
-  const freeformInflictionIds = new Set<string>();
-  const freeformReactionIds = new Set<string>();
-  seed(collectInflictionEntries(extLate, stops, freeformInflictionIds));
-  seed(collectFreeformReactionEntries(extLate, freeformReactionIds));
-
-  const freeformIds = new Set([...Array.from(freeformInflictionIds), ...Array.from(freeformReactionIds)]);
-  const queueBaseEvents = freeformIds.size > 0
-    ? extLate.filter(ev => !freeformIds.has(ev.id))
-    : extLate;
-  const queueState = new DerivedEventController(queueBaseEvents);
-  const interpretor = new EventInterpretor(queueState, extLate, {
+  // Create interpreter backed by the single DEC
+  const interpretor = new EventInterpretorController(state, registeredEvents, {
     exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings,
   });
 
-  seed(collectFrameEffectEntries(extLate, loadoutProperties, stops));
-  for (const ev of extLate) {
+  // Seed derived events (freeform inflictions/reactions) — these go through the
+  // queue so they're processed at the correct priority (not into registeredEvents)
+  for (const ev of derivedEvents) {
+    if (INFLICTION_COLUMN_IDS.has(ev.columnId)) {
+      queue.insert({
+        frame: ev.startFrame,
+        priority: PRIORITY.INFLICTION_CREATE,
+        type: 'INFLICTION_CREATE',
+        id: ev.id,
+        statusName: ev.columnId,
+        columnId: ev.columnId,
+        ownerId: ev.ownerId,
+        sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
+        sourceSkillName: ev.sourceSkillName ?? ev.name,
+        maxStacks: MAX_INFLICTION_STACKS,
+        durationFrames: eventDuration(ev),
+        operatorSlotId: ev.ownerId,
+      });
+    } else if (REACTION_COLUMN_IDS.has(ev.columnId)) {
+      queue.insert({
+        frame: ev.startFrame,
+        priority: PRIORITY.FRAME_EFFECT,
+        type: 'FRAME_EFFECT',
+        statusName: ev.columnId,
+        columnId: ev.columnId,
+        ownerId: ev.ownerId,
+        sourceOwnerId: ev.sourceOwnerId ?? ev.ownerId,
+        sourceSkillName: ev.sourceSkillName ?? ev.name,
+        maxStacks: 0,
+        durationFrames: eventDuration(ev),
+        operatorSlotId: ev.ownerId,
+        derivedEvent: ev,
+      });
+    }
+  }
+
+  // Seed from input event frame markers
+  seed(collectInflictionEntries(registeredEvents, stops));
+  seed(collectFrameEffectEntries(registeredEvents, loadoutProperties, stops));
+  for (const ev of registeredEvents) {
     if (ev.columnId === SKILL_COLUMNS.COMBO && !ev.comboTriggerColumnId) {
-      seed([{
+      queue.insert({
         frame: ev.startFrame,
         priority: PRIORITY.COMBO_RESOLVE,
         type: 'COMBO_RESOLVE',
@@ -779,14 +738,14 @@ export function processEventQueue(
         durationFrames: 0,
         operatorSlotId: ev.ownerId,
         comboResolve: { comboEvent: ev },
-      }]);
+      });
     }
   }
-  seed(collectFinalStrikeEntries(extLate, stops));
-  seed(collectAbsorptionFrameEntries(extLate, stops));
-  seed(collectConsumeReactionEntries(extLate, stops));
-  seed(collectCryoConsumptionEntries(extLate, loadoutProperties));
-  seed(collectConsumeEntries(extLate, exchangeContexts, stops));
+  seed(collectFinalStrikeEntries(registeredEvents, stops));
+  seed(collectAbsorptionFrameEntries(registeredEvents, stops));
+  seed(collectConsumeReactionEntries(registeredEvents, stops));
+  seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
+  seed(collectConsumeEntries(registeredEvents, exchangeContexts, stops));
   for (const ctx of exchangeContexts) {
     for (const trigger of ctx.triggers) {
       queue.insert({
@@ -819,47 +778,76 @@ export function processEventQueue(
     engineTrigger: e,
   })));
 
-  // Run the queue
+  // ── Run the queue ─────────────────────────────────────────────────────────
   while (queue.size > 0) {
     const entry = queue.extractMin()!;
     const newEntries = interpretor.processQueueFrame(entry);
     for (const e of newEntries) queue.insert(e);
   }
 
-  const queueEvents = interpretor.controller.output;
+  // Register queue-created events + combo windows into DEC
+  const queueEvents = state.output;
   state.markExtended(queueEvents.map(ev => ev.id));
 
-  // ── Phase 7: Derive combo activation windows ────────────────────────────
-  const allEvents = [...extLate, ...queueEvents];
+  const allEvents = [...registeredEvents, ...queueEvents];
   const comboWindows = slotWirings && slotWirings.length > 0
     ? deriveComboActivationWindows(allEvents, slotWirings, stops)
     : [];
+  state.registerEvents([...queueEvents, ...comboWindows]);
 
-  // Propagate queue-side mutations back to state. The queue controller operates on
-  // copies of registered events — any clamps (consumption, refresh, merge) happen there
-  // and need to be reflected in state. Freeform inflictions are replaced with their
-  // derived copies. Other events get status + segment updates if they were clamped.
-  // Never mutate the originals — they belong to the undo history.
-  const queueRegistered = interpretor.controller.getRegisteredEvents();
-  const queueById = new Map<string, TimelineEvent>();
-  for (const ev of queueRegistered) {
-    if (ev.eventStatus) queueById.set(ev.id, ev);
-  }
-  for (const ev of queueEvents) {
-    if (freeformIds.has(ev.id)) queueById.set(ev.id, ev);
-  }
-  if (queueById.size > 0) {
-    state.replaceEvents(state.getRegisteredEvents().map(ev =>
-      queueById.get(ev.id) ?? ev
-    ));
-  }
-  const queueEventsToRegister = queueEvents.filter(ev => !freeformIds.has(ev.id));
-  state.registerEvents([...queueEventsToRegister, ...comboWindows]);
-  state.mergeRawDurations(interpretor.controller);
-
-  // ── Phase 8: Resolve frame positions & validate ─────────────────────────
-  state.cacheFramePositions();
   state.validateAll();
+}
 
-  return { events: state.getRegisteredEvents(), controller: state };
+// ── Pipeline entry point ─────────────────────────────────────────────────────
+
+let _lastController: DerivedEventController | null = null;
+
+/** Get the DerivedEventController from the most recent processCombatSimulation run. */
+export function getLastController(): DerivedEventController {
+  return _lastController!;
+}
+
+/**
+ * Linear pipeline entry point.
+ *
+ * 1. InputEventController.classifyEvents → split input vs derived
+ * 2. DerivedEventController.registerEvents → input events only
+ * 3. SkillPointController.deriveSPRecoveryEvents → SP recovery events
+ * 4. collectEngineTriggerEntries → talent presence events
+ * 5. EventQueueController.runEventQueue → seeds derived, runs interpreter
+ * 6. DerivedEventController.getProcessedEvents → final output
+ */
+export function processCombatSimulation(
+  rawEvents: TimelineEvent[],
+  loadoutProperties?: Record<string, LoadoutProperties>,
+  slotWeapons?: Record<string, string | undefined>,
+  slotWirings?: SlotTriggerWiring[],
+  slotOperatorMap?: Record<string, string>,
+  slotGearSets?: Record<string, string | undefined>,
+): TimelineEvent[] {
+  // ── 1. InputEventController: classify ─────────────────────────────────────
+  const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
+
+  // ── 2. DerivedEventController: register input events ──────────────────────
+  const triggerAssociations = getAllTriggerAssociations();
+  const state = new DerivedEventController(undefined, triggerAssociations, slotWirings);
+  state.registerEvents(inputEvents);
+
+  // ── 3. SP recovery + talent events ────────────────────────────────────────
+  const withSPRecovery = SkillPointController.deriveSPRecoveryEvents(state.getRegisteredEvents(), state.getStops());
+  const spEvents = withSPRecovery.slice(state.getRegisteredEvents().length);
+  state.registerEvents(spEvents);
+
+  const { talentEvents } = collectEngineTriggerEntries(
+    state.getRegisteredEvents(), loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
+    getExchangeStatusIds(),
+  );
+  state.registerEvents(talentEvents);
+
+  // ── 4. EventQueueController: seed derived + run queue ─────────────────────
+  runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets);
+
+  // ── 5. Output ─────────────────────────────────────────────────────────────
+  _lastController = state;
+  return state.getProcessedEvents();
 }

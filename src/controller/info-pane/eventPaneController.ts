@@ -8,12 +8,11 @@ import { interactionToLabel } from '../../consts/semantics';
 import type { Interaction, Effect, Predicate } from '../../consts/semantics';
 import { translateEffect } from '../../utils/semanticsTranslation';
 import type { TranslatedEffect } from '../../utils/semanticsTranslation';
-import { COMBO_WINDOW_COLUMN_ID } from '../timeline/processInteractions';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
 import { getOperatorJson, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
-import { getLastController } from '../timeline/processInteractions';
+import { getLastController } from '../timeline/eventQueueController';
 
 // ── JSON Skill Data Shapes ──────────────────────────────────────────────────
 

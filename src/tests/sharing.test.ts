@@ -224,7 +224,7 @@ describe('embedCodec', () => {
     test('equipment round-trips', async () => {
       const original = makeSheetData({
         loadouts: {
-          'slot-0': { ...EMPTY_LOADOUT, weaponName: 'FORGEBORN_SCATHE', armorName: 'TIDE_FALL' },
+          'slot-0': { ...EMPTY_LOADOUT, weaponId: 'FORGEBORN_SCATHE', armorId: 'TIDE_FALL' },
           'slot-1': { ...EMPTY_LOADOUT },
           'slot-2': { ...EMPTY_LOADOUT },
           'slot-3': { ...EMPTY_LOADOUT },
@@ -234,9 +234,9 @@ describe('embedCodec', () => {
       const encoded = await encodeEmbed(original, []);
       const decoded = await decodeEmbed(encoded, []);
 
-      expect(decoded.loadouts['slot-0'].weaponName).toBe('FORGEBORN_SCATHE');
-      expect(decoded.loadouts['slot-0'].armorName).toBe('TIDE_FALL');
-      expect(decoded.loadouts['slot-0'].glovesName).toBeNull();
+      expect(decoded.loadouts['slot-0'].weaponId).toBe('FORGEBORN_SCATHE');
+      expect(decoded.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
+      expect(decoded.loadouts['slot-0'].glovesId).toBeNull();
     });
   });
 
@@ -323,7 +323,7 @@ describe('embedCodec', () => {
     test('control characters are stripped from strings', async () => {
       const original = makeSheetData({
         loadouts: {
-          'slot-0': { ...EMPTY_LOADOUT, weaponName: 'WEAPON\x00\x01\x02NAME' },
+          'slot-0': { ...EMPTY_LOADOUT, weaponId: 'WEAPON\x00\x01\x02NAME' },
           'slot-1': { ...EMPTY_LOADOUT },
           'slot-2': { ...EMPTY_LOADOUT },
           'slot-3': { ...EMPTY_LOADOUT },
@@ -333,7 +333,7 @@ describe('embedCodec', () => {
       const encoded = await encodeEmbed(original, []);
       const decoded = await decodeEmbed(encoded, []);
 
-      expect(decoded.loadouts['slot-0'].weaponName).toBe('WEAPONNAME');
+      expect(decoded.loadouts['slot-0'].weaponId).toBe('WEAPONNAME');
     });
 
     test('invalid base64 throws', async () => {
@@ -803,7 +803,7 @@ describe('full state round-trip (current state → share → load → assert equ
         },
       ],
       loadouts: {
-        'slot-0': { ...EMPTY_LOADOUT, weaponName: 'FORGEBORN_SCATHE', armorName: 'TIDE_FALL' },
+        'slot-0': { ...EMPTY_LOADOUT, weaponId: 'FORGEBORN_SCATHE', armorId: 'TIDE_FALL' },
         'slot-1': { ...EMPTY_LOADOUT },
         'slot-2': { ...EMPTY_LOADOUT },
         'slot-3': { ...EMPTY_LOADOUT },
@@ -888,8 +888,8 @@ describe('full state round-trip (current state → share → load → assert equ
     expect(decodedRaw.loadoutProperties['slot-0'].skills.battleSkillLevel).toBe(10);
 
     // ── Assertions: equipment ───────────────────────────────────────────
-    expect(decodedRaw.loadouts['slot-0'].weaponName).toBe('FORGEBORN_SCATHE');
-    expect(decodedRaw.loadouts['slot-0'].armorName).toBe('TIDE_FALL');
+    expect(decodedRaw.loadouts['slot-0'].weaponId).toBe('FORGEBORN_SCATHE');
+    expect(decodedRaw.loadouts['slot-0'].armorId).toBe('TIDE_FALL');
 
     // ── Assertions: operator and enemy IDs ──────────────────────────────
     expect(decodedRaw.operatorIds).toEqual(['laevatain', 'akekuri', 'antal', 'ardelia']);

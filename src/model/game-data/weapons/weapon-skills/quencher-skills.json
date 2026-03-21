@@ -1,0 +1,34 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "FINAL_STRIKE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "QUENCHER_HONED_INTO_LEGION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Crusher: Honed into Legion",
+    "description": "When the wielder performs a Final Strike on the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "CRUSHER_HONED_INTO_LEGION"
+  },
+  "metadata": {
+    "originId": "QUENCHER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "SOLIDIFIED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OBJ_RAZORHORN_CONQUEST_OF_ICY_PEAKS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: Conquest of Icy Peaks",
+    "description": "To enemies with Cryo Infliction or Solidification, the wielder gains DMG Dealt +{dmg_up :0.0%}. After consuming Solidification, ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "INFLICTION_CONQUEST_OF_ICY_PEAKS"
+  },
+  "metadata": {
+    "originId": "OBJ_RAZORHORN",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

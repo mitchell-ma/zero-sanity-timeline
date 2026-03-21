@@ -1,0 +1,85 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "DEFEAT",
+            "object": "ENEMY"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "AIC_LIGHT"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "AIC_LIGHT",
+      "name": "AIC Light",
+      "rarity": 2,
+      "piecesRequired": 3,
+      "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s."
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_ATTACK",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  20
+                ]
+              }
+            },
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "AIC_LIGHT",
+      "name": "AIC Light",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          5
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "description": "ATK +20 for 5s after defeating an enemy."
+    },
+    "metadata": {
+      "originId": "AIC_LIGHT"
+    }
+  }
+]

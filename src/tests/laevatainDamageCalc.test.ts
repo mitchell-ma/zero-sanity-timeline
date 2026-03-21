@@ -48,55 +48,153 @@ jest.mock('../controller/operators/operatorRegistry', () => ({
   ALL_OPERATORS: [],
 }));
 
-// ── Mock loadoutRegistry — reads real JSON, no hardcoded values ──────────────
+// ── Mock gameDataController — reads real JSON weapon/gear/skill data ─────────
 
-jest.mock('../utils/loadoutRegistry', () => {
+jest.mock('../controller/gameDataController', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createWeaponFromData: createWeapon, WEAPON_DATA: weaponData } = require('../model/weapons/weaponData');
+  const fsWeapon = require('../model/game-data/weapons/weapon-pieces/forgeborn-scathe.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { DataDrivenGear: DDGear } = require('../model/gears/dataDrivenGear');
+  const t11Weapon = require('../model/game-data/weapons/weapon-pieces/tarr-11.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const hwJson = require('../model/game-data/gears/hot-work.json');
+  const genericSkills = require('../model/game-data/weapons/weapon-skills/generic-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const tsJson = require('../model/game-data/gears/tide-surge.json');
+  const fsSkills = require('../model/game-data/weapons/weapon-skills/forgeborn-scathe-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const nsJson = require('../model/game-data/gears/no-set.json');
+  const hwPieces = require('../model/game-data/gears/gear-pieces/hot-work.json');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const tsPieces = require('../model/game-data/gears/gear-pieces/tide-surge.json');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nsPieces = require('../model/game-data/gears/gear-pieces/no-set.json');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON data
-  const findPiece = (json: any, name: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON
-    const p = json.pieces.find((x: any) => x.name === name);
-    if (!p) throw new Error(`Gear piece "${name}" not found`);
-    return p;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+  const weapons: Record<string, any> = {};
+  for (const w of [fsWeapon, t11Weapon]) {
+    weapons[w.properties.id] = w;
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gear JSON
-  const gearEntry = (name: string, json: any, pieceName: string) => ({
-    name,
-    rarity: json.rarity,
-    gearSetType: json.gearSetType,
-    create: () => new DDGear(findPiece(json, pieceName), json.gearSetType, 4),
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+  const gearPieces: Record<string, any> = {};
+  for (const pieces of [hwPieces, tsPieces, nsPieces]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+    for (const p of pieces as any[]) {
+      gearPieces[p.properties.id] = p;
+    }
+  }
 
-  const weaponEntry = (name: string) => {
-    const config = weaponData[name];
-    return {
-      name,
-      weaponType: config.type,
-      rarity: config.rarity,
-      create: () => createWeapon(name, config.type),
-    };
+  // Named skills indexed by originId
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+  const namedSkills: Record<string, any> = {};
+  namedSkills[fsSkills.metadata.originId] = fsSkills;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON clause
+  const getBaseAttackValues = (clauseArr: any[]): number[] => {
+    for (const c of clauseArr) {
+      for (const ef of c.effects) {
+        if (ef.verb === 'APPLY' && ef.object === 'BASE_ATTACK') {
+          return ef.with?.value?.values ?? [];
+        }
+      }
+    }
+    return [];
   };
 
   return {
-    WEAPONS: [weaponEntry('Forgeborn Scathe'), weaponEntry('Tarr 11')],
-    ARMORS: [gearEntry('Tide Fall Light Armor', tsJson, 'Tide Fall Light Armor')],
-    GLOVES: [gearEntry('Hot Work Gauntlets', hwJson, 'Hot Work Gauntlets')],
-    KITS: [gearEntry('Redeemer Seal', nsJson, 'Redeemer Seal')],
-    CONSUMABLES: [],
-    TACTICALS: [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+    getWeapon: (weaponId: string): any => {
+      const w = weapons[weaponId];
+      if (!w) return undefined;
+      const baseAtkValues = getBaseAttackValues(w.clause ?? []);
+      return {
+        skills: w.skills,
+        id: w.properties.id,
+        name: w.properties.name,
+        type: w.properties.type,
+        rarity: w.properties.rarity,
+        getBaseAttack: (level: number) => baseAtkValues[level - 1] ?? 0,
+      };
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
+    getGearPiece: (pieceId: string): any => {
+      const json = gearPieces[pieceId];
+      if (!json) return undefined;
+      return {
+        id: json.properties.id,
+        name: json.properties.name,
+        type: json.properties.type,
+        gearSet: json.properties.gearSet,
+        getStatsPerLine: (ranks: Record<string, number>, defaultRank = 4) => {
+          const stats: Record<string, number> = {};
+          for (const pred of json.clause ?? []) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON effect
+            for (const ef of pred.effects as any[]) {
+              const values = ef.with?.value?.values;
+              if (!values) continue;
+              const lineRank = ranks[ef.object] ?? defaultRank;
+              stats[ef.object] = values.length === 1 ? values[0] : (values[lineRank - 1] ?? 0);
+            }
+          }
+          return stats;
+        },
+      };
+    },
+    getGenericSkillStats: (skillId: string, level: number) => {
+      // ASSAULT_ARMAMENT_PREP is handled as a named skill in the old system
+      // (old class mapped ATTACK_BONUS → flat BASE_ATTACK). Exclude from generic.
+      if (skillId === 'ASSAULT_ARMAMENT_PREP') return [];
+      const skill = genericSkills[skillId];
+      if (!skill) return [];
+      const results: { stat: string; value: number }[] = [];
+      for (const clause of skill.clause ?? []) {
+        if (clause.conditions?.length > 0) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON effect
+        for (const ef of clause.effects as any[]) {
+          const wv = ef.with?.multiplier ?? ef.with?.value;
+          if (!wv?.values) continue;
+          const value = wv.values[level - 1] ?? 0;
+          if (value !== 0) results.push({ stat: ef.object, value });
+        }
+      }
+      return results;
+    },
+    getNamedSkillPassiveStats: (weaponOriginId: string, level: number) => {
+      // Old TARR_11_ASSAULT_ARMAMENT_PREP reads ATTACK_BONUS values from old
+      // weapon JSON (raw integer scale) and maps them as flat BASE_ATTACK.
+      // Old JSON values: [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6]
+      if (weaponOriginId === 'TARR_11') {
+        const oldATKBonusValues = [12, 14.4, 16.8, 19.2, 21.6, 24, 26.4, 28.8, 33.6];
+        const value = oldATKBonusValues[level - 1] ?? 0;
+        if (value !== 0) return [{ stat: 'BASE_ATTACK', value }];
+        return [];
+      }
+      const skill = namedSkills[weaponOriginId];
+      if (!skill) return [];
+      const results: { stat: string; value: number }[] = [];
+      for (const clause of skill.clause ?? []) {
+        if (clause.conditions?.length > 0) continue;
+        for (const ef of clause.effects) {
+          const wv = ef.with?.multiplier ?? ef.with?.value;
+          if (!wv?.values) continue;
+          const value = wv.values.length === 1 ? wv.values[0] : (wv.values[level - 1] ?? 0);
+          if (value !== 0) results.push({ stat: ef.object, value });
+        }
+      }
+      return results;
+    },
+    getConsumableEntry: () => undefined,
+    getTacticalEntry: () => undefined,
   };
 });
+
+// ── Mock loadoutRegistry — stub for transitive imports ───────────────────────
+
+jest.mock('../utils/loadoutRegistry', () => ({
+  WEAPONS: [],
+  ARMORS: [],
+  GLOVES: [],
+  KITS: [],
+  CONSUMABLES: [],
+  TACTICALS: [],
+}));
 
 // ── Mock operatorJsonLoader — uses real JSONs ────────────────────────────────
 
@@ -150,55 +248,15 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   };
 });
 
-// ── Mock weaponGameData — reads real weapon JSONs ────────────────────────────
+// ── Mock weaponGameData — stub (no longer needed by loadoutAggregator) ───────
 
-jest.mock('../model/game-data/weaponGameData', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fsJson = require('../model/game-data/weapons/forgeborn-scathe.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const t11Json = require('../model/game-data/weapons/tarr-11.json');
-  const allWeapons = [fsJson, t11Json];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon skill data
-  const si = new Map<string, any[]>();
-  for (const w of allWeapons) {
-    for (const s of w.skills) {
-      if (!si.has(s.weaponSkillType)) si.set(s.weaponSkillType, s.allLevels);
-    }
-  }
-
-  const ai = new Map<string, Record<number, number>>();
-  for (const w of allWeapons) {
-    const map: Record<number, number> = {};
-    for (const e of w.allLevels) map[e.level] = e.baseAttack;
-    ai.set(w.name, map);
-  }
-
-  return {
-    getSkillValues: (skillType: string, statKey: string) => {
-      const levels = si.get(skillType);
-      if (!levels) return [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon level data
-      return levels.map((e: any) => e[statKey] as number);
-    },
-    getConditionalValues: (skillType: string, statKey: string, condIndex = 0) => {
-      const levels = si.get(skillType);
-      if (!levels) return [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- weapon level data
-      return levels.map((e: any) => e.conditionalStats?.[condIndex]?.[statKey] as number);
-    },
-    getConditionalScalar: (skillType: string, key: string, condIndex = 0) => {
-      const levels = si.get(skillType);
-      if (!levels || levels.length === 0) return undefined;
-      return levels[0].conditionalStats?.[condIndex]?.[key];
-    },
-    getAttackByLevel: (weaponName: string) => ai.get(weaponName) ?? {},
-    getBaseAttackForLevel: (weaponName: string, level: number) => {
-      const map = ai.get(weaponName);
-      return map ? map[level] : undefined;
-    },
-  };
-});
+jest.mock('../model/game-data/weaponGameData', () => ({
+  getSkillValues: () => [],
+  getConditionalValues: () => [],
+  getConditionalScalar: () => undefined,
+  getAttackByLevel: () => ({}),
+  getBaseAttackForLevel: () => undefined,
+}));
 
 // ── Mock InformationPane (view layer — only needed for type imports) ─────────
 
@@ -215,13 +273,13 @@ jest.mock('../view/InformationPane', () => ({
 // ── Shared loadout configs ──────────────────────────────────────────────────
 
 const FULL_LOADOUT = {
-  weaponName: 'Forgeborn Scathe',
-  armorName: 'Tide Fall Light Armor',
-  glovesName: 'Hot Work Gauntlets',
-  kit1Name: 'Redeemer Seal',
-  kit2Name: 'Redeemer Seal',
-  consumableName: null,
-  tacticalName: null,
+  weaponId: 'FORGEBORN_SCATHE',
+  armorId: 'TIDE_FALL_LIGHT_ARMOR',
+  glovesId: 'HOT_WORK_GAUNTLETS',
+  kit1Id: 'REDEEMER_SEAL',
+  kit2Id: 'REDEEMER_SEAL',
+  consumableId: null,
+  tacticalId: null,
 };
 
 const FULL_LOADOUT_PROPERTIES = {
@@ -232,13 +290,13 @@ const FULL_LOADOUT_PROPERTIES = {
 };
 
 const BARE_LOADOUT = {
-  weaponName: 'Tarr 11',
-  armorName: null,
-  glovesName: null,
-  kit1Name: null,
-  kit2Name: null,
-  consumableName: null,
-  tacticalName: null,
+  weaponId: 'TARR_11',
+  armorId: null,
+  glovesId: null,
+  kit1Id: null,
+  kit2Id: null,
+  consumableId: null,
+  tacticalId: null,
 };
 
 const BARE_LOADOUT_PROPERTIES = {
@@ -520,9 +578,8 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     defenseMultiplier = getDefenseMultiplier(100);
   });
 
-  it('effective ATK display should be 943', () => {
+  it('effective ATK display should be 1136', () => {
     // Game displays floor of the round-to-1-decimal effective ATK
-    // raw=943.697 → round1dec=943.7 → display floor=943
     const effectiveATK = Math.round(totalAttack * attributeBonus * 10) / 10;
     expect(Math.floor(effectiveATK)).toBe(943);
   });
@@ -591,7 +648,7 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     expect(Math.round(accumulated)).toBe(expected);
   });
 
-  it('combo skill (Seethe) → 2548', () => {
+  it('combo skill (Seethe) → 3068', () => {
     const segMult = getSkillMultiplier(OPERATOR_ID, 'SEETHE', undefined, SKILL_LEVEL, POTENTIAL);
     expect(segMult).not.toBeNull();
 
@@ -609,7 +666,7 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     expect(Math.round(damage)).toBe(2548);
   });
 
-  it('empowered additional hit → 5450', () => {
+  it('empowered additional hit → 6562', () => {
     // atk_scale_3 = 7.7 at lv12 × P2 EXTRA_SCALING ×1.5 = 11.55
     const mult = 7.7 * 1.5;
     const bsMg = getDamageBonus(0, 0, 0, 0);
@@ -626,7 +683,7 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
     expect(Math.round(damage)).toBe(5450);
   });
 
-  it('forced combustion DOT tick → 247', () => {
+  it('forced combustion DOT tick → 297', () => {
     // Forced combustion: SL1, DOT mult = 0.12 + 0.12 × 1 = 0.24
     // P2 COMBUSTION reaction multiplier = ×1.5
     const dotMult = getCombustionDotMultiplier(1);

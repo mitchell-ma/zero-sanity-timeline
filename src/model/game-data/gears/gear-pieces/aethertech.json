@@ -1,0 +1,583 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STAGGER_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.207,
+                  0.2277,
+                  0.2484,
+                  0.2691
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_PLATING",
+      "name": "Thertech Plating",
+      "type": "ARMOR",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_LIGHT_GLOVES",
+      "name": "Thertech Light Gloves",
+      "type": "GLOVES",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ARTS_INTENSITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  34.5,
+                  38,
+                  41.4,
+                  44.9
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_GLOVES",
+      "name": "Thertech Gloves",
+      "type": "GLOVES",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BATTLE_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.414,
+                  0.4554,
+                  0.4968,
+                  0.5382
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_WATCH",
+      "name": "Thertech Watch",
+      "type": "KIT",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_STABILIZER_T1",
+      "name": "Thertech Stabilizer T1",
+      "type": "KIT",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_ANALYSIS_BAND",
+      "name": "Thertech Analysis Band",
+      "type": "KIT",
+      "gearSet": "AETHERTECH"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ARTS_INTENSITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41.4,
+                  45.5,
+                  49.7,
+                  53.8
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THERTECH_STABILIZER",
+      "name": "Thertech Stabilizer",
+      "type": "KIT",
+      "gearSet": "AETHERTECH"
+    }
+  }
+]

@@ -1,0 +1,915 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.115,
+                  0.1265,
+                  0.138,
+                  0.1495
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_HEAVY_ARMOR",
+      "name": "Type 50 Yinglung Heavy Armor",
+      "type": "ARMOR",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_GAIN_EFFICIENCY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1232142857,
+                  0.13553572,
+                  0.14785714,
+                  0.16017857
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_HEAVY_ARMOR_T1",
+      "name": "Type 50 Yinglung Heavy Armor T1",
+      "type": "ARMOR",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.207,
+                  0.2277,
+                  0.2484,
+                  0.2691
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_HEAVY_ARMOR_T2",
+      "name": "Type 50 Yinglung Heavy Armor T2",
+      "type": "ARMOR",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.138,
+                  0.1518,
+                  0.1656,
+                  0.1794
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_LIGHT_ARMOR",
+      "name": "Type 50 Yinglung Light Armor",
+      "type": "ARMOR",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.345,
+                  0.3795,
+                  0.414,
+                  0.4485
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_GLOVES_T1",
+      "name": "Type 50 Yinglung Gloves T1",
+      "type": "GLOVES",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.345,
+                  0.3795,
+                  0.414,
+                  0.4485
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_GLOVES",
+      "name": "Type 50 Yinglung Gloves",
+      "type": "GLOVES",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.414,
+                  0.4554,
+                  0.4968,
+                  0.5382
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_KNIFE",
+      "name": "Type 50 Yinglung Knife",
+      "type": "KIT",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.276,
+                  0.3036,
+                  0.3312,
+                  0.3588
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_KNIFE_T1",
+      "name": "Type 50 Yinglung Knife T1",
+      "type": "KIT",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_RADAR",
+      "name": "Type 50 Yinglung Radar",
+      "type": "KIT",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.5175,
+                  0.56925,
+                  0.621,
+                  0.67275
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_RADAR_T1",
+      "name": "Type 50 Yinglung Radar T1",
+      "type": "KIT",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.414,
+                  0.4554,
+                  0.4968,
+                  0.5382
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "TYPE_50_YINGLUNG_RADAR_T2",
+      "name": "Type 50 Yinglung Radar T2",
+      "type": "KIT",
+      "gearSet": "TYPE_50_YINGLUNG"
+    }
+  }
+]

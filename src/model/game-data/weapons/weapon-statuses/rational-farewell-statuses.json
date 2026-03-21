@@ -1,0 +1,82 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BATTLE_SKILL_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1,
+                  0.12,
+                  0.14,
+                  0.16,
+                  0.18,
+                  0.2,
+                  0.22,
+                  0.24,
+                  0.28
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.16,
+                  0.192,
+                  0.224,
+                  0.256,
+                  0.288,
+                  0.32,
+                  0.352,
+                  0.384,
+                  0.448
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
+      "name": "Aid from the Past",
+      "description": "When combo applies Arts Burst/Combustion",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "RATIONAL_FAREWELL",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

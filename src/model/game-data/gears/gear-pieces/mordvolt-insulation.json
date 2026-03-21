@@ -1,0 +1,778 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  28.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  44,
+                  44,
+                  44,
+                  44
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  29,
+                  29,
+                  29,
+                  29
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BASE_ATTACK",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16.2,
+                  16.2,
+                  16.2,
+                  16.2
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_VEST",
+      "name": "Mordvolt Insulation Vest",
+      "type": "ARMOR",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  40
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  61,
+                  61,
+                  61,
+                  61
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41,
+                  41,
+                  41,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BASIC_ATTACK_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.098,
+                  0.098,
+                  0.098,
+                  0.098
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_VEST_T1",
+      "name": "Mordvolt Insulation Vest T1",
+      "type": "ARMOR",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  40
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  61,
+                  61,
+                  61,
+                  61
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41,
+                  41,
+                  41,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "HP_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.147,
+                  0.147,
+                  0.147,
+                  0.147
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_VEST_T2",
+      "name": "Mordvolt Insulation Vest T2",
+      "type": "ARMOR",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21.6
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  33,
+                  33,
+                  33,
+                  33
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  22,
+                  22,
+                  22,
+                  22
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ARTS_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.0921052632,
+                  0.0921052632,
+                  0.0921052632,
+                  0.0921052632
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_GLOVES",
+      "name": "Mordvolt Insulation Gloves",
+      "type": "GLOVES",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  30
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  46,
+                  46,
+                  46,
+                  46
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  30,
+                  30,
+                  30,
+                  30
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1225,
+                  0.1225,
+                  0.1225,
+                  0.1225
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_GLOVES_T1",
+      "name": "Mordvolt Insulation Gloves T1",
+      "type": "GLOVES",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  29,
+                  29,
+                  29,
+                  29
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_GAIN_EFFICIENCY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.175,
+                  0.175,
+                  0.175,
+                  0.175
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_BATTERY_T1",
+      "name": "Mordvolt Insulation Battery T1",
+      "type": "KIT",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  23,
+                  23,
+                  23,
+                  23
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  15,
+                  15,
+                  15,
+                  15
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.147,
+                  0.147,
+                  0.147,
+                  0.147
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_WRENCH_T2",
+      "name": "Mordvolt Insulation Wrench T2",
+      "type": "KIT",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  10.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  21,
+                  21,
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.105,
+                  0.105,
+                  0.105,
+                  0.105
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_WRENCH",
+      "name": "Mordvolt Insulation Wrench",
+      "type": "KIT",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  10.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  21,
+                  21,
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1166666667,
+                  0.1166666667,
+                  0.1166666667,
+                  0.1166666667
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ELECTRIC_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1166666667,
+                  0.1166666667,
+                  0.1166666667,
+                  0.1166666667
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_WRENCH_T1",
+      "name": "Mordvolt Insulation Wrench T1",
+      "type": "KIT",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  10.8
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  21,
+                  21,
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "CRITICAL_RATE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.0525,
+                  0.0525,
+                  0.0525,
+                  0.0525
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "MORDVOLT_INSULATION_BATTERY",
+      "name": "Mordvolt Insulation Battery",
+      "type": "KIT",
+      "gearSet": "MORDVOLT_INSULATION"
+    }
+  }
+]

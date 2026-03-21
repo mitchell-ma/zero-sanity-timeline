@@ -14,26 +14,21 @@
 
 import { GearSetType, StatType, WeaponSkillType } from '../../consts/enums';
 import type { SkillLevel } from '../../consts/types';
-import { Weapon } from '../../model/weapons/weapon';
-import { Gear } from '../../model/gears/gear';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
-import { Consumable } from '../../model/consumables/consumable';
-import { Tactical } from '../../model/consumables/tactical';
-import { WeaponSkill } from '../../model/weapon-skills/weaponSkill';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
 import {
-  WEAPONS,
-  ARMORS,
-  GLOVES,
-  KITS,
-  CONSUMABLES,
-  TACTICALS,
-} from '../../utils/loadoutRegistry';
+  getWeapon,
+  getGearPiece,
+  getGenericSkillStats,
+  getNamedSkillPassiveStats,
+  getConsumableEntry,
+  getTacticalEntry,
+} from '../gameDataController';
 
-// ── Result type ─────────────────────────────────────────────────────────────
+// ── Result type ─────────────────────────────────────────────────────────
 
 export interface StatSourceEntry {
   source: string;
@@ -85,7 +80,7 @@ export interface AggregatedStats {
   gearSetDescription: string | null;
 }
 
-// ── Attribute → bonus stat mapping ──────────────────────────────────────────
+// ── Attribute → bonus stat mapping ──────────────────────────────────────
 
 /** Maps flat attribute stat types to their percentage bonus counterparts. */
 const ATTR_TO_BONUS: Partial<Record<StatType, StatType>> = {
@@ -95,7 +90,7 @@ const ATTR_TO_BONUS: Partial<Record<StatType, StatType>> = {
   [StatType.WILL]: StatType.WILL_BONUS,
 };
 
-// ── Weapon skill → stat mapping ─────────────────────────────────────────────
+// ── Weapon skill → stat mapping ─────────────────────────────────────────
 
 /** Maps a weapon skill type to the StatType it modifies.
  *  Returns null for named/unique skills that don't have a simple stat mapping. */
@@ -126,8 +121,16 @@ export function weaponSkillStat(
   }
 }
 
+/** Maps a clause effect object name to a StatType, resolving MAIN_ATTRIBUTE. */
+function resolveClauseStatType(object: string, mainAttr: StatType): StatType | null {
+  if (object === 'MAIN_ATTRIBUTE') return mainAttr;
+  // Check if it's a valid StatType
+  if (Object.values(StatType).includes(object as StatType)) return object as StatType;
+  return null;
+}
 
-// ── Main aggregation ────────────────────────────────────────────────────────
+
+// ── Main aggregation ────────────────────────────────────────────────────
 
 /**
  * Aggregate all loadout sources into final operator stats.
@@ -195,46 +198,42 @@ export function aggregateLoadoutStats(
     if (source && value !== 0) trackSource(stat, source, value);
   }
 
-  // 2. Weapon
+  // 2. Weapon — via gameDataController
   let weaponBaseAttack = 0;
-  if (loadout.weaponName) {
-    const weaponEntry = WEAPONS.find((w) => w.name === loadout.weaponName);
-    if (weaponEntry) {
-      const weapon: Weapon = weaponEntry.create();
-      weapon.level = loadoutProperties.weapon.level;
-      weaponBaseAttack = weapon.getBaseAttack();
+  if (loadout.weaponId) {
+    const weaponPiece = getWeapon(loadout.weaponId);
+    if (weaponPiece) {
+      weaponBaseAttack = weaponPiece.getBaseAttack(loadoutProperties.weapon.level);
 
-      // Apply weapon skill stat boosts and passive stats
-      const allSkills: { skill: WeaponSkill; levelKey: number }[] = [
-        { skill: weapon.weaponSkillOne, levelKey: loadoutProperties.weapon.skill1Level },
-        { skill: weapon.weaponSkillTwo, levelKey: loadoutProperties.weapon.skill2Level },
+      // Apply weapon skill stat boosts from generic + named skills
+      const skillLevels = [
+        loadoutProperties.weapon.skill1Level,
+        loadoutProperties.weapon.skill2Level,
+        loadoutProperties.weapon.skill3Level,
       ];
-      if (weapon.weaponSkillThree) {
-        allSkills.push({ skill: weapon.weaponSkillThree, levelKey: loadoutProperties.weapon.skill3Level });
-      }
-      for (const { skill, levelKey } of allSkills) {
-        skill.level = levelKey;
-        // Apply weapon skill stat boosts with source tracking
-        const wsStat = weaponSkillStat(skill.weaponSkillType, model.mainAttributeType);
-        if (wsStat != null) {
-          const wsValue = skill.getValue();
-          stats[wsStat] += wsValue;
-          trackSource(wsStat, `Weapon Skill`, wsValue);
-        }
-        // Apply passive (always-active) stats from named skills
-        const passiveStats = skill.getPassiveStats();
-        for (const [key, value] of Object.entries(passiveStats)) {
-          addStat(key as StatType, value as number, 'Weapon Passive');
-        }
-        // Handle secondary attribute bonus for skills that grant it (e.g. Flow: Unbridled Edge)
-        if ('getElementDmgBonus' in skill) {
-          const secAttrBonus = (skill as WeaponSkill & { getValue(): number }).getValue();
-          if (secAttrBonus > 0) {
-            const secBonusStat = ATTR_TO_BONUS[model.secondaryAttributeType];
-            if (secBonusStat) {
-              stats[secBonusStat] += secAttrBonus;
-              trackSource(secBonusStat, 'Weapon Skill', secAttrBonus);
+      for (let i = 0; i < weaponPiece.skills.length; i++) {
+        const skillId = weaponPiece.skills[i];
+        const level = skillLevels[i] ?? 1;
+
+        // Try generic skill stats (e.g. INTELLECT_BOOST_L → INTELLECT value)
+        const genericResults = getGenericSkillStats(skillId, level);
+        if (genericResults.length > 0) {
+          for (const { stat, value } of genericResults) {
+            const statType = resolveClauseStatType(stat, model.mainAttributeType);
+            if (statType != null) {
+              stats[statType] += value;
+              trackSource(statType, 'Weapon Skill', value);
             }
+          }
+          continue;
+        }
+
+        // Named skill — get passive stats from weapon skill controller
+        const namedStats = getNamedSkillPassiveStats(weaponPiece.id, level);
+        for (const { stat, value } of namedStats) {
+          const resolvedStat = resolveClauseStatType(stat, model.mainAttributeType);
+          if (resolvedStat != null) {
+            addStat(resolvedStat, value, 'Weapon Passive');
           }
         }
       }
@@ -242,30 +241,27 @@ export function aggregateLoadoutStats(
   }
 
   // 3. Gear pieces — collect stats and count effect types for set bonus
-  const gearPieces: { name: string | null; registry: typeof ARMORS; ranksKey: keyof typeof loadoutProperties.gear }[] = [
-    { name: loadout.armorName,  registry: ARMORS, ranksKey: 'armorRanks' },
-    { name: loadout.glovesName, registry: GLOVES, ranksKey: 'glovesRanks' },
-    { name: loadout.kit1Name,   registry: KITS,   ranksKey: 'kit1Ranks' },
-    { name: loadout.kit2Name,   registry: KITS,   ranksKey: 'kit2Ranks' },
+  const gearPieces: { id: string | null; ranksKey: keyof typeof loadoutProperties.gear }[] = [
+    { id: loadout.armorId,  ranksKey: 'armorRanks' },
+    { id: loadout.glovesId, ranksKey: 'glovesRanks' },
+    { id: loadout.kit1Id,   ranksKey: 'kit1Ranks' },
+    { id: loadout.kit2Id,   ranksKey: 'kit2Ranks' },
   ];
-  const effectCounts = new Map<GearSetType, number>();
+  const effectCounts = new Map<string, number>();
 
   for (const piece of gearPieces) {
-    const name = piece.name;
-    if (!name) continue;
-    const entry = piece.registry.find((g) => g.name === name);
-    if (!entry) continue;
-    const gear: Gear = entry.create();
-    gear.rank = 4; // default rank for fallback
+    if (!piece.id) continue;
+    const gearPiece = getGearPiece(piece.id);
+    if (!gearPiece) continue;
     const lineRanks = loadoutProperties.gear[piece.ranksKey] ?? {};
-    const gearStats = gear.getStatsPerLine(lineRanks);
+    const gearStats = gearPiece.getStatsPerLine(lineRanks);
     for (const [key, value] of Object.entries(gearStats)) {
       addStat(key as StatType, value as number, 'Gear');
     }
-    // Count gear effect type
+    // Count gear set for set bonus
     effectCounts.set(
-      gear.gearSetType,
-      (effectCounts.get(gear.gearSetType) ?? 0) + 1,
+      gearPiece.gearSet,
+      (effectCounts.get(gearPiece.gearSet) ?? 0) + 1,
     );
   }
 
@@ -274,10 +270,10 @@ export function aggregateLoadoutStats(
   let gearSetType: GearSetType | null = null;
   let gearSetDescription: string | null = null;
   effectCounts.forEach((count, effectType) => {
-    if (count >= 3 && effectType !== GearSetType.NONE) {
+    if (count >= 3 && effectType !== 'NONE') {
       gearSetActive = true;
-      gearSetType = effectType;
-      const entry = getGearSetEffects(effectType);
+      gearSetType = effectType as GearSetType;
+      const entry = getGearSetEffects(effectType as GearSetType);
       if (entry) {
         gearSetDescription = entry.label;
         for (const [key, value] of Object.entries(entry.passiveStats)) {
@@ -288,10 +284,10 @@ export function aggregateLoadoutStats(
   });
 
   // 5. Consumable (food buff)
-  if (loadout.consumableName) {
-    const entry = CONSUMABLES.find((c) => c.name === loadout.consumableName);
+  if (loadout.consumableId) {
+    const entry = getConsumableEntry(loadout.consumableId);
     if (entry) {
-      const consumable: Consumable = entry.create();
+      const consumable = entry.create();
       for (const [key, value] of Object.entries(consumable.stats)) {
         addStat(key as StatType, value as number, 'Food');
       }
@@ -299,10 +295,10 @@ export function aggregateLoadoutStats(
   }
 
   // 6. Tactical
-  if (loadout.tacticalName) {
-    const entry = TACTICALS.find((t) => t.name === loadout.tacticalName);
+  if (loadout.tacticalId) {
+    const entry = getTacticalEntry(loadout.tacticalId);
     if (entry) {
-      const tactical: Tactical = entry.create();
+      const tactical = entry.create();
       for (const [key, value] of Object.entries(tactical.stats)) {
         addStat(key as StatType, value as number, 'Tactical');
       }

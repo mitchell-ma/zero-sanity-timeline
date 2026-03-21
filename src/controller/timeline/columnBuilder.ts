@@ -3,7 +3,7 @@ import { CombatSkillsType, ELEMENT_COLORS, ElementType, EnhancementType, EventFr
 import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
-import { TACTICALS } from '../../utils/loadoutRegistry';
+import { getTacticalEntry, getWeapon } from '../gameDataController';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS } from '../../utils/timeline';
@@ -20,10 +20,10 @@ export interface Slot {
   slotId: string;
   operator: Operator | null;
   potential?: number;
-  /** Equipped weapon name (for weapon skill subtimeline columns). */
-  weaponName?: string;
-  /** Equipped tactical name (for tactical subtimeline column). */
-  tacticalName?: string;
+  /** Equipped weapon ID (for weapon skill subtimeline columns). */
+  weaponId?: string;
+  /** Equipped tactical ID (for tactical subtimeline column). */
+  tacticalId?: string;
   /** Active gear set effect type (3+ matching pieces). */
   gearSetType?: import('../../consts/enums').GearSetType;
   /** Combo skill level (1–12) for level-dependent cooldown computation. */
@@ -128,7 +128,8 @@ export function buildColumns(
         }
       }
     };
-    if (s.weaponName) addEquipDefs(getWeaponEffectDefs(s.weaponName));
+    const weaponDisplayName = s.weaponId ? getWeapon(s.weaponId)?.name : undefined;
+    if (weaponDisplayName) addEquipDefs(getWeaponEffectDefs(weaponDisplayName));
     if (s.gearSetType) addEquipDefs(getGearEffectDefs(s.gearSetType));
   }
 
@@ -599,8 +600,8 @@ export function buildColumns(
 
     // ── Tactical subtimeline column ───────────────────────────────────────────
     let tacticalColCount = 0;
-    if (op && slot.tacticalName) {
-      const entry = TACTICALS.find((t) => t.name === slot.tacticalName);
+    if (op && slot.tacticalId) {
+      const entry = getTacticalEntry(slot.tacticalId);
       if (entry) {
         const tactical = entry.create() as Tactical;
         const TACTICAL_DURATION_FRAMES = Math.round(1 * 120); // 1 second at 120fps

@@ -1,0 +1,90 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "RECOVER",
+            "object": "SKILL_POINT"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "POSITIVE_FEEDBACK",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "POSITIVE_FEEDBACK_POTENTIAL",
+      "name": "Positive Feedback (P1)",
+      "type": "POTENTIAL",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "akekuri",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.1
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "POSITIVE_FEEDBACK",
+      "name": "Positive Feedback",
+      "type": "POTENTIAL_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          10
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            5
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "POSITIVE_FEEDBACK_POTENTIAL",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

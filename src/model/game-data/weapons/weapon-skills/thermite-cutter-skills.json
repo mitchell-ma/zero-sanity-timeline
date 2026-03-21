@@ -1,0 +1,83 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "THERMITE_CUTTER_THERMAL_RELEASE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    },
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "THERMITE_CUTTER_THERMAL_RELEASE_TEAM",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Flow: Thermal Release",
+    "description": "ATK +{atk_up:0.0%}. After the wielder's skill recovers SP or grants a Link state, the entire team gains ATK +{atk_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "id": "FLOW_THERMAL_RELEASE"
+  },
+  "metadata": {
+    "originId": "THERMITE_CUTTER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -4,7 +4,7 @@
   "operatorRarity": 5,
   "operatorClassType": "STRIKER",
   "elementType": "ELECTRIC",
-  "weaponType": "POLEARM",
+  "weaponTypes": ["POLEARM"],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "AGILITY",
   "potentials": [

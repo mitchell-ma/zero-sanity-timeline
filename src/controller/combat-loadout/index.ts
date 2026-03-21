@@ -1,2 +1,2 @@
-export { CombatLoadout } from './combatLoadout';
-export type { ActivationWindow, WindowsMap, CombatLoadoutListener } from './combatLoadout';
+export { CombatLoadoutController } from './combatLoadoutController';
+export type { ActivationWindow, WindowsMap, CombatLoadoutListener } from './combatLoadoutController';

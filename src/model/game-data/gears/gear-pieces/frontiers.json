@@ -1,0 +1,980 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.25875,
+                  0.284625,
+                  0.3105,
+                  0.336375
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_ARMOR",
+      "name": "Frontiers Armor",
+      "type": "ARMOR",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BATTLE_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.207,
+                  0.2277,
+                  0.2484,
+                  0.2691
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_ARMOR_T1",
+      "name": "Frontiers Armor T1",
+      "type": "ARMOR",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BATTLE_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.207,
+                  0.2277,
+                  0.2484,
+                  0.2691
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_ARMOR_T2",
+      "name": "Frontiers Armor T2",
+      "type": "ARMOR",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SECONDARY_ATTRIBUTE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1035089175,
+                  0.11385981,
+                  0.1242107,
+                  0.1345616
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_ARMOR_T3",
+      "name": "Frontiers Armor T3",
+      "type": "ARMOR",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  56
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  87,
+                  95,
+                  104,
+                  113
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  58,
+                  63,
+                  69,
+                  75
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_GAIN_EFFICIENCY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1232142857,
+                  0.13553572,
+                  0.14785714,
+                  0.16017857
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_PROTECTION_SUIT",
+      "name": "Frontiers Protection Suit",
+      "type": "ARMOR",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "BATTLE_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.345,
+                  0.3795,
+                  0.414,
+                  0.4485
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_BLIGHT_RES_GLOVES",
+      "name": "Frontiers Blight Res Gloves",
+      "type": "GLOVES",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  42
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  65,
+                  71,
+                  78,
+                  84
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  43,
+                  47,
+                  51,
+                  55
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_FIBER_GLOVES",
+      "name": "Frontiers Fiber Gloves",
+      "type": "GLOVES",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "SECONDARY_ATTRIBUTE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.207017835,
+                  0.22771962,
+                  0.2484214,
+                  0.2691232
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_EXTRA_O2_TUBE",
+      "name": "Frontiers Extra O2 Tube",
+      "type": "KIT",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ELECTRIC_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_COMM_T1",
+      "name": "Frontiers Comm T1",
+      "type": "KIT",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  32,
+                  35,
+                  38,
+                  41
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  21,
+                  23,
+                  25,
+                  27
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.414,
+                  0.4554,
+                  0.4968,
+                  0.5382
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_COMM",
+      "name": "Frontiers Comm",
+      "type": "KIT",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41,
+                  45,
+                  49,
+                  53
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.5175,
+                  0.56925,
+                  0.621,
+                  0.67275
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_ANALYZER",
+      "name": "Frontiers Analyzer",
+      "type": "KIT",
+      "gearSet": "FRONTIERS"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASE_DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  21
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  41,
+                  45,
+                  49,
+                  53
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.23,
+                  0.253,
+                  0.276,
+                  0.299
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRONTIERS_O2_TUBE",
+      "name": "Frontiers O2 Tube",
+      "type": "KIT",
+      "gearSet": "FRONTIERS"
+    }
+  }
+]

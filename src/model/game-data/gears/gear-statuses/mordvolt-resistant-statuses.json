@@ -1,0 +1,16 @@
+[
+  {
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "MORDVOLT_RESISTANT",
+      "name": "Mordvolt Resistant",
+      "rarity": 4
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  }
+]

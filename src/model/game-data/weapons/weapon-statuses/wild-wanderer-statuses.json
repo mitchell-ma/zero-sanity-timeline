@@ -1,0 +1,85 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "OTHER",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ELECTRIC_DAMAGE_BONUS",
+            "toDeterminer": "OTHER",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "WILD_WANDERER_WILDERNESS_CLUSTER",
+      "name": "Wilderness Cluster",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "OTHER"
+    },
+    "metadata": {
+      "originId": "WILD_WANDERER",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

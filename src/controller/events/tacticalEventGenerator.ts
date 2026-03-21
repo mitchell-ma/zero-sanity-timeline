@@ -1,5 +1,5 @@
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-import { TACTICALS } from '../../utils/loadoutRegistry';
+import { getTacticalEntry } from '../gameDataController';
 import { Tactical } from '../../model/consumables/tactical';
 import { StewMeeting } from '../../model/consumables/stewMeeting';
 import type { Interaction } from '../../consts/semantics';
@@ -22,9 +22,9 @@ interface TacticalEventConfig {
   ultThreshold: number;
 }
 
-/** Resolve tactical config from a tactical name. */
-function getTacticalConfig(tacticalName: string): TacticalEventConfig | null {
-  const entry = TACTICALS.find((t) => t.name === tacticalName);
+/** Resolve tactical config from a tactical ID. */
+function getTacticalConfig(tacticalId: string): TacticalEventConfig | null {
+  const entry = getTacticalEntry(tacticalId);
   if (!entry) return null;
   const tactical = entry.create() as Tactical;
 
@@ -60,7 +60,7 @@ export interface TacticalEventResult {
  * up to `maxUses`.
  *
  * @param slotId       Operator slot ID
- * @param tacticalName Equipped tactical item name
+ * @param tacticalId   Equipped tactical item ID
  * @param ultMax       Ultimate energy cost (max gauge)
  * @param ultTimeline  Sorted ult timeline events: { frame, type, amount }[]
  * @param chargePerFrame Ult charge per frame (regen rate)
@@ -68,14 +68,14 @@ export interface TacticalEventResult {
  */
 export function generateTacticalEvents(
   slotId: string,
-  tacticalName: string,
+  tacticalId: string,
   ultMax: number,
   ultTimeline: { frame: number; type: 'consume' | 'gain'; amount: number }[],
   chargePerFrame: number,
   startValue: number,
   maxUsesOverride?: number,
 ): TacticalEventResult | null {
-  const config = getTacticalConfig(tacticalName);
+  const config = getTacticalConfig(tacticalId);
   if (!config) return null;
   if (maxUsesOverride !== undefined) config.maxUses = maxUsesOverride;
 

@@ -1,0 +1,196 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "TRIGGER",
+            "object": "SHATTER"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "COMMISERATION",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "COMMISERATION_TALENT",
+      "name": "Commiseration (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "estella",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CAST",
+            "object": "ONOMATOPOEIA"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "RECOVER",
+            "object": "SKILL_POINT",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  7.5,
+                  15
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "COMMISERATION",
+      "name": "Commiseration",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "CONSUME"
+      }
+    },
+    "metadata": {
+      "originId": "COMMISERATION_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "SOLIDIFICATION"
+          },
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HAVE",
+            "object": "SURVIVAL_IS_A_WIN_P5",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "value": "OFF_COOLDOWN"
+              }
+            }
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "SURVIVAL_IS_A_WIN_P5",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "SURVIVAL_IS_A_WIN_P5_TALENT",
+      "name": "Survival is a Win (P5)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "estella",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "THIS",
+            "toObject": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "value": 5
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME"
+        },
+        "frames": []
+      }
+    ],
+    "properties": {
+      "id": "SURVIVAL_IS_A_WIN_P5",
+      "name": "Survival is a Win",
+      "type": "POTENTIAL_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "estella",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

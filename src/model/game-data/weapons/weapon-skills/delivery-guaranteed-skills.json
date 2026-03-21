@@ -1,0 +1,65 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "NATURE_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.16,
+                0.192,
+                0.224,
+                0.256,
+                0.288,
+                0.32,
+                0.352,
+                0.384,
+                0.448
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "LIFTED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "DELIVERY_GUARANTEED_DUTY_FULFILLED",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Pursuit: Duty Fulfilled",
+    "description": "Nature DMG Dealt +{nature_dmg_up:0.0%}. After the wielder's combo skill applies Lifted, the team gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. For every enemy Lifted, the team gains bonus Arts DMG Dealt +{spell_dmg_up2:0.0%}, up to a max of +{spell_dmg_up2*max_stack:0.0%}. Effects of the same name cannot stack.",
+    "id": "PURSUIT_DUTY_FULFILLED"
+  },
+  "metadata": {
+    "originId": "DELIVERY_GUARANTEED",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

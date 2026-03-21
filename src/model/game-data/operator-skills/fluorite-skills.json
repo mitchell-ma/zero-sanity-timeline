@@ -46,9 +46,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -65,10 +65,6 @@
                           0.52,
                           0.56
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -113,9 +109,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -132,10 +128,6 @@
                           0.67,
                           0.73
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -180,9 +172,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -199,10 +191,6 @@
                           0.53,
                           0.57
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -247,7 +235,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 15
                       }
@@ -268,9 +256,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -287,14 +275,6 @@
                           1.25,
                           1.35
                         ]
-                      },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 15
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 15
                       }
                     }
                   }
@@ -303,21 +283,6 @@
             ]
           }
         ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "SEGMENT",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "duration": {
-            "value": 0,
-            "unit": "SECOND"
-          }
-        },
-        "frames": []
       }
     ],
     "properties": {
@@ -360,9 +325,25 @@
                 "verb": "DEAL",
                 "adjective": "NATURE",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "stagger": {
+                    "verb": "IS",
+                    "value": 10
+                  },
+                  "moveSpeedScalar": {
+                    "verb": "IS",
+                    "value": 0.7
+                  },
+                  "duration": {
+                    "verb": "IS",
+                    "value": 3
+                  },
+                  "boomUp": {
+                    "verb": "IS",
+                    "value": 0.3
+                  },
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -379,22 +360,6 @@
                       3.88,
                       4.2
                     ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "moveSpeedScalar": {
-                    "verb": "IS",
-                    "value": 0.7
-                  },
-                  "duration": {
-                    "verb": "IS",
-                    "value": 3
-                  },
-                  "boomUp": {
-                    "verb": "IS",
-                    "value": 0.3
                   }
                 }
               }
@@ -446,9 +411,9 @@
                 "verb": "DEAL",
                 "adjective": "NATURE",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -481,33 +446,9 @@
             "verb": "CONSUME",
             "object": "SKILL_POINT",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 100
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "ALL",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
               }
             }
           }
@@ -551,16 +492,6 @@
       {
         "conditions": [],
         "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "COOLDOWN",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 25
-              }
-            }
-          },
           {
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
@@ -636,26 +567,8 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          1.69,
-                          1.86,
-                          2.03,
-                          2.2,
-                          2.37,
-                          2.54,
-                          2.7,
-                          2.87,
-                          3.04,
-                          3.25,
-                          3.51,
-                          3.8
-                        ]
-                      },
                       "atkScaleAdd_1": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
@@ -728,10 +641,6 @@
                           4.15
                         ]
                       },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "usp": {
                         "verb": "IS",
                         "value": 10
@@ -739,6 +648,24 @@
                       "skillPoint": {
                         "verb": "IS",
                         "value": 10
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.69,
+                          1.86,
+                          2.03,
+                          2.2,
+                          2.37,
+                          2.54,
+                          2.7,
+                          2.87,
+                          3.04,
+                          3.25,
+                          3.51,
+                          3.8
+                        ]
                       }
                     }
                   }
@@ -747,6 +674,21 @@
             ]
           }
         ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "COOLDOWN"
+        },
+        "properties": {
+          "name": "Cooldown",
+          "duration": {
+            "value": 25,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME"
+        },
+        "frames": []
       }
     ],
     "metadata": {
@@ -824,9 +766,17 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "boomUp": {
+                        "verb": "IS",
+                        "value": 0.3
+                      },
+                      "stagger": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -843,14 +793,6 @@
                           2.31,
                           2.5
                         ]
-                      },
-                      "boomUp": {
-                        "verb": "IS",
-                        "value": 0.3
-                      },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 5
                       }
                     }
                   }
@@ -879,9 +821,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -926,9 +868,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -984,9 +926,9 @@
                     "verb": "DEAL",
                     "adjective": "NATURE",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -1048,9 +990,9 @@
                 "verb": "DEAL",
                 "adjective": "NATURE",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -1113,9 +1055,9 @@
                 "verb": "DEAL",
                 "adjective": "NATURE",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [

@@ -1,0 +1,61 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1,
+                  0.12,
+                  0.14,
+                  0.16,
+                  0.18,
+                  0.2,
+                  0.22,
+                  0.24,
+                  0.28
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "KHRAVENGGER_BONECHILLING",
+      "name": "Bonechilling",
+      "description": "Battle skill: +10-20%, Combo on Cryo: +20-40%",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "KHRAVENGGER",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

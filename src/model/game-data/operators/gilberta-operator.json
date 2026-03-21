@@ -4,7 +4,7 @@
   "operatorRarity": 6,
   "operatorClassType": "SUPPORTER",
   "elementType": "NATURE",
-  "weaponType": "ARTS_UNIT",
+  "weaponTypes": ["ARTS_UNIT"],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -110,7 +110,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "MATRIX_DISPLACEMENT",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.3,
             "parameterModifyType": "MULTIPLICATIVE"
           }

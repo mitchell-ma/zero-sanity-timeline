@@ -100,9 +100,9 @@ export interface EventFrameMarker {
   name?: string;
   /** Frame offset from the start of the parent segment (base/raw value). */
   offsetFrame: number;
-  /** Derived frame offset accounting for time-stop extension within the segment (set by processInflictionEvents). */
+  /** Derived frame offset accounting for time-stop extension within the segment (set by processCombatSimulation). */
   derivedOffsetFrame?: number;
-  /** Pre-computed absolute frame position (set by processInflictionEvents). */
+  /** Pre-computed absolute frame position (set by processCombatSimulation). */
   absoluteFrame?: number;
   /** SP recovered on this frame hit. */
   skillPointRecovery?: number;

@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "GUARD",
   "elementType": "PHYSICAL",
-  "weaponType": "POLEARM",
+  "weaponTypes": [
+    "POLEARM"
+  ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "potentials": [
@@ -100,34 +102,7 @@
       "name": "Unremitting",
       "effects": [
         {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [
-              {
-                "key": "interval",
-                "value": 15,
-                "valueStr": ""
-              },
-              {
-                "key": "atk_scale_potential5",
-                "value": 2.5,
-                "valueStr": ""
-              },
-              {
-                "key": "poise_potential5",
-                "value": 5,
-                "valueStr": ""
-              }
-            ],
-            "objectId": "LIFENG_POTENTIAL5_UNREMITTING"
-          }
-        },
-        {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [],
-            "objectId": "LIFENG_POTENTIAL5_UNREMITTING"
-          }
+          "potentialEffectType": "IMPLEMENTED_IN_DSL"
         }
       ]
     }
@@ -1800,11 +1775,11 @@
   ],
   "talents": {
     "one": {
-      "name": "Illumination",
+      "id": "ILLUMINATION",
       "maxLevel": 2
     },
     "two": {
-      "name": "Subduer of Evil",
+      "id": "SUBDUER_OF_EVIL_TALENT",
       "maxLevel": 2
     },
     "attributeIncrease": {

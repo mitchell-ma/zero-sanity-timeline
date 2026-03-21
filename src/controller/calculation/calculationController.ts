@@ -19,8 +19,9 @@ import {
   type WeaponFragilityEffect,
   type OperatorTalentFragility,
 } from '../timeline/eventsQueryService';
-import { getLastController } from '../timeline/processInteractions';
+import { getLastController } from '../timeline/eventQueueController';
 import { getWeaponEffectDefs, resolveTargetDisplay } from '../../model/game-data/weaponGearEffectLoader';
+import { getWeapon } from '../gameDataController';
 import { INFLICTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 import type { Slot } from '../timeline/columnBuilder';
 import type { StaggerBreak } from '../timeline/staggerTimeline';
@@ -63,8 +64,10 @@ export function buildWeaponFragility(
 ): Record<string, WeaponFragilityEffect[]> {
   const result: Record<string, WeaponFragilityEffect[]> = {};
   for (const slot of slots) {
-    if (!slot.operator || !slot.weaponName) continue;
-    const defs = getWeaponEffectDefs(slot.weaponName);
+    if (!slot.operator || !slot.weaponId) continue;
+    const weaponDisplayName = getWeapon(slot.weaponId)?.name;
+    if (!weaponDisplayName) continue;
+    const defs = getWeaponEffectDefs(weaponDisplayName);
     if (defs.length === 0) continue;
     const effects: WeaponFragilityEffect[] = [];
     for (const def of defs) {

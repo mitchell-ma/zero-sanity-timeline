@@ -27,14 +27,33 @@ export interface GearSetData {
   dataSources?: string[];
 }
 
-const gearJsonContext = require.context('./gears', false, /\.json$/);
+const gearJsonContext = require.context('./gears/gear-statuses', false, /-statuses\.json$/);
 
 const GEAR_SET_DATA: Record<string, GearSetData> = {};
 
 for (const key of gearJsonContext.keys()) {
-  const data = gearJsonContext(key) as GearSetData;
-  if (data.gearSetType) {
-    GEAR_SET_DATA[data.gearSetType] = data;
+  const entries = gearJsonContext(key) as Record<string, unknown>[];
+  if (!Array.isArray(entries)) continue;
+  const raw = entries.find(e => (e.properties as Record<string, unknown>)?.type === 'GEAR_SET_EFFECT');
+  if (!raw) continue;
+  const props = (raw.properties ?? {}) as Record<string, unknown>;
+  const meta = (raw.metadata ?? {}) as Record<string, unknown>;
+  const id = props.id as string;
+  if (id) {
+    GEAR_SET_DATA[id] = {
+      gearSetType: id,
+      name: (props.name ?? '') as string,
+      rarity: (props.rarity ?? 0) as number,
+      ...(props.piecesRequired ? {
+        setEffect: {
+          piecesRequired: props.piecesRequired as number,
+          gearSetEffectType: id,
+          description: (props.description ?? '') as string,
+        },
+      } : {}),
+      pieces: [],
+      dataSources: (meta.dataSources ?? []) as string[],
+    };
   }
 }
 

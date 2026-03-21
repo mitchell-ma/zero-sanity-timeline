@@ -227,7 +227,9 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
+// eslint-disable-next-line import/first
+import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 // eslint-disable-next-line import/first
 import { StatusType } from '../consts/enums';
 
@@ -361,7 +363,7 @@ describe('B2. Melting Flame Consumption', () => {
   });
 
   test('B2.3: Full pipeline with empowered BS consumes MF and re-accumulates', () => {
-    // Full pipeline test — consumption happens via processInflictionEvents
+    // Full pipeline test — consumption happens via processCombatSimulation
     // which runs consumeOperatorStatuses on empowered BS's consumeStatus frame
     // (Covered by eventQueue.test.ts Q3-Q4)
     expect(true).toBe(true);
@@ -758,7 +760,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       ],
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, akekuriHeat, antalCombo, laevBasic],
       loadoutProps, undefined, wirings,
     );
@@ -824,7 +826,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
       ],
     };
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [heat, basic], loadoutProps, undefined, wirings,
     );
 
@@ -860,7 +862,7 @@ describe('M. Normal basic attack without external infliction', () => {
       ],
     };
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [basic], loadoutProps, undefined, wirings,
     );
 
@@ -890,7 +892,7 @@ describe('N. Scorching Heart talent presence', () => {
     const slotOpMap: Record<string, string> = { [LAEV_SLOT]: 'laevatain' };
 
     // Even with no skill events, the talent should be created
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [], loadoutProps, undefined, wirings, slotOpMap,
     );
 

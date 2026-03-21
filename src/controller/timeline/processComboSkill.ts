@@ -1,124 +1,14 @@
-import { TimelineEvent, computeSegmentsSpan, getAnimationDuration } from '../../consts/viewTypes';
-import { CombatSkillsType, SegmentType } from '../../consts/enums';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
-import { findClauseTriggerMatches } from './statusDerivationEngine';
+import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import type { SlotTriggerWiring } from './eventQueueTypes';
 
-// ── Combo time-stop chaining ─────────────────────────────────────────────────
-
-/**
- * Combo time-stop chaining: combo time-stops are special — other combos can
- * be triggered within a combo's time-stop region. A combo's time-stop covers
- * the game-frame range [startFrame, startFrame + animationDuration). When
- * another combo's startFrame falls within that range, the earlier combo's
- * time-stop is cut short at the interruption point.
- *
- * Effective animDur = B.startFrame - A.startFrame (truncated band width).
- * The game frames [A.startFrame, B.startFrame) become a "frozen range" in
- * the layout — they collapse to zero real-time width, with A's truncated
- * time-stop band filling that space. The two bands render adjacent (no gap).
- */
-export function applyComboChaining(events: TimelineEvent[]): TimelineEvent[] {
-  const comboStops: { id: string; startFrame: number; animDur: number }[] = [];
-  for (const ev of events) {
-    if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-    const anim = getAnimationDuration(ev);
-    if (anim <= 0) continue;
-    comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur: anim });
-  }
-  if (comboStops.length <= 1) return events;
-
-  comboStops.sort((a, b) => a.startFrame - b.startFrame);
-
-  const overrides = new Map<string, number>();
-  for (let i = 0; i < comboStops.length; i++) {
-    const a = comboStops[i];
-    const effectiveAnimDur = overrides.get(a.id) ?? a.animDur;
-    const coveredEnd = a.startFrame + effectiveAnimDur;
-
-    for (let j = i + 1; j < comboStops.length; j++) {
-      const b = comboStops[j];
-      if (b.startFrame >= coveredEnd) break;
-
-      // B starts within A's time-stop band (real-time overlap) — truncate
-      // A's animation at B's start.
-      overrides.set(a.id, b.startFrame - a.startFrame);
-      break;
-    }
-  }
-
-  if (overrides.size === 0) return events;
-  return events.map((ev) => {
-    const truncatedAnim = overrides.get(ev.id);
-    if (truncatedAnim == null) return ev;
-    const newSegments = ev.segments.map(s =>
-      s.metadata?.segmentType === SegmentType.ANIMATION ? { ...s, properties: { ...s.properties, duration: truncatedAnim } } : s,
-    );
-    return { ...ev, segments: newSegments };
-  });
-}
-
-// ── Potential-based effects ──────────────────────────────────────────────────
-
-/** Map of ultimate skill names → combo cooldown reset at potential threshold. */
-const ULTIMATE_RESETS_COMBO: Record<string, number> = {
-  [CombatSkillsType.WOLVEN_FURY]: 5, // Wulfgard P5: Natural Predator
-};
-
-/**
- * Applies potential-gated effects that modify operator events:
- * - Combo cooldown reset on ultimate cast (e.g. Wulfgard P5)
- */
-export function applyPotentialEffects(events: TimelineEvent[]): TimelineEvent[] {
-  const ultimates = events.filter(
-    (ev) => ev.columnId === SKILL_COLUMNS.ULTIMATE && ULTIMATE_RESETS_COMBO[ev.name] != null
-      && (ev.operatorPotential ?? 0) >= ULTIMATE_RESETS_COMBO[ev.name],
-  );
-  if (ultimates.length === 0) return events;
-
-  const modified = new Map<string, TimelineEvent>();
-  for (const ult of ultimates) {
-    const ultFrame = ult.startFrame;
-    for (const ev of events) {
-      if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-      // With segments, compute pre-cooldown and total duration
-      let preCooldownDur = 0;
-      let totalDur = 0;
-      for (const s of ev.segments) {
-        totalDur += s.properties.duration;
-        if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
-      }
-      const activeEnd = ev.startFrame + preCooldownDur;
-      const cooldownEnd = ev.startFrame + totalDur;
-      // If the combo is in its cooldown phase when the ultimate is cast, reset it
-      if (ultFrame >= activeEnd && ultFrame < cooldownEnd) {
-        modified.set(ev.id, {
-          ...ev,
-          segments: ev.segments.map(s => {
-            if (s.properties.name !== 'Cooldown') return s;
-            const cooldownRemaining = Math.max(0, ultFrame - ev.startFrame - preCooldownDur);
-            return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
-          }),
-        });
-      }
-    }
-  }
-
-  if (modified.size === 0) return events;
-  return events.map((ev) => modified.get(ev.id) ?? ev);
-}
+export { COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+export type { SlotTriggerWiring } from './eventQueueTypes';
 
 // ── Combo activation window derivation ──────────────────────────────────────
-
-/** Column ID for derived combo activation window events. */
-export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
-
-/** Slot-level trigger wiring for the pipeline. */
-export interface SlotTriggerWiring {
-  slotId: string;
-  operatorId: string;
-}
 
 /**
  * Derive combo activation window events from processed events + operator trigger capabilities.

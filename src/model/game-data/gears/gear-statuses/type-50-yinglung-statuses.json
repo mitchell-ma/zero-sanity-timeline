@@ -1,0 +1,86 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "BATTLE_SKILL"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "TYPE_50_YINGLUNG"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "TYPE_50_YINGLUNG",
+      "name": "Type 50 Yinglung",
+      "rarity": 5,
+      "piecesRequired": 3,
+      "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When any operator in the team casts a battle skill, the wearer gains 1 stack of Yinglung's Edge that gives DMG +{dmg_up:0%} to the wearer's next combo skill. Yinglung's Edge can stack {max_stack:0} time(s)."
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "COMBO_SKILL_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "STATUS_LEVEL",
+                "values": [
+                  0.2
+                ]
+              }
+            },
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "TYPE_50_YINGLUNG",
+      "name": "Type 50 Yinglung",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          0
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            3
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "description": "Consumed on next combo skill cast"
+    },
+    "metadata": {
+      "originId": "TYPE_50_YINGLUNG"
+    }
+  }
+]

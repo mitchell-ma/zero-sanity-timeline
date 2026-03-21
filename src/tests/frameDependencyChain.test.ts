@@ -190,13 +190,13 @@ const SKILL_LEVEL = 12 as SkillLevel;
 const POTENTIAL = 0 as Potential; // P0 for simpler multiplier math
 
 const LOADOUT: OperatorLoadoutState = {
-  weaponName: 'Tarr 11',
-  armorName: null,
-  glovesName: null,
-  kit1Name: null,
-  kit2Name: null,
-  consumableName: null,
-  tacticalName: null,
+  weaponId: 'TARR_11',
+  armorId: null,
+  glovesId: null,
+  kit1Id: null,
+  kit2Id: null,
+  consumableId: null,
+  tacticalId: null,
 };
 
 const LOADOUT_PROPERTIES: LoadoutProperties = {

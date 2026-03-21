@@ -1,0 +1,131 @@
+{
+  "skills": [
+    "AGILITY_BOOST_M",
+    "ATTACK_BOOST_M",
+    "INFLICTION_SINCERE_INTERROGATION"
+  ],
+  "properties": {
+    "name": "Twelve Questions",
+    "id": "TWELVE_QUESTIONS",
+    "type": "SWORD",
+    "rarity": 5
+  },
+  "metadata": {
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "originId": "game",
+    "icon": "weapons/twelve_questions_icon.png"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_ATTACK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "BASED_ON",
+              "object": "WEAPON_LEVEL",
+              "values": [
+                42,
+                46,
+                50,
+                54,
+                58,
+                62,
+                66,
+                71,
+                75,
+                79,
+                83,
+                87,
+                91,
+                95,
+                100,
+                104,
+                108,
+                112,
+                116,
+                120,
+                125,
+                129,
+                133,
+                137,
+                141,
+                145,
+                149,
+                154,
+                158,
+                162,
+                166,
+                170,
+                174,
+                178,
+                183,
+                187,
+                191,
+                195,
+                199,
+                203,
+                208,
+                212,
+                216,
+                220,
+                224,
+                228,
+                232,
+                237,
+                241,
+                245,
+                249,
+                253,
+                257,
+                261,
+                266,
+                270,
+                274,
+                278,
+                282,
+                286,
+                291,
+                295,
+                299,
+                303,
+                307,
+                311,
+                315,
+                320,
+                324,
+                328,
+                332,
+                336,
+                340,
+                344,
+                349,
+                353,
+                357,
+                361,
+                365,
+                369,
+                374,
+                378,
+                382,
+                386,
+                390,
+                394,
+                398,
+                403,
+                407,
+                411
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

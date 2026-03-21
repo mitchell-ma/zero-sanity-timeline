@@ -4,7 +4,9 @@
   "operatorRarity": 4,
   "operatorClassType": "DEFENDER",
   "elementType": "PHYSICAL",
-  "weaponType": "GREAT_SWORD",
+  "weaponTypes": [
+    "GREAT_SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -13,22 +15,7 @@
       "name": "Multi-layered Readiness",
       "effects": [
         {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [
-              {
-                "key": "def_scale",
-                "value": 5,
-                "valueStr": ""
-              },
-              {
-                "key": "dmg_base",
-                "value": 300,
-                "valueStr": ""
-              }
-            ],
-            "objectId": "CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS"
-          }
+          "potentialEffectType": "IMPLEMENTED_IN_DSL"
         }
       ]
     },
@@ -1785,11 +1772,11 @@
   ],
   "talents": {
     "one": {
-      "name": "Resilient Defense",
+      "id": "RESILIENT_DEFENSE",
       "maxLevel": 2
     },
     "two": {
-      "name": "Comprehensive Mindset",
+      "id": "COMPREHENSIVE_MINDSET_TALENT",
       "maxLevel": 2
     },
     "attributeIncrease": {

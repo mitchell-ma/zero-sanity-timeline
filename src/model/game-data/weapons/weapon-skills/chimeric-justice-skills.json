@@ -1,0 +1,65 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.03,
+                0.036,
+                0.042,
+                0.048,
+                0.054,
+                0.06,
+                0.066,
+                0.072,
+                0.084
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "CHIMERIC_JUSTICE_CEMENTED_FURY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Brutality: Cemented Fury",
+    "description": "Critical Rate +{crit_up:0.0%}. When the wielder applies Vulnerability to an enemy with no Vulnerability stacks, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "BRUTALITY_CEMENTED_FURY"
+  },
+  "metadata": {
+    "originId": "CHIMERIC_JUSTICE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

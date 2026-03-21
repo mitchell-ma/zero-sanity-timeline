@@ -109,5 +109,76 @@
     "metadata": {
       "originId": "MELTING_FLAME"
     }
+  },
+  {
+    "properties": {
+      "type": "TALENT",
+      "id": "SCORCHING_HEART",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS",
+      "name": "Scorching Heart",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          -1
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "element": "HEAT"
+    },
+    "metadata": {
+      "originId": "laevatain"
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "INFLICTION",
+            "objectId": "HEAT"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "ALL",
+            "cardinalityConstraint": "AT_MOST",
+            "cardinality": "MAX",
+            "effects": [
+              {
+                "verb": "CONSUME",
+                "cardinality": 1,
+                "object": "INFLICTION",
+                "element": "HEAT",
+                "fromObject": "ENEMY"
+              },
+              {
+                "verb": "APPLY",
+                "cardinality": 1,
+                "object": "STATUS",
+                "objectId": "MELTING_FLAME",
+                "toDeterminer": "THIS",
+                "toObject": "OPERATOR"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

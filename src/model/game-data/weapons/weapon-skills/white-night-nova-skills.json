@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: White Night Nova",
+    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. After the wielder applies Combustion or Electrification, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} and Arts Intensity +{phy_spell_up:0} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "INFLICTION_WHITE_NIGHT_NOVA"
+  },
+  "metadata": {
+    "originId": "WHITE_NIGHT_NOVA",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

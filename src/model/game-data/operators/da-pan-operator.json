@@ -1758,7 +1758,7 @@
   ],
   "talents": {
     "one": {
-      "name": "Reduce and Thicken",
+      "id": "REDUCE_AND_THICKEN_TALENT",
       "maxLevel": 2
     },
     "two": {

@@ -4,7 +4,9 @@
   "operatorRarity": 4,
   "operatorClassType": "GUARD",
   "elementType": "CRYO",
-  "weaponType": "POLEARM",
+  "weaponTypes": [
+    "POLEARM"
+  ],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "STRENGTH",
   "potentials": [
@@ -95,17 +97,7 @@
       "name": "Survival is a Win",
       "effects": [
         {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [
-              {
-                "key": "usp",
-                "value": 5,
-                "valueStr": ""
-              }
-            ],
-            "objectId": "ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN"
-          }
+          "potentialEffectType": "IMPLEMENTED_IN_DSL"
         }
       ]
     }
@@ -1762,7 +1754,7 @@
   ],
   "talents": {
     "one": {
-      "name": "Commiseration",
+      "id": "COMMISERATION_TALENT",
       "maxLevel": 2
     },
     "two": {

@@ -4,7 +4,12 @@ import { CombatSkillsType, ElementType, EventFrameType, EventStatusType, StatusT
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, PHYSICAL_INFLICTION_COLUMN_IDS } from '../../model/channels';
+import {
+  ELEMENT_TO_INFLICTION_COLUMN, ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION,
+  INFLICTION_DURATION, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, REACTION_COLUMNS, REACTION_DURATION,
+  FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION, TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
+  PHYSICAL_INFLICTION_COLUMN_IDS,
+} from '../../model/channels';
 import { getExchangeStatusConfig } from '../../model/event-frames/operatorJsonLoader';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -15,58 +20,21 @@ import type { Interaction } from '../../consts/semantics';
 /** Maximum 0-based index for skill level arrays (12 levels → index 0–11). */
 const MAX_SKILL_LEVEL_INDEX = 11;
 
-/** Maps forced reaction name → reaction columnId. */
-export const FORCED_REACTION_COLUMN: Record<string, string> = {
-  [StatusType.COMBUSTION]:      REACTION_COLUMNS.COMBUSTION,
-  [StatusType.SOLIDIFICATION]:  REACTION_COLUMNS.SOLIDIFICATION,
-  [StatusType.CORROSION]:       REACTION_COLUMNS.CORROSION,
-  [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
-};
-
-/** Default active duration for derived reaction events (20s at 120fps). */
-export const REACTION_DURATION = 2400;
-
-/** Forced reaction durations by type (frames at 120fps). */
-export const FORCED_REACTION_DURATION: Record<string, number> = {
-  [REACTION_COLUMNS.COMBUSTION]:      600,  // 5s
-  [REACTION_COLUMNS.SOLIDIFICATION]:  600,  // 5s
-  [REACTION_COLUMNS.CORROSION]:       600,  // 5s
-  [REACTION_COLUMNS.ELECTRIFICATION]: 600,  // 5s
-};
-
-/** Default active duration for derived infliction events (20s at 120fps). */
-export const INFLICTION_DURATION = 2400;
-
-
-/** Breach durations by status level (frames at 120fps). */
-export const BREACH_DURATION: Record<number, number> = {
-  1: 1440,   // 12s
-  2: 2160,   // 18s
-  3: 2880,   // 24s
-  4: 3600,   // 30s
-};
-
-/** Default active duration for derived physical infliction events (20s at 120fps). */
-export const PHYSICAL_INFLICTION_DURATION = 2400;
+// Re-export domain constants now defined in channels
+export {
+  ELEMENT_TO_INFLICTION_COLUMN,
+  FORCED_REACTION_COLUMN,
+  FORCED_REACTION_DURATION,
+  TEAM_STATUS_COLUMN,
+  REACTION_DURATION,
+  INFLICTION_DURATION,
+  BREACH_DURATION,
+  PHYSICAL_INFLICTION_DURATION,
+  P5_LINK_EXTENSION_FRAMES,
+} from '../../model/channels';
 
 /** Maximum concurrent stacks of the same element infliction (arts or physical). */
 const MAX_INFLICTION_STACKS = 4;
-
-/** Maps element key (from frame data) → infliction columnId. */
-export const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
-  HEAT: 'heatInfliction',
-  CRYO: 'cryoInfliction',
-  NATURE: 'natureInfliction',
-  ELECTRIC: 'electricInfliction',
-};
-
-/** Maps self-targeted grant status → team-level derived column. */
-export const TEAM_STATUS_COLUMN: Record<string, string> = {
-  [StatusType.SQUAD_BUFF]: StatusType.LINK,
-};
-
-/** P5 link extension: extra frames added to link duration when operator potential >= 5. */
-export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
 
 /** Default duration for generated exchange events (effectively permanent). */
 export const EXCHANGE_EVENT_DURATION = TOTAL_FRAMES * 10;

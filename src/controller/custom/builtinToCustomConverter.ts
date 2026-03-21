@@ -2,9 +2,8 @@
  * Converts built-in game data to CustomWeapon / CustomGearSet format
  * for the "Clone as Custom" feature.
  */
-import { WeaponType, GearSetType, ElementType } from '../../consts/enums';
-import { WEAPON_DATA } from '../../model/weapons/weaponData';
-import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
+import { WeaponType, GearSetType, GearCategory, ElementType } from '../../consts/enums';
+import { getWeapon, resolveWeaponId, getAllGearPieces, getGearSetEffect } from '../gameDataController';
 import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
@@ -19,15 +18,15 @@ import { getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader
 
 /** Convert a built-in weapon to CustomWeapon format. */
 export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
-  const config = WEAPON_DATA[weaponName];
-  const entry = WEAPONS.find((w) => w.name === weaponName);
-  if (!config || !entry) return null;
+  const weaponId = resolveWeaponId(weaponName);
+  const config = weaponId ? getWeapon(weaponId) : undefined;
+  if (!config) return null;
 
   const skills: CustomWeaponSkillDef[] = [];
 
   // Skill 1 & 2 are stat boosts; skill 3 is the named effect
-  const skillTypes = [config.skill1, config.skill2];
-  if (config.skill3) skillTypes.push(config.skill3);
+  const skillTypes = [config.skills[0], config.skills[1]].filter(Boolean);
+  if (config.skills[2]) skillTypes.push(config.skills[2]);
 
   // Check for triggered effects from DSL JSON
   const dslDefs = getWeaponEffectDefs(weaponName);
@@ -36,7 +35,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
 
   for (const skillType of skillTypes) {
     // Named skill (skill 3) — match to DSL defs
-    if (dslDefIdx < dslDefs.length && skillType === config.skill3) {
+    if (dslDefIdx < dslDefs.length && skillType === config.skills[2]) {
       // All remaining DSL defs belong to the named skill slot
       while (dslDefIdx < dslDefs.length) {
         const def = dslDefs[dslDefIdx];
@@ -81,24 +80,24 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
   return {
     id: `clone_${weaponName.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
     name: `${weaponName} (Clone)`,
-    weaponType: config.type,
+    weaponType: config.type as WeaponType,
     weaponRarity: config.rarity as 3 | 4 | 5 | 6,
-    baseAtk: { lv1: config.baseAtk.lv1, lv90: config.baseAtk.lv90 },
+    baseAtk: { lv1: config.getBaseAttack(1), lv90: config.getBaseAttack(90) },
     skills,
   };
 }
 
 /** Convert a built-in gear set to CustomGearSet format. */
 export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet | null {
-  const gearEntries = GEARS.filter((g) => g.gearSetType === gearSetType);
-  if (gearEntries.length === 0) return null;
+  const gearPieces = getAllGearPieces().filter((g) => g.gearSet === gearSetType);
+  if (gearPieces.length === 0) return null;
 
   const passiveEntry = getGearSetEffects(gearSetType);
   const dslDefs = getGearEffectDefs(gearSetType);
 
-  const pieces: CustomGearPiece[] = gearEntries.slice(0, 3).map((g) => ({
+  const pieces: CustomGearPiece[] = gearPieces.slice(0, 3).map((g) => ({
     name: g.name,
-    gearCategory: g.gearCategory,
+    gearCategory: g.type as GearCategory,
     defense: 0,
     statsByRank: { 1: {}, 2: {}, 3: {}, 4: {} },
   }));
@@ -135,7 +134,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
   return {
     id: `clone_${gearSetType.toLowerCase()}_${Date.now()}`,
     setName: `${passiveEntry?.label ?? gearSetType} (Clone)`,
-    rarity: (gearEntries[0].rarity as 4 | 5 | 6) || 5,
+    rarity: ((getGearSetEffect(gearSetType)?.rarity ?? 5) as 4 | 5 | 6) || 5,
     pieces,
     setEffect,
   };

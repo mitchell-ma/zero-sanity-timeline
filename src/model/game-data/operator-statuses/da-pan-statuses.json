@@ -1,0 +1,223 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CONSUME",
+            "object": "VULNERABILITY"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "REDUCE_AND_THICKEN",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "REDUCE_AND_THICKEN_TALENT",
+      "name": "Reduce and Thicken (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "da-pan",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.04,
+                  0.06
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "REDUCE_AND_THICKEN",
+      "name": "Reduce and Thicken",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          10
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            4
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "REDUCE_AND_THICKEN_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "properties": {
+      "id": "PREP_INGREDIENTS",
+      "name": "Prep Ingredients",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "BASED_ON",
+        "object": "POTENTIAL",
+        "values": [
+          20,
+          20,
+          30,
+          30,
+          30,
+          30
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "BASED_ON",
+          "object": "POTENTIAL",
+          "values": [
+            1,
+            1,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "da-pan",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "DEFEAT",
+            "object": "ENEMY"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "FINE_COOKING",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FINE_COOKING_POTENTIAL",
+      "name": "Fine Cooking (P1)",
+      "type": "POTENTIAL",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "da-pan",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.3
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FINE_COOKING",
+      "name": "Fine Cooking",
+      "type": "POTENTIAL_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          15
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "FINE_COOKING_POTENTIAL",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

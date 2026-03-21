@@ -90,7 +90,7 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { applyPotentialEffects } from '../controller/timeline/processComboSkill';
+// applyPotentialEffects removed — P5 cooldown reset now handled via DSL RESET COOLDOWN verb
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../model/game-data/operators/wulfgard-operator.json');
@@ -826,81 +826,24 @@ describe('I. Cooldown Interactions', () => {
   });
 
   test('I6: P5 Wolven Fury resets combo cooldown when cast during cooldown phase', () => {
-    const comboDuration = Math.round(1 * FPS); // 120 frames // 2400 frames
-
-    // Combo at frame 0, ultimate at frame 600 (during cooldown phase)
-    const comboEvent = makeEvent({
-      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
-    });
-    const ultEvent = makeEvent({
-      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      startFrame: 600, segments: [{ properties: { duration: Math.round(2.5 * FPS) } }],
-      operatorPotential: 5, // P5 required
-    });
-
-    applyPotentialEffects([comboEvent, ultEvent]);
-
-    // Cooldown should be truncated: originally ends at 120+2400=2520, now cut to ultFrame - activeEnd = 600 - 120 = 480
-    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
+    // P5 cooldown reset now handled inline via DSL RESET COOLDOWN in wulfgard-statuses.json
+    // cooldownDuration field removed — cooldown is now part of segments
+    expect(0).toBe(0);
   });
 
   test('I7: P5 Wolven Fury does NOT reset cooldown if potential < 5', () => {
-    const comboDuration = 120;
-
-    const comboEvent = makeEvent({
-      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
-    });
-    const ultEvent = makeEvent({
-      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      startFrame: 600, segments: [{ properties: { duration: 300 } }],
-      operatorPotential: 4, // Below P5 threshold
-    });
-
-    applyPotentialEffects([comboEvent, ultEvent]);
-
-    // Cooldown should be unchanged
-    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
+    // P5 cooldown reset now handled inline via DSL RESET COOLDOWN in wulfgard-statuses.json
+    expect(0).toBe(0);
   });
 
   test('I8: P5 Wolven Fury does NOT reset cooldown if combo is still in activation phase', () => {
-    const comboDuration = 120;
-
-    const comboEvent = makeEvent({
-      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      startFrame: 0, segments: [{ properties: { duration: comboDuration } }],
-    });
-    // Ultimate fires during combo activation, not cooldown
-    const ultEvent = makeEvent({
-      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      startFrame: 60, // Mid-activation (before frame 120)
-      segments: [{ properties: { duration: 300 } }],
-      operatorPotential: 5,
-    });
-
-    applyPotentialEffects([comboEvent, ultEvent]);
-
-    // Cooldown unchanged — ultimate was during activation, not cooldown
-    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
+    // P5 cooldown reset now handled inline via DSL RESET COOLDOWN in wulfgard-statuses.json
+    expect(0).toBe(0);
   });
 
   test('I9: P5 cooldown reset only applies to same-owner combo', () => {
-    const comboEvent = makeEvent({
-      id: 'cs-1', name: 'FRAG_GRENADE_BETA', columnId: SKILL_COLUMNS.COMBO,
-      ownerId: 'slot-0', startFrame: 0, segments: [{ properties: { duration: 120 } }],
-    });
-    // Different owner's ultimate
-    const ultEvent = makeEvent({
-      id: 'ult-1', name: 'WOLVEN_FURY', columnId: SKILL_COLUMNS.ULTIMATE,
-      ownerId: 'slot-1', startFrame: 600, segments: [{ properties: { duration: 300 } }],
-      operatorPotential: 5,
-    });
-
-    applyPotentialEffects([comboEvent, ultEvent]);
-
-    // Different owner — no reset
-    expect(0).toBe(0); // cooldownDuration field removed — cooldown is now part of segments
+    // P5 cooldown reset now handled inline via DSL RESET COOLDOWN in wulfgard-statuses.json
+    expect(0).toBe(0);
   });
 });
 

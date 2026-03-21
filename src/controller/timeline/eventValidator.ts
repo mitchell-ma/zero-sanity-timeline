@@ -10,12 +10,12 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
 import type { Interaction, Predicate } from '../../consts/semantics';
-import { COMBO_WINDOW_COLUMN_ID, extendByTimeStops } from './processInteractions';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { extendByTimeStops } from './processTimeStop';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
-import { isClauseAlwaysAvailable } from './statusDerivationEngine';
+import { isClauseAlwaysAvailable } from './triggerMatch';
 
 export type TimeStopRegion = {
   startFrame: number;

@@ -9,7 +9,7 @@ import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveC
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
-import { getLastController } from '../../controller/timeline/processInteractions';
+import { getLastController } from '../../controller/timeline/eventQueueController';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';

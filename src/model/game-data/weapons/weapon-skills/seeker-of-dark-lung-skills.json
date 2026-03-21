@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PRIMARY_ATTRIBUTE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+                0.11,
+                0.12,
+                0.14
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "ARTS_BURST"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "SEEKER_OF_DARK_LUNG_SEEKER_OF_THE_ESOTERIC",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Detonate: Seeker of the Esoteric",
+    "description": "Main Attribute +{primary_attr_up:0.0%}. When the wielder applies an Arts Burst, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "id": "DETONATE_SEEKER_OF_THE_ESOTERIC"
+  },
+  "metadata": {
+    "originId": "SEEKER_OF_DARK_LUNG",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

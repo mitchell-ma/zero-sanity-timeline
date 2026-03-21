@@ -29,14 +29,6 @@ for (const key of skillContext.keys()) {
   SKILL_JSON[filenameToCamelCase(filename)] = skillContext(key);
 }
 
-// Talent configs: game-data/operator-talents/*-talents.json
-const talentContext = require.context('../game-data/operator-talents', false, /-talents\.json$/);
-const TALENT_JSON: Record<string, Record<string, unknown>> = {};
-for (const key of talentContext.keys()) {
-  const filename = key.replace('./', '').replace('-talents.json', '');
-  TALENT_JSON[filenameToCamelCase(filename)] = talentContext(key);
-}
-
 // Status configs: game-data/operator-statuses/*-statuses.json
 const statusContext = require.context('../game-data/operator-statuses', false, /-statuses\.json$/);
 const STATUS_JSON: Record<string, Record<string, unknown>[]> = {};
@@ -52,16 +44,6 @@ for (const [operatorId, statuses] of Object.entries(STATUS_JSON)) {
     console.warn(`[statusValidator] ${operatorId}-statuses.json:`, errors.map(e => `${e.path}: ${e.message}`).join('; '));
   }
 }
-for (const [operatorId, talentJson] of Object.entries(TALENT_JSON)) {
-  const talentStatuses = talentJson?.statusEvents as Record<string, unknown>[] | undefined;
-  if (talentStatuses) {
-    const errors = validateStatusConfig(talentStatuses, operatorId);
-    if (errors.length > 0) {
-      console.warn(`[statusValidator] ${operatorId}-talents.json:`, errors.map(e => `${e.path}: ${e.message}`).join('; '));
-    }
-  }
-}
-
 // Validate skill configs at load time
 for (const [operatorId, skillJson] of Object.entries(SKILL_JSON)) {
   const errors = validateSkillConfig(skillJson, operatorId);
@@ -155,14 +137,11 @@ export function getOperatorJson(operatorId: string): Record<string, unknown> | u
   if (!skills) return base;
   // Hoist non-skill keys (statusEvents, skillTypeMap) from skills JSON to top level
   const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, unknown>;
-  // Merge status sources: operator-statuses JSONs (short keys → expanded) > skills JSON > talent JSON
+  // Merge status sources: operator-statuses JSONs (short keys → expanded) > skills JSON
   const operatorStatuses = (STATUS_JSON[operatorId] ?? []).map(expandKeys);
-  const talentJson = TALENT_JSON[operatorId];
-  const talentStatusEvents = talentJson?.statusEvents as unknown[] | undefined;
   const mergedStatusEvents = [
     ...operatorStatuses,
     ...((statusEvents as unknown[]) ?? []),
-    ...(talentStatusEvents ?? []),
   ];
   return {
     ...base,

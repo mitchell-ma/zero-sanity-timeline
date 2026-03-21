@@ -1,0 +1,63 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "OTHER",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
+      "name": "Lustrous Pyre",
+      "description": "Applies to different-element operators",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          20
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "OTHER"
+    },
+    "metadata": {
+      "originId": "STANZA_OF_MEMORIALS",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

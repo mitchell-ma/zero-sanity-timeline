@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.12,
+                0.144,
+                0.168,
+                0.192,
+                0.216,
+                0.24,
+                0.264,
+                0.288,
+                0.336
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "JET_ASTROPHYSICS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Suppression: Astrophysics",
+    "description": "Arts DMG Dealt +{spell_dmg_up:0.0%}. When the wielder casts a battle skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration:0}s. When the wielder casts a combo skill, Arts DMG Dealt +{spell_dmg_up3:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "id": "SUPPRESSION_ASTROPHYSICS"
+  },
+  "metadata": {
+    "originId": "JET",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

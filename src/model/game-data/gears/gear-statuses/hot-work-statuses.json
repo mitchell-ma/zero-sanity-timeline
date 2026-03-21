@@ -1,0 +1,148 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "COMBUSTED"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "HOT_WORK_HEAT"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "CORRODED"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "HOT_WORK_NATURE"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "HOT_WORK",
+      "name": "Hot Work",
+      "rarity": 5,
+      "piecesRequired": 3,
+      "description": "3-piece set effect: Wearer's Arts Intensity +{phy_spell_up:0}. After the wearer applies Combustion, the wearer gains Heat DMG +{fire_dmg_up:0%} for {duration}s. After the wearer applies Corrosion, the wearer gains Nature DMG +{nature_dmg_up:0%} for {duration2}s. The aforementioned effects cannot stack."
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HEAT_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.5
+                ]
+              }
+            },
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "HOT_WORK_HEAT",
+      "name": "Hot Work (Heat)",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          10
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "description": "Heat DMG +50% for 10s after applying Combustion. Cannot stack."
+    },
+    "metadata": {
+      "originId": "HOT_WORK"
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "NATURE_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.5
+                ]
+              }
+            },
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "HOT_WORK_NATURE",
+      "name": "Hot Work (Nature)",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          10
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "description": "Nature DMG +50% for 10s after applying Corrosion. Cannot stack."
+    },
+    "metadata": {
+      "originId": "HOT_WORK"
+    }
+  }
+]

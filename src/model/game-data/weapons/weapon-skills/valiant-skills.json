@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "VALIANT_VIRTUOUS_GAIN",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Combative: Virtuous Gain",
+    "description": "ATK +{atk_up:0.0%}. After the wielder applies Physical Statuses, the wielder also deals another hit of Physical DMG equal to {atk_scale:0.0%} of the wielder's ATK.",
+    "id": "COMBATIVE_VIRTUOUS_GAIN"
+  },
+  "metadata": {
+    "originId": "VALIANT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

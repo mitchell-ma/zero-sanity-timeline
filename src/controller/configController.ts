@@ -1,13 +1,10 @@
 /**
- * ConfigController — centralized config deserialization and association management.
+ * ConfigController — operator config deserialization and trigger association management.
  *
- * Provides typed access to all JSON configs (operators, skills, statuses, talents,
- * weapon effects, gear effects) and manages associations between them via originId.
+ * Builds typed OperatorConfig objects from operatorJsonLoader and
+ * TriggerAssociation lists by scanning operator statuses, weapon effects, and gear effects.
  *
- * This is a facade over operatorJsonLoader and weaponGearEffectLoader that:
- * 1. Exposes typed config objects (EventConfig, OperatorConfig)
- * 2. Builds and caches association lists (onTriggerClause, onEntryClause, etc.)
- * 3. Validates configs at load time
+ * This is an internal module — consumers should import from gameDataController.ts.
  */
 
 import type { EventSegmentData } from '../consts/viewTypes';
@@ -46,10 +43,21 @@ export interface StatusEventConfig {
   originId: string;
   target: string;
   targetDeterminer: string;
+  type?: string;
+  element?: string;
   duration?: number;
+  statusLevel?: {
+    interactionType: string;
+    limit: { verb: string; values: number[] };
+  };
+  susceptibility?: Record<string, number[]>;
+  minPotential?: number;
+  enhancementTypes?: string[];
+  cooldownSeconds?: number;
   onTriggerClause?: { conditions: Interaction[] }[];
   onEntryClause?: { conditions: Interaction[]; effects: unknown[] }[];
   onExitClause?: { conditions: Interaction[]; effects: unknown[] }[];
+  clause?: { conditions: unknown[]; effects: unknown[] }[];
   segments?: EventSegmentData[];
 }
 
@@ -68,6 +76,8 @@ export interface TriggerAssociation {
   originId: string;
   triggerClause: { conditions: Interaction[] }[];
   source: 'status' | 'talent' | 'weapon' | 'gear';
+  /** Full status event config for trigger evaluation. */
+  config?: StatusEventConfig;
 }
 
 // ── Internal caches ──────────────────────────────────────────────────────────
@@ -90,13 +100,29 @@ function parseDurationFrames(props: Record<string, unknown> | undefined): number
 function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
   const props = (raw.properties ?? {}) as Record<string, unknown>;
   const id = (props.id ?? props.name ?? '') as string;
+  const sl = props.statusLevel as { interactionType?: string; limit?: { verb?: string; values?: number[]; value?: number } } | undefined;
 
   return {
     id,
-    originId: (raw.originId ?? '') as string,
-    target: (raw.target ?? 'OPERATOR') as string,
-    targetDeterminer: (raw.targetDeterminer ?? 'THIS') as string,
+    originId: ((raw.metadata as Record<string, unknown>)?.originId ?? raw.originId ?? '') as string,
+    target: (props.target ?? raw.target ?? 'OPERATOR') as string,
+    targetDeterminer: (props.targetDeterminer ?? raw.targetDeterminer ?? 'THIS') as string,
+    type: props.type as string | undefined,
+    element: props.element as string | undefined,
     duration: parseDurationFrames(props),
+    ...(sl ? {
+      statusLevel: {
+        interactionType: sl.interactionType ?? 'NONE',
+        limit: {
+          verb: sl.limit?.verb ?? 'IS',
+          values: sl.limit?.values ?? (sl.limit?.value != null ? [sl.limit.value as number] : [1]),
+        },
+      },
+    } : {}),
+    ...(props.susceptibility ? { susceptibility: props.susceptibility as Record<string, number[]> } : {}),
+    ...(props.minPotential != null ? { minPotential: props.minPotential as number } : {}),
+    ...(props.enhancementTypes ? { enhancementTypes: props.enhancementTypes as string[] } : {}),
+    ...(props.cooldownSeconds != null ? { cooldownSeconds: props.cooldownSeconds as number } : {}),
     ...(raw.onTriggerClause
       ? { onTriggerClause: raw.onTriggerClause as StatusEventConfig['onTriggerClause'] }
       : {}),
@@ -105,6 +131,9 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
       : {}),
     ...(raw.onExitClause
       ? { onExitClause: raw.onExitClause as StatusEventConfig['onExitClause'] }
+      : {}),
+    ...(raw.clause
+      ? { clause: raw.clause as StatusEventConfig['clause'] }
       : {}),
     ...(raw.segments
       ? { segments: raw.segments as EventSegmentData[] }
@@ -167,7 +196,8 @@ function buildTriggerAssociations(): TriggerAssociation[] {
           statusId: se.id,
           originId: se.originId || operatorId,
           triggerClause: se.onTriggerClause,
-          source: 'status',
+          source: se.type === 'TALENT' ? 'talent' : 'status',
+          config: se,
         });
       }
     }

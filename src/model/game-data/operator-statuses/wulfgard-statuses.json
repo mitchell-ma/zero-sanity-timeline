@@ -50,5 +50,52 @@
         ]
       }
     ]
+  },
+  {
+    "properties": {
+      "id": "WULFGARD_NATURAL_PREDATOR",
+      "name": "Natural Predator",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "value": 1
+        },
+        "statusLevelInteractionType": "NONE"
+      },
+      "duration": {
+        "value": -1,
+        "unit": "SECOND"
+      },
+      "minPotential": 5
+    },
+    "metadata": {
+      "originId": "NATURAL_PREDATOR"
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "ULTIMATE"
+          }
+        ]
+      }
+    ],
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "RESET",
+            "object": "COOLDOWN",
+            "objectId": "COMBO_SKILL"
+          }
+        ]
+      }
+    ]
   }
 ]

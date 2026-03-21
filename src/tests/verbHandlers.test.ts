@@ -13,15 +13,14 @@ import { FPS } from '../utils/timeline';
 // ── Load real JSON configs ──────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const opusJson = require('../model/game-data/weapon-effects/opus-the-living-effects.json');
+const opusJson = require('../model/game-data/weapons/weapon-effects/opus-the-living-effects.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const formerFineryJson = require('../model/game-data/weapon-effects/former-finery-effects.json');
+const formerFineryJson = require('../model/game-data/weapons/weapon-effects/former-finery-effects.json');
+// Gear statuses are stored as plain arrays (new format) — wrap with gearSetType for test API
+const aicLightJson = { gearSetType: 'aic-light', statusEvents: require('../model/game-data/gears/gear-statuses/aic-light-statuses.json') };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const aicLightJson = require('../model/game-data/gear-effects/aic-light-effects.json');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const khravenggerJson = require('../model/game-data/weapon-effects/khravengger-effects.json');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const swordmancerJson = require('../model/game-data/gear-effects/swordmancer-effects.json');
+const khravenggerJson = require('../model/game-data/weapons/weapon-effects/khravengger-effects.json');
+const swordmancerJson = { gearSetType: 'swordmancer', statusEvents: require('../model/game-data/gears/gear-statuses/swordmancer-statuses.json') };
 
 // ── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -50,7 +49,9 @@ jest.mock('../view/InformationPane', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { deriveStatusesFromEngine, findClauseTriggerMatches } from '../controller/timeline/statusDerivationEngine';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
+// eslint-disable-next-line import/first
+import { findClauseTriggerMatches } from '../controller/timeline/triggerMatch';
 // eslint-disable-next-line import/first
 import {
   registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs,
@@ -66,7 +67,7 @@ function makeEvent(overrides: Partial<TimelineEvent> & { id: string; columnId: s
 }
 
 function derive(events: TimelineEvent[], slotWeapons?: Record<string, string>, slotGearSets?: Record<string, string>) {
-  return deriveStatusesFromEngine(events, undefined, undefined, slotWeapons, slotGearSets);
+  return processCombatSimulation(events, undefined, slotWeapons, undefined, undefined, slotGearSets);
 }
 
 function derivedEvents(result: TimelineEvent[], inputEvents: TimelineEvent[]) {

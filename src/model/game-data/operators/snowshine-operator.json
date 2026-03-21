@@ -4,7 +4,7 @@
   "operatorRarity": 5,
   "operatorClassType": "DEFENDER",
   "elementType": "CRYO",
-  "weaponType": "GREAT_SWORD",
+  "weaponTypes": ["GREAT_SWORD"],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -1750,11 +1750,11 @@
   ],
   "talents": {
     "one": {
-      "name": "Polar Survival",
+      "id": "POLAR_SURVIVAL",
       "maxLevel": 2
     },
     "two": {
-      "name": "SAR Professional",
+      "id": "SAR_PROFESSIONAL_TALENT",
       "maxLevel": 2
     },
     "attributeIncrease": {

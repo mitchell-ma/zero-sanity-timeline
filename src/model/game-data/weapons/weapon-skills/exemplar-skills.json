@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "BATTLE_SKILL"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "EXEMPLAR_STACKED_HEW",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Suppression: Stacked Hew",
+    "description": "Physical DMG Dealt +{phy_damage_up:0.0%}. When the wielder's battle skill or ultimate hits the enemy, the wielder gains Physical DMG Dealt +{phy_damage_up2:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "id": "SUPPRESSION_STACKED_HEW"
+  },
+  "metadata": {
+    "originId": "EXEMPLAR",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -4,8 +4,15 @@ import { LoadoutProperties } from '../view/InformationPane';
 import { EnemyStats } from '../controller/appStateController';
 import { LoadoutTree } from './loadoutStorage';
 
+import {
+  resolveWeaponId,
+  resolveGearPieceId,
+  resolveConsumableId,
+  resolveTacticalId,
+} from '../controller/gameDataController';
+
 const STORAGE_KEY = 'zst-sheet';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 export interface SheetData {
   version: number;
@@ -52,11 +59,40 @@ export type LoadResult =
   | { ok: true; data: SheetData }
   | { ok: false; error: string };
 
+/** Migrate a loadout from v2 (name-based) to v3 (ID-based). */
+function migrateLoadoutV2toV3(loadout: Record<string, unknown>): OperatorLoadoutState {
+  return {
+    weaponId: loadout.weaponName ? resolveWeaponId(loadout.weaponName as string) ?? null : (loadout.weaponId as string | null) ?? null,
+    armorId: loadout.armorName ? resolveGearPieceId(loadout.armorName as string) ?? null : (loadout.armorId as string | null) ?? null,
+    glovesId: loadout.glovesName ? resolveGearPieceId(loadout.glovesName as string) ?? null : (loadout.glovesId as string | null) ?? null,
+    kit1Id: loadout.kit1Name ? resolveGearPieceId(loadout.kit1Name as string) ?? null : (loadout.kit1Id as string | null) ?? null,
+    kit2Id: loadout.kit2Name ? resolveGearPieceId(loadout.kit2Name as string) ?? null : (loadout.kit2Id as string | null) ?? null,
+    consumableId: loadout.consumableName ? resolveConsumableId(loadout.consumableName as string) ?? null : (loadout.consumableId as string | null) ?? null,
+    tacticalId: loadout.tacticalName ? resolveTacticalId(loadout.tacticalName as string) ?? null : (loadout.tacticalId as string | null) ?? null,
+  };
+}
+
+/** Migrate sheet data from older versions. */
+function migrateSheetData(data: Record<string, unknown>): SheetData {
+  const version = (data.version as number) ?? 1;
+  if (version < 3 && data.loadouts) {
+    const oldLoadouts = data.loadouts as Record<string, Record<string, unknown>>;
+    const newLoadouts: Record<string, OperatorLoadoutState> = {};
+    for (const [key, lo] of Object.entries(oldLoadouts)) {
+      newLoadouts[key] = migrateLoadoutV2toV3(lo);
+    }
+    data.loadouts = newLoadouts;
+    data.version = CURRENT_VERSION;
+  }
+  return data as unknown as SheetData;
+}
+
 export function validateSheetData(raw: unknown): LoadResult {
   if (raw == null || typeof raw !== 'object') {
     return { ok: false, error: 'Save data is not a valid object.' };
   }
-  return { ok: true, data: raw as SheetData };
+  const migrated = migrateSheetData(raw as Record<string, unknown>);
+  return { ok: true, data: migrated };
 }
 
 // ─── Clean & normalize ───────────────────────────────────────────────────

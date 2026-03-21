@@ -1,0 +1,1826 @@
+{
+  "AGILITY_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  20,
+                  36,
+                  52,
+                  68,
+                  84,
+                  100,
+                  116,
+                  132,
+                  156
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Agility Boost [L]",
+      "description": "Agility +",
+      "id": "AGILITY_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "AGILITY_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16,
+                  28,
+                  41,
+                  54,
+                  67,
+                  80,
+                  92,
+                  105,
+                  124
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Agility Boost [M]",
+      "description": "Agility +",
+      "id": "AGILITY_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "AGILITY_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  12,
+                  21,
+                  31,
+                  40,
+                  50,
+                  60,
+                  69,
+                  79,
+                  93
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Agility Boost [S]",
+      "description": "Agility +",
+      "id": "AGILITY_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ARTS_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.055555556,
+                  0.1,
+                  0.14444445,
+                  0.18888889,
+                  0.23333333,
+                  0.2777778,
+                  0.32222223,
+                  0.36666667,
+                  0.43333334
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Arts Boost [L]",
+      "description": "Arts DMG Dealt +",
+      "id": "ARTS_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ARTS_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.044444446,
+                  0.08,
+                  0.115555555,
+                  0.15111111,
+                  0.18666667,
+                  0.22222222,
+                  0.25777778,
+                  0.29333332,
+                  0.34666666
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Arts Boost [M]",
+      "description": "Arts DMG Dealt +",
+      "id": "ARTS_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ARTS_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.033333335,
+                  0.06,
+                  0.086666666,
+                  0.11333334,
+                  0.14,
+                  0.16666667,
+                  0.19333333,
+                  0.22,
+                  0.26
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Arts Boost [S]",
+      "description": "Arts DMG Dealt +",
+      "id": "ARTS_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ARTS_INTENSITY_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_INTENSITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  10,
+                  18,
+                  26,
+                  34,
+                  42,
+                  50,
+                  58,
+                  66,
+                  78
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Arts Intensity Boost [L]",
+      "description": "Arts Intensity +",
+      "id": "ARTS_INTENSITY_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ARTS_INTENSITY_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_INTENSITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  8,
+                  14,
+                  20,
+                  27,
+                  33,
+                  40,
+                  46,
+                  52,
+                  62
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Arts Intensity Boost [M]",
+      "description": "Arts Intensity +",
+      "id": "ARTS_INTENSITY_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ATTACK_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.05,
+                  0.09,
+                  0.13,
+                  0.17,
+                  0.21,
+                  0.25,
+                  0.29,
+                  0.33,
+                  0.39
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Attack Boost [L]",
+      "description": "Attack +",
+      "id": "ATTACK_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ATTACK_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.04,
+                  0.072,
+                  0.104,
+                  0.136,
+                  0.168,
+                  0.2,
+                  0.232,
+                  0.264,
+                  0.312
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "ATK Boost [M]",
+      "description": "Attack +",
+      "id": "ATK_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ATTACK_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.03,
+                  0.054,
+                  0.078,
+                  0.102,
+                  0.126,
+                  0.15,
+                  0.174,
+                  0.198,
+                  0.234
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "ATK Boost [S]",
+      "description": "Attack +",
+      "id": "ATK_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "CRITICAL_RATE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRITICAL_RATE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.025,
+                  0.045,
+                  0.065,
+                  0.085,
+                  0.105,
+                  0.125,
+                  0.145,
+                  0.165,
+                  0.195
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Critical Rate Boost [L]",
+      "description": "Critical Rate +",
+      "id": "CRITICAL_RATE_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "CRYO_DAMAGE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.055555556,
+                  0.1,
+                  0.14444445,
+                  0.18888889,
+                  0.23333333,
+                  0.2777778,
+                  0.32222223,
+                  0.36666667,
+                  0.43333334
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Cryo DMG Boost [L]",
+      "description": "Cryo DMG Dealt +",
+      "id": "CRYO_DMG_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "CRYO_DAMAGE_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.044444446,
+                  0.08,
+                  0.115555555,
+                  0.15111111,
+                  0.18666667,
+                  0.22222222,
+                  0.25777778,
+                  0.29333332,
+                  0.34666666
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Cryo DMG Boost [M]",
+      "description": "Cryo DMG Dealt +",
+      "id": "CRYO_DMG_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ELECTRIC_DAMAGE_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ELECTRIC_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.044444446,
+                  0.08,
+                  0.115555555,
+                  0.15111111,
+                  0.18666667,
+                  0.22222222,
+                  0.25777778,
+                  0.29333332,
+                  0.34666666
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Electric DMG Boost [M]",
+      "description": "Electric DMG Dealt +",
+      "id": "ELECTRIC_DMG_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "HEAT_DAMAGE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HEAT_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.055555556,
+                  0.1,
+                  0.14444445,
+                  0.18888889,
+                  0.23333333,
+                  0.2777778,
+                  0.32222223,
+                  0.36666667,
+                  0.43333334
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Heat DMG Boost [L]",
+      "description": "Heat DMG Dealt +",
+      "id": "HEAT_DMG_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "HEAT_DAMAGE_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HEAT_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.044444446,
+                  0.08,
+                  0.115555555,
+                  0.15111111,
+                  0.18666667,
+                  0.22222222,
+                  0.25777778,
+                  0.29333332,
+                  0.34666666
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Heat DMG Boost [M]",
+      "description": "Heat DMG Dealt +",
+      "id": "HEAT_DMG_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "HP_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HP_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1,
+                  0.18,
+                  0.26,
+                  0.34,
+                  0.42,
+                  0.5,
+                  0.58,
+                  0.66,
+                  0.78
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "HP Boost [L]",
+      "description": "Max HP +",
+      "id": "HP_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "HP_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HP_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.144,
+                  0.208,
+                  0.272,
+                  0.336,
+                  0.4,
+                  0.464,
+                  0.528,
+                  0.624
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "HP Boost [M]",
+      "description": "Max HP +",
+      "id": "HP_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "HP_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HP_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.06,
+                  0.108,
+                  0.156,
+                  0.204,
+                  0.252,
+                  0.3,
+                  0.348,
+                  0.396,
+                  0.468
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "HP Boost [S]",
+      "description": "Max HP +",
+      "id": "HP_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "INTELLECT_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  20,
+                  36,
+                  52,
+                  68,
+                  84,
+                  100,
+                  116,
+                  132,
+                  156
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Intellect Boost [L]",
+      "description": "Intellect +",
+      "id": "INTELLECT_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "INTELLECT_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16,
+                  28,
+                  41,
+                  54,
+                  67,
+                  80,
+                  92,
+                  105,
+                  124
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Intellect Boost [M]",
+      "description": "Intellect +",
+      "id": "INTELLECT_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "INTELLECT_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  12,
+                  21,
+                  31,
+                  40,
+                  50,
+                  60,
+                  69,
+                  79,
+                  93
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Intellect Boost [S]",
+      "description": "Intellect +",
+      "id": "INTELLECT_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "MAIN_ATTRIBUTE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "MAIN_ATTRIBUTE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  17,
+                  30,
+                  44,
+                  57,
+                  71,
+                  85,
+                  98,
+                  112,
+                  132
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Main Attribute Boost [L]",
+      "description": "Main attribute +",
+      "id": "MAIN_ATTRIBUTE_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "MAIN_ATTRIBUTE_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "MAIN_ATTRIBUTE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  10,
+                  18,
+                  26,
+                  34,
+                  42,
+                  51,
+                  59,
+                  67,
+                  79
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Main Attribute Boost [S]",
+      "description": "Main attribute +",
+      "id": "MAIN_ATTRIBUTE_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "NATURE_DAMAGE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "NATURE_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.055555556,
+                  0.1,
+                  0.14444445,
+                  0.18888889,
+                  0.23333333,
+                  0.2777778,
+                  0.32222223,
+                  0.36666667,
+                  0.43333334
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Nature DMG Boost [L]",
+      "description": "Nature DMG Dealt +",
+      "id": "NATURE_DMG_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "PHYSICAL_DAMAGE_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.055555556,
+                  0.1,
+                  0.14444445,
+                  0.18888889,
+                  0.23333333,
+                  0.2777778,
+                  0.32222223,
+                  0.36666667,
+                  0.43333334
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Physical DMG Boost [L]",
+      "description": "Physical DMG Dealt +",
+      "id": "PHYSICAL_DMG_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "PHYSICAL_DAMAGE_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.044444446,
+                  0.08,
+                  0.115555555,
+                  0.15111111,
+                  0.18666667,
+                  0.22222222,
+                  0.25777778,
+                  0.29333332,
+                  0.34666666
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Physical DMG Boost [M]",
+      "description": "Physical DMG Dealt +",
+      "id": "PHYSICAL_DMG_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "PHYSICAL_DAMAGE_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.033333335,
+                  0.06,
+                  0.086666666,
+                  0.11333334,
+                  0.14,
+                  0.16666667,
+                  0.19333333,
+                  0.22,
+                  0.26
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Physical DMG Boost [S]",
+      "description": "Physical DMG Dealt +",
+      "id": "PHYSICAL_DMG_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "STRENGTH_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  20,
+                  36,
+                  52,
+                  68,
+                  84,
+                  100,
+                  116,
+                  132,
+                  156
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Strength Boost [L]",
+      "description": "Strength +",
+      "id": "STRENGTH_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "STRENGTH_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16,
+                  28,
+                  41,
+                  54,
+                  67,
+                  80,
+                  92,
+                  105,
+                  124
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Strength Boost [M]",
+      "description": "Strength +",
+      "id": "STRENGTH_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "STRENGTH_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  12,
+                  21,
+                  31,
+                  40,
+                  50,
+                  60,
+                  69,
+                  79,
+                  93
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Strength Boost [S]",
+      "description": "Strength +",
+      "id": "STRENGTH_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "TREATMENT_EFFICIENCY_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "heal",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.05952381,
+                  0.10714286,
+                  0.15476191,
+                  0.20238096,
+                  0.25,
+                  0.29761904,
+                  0.3452381,
+                  0.39285713,
+                  0.4642857
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Treatment Efficiency Boost [L]",
+      "description": "Treatment Efficiency +.",
+      "id": "TREATMENT_EFFICIENCY_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "TREATMENT_EFFICIENCY_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "heal",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.04761905,
+                  0.08571429,
+                  0.123809524,
+                  0.16190477,
+                  0.2,
+                  0.23809524,
+                  0.2761905,
+                  0.31428573,
+                  0.37142858
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Treatment Efficiency Boost [M]",
+      "description": "Treatment Efficiency +.",
+      "id": "TREATMENT_EFFICIENCY_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ULTIMATE_GAIN_EFFICIENCY_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_GAIN_EFFICIENCY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.05952381,
+                  0.10714286,
+                  0.15476191,
+                  0.20238096,
+                  0.25,
+                  0.29761904,
+                  0.3452381,
+                  0.39285713,
+                  0.4642857
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Ultimate Gain Efficiency Boost [L]",
+      "description": "Ultimate Gain Efficiency +",
+      "id": "ULTIMATE_GAIN_EFFICIENCY_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ULTIMATE_GAIN_EFFICIENCY_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ULTIMATE_GAIN_EFFICIENCY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.04761905,
+                  0.08571429,
+                  0.123809524,
+                  0.16190477,
+                  0.2,
+                  0.23809524,
+                  0.2761905,
+                  0.31428573,
+                  0.37142858
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Ultimate Gain Efficiency Boost [M]",
+      "description": "Ultimate Gain Efficiency +",
+      "id": "ULTIMATE_GAIN_EFFICIENCY_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "WILL_BOOST_L": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  20,
+                  36,
+                  52,
+                  68,
+                  84,
+                  100,
+                  116,
+                  132,
+                  156
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Will Boost [L]",
+      "description": "Will +",
+      "id": "WILL_BOOST_L"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "WILL_BOOST_M": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  16,
+                  28,
+                  41,
+                  54,
+                  67,
+                  80,
+                  92,
+                  105,
+                  124
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Will Boost [M]",
+      "description": "Will +",
+      "id": "WILL_BOOST_M"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "WILL_BOOST_S": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  12,
+                  21,
+                  31,
+                  40,
+                  50,
+                  60,
+                  69,
+                  79,
+                  93
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Will Boost [S]",
+      "description": "Will +",
+      "id": "WILL_BOOST_S"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "SUPPRESSION_EMERGENCY_BOOST": {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "BATTLE_SKILL"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "EMERGENCY_BOOST",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Suppression: Emergency Boost",
+      "description": "When the wielder's battle skill hits the enemy, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+      "id": "SUPPRESSION_EMERGENCY_BOOST"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "PURSUIT_UNENDING_CYCLE": {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "COMBO_SKILL"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "UNENDING_CYCLE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "name": "Pursuit: Unending Cycle",
+      "description": "When the wielder casts a combo skill, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+      "id": "PURSUIT_UNENDING_CYCLE"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "INSPIRING_START_OF_A_SAGA": {
+    "properties": {
+      "name": "Inspiring: Start of a Saga",
+      "description": "When the wielder's HP is above {hp_ratio_c:0%}, ATK +{atk_up:0.0%}.",
+      "id": "INSPIRING_START_OF_A_SAGA"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  "ASSAULT_ARMAMENT_PREP": {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "MAIN_ATTRIBUTE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  10,
+                  18,
+                  26,
+                  34,
+                  42,
+                  50,
+                  58,
+                  66,
+                  79
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.12,
+                  0.144,
+                  0.168,
+                  0.192,
+                  0.216,
+                  0.24,
+                  0.264,
+                  0.288,
+                  0.336
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "ASSAULT_ARMAMENT_PREP",
+      "name": "Assault: Armament Prep",
+      "description": "Main attribute + ATK +"
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+}

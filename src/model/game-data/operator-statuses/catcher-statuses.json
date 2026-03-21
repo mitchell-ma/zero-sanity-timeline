@@ -1,0 +1,106 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "DEFENSE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.1,
+                  0.12
+                ]
+              },
+              "scalingAttribute": {
+                "verb": "IS",
+                "values": [
+                  "WILL"
+                ]
+              },
+              "scalingRate": {
+                "verb": "IS",
+                "value": 10
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "RESILIENT_DEFENSE",
+      "name": "Resilient Defense",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "catcher",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "DEAL",
+            "object": "DAMAGE",
+            "with": {
+              "source": "FINAL_HIT"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "verb": "DEAL",
+            "adjective": "PHYSICAL",
+            "object": "DAMAGE",
+            "to": "ENEMY",
+            "with": {
+              "DAMAGE_MULTIPLIER": {
+                "verb": "BASED_ON",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  0.3,
+                  0.45
+                ]
+              },
+              "hitCount": {
+                "verb": "BASED_ON",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  2,
+                  3
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "COMPREHENSIVE_MINDSET_TALENT",
+      "name": "Comprehensive Mindset (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "catcher",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

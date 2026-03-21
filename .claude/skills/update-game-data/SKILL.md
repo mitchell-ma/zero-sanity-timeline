@@ -778,6 +778,202 @@ When a new weapon is added, update `NAMED_SKILL_ID_TO_WEAPON_SKILL_TYPE` in `par
 
 ---
 
+# Part 1c: Manual Operator Skill & Status Review
+
+After parsing operator data from external sources, manually review and refine the skill DSL and status configs using the wiki as the source of truth. Follow this sequence for each operator.
+
+## Step 1: Fetch wiki data
+
+Fetch the operator's wiki page (`https://endfield.wiki.gg/wiki/<Operator_Name>`) and extract:
+- All skill names, descriptions, damage types, multipliers per rank (1-12)
+- SP costs, cooldowns, gauge gains
+- Status effects applied or consumed
+- Talent descriptions with exact values per elite level
+- Potential descriptions with exact values
+
+## Step 2: Review skill DSL against wiki
+
+For each skill in `operator-skills/<slug>-skills.json`, present the DSL in human-readable form and compare against wiki data. Check:
+
+1. **Damage types** — wiki says Physical vs Heat/Cryo/Electric/Nature. Basic attacks are often Physical even for elemental operators.
+2. **Multiplier values** — verify each rank's value matches wiki percentages (e.g. wiki 173% = 1.73 in JSON)
+3. **Stagger values** — match wiki stagger numbers
+4. **Status effects** — APPLY KNOCK_DOWN, inflictions, etc. must match wiki descriptions
+5. **Cooldowns** — combo skill cooldowns should be BASED_ON SKILL_LEVEL arrays if they change at rank 12 (check wiki). Cooldowns live in a COOLDOWN segment with `timeDependency: "REAL_TIME"`, not as CONSUME COOLDOWN effects.
+6. **SP costs** — CONSUME SKILL_POINT on battle skills
+7. **Conditional effects** — e.g. "if hit during cast, deal extra stagger" → separate clause with predicate
+
+## Step 3: Clean up skill DSL
+
+Apply these conventions across all skill entries:
+
+| Pattern | Convention |
+|---|---|
+| Damage multiplier arrays | Key is `DAMAGE_MULTIPLIER` inside `with` block of DEAL DAMAGE effects |
+| HP multiplier arrays | Key is `HP_MULTIPLIER` (e.g. shield based on Max HP) |
+| Multiplier modifiers | Key is `DAMAGE_MULTIPLIER_MODIFIER` or `HP_MULTIPLIER_MODIFIER` (e.g. P5 ×1.2) |
+| DEAL DAMAGE target | `"to": "ENEMY"` (never `"to": "TARGET"`) |
+| SP recovery/consumption | Use `"value"` not `"cardinality"` in `with` block for SKILL_POINT effects |
+| Empty segments | Remove segments with `duration: 0` and empty `frames[]` |
+| Combo cooldowns | Separate COOLDOWN segment (not CONSUME COOLDOWN in clause), with `timeDependency: "REAL_TIME"` |
+| Battle skill gauge | Do NOT include RECOVER ULTIMATE_ENERGY 6.5 effects — these are universal and handled by the engine |
+| Stagger/knockdown | Separate DEAL STAGGER and APPLY KNOCK_DOWN effects (not properties inside DEAL DAMAGE `with`) |
+| Heal/shield | Separate APPLY effects (not properties inside DEAL DAMAGE `with`) |
+| Mutually exclusive damage paths | When wiki lists different multipliers for different conditions (e.g. 160% vs 280%), use `IF X → effects` / `IF NOT_X → effects` clauses. Do NOT use unconditional + conditional additive — the higher multiplier REPLACES the base, not adds to it. Each path is a single hit instance for crit calculation; never split one path into multiple DEAL DAMAGE effects. Add `_note` field explaining the mutual exclusivity. |
+| Verb: HAVE/NOT_HAVE | Use `HAVE` (not `HAS`) for condition verbs. `NOT_HAVE` for negation. |
+| APPLY LIFT/KNOCK_DOWN duration | Only supply `duration` in `with` if the wiki or data source specifies a non-default value (e.g. battle skill with level-scaling lift duration). If no duration is specified, omit it — LIFT and KNOCK_DOWN have default durations in the engine. |
+| Counter-attack/retaliation frames | Frames triggered by being hit (e.g. Snowshine shield retaliation) can have arbitrary offsets from End-Axis. Users edit these after default placement. Don't add conditional predicates — the offset is the user-adjustable part. |
+| Cast-time effects vs hit-time effects | When a skill has instant effects on cast (e.g. APPLY PROTECTION, RECOVER SP) plus delayed effects on hit/retaliation, split into separate frames: frame 0 at offset 0 for cast-time effects, later frame for hit effects. |
+| Healing DSL | Write full heal DSL (APPLY TREATMENT with healBase + willAdditive, APPLY CONTINUOUS_TREATMENT with duration + interval + healBase + willAdditive). These are no-op in the engine currently but should be complete in configs for future implementation. |
+| Potential modifying a number | When a potential just changes a numeric value on an existing effect (e.g. "retaliation returns 10 SP"), bake it into the skill frame as a conditional clause with `THIS OPERATOR HAVE POTENTIAL AT_LEAST X`. Don't create separate statuses. |
+
+## Step 4: Create operator statuses
+
+Create `operator-statuses/<slug>-statuses.json` for talents and potential-triggered statuses.
+
+### Talent implementation strategy
+
+Compare the wiki talent description against these categories to decide how to implement:
+
+| Wiki description pattern | Implementation | Talent field | Example |
+|---|---|---|---|
+| "When X happens, gain Y buff for Zs" | TALENT trigger + TALENT_STATUS pair in statuses file | `id` → trigger ID | Ember "Pay the Ferric Price": on hit → ATK +6% 7s |
+| "Applying X also does Y" | TALENT trigger with inline effects (no separate status needed) | `id` → trigger ID | Lifeng "Subduer of Evil": knock down → deal Physical DMG |
+| Passive stat scaling (no trigger) | TALENT_STATUS only (no trigger entry) | `id` → status ID | Lifeng "Illumination": ATK +0.1% per INT+WILL |
+| Modifies another talent/status's parameters | No own status — baked into the modified status via BASED_ON POTENTIAL arrays | `name` (no `id`) | Da Pan "Salty or Mild": modifies Prep Ingredients stack limits |
+| Passive attribute increase | `attributeIncrease` with `attribute` field | `name` | All operators' "Forged"/"Skirmisher" |
+
+### Potential implementation strategy
+
+| Wiki description pattern | Implementation | Operator JSON | Example |
+|---|---|---|---|
+| Flat stat bonus | `STAT_MODIFIER` in potentials array | Stays as-is | Da Pan P3: STR +15, Phys DMG +8% |
+| Skill multiplier modifier (×1.2, ×1.3) | `SKILL_PARAMETER` with `parameterKey: "DAMAGE_MULTIPLIER_MODIFIER"` | Stays as-is | Endmin P3: combo ×1.3 |
+| Skill cost reduction (-15%) | `SKILL_COST` in potentials array | Stays as-is | Ember P4: ult energy ×0.85 |
+| Skill parameter tweak (interval, extra stacks) | `SKILL_PARAMETER` with relevant key | Stays as-is | Da Pan P5: 45s interval for extra Vulnerability |
+| Adds new conditional effect to a skill | Bake into skill DSL as conditional clause with `THIS OPERATOR HAVE POTENTIAL` predicate | Mark effect as `IMPLEMENTED_IN_DSL` | Ember P5: ult applies empowered shield |
+| Adds new conditional effect to a talent | Bake into talent's onTriggerClause with potential-level predicates | Mark effect as `IMPLEMENTED_IN_DSL` | Endmin P2: P2+ shares ATK buff to allies |
+| Modifies a skill's base behavior (consume → return SP) | Bake into skill DSL as conditional clause | Mark effect as `IMPLEMENTED_IN_DSL` | Endmin P1: crystal consume → return 50 SP |
+| Creates entirely new triggered effect (periodic, on-condition) | New TALENT trigger + POTENTIAL_STATUS in statuses file | Mark effect as `IMPLEMENTED_IN_DSL` | Lifeng P5: every 15s empower next Subduer of Evil |
+
+### Potential-branched talent triggers
+
+When a potential modifies a talent's behavior, use multiple onTriggerClause entries with potential-level predicates instead of creating separate statuses:
+
+```json
+"onTriggerClause": [
+  {
+    "conditions": [
+      { "subject": "...", "verb": "...", "object": "..." },
+      { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "with": { "value": { "verb": "IS", "value": 1 } } }
+    ],
+    "effects": [{ "verb": "APPLY", "object": "STATUS", "objectId": "BUFF_SELF", ... }]
+  },
+  {
+    "conditions": [
+      { "subject": "...", "verb": "...", "object": "..." },
+      { "subjectDeterminer": "THIS", "subject": "OPERATOR", "verb": "HAVE", "object": "POTENTIAL", "with": { "value": { "verb": "AT_LEAST", "value": 2 } } }
+    ],
+    "effects": [
+      { "verb": "APPLY", "object": "STATUS", "objectId": "BUFF_SELF", ... },
+      { "verb": "APPLY", "object": "STATUS", "objectId": "BUFF_SHARED", "toDeterminer": "ALL_OTHER", ... }
+    ]
+  }
+]
+```
+
+Example: Endministrator "Essence Disintegration" — P1 applies self ATK buff, P2+ also shares half to allies.
+
+### Team-shared buffs with weaker effects
+
+When a potential adds a team-wide version of a self buff at reduced power, create two separate statuses — the full-power self version and a weaker shared version — and branch the trigger/skill frame based on potential level:
+
+- `BUFF_NAME` — full-power status applied to self (e.g. ATK +15%/+30%)
+- `BUFF_NAME_SHARED` — weaker status applied to ALL_OTHER operators (e.g. ATK +7.5%/+15%)
+
+The trigger or skill frame uses potential predicates to decide which statuses to apply. At the base potential level, only the self buff is applied. At the potential that unlocks sharing, both are applied. This avoids runtime division logic — the half-power values are pre-computed in the shared status definition.
+
+Example: Endministrator P2 "Reflection of Authority" — `ESSENCE_DISINTEGRATION` (self, full power) + `ESSENCE_DISINTEGRATION_SHARED` (ALL_OTHER, half power). The talent trigger has two clauses: P1 applies self only, P2+ applies both.
+
+### Resolved potential/talent interaction examples
+
+**Potential adds resource return on conditional skill path (Endministrator P1):**
+Wiki: "Constructive Sequence consuming Originium Crystals returns 50 SP." The battle skill already has a crystal-consume mechanic. Solution: restructure the frame into two mutually exclusive predicates — `ENEMY HAVE ORIGINIUM_CRYSTAL` path gets CONSUME + RECOVER SKILL_POINT 50 + deal damage + crush, `ENEMY NOT_HAVE ORIGINIUM_CRYSTAL` path gets just deal damage + crush. The P1 SP return is inherent to the crystal path — no separate potential check needed since crystals only exist if Sealing Sequence was used, which is the operator's core loop.
+
+**Potential shares self-buff to team at reduced power (Endministrator P2):**
+Wiki: "When Endministrator gains ATK buff, allied operators gain half." Solution: create two statuses — `ESSENCE_DISINTEGRATION` (full power, self) and `ESSENCE_DISINTEGRATION_SHARED` (half power, ALL_OTHER). The talent trigger uses potential-branched predicates: P1 condition applies self only, P2+ condition applies both. The shared status has pre-computed half values (0.075/0.15 vs 0.15/0.30) to avoid runtime math.
+
+**Potential adds periodic empowered proc to existing talent (Lifeng P5):**
+Wiki: "Every 15 seconds, next Subduer of Evil deals additional 250% ATK Physical DMG and 5 Stagger." Solution: create `SUBDUER_OF_EVIL_P5_TALENT` trigger (conditions: THIS OPERATOR APPLY KNOCK_DOWN + status is in COOLDOWN state) and `SUBDUER_OF_EVIL_P5` POTENTIAL_STATUS with two segments — 2s active segment (frame at offset 0: DEAL PHYSICAL DAMAGE 2.5 + DEAL STAGGER 5) and 13s COOLDOWN segment (timeDependency REAL_TIME). The 2s + 13s = 15s total cycle matches wiki.
+
+### Status types reference
+
+| Type | When to use | Trigger needed? | Example |
+|---|---|---|---|
+| `TALENT` | Entry point — triggers on game event, applies a TALENT_STATUS | N/A (is the trigger) | Ember INFLAMED_FOR_THE_ASSAULT_TALENT |
+| `TALENT_STATUS` | Buff/debuff produced by a talent trigger | No (applied by trigger) | Ember INFLAMED_FOR_THE_ASSAULT |
+| `SKILL_STATUS` | Applied directly by skill DSL (shields, Link, crystals) | No (applied by skill) | Ember THE_STEEL_OATH, Lifeng LINK |
+| `POTENTIAL_STATUS` | Empowered version of a skill/talent effect, gated by potential | No (applied by skill/talent) | Ember THE_STEEL_OATH_EMPOWERED |
+
+### POTENTIAL_STATUS with cooldown-gated procs
+
+For potentials that create periodic effects (e.g. "every 15s, next X does extra damage" or "once per 1s"), use a status with a single COOLDOWN segment and a top-level `clause` for the instant effects:
+
+```json
+{
+  "clause": [{ "conditions": [], "effects": [{ "verb": "DEAL", ... }, { "verb": "RECOVER", ... }] }],
+  "segments": [
+    { "metadata": { "eventComponentType": "SEGMENT" },
+      "properties": { "duration": { "value": 15, "unit": "SECOND" }, "timeDependency": "REAL_TIME" }, "frames": [] }
+  ],
+  "properties": { "id": "...", "type": "POTENTIAL_STATUS", ... }
+}
+```
+
+The trigger uses `OFF_COOLDOWN` to check readiness:
+```json
+{ "subject": "OPERATOR", "verb": "HAVE", "object": "STATUS_ID", "with": { "value": { "verb": "IS", "value": "OFF_COOLDOWN" } } }
+```
+
+**Key rules:**
+- Use a single regular segment (NOT `segmentType: "COOLDOWN"` — that gets different visual styling) with the full cycle duration so users can see the event label on the timeline
+- Set `timeDependency: "REAL_TIME"` on these segments so they aren't affected by TIME_STOP
+- Effects fire instantly via top-level `clause`, the segment only tracks the cooldown timer visually
+- `OFF_COOLDOWN` means the cooldown has completed and the talent is ready (not during active/cooldown)
+
+Examples:
+- Lifeng SUBDUER_OF_EVIL_P5 — 15s cooldown, fires 250% ATK Physical DMG + 5 stagger on knock down
+- Estella SURVIVAL_IS_A_WIN_P5 — 1s cooldown, recovers 5 ultimate energy on Solidification
+
+## Step 5: Link operator JSON
+
+In `operators/<slug>-operator.json`:
+
+### Talent linking
+
+| Talent has... | Use | Example |
+|---|---|---|
+| Own trigger + status in statuses file | `"id": "<TRIGGER_ID>"` | Ember talent one: `"id": "INFLAMED_FOR_THE_ASSAULT_TALENT"` |
+| Passive status only (no trigger) in statuses file | `"id": "<STATUS_ID>"` | Lifeng talent one: `"id": "ILLUMINATION"` |
+| No own status (modifies other systems) | `"name": "<Talent Name>"` | Da Pan talent two: `"name": "Salty or Mild"` |
+
+### Potential cleanup
+
+1. Remove stale `BUFF_ATTACHMENT` entries (old Warfarin `OPERATOR_POTENTIALX_XYZ` refs)
+2. If the potential's effect is now baked into skill DSL or talent triggers, replace effects with `[{ "potentialEffectType": "IMPLEMENTED_IN_DSL" }]`
+3. Rename `parameterKey: "DAMAGE_MULTIPLIER"` → `"DAMAGE_MULTIPLIER_MODIFIER"` for multiplier-modifying potentials
+4. Keep `STAT_MODIFIER`, `SKILL_PARAMETER`, `SKILL_COST` entries as-is — these are consumed directly by the engine
+
+Statuses and skills are auto-loaded by `require.context` from filename patterns (`*-statuses.json`, `*-skills.json`) — no explicit registration needed.
+
+## Step 6: Validate
+
+1. Verify all JSON files parse: `node -e "JSON.parse(require('fs').readFileSync('<file>','utf8'))"`
+2. Run `npx tsc --noEmit` to check for type errors
+3. Run `npx eslint src/` to check for linter warnings
+
+---
+
 # Part 2: Gear Data Parsing
 
 Parse gear data from the Warfarin API into per-set files under `game-data/gears/`.

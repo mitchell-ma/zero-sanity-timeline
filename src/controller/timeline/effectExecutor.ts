@@ -255,18 +255,23 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (effect.object === 'STATUS') {
     const columnId = resolveStatusColumnId(effect.objectId);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-      .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
+      .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
+      .sort((a, b) => a.startFrame - b.startFrame);
 
     if (targets.length === 0) { result.failed = true; return result; }
 
-    // Consume the oldest active status
-    const target = targets.sort((a, b) => a.startFrame - b.startFrame)[0];
-    result.clamped.set(target.id, {
-      newDuration: Math.max(0, ctx.frame - target.startFrame),
-      eventStatus: EventStatusType.CONSUMED,
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    });
+    // If statusLevel is specified, consume that many stacks (oldest first);
+    // otherwise consume all active stacks.
+    const consumeCount = (effect.with?.statusLevel as number | undefined) ?? targets.length;
+    const toConsume = targets.slice(0, consumeCount);
+    for (const target of toConsume) {
+      result.clamped.set(target.id, {
+        newDuration: Math.max(0, ctx.frame - target.startFrame),
+        eventStatus: EventStatusType.CONSUMED,
+        sourceOwnerId: ctx.sourceOwnerId,
+        sourceSkillName: ctx.sourceSkillName,
+      });
+    }
     return result;
   }
 

@@ -20,7 +20,7 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../model/channels';
+import { SKILL_COLUMNS, OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import { TimelineSourceType, InteractionModeType } from '../consts/enums';
 import {
   Operator,
@@ -36,7 +36,6 @@ import {
   durationSegment,
 } from "../consts/viewTypes";
 import { MicroColumnController } from '../controller/timeline/microColumnController';
-import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
 import type { Slot } from '../controller/timeline/columnBuilder';
 import { formatSegmentShortName } from '../utils/semanticsTranslation';
 import { COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';

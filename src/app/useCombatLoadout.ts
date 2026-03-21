@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { CombatLoadout } from '../controller/combat-loadout';
+import { CombatLoadoutController } from '../controller/combat-loadout';
 import { TimelineEvent } from '../consts/viewTypes';
 import type { Slot } from '../controller/timeline/columnBuilder';
 
@@ -9,9 +9,9 @@ export function useCombatLoadout(
   slots: Slot[],
   events: TimelineEvent[],
 ) {
-  const combatLoadoutRef = useRef<CombatLoadout>(null!);
+  const combatLoadoutRef = useRef<CombatLoadoutController>(null!);
   if (combatLoadoutRef.current === null) {
-    combatLoadoutRef.current = new CombatLoadout();
+    combatLoadoutRef.current = new CombatLoadoutController();
     combatLoadoutRef.current.setSlotIds(slotIds);
   }
 

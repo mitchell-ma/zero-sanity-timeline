@@ -15,7 +15,8 @@ import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
-import { processInflictionEvents, SlotTriggerWiring, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
+import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
@@ -83,7 +84,7 @@ import {
 } from '../controller/appStateController';
 import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
 import { StatType, InteractionModeType } from '../consts/enums';
-import { SKILL_COLUMNS } from '../model/channels';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
 // ── Module-scope initialization ──────────────────────────────────────────────
@@ -397,7 +398,7 @@ export function useApp() {
 
   const slotWeapons = useMemo(() => {
     const map: Record<string, string | undefined> = {};
-    for (const s of slots) map[s.slotId] = s.weaponName;
+    for (const s of slots) map[s.slotId] = s.weaponId;
     return map;
   }, [slots]);
 
@@ -408,7 +409,7 @@ export function useApp() {
   }, [slots]);
 
   const processedEvents = useMemo(
-    () => processInflictionEvents(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets),
+    () => processCombatSimulation(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets),
     [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets],
   );
 
@@ -418,7 +419,7 @@ export function useApp() {
   const tacticalNamesBySlot = useMemo(() => {
     const map: Record<string, string | undefined> = {};
     for (const slotId of SLOT_IDS) {
-      map[slotId] = loadouts[slotId]?.tacticalName ?? undefined;
+      map[slotId] = loadouts[slotId]?.tacticalId ?? undefined;
     }
     return map;
   }, [loadouts]);

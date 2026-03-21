@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "dmg_up",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "ARTS_REACTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "RATIONAL_FAREWELL_AID_FROM_THE_PAST",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Pursuit: Aid from the Past",
+    "description": "Battle Skill DMG +{dmg_up:0.0%}. When the wielder's combo skill applies Arts Burst or Combusted, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "PURSUIT_AID_FROM_THE_PAST"
+  },
+  "metadata": {
+    "originId": "RATIONAL_FAREWELL",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

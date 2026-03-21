@@ -1,0 +1,93 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "SWORDMANCER"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "SWORDMANCER",
+      "name": "Swordmancer",
+      "rarity": 5,
+      "piecesRequired": 3,
+      "description": "3-piece set effect: Wearer's Stagger Efficiency Bonus +{poise_up:0%}. After the wearer applies a Physical Status, the wearer also performs 1 hit that deals {atk_scale:0%} ATK of Physical DMG and [{poise} Stagger]. Effect trigger cooldown: {duration}s."
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "DEAL",
+            "object": "DAMAGE",
+            "adjective": "PHYSICAL",
+            "toDeterminer": "THIS",
+            "to": "ENEMY",
+            "with": {
+              "multiplier": {
+                "verb": "IS",
+                "values": [
+                  2.5
+                ]
+              },
+              "staggerValue": {
+                "verb": "IS",
+                "values": [
+                  10
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "SWORDMANCER",
+      "name": "Swordmancer",
+      "description": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          0
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "cooldownSeconds": 15
+    },
+    "metadata": {
+      "originId": "SWORDMANCER"
+    }
+  }
+]

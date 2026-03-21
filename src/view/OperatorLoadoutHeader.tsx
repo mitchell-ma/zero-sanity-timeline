@@ -1,32 +1,29 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import {
-  WEAPONS,
-  ARMORS,
-  GLOVES,
-  KITS,
-  CONSUMABLES,
-  TACTICALS,
-  RegistryEntry,
-} from '../utils/loadoutRegistry';
+  getWeapon,
+  getGearPiece,
+  getConsumableEntry,
+  getTacticalEntry,
+} from '../controller/gameDataController';
 
 export interface OperatorLoadoutState {
-  weaponName:     string | null;
-  armorName:      string | null;
-  glovesName:     string | null;
-  kit1Name:       string | null;
-  kit2Name:       string | null;
-  consumableName: string | null;
-  tacticalName:   string | null;
+  weaponId:     string | null;
+  armorId:      string | null;
+  glovesId:     string | null;
+  kit1Id:       string | null;
+  kit2Id:       string | null;
+  consumableId: string | null;
+  tacticalId:   string | null;
 }
 
 export const EMPTY_LOADOUT: OperatorLoadoutState = {
-  weaponName:     null,
-  armorName:      null,
-  glovesName:     null,
-  kit1Name:       null,
-  kit2Name:       null,
-  consumableName: null,
-  tacticalName:   null,
+  weaponId:     null,
+  armorId:      null,
+  glovesId:     null,
+  kit1Id:       null,
+  kit2Id:       null,
+  consumableId: null,
+  tacticalId:   null,
 };
 
 interface OperatorLoadoutHeaderProps {
@@ -132,15 +129,15 @@ export { DropdownFilterBar, DropdownTierBar };
 
 /* ─── Static icon display ────────────────────────────────────────────── */
 
-function StaticIcon({ label, entry }: { label: string; entry: RegistryEntry<unknown> | null }) {
+function StaticIcon({ label, icon, name }: { label: string; icon?: string; name?: string }) {
   return (
     <div className="lo-dropdown">
       <div
         className="lo-dropdown-trigger"
-        title={entry?.name ?? label}
+        title={name ?? label}
       >
-        {entry?.icon ? (
-          <img className="lo-dropdown-icon" src={entry.icon} alt={entry.name} />
+        {icon ? (
+          <img className="lo-dropdown-icon" src={icon} alt={name ?? label} />
         ) : (
           <span className="lo-dropdown-placeholder">{label}</span>
         )}
@@ -157,29 +154,27 @@ interface EquipmentSlotsProps {
 }
 
 export function EquipmentSlots({ operatorWeaponTypes, state }: EquipmentSlotsProps) {
-  const findEntry = (name: string | null, entries: RegistryEntry<unknown>[]): RegistryEntry<unknown> | null => {
-    if (name === null) return null;
-    return entries.find((e) => e.name === name) ?? null;
-  };
-
-  const compatibleWeapons = useMemo(
-    () => WEAPONS.filter((w) => operatorWeaponTypes.includes(w.weaponType)),
-    [operatorWeaponTypes],
-  );
+  const wpn = state.weaponId ? getWeapon(state.weaponId) : undefined;
+  const csm = state.consumableId ? getConsumableEntry(state.consumableId) : undefined;
+  const tac = state.tacticalId ? getTacticalEntry(state.tacticalId) : undefined;
+  const arm = state.armorId ? getGearPiece(state.armorId) : undefined;
+  const glv = state.glovesId ? getGearPiece(state.glovesId) : undefined;
+  const k1 = state.kit1Id ? getGearPiece(state.kit1Id) : undefined;
+  const k2 = state.kit2Id ? getGearPiece(state.kit2Id) : undefined;
 
   return (
     <>
       <div className="lo-slots lo-slots-left">
-        <StaticIcon label="WPN" entry={findEntry(state.weaponName, compatibleWeapons)} />
+        <StaticIcon label="WPN" icon={wpn?.icon} name={wpn?.name} />
         <div className="lo-slots-spacer" />
-        <StaticIcon label="CSM" entry={findEntry(state.consumableName, CONSUMABLES)} />
-        <StaticIcon label="TAC" entry={findEntry(state.tacticalName, TACTICALS)} />
+        <StaticIcon label="CSM" icon={csm?.icon} name={csm?.name} />
+        <StaticIcon label="TAC" icon={tac?.icon} name={tac?.name} />
       </div>
       <div className="lo-slots lo-slots-right">
-        <StaticIcon label="ARM" entry={findEntry(state.armorName, ARMORS)} />
-        <StaticIcon label="GLV" entry={findEntry(state.glovesName, GLOVES)} />
-        <StaticIcon label="K1"  entry={findEntry(state.kit1Name, KITS)} />
-        <StaticIcon label="K2"  entry={findEntry(state.kit2Name, KITS)} />
+        <StaticIcon label="ARM" icon={arm?.icon} name={arm?.name} />
+        <StaticIcon label="GLV" icon={glv?.icon} name={glv?.name} />
+        <StaticIcon label="K1"  icon={k1?.icon} name={k1?.name} />
+        <StaticIcon label="K2"  icon={k2?.icon} name={k2?.name} />
       </div>
     </>
   );

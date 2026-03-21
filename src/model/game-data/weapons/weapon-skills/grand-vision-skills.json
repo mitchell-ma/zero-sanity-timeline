@@ -1,0 +1,63 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                30,
+                36,
+                42,
+                48,
+                54,
+                60,
+                66,
+                72,
+                84
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "SOLIDIFIED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "GRAND_VISION_LONG_TIME_WISH",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: Long Time Wish",
+    "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Originium Crystals or Solidification, during the next battle skill or ultimate cast within {duration:0}s, the wielder gains Physical DMG Dealt +{phy_dmg_up:0.0%}. Effects of the same name cannot stack.",
+    "id": "INFLICTION_LONG_TIME_WISH"
+  },
+  "metadata": {
+    "originId": "GRAND_VISION",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

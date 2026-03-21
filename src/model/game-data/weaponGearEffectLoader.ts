@@ -6,6 +6,7 @@
  */
 import type { GearSetType } from '../../consts/enums';
 import type { Interaction } from '../../consts/semantics';
+import { getGearStatuses } from './gearStatusesController';
 
 // ── Normalized effect def shape ──────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ const WEAPON_EFFECT_JSON: Record<string, WeaponEffectJson> = {};
 /** Weapon name → file key lookup for O(1) access. */
 const WEAPON_NAME_INDEX: Record<string, string> = {};
 
-const weaponEffectContext = require.context('./weapon-effects', false, /-effects\.json$/);
+const weaponEffectContext = require.context('./weapons/weapon-effects', false, /-effects\.json$/);
 for (const key of weaponEffectContext.keys()) {
   const data = weaponEffectContext(key) as WeaponEffectJson;
   WEAPON_EFFECT_JSON[key] = data;
@@ -59,17 +60,21 @@ for (const key of weaponEffectContext.keys()) {
 
 // ── Auto-discover gear effect JSONs ──────────────────────────────────────────
 
-interface GearEffectJson { gearSetType: string; label: string; statusEvents: Record<string, unknown>[] }
-const GEAR_EFFECT_JSON: Record<string, GearEffectJson> = {};
+interface GearEffectEntry { properties: { type: string; id: string; name: string }; onTriggerClause?: { conditions: Interaction[]; effects: { objectId?: string }[] }[] }
+/** Gear set effect entry (type=GEAR_SET_EFFECT) indexed by file key. */
+const GEAR_EFFECT_INDEX: Record<string, GearEffectEntry> = {};
 /** GearSetType → file key lookup for O(1) access. */
 const GEAR_TYPE_INDEX: Record<string, string> = {};
 
-const gearEffectContext = require.context('./gear-effects', false, /-effects\.json$/);
-for (const key of gearEffectContext.keys()) {
-  const data = gearEffectContext(key) as GearEffectJson;
-  GEAR_EFFECT_JSON[key] = data;
-  if (data.gearSetType) {
-    GEAR_TYPE_INDEX[data.gearSetType] = key;
+const gearStatusContext2 = require.context('./gears/gear-statuses', false, /-statuses\.json$/);
+for (const key of gearStatusContext2.keys()) {
+  const entries = gearStatusContext2(key) as Record<string, unknown>[];
+  if (!Array.isArray(entries)) continue;
+  // First entry with type GEAR_SET_EFFECT is the set-level effect
+  const effectEntry = entries.find(e => (e.properties as Record<string, unknown>)?.type === 'GEAR_SET_EFFECT') as GearEffectEntry | undefined;
+  if (effectEntry?.properties?.id) {
+    GEAR_EFFECT_INDEX[key] = effectEntry;
+    GEAR_TYPE_INDEX[effectEntry.properties.id] = key;
   }
 }
 
@@ -156,9 +161,22 @@ export function getWeaponEffectDefs(weaponName: string): NormalizedEffectDef[] {
 export function getGearEffectDefs(gearSetType: GearSetType | string): NormalizedEffectDef[] {
   // Check custom first
   if (customGearEffects[gearSetType]) return customGearEffects[gearSetType];
+  // Load statuses from gearStatusesController, normalize, and inject triggers from gear-effects
+  const statuses = getGearStatuses(gearSetType as string);
+  if (statuses.length === 0) return [];
+  const defs = statuses.map(s => normalizeEffectEntry(s.serialize() as Record<string, unknown>));
+  // Inject onTriggerClause from gear-effects file
   const key = GEAR_TYPE_INDEX[gearSetType];
-  if (!key) return [];
-  return (GEAR_EFFECT_JSON[key]?.statusEvents ?? []).map(normalizeEffectEntry);
+  const triggers = key ? (GEAR_EFFECT_INDEX[key]?.onTriggerClause ?? []) as { conditions: Interaction[]; effects: { objectId?: string }[] }[] : [];
+  for (const def of defs) {
+    if (!def.onTriggerClause || def.onTriggerClause.length === 0) {
+      const trigger = triggers.find(t => t.effects?.some(e => e.objectId === def.id));
+      if (trigger) {
+        def.onTriggerClause = [{ conditions: trigger.conditions }];
+      }
+    }
+  }
+  return defs;
 }
 
 /** Get all weapon names that have effect definitions. */
@@ -172,7 +190,7 @@ export function getAllWeaponEffectNames(): string[] {
 /** Get all gear set types that have effect definitions. */
 export function getAllGearEffectTypes(): string[] {
   return [
-    ...Object.values(GEAR_EFFECT_JSON).map(d => d.gearSetType),
+    ...Object.values(GEAR_EFFECT_INDEX).map(d => d.properties.id),
     ...Object.keys(customGearEffects),
   ];
 }
@@ -201,7 +219,7 @@ export function deregisterCustomGearEffectDefs(gearSetType: string): void {
 export function getGearEffectLabel(gearSetType: GearSetType | string): string | undefined {
   const key = GEAR_TYPE_INDEX[gearSetType];
   if (!key) return undefined;
-  return GEAR_EFFECT_JSON[key]?.label;
+  return GEAR_EFFECT_INDEX[key]?.properties?.name;
 }
 
 // ── Display helpers for DSL status event defs ────────────────────────────────

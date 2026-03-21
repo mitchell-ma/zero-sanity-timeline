@@ -1,0 +1,102 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "HEAT_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "NATURE_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.08,
+                  0.096,
+                  0.112,
+                  0.128,
+                  0.144,
+                  0.16,
+                  0.176,
+                  0.192,
+                  0.224
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.07,
+                  0.084,
+                  0.098,
+                  0.112,
+                  0.126,
+                  0.14,
+                  0.154,
+                  0.168,
+                  0.196
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "UMBRAL_TORCH_COVETOUS_BUILDUP",
+      "name": "Covetous Buildup",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          20
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            2
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "UMBRAL_TORCH",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

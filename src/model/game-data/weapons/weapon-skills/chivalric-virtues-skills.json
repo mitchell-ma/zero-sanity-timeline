@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "TREATMENT_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "HP"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "CHIVALRIC_VIRTUES_BLIGHT_FERVOR",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Medicant: Blight Fervor",
+    "description": "Treatment Efficiency +{heal_up:0.0%}. After the wielder's skill provides HP treatment, the entire team gains ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "MEDICANT_BLIGHT_FERVOR"
+  },
+  "metadata": {
+    "originId": "CHIVALRIC_VIRTUES",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1,
+                  0.12,
+                  0.14,
+                  0.16,
+                  0.18,
+                  0.2,
+                  0.22,
+                  0.24,
+                  0.28
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "EXEMPLAR_STACKED_HEW",
+      "name": "Stacked Hew",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          30
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            3
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "EXEMPLAR",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

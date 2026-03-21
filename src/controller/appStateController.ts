@@ -11,7 +11,7 @@ import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
 import { StatType } from '../consts/enums';
 import { DEFAULT_STATS } from '../consts/stats';
-import { ARMORS, GLOVES, KITS } from '../utils/loadoutRegistry';
+import { getGearPiece } from './gameDataController';
 import { filterEventsOnOperatorChange } from './timeline/inputEventController';
 import GENERAL_MECHANICS from '../model/game-data/generalMechanics.json';
 import { GearSetType } from '../consts/enums';
@@ -202,19 +202,18 @@ export function computeSlots(
   loadouts: Record<string, OperatorLoadoutState>,
   loadoutProperties: Record<string, LoadoutProperties>,
 ): Slot[] {
-  const allGear = [...ARMORS, ...GLOVES, ...KITS];
   return slotIds.map((slotId, i) => {
     const op = operators[i] ?? null;
     const lo = loadouts[slotId];
     let gearSetType: GearSetType | undefined;
     if (lo) {
-      const gearNames = [lo.armorName, lo.glovesName, lo.kit1Name, lo.kit2Name];
+      const gearIds = [lo.armorId, lo.glovesId, lo.kit1Id, lo.kit2Id];
       const counts = new Map<string, number>();
-      for (const name of gearNames) {
-        if (!name) continue;
-        const entry = allGear.find((g) => g.name === name);
-        if (!entry) continue;
-        const et = entry.gearSetType;
+      for (const id of gearIds) {
+        if (!id) continue;
+        const piece = getGearPiece(id);
+        if (!piece) continue;
+        const et = piece.gearSet;
         counts.set(et, (counts.get(et) ?? 0) + 1);
       }
       counts.forEach((count, et) => {
@@ -225,8 +224,8 @@ export function computeSlots(
       slotId,
       operator: op,
       potential: loadoutProperties[slotId]?.operator.potential,
-      weaponName: lo?.weaponName ?? undefined,
-      tacticalName: lo?.tacticalName ?? undefined,
+      weaponId: lo?.weaponId ?? undefined,
+      tacticalId: lo?.tacticalId ?? undefined,
       gearSetType,
       comboSkillLevel: loadoutProperties[slotId]?.skills.comboSkillLevel,
     };

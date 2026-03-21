@@ -1,0 +1,16 @@
+[
+  {
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "NONE",
+      "name": "NONE",
+      "rarity": 5
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  }
+]

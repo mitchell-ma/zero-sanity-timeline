@@ -57,7 +57,7 @@
  */
 import { TimelineEvent } from '../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -107,9 +107,9 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
 // eslint-disable-next-line import/first
-import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
+import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 // eslint-disable-next-line import/first
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -840,7 +840,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(250, 'heatInfliction');
     const wirings = [laevWiring(), antalWiring()];
 
-    const processed = processInflictionEvents([focus, laevBattle, antalCombo], undefined, undefined, wirings);
+    const processed = processCombatSimulation([focus, laevBattle, antalCombo], undefined, undefined, wirings);
     const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
     expect(derived.length).toBeGreaterThan(0);
     expect(derived[0].columnId).toBe('heatInfliction');
@@ -855,7 +855,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(250);
     const wirings = [laevWiring(), antalWiring()];
 
-    const processed = processInflictionEvents([focus, laevBattle, antalCombo], undefined, undefined, wirings);
+    const processed = processCombatSimulation([focus, laevBattle, antalCombo], undefined, undefined, wirings);
     const combo = processed.find((e) => e.id === antalCombo.id);
     expect(combo).toBeDefined();
     expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
@@ -867,7 +867,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(250);
     const wirings = [laevWiring(), antalWiring()];
 
-    const processed = processInflictionEvents([laevBattle, antalCombo], undefined, undefined, wirings);
+    const processed = processCombatSimulation([laevBattle, antalCombo], undefined, undefined, wirings);
     const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
     expect(derived.length).toBe(0);
   });
@@ -890,7 +890,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(250);
     const wirings = [laevWiring(), antalWiring(), electricWiring];
 
-    const processed = processInflictionEvents([focus, arcBattle, antalCombo], undefined, undefined, wirings);
+    const processed = processCombatSimulation([focus, arcBattle, antalCombo], undefined, undefined, wirings);
     const combo = processed.find((e) => e.id === antalCombo.id);
     expect(combo!.comboTriggerColumnId).toBe('electricInfliction');
     const derived = processed.filter((e) => e.id.startsWith(`${antalCombo.id}-combo-inflict`));
@@ -902,7 +902,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const laevBattle = makeLaevBattle(100);
     const wirings = [laevWiring(), antalWiring()];
 
-    const processed = processInflictionEvents([laevBattle], undefined, undefined, wirings);
+    const processed = processCombatSimulation([laevBattle], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
     );
@@ -919,7 +919,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     });
     const wirings = [laevWiring(), antalWiring()];
 
-    const processed = processInflictionEvents([focus, heatInfliction], undefined, undefined, wirings);
+    const processed = processCombatSimulation([focus, heatInfliction], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ANTAL,
     );
@@ -942,7 +942,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, akekuriHeatInfliction, antalCombo],
       undefined, undefined, wirings,
     );
@@ -980,7 +980,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, akekuriHeat, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1009,7 +1009,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(250);
     const wirings = [antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, antalBattle, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1050,7 +1050,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: 'slot-0', operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [antalBattle, akekuriHeat],
       undefined, undefined, wirings,
     );
@@ -1076,7 +1076,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const wirings = [akekuriWiring, antalWiring()];
 
     // No Akekuri battle event in the events list — it was removed/dragged away
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1134,7 +1134,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [antalBattle, akekuriBattle, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1202,7 +1202,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [antalBattle, akekuriBattle, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1262,7 +1262,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const akekuriWiring: SlotTriggerWiring = { slotId: SLOT_AKEKURI, operatorId: 'akekuri' };
     const wirings = [akekuriWiring, antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [antalBattle, akekuriBattle, antalCombo],
       undefined, undefined, wirings,
     );
@@ -1280,7 +1280,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     const antalCombo = makeAntalCombo(300);
     const wirings = [antalWiring()];
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, antalCombo],
       undefined, undefined, wirings,
     );

@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "GUARD",
   "elementType": "PHYSICAL",
-  "weaponType": "SWORD",
+  "weaponTypes": [
+    "SWORD"
+  ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "potentials": [
@@ -13,22 +15,7 @@
       "name": "\"Shadowless\"",
       "effects": [
         {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [
-              {
-                "key": "extra_dmg",
-                "value": 0.2,
-                "valueStr": ""
-              },
-              {
-                "key": "hp_remain",
-                "value": 0.5,
-                "valueStr": ""
-              }
-            ],
-            "objectId": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS"
-          }
+          "potentialEffectType": "IMPLEMENTED_IN_DSL"
         }
       ]
     },
@@ -60,7 +47,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "BLADE_GALE",
-            "parameterKey": "atk_scale1",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.1,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -69,7 +56,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "BLADE_GALE",
-            "parameterKey": "atk_scale2",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.1,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -78,7 +65,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "ASCENDING_STRIKE",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.1,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -87,7 +74,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "SOAR_TO_THE_STARS",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.1,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -113,21 +100,7 @@
       "name": "Bonded with the World",
       "effects": [
         {
-          "potentialEffectType": "SKILL_COST",
-          "skillCostModifier": {
-            "skillType": "CHEN_QIANYU_SOAR_TO_THE_STARS",
-            "parameterType": 2,
-            "value": -3
-          }
-        },
-        {
-          "potentialEffectType": "SKILL_PARAMETER",
-          "skillParameterModifier": {
-            "skillType": "BLADE_GALE",
-            "parameterKey": "potential5",
-            "value": 1,
-            "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
+          "potentialEffectType": "IMPLEMENTED_IN_DSL"
         }
       ]
     }
@@ -1796,11 +1769,11 @@
   ],
   "talents": {
     "one": {
-      "name": "Slashing Edge",
+      "id": "SLASHING_EDGE_TALENT",
       "maxLevel": 2
     },
     "two": {
-      "name": "Momentum Breaker",
+      "id": "MOMENTUM_BREAKER_TALENT",
       "maxLevel": 2
     },
     "attributeIncrease": {

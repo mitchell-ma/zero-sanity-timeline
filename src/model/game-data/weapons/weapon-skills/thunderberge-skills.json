@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "SHIELD_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.24,
+                0.288,
+                0.336,
+                0.384,
+                0.432,
+                0.48,
+                0.528,
+                0.576,
+                0.672
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "HP"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "THUNDERBERGE_EYE_OF_TALOS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Medicant: Eye of Talos",
+    "description": "Shield applied +{shield_up:0.0%}. After the wielder's combo skill provides HP treatment, the controlled operator gains an additional [{hp_ratio:0.0%}×Wielder's Max HP] Shield for {duration:0}s. Effect only triggers once every {cd:0}s.",
+    "id": "MEDICANT_EYE_OF_TALOS"
+  },
+  "metadata": {
+    "originId": "THUNDERBERGE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

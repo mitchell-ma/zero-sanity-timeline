@@ -1,0 +1,93 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "TREATMENT_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.15,
+                  0.25
+                ]
+              },
+              "hpThreshold": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.45,
+                  0.55
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "POLAR_SURVIVAL",
+      "name": "Polar Survival",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "snowshine",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "RETALIATE",
+            "object": "ENEMY"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "THIS",
+            "toObject": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  6,
+                  10
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "SAR_PROFESSIONAL_TALENT",
+      "name": "SAR Professional (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "snowshine",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

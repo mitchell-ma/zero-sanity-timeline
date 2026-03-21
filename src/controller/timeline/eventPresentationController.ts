@@ -9,8 +9,7 @@ import { TimelineEvent, Column, EventSegmentData, eventEndFrame } from '../../co
 import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, SegmentType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
-import { SKILL_COLUMNS } from '../../model/channels';
-import { COMBO_WINDOW_COLUMN_ID } from './processInteractions';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 import type { Slot } from './columnBuilder';
 import type { ValidationMaps } from './eventValidationController';

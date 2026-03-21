@@ -8,7 +8,7 @@
  * a given event.
  */
 
-import { PhysicalStatusType } from '../../consts/enums';
+import { PhysicalStatusType, StatusType } from '../../consts/enums';
 import { SkillType } from '../../consts/viewTypes';
 
 // ── Owner IDs ─────────────────────────────────────────────────────────────
@@ -115,3 +115,56 @@ export const ENEMY_GROUP_COLUMNS = {
 export const NODE_STAGGER_COLUMN_ID = 'node-stagger';
 /** Column ID for full stagger frailty events. */
 export const FULL_STAGGER_COLUMN_ID = 'full-stagger';
+/** Column ID for derived combo activation window events. */
+export const COMBO_WINDOW_COLUMN_ID = 'comboActivationWindow';
+
+// ── Infliction / Reaction domain constants ───────────────────────────────
+
+/** Maps element key (from frame data) → infliction columnId. */
+export const ELEMENT_TO_INFLICTION_COLUMN: Record<string, string> = {
+  HEAT: 'heatInfliction',
+  CRYO: 'cryoInfliction',
+  NATURE: 'natureInfliction',
+  ELECTRIC: 'electricInfliction',
+};
+
+/** Maps forced reaction name → reaction columnId. */
+export const FORCED_REACTION_COLUMN: Record<string, string> = {
+  [StatusType.COMBUSTION]:      REACTION_COLUMNS.COMBUSTION,
+  [StatusType.SOLIDIFICATION]:  REACTION_COLUMNS.SOLIDIFICATION,
+  [StatusType.CORROSION]:       REACTION_COLUMNS.CORROSION,
+  [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
+};
+
+/** Maps self-targeted grant status → team-level derived column. */
+export const TEAM_STATUS_COLUMN: Record<string, string> = {
+  [StatusType.SQUAD_BUFF]: StatusType.LINK,
+};
+
+/** Default active duration for derived reaction events (20s at 120fps). */
+export const REACTION_DURATION = 2400;
+
+/** Forced reaction durations by type (frames at 120fps). */
+export const FORCED_REACTION_DURATION: Record<string, number> = {
+  [REACTION_COLUMNS.COMBUSTION]:      600,  // 5s
+  [REACTION_COLUMNS.SOLIDIFICATION]:  600,  // 5s
+  [REACTION_COLUMNS.CORROSION]:       600,  // 5s
+  [REACTION_COLUMNS.ELECTRIFICATION]: 600,  // 5s
+};
+
+/** Default active duration for derived infliction events (20s at 120fps). */
+export const INFLICTION_DURATION = 2400;
+
+/** Breach durations by status level (frames at 120fps). */
+export const BREACH_DURATION: Record<number, number> = {
+  1: 1440,   // 12s
+  2: 2160,   // 18s
+  3: 2880,   // 24s
+  4: 3600,   // 30s
+};
+
+/** Default active duration for derived physical infliction events (20s at 120fps). */
+export const PHYSICAL_INFLICTION_DURATION = 2400;
+
+/** P5 link extension: extra frames added to link duration when operator potential >= 5. */
+export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps

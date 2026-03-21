@@ -27,6 +27,7 @@ interface JsonWithValue {
   verb: string; // "IS" | "BASED_ON"
   object?: string;
   value: number | number[];
+  values?: number[];
 }
 
 /** DSL Effect: Verb-Object with optional adjective and prepositional phrases. */
@@ -349,8 +350,9 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
           case 'DEAL':
             if (ef.object === 'DAMAGE') {
-              const multipliers = wp?.value;
-              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
+              const multipliers = wp?.DAMAGE_MULTIPLIER ?? wp?.value;
+              const mulArr = multipliers && Array.isArray(multipliers.values) ? multipliers.values
+                : (multipliers && Array.isArray(multipliers.value) ? multipliers.value : []);
               const dd: FrameDealDamage = {
                 ...(elementAdj && { element: elementAdj }),
                 multipliers: mulArr,

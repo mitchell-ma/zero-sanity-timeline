@@ -59,7 +59,7 @@
  */
 import { TimelineEvent } from '../consts/viewTypes';
 import { SegmentType, TimeDependency } from '../consts/enums';
-import { SKILL_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -103,9 +103,9 @@ import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '..
 // eslint-disable-next-line import/first
 import { wouldOverlapSiblings } from '../controller/timeline/eventValidator';
 // eslint-disable-next-line import/first
-import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
 // eslint-disable-next-line import/first
-import { COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
+import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -791,7 +791,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const ba = makeBasicAttack(SLOT_ARDELIA, 0);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -805,7 +805,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const heat = makeInflictionEvent('heat', 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -817,7 +817,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const nature = makeInflictionEvent('nature', 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, nature], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, nature], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -830,7 +830,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const heat = makeInflictionEvent('heat', 0, 2 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -843,7 +843,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const vuln = makeInflictionEvent('vulnerable', 0, 20 * FPS);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, vuln], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, vuln], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -854,7 +854,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const otherBa = makeBasicAttack(SLOT_OTHER, 0);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([otherBa], undefined, undefined, wirings);
+    const processed = processCombatSimulation([otherBa], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -896,7 +896,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const heat = makeInflictionEvent('heat', 0, 450);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, combo, heat], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -933,7 +933,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const heat = makeInflictionEvent('heat', 0, 550);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, combo, heat], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, combo, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );
@@ -962,7 +962,7 @@ describe('J. Combo Activation Window Pipeline', () => {
     const heat = makeInflictionEvent('heat', 0, 497);
     const wirings = [ardeliaWiring(), otherOperatorWiring()];
 
-    const processed = processInflictionEvents([ba, heat], undefined, undefined, wirings);
+    const processed = processCombatSimulation([ba, heat], undefined, undefined, wirings);
     const windows = processed.filter(
       (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === SLOT_ARDELIA,
     );

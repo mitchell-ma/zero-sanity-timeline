@@ -199,7 +199,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     role: ROLE_LABELS[opJson.operatorClassType as string] ?? opJson.operatorClassType,
     rarity: opJson.operatorRarity as number,
     splash: splash as string | undefined,
-    weaponTypes: Array.isArray(opJson.weaponType) ? opJson.weaponType : [opJson.weaponType],
+    weaponTypes: (opJson.weaponTypes as string[]) ?? (Array.isArray(opJson.weaponType) ? opJson.weaponType : [opJson.weaponType]),
     weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     skills,

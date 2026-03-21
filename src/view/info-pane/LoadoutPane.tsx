@@ -5,14 +5,13 @@ import { fmtN } from '../../utils/timeline';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { getStarredOperators, toggleStarredOperator } from '../../utils/starredOperators';
 import {
-  WEAPONS,
-  ARMORS,
-  GLOVES,
-  KITS,
-  CONSUMABLES,
-  TACTICALS,
-  RegistryEntry,
-} from '../../utils/loadoutRegistry';
+  getWeaponsByType,
+  getGearPiecesByType,
+  getGearSetEffect,
+  getAllConsumableEntries,
+  getAllTacticalEntries,
+} from '../../controller/gameDataController';
+import { GearCategory } from '../../consts/enums';
 import { LoadoutProperties } from '../InformationPane';
 import { StatField } from './SharedFields';
 import {
@@ -249,8 +248,14 @@ function OperatorSelector({ operators, currentOperator, onSelect }: {
 
 // ── Item Selector (weapon/gear/consumable/tactical) ──────────────────────────
 
-function ItemSelector<T>({ entries, selectedName, onSelect, placeholder }: {
-  entries: RegistryEntry<T>[];
+interface SelectorEntry {
+  name: string;
+  icon?: string;
+  rarity: number;
+}
+
+function ItemSelector({ entries, selectedName, onSelect, placeholder }: {
+  entries: readonly SelectorEntry[];
   selectedName: string | null;
   onSelect: (name: string | null) => void;
   placeholder: string;
@@ -413,7 +418,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
     onStatsChange({ ...stats, gear: { ...stats.gear, [ranksKey]: ranks } });
 
   const compatibleWeapons = useMemo(
-    () => WEAPONS.filter((w) => operator.weaponTypes.includes(w.weaponType)),
+    () => operator.weaponTypes.flatMap((wt) => [...getWeaponsByType(wt)]),
     [operator.weaponTypes],
   );
 
@@ -529,8 +534,8 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           {onLoadoutChange && (
             <ItemSelector
               entries={compatibleWeapons}
-              selectedName={loadout.weaponName}
-              onSelect={(name) => setLoadoutField('weaponName', name)}
+              selectedName={loadout.weaponId}
+              onSelect={(name) => setLoadoutField('weaponId', name)}
               placeholder="Weapon"
             />
           )}
@@ -612,19 +617,24 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             </div>
           )}
           {([
-            { entries: ARMORS, loadoutKey: 'armorName' as const, ranksKey: 'armorRanks' as const, label: 'Armor' },
-            { entries: GLOVES, loadoutKey: 'glovesName' as const, ranksKey: 'glovesRanks' as const, label: 'Gloves' },
-            { entries: KITS, loadoutKey: 'kit1Name' as const, ranksKey: 'kit1Ranks' as const, label: 'Kit 1' },
-            { entries: KITS, loadoutKey: 'kit2Name' as const, ranksKey: 'kit2Ranks' as const, label: 'Kit 2' },
-          ] as const).map(({ entries, loadoutKey, ranksKey, label }, i) => {
+            { gearCategory: GearCategory.ARMOR, loadoutKey: 'armorId' as const, ranksKey: 'armorRanks' as const, label: 'Armor' },
+            { gearCategory: GearCategory.GLOVES, loadoutKey: 'glovesId' as const, ranksKey: 'glovesRanks' as const, label: 'Gloves' },
+            { gearCategory: GearCategory.KIT, loadoutKey: 'kit1Id' as const, ranksKey: 'kit1Ranks' as const, label: 'Kit 1' },
+            { gearCategory: GearCategory.KIT, loadoutKey: 'kit2Id' as const, ranksKey: 'kit2Ranks' as const, label: 'Kit 2' },
+          ] as const).map(({ gearCategory, loadoutKey, ranksKey, label }, i) => {
             const piece = gearData?.pieces.find((p) => p.ranksKey === ranksKey);
+            const gearEntries: SelectorEntry[] = getGearPiecesByType(gearCategory).map((gp) => ({
+              name: gp.name,
+              icon: gp.icon,
+              rarity: getGearSetEffect(gp.gearSet)?.rarity ?? 5,
+            }));
             return (
               <React.Fragment key={ranksKey}>
                 {i > 0 && <div style={{ marginTop: 10, borderTop: '1px solid var(--border-dim)', width: '60%', marginLeft: 'auto', marginRight: 'auto' }} />}
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', marginTop: i > 0 ? 4 : 0 }}>{label}</div>
                 {onLoadoutChange && (
                   <ItemSelector
-                    entries={entries as RegistryEntry<unknown>[]}
+                    entries={gearEntries}
                     selectedName={loadout[loadoutKey]}
                     onSelect={(name) => setLoadoutField(loadoutKey, name)}
                     placeholder={label}
@@ -678,9 +688,9 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Consumable</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={CONSUMABLES as RegistryEntry<unknown>[]}
-              selectedName={loadout.consumableName}
-              onSelect={(name) => setLoadoutField('consumableName', name)}
+              entries={getAllConsumableEntries()}
+              selectedName={loadout.consumableId}
+              onSelect={(name) => setLoadoutField('consumableId', name)}
               placeholder="Consumable"
             />
           )}
@@ -691,9 +701,9 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           <span className="edit-section-label">Tactical</span>
           {onLoadoutChange && (
             <ItemSelector
-              entries={TACTICALS as RegistryEntry<unknown>[]}
-              selectedName={loadout.tacticalName}
-              onSelect={(name) => setLoadoutField('tacticalName', name)}
+              entries={getAllTacticalEntries()}
+              selectedName={loadout.tacticalId}
+              onSelect={(name) => setLoadoutField('tacticalId', name)}
               placeholder="Tactical"
             />
           )}

@@ -1,0 +1,66 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PRIMARY_ATTRIBUTE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+                0.11,
+                0.12,
+                0.14
+              ]
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                25,
+                30,
+                35,
+                40,
+                45,
+                50,
+                55,
+                60,
+                70
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Inspiring: Mortise-and-Tenon Analysis",
+    "description": "Main Attribute +{primary_attr_up:0.0%}. Arts Intensity +{phy_spell_up:0}.",
+    "id": "INSPIRING_MORTISE_AND_TENON_ANALYSIS"
+  },
+  "metadata": {
+    "originId": "MONAIHE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

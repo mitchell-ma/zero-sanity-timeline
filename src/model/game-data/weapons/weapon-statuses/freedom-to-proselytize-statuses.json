@@ -1,0 +1,33 @@
+[
+  {
+    "properties": {
+      "id": "FREEDOM_TO_PROSELYTIZE_REDEMPTION_OF_FAITH",
+      "name": "Redemption of Faith",
+      "description": "Heal controlled operator; 15s CD",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "FREEDOM_TO_PROSELYTIZE",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

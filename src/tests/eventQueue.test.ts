@@ -149,7 +149,7 @@ jest.mock('../view/InformationPane', () => ({
 // eslint-disable-next-line import/first
 import { PriorityQueue } from '../controller/timeline/priorityQueue';
 // eslint-disable-next-line import/first
-import { processInflictionEvents } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -257,7 +257,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(600),
       battleSkillEvent(900),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     expect(mfEvents.length).toBe(4);
     expect(mfEvents.every(ev => ev.eventStatus !== EventStatusType.CONSUMED)).toBe(true);
@@ -272,7 +272,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(1200),
       battleSkillEvent(1500),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     // Only 4 stacks — 5th and 6th are blocked by cap
     expect(mfEvents.length).toBe(4);
@@ -287,7 +287,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(900),
       empoweredBattleSkillEvent(1200),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     expect(consumed.length).toBe(4);
@@ -302,7 +302,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       empoweredBattleSkillEvent(1200),
       battleSkillEvent(1800),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     const active = mfEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -318,7 +318,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(600),
       battleSkillEvent(900),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const shEvents = filterByColumn(result, 'scorching-heart-effect');
     expect(shEvents.length).toBeGreaterThanOrEqual(1);
   });
@@ -338,7 +338,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(2400),
       battleSkillEvent(2700),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const shEvents = filterByColumn(result, 'scorching-heart-effect');
     // Should have at least 2 Scorching Heart Effects (one per cycle)
     expect(shEvents.length).toBeGreaterThanOrEqual(2);
@@ -353,7 +353,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(900),
       battleSkillEvent(1200),
     ];
-    const sortedResult = processInflictionEvents(sorted);
+    const sortedResult = processCombatSimulation(sorted);
     const sortedMF = filterByColumn(sortedResult, OPERATOR_COLUMNS.MELTING_FLAME)
       .sort((a, b) => a.startFrame - b.startFrame);
 
@@ -365,7 +365,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
       battleSkillEvent(300),
       battleSkillEvent(1200),
     ];
-    const shuffledResult = processInflictionEvents(shuffled);
+    const shuffledResult = processCombatSimulation(shuffled);
     const shuffledMF = filterByColumn(shuffledResult, OPERATOR_COLUMNS.MELTING_FLAME)
       .sort((a, b) => a.startFrame - b.startFrame);
 
@@ -383,7 +383,7 @@ describe('MF Stacking (Queue Pipeline)', () => {
 describe('Reactions (Queue Pipeline)', () => {
   test('R1: Cross-element infliction overlap triggers reaction', () => {
     const heatBS = battleSkillEvent(0);
-    const result = processInflictionEvents([heatBS]);
+    const result = processCombatSimulation([heatBS]);
     const heatInflictions = filterByColumn(result, INFLICTION_COLUMNS.HEAT);
     expect(heatInflictions.length).toBeGreaterThanOrEqual(0);
   });
@@ -407,7 +407,7 @@ describe('MF Absorption Behavior', () => {
       battleSkillEvent(2400),
       battleSkillEvent(2700),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     const active = mfEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -417,7 +417,7 @@ describe('MF Absorption Behavior', () => {
 
   test('MF events start at the trigger frame of the source skill', () => {
     const events = [battleSkillEvent(0)];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     expect(mfEvents.length).toBeGreaterThan(0);
     expect(mfEvents[0].startFrame).toBeGreaterThanOrEqual(0);
@@ -437,7 +437,7 @@ describe('Infliction Stack Cap (Queue Pipeline)', () => {
   test('at cap, additional triggers do not exceed max stacks', () => {
     // Q2 already validates this — 6 BS → exactly 4 MF
     const events = Array.from({ length: 6 }, (_, i) => battleSkillEvent(i * 300));
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
     expect(mfEvents.length).toBe(4);
@@ -451,7 +451,7 @@ describe('Infliction Stack Cap (Queue Pipeline)', () => {
       battleSkillEvent(900),
       empoweredBattleSkillEvent(1200),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     // Consumed MF stacks should have duration < original (clamped at consume frame)
@@ -472,7 +472,7 @@ describe('Infliction Stack Cap (Queue Pipeline)', () => {
       battleSkillEvent(1800),
       battleSkillEvent(2100),
     ];
-    const result = processInflictionEvents(events);
+    const result = processCombatSimulation(events);
     const mfEvents = filterByColumn(result, OPERATOR_COLUMNS.MELTING_FLAME);
     const consumed = mfEvents.filter(ev => ev.eventStatus === EventStatusType.CONSUMED);
     const active = mfEvents.filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
@@ -507,7 +507,7 @@ describe('Freeform Inflictions', () => {
   test('F1: Two different-element freeform inflictions overlapping in time create a reaction', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400);
-    const result = processInflictionEvents([heat, nature]);
+    const result = processCombatSimulation([heat, nature]);
 
     // Should create a corrosion reaction (heat + nature → corrosion)
     const reactions = filterByColumn(result, REACTION_COLUMNS.CORROSION);
@@ -518,7 +518,7 @@ describe('Freeform Inflictions', () => {
   test('F2: Same-element freeform inflictions do NOT create a reaction', () => {
     const heat1 = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const heat2 = freeformInfliction(INFLICTION_COLUMNS.HEAT, 200, 2400);
-    const result = processInflictionEvents([heat1, heat2]);
+    const result = processCombatSimulation([heat1, heat2]);
 
     // No reaction — same element
     const combustion = filterByColumn(result, REACTION_COLUMNS.COMBUSTION);
@@ -531,7 +531,7 @@ describe('Freeform Inflictions', () => {
   test('F3: Freeform inflictions that do not overlap do NOT create a reaction', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 50); // ends at 150
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400); // starts at 200
-    const result = processInflictionEvents([heat, nature]);
+    const result = processCombatSimulation([heat, nature]);
 
     const reactions = filterByColumn(result, REACTION_COLUMNS.CORROSION);
     expect(reactions.length).toBe(0);
@@ -539,7 +539,7 @@ describe('Freeform Inflictions', () => {
 
   test('F4: Freeform infliction does not duplicate (single stack in output)', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
-    const result = processInflictionEvents([heat]);
+    const result = processCombatSimulation([heat]);
 
     const heats = filterByColumn(result, INFLICTION_COLUMNS.HEAT);
     expect(heats.length).toBe(1);
@@ -549,7 +549,7 @@ describe('Freeform Inflictions', () => {
   test('F5: Cross-element reaction consumes BOTH inflictions', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400);
-    const result = processInflictionEvents([heat, nature]);
+    const result = processCombatSimulation([heat, nature]);
 
     // Reaction exists at the later infliction's frame
     const corrosion = filterByColumn(result, REACTION_COLUMNS.CORROSION);
@@ -572,7 +572,7 @@ describe('Freeform Inflictions', () => {
   test('F6: Freeform infliction interacts with another freeform of different element at same frame', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const electric = freeformInfliction(INFLICTION_COLUMNS.ELECTRIC, 100, 2400);
-    const result = processInflictionEvents([heat, electric]);
+    const result = processCombatSimulation([heat, electric]);
 
     const electrification = filterByColumn(result, REACTION_COLUMNS.ELECTRIFICATION);
     expect(electrification.length).toBe(1);
@@ -584,12 +584,12 @@ describe('Freeform Inflictions', () => {
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400);
 
     // Run 1: no overlap → no reaction
-    const result1 = processInflictionEvents([heat, nature]);
+    const result1 = processCombatSimulation([heat, nature]);
     expect(filterByColumn(result1, REACTION_COLUMNS.CORROSION).length).toBe(0);
 
     // Run 2: "drag" heat to overlap nature → reaction appears
     const heatDragged = { ...heat, startFrame: 200 };
-    const result2 = processInflictionEvents([heatDragged, nature]);
+    const result2 = processCombatSimulation([heatDragged, nature]);
     expect(filterByColumn(result2, REACTION_COLUMNS.CORROSION).length).toBe(1);
   });
 
@@ -598,13 +598,13 @@ describe('Freeform Inflictions', () => {
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400);
 
     // Run 1: overlapping → reaction + both consumed
-    const result1 = processInflictionEvents([heat, nature]);
+    const result1 = processCombatSimulation([heat, nature]);
     expect(filterByColumn(result1, REACTION_COLUMNS.CORROSION).length).toBe(1);
     expect(result1.find(ev => ev.id === heat.id)!.eventStatus).toBe(EventStatusType.CONSUMED);
 
     // Run 2: drag nature far away → no overlap → no reaction, both restored
     const natureDragged = { ...nature, startFrame: 5000 };
-    const result2 = processInflictionEvents([heat, natureDragged]);
+    const result2 = processCombatSimulation([heat, natureDragged]);
     expect(filterByColumn(result2, REACTION_COLUMNS.CORROSION).length).toBe(0);
     // Heat should be active again (not consumed) since raw event was never mutated
     const heatResult = result2.find(ev => ev.id === heat.id)!;
@@ -617,7 +617,7 @@ describe('Freeform Inflictions', () => {
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 200, 2400);
 
     // Run with overlap → reaction consumes both
-    processInflictionEvents([heat, nature]);
+    processCombatSimulation([heat, nature]);
 
     // Original objects must be untouched (undo history integrity)
     expect(eventDuration(heat)).toBe(2400);
@@ -629,7 +629,7 @@ describe('Freeform Inflictions', () => {
   test('F10: Heat + Cryo freeform inflictions create solidification', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const cryo = freeformInfliction(INFLICTION_COLUMNS.CRYO, 200, 2400);
-    const result = processInflictionEvents([heat, cryo]);
+    const result = processCombatSimulation([heat, cryo]);
 
     const solidification = filterByColumn(result, REACTION_COLUMNS.SOLIDIFICATION);
     expect(solidification.length).toBe(1);
@@ -638,7 +638,7 @@ describe('Freeform Inflictions', () => {
   test('F11: Heat + Electric freeform inflictions create electrification', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
     const electric = freeformInfliction(INFLICTION_COLUMNS.ELECTRIC, 200, 2400);
-    const result = processInflictionEvents([heat, electric]);
+    const result = processCombatSimulation([heat, electric]);
 
     const electrification = filterByColumn(result, REACTION_COLUMNS.ELECTRIFICATION);
     expect(electrification.length).toBe(1);
@@ -648,7 +648,7 @@ describe('Freeform Inflictions', () => {
     // Reaction is keyed on the incoming infliction: CRYO → SOLIDIFICATION
     const nature = freeformInfliction(INFLICTION_COLUMNS.NATURE, 100, 2400);
     const cryo = freeformInfliction(INFLICTION_COLUMNS.CRYO, 200, 2400);
-    const result = processInflictionEvents([nature, cryo]);
+    const result = processCombatSimulation([nature, cryo]);
 
     const solidification = filterByColumn(result, REACTION_COLUMNS.SOLIDIFICATION);
     expect(solidification.length).toBe(1);
@@ -656,7 +656,7 @@ describe('Freeform Inflictions', () => {
 
   test('F13: Single freeform infliction produces exactly one event (no duplicate)', () => {
     const heat = freeformInfliction(INFLICTION_COLUMNS.HEAT, 100, 2400);
-    const result = processInflictionEvents([heat]);
+    const result = processCombatSimulation([heat]);
 
     const heats = filterByColumn(result, INFLICTION_COLUMNS.HEAT);
     expect(heats.length).toBe(1);
@@ -689,7 +689,7 @@ describe('Freeform Inflictions', () => {
       forcedReaction: true,
     };
 
-    const result = processInflictionEvents([combustion1, combustion2]);
+    const result = processCombatSimulation([combustion1, combustion2]);
 
     // First combustion should be clamped at frame 60
     const first = result.find(ev => ev.id === 'comb-1');
@@ -727,7 +727,7 @@ describe('Freeform Inflictions', () => {
       forcedReaction: true,
     };
 
-    const result = processInflictionEvents([combustion1, combustion2]);
+    const result = processCombatSimulation([combustion1, combustion2]);
     const first = result.find(ev => ev.id === 'comb-5s-1');
     expect(first).toBeDefined();
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
@@ -751,7 +751,7 @@ describe('Freeform Inflictions', () => {
       forcedReaction: true,
     };
 
-    const result = processInflictionEvents([combustion]);
+    const result = processCombatSimulation([combustion]);
     const ev = result.find(e => e.id === 'comb-short');
     expect(ev).toBeDefined();
 
@@ -786,7 +786,7 @@ describe('Freeform Inflictions', () => {
       sourceSkillName: 'Freeform',
     };
 
-    const result = processInflictionEvents([comb1, comb2]);
+    const result = processCombatSimulation([comb1, comb2]);
 
     // First combustion clamped
     const first = result.find(ev => ev.id === 'int-comb-1');
@@ -840,7 +840,7 @@ describe('Freeform Inflictions', () => {
       isForced: true,
     };
 
-    const result = processInflictionEvents([comb1, comb2]);
+    const result = processCombatSimulation([comb1, comb2]);
 
     const first = result.find(ev => ev.id === 'app-comb-1');
     expect(first).toBeDefined();
@@ -878,7 +878,7 @@ describe('Freeform Inflictions', () => {
       isForced: true,
     };
 
-    const result = processInflictionEvents([combustion]);
+    const result = processCombatSimulation([combustion]);
     const ev = result.find(e => e.id === 'forced-preserve');
     expect(ev).toBeDefined();
 
@@ -902,7 +902,7 @@ describe('Freeform Inflictions', () => {
       sourceSkillName: 'Freeform',
     };
 
-    const result = processInflictionEvents([combustion]);
+    const result = processCombatSimulation([combustion]);
     const ev = result.find(e => e.id === 'seg-comb');
     expect(ev).toBeDefined();
     expect(ev!.segments).toBeDefined();
@@ -926,7 +926,7 @@ describe('Freeform Inflictions', () => {
       sourceSkillName: 'Freeform',
     };
 
-    const result = processInflictionEvents([solidification]);
+    const result = processCombatSimulation([solidification]);
     const ev = result.find(e => e.id === 'seg-solid');
     expect(ev).toBeDefined();
 
@@ -948,7 +948,7 @@ describe('Freeform Inflictions', () => {
       sourceSkillName: 'Freeform',
     };
 
-    const result = processInflictionEvents([combustion]);
+    const result = processCombatSimulation([combustion]);
     const combustions = filterByColumn(result, REACTION_COLUMNS.COMBUSTION);
     expect(combustions.length).toBe(1);
     expect(combustions[0].id).toBe('no-dup-comb');
@@ -980,7 +980,7 @@ describe('Freeform Inflictions', () => {
       isForced: true,
     };
 
-    const result = processInflictionEvents([comb1, comb2]);
+    const result = processCombatSimulation([comb1, comb2]);
     const first = result.find(ev => ev.id === 'merge-1');
     const second = result.find(ev => ev.id === 'merge-2');
     expect(first!.eventStatus).toBe(EventStatusType.REFRESHED);
@@ -1013,7 +1013,7 @@ describe('Freeform Inflictions', () => {
       isForced: true,
     };
 
-    processInflictionEvents([comb1, comb2]);
+    processCombatSimulation([comb1, comb2]);
     // Raw events must be untouched
     expect(eventDuration(comb1)).toBe(600);
     expect(comb1.eventStatus).toBeUndefined();
@@ -1048,12 +1048,12 @@ describe('Freeform Inflictions', () => {
     };
 
     // Run 1: overlapping → first is refreshed
-    const result1 = processInflictionEvents([comb1, comb2]);
+    const result1 = processCombatSimulation([comb1, comb2]);
     expect(result1.find(ev => ev.id === 'drag-undo-1')!.eventStatus).toBe(EventStatusType.REFRESHED);
 
     // Run 2: drag second far away → no overlap → both restored
     const comb2Dragged = { ...comb2, startFrame: 5000 };
-    const result2 = processInflictionEvents([comb1, comb2Dragged]);
+    const result2 = processCombatSimulation([comb1, comb2Dragged]);
     const first = result2.find(ev => ev.id === 'drag-undo-1')!;
     expect(first.eventStatus).toBeUndefined();
     expect(eventDuration(first)).toBe(600);
@@ -1065,7 +1065,7 @@ describe('Freeform Inflictions', () => {
     const heats = Array.from({ length: 5 }, (_, i) =>
       freeformInfliction(INFLICTION_COLUMNS.HEAT, i * 100, 2400)
     );
-    const result = processInflictionEvents(heats);
+    const result = processCombatSimulation(heats);
 
     const activeHeats = result.filter(ev =>
       ev.columnId === INFLICTION_COLUMNS.HEAT && ev.eventStatus !== EventStatusType.CONSUMED
@@ -1119,25 +1119,25 @@ describe('Combo skill infliction behavior', () => {
   }
 
   test('G1: Seethe with heat trigger produces 0 enemy inflictions', () => {
-    const result = processInflictionEvents([seetheCombo(500, INFLICTION_COLUMNS.HEAT)]);
+    const result = processCombatSimulation([seetheCombo(500, INFLICTION_COLUMNS.HEAT)]);
     const enemyInflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
     expect(enemyInflictions.length).toBe(0);
   });
 
   test('G2: Seethe with corrosion trigger produces 0 enemy events', () => {
-    const result = processInflictionEvents([seetheCombo(500, 'corrosion')]);
+    const result = processCombatSimulation([seetheCombo(500, 'corrosion')]);
     const enemyEvents = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
     expect(enemyEvents.length).toBe(0);
   });
 
   test('G3: Seethe without trigger column produces 0 enemy events', () => {
-    const result = processInflictionEvents([seetheCombo(500)]);
+    const result = processCombatSimulation([seetheCombo(500)]);
     const enemyEvents = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
     expect(enemyEvents.length).toBe(0);
   });
 
   test('G4: EMP Test Site with heat trigger produces exactly 1 heat infliction on enemy', () => {
-    const result = processInflictionEvents([empTestSiteCombo(500, INFLICTION_COLUMNS.HEAT)]);
+    const result = processCombatSimulation([empTestSiteCombo(500, INFLICTION_COLUMNS.HEAT)]);
     const heatInflictions = result.filter(ev =>
       ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID
     );
@@ -1147,7 +1147,7 @@ describe('Combo skill infliction behavior', () => {
   });
 
   test('G5: EMP Test Site without trigger column produces 0 enemy inflictions', () => {
-    const result = processInflictionEvents([empTestSiteCombo(500)]);
+    const result = processCombatSimulation([empTestSiteCombo(500)]);
     const enemyInflictions = result.filter(ev => ev.ownerId === ENEMY_OWNER_ID);
     expect(enemyInflictions.length).toBe(0);
   });
@@ -1174,7 +1174,7 @@ describe('Combo skill infliction behavior', () => {
         },
       ],
     };
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const heatInflictions = result.filter(ev =>
       ev.columnId === INFLICTION_COLUMNS.HEAT && ev.ownerId === ENEMY_OWNER_ID
     );
@@ -1224,7 +1224,7 @@ describe('Sibling overlap warnings', () => {
       ],
     };
 
-    const result = processInflictionEvents([basic1, combo, basic2]);
+    const result = processCombatSimulation([basic1, combo, basic2]);
 
     const b1 = result.find(ev => ev.id === 'basic-overlap-1');
     const b2 = result.find(ev => ev.id === 'basic-overlap-2');
@@ -1253,7 +1253,7 @@ describe('Sibling overlap warnings', () => {
             segments: [{ properties: { duration: 100 }, frames: [{ offsetFrame: 50 }] }],
     };
 
-    const result = processInflictionEvents([basic1, basic2]);
+    const result = processCombatSimulation([basic1, basic2]);
     const b1 = result.find(ev => ev.id === 'no-overlap-1');
     const b2 = result.find(ev => ev.id === 'no-overlap-2');
     expect(b1!.warnings ?? []).toEqual([]);
@@ -1279,7 +1279,7 @@ describe('Sibling overlap warnings', () => {
       segments: [{ properties: { duration: 500 } }],
     };
 
-    const result = processInflictionEvents([status1, status2]);
+    const result = processCombatSimulation([status1, status2]);
     const s1 = result.find(ev => ev.id === 'status-a');
     const s2 = result.find(ev => ev.id === 'status-b');
     expect(s1!.warnings ?? []).toEqual([]);
@@ -1306,7 +1306,7 @@ describe('Sibling overlap warnings', () => {
       nonOverlappableRange: 500,
     };
 
-    const result = processInflictionEvents([status1, status2]);
+    const result = processCombatSimulation([status1, status2]);
     const s1 = result.find(ev => ev.id === 'same-name-1');
     const s2 = result.find(ev => ev.id === 'same-name-2');
     expect(s1!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
@@ -1421,7 +1421,7 @@ describe('Combo skill effects — all operators', () => {
   for (const [file, slotId, skillId] of noInflictionCombos) {
     test(`${skillId}: produces 0 enemy inflictions with heat trigger`, () => {
       const combo = buildComboFromJson(file, slotId, 500, INFLICTION_COLUMNS.HEAT);
-      const result = processInflictionEvents([combo]);
+      const result = processCombatSimulation([combo]);
       const enemyCounts = enemyEventsByColumn(result);
       expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
       expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
@@ -1434,7 +1434,7 @@ describe('Combo skill effects — all operators', () => {
 
   test('EMP_TEST_SITE: mirrors exactly 1 heat infliction with heat trigger', () => {
     const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500, INFLICTION_COLUMNS.HEAT);
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
     expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
@@ -1444,7 +1444,7 @@ describe('Combo skill effects — all operators', () => {
 
   test('EMP_TEST_SITE: mirrors exactly 1 electric infliction with electric trigger', () => {
     const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500, INFLICTION_COLUMNS.ELECTRIC);
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
     expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(1);
@@ -1452,7 +1452,7 @@ describe('Combo skill effects — all operators', () => {
 
   test('EMP_TEST_SITE: produces 0 inflictions without trigger column', () => {
     const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500);
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);
     expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
@@ -1464,7 +1464,7 @@ describe('Combo skill effects — all operators', () => {
 
   test('FRAG_GRENADE_BETA: produces exactly 1 heat infliction from explicit APPLY INFLICTION', () => {
     const combo = buildComboFromJson('wulfgard-skills.json', 'slot-wulfgard', 500, INFLICTION_COLUMNS.HEAT);
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
     // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicatesSourceInfliction)
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
@@ -1481,7 +1481,7 @@ describe('Combo skill effects — all operators', () => {
 
   test('STRESS_TESTING: produces exactly 1 cryo infliction from explicit APPLY INFLICTION', () => {
     const combo = buildComboFromJson('xaihi-skills.json', 'slot-xaihi', 500);
-    const result = processInflictionEvents([combo]);
+    const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
     expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(1);
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(0);

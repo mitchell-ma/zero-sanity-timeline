@@ -39,6 +39,8 @@ export enum DeterminerType {
   OTHER = "OTHER",
   /** Entire team including owner. */
   ALL = "ALL",
+  /** All teammates excluding owner. */
+  ALL_OTHER = "ALL_OTHER",
   /** Any operator (wildcard for triggers). */
   ANY = "ANY",
 }

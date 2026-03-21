@@ -1,5 +1,5 @@
 /**
- * EventInterpretor Tests
+ * EventInterpretorController Tests
  *
  * Validates the DSL interpreter with canDo/do verb dispatch:
  * - APPLY INFLICTION, STATUS, REACTION
@@ -42,9 +42,9 @@ import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMN
 // eslint-disable-next-line import/first
 import { DerivedEventController } from '../controller/timeline/derivedEventController';
 // eslint-disable-next-line import/first
-import { EventInterpretor } from '../controller/timeline/eventInterpretor';
+import { EventInterpretorController } from '../controller/timeline/eventInterpretorController';
 // eslint-disable-next-line import/first
-import type { InterpretContext } from '../controller/timeline/eventInterpretor';
+import type { InterpretContext } from '../controller/timeline/eventInterpretorController';
 // eslint-disable-next-line import/first
 import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType, WithValueVerb } from '../consts/semantics';
 // eslint-disable-next-line import/first
@@ -54,10 +54,10 @@ import type { Effect } from '../consts/semantics';
 
 function makeInterpretor() {
   const ctrl = new DerivedEventController();
-  return new EventInterpretor(ctrl, []);
+  return new EventInterpretorController(ctrl, []);
 }
 
-function makeCtx(interp: EventInterpretor, overrides?: Partial<InterpretContext>): InterpretContext {
+function makeCtx(interp: EventInterpretorController, overrides?: Partial<InterpretContext>): InterpretContext {
   return {
     frame: 100,
     sourceOwnerId: 'op-1',
@@ -91,7 +91,7 @@ function makeStatusEvent(columnId: string, ownerId: string, startFrame: number, 
 
 // ── APPLY tests ──────────────────────────────────────────────────────────
 
-describe('EventInterpretor: APPLY', () => {
+describe('EventInterpretorController: APPLY', () => {
   test('APPLY HEAT INFLICTION creates infliction event', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp);
@@ -172,7 +172,7 @@ describe('EventInterpretor: APPLY', () => {
 
 // ── CONSUME tests ────────────────────────────────────────────────────────
 
-describe('EventInterpretor: CONSUME', () => {
+describe('EventInterpretorController: CONSUME', () => {
   test('CONSUME HEAT INFLICTION consumes oldest infliction', () => {
     const interp = makeInterpretor();
     // Pre-populate with heat inflictions
@@ -269,7 +269,7 @@ describe('EventInterpretor: CONSUME', () => {
 
 // ── ALL compound tests ───────────────────────────────────────────────────
 
-describe('EventInterpretor: ALL', () => {
+describe('EventInterpretorController: ALL', () => {
   test('ALL FOR AT_MOST 4: CONSUME + APPLY (absorption pattern)', () => {
     const interp = makeInterpretor();
     // Pre-populate with 2 heat inflictions
@@ -401,7 +401,7 @@ describe('EventInterpretor: ALL', () => {
 
 // ── ANY compound tests ───────────────────────────────────────────────────
 
-describe('EventInterpretor: ANY', () => {
+describe('EventInterpretorController: ANY', () => {
   test('ANY executes first matching predicate', () => {
     const interp = makeInterpretor();
     // No heat inflictions active → first predicate fails
@@ -487,7 +487,7 @@ describe('EventInterpretor: ANY', () => {
 
 // ── Validation tests ─────────────────────────────────────────────────────
 
-describe('EventInterpretor: Validation', () => {
+describe('EventInterpretorController: Validation', () => {
   test('invalid verb+object logs warning and returns false', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp);
@@ -509,7 +509,7 @@ describe('EventInterpretor: Validation', () => {
 
 // ── Resource verb no-op tests ────────────────────────────────────────────
 
-describe('EventInterpretor: Resource verbs', () => {
+describe('EventInterpretorController: Resource verbs', () => {
   test.each([
     VerbType.RECOVER,
     VerbType.DEAL,
@@ -529,7 +529,7 @@ describe('EventInterpretor: Resource verbs', () => {
 
 // ── interpretEffects tests ───────────────────────────────────────────────
 
-describe('EventInterpretor: interpretEffects', () => {
+describe('EventInterpretorController: interpretEffects', () => {
   test('executes multiple effects sequentially', () => {
     const interp = makeInterpretor();
     const ctx = makeCtx(interp);
@@ -559,7 +559,7 @@ describe('EventInterpretor: interpretEffects', () => {
 
 // ── APPLY LIFT PHYSICAL_STATUS tests ──────────────────────────────────────
 
-describe('EventInterpretor: APPLY LIFT PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
   const liftEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
@@ -715,7 +715,7 @@ describe('EventInterpretor: APPLY LIFT PHYSICAL_STATUS', () => {
 
 // ── APPLY KNOCK_DOWN PHYSICAL_STATUS tests ────────────────────────────────
 
-describe('EventInterpretor: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
   const knockDownEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
@@ -861,7 +861,7 @@ describe('EventInterpretor: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
 
 // ── APPLY CRUSH PHYSICAL_STATUS tests ─────────────────────────────────────
 
-describe('EventInterpretor: APPLY CRUSH PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY CRUSH PHYSICAL_STATUS', () => {
   const crushEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
@@ -1029,7 +1029,7 @@ describe('EventInterpretor: APPLY CRUSH PHYSICAL_STATUS', () => {
 
 // ── APPLY BREACH PHYSICAL_STATUS tests ────────────────────────────────────
 
-describe('EventInterpretor: APPLY BREACH PHYSICAL_STATUS', () => {
+describe('EventInterpretorController: APPLY BREACH PHYSICAL_STATUS', () => {
   const breachEffect: Effect = {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,

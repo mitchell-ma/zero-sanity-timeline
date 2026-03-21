@@ -1,0 +1,65 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "dmg_up",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.16,
+                0.192,
+                0.224,
+                0.256,
+                0.288,
+                0.32,
+                0.352,
+                0.384,
+                0.448
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "LIFTED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "ASPIRANT_IMPOSING_PEAK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Twilight: Imposing Peak",
+    "description": "Ultimate DMG Dealt +{dmg_up:0.0%}. After the wielder applies Lifted, during the next ultimate cast within {duration:0}s, the wielder gains Physical DMG Dealt +{phy_dmg_up:0.0%}. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.5s.",
+    "id": "TWILIGHT_IMPOSING_PEAK"
+  },
+  "metadata": {
+    "originId": "ASPIRANT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

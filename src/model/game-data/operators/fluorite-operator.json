@@ -4,7 +4,7 @@
   "operatorRarity": 4,
   "operatorClassType": "CASTER",
   "elementType": "NATURE",
-  "weaponType": "HANDCANNON",
+  "weaponTypes": ["HANDCANNON"],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [

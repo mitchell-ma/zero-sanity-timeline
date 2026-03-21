@@ -1,0 +1,16 @@
+[
+  {
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "AIC_HEAVY",
+      "name": "AIC Heavy",
+      "rarity": 2
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  }
+]

@@ -1,0 +1,66 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "PHYSICAL_DAMAGE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.15,
+                0.18,
+                0.21,
+                0.24,
+                0.27,
+                0.3,
+                0.33,
+                0.36,
+                0.42
+              ]
+            }
+          }
+        },
+        {
+          "verb": "APPLY",
+          "object": "dmg_up",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.35,
+                0.42,
+                0.49,
+                0.56,
+                0.63,
+                0.7,
+                0.77,
+                0.84,
+                0.98
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Twilight: Azure Clouds",
+    "description": "Battle skills and ultimates gain Physical DMG Dealt +{phy_dmg_up:0.0%}. Against Staggered enemies, battle skills and ultimates also gain DMG Dealt +{dmg_up:0.0%}.",
+    "id": "TWILIGHT_AZURE_CLOUDS"
+  },
+  "metadata": {
+    "originId": "RAPID_ASCENT",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

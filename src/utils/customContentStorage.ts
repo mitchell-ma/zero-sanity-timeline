@@ -10,7 +10,7 @@ import type { CustomWeaponEffect } from '../model/custom/customWeaponEffectTypes
 import type { CustomGearEffect } from '../model/custom/customGearEffectTypes';
 import type { CustomOperatorStatus } from '../model/custom/customOperatorStatusTypes';
 import type { CustomOperatorTalent } from '../model/custom/customOperatorTalentTypes';
-import { WEAPON_DATA } from '../model/weapons/weaponData';
+import { getWeaponIdByName } from '../controller/gameDataController';
 import { GearCategory } from '../consts/enums';
 
 const CUSTOM_WEAPONS_KEY = 'zst-custom-weapons';
@@ -127,7 +127,7 @@ export function validateCustomWeapon(
   }
 
   // Name must be unique across all weapons (built-in + custom)
-  if (weapon.name in WEAPON_DATA && !existingIds.has(weapon.id)) {
+  if (getWeaponIdByName(weapon.name) && !existingIds.has(weapon.id)) {
     errors.push({ field: 'name', message: `Weapon name "${weapon.name}" is already in use` });
   }
 

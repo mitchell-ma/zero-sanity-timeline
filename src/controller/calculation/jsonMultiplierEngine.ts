@@ -83,9 +83,9 @@ function getCacheKey(operatorId: string, category: string): string {
 
 // ── Build multiplier data from JSON ──────────────────────────────────────────
 
-/** Map old multiplier key names to their camelCase equivalents in the DEAL effect's with block. */
+/** Map multiplier key names to their equivalents in the DEAL effect's with block. */
 const MULTIPLIER_KEY_MAP: Record<string, string> = {
-  DAMAGE_MULTIPLIER: 'value',
+  DAMAGE_MULTIPLIER: 'DAMAGE_MULTIPLIER',
   DAMAGE_MULTIPLIER_INCREMENT: 'damageMultiplierIncrement',
 };
 
@@ -223,7 +223,7 @@ function getPotentialMultiplier(
     for (const eff of pot.effects) {
       if (eff.potentialEffectType !== 'SKILL_PARAMETER') continue;
       const mod = eff.skillParameterModifier;
-      if (!mod || mod.parameterKey !== 'DAMAGE_MULTIPLIER') continue;
+      if (!mod || mod.parameterKey !== 'DAMAGE_MULTIPLIER_MODIFIER') continue;
       const modSkill = mod.skillType;
       if (modSkill === skillName) {
         switch (mod.parameterModifyType) {

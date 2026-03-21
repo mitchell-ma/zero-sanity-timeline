@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.03,
+                0.036,
+                0.042,
+                0.048,
+                0.054,
+                0.06,
+                0.066,
+                0.072,
+                0.084
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "APPLY",
+          "object": "REACTION"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: Road Home for All Life",
+    "description": "Critical Rate +{crit_up:0.0%}. When the wielder applies an Arts Reaction, the wielder gains ATK +{atk_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately. Effect only triggers once every 0.1s.",
+    "id": "INFLICTION_ROAD_HOME_FOR_ALL_LIFE"
+  },
+  "metadata": {
+    "originId": "OPUS_THE_LIVING",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

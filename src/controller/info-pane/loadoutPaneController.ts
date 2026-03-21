@@ -1,12 +1,14 @@
-import { StatType, WeaponSkillType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
+import { StatType, StatOwnerType, STAT_ATTRIBUTION } from '../../consts/enums';
 import { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { LoadoutProperties } from '../../view/InformationPane';
-import { WEAPONS, ARMORS, GLOVES, KITS, CONSUMABLES, TACTICALS } from '../../utils/loadoutRegistry';
-import { Gear } from '../../model/gears/gear';
 import { DataDrivenOperator } from '../../model/operators/dataDrivenOperator';
 import { getOperatorConfig } from '../operators/operatorRegistry';
-import { interpolateAttack } from '../../model/weapons/weapon';
-import { aggregateLoadoutStats, weaponSkillStat, AggregatedStats } from '../calculation/loadoutAggregator';
+import {
+  getWeapon, getGearPiece, getConsumableEntry, getTacticalEntry,
+  getGenericSkillStats, getNamedSkillPassiveStats,
+  getGenericWeaponSkill, getNamedWeaponSkill,
+} from '../gameDataController';
+import { aggregateLoadoutStats, AggregatedStats } from '../calculation/loadoutAggregator';
 import { getWeaponEffectDefs, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
 import { fmtN } from '../../utils/timeline';
 import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
@@ -85,76 +87,80 @@ export function resolveWeaponBreakdown(
   loadout: OperatorLoadoutState,
   stats: LoadoutProperties,
 ): WeaponBreakdown | null {
-  const weaponEntry = loadout.weaponName !== null
-    ? WEAPONS.find((w) => w.name === loadout.weaponName) ?? null
-    : null;
-  if (!weaponEntry) return null;
+  if (!loadout.weaponId) return null;
+  const weaponPiece = getWeapon(loadout.weaponId);
+  if (!weaponPiece) return null;
 
-  const wpn = weaponEntry.create();
   const opConfig = getOperatorConfig(operatorId);
   const operatorModel = opConfig ? new DataDrivenOperator(opConfig, stats.operator.level) : null;
   const mainAttr = operatorModel?.mainAttributeType ?? StatType.STRENGTH;
 
-  const allSkills = [wpn.weaponSkillOne, wpn.weaponSkillTwo, wpn.weaponSkillThree];
   const levelValues = [stats.weapon.skill1Level, stats.weapon.skill2Level, stats.weapon.skill3Level];
-
   const skills: WeaponBreakdown['skills'] = [];
   const statContributions: WeaponStatContribution[] = [];
   const passiveStats: WeaponPassiveStat[] = [];
 
-  for (let i = 0; i < allSkills.length; i++) {
-    const sk = allSkills[i];
-    if (!sk) continue;
+  for (let i = 0; i < weaponPiece.skills.length; i++) {
+    const skillId = weaponPiece.skills[i];
+    const level = levelValues[i] ?? 1;
 
-    const skillName = sk.weaponSkillType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-    skills.push({ name: skillName, maxLevel: 9, index: i });
+    // Resolve display name from skill controller
+    const genericSkill = getGenericWeaponSkill(skillId);
+    const namedSkill = !genericSkill ? getNamedWeaponSkill(weaponPiece.id) : undefined;
+    const displayName = namedSkill?.name ?? genericSkill?.name
+      ?? skillId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    skills.push({ name: displayName, maxLevel: 9, index: i });
 
-    sk.level = levelValues[i];
-    const stat = weaponSkillStat(sk.weaponSkillType as WeaponSkillType, mainAttr);
-    if (stat != null) {
-      const value = sk.getValue();
-      if (value !== 0) {
-        statContributions.push({ skillIndex: i, stat, value });
+    // Generic skill stats
+    const genericResults = getGenericSkillStats(skillId, level);
+    if (genericResults.length > 0) {
+      for (const { stat, value } of genericResults) {
+        const resolvedStat = stat === 'MAIN_ATTRIBUTE' ? mainAttr : stat as StatType;
+        if (value !== 0) statContributions.push({ skillIndex: i, stat: resolvedStat, value });
       }
-    } else {
-      const passive = sk.getPassiveStats();
-      for (const [key, value] of Object.entries(passive)) {
-        if ((value as number) !== 0) {
-          passiveStats.push({ skillIndex: i, stat: key as StatType, value: value as number });
-        }
-      }
+      continue;
+    }
+
+    // Named skill passive stats
+    const namedResults = getNamedSkillPassiveStats(weaponPiece.id, level);
+    for (const { stat, value } of namedResults) {
+      if (value !== 0) passiveStats.push({ skillIndex: i, stat: stat as StatType, value });
     }
   }
 
-  const baseAtk = interpolateAttack(wpn.baseAttack, stats.weapon.level);
+  const baseAtk = weaponPiece.getBaseAttack(stats.weapon.level);
 
   // Named skill effects (from DSL JSON)
   const effects: WeaponEffectDisplay[] = [];
-  const dslDefs = getWeaponEffectDefs(weaponEntry.name);
+  const dslDefs = getWeaponEffectDefs(weaponPiece.name);
   if (dslDefs.length > 0) {
-    const sk3 = wpn.weaponSkillThree;
-
     for (let ei = 0; ei < dslDefs.length; ei++) {
       const def = dslDefs[ei];
       const maxStacks = def.statusLevel?.limit?.value ?? 1;
       const durationSeconds = resolveDurationSeconds(def);
 
-      // Secondary attribute bonus
+      // Secondary attribute bonus — check if the named skill has conditional stats
       let secondaryAttrBonus: WeaponEffectDisplay['secondaryAttrBonus'] = null;
-      if (ei === 0 && sk3 && 'getElementDmgBonus' in sk3 && operatorModel) {
-        const secBonus = sk3.getValue();
-        if (secBonus > 0) {
-          secondaryAttrBonus = {
-            label: operatorModel.secondaryAttributeType as string,
-            value: secBonus,
-          };
+      if (ei === 0 && operatorModel) {
+        const namedSkill = getNamedWeaponSkill(weaponPiece.id);
+        if (namedSkill) {
+          // Check for conditional clause effects (non-passive) that grant element damage bonuses
+          const conditionalEffects = namedSkill.clause
+            .filter(c => c.conditions?.length > 0)
+            .flatMap(c => c.effects);
+          for (const ef of conditionalEffects) {
+            const wv = ef.with?.multiplier ?? ef.with?.value;
+            if (wv?.values && (ef.object.endsWith('_DAMAGE_BONUS') || ef.object === 'BASIC_ATTACK_DAMAGE_BONUS')) {
+              // Skip — these are shown as triggered effect buffs, not secondary attr
+            }
+          }
         }
       }
 
       // Buff lines — extracted from clause effects (APPLY verb with stat object)
       const stackSuffix = maxStacks > 1 ? `/stack (max ${maxStacks})` : '';
-      interface ClauseEffect { verb: string; object: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
-      const clauseEffects: ClauseEffect[] = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as unknown as ClauseEffect[])
+      interface EffectClause { verb: string; object: string; with?: { value?: { verb?: string; object?: string; value?: number; valueMin?: number; valueMax?: number } } }
+      const clauseEffects: EffectClause[] = (def.clause ?? []).flatMap((c) => (c.effects ?? []) as unknown as EffectClause[])
         .filter((e) => e.verb === 'APPLY' && e.with?.value);
       const buffs: WeaponEffectBuff[] = clauseEffects.map((e) => {
         const stat = e.object;
@@ -166,11 +172,7 @@ export function resolveWeaponBreakdown(
             ? `${fmtN(wv.valueMin * 100)}–${fmtN(wv.valueMax * 100)}%`
             : `${wv.valueMin}–${wv.valueMax}`)
           : (isPercent ? `${fmtN((wv.value ?? 0) * 100)}%` : String(wv.value ?? 0));
-        return {
-          statLabel: stat as string,
-          valueStr,
-          perStack,
-        };
+        return { statLabel: stat as string, valueStr, perStack };
       });
 
       // Meta
@@ -181,19 +183,11 @@ export function resolveWeaponBreakdown(
       ].filter(Boolean);
       const metaStr = [def.note, ...metaParts].filter(Boolean).join(' · ');
 
-      effects.push({
-        label: def.name ?? def.description ?? '',
-        description: def.description,
-        durationSeconds,
-        secondaryAttrBonus,
-        buffs,
-        stackSuffix,
-        metaStr,
-      });
+      effects.push({ label: def.name ?? def.description ?? '', description: def.description, durationSeconds, secondaryAttrBonus, buffs, stackSuffix, metaStr });
     }
   }
 
-  return { name: weaponEntry.name, baseAtk, skills, statContributions, passiveStats, effects };
+  return { name: weaponPiece.name, baseAtk, skills, statContributions, passiveStats, effects };
 }
 
 // ── Gear Breakdown ──────────────────────────────────────────────────────────
@@ -218,32 +212,27 @@ export function resolveGearBreakdown(
   loadout: OperatorLoadoutState,
   stats: LoadoutProperties,
 ): GearBreakdown | null {
-  const armor  = loadout.armorName  !== null ? ARMORS.find((a) => a.name === loadout.armorName) ?? null : null;
-  const gloves = loadout.glovesName !== null ? GLOVES.find((g) => g.name === loadout.glovesName) ?? null : null;
-  const kit1   = loadout.kit1Name   !== null ? KITS.find((k) => k.name === loadout.kit1Name) ?? null : null;
-  const kit2   = loadout.kit2Name   !== null ? KITS.find((k) => k.name === loadout.kit2Name) ?? null : null;
-
-  if (!armor && !gloves && !kit1 && !kit2) return null;
-
-  const agg = aggregateLoadoutStats(operatorId, loadout, stats);
-
-  const entries = [
-    { entry: armor,  ranksKey: 'armorRanks' as const },
-    { entry: gloves, ranksKey: 'glovesRanks' as const },
-    { entry: kit1,   ranksKey: 'kit1Ranks' as const },
-    { entry: kit2,   ranksKey: 'kit2Ranks' as const },
+  const gearSlots: { id: string | null; ranksKey: 'armorRanks' | 'glovesRanks' | 'kit1Ranks' | 'kit2Ranks' }[] = [
+    { id: loadout.armorId,  ranksKey: 'armorRanks' },
+    { id: loadout.glovesId, ranksKey: 'glovesRanks' },
+    { id: loadout.kit1Id,   ranksKey: 'kit1Ranks' },
+    { id: loadout.kit2Id,   ranksKey: 'kit2Ranks' },
   ];
 
   const pieces: GearPieceData[] = [];
-  for (const { entry, ranksKey } of entries) {
-    if (!entry) continue;
-    const gear: Gear = entry.create();
-    gear.rank = 4;
-    const statKeys = gear.getStatKeys();
+  for (const { id, ranksKey } of gearSlots) {
+    if (!id) continue;
+    const piece = getGearPiece(id);
+    if (!piece) continue;
+    const statKeys = piece.statKeys as StatType[];
     const ranks = stats.gear[ranksKey] ?? {};
-    const resolvedStats = gear.getStatsPerLine(ranks);
-    pieces.push({ name: entry.name, ranksKey, statKeys, ranks, resolvedStats });
+    const resolvedStats = piece.getStatsPerLine(ranks);
+    pieces.push({ name: piece.name, ranksKey, statKeys, ranks, resolvedStats });
   }
+
+  if (pieces.length === 0) return null;
+
+  const agg = aggregateLoadoutStats(operatorId, loadout, stats);
 
   return {
     setActive: !!agg?.gearSetActive,
@@ -309,12 +298,8 @@ export function resolveTactical(
   loadout: OperatorLoadoutState,
   stats: LoadoutProperties,
 ): { foodName: string | null; tactical: TacticalData | null } {
-  const food = loadout.consumableName !== null
-    ? CONSUMABLES.find((c) => c.name === loadout.consumableName) ?? null
-    : null;
-  const tac = loadout.tacticalName !== null
-    ? TACTICALS.find((t) => t.name === loadout.tacticalName) ?? null
-    : null;
+  const food = loadout.consumableId ? getConsumableEntry(loadout.consumableId) : undefined;
+  const tac = loadout.tacticalId ? getTacticalEntry(loadout.tacticalId) : undefined;
 
   let tactical: TacticalData | null = null;
   if (tac) {

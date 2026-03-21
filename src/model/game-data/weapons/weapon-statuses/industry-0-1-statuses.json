@@ -1,0 +1,60 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.12,
+                  0.144,
+                  0.168,
+                  0.192,
+                  0.216,
+                  0.24,
+                  0.264,
+                  0.288,
+                  0.336
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "INDUSTRY_0_1_EMERGENCY_BOOST",
+      "name": "Emergency Boost",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          20
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "INDUSTRY_0_1",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

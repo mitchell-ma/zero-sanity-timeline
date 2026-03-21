@@ -4,7 +4,7 @@
   "operatorRarity": 5,
   "operatorClassType": "SUPPORTER",
   "elementType": "CRYO",
-  "weaponType": "ARTS_UNIT",
+  "weaponTypes": ["ARTS_UNIT"],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [

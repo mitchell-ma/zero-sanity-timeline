@@ -4,7 +4,7 @@
   "operatorRarity": 6,
   "operatorClassType": "STRIKER",
   "elementType": "CRYO",
-  "weaponType": "GREAT_SWORD",
+  "weaponTypes": ["GREAT_SWORD"],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -87,7 +87,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "WINTERS_DEVOURER",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.15,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -96,7 +96,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "VIGIL_SERVICES",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.15,
             "parameterModifyType": "MULTIPLICATIVE"
           }
@@ -143,7 +143,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "ESOTERIC_LEGACY",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.2,
             "parameterModifyType": "MULTIPLICATIVE"
           }

@@ -70,7 +70,7 @@ export interface QueueFrame {
     perStack: number;
   };
   /** Engine trigger context for ENGINE_TRIGGER entries. */
-  engineTrigger?: import('./statusDerivationEngine').EngineTriggerEntry;
+  engineTrigger?: import('./statusTriggerCollector').EngineTriggerEntry;
   /** Deferred combo trigger resolution context. */
   comboResolve?: {
     comboEvent: import('../../consts/viewTypes').TimelineEvent;
@@ -96,3 +96,9 @@ export function getConsumeStatusConfig(): Record<string, { columnId: string; tar
 
 /** Skill column IDs that consume team statuses (Link) when cast. */
 export const CONSUMING_COLUMNS = new Set(['battle', 'combo', 'ultimate']);
+
+/** Slot-level trigger wiring for the pipeline. */
+export interface SlotTriggerWiring {
+  slotId: string;
+  operatorId: string;
+}

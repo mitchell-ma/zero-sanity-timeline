@@ -4,7 +4,7 @@
   "operatorRarity": 6,
   "operatorClassType": "DEFENDER",
   "elementType": "HEAT",
-  "weaponType": "GREAT_SWORD",
+  "weaponTypes": ["GREAT_SWORD"],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -155,13 +155,6 @@
             "parameterKey": "extraattack",
             "value": 0.1,
             "parameterModifyType": "UNIQUE_MULTIPLIER"
-          }
-        },
-        {
-          "potentialEffectType": "BUFF_ATTACHMENT",
-          "buffAttachment": {
-            "parameters": [],
-            "objectId": "EMBER_POTENTIAL5_THE_STEEL_OATH"
           }
         }
       ]
@@ -1819,11 +1812,11 @@
   ],
   "talents": {
     "one": {
-      "name": "Inflamed for the Assault",
+      "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
       "maxLevel": 2
     },
     "two": {
-      "name": "Pay the Ferric Price",
+      "id": "PAY_THE_FERRIC_PRICE_TALENT",
       "maxLevel": 2
     },
     "attributeIncrease": {

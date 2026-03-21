@@ -38,8 +38,7 @@ import { deleteCustomGearEffect } from '../../controller/custom/customGearEffect
 import { deleteCustomOperatorStatus } from '../../controller/custom/customOperatorStatusController';
 import { deleteCustomOperatorTalent } from '../../controller/custom/customOperatorTalentController';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
-import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
-import { WEAPON_DATA } from '../../model/weapons/weaponData';
+import { getGearPiecesBySet, getWeapon, getWeaponIdByName } from '../../controller/gameDataController';
 import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDurationSeconds, resolveTriggerInteractions } from '../../model/game-data/weaponGearEffectLoader';
 import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
 import type { GearPieceData } from '../../model/game-data/gearSetDataLoader';
@@ -1136,23 +1135,23 @@ function BuiltinOperatorView({ id }: { id: string }) {
 }
 
 function BuiltinWeaponView({ id }: { id: string }) {
-  const weapon = WEAPONS.find((w) => w.name === id);
-  const config = WEAPON_DATA[id];
+  const weaponId = getWeaponIdByName(id);
+  const weapon = weaponId ? getWeapon(weaponId) : undefined;
   const dslDefs = getWeaponEffectDefs(id);
-  if (!weapon || !config) return null;
+  if (!weapon) return null;
 
   return (
     <>
       <div className="cv-field-grid">
         <Field label="Rarity" value={starStr(weapon.rarity)} />
-        <Field label="Type" value={config.type.replace(/_/g, ' ')} />
-        <Field label="Base ATK (Lv1)" value={String(config.baseAtk.lv1)} />
-        <Field label="Base ATK (Lv90)" value={String(config.baseAtk.lv90)} />
+        <Field label="Type" value={weapon.type.replace(/_/g, ' ')} />
+        <Field label="Base ATK (Lv1)" value={String(weapon.getBaseAttack(1))} />
+        <Field label="Base ATK (Lv90)" value={String(weapon.getBaseAttack(90))} />
       </div>
       <GSection title="Skills">
-        <Field label="Skill 1" value={config.skill1.replace(/_/g, ' ')} />
-        <Field label="Skill 2" value={config.skill2.replace(/_/g, ' ')} />
-        {config.skill3 && <Field label="Skill 3" value={config.skill3.replace(/_/g, ' ')} />}
+        {weapon.skills.map((skill, i) => (
+          <Field key={i} label={`Skill ${i + 1}`} value={skill.replace(/_/g, ' ')} />
+        ))}
       </GSection>
       {dslDefs.length > 0 && (
         <GSection title="Triggered Effects">
@@ -1264,7 +1263,7 @@ const GEAR_TAB_ABBREV: Record<string, string> = {
 
 function BuiltinGearSetView({ id }: { id: string }) {
   const gearSetData = getGearSetData(id);
-  const registryPieces = GEARS.filter((g) => g.gearSetType === id);
+  const registryPieces = getGearPiecesBySet(id);
   const passiveEntry = getGearSetEffects(id as GearSetType);
   const dslDefs = getGearEffectDefs(id);
   const [activeTab, setActiveTab] = useState<string>(GearCategory.ARMOR);

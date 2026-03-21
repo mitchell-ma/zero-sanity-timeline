@@ -1,0 +1,43 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "dmg_up",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.2,
+                0.24,
+                0.28,
+                0.32,
+                0.36,
+                0.4,
+                0.44,
+                0.48,
+                0.56
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Efficacy: Weight of Mountain",
+    "description": "Against Vulnerable enemies, the wielder gains DMG Dealt +{dmg_up:0.0%}. When the wielder's battle skill applies Vulnerability, the wielder gains All Attributes +{all_attr_up:0.0%} for {duration:0}s. When the wielder's battle skill applies Physical Susceptibility, the wielder gains All Attributes +{all_attr_up2:0.0%} for {duration:0}s. The two effects apply separately and do not stack with themselves.",
+    "id": "EFFICACY_WEIGHT_OF_MOUNTAIN"
+  },
+  "metadata": {
+    "originId": "MOUNTAIN_BEARER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

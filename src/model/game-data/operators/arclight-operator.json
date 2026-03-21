@@ -4,7 +4,7 @@
   "operatorRarity": 5,
   "operatorClassType": "VANGUARD",
   "elementType": "ELECTRIC",
-  "weaponType": "SWORD",
+  "weaponTypes": ["SWORD"],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
 import { SKILL_COLUMNS } from '../model/channels';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CombatLoadout } from '../controller/combat-loadout';
+import { CombatLoadoutController } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
 import { FPS } from '../utils/timeline';
 import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
@@ -22,7 +22,7 @@ export function useResourceGraphs(
   operators: (Operator | null)[],
   slotIds: string[],
   events: TimelineEvent[],
-  combatLoadout: CombatLoadout,
+  combatLoadout: CombatLoadoutController,
   resourceConfigs?: Record<string, ResourceConfig>,
   tacticalNames?: Record<string, string | undefined>,
   tacticalMaxUsesOverrides?: Record<string, number | undefined>,

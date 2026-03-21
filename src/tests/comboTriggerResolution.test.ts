@@ -17,13 +17,13 @@
  *    - Returns existing value for non-combo events
  *    - Returns existing value when processedEvents is null
  *
- * C. Pipeline integration (processInflictionEvents)
+ * C. Pipeline integration (processCombatSimulation)
  *    - Source event move causes combo's derived inflictions to update element
  *    - Combo outside window produces no derived inflictions
  */
 import { TimelineEvent, eventDuration } from '../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../consts/enums';
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID } from '../model/channels';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 
 function mockGetTriggerFromJson(id: string) {
   const map: Record<string, { file: string; skillId: string }> = {
@@ -63,11 +63,13 @@ jest.mock('../view/InformationPane', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { resolveComboTriggerColumns, COMBO_WINDOW_COLUMN_ID } from '../controller/timeline/processComboSkill';
+import { resolveComboTriggerColumns } from '../controller/timeline/processComboSkill';
 // eslint-disable-next-line import/first
 import { ComboSkillEventController } from '../controller/timeline/comboSkillEventController';
 // eslint-disable-next-line import/first
-import { processInflictionEvents, SlotTriggerWiring } from '../controller/timeline/processInteractions';
+import { processCombatSimulation } from '../controller/timeline/eventQueueController';
+// eslint-disable-next-line import/first
+import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -272,7 +274,7 @@ describe('B. ComboSkillEventController.resolveComboTriggerColumnId', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Group C: Pipeline integration (processInflictionEvents)
+// Group C: Pipeline integration (processCombatSimulation)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C. Pipeline integration', () => {
@@ -283,7 +285,7 @@ describe('C. Pipeline integration', () => {
     // Antal combo within the window, but with stale trigger column
     const antalCombo = makeAntalCombo(250, 'electricInfliction');
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, laevBattle, antalCombo],
       undefined, undefined, standardWirings(),
     );
@@ -315,7 +317,7 @@ describe('C. Pipeline integration', () => {
       sourceSkillName: 'FLAMING_CINDERS',
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, heatInfliction],
       undefined, undefined, standardWirings(),
     );
@@ -335,7 +337,7 @@ describe('C. Pipeline integration', () => {
     // Combo still at frame 250 with stale trigger column
     const antalCombo = makeAntalCombo(250, 'heatInfliction');
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, laevBattle, antalCombo],
       undefined, undefined, standardWirings(),
     );
@@ -357,7 +359,7 @@ describe('C. Pipeline integration', () => {
     const focus = makeFocusEvent(0, 50);
     const laevBattle = makeLaevBattle(100);
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, laevBattle],
       undefined, undefined, standardWirings(),
     );
@@ -409,7 +411,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       sourceSkillName: 'BURST_OF_PASSION',
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, heatInfliction],
       undefined, undefined, akekuriAntalWirings(),
     );
@@ -446,7 +448,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       sourceSkillName: 'BURST_OF_PASSION',
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, heatInfliction],
       undefined, undefined, akekuriAntalWirings(),
     );
@@ -470,7 +472,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       sourceSkillName: 'BURST_OF_PASSION',
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [heatInfliction],
       undefined, undefined, akekuriAntalWirings(),
     );
@@ -502,7 +504,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       sourceOwnerId: SLOT_AKEKURI,
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, heatInfliction],
       undefined, undefined, akekuriAntalWirings(),
     );
@@ -537,7 +539,7 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
       sourceSkillName: 'SPECIFIED_RESEARCH_SUBJECT',
     });
 
-    const processed = processInflictionEvents(
+    const processed = processCombatSimulation(
       [focus, electricInfliction],
       undefined, undefined, akekuriAntalWirings(),
     );

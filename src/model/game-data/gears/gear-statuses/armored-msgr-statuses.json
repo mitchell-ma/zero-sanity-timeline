@@ -1,0 +1,16 @@
+[
+  {
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "ARMORED_MSGR",
+      "name": "Armored MSGR",
+      "rarity": 4
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  }
+]

@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "HP_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "ULTIMATE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "STANZA_OF_MEMORIALS_LUSTROUS_PYRE",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Twilight: Lustrous Pyre",
+    "description": "Max HP +{hp_up:0.0%}. When the wielder casts an ultimate, operators whose elements differ from the wielder gain ATK +{atk_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "TWILIGHT_LUSTROUS_PYRE"
+  },
+  "metadata": {
+    "originId": "STANZA_OF_MEMORIALS",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

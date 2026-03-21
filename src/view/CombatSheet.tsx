@@ -15,7 +15,13 @@ import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CritMode, CombatSkillsType } from '../consts/enums';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
-import { OPERATORS, WEAPONS, GEARS, CONSUMABLES, TACTICALS } from '../utils/loadoutRegistry';
+import { OPERATORS } from '../utils/loadoutRegistry';
+import {
+  getWeapon,
+  getGearPiece,
+  getConsumableEntry,
+  getTacticalEntry,
+} from '../controller/gameDataController';
 import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { SkillType } from '../consts/viewTypes';
 
@@ -558,13 +564,13 @@ export default function CombatSheet({
               if (!slot.operator) return null;
               const opEntry = OPERATORS.find((o) => o.name === slot.operator!.name);
               const loadout = loadouts?.[slot.slotId];
-              const weaponEntry = loadout?.weaponName ? WEAPONS.find((w) => w.name === loadout.weaponName) : null;
-              const armorEntry = loadout?.armorName ? GEARS.find((g) => g.name === loadout.armorName) : null;
-              const glovesEntry = loadout?.glovesName ? GEARS.find((g) => g.name === loadout.glovesName) : null;
-              const kit1Entry = loadout?.kit1Name ? GEARS.find((g) => g.name === loadout.kit1Name) : null;
-              const kit2Entry = loadout?.kit2Name ? GEARS.find((g) => g.name === loadout.kit2Name) : null;
-              const consumableEntry = loadout?.consumableName ? CONSUMABLES.find((c) => c.name === loadout.consumableName) : null;
-              const tacticalEntry = loadout?.tacticalName ? TACTICALS.find((t) => t.name === loadout.tacticalName) : null;
+              const weaponEntry = loadout?.weaponId ? getWeapon(loadout.weaponId) : null;
+              const armorEntry = loadout?.armorId ? getGearPiece(loadout.armorId) : null;
+              const glovesEntry = loadout?.glovesId ? getGearPiece(loadout.glovesId) : null;
+              const kit1Entry = loadout?.kit1Id ? getGearPiece(loadout.kit1Id) : null;
+              const kit2Entry = loadout?.kit2Id ? getGearPiece(loadout.kit2Id) : null;
+              const consumableEntry = loadout?.consumableId ? getConsumableEntry(loadout.consumableId) : null;
+              const tacticalEntry = loadout?.tacticalId ? getTacticalEntry(loadout.tacticalId) : null;
               const coreItems = [weaponEntry, armorEntry, glovesEntry, kit1Entry, kit2Entry];
               const items = [
                 ...coreItems,

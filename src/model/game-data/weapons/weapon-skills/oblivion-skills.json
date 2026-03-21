@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "CRITICAL_DAMAGE",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+                0.11,
+                0.12,
+                0.14
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "PERFORM",
+          "object": "ULTIMATE"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OBLIVION_HUMILIATION",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Twilight: Humiliation",
+    "description": "Critical Rate +{crit_up:0.0%}. When the wielder casts an ultimate, the wielder gains Arts DMG Dealt +{spell_dmg_up:0.0%} for {duration:0}s. When the wielder casts a combo skill, the wielder gains Arts DMG Dealt +{spell_dmg_up2:0.0%} for {duration2:0}s. The two effects apply separately and do not stack with themselves.",
+    "id": "TWILIGHT_HUMILIATION"
+  },
+  "metadata": {
+    "originId": "OBLIVION",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import { TimelineEvent } from '../../consts/viewTypes';
-import { COMBO_WINDOW_COLUMN_ID, comboWindowEndFrame } from './processInteractions';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { comboWindowEndFrame } from './processComboSkill';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 
 /**
  * Controller for combo skill event validation.

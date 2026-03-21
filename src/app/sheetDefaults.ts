@@ -35,13 +35,13 @@ export const INITIAL_VISIBLE: VisibleSkills = Object.fromEntries(
 );
 
 const DEV_LAEVATAIN_LOADOUT: OperatorLoadoutState = {
-  weaponName:     'Forgeborn Scathe',
-  armorName:      'Tide Fall Light Armor',
-  glovesName:     'Hot Work Gauntlets',
-  kit1Name:       'Redeemer Seal',
-  kit2Name:       'Redeemer Seal',
-  consumableName: null,
-  tacticalName:   null,
+  weaponId:     'FORGEBORN_SCATHE',
+  armorId:      'TIDE_FALL_LIGHT_ARMOR',
+  glovesId:     'HOT_WORK_GAUNTLETS',
+  kit1Id:       'REDEEMER_SEAL',
+  kit2Id:       'REDEEMER_SEAL',
+  consumableId: null,
+  tacticalId:   null,
 };
 
 export const INITIAL_LOADOUTS: Record<string, OperatorLoadoutState> = Object.fromEntries(

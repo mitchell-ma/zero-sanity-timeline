@@ -1,0 +1,120 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PHYSICAL_DAMAGE_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.05,
+                  0.06,
+                  0.07,
+                  0.08,
+                  0.09,
+                  0.1,
+                  0.11,
+                  0.12,
+                  0.14
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "NEVER_REST_REINCARNATION",
+      "name": "Reincarnation",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          30
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            5
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "NEVER_REST",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "OTHER",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.025,
+                  0.03,
+                  0.035,
+                  0.04,
+                  0.045,
+                  0.05,
+                  0.055,
+                  0.06,
+                  0.07
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "NEVER_REST_REINCARNATION_TEAM",
+      "name": "Reincarnation (Team)",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          30
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            5
+          ]
+        },
+        "interactionType": "NONE"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "OTHER"
+    },
+    "metadata": {
+      "originId": "NEVER_REST",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

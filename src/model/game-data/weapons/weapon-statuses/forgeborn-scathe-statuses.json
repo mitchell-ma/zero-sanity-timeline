@@ -1,0 +1,62 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "BASIC_ATTACK_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.75,
+                  0.9,
+                  1.05,
+                  1.2,
+                  1.35,
+                  1.5,
+                  1.65,
+                  1.8,
+                  2.1
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FORGEBORN_SCATHE_BLAZING_WAIL",
+      "name": "Blazing Wail",
+      "toDeterminer": "THIS",
+      "to": "OPERATOR",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          20
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "FORGEBORN_SCATHE",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

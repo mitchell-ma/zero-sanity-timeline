@@ -1,0 +1,131 @@
+{
+  "skills": [
+    "WILL_BOOST_L",
+    "NATURE_DAMAGE_BOOST_L",
+    "SUPPRESSION_TILLITE_ETCHINGS"
+  ],
+  "properties": {
+    "name": "Opus Etch Figure",
+    "id": "OPUS_ETCH_FIGURE",
+    "type": "ARTS_UNIT",
+    "rarity": 6
+  },
+  "metadata": {
+    "dataSources": [
+      "WARFARIN"
+    ],
+    "originId": "game",
+    "icon": "weapons/opus_etch_figure_icon.png"
+  },
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "BASE_ATTACK",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "value": {
+              "verb": "BASED_ON",
+              "object": "WEAPON_LEVEL",
+              "values": [
+                49,
+                54,
+                59,
+                64,
+                69,
+                74,
+                78,
+                83,
+                88,
+                93,
+                98,
+                103,
+                108,
+                113,
+                118,
+                123,
+                127,
+                132,
+                137,
+                142,
+                147,
+                152,
+                157,
+                162,
+                167,
+                172,
+                176,
+                181,
+                186,
+                191,
+                196,
+                201,
+                206,
+                211,
+                216,
+                221,
+                225,
+                230,
+                235,
+                240,
+                245,
+                250,
+                255,
+                260,
+                265,
+                270,
+                274,
+                279,
+                284,
+                289,
+                294,
+                299,
+                304,
+                309,
+                314,
+                319,
+                323,
+                328,
+                333,
+                338,
+                343,
+                348,
+                353,
+                358,
+                363,
+                368,
+                372,
+                377,
+                382,
+                387,
+                392,
+                397,
+                402,
+                407,
+                412,
+                417,
+                421,
+                426,
+                431,
+                436,
+                441,
+                446,
+                451,
+                456,
+                461,
+                466,
+                470,
+                475,
+                480,
+                485
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -3,31 +3,18 @@
  */
 import { GearSetType } from '../../consts/enums';
 import { GEAR_SET_EFFECTS } from '../../consts/gearSetEffects';
-import { GEARS } from '../../utils/loadoutRegistry';
-import type { GearRegistryEntry } from '../../utils/loadoutRegistry';
-import { DataDrivenGear } from '../../model/gears/dataDrivenGear';
 import type { CustomGearSet } from '../../model/custom/customGearTypes';
 import { registerCustomGearEffectDefs, deregisterCustomGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
+import { registerCustomGearPiece as registerPieceInController, deregisterCustomGearPiece as deregisterPieceFromController } from '../../model/game-data/gearPiecesController';
 
 // ── Registration ────────────────────────────────────────────────────────────
 
 export function registerCustomGearSet(gearSet: CustomGearSet): void {
   const customGearSetType = `CUSTOM_${gearSet.id}` as unknown as GearSetType;
 
-  // Register each piece into GEARS registry
+  // Register each piece in gearPiecesController
   for (const piece of gearSet.pieces) {
-    const entry: GearRegistryEntry = {
-      name: piece.name,
-      icon: gearSet.icon,
-      rarity: gearSet.rarity,
-      gearCategory: piece.gearCategory,
-      gearSetType: customGearSetType,
-      create: () => new DataDrivenGear(
-        { name: piece.name, gearCategory: piece.gearCategory as string, defense: piece.defense, allLevels: piece.statsByRank as Record<string, Record<string, number>> },
-        customGearSetType as string,
-      ),
-    };
-    GEARS.push(entry);
+    registerPieceInController({ properties: { id: `${gearSet.id}_${piece.gearCategory}`, name: piece.name, type: piece.gearCategory as string, gearSet: customGearSetType as string }, clause: [] }, gearSet.icon);
   }
 
   // Register passive stats for loadout aggregation
@@ -50,10 +37,9 @@ export function registerCustomGearSet(gearSet: CustomGearSet): void {
 export function deregisterCustomGearSet(gearSet: CustomGearSet): void {
   const customGearSetType = `CUSTOM_${gearSet.id}`;
 
-  // Remove pieces from GEARS
+  // Remove pieces from gearPiecesController
   for (const piece of gearSet.pieces) {
-    const idx = GEARS.findIndex((g) => g.name === piece.name && (g.gearSetType as string) === customGearSetType);
-    if (idx >= 0) GEARS.splice(idx, 1);
+    deregisterPieceFromController(`${gearSet.id}_${piece.gearCategory}`);
   }
 
   // Remove set effects
@@ -79,7 +65,7 @@ function buildDslDefsFromCustomGearSet(gearSet: CustomGearSet, gearSetType: stri
 
     defs.push({
       name: statusName,
-      type: 'GEAR_EFFECT',
+      type: 'GEAR_SET_STATUS',
       originId,
       target,
       ...(targetDeterminer ? { targetDeterminer } : {}),

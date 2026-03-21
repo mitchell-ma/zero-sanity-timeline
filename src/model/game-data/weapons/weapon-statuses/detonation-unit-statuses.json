@@ -1,0 +1,120 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "WILL_BONUS",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.1,
+                  0.12,
+                  0.14,
+                  0.16,
+                  0.18,
+                  0.2,
+                  0.22,
+                  0.24,
+                  0.28
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "DETONATION_UNIT_IMPOSING_CHAMPION",
+      "name": "Imposing Champion",
+      "description": "Secondary attribute bonus",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "DETONATION_UNIT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ARTS_DAMAGE_BONUS",
+            "to": "ENEMY",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "SKILL_LEVEL",
+                "values": [
+                  0.09,
+                  0.108,
+                  0.126,
+                  0.144,
+                  0.162,
+                  0.18,
+                  0.198,
+                  0.216,
+                  0.252
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "DETONATION_UNIT_IMPOSING_CHAMPION_ENEMY",
+      "name": "Imposing Champion (Enemy)",
+      "description": "Enemy Arts DMG Taken (Fragility)",
+      "duration": {
+        "unit": "SECOND",
+        "verb": "IS",
+        "values": [
+          15
+        ]
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "to": "ENEMY"
+    },
+    "metadata": {
+      "originId": "DETONATION_UNIT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

@@ -1,5 +1,11 @@
 # Devlog
 
+## 2026-03-20
+- **Status effects for more operators** — Akekuri, Chen Qianyu, Da Pan, Ember, Estella, Gilberta, Lifeng, and Snowshine now have tracked status effects on the timeline (buffs, debuffs, and triggered effects)
+- **Improved status trigger system** — status effects from skills, weapons, and gear now trigger more reliably and consistently across all operators
+- **Loadout lookup improvements** — weapon, gear, consumable, and tactical selectors now use faster ID-based lookups, fixing edge cases where items with similar names could conflict
+- Updated skill data for all 24 operators with more accurate frame timings and status references
+
 ## 2026-03-19
 - **Crit simulation mode** — damage calculator now supports randomized crit rolls per hit, in addition to always/never/expected crit modes, for more realistic rotation analysis
 - **Cumulative damage tracking** — skills with ramping or stacking damage (like Smouldering Fire's DoT) now correctly accumulate across hits

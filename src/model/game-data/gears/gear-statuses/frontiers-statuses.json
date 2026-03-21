@@ -1,0 +1,85 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "RECOVER",
+            "object": "SKILL_POINT"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "FRONTIERS"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_EFFECT",
+      "id": "FRONTIERS",
+      "name": "Frontiers",
+      "rarity": 5,
+      "piecesRequired": 3,
+      "description": "3-piece set effect: Wearer's Combo Skill Cooldown Reduction +{1-comboskill_cooldown:0%}. After the wearer's skill recovers SP, the team gains DMG +{dmg_up:0%} for {duration}s. This effect cannot stack."
+    },
+    "metadata": {
+      "originId": "game",
+      "dataSources": [
+        "WARFARIN"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "SKILL_DAMAGE_BONUS",
+            "toDeterminer": "OTHER",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.16
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "type": "GEAR_SET_STATUS",
+      "id": "FRONTIERS",
+      "name": "Frontiers",
+      "duration": {
+        "unit": "SECOND",
+        "values": [
+          15
+        ],
+        "verb": "IS"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      },
+      "description": "Team DMG +16%"
+    },
+    "metadata": {
+      "originId": "FRONTIERS"
+    }
+  }
+]

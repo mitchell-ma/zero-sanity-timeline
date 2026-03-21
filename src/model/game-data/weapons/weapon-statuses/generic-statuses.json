@@ -1,0 +1,122 @@
+{
+  "SUPPRESSION_EMERGENCY_BOOST": [
+    {
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "SKILL_LEVEL",
+                  "values": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "id": "EMERGENCY_BOOST",
+        "name": "Emergency Boost",
+        "duration": {
+          "unit": "SECOND",
+          "verb": "IS",
+          "values": [
+            20
+          ]
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "values": [
+              1
+            ]
+          },
+          "interactionType": "RESET"
+        },
+        "to": "OPERATOR",
+        "toDeterminer": "THIS"
+      },
+      "metadata": {
+        "originId": "game",
+        "dataSources": [
+          "ENDFIELD_WIKI"
+        ]
+      }
+    }
+  ],
+  "PURSUIT_UNENDING_CYCLE": [
+    {
+      "clause": [
+        {
+          "conditions": [],
+          "effects": [
+            {
+              "verb": "APPLY",
+              "object": "ATTACK_BONUS",
+              "with": {
+                "value": {
+                  "verb": "BASED_ON",
+                  "object": "SKILL_LEVEL",
+                  "values": [
+                    0.12,
+                    0.144,
+                    0.168,
+                    0.192,
+                    0.216,
+                    0.24,
+                    0.264,
+                    0.288,
+                    0.336
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "id": "UNENDING_CYCLE",
+        "name": "Unending Cycle",
+        "duration": {
+          "unit": "SECOND",
+          "verb": "IS",
+          "values": [
+            20
+          ]
+        },
+        "statusLevel": {
+          "limit": {
+            "verb": "IS",
+            "values": [
+              1
+            ]
+          },
+          "interactionType": "RESET"
+        },
+        "to": "OPERATOR",
+        "toDeterminer": "THIS"
+      },
+      "metadata": {
+        "originId": "game",
+        "dataSources": [
+          "ENDFIELD_WIKI"
+        ]
+      }
+    }
+  ]
+}

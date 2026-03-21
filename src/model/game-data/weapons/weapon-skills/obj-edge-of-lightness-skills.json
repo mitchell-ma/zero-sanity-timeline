@@ -1,0 +1,64 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "SECONDARY_ATTRIBUTE_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+                0.11,
+                0.12,
+                0.14
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "RECOVER",
+          "object": "SKILL_POINT"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Flow: Unbridled Edge",
+    "description": "Secondary Attribute +{second_attr_up:0.0%}. After the wielder's skill recovers SP, the entire team gains Heat DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Max stacks for effects of the same name: {max_stack:0}. Duration of each stack is counted separately.",
+    "id": "FLOW_UNBRIDLED_EDGE"
+  },
+  "metadata": {
+    "originId": "OBJ_EDGE_OF_LIGHTNESS",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

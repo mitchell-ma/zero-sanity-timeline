@@ -1,0 +1,63 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ARTS_INTENSITY",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                10,
+                12,
+                14,
+                16,
+                18,
+                20,
+                22,
+                24,
+                28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subject": "ENEMY",
+          "verb": "IS",
+          "object": "ELECTRIFIED"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "WILD_WANDERER_WILDERNESS_CLUSTER",
+          "toDeterminer": "OTHER",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Infliction: Wilderness Cluster",
+    "description": "Arts Intensity +{phy_spell_up:0}. When the wielder applies Electrification, the team gains Physical DMG Dealt and Electric DMG Dealt +{dmg_up:0.0%} for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "INFLICTION_WILDERNESS_CLUSTER"
+  },
+  "metadata": {
+    "originId": "WILD_WANDERER",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

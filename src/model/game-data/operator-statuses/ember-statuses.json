@@ -1,0 +1,278 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CAST",
+            "object": "FORWARD_MARCH"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "INFLAMED_FOR_THE_ASSAULT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CAST",
+            "object": "FRONTLINE_SUPPORT"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "INFLAMED_FOR_THE_ASSAULT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+      "name": "Inflamed for the Assault (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "ember",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PROTECTION",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.3,
+                  0.5
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "INFLAMED_FOR_THE_ASSAULT",
+      "name": "Inflamed for the Assault",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "DEAL",
+            "object": "DAMAGE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "PAY_THE_FERRIC_PRICE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "PAY_THE_FERRIC_PRICE_TALENT",
+      "name": "Pay the Ferric Price (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "ember",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "BASED_ON",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  0.06,
+                  0.09
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "PAY_THE_FERRIC_PRICE",
+      "name": "Pay the Ferric Price",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          7
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            3
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "PAY_THE_FERRIC_PRICE_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "properties": {
+      "id": "THE_STEEL_OATH",
+      "name": "The Steel Oath",
+      "type": "SKILL_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "ALL",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          10
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "ember",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.1
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "THE_STEEL_OATH_EMPOWERED",
+      "name": "The Steel Oath (Empowered)",
+      "type": "POTENTIAL_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          10
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "ember",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

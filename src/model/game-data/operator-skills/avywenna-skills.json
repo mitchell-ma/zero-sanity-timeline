@@ -46,9 +46,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -65,10 +65,6 @@
                           0.34,
                           0.37
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -113,9 +109,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -132,10 +128,6 @@
                           0.45,
                           0.48
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -180,9 +172,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -199,10 +191,6 @@
                           0.43,
                           0.46
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -247,9 +235,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -266,10 +254,6 @@
                           0.21,
                           0.23
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -298,9 +282,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -361,7 +345,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 19
                       }
@@ -382,9 +366,9 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -401,14 +385,6 @@
                           1.04,
                           1.13
                         ]
-                      },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 17
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 19
                       }
                     }
                   }
@@ -469,26 +445,8 @@
                 "verb": "DEAL",
                 "adjective": "ELECTRIC",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.67,
-                      0.73,
-                      0.8,
-                      0.87,
-                      0.93,
-                      1,
-                      1.07,
-                      1.13,
-                      1.2,
-                      1.28,
-                      1.38,
-                      1.5
-                    ]
-                  },
                   "atkScaleLance": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
@@ -525,10 +483,6 @@
                       4.32
                     ]
                   },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  },
                   "poiseLance": {
                     "verb": "IS",
                     "value": 5
@@ -536,6 +490,24 @@
                   "poiseLanceUlt": {
                     "verb": "IS",
                     "value": 10
+                  },
+                  "DAMAGE_MULTIPLIER": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.67,
+                      0.73,
+                      0.8,
+                      0.87,
+                      0.93,
+                      1,
+                      1.07,
+                      1.13,
+                      1.2,
+                      1.28,
+                      1.38,
+                      1.5
+                    ]
                   }
                 }
               }
@@ -552,33 +524,9 @@
             "verb": "CONSUME",
             "object": "SKILL_POINT",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 100
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "ALL",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
               }
             }
           }
@@ -614,16 +562,6 @@
       {
         "conditions": [],
         "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "COOLDOWN",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 13
-              }
-            }
-          },
           {
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
@@ -699,9 +637,17 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "usp": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "lanceDuration": {
+                        "verb": "IS",
+                        "value": 30
+                      },
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -718,18 +664,6 @@
                           3.5,
                           3.8
                         ]
-                      },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 10
-                      },
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
-                      "lanceDuration": {
-                        "verb": "IS",
-                        "value": 30
                       }
                     }
                   }
@@ -738,6 +672,21 @@
             ]
           }
         ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "COOLDOWN"
+        },
+        "properties": {
+          "name": "Cooldown",
+          "duration": {
+            "value": 13,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME"
+        },
+        "frames": []
       }
     ],
     "metadata": {
@@ -815,26 +764,8 @@
                     "verb": "DEAL",
                     "adjective": "ELECTRIC",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          4.22,
-                          4.64,
-                          5.07,
-                          5.49,
-                          5.91,
-                          6.33,
-                          6.75,
-                          7.18,
-                          7.6,
-                          8.13,
-                          8.76,
-                          9.5
-                        ]
-                      },
                       "stagger": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
@@ -892,6 +823,24 @@
                       "lanceDurationUlt": {
                         "verb": "IS",
                         "value": 30
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4.22,
+                          4.64,
+                          5.07,
+                          5.49,
+                          5.91,
+                          6.33,
+                          6.75,
+                          7.18,
+                          7.6,
+                          8.13,
+                          8.76,
+                          9.5
+                        ]
                       }
                     }
                   }
@@ -963,9 +912,9 @@
                 "verb": "DEAL",
                 "adjective": "PHYSICAL",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -1028,9 +977,9 @@
                 "verb": "DEAL",
                 "adjective": "PHYSICAL",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [

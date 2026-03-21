@@ -46,9 +46,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -65,10 +65,6 @@
                           0.48,
                           0.52
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -113,9 +109,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -132,10 +128,6 @@
                           0.29,
                           0.32
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -164,9 +156,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -227,9 +219,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -246,10 +238,6 @@
                           0.34,
                           0.37
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -278,9 +266,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -341,9 +329,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -360,10 +348,6 @@
                           0.13,
                           0.14
                         ]
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 0
                       }
                     }
                   }
@@ -392,9 +376,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -439,9 +423,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -486,9 +470,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -533,9 +517,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -580,9 +564,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -643,7 +627,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 20
                       }
@@ -664,9 +648,9 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
+                      "DAMAGE_MULTIPLIER": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
                         "value": [
@@ -683,14 +667,6 @@
                           0.89,
                           0.97
                         ]
-                      },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 18
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 20
                       }
                     }
                   }
@@ -751,30 +727,8 @@
                 "verb": "DEAL",
                 "adjective": "CRYO",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.86,
-                      0.94,
-                      1.03,
-                      1.11,
-                      1.2,
-                      1.28,
-                      1.37,
-                      1.45,
-                      1.54,
-                      1.65,
-                      1.77,
-                      1.92
-                    ]
-                  },
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 5
-                  },
                   "atb1": {
                     "verb": "IS",
                     "value": 5
@@ -832,6 +786,24 @@
                       35,
                       35
                     ]
+                  },
+                  "DAMAGE_MULTIPLIER": {
+                    "verb": "BASED_ON",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.86,
+                      0.94,
+                      1.03,
+                      1.11,
+                      1.2,
+                      1.28,
+                      1.37,
+                      1.45,
+                      1.54,
+                      1.65,
+                      1.77,
+                      1.92
+                    ]
                   }
                 }
               }
@@ -871,9 +843,9 @@
                 "verb": "DEAL",
                 "adjective": "CRYO",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -906,33 +878,9 @@
             "verb": "CONSUME",
             "object": "SKILL_POINT",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 100
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
-              }
-            }
-          },
-          {
-            "verb": "RECOVER",
-            "object": "ULTIMATE_ENERGY",
-            "toDeterminer": "ALL",
-            "toObject": "OPERATOR",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 6.5
               }
             }
           }
@@ -969,16 +917,6 @@
       {
         "conditions": [],
         "effects": [
-          {
-            "verb": "CONSUME",
-            "object": "COOLDOWN",
-            "with": {
-              "cardinality": {
-                "verb": "IS",
-                "value": 18
-              }
-            }
-          },
           {
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
@@ -1043,7 +981,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 5
                       }
@@ -1064,26 +1002,8 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.42,
-                          0.46,
-                          0.5,
-                          0.55,
-                          0.59,
-                          0.63,
-                          0.67,
-                          0.71,
-                          0.76,
-                          0.81,
-                          0.87,
-                          0.95
-                        ]
-                      },
                       "damageMultiplierIncrement": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
@@ -1169,6 +1089,24 @@
                       "poise4": {
                         "verb": "IS",
                         "value": 9
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
+                        ]
                       }
                     }
                   }
@@ -1197,7 +1135,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 7
                       }
@@ -1218,26 +1156,8 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.42,
-                          0.46,
-                          0.5,
-                          0.55,
-                          0.59,
-                          0.63,
-                          0.67,
-                          0.71,
-                          0.76,
-                          0.81,
-                          0.87,
-                          0.95
-                        ]
-                      },
                       "damageMultiplierIncrement": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
@@ -1290,6 +1210,24 @@
                           2.54,
                           2.74,
                           2.97
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
                         ]
                       }
                     }
@@ -1319,7 +1257,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 23
                       }
@@ -1340,26 +1278,8 @@
                     "verb": "DEAL",
                     "adjective": "CRYO",
                     "object": "DAMAGE",
-                    "to": "TARGET",
+                    "to": "ENEMY",
                     "with": {
-                      "value": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.42,
-                          0.46,
-                          0.5,
-                          0.55,
-                          0.59,
-                          0.63,
-                          0.67,
-                          0.71,
-                          0.76,
-                          0.81,
-                          0.87,
-                          0.95
-                        ]
-                      },
                       "damageMultiplierIncrement": {
                         "verb": "BASED_ON",
                         "object": "SKILL_LEVEL",
@@ -1413,6 +1333,24 @@
                           2.74,
                           2.97
                         ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "BASED_ON",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.42,
+                          0.46,
+                          0.5,
+                          0.55,
+                          0.59,
+                          0.63,
+                          0.67,
+                          0.71,
+                          0.76,
+                          0.81,
+                          0.87,
+                          0.95
+                        ]
                       }
                     }
                   }
@@ -1421,6 +1359,21 @@
             ]
           }
         ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT",
+          "segmentType": "COOLDOWN"
+        },
+        "properties": {
+          "name": "Cooldown",
+          "duration": {
+            "value": 18,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME"
+        },
+        "frames": []
       }
     ],
     "metadata": {
@@ -1530,7 +1483,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 7.5
                       }
@@ -1561,7 +1514,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 7.5
                       }
@@ -1592,7 +1545,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 7.5
                       }
@@ -1623,7 +1576,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 7.5
                       }
@@ -1654,7 +1607,7 @@
                     "verb": "RECOVER",
                     "object": "SKILL_POINT",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 30
                       }
@@ -1713,9 +1666,9 @@
                 "verb": "DEAL",
                 "adjective": "PHYSICAL",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [
@@ -1778,9 +1731,9 @@
                 "verb": "DEAL",
                 "adjective": "PHYSICAL",
                 "object": "DAMAGE",
-                "to": "TARGET",
+                "to": "ENEMY",
                 "with": {
-                  "value": {
+                  "DAMAGE_MULTIPLIER": {
                     "verb": "BASED_ON",
                     "object": "SKILL_LEVEL",
                     "value": [

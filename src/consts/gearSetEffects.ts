@@ -2,7 +2,7 @@
  * Gear set passive stats and metadata registry.
  *
  * Passive (always-on) stats live here. Triggered (conditional) effects have
- * been migrated to DSL JSON files in game-data/gear-effects/.
+ * been migrated to DSL JSON files in game-data/gears/gear-effects/.
  *
  * Used by loadoutAggregator for passive stat aggregation.
  */

@@ -73,13 +73,13 @@ interface EventCompact {
 // ── Equipment key mapping ───────────────────────────────────────────────────
 
 const EQUIP_KEYS: [string, keyof OperatorLoadoutState][] = [
-  ['w', 'weaponName'],
-  ['a', 'armorName'],
-  ['g', 'glovesName'],
-  ['k1', 'kit1Name'],
-  ['k2', 'kit2Name'],
-  ['c', 'consumableName'],
-  ['t', 'tacticalName'],
+  ['w', 'weaponId'],
+  ['a', 'armorId'],
+  ['g', 'glovesId'],
+  ['k1', 'kit1Id'],
+  ['k2', 'kit2Id'],
+  ['c', 'consumableId'],
+  ['t', 'tacticalId'],
 ];
 
 const SLOT_IDS = ['slot-0', 'slot-1', 'slot-2', 'slot-3'];

@@ -4,7 +4,7 @@
   "operatorRarity": 6,
   "operatorClassType": "CASTER",
   "elementType": "CRYO",
-  "weaponType": "HANDCANNON",
+  "weaponTypes": ["HANDCANNON"],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "STRENGTH",
   "potentials": [
@@ -42,7 +42,7 @@
           "potentialEffectType": "SKILL_PARAMETER",
           "skillParameterModifier": {
             "skillType": "COMBO_SKILL",
-            "parameterKey": "DAMAGE_MULTIPLIER",
+            "parameterKey": "DAMAGE_MULTIPLIER_MODIFIER",
             "value": 1.2,
             "parameterModifyType": "MULTIPLICATIVE"
           }

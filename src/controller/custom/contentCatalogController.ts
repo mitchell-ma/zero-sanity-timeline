@@ -3,7 +3,7 @@
  */
 import { ContentCategory, ContentBrowserItem } from '../../consts/contentBrowserTypes';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
-import { WEAPONS, GEARS } from '../../utils/loadoutRegistry';
+import { getAllWeapons, getAllGearPieces, getGearSetEffect } from '../gameDataController';
 import { getWeaponEffectDefs, getGearEffectDefs, getAllWeaponEffectNames, getAllGearEffectTypes, getGearEffectLabel } from '../../model/game-data/weaponGearEffectLoader';
 import { getGearSetData } from '../../model/game-data/gearSetDataLoader';
 import { getGearSetEffects } from '../../consts/gearSetEffects';
@@ -109,13 +109,13 @@ export function getAllContentItems(): ContentBrowserItem[] {
   }
 
   // ── Weapons ─────────────────────────────────────────────────────────────
-  for (const w of WEAPONS) {
+  for (const w of getAllWeapons()) {
     items.push({
       id: w.name,
       name: w.name,
       category: ContentCategory.WEAPONS,
       source: 'builtin',
-      meta: `${starStr(w.rarity)} ${w.weaponType.replace(/_/g, ' ')}`,
+      meta: `${starStr(w.rarity)} ${w.type.replace(/_/g, ' ')}`,
     });
   }
   for (const w of getCustomWeapons()) {
@@ -128,20 +128,22 @@ export function getAllContentItems(): ContentBrowserItem[] {
     });
   }
 
-  // ── Gear Sets (deduplicated by gearSetType) ─────────────────────────────
+  // ── Gear Sets (deduplicated by gearSet) ─────────────────────────────────
   const seenSets = new Set<string>();
-  for (const g of GEARS) {
-    const key = g.gearSetType;
+  for (const g of getAllGearPieces()) {
+    const key = g.gearSet;
     if (key === 'NONE' || seenSets.has(key)) continue;
     seenSets.add(key);
-    const pieceCount = GEARS.filter((x) => x.gearSetType === key).length;
+    const pieceCount = getAllGearPieces().filter((x) => x.gearSet === key).length;
     const setData = getGearSetData(key);
+    const setEffect = getGearSetEffect(key);
+    const rarity = setEffect?.rarity ?? 5;
     items.push({
       id: key,
       name: setData?.name ?? g.name.replace(/ (Heavy Armor|Light Armor|Exoskeleton|Gauntlets|Gloves|Poncho|Knife Kit|Radar|Tool Kit|Arm Kit|Combat Kit|Field Kit|Stealth Kit).*$/, ''),
       category: ContentCategory.GEAR_SETS,
       source: 'builtin',
-      meta: `${starStr(g.rarity)} \u00B7 ${pieceCount} pcs`,
+      meta: `${starStr(rarity)} \u00B7 ${pieceCount} pcs`,
     });
   }
   for (const gs of getCustomGearSets()) {

@@ -1,0 +1,65 @@
+{
+  "clause": [
+    {
+      "conditions": [],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "ATTACK_BONUS",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR",
+          "with": {
+            "multiplier": {
+              "verb": "BASED_ON",
+              "object": "SKILL_LEVEL",
+              "values": [
+                0.1,
+                0.12,
+                0.14,
+                0.16,
+                0.18,
+                0.2,
+                0.22,
+                0.24,
+                0.28
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "onTriggerClause": [
+    {
+      "conditions": [
+        {
+          "subjectDeterminer": "THIS",
+          "subject": "OPERATOR",
+          "verb": "CONSUME",
+          "object": "STATUS",
+          "objectId": "VULNERABILITY"
+        }
+      ],
+      "effects": [
+        {
+          "verb": "APPLY",
+          "object": "STATUS",
+          "objectId": "EMINENT_REPUTE_DISCIPLINARIAN",
+          "toDeterminer": "THIS",
+          "to": "OPERATOR"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "name": "Brutality: Disciplinarian",
+    "description": "ATK +{atk_up:0.0%}. After the wielder consumes Vulnerability stack(s), the wielder gains ATK +[{atk_up_add:0.0%} + {atk_up_mult:0.0%}×Stacks Consumed] while other operators in the team gain half of this buff for {duration:0}s. Effects of the same name cannot stack.",
+    "id": "BRUTALITY_DISCIPLINARIAN"
+  },
+  "metadata": {
+    "originId": "EMINENT_REPUTE",
+    "dataSources": [
+      "ENDFIELD_WIKI"
+    ]
+  }
+}

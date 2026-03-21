@@ -16,24 +16,18 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CombatSkillsType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
+import { EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
-import { REACTION_DURATION, buildReactionSegment, buildCorrosionSegments } from './processInfliction';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
-import { resolveComboTriggerColumns } from './processComboSkill';
-import type { SlotTriggerWiring } from './processComboSkill';
-import type { TriggerAssociation } from '../configController';
-
-// ── Potential-effect constants ───────────────────────────────────────────────
-
-/** Map of ultimate skill names → combo cooldown reset at potential threshold. */
-const ULTIMATE_RESETS_COMBO: Record<string, number> = {
-  [CombatSkillsType.WOLVEN_FURY]: 5, // Wulfgard P5: Natural Predator
-};
+import type { SlotTriggerWiring } from './eventQueueTypes';
+import { findClauseTriggerMatches } from './triggerMatch';
+import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
+import type { TriggerAssociation } from '../gameDataController';
 
 /** Source metadata for event mutations. */
 interface EventSource {
@@ -52,9 +46,11 @@ export class DerivedEventController {
   readonly output: TimelineEvent[] = [];
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
+  private slotWirings: SlotTriggerWiring[] = [];
 
-  constructor(baseEvents?: TimelineEvent[], triggerAssociations?: TriggerAssociation[]) {
+  constructor(baseEvents?: TimelineEvent[], triggerAssociations?: TriggerAssociation[], slotWirings?: SlotTriggerWiring[]) {
     this.triggerAssociations = triggerAssociations ?? [];
+    this.slotWirings = slotWirings ?? [];
     if (baseEvents) {
       this.registeredEvents = baseEvents;
       for (const ev of baseEvents) {
@@ -70,10 +66,16 @@ export class DerivedEventController {
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
-   * Register events with inline combo chaining and time-stop discovery.
-   * Call `extendAll()` after registration to extend durations.
+   * Register events with inline combo chaining, time-stop discovery, and
+   * time-stop extension. Two internal passes per batch:
+   *   1. Combo chaining + reaction segments + stop discovery + push
+   *   2. Extend newly-registered events by the now-complete stops list
+   * No separate extendAll() call needed.
    */
   registerEvents(events: TimelineEvent[]) {
+    const startIdx = this.registeredEvents.length;
+
+    // Pass 1: combo chaining, reaction segments, stop discovery
     for (let i = 0; i < events.length; i++) {
       let ev = events[i];
 
@@ -96,186 +98,159 @@ export class DerivedEventController {
       this.maybeRegisterStop(ev);
       this.registeredEvents.push(ev);
     }
+
+    // Pass 2: per-event extension, frame positions, and validation
+    for (let i = startIdx; i < this.registeredEvents.length; i++) {
+      let ev = this.registeredEvents[i];
+      if (this.stops.length > 0 && !this.extendedIds.has(ev.id)) {
+        ev = this.extendSingleEvent(ev);
+      }
+      ev = this.computeFramePositions(ev);
+      ev = this.validateTimeStopStart(ev);
+      this.registeredEvents[i] = ev;
+    }
+
+    // Pass 3: resolve combo trigger columns (needs full event list + stops)
+    if (this.slotWirings.length > 0) {
+      this.resolveComboTriggersInline();
+    }
   }
 
   /**
-   * Extend all not-yet-extended registered events by foreign time-stops.
-   * Each event is extended individually using the shared stops array.
+   * Resolve combo trigger columns inline during registration.
+   * For each slot wiring, evaluate trigger clauses against all registered events,
+   * then set comboTriggerColumnId on combo events that fall within trigger windows.
    */
-  extendAll() {
-    if (this.stops.length === 0) return;
-    this.registeredEvents = this.registeredEvents.map(ev => {
-      if (this.extendedIds.has(ev.id)) return ev;
-      return this.extendSingleEvent(ev);
-    });
-  }
+  private resolveComboTriggersInline() {
+    type WindowInfo = { startFrame: number; endFrame: number; sourceColumnId?: string };
+    const mergedBySlot = new Map<string, WindowInfo[]>();
 
-  /**
-   * Apply potential-gated effects that modify operator events:
-   * - Combo cooldown reset on ultimate cast (e.g. Wulfgard P5)
-   */
-  applyPotentialEffects() {
-    const ultimates = this.registeredEvents.filter(
-      ev => ev.columnId === SKILL_COLUMNS.ULTIMATE && ULTIMATE_RESETS_COMBO[ev.name] != null
-        && (ev.operatorPotential ?? 0) >= ULTIMATE_RESETS_COMBO[ev.name],
-    );
-    if (ultimates.length === 0) return;
-
-    const modified = new Map<string, TimelineEvent>();
-    for (const ult of ultimates) {
-      const ultFrame = ult.startFrame;
-      for (const ev of this.registeredEvents) {
-        if (ev.ownerId !== ult.ownerId || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
-        // With segments, compute pre-cooldown and total duration
-        let preCooldownDur = 0;
-        let totalDur = 0;
-        for (const s of ev.segments) {
-          totalDur += s.properties.duration;
-          if (s.properties.name !== 'Cooldown') preCooldownDur += s.properties.duration;
-        }
-        const activeEnd = ev.startFrame + preCooldownDur;
-        const cooldownEnd = ev.startFrame + totalDur;
-        if (ultFrame >= activeEnd && ultFrame < cooldownEnd) {
-          // Truncate cooldown at ultimate cast frame
-          const newTotal = ultFrame - ev.startFrame;
-          modified.set(ev.id, { ...ev, segments: ev.segments.map(s => {
-            if (s.properties.name !== 'Cooldown') return s;
-            const cooldownRemaining = Math.max(0, newTotal - preCooldownDur);
-            return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
-          }) });
+    for (const wiring of this.slotWirings) {
+      const clause = getComboTriggerClause(wiring.operatorId);
+      if (!clause?.length) continue;
+      const info = getComboTriggerInfo(wiring.operatorId);
+      const baseDuration = info?.windowFrames ?? 720;
+      const matches = findClauseTriggerMatches(clause, this.registeredEvents, wiring.slotId, this.stops);
+      const windows: WindowInfo[] = [];
+      for (const match of matches) {
+        const extDuration = extendByTimeStops(match.frame, baseDuration, this.stops);
+        windows.push({ startFrame: match.frame, endFrame: match.frame + extDuration, sourceColumnId: match.sourceColumnId });
+      }
+      // Merge overlapping windows
+      windows.sort((a, b) => a.startFrame - b.startFrame);
+      const merged: WindowInfo[] = [];
+      for (const w of windows) {
+        const prev = merged.length > 0 ? merged[merged.length - 1] : null;
+        if (prev && w.startFrame <= prev.endFrame) {
+          prev.endFrame = Math.max(prev.endFrame, w.endFrame);
+        } else {
+          merged.push({ ...w });
         }
       }
+      mergedBySlot.set(wiring.slotId, merged);
     }
 
-    if (modified.size > 0) {
-      this.registeredEvents = this.registeredEvents.map(ev => modified.get(ev.id) ?? ev);
+    if (mergedBySlot.size === 0) return;
+
+    // Update combo events that fall within trigger windows
+    for (let i = 0; i < this.registeredEvents.length; i++) {
+      const ev = this.registeredEvents[i];
+      if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+      const merged = mergedBySlot.get(ev.ownerId);
+      const match = merged?.find(w => ev.startFrame >= w.startFrame && ev.startFrame < w.endFrame);
+      if (match?.sourceColumnId != null && match.sourceColumnId !== ev.comboTriggerColumnId) {
+        this.registeredEvents[i] = { ...ev, comboTriggerColumnId: match.sourceColumnId };
+      } else if (!match && ev.comboTriggerColumnId != null) {
+        this.registeredEvents[i] = { ...ev, comboTriggerColumnId: undefined };
+      }
     }
   }
 
   /**
-   * Resolve combo trigger columns on combo events using operator trigger
-   * capabilities and current stops.
+   * Compute absoluteFrame and derivedOffsetFrame on a single event's frame markers.
+   * Called per-event during registration (inline, not as a bulk pass).
    */
-  resolveComboTriggers(slotWirings: SlotTriggerWiring[]) {
-    if (slotWirings.length === 0) return;
-    this.registeredEvents = resolveComboTriggerColumns(
-      this.registeredEvents, slotWirings, this.stops,
-    );
-  }
+  private computeFramePositions(ev: TimelineEvent): TimelineEvent {
+    const fStops = this.foreignStopsFor(ev);
+    let hasFrames = false;
+    for (const seg of ev.segments) {
+      if (seg.frames && seg.frames.length > 0) { hasFrames = true; break; }
+    }
+    if (!hasFrames) return ev;
 
-  /**
-   * Cache absoluteFrame and derivedOffsetFrame on all frame markers.
-   * Replaces the post-queue resolveFramePositions pass.
-   */
-  cacheFramePositions() {
-    this.registeredEvents = this.registeredEvents.map(ev => {
-      const fStops = this.foreignStopsFor(ev);
-      let cumulativeOffset = 0;
-      const newSegments = ev.segments.map(seg => {
-        const segStart = cumulativeOffset;
-        cumulativeOffset += seg.properties.duration;
-        if (!seg.frames) return seg;
-        const segAbsStart = ev.startFrame + segStart;
-        if (this.stops.length === 0) {
-          return {
-            ...seg,
-            frames: seg.frames.map(f => ({
-              ...f,
-              derivedOffsetFrame: f.offsetFrame,
-              absoluteFrame: segAbsStart + f.offsetFrame,
-            })),
-          };
-        }
+    let cumulativeOffset = 0;
+    const newSegments = ev.segments.map(seg => {
+      const segStart = cumulativeOffset;
+      cumulativeOffset += seg.properties.duration;
+      if (!seg.frames) return seg;
+      const segAbsStart = ev.startFrame + segStart;
+      if (this.stops.length === 0) {
         return {
           ...seg,
-          frames: seg.frames.map(f => {
-            const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
-            return { ...f, derivedOffsetFrame: extOffset, absoluteFrame: segAbsStart + extOffset };
-          }),
+          frames: seg.frames.map(f => ({
+            ...f,
+            derivedOffsetFrame: f.offsetFrame,
+            absoluteFrame: segAbsStart + f.offsetFrame,
+          })),
         };
-      });
-      return { ...ev, segments: newSegments };
+      }
+      return {
+        ...seg,
+        frames: seg.frames.map(f => {
+          const extOffset = extendByTimeStops(segAbsStart, f.offsetFrame, fStops);
+          return { ...f, derivedOffsetFrame: extOffset, absoluteFrame: segAbsStart + extOffset };
+        }),
+      };
     });
+    return { ...ev, segments: newSegments };
   }
 
+
   /**
-   * Validate events after processing:
-   * 1. Sibling events in the same column must not overlap.
-   * 2. Events starting inside time-stop regions must be allowed per game rules.
-   * Attaches warnings to events that violate these constraints.
+   * Validate sibling overlap: events in the same column must not overlap.
+   * Attaches warnings (read-only annotation, not bulk transformation).
+   * Time-stop start validation is handled inline during registerEvents().
    */
   validateAll() {
-    // ── Sibling overlap ───────────────────────────────────────────────────
-    // Group events by owner+column and check for overlaps using processed ranges.
-    {
-      const byKey = new Map<string, TimelineEvent[]>();
-      for (const ev of this.registeredEvents) {
-        const k = `${ev.ownerId}:${ev.columnId}:${ev.name}`;
-        const arr = byKey.get(k) ?? [];
-        arr.push(ev);
-        byKey.set(k, arr);
-      }
+    const byKey = new Map<string, TimelineEvent[]>();
+    for (const ev of this.registeredEvents) {
+      const k = `${ev.ownerId}:${ev.columnId}:${ev.name}`;
+      const arr = byKey.get(k) ?? [];
+      arr.push(ev);
+      byKey.set(k, arr);
+    }
 
-      const overlapIds = new Set<string>();
-      for (const group of Array.from(byKey.values())) {
-        if (group.length < 2) continue;
-        const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
-        for (let i = 0; i < sorted.length - 1; i++) {
-          const cur = sorted[i];
-          const next = sorted[i + 1];
-          const curRange = computeSegmentsSpan(cur.segments);
-          if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
-            overlapIds.add(cur.id);
-            overlapIds.add(next.id);
-          }
+    const overlapIds = new Set<string>();
+    for (const group of Array.from(byKey.values())) {
+      if (group.length < 2) continue;
+      const sorted = [...group].sort((a, b) => a.startFrame - b.startFrame);
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const cur = sorted[i];
+        const next = sorted[i + 1];
+        const curRange = computeSegmentsSpan(cur.segments);
+        if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
+          overlapIds.add(cur.id);
+          overlapIds.add(next.id);
         }
-      }
-
-      if (overlapIds.size > 0) {
-        this.registeredEvents = this.registeredEvents.map(ev => {
-          if (!overlapIds.has(ev.id)) return ev;
-          return { ...ev, warnings: [...(ev.warnings ?? []), 'Overlaps with another event in the same column'] };
-        });
       }
     }
 
-    // ── Time-stop start validation ────────────────────────────────────────
-    if (this.stops.length === 0) return;
-
-    const evById = new Map<string, TimelineEvent>();
-    for (const ev of this.registeredEvents) evById.set(ev.id, ev);
-
-    this.registeredEvents = this.registeredEvents.map(ev => {
-      const warnings: string[] = [];
-
-      for (const stop of this.stops) {
-        if (stop.eventId === ev.id) continue;
-        const stopEnd = stop.startFrame + stop.durationFrames;
-        if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
-
-        const source = evById.get(stop.eventId);
-        if (!source) continue;
-
-        const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
-        const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
-        if (sourceIsDodge) continue;
-
-        if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
-          warnings.push('Combo skill cannot start during ultimate animation time-stop');
-        }
-        if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
-          warnings.push("Ultimate cannot start during another ultimate's animation time-stop");
-        }
-      }
-
-      if (warnings.length === 0) return ev;
-      return { ...ev, warnings: [...(ev.warnings ?? []), ...warnings] };
-    });
+    if (overlapIds.size > 0) {
+      this.registeredEvents = this.registeredEvents.map(ev => {
+        if (!overlapIds.has(ev.id)) return ev;
+        return { ...ev, warnings: [...(ev.warnings ?? []), 'Overlaps with another event in the same column'] };
+      });
+    }
   }
 
   /** Get all registered events (extended, with transforms applied). */
   getRegisteredEvents(): TimelineEvent[] {
     return this.registeredEvents;
+  }
+
+  /** Get slot wirings (for combo window derivation). */
+  getSlotWirings(): SlotTriggerWiring[] {
+    return this.slotWirings;
   }
 
   /** Get discovered time-stop regions. */
@@ -291,6 +266,14 @@ export class DerivedEventController {
         return;
       }
     }
+  }
+
+  /**
+   * Get all registered events with reactions merged and reaction frames attached.
+   * This is the final output for the view layer — replaces external mergeReactions + attachReactionFrames calls.
+   */
+  getProcessedEvents(): TimelineEvent[] {
+    return attachReactionFrames(mergeReactions(this.registeredEvents));
   }
 
   /** Get all events (registered + queue-created). */
@@ -811,6 +794,37 @@ export class DerivedEventController {
     });
   }
 
+  /**
+   * Per-event time-stop start validation. Checks if an event starts inside
+   * a time-stop region and attaches warnings. Called inline during registration.
+   */
+  private validateTimeStopStart(ev: TimelineEvent): TimelineEvent {
+    if (this.stops.length === 0) return ev;
+    const warnings: string[] = [];
+    for (const stop of this.stops) {
+      if (stop.eventId === ev.id) continue;
+      const stopEnd = stop.startFrame + stop.durationFrames;
+      if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
+
+      // Look up source event to determine stop type
+      const source = this.registeredEvents.find(e => e.id === stop.eventId);
+      if (!source) continue;
+
+      const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
+      if (sourceIsDodge) continue;
+
+      const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
+      if (ev.columnId === SKILL_COLUMNS.COMBO && sourceIsUltimate) {
+        warnings.push('Combo skill cannot start during ultimate animation time-stop');
+      }
+      if (ev.columnId === SKILL_COLUMNS.ULTIMATE && sourceIsUltimate) {
+        warnings.push("Ultimate cannot start during another ultimate's animation time-stop");
+      }
+    }
+    if (warnings.length === 0) return ev;
+    return { ...ev, warnings: [...(ev.warnings ?? []), ...warnings] };
+  }
+
   // ── Active event queries ─────────────────────────────────────────────────
 
   private activeEventsIn(columnId: string, ownerId: string, frame: number): TimelineEvent[] {
@@ -858,6 +872,28 @@ export class DerivedEventController {
   /** Clamp all active events in a column — set status and truncate duration. */
   resetStatus(columnId: string, ownerId: string, frame: number, source: EventSource) {
     this.clampActive(columnId, ownerId, frame, source, EventStatusType.REFRESHED);
+  }
+
+  /**
+   * Reset a skill event's cooldown segment at a given frame.
+   * Truncates the Cooldown segment so the event ends at resetFrame.
+   */
+  resetCooldown(eventId: string, resetFrame: number) {
+    for (let i = 0; i < this.registeredEvents.length; i++) {
+      if (this.registeredEvents[i].id !== eventId) continue;
+      const ev = this.registeredEvents[i];
+      let preCooldownDur = 0;
+      const newSegments = ev.segments.map(s => {
+        if (s.properties.name === 'Cooldown') {
+          const cooldownRemaining = Math.max(0, resetFrame - ev.startFrame - preCooldownDur);
+          return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
+        }
+        preCooldownDur += s.properties.duration;
+        return s;
+      });
+      this.registeredEvents[i] = { ...ev, segments: newSegments };
+      return;
+    }
   }
 
   // ── Private helpers ────────────────────────────────────────────────────
