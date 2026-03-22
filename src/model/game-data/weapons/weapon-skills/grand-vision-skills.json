@@ -22,7 +22,9 @@
                 66,
                 72,
                 84
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

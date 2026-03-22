@@ -16,7 +16,9 @@
                 "value": [
                   0.001,
                   0.0015
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "scalingAttribute": {
                 "verb": "IS",
@@ -70,7 +72,9 @@
                 "value": [
                   0.5,
                   1
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

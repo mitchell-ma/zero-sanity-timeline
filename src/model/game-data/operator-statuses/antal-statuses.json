@@ -38,7 +38,9 @@
                       0.09,
                       0.09,
                       0.1
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               },
@@ -64,7 +66,9 @@
                       0.09,
                       0.09,
                       0.1
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               }
@@ -138,7 +142,9 @@
                       0.09,
                       0.09,
                       0.1
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               },
@@ -164,7 +170,9 @@
                       0.09,
                       0.09,
                       0.1
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               }
@@ -209,7 +217,9 @@
                       0.13,
                       0.13,
                       0.14
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               },
@@ -235,7 +245,9 @@
                       0.13,
                       0.13,
                       0.14
-                    ]
+                    ],
+                    "ofDeterminer": "THIS",
+                    "of": "OPERATOR"
                   }
                 }
               }
@@ -375,7 +387,8 @@
                             "verb": "IS",
                             "valueType": "STAT",
                             "stat": "STRENGTH",
-                            "ofDeterminer": "SOURCE"
+                            "ofDeterminer": "SOURCE",
+                            "of": "OPERATOR"
                           }
                         }
                       }

@@ -121,7 +121,9 @@
                 403,
                 407,
                 411
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

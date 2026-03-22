@@ -291,7 +291,6 @@ export function buildColumns(
     const battleName = op?.skills.battle?.name;
     const hasBasicVariants = basicName && (!!opSkills[basicName + '_ENHANCED'] || !!opSkills[basicName + '_EMPOWERED']);
     const hasBattleVariants = battleName && (!!opSkills[battleName + '_ENHANCED'] || !!opSkills[battleName + '_EMPOWERED']);
-    const hasComboOverride = false; // Combo frame overrides now handled generically
     let slotHasCols = false;
     // ── Aggregated stats for value resolution context ──
     const slotAggStats = op && slot.loadout && slot.loadoutProperties
@@ -532,7 +531,7 @@ export function buildColumns(
           // Generic combo skill: data-driven frame sequences
           const comboName = op?.skills.combo?.name;
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
-          if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
+          if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
             const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
             col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };

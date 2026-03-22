@@ -22,7 +22,9 @@
                 0.33,
                 0.36,
                 0.42
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         },
@@ -45,7 +47,9 @@
                 0.77,
                 0.84,
                 0.98
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

@@ -119,7 +119,7 @@ interface EventBlockProps {
   onSelect?: (e: React.MouseEvent, eventUid: string) => void;
   onHover?: (eventUid: string | null) => void;
   onTouchStart?: (e: React.TouchEvent, eventUid: string, startFrame: number) => void;
-  onFrameClick?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
+  onFrameClick?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onFrameDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onSegmentContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number) => void;
@@ -308,6 +308,7 @@ function EventBlock({
           borderTop: passive ? 'none' : style.striped && !isFirst ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, Math.min(style.borderAlpha, 0.5))}`,
           borderRadius: passive ? '2px' : borderRadiusVal,
           boxShadow: style.glow ? `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)` : undefined,
+          zIndex: segments.length - i,
           padding: 0,
           margin: 0,
         } as React.CSSProperties}
@@ -334,7 +335,7 @@ function EventBlock({
               style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
               title={f.statusLabel ?? undefined}
               onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
-              onClick={(e) => { e.stopPropagation(); onFrameClick?.(uid, i, fi); }}
+              onClick={(e) => { e.stopPropagation(); onFrameClick?.(e, uid, i, fi); }}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, i, fi); }}
               onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
               onMouseOut={(e) => { e.stopPropagation(); }}

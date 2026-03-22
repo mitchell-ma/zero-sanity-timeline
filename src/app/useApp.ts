@@ -84,7 +84,7 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType, InfoLevel, CritMode } from '../consts/enums';
+import { StatType, InteractionModeType, InfoLevel, CritMode, EnhancementType } from '../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -897,7 +897,7 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string } | null,
+    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
@@ -908,17 +908,8 @@ export function useApp() {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
         if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
-        // Empowered battle skills require 4 active Melting Flame stacks
-        if (ev.id?.includes('EMPOWERED')) {
-          const processed = processedEventsRef.current;
-          const mfCount = (processed ?? prev).filter(
-            (e) => e.ownerId === ownerId && e.columnId === 'melting-flame'
-              && e.startFrame <= atFrame && eventEndFrame(e) > atFrame,
-          ).length;
-          if (mfCount < 4) return prev;
-        }
-        // Enhanced battle skills require an active ultimate
-        if (ev.id?.includes('ENHANCED') && !ev.id?.includes('EMPOWERED')) {
+        // Enhanced skills require an active ultimate
+        if (ev.enhancementType === EnhancementType.ENHANCED) {
           const ultActive = prev.some(
             (e) => {
               if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
@@ -1237,7 +1228,8 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
-  const handleFrameClick = useCallback((eventUid: string, segmentIndex: number, frameIndex: number) => {
+  const handleFrameClick = useCallback((e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => {
+    const ctrlKey = e.ctrlKey || e.metaKey;
     setSelectedFrames((prev) => {
       const exists = prev.some((f) => f.eventUid === eventUid && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex);
       if (exists) {
@@ -1245,6 +1237,7 @@ export function useApp() {
         if (next.length === 0) setInfoPaneClosing(true);
         return next;
       }
+      if (ctrlKey) return [...prev, { eventUid, segmentIndex, frameIndex }];
       return [{ eventUid, segmentIndex, frameIndex }];
     });
     setEditingEventId(eventUid);

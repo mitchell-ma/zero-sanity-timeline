@@ -16,7 +16,9 @@
                 "value": [
                   0.04,
                   0.07
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "targetClasses": {
                 "verb": "IS",
@@ -113,7 +115,9 @@
                 "value": [
                   72,
                   108
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "intellectAdditive": {
                 "verb": "VARY_BY",
@@ -121,7 +125,9 @@
                 "value": [
                   0.6,
                   0.9
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

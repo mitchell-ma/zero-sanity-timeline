@@ -1,6 +1,9 @@
 # Devlog
 
 ## 2026-03-22
+- **Frame diamond dragging restored** — you can once again drag the hit-timing diamonds within skill events to fine-tune exactly when each hit lands
+- **Ctrl+click frame multi-select** — hold Ctrl (or Cmd) and click multiple frame diamonds to select them together, useful for comparing hit timings across a skill
+- **No more accidental text selection** — dragging on the timeline (marquee select or moving events) no longer highlights text
 - **Content browser and editor** — browse all operators, weapons, gear sets, and their skills, statuses, talents, and effects in one unified panel with inline editing and a "clone to custom" workflow
 - **Event viewer** — multi-page event inspector showing event details, segment breakdowns, and per-frame hit data with a live timeline preview
 - **Status event editor** — dedicated editor for operator status configs with property, metadata, and clause sections

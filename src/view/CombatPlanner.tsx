@@ -113,7 +113,7 @@ interface CombatPlannerProps {
   onEditResource?: (columnKey: string) => void;
   onBatchStart?: () => void;
   onBatchEnd?: () => void;
-  onFrameClick?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
+  onFrameClick?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onRemoveFrame?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
   onRemoveFrames?: (frames: import('../consts/viewTypes').SelectedFrame[]) => void;
   onRemoveSegment?: (eventUid: string, segmentIndex: number) => void;
@@ -1126,8 +1126,23 @@ export default function CombatPlanner({
     setHoverFrame(null);
     setHoverColKey(null);
     hoverClientFrameRef.current = null;
+    // End any active drag/batch if mouse leaves the timeline
+    if (frameDragRef.current) {
+      throttledDragAction.current.flush();
+      frameDragRef.current = null;
+      onBatchEnd?.();
+      requestAnimationFrame(() => { dragMovedRef.current = false; });
+    }
+    if (dragRef.current) {
+      throttledDragAction.current.flush();
+      dragRef.current = null;
+      setDraggingIds(null);
+      setDragZonesSnapshot(null);
+      onBatchEnd?.();
+      requestAnimationFrame(() => { dragMovedRef.current = false; });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onBatchEnd]);
 
   const handleMouseUp = useCallback(() => {
     // Flush any pending throttled drag action so the final position is applied.
@@ -1252,8 +1267,8 @@ export default function CombatPlanner({
     dragMovedRef.current = false;
   }, [events, onBatchStart, axis]);
 
-  const handleFrameClickGuarded = useCallback((eid: string, si: number, fi: number) => {
-    if (!dragMovedRef.current) onFrameClick?.(eid, si, fi);
+  const handleFrameClickGuarded = useCallback((e: React.MouseEvent, eid: string, si: number, fi: number) => {
+    if (!dragMovedRef.current) onFrameClick?.(e, eid, si, fi);
   }, [onFrameClick]);
 
   // ─── Marquee start (mousedown on empty timeline area) ─────────────────────────
@@ -1589,7 +1604,7 @@ export default function CombatPlanner({
   return (
     <div
       ref={outerRef}
-      className={`timeline-outer${isHorizontal ? ' timeline-outer--horizontal' : ''}${dupMode ? ' timeline-outer--dup' : ''}`}
+      className={`timeline-outer${isHorizontal ? ' timeline-outer--horizontal' : ''}${dupMode ? ' timeline-outer--dup' : ''}${marqueeRect ? ' timeline-outer--selecting' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}

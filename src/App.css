@@ -1755,6 +1755,7 @@
 .timeline-scroll--dragging,
 .timeline-scroll--dragging * {
   cursor: grabbing !important;
+  user-select: none;
 }
 
 .timeline-scroll--no-bar {
@@ -2878,6 +2879,9 @@
 .timeline-outer--dup,
 .timeline-outer--dup * {
   cursor: copy !important;
+}
+.timeline-outer--selecting {
+  user-select: none;
 }
 
 /* ── Duplicate ghost events ────────────────────────── */

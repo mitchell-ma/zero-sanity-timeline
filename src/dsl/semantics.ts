@@ -111,6 +111,12 @@ export enum CoreNounType {
   // Value resolution
   /** A raw operator stat reference (used in ValueStat). */
   STAT = "STAT",
+  /** Talent 1 level of an operator. */
+  TALENT_ONE_LEVEL = "TALENT_ONE_LEVEL",
+  /** Talent 2 level of an operator. */
+  TALENT_TWO_LEVEL = "TALENT_TWO_LEVEL",
+  /** Attribute increase level of an operator (0–4). */
+  ATTRIBUTE_INCREASE_LEVEL = "ATTRIBUTE_INCREASE_LEVEL",
 }
 
 // ── Noun Adjunct ──────────────────────────────────────────────────────────
@@ -403,6 +409,9 @@ export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, (NounType | Adject
  */
 export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
   [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT],
+  [NounType.TALENT_ONE_LEVEL]: [NounType.OPERATOR],
+  [NounType.TALENT_TWO_LEVEL]: [NounType.OPERATOR],
+  [NounType.STAT]: [NounType.OPERATOR],
 };
 
 /**
@@ -1069,6 +1078,9 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.FINAL_STRIKE]: 'Final Strike',
   [ObjectType.NORMAL_ATTACK]: 'Normal Attack',
   [ObjectType.ACTIVE]: 'Active',
+  [ObjectType.STAT]: 'Stat',
+  [ObjectType.TALENT_ONE_LEVEL]: 'Talent 1 Level',
+  [ObjectType.TALENT_TWO_LEVEL]: 'Talent 2 Level',
 };
 
 export const ADJECTIVE_LABELS: Record<string, string> = Object.fromEntries(

@@ -39,7 +39,9 @@
             3,
             2,
             2
-          ]
+          ],
+          "ofDeterminer": "THIS",
+          "of": "OPERATOR"
         },
         "interactionType": "NONE"
       },
@@ -111,7 +113,9 @@
                     "1": 0.00104,
                     "2": 0.00156
                   }
-                }
+                },
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -163,7 +167,9 @@
                 "value": [
                   0.1,
                   0.15
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

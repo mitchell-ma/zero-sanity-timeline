@@ -22,7 +22,9 @@
                 "value": [
                   3,
                   4
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

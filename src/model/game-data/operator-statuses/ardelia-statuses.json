@@ -23,7 +23,9 @@
                 "value": [
                   63,
                   90
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "willAdditive": {
                 "verb": "VARY_BY",
@@ -31,7 +33,9 @@
                 "value": [
                   0.53,
                   0.75
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

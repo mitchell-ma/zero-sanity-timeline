@@ -59,7 +59,9 @@
                 "value": [
                   7.5,
                   15
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

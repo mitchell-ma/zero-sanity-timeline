@@ -22,7 +22,9 @@
                 0.352,
                 0.384,
                 0.448
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

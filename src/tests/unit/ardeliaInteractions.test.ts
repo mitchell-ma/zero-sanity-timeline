@@ -676,8 +676,7 @@ describe('G. Operator Identity & Metadata', () => {
     expect(mockJson.talents.one.maxLevel).toBe(3);
     expect(mockJson.talents.two.name).toBe('Mountainpeak Surfer');
     expect(mockJson.talents.two.maxLevel).toBe(1);
-    expect(mockJson.talents.attributeIncrease.name).toBe('Keen Mind');
-    expect(mockJson.talents.attributeIncrease.attribute).toBe('INTELLECT');
+    expect(mockJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
     expect(mockJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 

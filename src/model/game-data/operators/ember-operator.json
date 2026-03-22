@@ -172,8 +172,7 @@
       "maxLevel": 2
     },
     "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
+      "id": "FORGED",
       "maxLevel": 4
     }
   },

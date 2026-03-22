@@ -67,7 +67,9 @@
                 "object": "STATUS_LEVEL",
                 "value": [
                   0.05
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             },
             "toDeterminer": "THIS",

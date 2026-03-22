@@ -1,0 +1,138 @@
+[
+  {
+    "properties": {
+      "id": "KEEN_MIND",
+      "name": "Keen Mind",
+      "type": "TALENT_STATUS",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "game"
+    },
+    "clause": [
+      {
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STAT",
+            "objectId": "INTELLECT",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "ATTRIBUTE_INCREASE_LEVEL",
+                "value": [0, 10, 25, 40, 60],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "properties": {
+      "id": "SKIRMISHER",
+      "name": "Skirmisher",
+      "type": "TALENT_STATUS",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "game"
+    },
+    "clause": [
+      {
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STAT",
+            "objectId": "AGILITY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "ATTRIBUTE_INCREASE_LEVEL",
+                "value": [0, 10, 25, 40, 60],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "properties": {
+      "id": "FORGED",
+      "name": "Forged",
+      "type": "TALENT_STATUS",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "game"
+    },
+    "clause": [
+      {
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STAT",
+            "objectId": "STRENGTH",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "ATTRIBUTE_INCREASE_LEVEL",
+                "value": [0, 10, 25, 40, 60],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "properties": {
+      "id": "STALWART",
+      "name": "Stalwart",
+      "type": "TALENT_STATUS",
+      "target": "OPERATOR",
+      "targetDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "game"
+    },
+    "clause": [
+      {
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STAT",
+            "objectId": "WILL",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "ATTRIBUTE_INCREASE_LEVEL",
+                "value": [0, 10, 25, 40, 60],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

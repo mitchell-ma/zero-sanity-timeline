@@ -83,7 +83,9 @@
                   10,
                   15,
                   20
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -276,7 +278,9 @@
           "value": [
             4,
             8
-          ]
+          ],
+          "ofDeterminer": "THIS",
+          "of": "OPERATOR"
         },
         "unit": "SECOND"
       },

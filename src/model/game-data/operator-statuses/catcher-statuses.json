@@ -16,7 +16,9 @@
                 "value": [
                   0.1,
                   0.12
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "scalingAttribute": {
                 "verb": "IS",
@@ -74,7 +76,9 @@
                 "value": [
                   0.3,
                   0.45
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "hitCount": {
                 "verb": "VARY_BY",
@@ -82,7 +86,9 @@
                 "value": [
                   2,
                   3
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

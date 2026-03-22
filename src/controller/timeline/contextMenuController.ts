@@ -266,6 +266,7 @@ export function buildColumnContextMenu(
               ...(v.isPerfectDodge ? { isPerfectDodge: v.isPerfectDodge } : {}),
               ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
               ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
+              ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
             },
           },
           disabled,

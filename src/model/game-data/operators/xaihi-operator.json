@@ -118,8 +118,7 @@
       "maxLevel": 1
     },
     "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
+      "id": "STALWART",
       "maxLevel": 4
     }
   },

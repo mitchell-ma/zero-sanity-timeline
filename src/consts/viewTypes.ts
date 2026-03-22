@@ -1,4 +1,4 @@
-import { DamageType, ElementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
+import { DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
 import type { DslTarget } from '../dsl/semantics';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
@@ -260,6 +260,8 @@ export interface TimelineEvent {
   operatorPotential?: number;
   /** SP cost consumed when this battle skill event fires. */
   skillPointCost?: number;
+  /** Enhancement tier of this event's skill variant (derived from column definition). */
+  enhancementType?: EnhancementType;
   /** For chained combo time-stops: game frames [startFrame, comboChainFreezeEnd) are frozen in real-time layout. */
   comboChainFreezeEnd?: number;
   /** Validation warnings (e.g. event starts inside an invalid time-stop period). */

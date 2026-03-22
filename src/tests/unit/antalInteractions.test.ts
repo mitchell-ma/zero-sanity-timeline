@@ -696,8 +696,7 @@ describe('G. Operator Identity', () => {
     expect(mockAntalJson.talents.one.maxLevel).toBe(2);
     expect(mockAntalJson.talents.two.name).toBe('Subconscious Act');
     expect(mockAntalJson.talents.two.maxLevel).toBe(2);
-    expect(mockAntalJson.talents.attributeIncrease.name).toBe('Keen Mind');
-    expect(mockAntalJson.talents.attributeIncrease.attribute).toBe('INTELLECT');
+    expect(mockAntalJson.talents.attributeIncrease.id).toBe('KEEN_MIND');
     expect(mockAntalJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 

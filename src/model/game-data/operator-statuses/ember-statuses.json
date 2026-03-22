@@ -73,7 +73,9 @@
                 "value": [
                   0.3,
                   0.5
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -159,7 +161,9 @@
                 "value": [
                   0.06,
                   0.09
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

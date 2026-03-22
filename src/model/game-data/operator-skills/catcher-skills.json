@@ -57,7 +57,9 @@
                           0.67,
                           0.73,
                           0.79
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -123,7 +125,9 @@
                           0.74,
                           0.8,
                           0.87
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -189,7 +193,9 @@
                           1.04,
                           1.12,
                           1.22
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -276,7 +282,9 @@
                           1.37,
                           1.47,
                           1.6
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -430,7 +438,9 @@
                           3.42,
                           3.69,
                           4
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -592,7 +602,9 @@
                           1.93,
                           2.08,
                           2.25
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   },
@@ -619,7 +631,9 @@
                           774,
                           792,
                           810
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "defAdditive": {
                         "verb": "VARY_BY",
@@ -637,7 +651,9 @@
                           4.84,
                           4.95,
                           5.06
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "duration": {
                         "value": {
@@ -681,7 +697,9 @@
                 35,
                 35,
                 33
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             },
             "unit": "SECOND"
           },
@@ -730,7 +748,9 @@
                   72,
                   72,
                   72
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -823,7 +843,9 @@
                           1.72,
                           1.85,
                           2
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   },
@@ -849,7 +871,9 @@
                           0.3,
                           0.3,
                           0.3
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "duration": {
                         "value": {
@@ -914,7 +938,9 @@
                           2.31,
                           2.49,
                           2.7
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -977,7 +1003,9 @@
                           3.42,
                           3.69,
                           4
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -1044,7 +1072,9 @@
                           7.7,
                           8.3,
                           9
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -1120,7 +1150,9 @@
                           1.54,
                           1.66,
                           1.8
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }

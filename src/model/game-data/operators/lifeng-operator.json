@@ -117,8 +117,7 @@
       "maxLevel": 2
     },
     "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
+      "id": "SKIRMISHER",
       "maxLevel": 4
     }
   },

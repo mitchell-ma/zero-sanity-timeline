@@ -163,8 +163,7 @@
       "maxLevel": 2
     },
     "attributeIncrease": {
-      "name": "Keen Mind",
-      "attribute": "INTELLECT",
+      "id": "KEEN_MIND",
       "maxLevel": 4
     }
   },
@@ -196,7 +195,9 @@
           "P3": 1.5,
           "P4": 1.5,
           "P5": 1.5
-        }
+        },
+        "ofDeterminer": "THIS",
+        "of": "OPERATOR"
       },
       "condition": {
         "reactionType": "COMBUSTION"

@@ -132,7 +132,9 @@
                 "value": [
                   5,
                   10
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

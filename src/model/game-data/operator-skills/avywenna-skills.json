@@ -57,7 +57,9 @@
                           0.32,
                           0.34,
                           0.37
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -123,7 +125,9 @@
                           0.41,
                           0.45,
                           0.48
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -189,7 +193,9 @@
                           0.39,
                           0.43,
                           0.46
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -255,7 +261,9 @@
                           0.19,
                           0.21,
                           0.23
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -302,7 +310,9 @@
                           0.39,
                           0.42,
                           0.45
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -389,7 +399,9 @@
                           0.96,
                           1.04,
                           1.13
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -490,7 +502,9 @@
                           1.44,
                           1.55,
                           1.68
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "atkScaleLanceUlt": {
                         "verb": "VARY_BY",
@@ -508,7 +522,9 @@
                           3.7,
                           3.98,
                           4.32
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "poiseLance": {
                         "verb": "IS",
@@ -534,7 +550,9 @@
                           1.28,
                           1.38,
                           1.5
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -672,7 +690,9 @@
                           3.25,
                           3.5,
                           3.8
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -709,7 +729,9 @@
                 13,
                 13,
                 12
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             },
             "unit": "SECOND"
           },
@@ -759,7 +781,9 @@
                   85,
                   85,
                   85
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -841,7 +865,9 @@
                           0.36,
                           0.38,
                           0.4
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "pulseResistDownDuration": {
                         "verb": "VARY_BY",
@@ -859,7 +885,9 @@
                           6,
                           7,
                           8
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "lanceDurationUlt": {
                         "verb": "IS",
@@ -881,7 +909,9 @@
                           8.13,
                           8.76,
                           9.5
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -948,7 +978,9 @@
                           7.7,
                           8.3,
                           9
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -1024,7 +1056,9 @@
                           1.54,
                           1.66,
                           1.8
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }

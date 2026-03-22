@@ -18,7 +18,7 @@ import {
   getUltimateEnergyCost as loadUltimateEnergyCost,
   getBattleSkillSpCost as loadBattleSkillSpCost,
 } from '../../model/event-frames/operatorJsonLoader';
-import type { OperatorStatConfig } from '../../model/operators/dataDrivenOperator';
+import { ATTRIBUTE_INCREASE_LOOKUP, type OperatorStatConfig } from '../../model/operators/dataDrivenOperator';
 import { loadCustomOperators } from '../../utils/customContentStorage';
 
 // Auto-discover splash art assets
@@ -79,7 +79,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const talents = opJson.talents as {
     one?: { name: string; maxLevel: number };
     two?: { name: string; maxLevel: number };
-    attributeIncrease?: { name: string; attribute: string };
+    attributeIncrease?: { id: string; maxLevel: number };
   } | undefined;
   const opSkills = opJson.skills as Record<string, Record<string, unknown>> | undefined;
 
@@ -182,8 +182,8 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     maxTalentTwoLevel: talents?.two?.maxLevel ?? 0,
     talentOneName: talents?.one?.name ?? '',
     talentTwoName: talents?.two?.name ?? '',
-    attributeIncreaseName: talents?.attributeIncrease?.name ?? '',
-    attributeIncreaseAttribute: talents?.attributeIncrease?.attribute ?? '',
+    attributeIncreaseName: (talents?.attributeIncrease?.id ? ATTRIBUTE_INCREASE_LOOKUP[talents.attributeIncrease.id]?.name : undefined) ?? '',
+    attributeIncreaseAttribute: (talents?.attributeIncrease?.id ? ATTRIBUTE_INCREASE_LOOKUP[talents.attributeIncrease.id]?.attribute : undefined) ?? '',
     maxAttributeIncreaseLevel: 4,
   };
 }

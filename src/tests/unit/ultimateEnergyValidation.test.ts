@@ -11,7 +11,7 @@ import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyContro
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
-import { SegmentType } from '../../consts/enums';
+import { EnhancementType, SegmentType } from '../../consts/enums';
 
 // Mock operatorJsonLoader to handle require.context (loads real JSON data)
 jest.mock('../../model/event-frames/operatorJsonLoader', () => {
@@ -584,20 +584,20 @@ describe('ENHANCE clause variant validation', () => {
 
   test('enhanced variant is available during ENHANCE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(false);
   });
 
   test('enhanced variant is disabled outside ENHANCE window', () => {
     const events = [ultEvent(0)];
     // Frame 3000 is during Cooldown (no ENHANCE clause)
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 3000, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 3000, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('ENHANCE');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, [], 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
   });
 
@@ -650,7 +650,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic during ENHANCE window: no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(false);
@@ -659,7 +659,7 @@ describe('validateEnhanced and validateDisabledVariants', () => {
   test('enhanced basic outside ENHANCE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 3000 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 3000, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);

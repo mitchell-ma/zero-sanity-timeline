@@ -54,7 +54,9 @@
                 "value": [
                   0.04,
                   0.06
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -109,7 +111,9 @@
             30,
             30,
             30
-          ]
+          ],
+          "ofDeterminer": "THIS",
+          "of": "OPERATOR"
         },
         "unit": "SECOND"
       },
@@ -124,7 +128,9 @@
             2,
             2,
             2
-          ]
+          ],
+          "ofDeterminer": "THIS",
+          "of": "OPERATOR"
         },
         "interactionType": "RESET"
       },

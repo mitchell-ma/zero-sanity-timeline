@@ -44,6 +44,7 @@ const VARIABLE_OBJECT_OPTIONS = [
   { value: 'POTENTIAL', label: 'Potential' },
   { value: 'TALENT_ONE_LEVEL', label: 'Talent 1 Level' },
   { value: 'TALENT_TWO_LEVEL', label: 'Talent 2 Level' },
+  { value: 'ATTRIBUTE_INCREASE_LEVEL', label: 'Attr. Increase Level' },
 ];
 
 /** Starting index for level table headers (skill level is 1-indexed, others are 0-indexed). */
@@ -52,6 +53,7 @@ const VARIABLE_START_INDEX: Record<string, number> = {
   POTENTIAL: 0,
   TALENT_ONE_LEVEL: 0,
   TALENT_TWO_LEVEL: 0,
+  ATTRIBUTE_INCREASE_LEVEL: 0,
 };
 
 const VARIABLE_ARRAY_LENGTHS: Record<string, number> = {
@@ -59,6 +61,7 @@ const VARIABLE_ARRAY_LENGTHS: Record<string, number> = {
   POTENTIAL: 6,
   TALENT_ONE_LEVEL: 3,
   TALENT_TWO_LEVEL: 3,
+  ATTRIBUTE_INCREASE_LEVEL: 5,
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

@@ -776,8 +776,7 @@ describe('H. Operator Identity & Metadata', () => {
     expect(mockJson.talents.one.maxLevel).toBe(2);
     expect(mockJson.talents.two.id).toBe('CODE_OF_RESTRAINT_TALENT');
     expect(mockJson.talents.two.maxLevel).toBe(2);
-    expect(mockJson.talents.attributeIncrease.name).toBe('Forged');
-    expect(mockJson.talents.attributeIncrease.attribute).toBe('STRENGTH');
+    expect(mockJson.talents.attributeIncrease.id).toBe('FORGED');
     expect(mockJson.talents.attributeIncrease.maxLevel).toBe(4);
   });
 

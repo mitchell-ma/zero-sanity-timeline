@@ -63,7 +63,7 @@ export function computeAllValidations(
     resource: resourceGraphs
       ? validateResources(events, resourceGraphs, slots, draggingIds ?? undefined)
       : new Map(),
-    empowered: validateEmpowered(events),
+    empowered: validateEmpowered(events, slots),
     enhanced: validateEnhanced(events),
     regularBasic: validateDisabledVariants(events),
     clause: validateVariantClauses(events, slots),

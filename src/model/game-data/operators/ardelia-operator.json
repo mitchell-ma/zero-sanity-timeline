@@ -137,8 +137,7 @@
       "maxLevel": 1
     },
     "attributeIncrease": {
-      "name": "Keen Mind",
-      "attribute": "INTELLECT",
+      "id": "KEEN_MIND",
       "maxLevel": 4
     }
   },

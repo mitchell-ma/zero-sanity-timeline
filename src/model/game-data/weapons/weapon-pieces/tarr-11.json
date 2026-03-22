@@ -120,7 +120,9 @@
                 277,
                 280,
                 283
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

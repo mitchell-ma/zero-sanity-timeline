@@ -342,6 +342,10 @@
   "dsl.object.TIME_STOP": "time stop",
   "dsl.object.GAME_TIME": "game time",
   "dsl.object.REAL_TIME": "real time",
+  "dsl.object.STAT": "stat",
+  "dsl.object.TALENT_ONE_LEVEL": "talent 1 level",
+  "dsl.object.TALENT_TWO_LEVEL": "talent 2 level",
+  "dsl.object.ATTRIBUTE_INCREASE_LEVEL": "attribute increase level",
 
   "dsl.property.duration": "Duration",
   "dsl.property.stacks": "Stacks",

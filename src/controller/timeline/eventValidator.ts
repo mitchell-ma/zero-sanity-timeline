@@ -5,10 +5,11 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
-import { CombatSkillsType, StatusType, TimeDependency } from '../../consts/enums';
+import { CombatSkillsType, EnhancementType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
+import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { extendByTimeStops } from './processTimeStop';
@@ -831,8 +832,8 @@ export function checkVariantAvailability(
   slots?: Slot[],
   enhancementType?: string,
 ): VariantAvailability {
-  const isEnhanced = enhancementType ? enhancementType === 'ENHANCED' : variantName.includes('ENHANCED');
-  const isEmpowered = enhancementType ? enhancementType === 'EMPOWERED' : variantName.includes('EMPOWERED');
+  const isEnhanced = enhancementType === EnhancementType.ENHANCED;
+  const isEmpowered = enhancementType === EnhancementType.EMPOWERED;
 
   // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
@@ -875,17 +876,15 @@ export function checkVariantAvailability(
     const slot = slots?.find((s) => s.slotId === ownerId);
     const opId = slot?.operator?.id;
     if (opId) {
-      const opJson = getOperatorJson(opId);
-      const statusEvents = opJson?.statusEvents as { target?: string; targetDeterminer?: string; isNamedEvent?: boolean; name?: string; stack?: { max?: Record<string, number> } }[] | undefined;
-      const statusDef = statusEvents?.find(
-        (se) => se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS') && se.isNamedEvent && se.stack,
+      const statuses = getOperatorStatuses(opId);
+      const statusDef = statuses.find(
+        (s) => s.target === 'OPERATOR' && (!s.targetDeterminer || s.targetDeterminer === 'THIS') && s.stacks,
       );
-      if (statusDef && statusDef.stack && statusDef.name) {
-        const potKey = `P${slot?.potential ?? 0}`;
-        const maxStacks = statusDef.stack.max?.[potKey] ?? statusDef.stack.max?.P0 ?? 4;
-        const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.name]
-          ?? statusDef.name.toLowerCase().replace(/_/g, '-');
-        const statusLabel = STATUS_LABELS[statusDef.name as StatusType] ?? statusDef.name;
+      if (statusDef) {
+        const maxStacks = statusDef.maxStacks;
+        const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
+          ?? statusDef.id.toLowerCase().replace(/_/g, '-');
+        const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
         const activeCount = events.filter(
           (ev) =>
             ev.ownerId === ownerId &&
@@ -1004,23 +1003,31 @@ export function validateResources(
   return map;
 }
 
-export function validateEmpowered(events: TimelineEvent[]): Map<string, string> {
+export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<string, string> {
   const map = new Map<string, string>();
-  const empoweredNames = new Set([
-    'SMOULDERING_FIRE_EMPOWERED',
-    'SMOULDERING_FIRE_ENHANCED_EMPOWERED',
-  ]);
   for (const ev of events) {
-    if (!empoweredNames.has(ev.name)) continue;
-    const mfEvents = events.filter(
-      (mf) =>
-        mf.ownerId === ev.ownerId &&
-        mf.columnId === 'melting-flame' &&
-        mf.startFrame <= ev.startFrame &&
-        eventEndFrame(mf) > ev.startFrame,
+    if (ev.enhancementType !== EnhancementType.EMPOWERED) continue;
+    const slot = slots.find((s) => s.slotId === ev.ownerId);
+    const opId = slot?.operator?.id;
+    if (!opId) continue;
+    const statuses = getOperatorStatuses(opId);
+    const statusDef = statuses.find(
+      (s) => s.target === 'OPERATOR' && (!s.targetDeterminer || s.targetDeterminer === 'THIS') && s.stacks,
     );
-    if (mfEvents.length < 4) {
-      map.set(ev.uid, `Requires max Melting Flame stacks (${mfEvents.length}/4)`);
+    if (!statusDef) continue;
+    const maxStacks = statusDef.maxStacks;
+    const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
+      ?? statusDef.id.toLowerCase().replace(/_/g, '-');
+    const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
+    const activeCount = events.filter(
+      (e) =>
+        e.ownerId === ev.ownerId &&
+        e.columnId === colId &&
+        e.startFrame <= ev.startFrame &&
+        eventEndFrame(e) > ev.startFrame,
+    ).length;
+    if (activeCount < maxStacks) {
+      map.set(ev.uid, `Requires max ${statusLabel} (${activeCount}/${maxStacks})`);
     }
   }
   return map;
@@ -1029,7 +1036,7 @@ export function validateEmpowered(events: TimelineEvent[]): Map<string, string> 
 export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
-    if (!ev.id?.includes('ENHANCED') || ev.id?.includes('EMPOWERED')) continue;
+    if (ev.enhancementType !== EnhancementType.ENHANCED) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
 
     const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
@@ -1068,7 +1075,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
     // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
-    if (!ev.id || ev.id.includes('ENHANCED') || ev.id.includes('EMPOWERED')) continue;
+    if (ev.enhancementType === EnhancementType.ENHANCED || ev.enhancementType === EnhancementType.EMPOWERED) continue;
     if (ev.id === CombatSkillsType.FINISHER || ev.id === CombatSkillsType.DIVE) continue;
 
     const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];

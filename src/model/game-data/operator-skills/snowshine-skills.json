@@ -57,7 +57,9 @@
                           1.06,
                           1.14,
                           1.24
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -123,7 +125,9 @@
                           1.13,
                           1.21,
                           1.32
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -189,7 +193,9 @@
                           1.93,
                           2.08,
                           2.25
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -257,7 +263,9 @@
                           1.93,
                           2.08,
                           2.25
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -411,7 +419,9 @@
                           3.85,
                           4.15,
                           4.5
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -560,7 +570,9 @@
                           206,
                           211,
                           216
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "willAdditive": {
                         "verb": "VARY_BY",
@@ -578,7 +590,9 @@
                           0.48,
                           0.49,
                           0.5
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   },
@@ -617,7 +631,9 @@
                           52,
                           53,
                           54
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "willAdditive": {
                         "verb": "VARY_BY",
@@ -635,7 +651,9 @@
                           0.12,
                           0.12,
                           0.13
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -672,7 +690,9 @@
                 24,
                 23,
                 23
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             },
             "unit": "SECOND"
           },
@@ -800,7 +820,9 @@
                           20,
                           20,
                           20
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   },
@@ -826,7 +848,9 @@
                           3.85,
                           4.15,
                           4.5
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   },
@@ -864,7 +888,9 @@
                           0.55,
                           0.6,
                           0.65
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       },
                       "appliesSolidification": {
                         "verb": "IS",
@@ -935,7 +961,9 @@
                           7.7,
                           8.3,
                           9
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }
@@ -1011,7 +1039,9 @@
                           1.54,
                           1.66,
                           1.8
-                        ]
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
                       }
                     }
                   }

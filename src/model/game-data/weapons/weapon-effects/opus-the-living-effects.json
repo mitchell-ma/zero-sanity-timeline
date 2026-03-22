@@ -14,7 +14,9 @@
                   "verb": "VARY_BY",
                   "object": "STATUS_LEVEL",
                   "valueMin": 0.075,
-                  "valueMax": 0.15
+                  "valueMax": 0.15,
+                  "ofDeterminer": "THIS",
+                  "of": "OPERATOR"
                 }
               }
             }

@@ -8,7 +8,7 @@
  */
 
 import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../dsl/semantics';
-import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../dsl/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, NounType } from '../dsl/semantics';
 import { t } from '../locales/locale';
 
 // ── Output ───────────────────────────────────────────────────────────────────
@@ -106,6 +106,10 @@ export const OBJECT_LABELS: Record<string, string> = {
   TIME_STOP: t('dsl.object.TIME_STOP'),
   GAME_TIME: t('dsl.object.GAME_TIME'),
   REAL_TIME: t('dsl.object.REAL_TIME'),
+  [NounType.STAT]: t('dsl.object.STAT'),
+  [NounType.TALENT_ONE_LEVEL]: t('dsl.object.TALENT_ONE_LEVEL'),
+  [NounType.TALENT_TWO_LEVEL]: t('dsl.object.TALENT_TWO_LEVEL'),
+  [NounType.ATTRIBUTE_INCREASE_LEVEL]: t('dsl.object.ATTRIBUTE_INCREASE_LEVEL'),
 };
 
 const PROPERTY_LABELS: Record<string, string> = {

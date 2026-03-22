@@ -324,6 +324,7 @@ export function attachDefaultSegments(
       if (ev.timeInteraction === undefined && ext.timeInteraction != null) props.timeInteraction = ext.timeInteraction as string;
       if (ev.isPerfectDodge === undefined && ext.isPerfectDodge != null) props.isPerfectDodge = ext.isPerfectDodge as boolean;
       if (ev.timeStop === undefined && ext.timeStop != null) props.timeStop = ext.timeStop as number;
+      if (ev.enhancementType === undefined && ext.enhancementType != null) props.enhancementType = ext.enhancementType as import('../consts/enums').EnhancementType;
       if (ev.nonOverlappableRange === undefined && defaults.segments) {
         const span = defaults.segments.reduce((sum, s) => sum + s.properties.duration, 0);
         props.nonOverlappableRange = span;
@@ -343,6 +344,13 @@ export function attachDefaultSegments(
       const isTyped = defSeg.properties.segmentTypes && defSeg.properties.segmentTypes.length > 0;
       if (!isPlaceholder && !isTyped && i < ev.segments.length && ev.segments[i].properties.duration !== undefined) {
         copy.properties = { ...copy.properties, duration: ev.segments[i].properties.duration };
+      }
+      // Preserve user-modified frame offsets from the raw event
+      if (!isPlaceholder && copy.frames && i < ev.segments.length && ev.segments[i].frames) {
+        const rawFrames = ev.segments[i].frames!;
+        for (let fi = 0; fi < copy.frames.length && fi < rawFrames.length; fi++) {
+          copy.frames[fi].offsetFrame = rawFrames[fi].offsetFrame;
+        }
       }
       return copy;
     });

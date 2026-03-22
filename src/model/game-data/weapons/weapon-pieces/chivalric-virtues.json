@@ -121,7 +121,9 @@
                 475,
                 480,
                 485
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

@@ -5,9 +5,9 @@
  * independently and keeps the view layer thin.
  */
 
-import { EventFrameType } from '../../consts/enums';
+import { EnhancementType, EventFrameType } from '../../consts/enums';
 import { TimelineEvent, EventSegmentData, Operator, computeSegmentsSpan, getAnimationDuration, eventEndFrame, durationSegment } from '../../consts/viewTypes';
-import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
+import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
@@ -281,6 +281,7 @@ export function createEvent(
     skillPointCost?: number;
     sourceOwnerId?: string;
     sourceSkillName?: string;
+    enhancementType?: import('../../consts/enums').EnhancementType;
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
@@ -308,6 +309,7 @@ export function createEvent(
     ...(defaultSkill?.skillPointCost != null ? { skillPointCost: defaultSkill.skillPointCost } : {}),
     ...(defaultSkill?.sourceOwnerId ? { sourceOwnerId: defaultSkill.sourceOwnerId } : {}),
     ...(defaultSkill?.sourceSkillName ? { sourceSkillName: defaultSkill.sourceSkillName } : {}),
+    ...(defaultSkill?.enhancementType ? { enhancementType: defaultSkill.enhancementType } : {}),
   };
 }
 
@@ -484,17 +486,8 @@ export function validateUpdate(
   if (merged.columnId !== SKILL_COLUMNS.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Block battle skills from being placed during a combo animation
   if (merged.columnId === SKILL_COLUMNS.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
-  // Empowered battle skills require 4 active Melting Flame stacks
-  if (merged.id?.includes('EMPOWERED')) {
-    const mfSource = processedEvents ?? allEvents;
-    const mfCount = mfSource.filter(
-      (e) => e.ownerId === merged.ownerId && e.columnId === OPERATOR_COLUMNS.MELTING_FLAME
-        && e.startFrame <= merged.startFrame && eventEndFrame(e) > merged.startFrame,
-    ).length;
-    if (mfCount < 4) return null;
-  }
-  // Enhanced battle skills require an active ultimate
-  if (merged.id?.includes('ENHANCED') && !merged.id?.includes('EMPOWERED')) {
+  // Enhanced skills require an active ultimate
+  if (merged.enhancementType === EnhancementType.ENHANCED) {
     const ultActive = allEvents.some(
       (e) => e.uid !== merged.uid && e.ownerId === merged.ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
         && merged.startFrame >= e.startFrame + getAnimationDuration(e)
@@ -530,7 +523,7 @@ export function validateMove(
     clamped = clampToComboEdge(allEvents, target, clamped);
   }
   // Clamp enhanced events within the ENHANCE clause window
-  if (target.id?.includes('ENHANCED') && !target.id?.includes('EMPOWERED')) {
+  if (target.enhancementType === EnhancementType.ENHANCED) {
     clamped = clampToEnhanceWindow(allEvents, target, clamped);
   }
   return clamped;

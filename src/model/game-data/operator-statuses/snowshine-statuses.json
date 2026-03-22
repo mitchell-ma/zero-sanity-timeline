@@ -16,7 +16,9 @@
                 "value": [
                   0.15,
                   0.25
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "hpThreshold": {
                 "verb": "VARY_BY",
@@ -24,7 +26,9 @@
                 "value": [
                   0.45,
                   0.55
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }
@@ -71,7 +75,9 @@
                 "value": [
                   6,
                   10
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               }
             }
           }

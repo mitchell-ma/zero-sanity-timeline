@@ -23,7 +23,9 @@
                 "value": [
                   0.02,
                   0.04
-                ]
+                ],
+                "ofDeterminer": "THIS",
+                "of": "OPERATOR"
               },
               "duration": {
                 "value": {

@@ -22,7 +22,9 @@
                 22,
                 24,
                 28
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

@@ -121,7 +121,9 @@
                 334,
                 338,
                 341
-              ]
+              ],
+              "ofDeterminer": "THIS",
+              "of": "OPERATOR"
             }
           }
         }

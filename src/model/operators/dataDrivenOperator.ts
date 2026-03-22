@@ -15,6 +15,17 @@ import { DEFAULT_STATS } from '../../consts/stats';
 import { interpolateStats, ATTRIBUTE_INCREASE_VALUES } from './operator';
 import type { BaseStats } from './operator';
 import type { Potential, SkillLevel } from '../../consts/types';
+import genericStatuses from '../game-data/operator-statuses/generic-statuses.json';
+
+/** Lookup from generic attribute-increase status ID → { name, attribute }. */
+export const ATTRIBUTE_INCREASE_LOOKUP: Record<string, { name: string; attribute: StatType }> = {};
+for (const entry of genericStatuses) {
+  const props = entry.properties;
+  const effect = entry.clause[0]?.effects[0];
+  if (props?.id && effect?.objectId) {
+    ATTRIBUTE_INCREASE_LOOKUP[props.id] = { name: props.name, attribute: effect.objectId as StatType };
+  }
+}
 
 /** Minimal operator config shape accepted by DataDrivenOperator. */
 export interface OperatorStatConfig {
@@ -31,7 +42,7 @@ export interface OperatorStatConfig {
   talents?: {
     one?: { name: string; maxLevel: number };
     two?: { name: string; maxLevel: number };
-    attributeIncrease?: { name: string; attribute: string };
+    attributeIncrease?: { id: string; maxLevel: number };
   };
   /** Built-in operators: level entries with exact per-level stats. */
   statsByLevel?: { level: number; attributes: Record<string, number> }[];
@@ -77,8 +88,9 @@ export class DataDrivenOperator {
     this.element = config.elementType as ElementType;
     this.mainAttributeType = config.mainAttributeType as StatType;
     this.secondaryAttributeType = config.secondaryAttributeType as StatType;
+    const aiId = config.talents?.attributeIncrease?.id;
     this.attributeIncreaseAttribute =
-      (config.talents?.attributeIncrease?.attribute as StatType) ?? this.mainAttributeType;
+      (aiId ? ATTRIBUTE_INCREASE_LOOKUP[aiId]?.attribute : undefined) ?? this.mainAttributeType;
 
     // Default mutable state
     this.potential = 0;
@@ -137,7 +149,10 @@ export class DataDrivenOperator {
   get maxTalentTwoLevel(): number { return this.config.talents?.two?.maxLevel ?? 0; }
   get talentOneName(): string { return this.config.talents?.one?.name ?? ''; }
   get talentTwoName(): string { return this.config.talents?.two?.name ?? ''; }
-  get attributeIncreaseName(): string { return this.config.talents?.attributeIncrease?.name ?? ''; }
+  get attributeIncreaseName(): string {
+    const aiId = this.config.talents?.attributeIncrease?.id;
+    return (aiId ? ATTRIBUTE_INCREASE_LOOKUP[aiId]?.name : undefined) ?? '';
+  }
 
   // ── Private ──────────────────────────────────────────────────────────────
 

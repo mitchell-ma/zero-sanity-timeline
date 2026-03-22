@@ -123,8 +123,27 @@ const FOLD_MODE_LABELS: Record<FoldMode, string> = {
   [FoldMode.EVENT]: t('sheet.fold.event'),
 };
 
-function foldRows(rows: DamageTableRow[], mode: FoldMode): DamageTableRow[] {
+function getSegmentStartFrame(ev: TimelineEvent, segmentIndex: number): number {
+  let offset = 0;
+  for (let i = 0; i < segmentIndex && i < ev.segments.length; i++) {
+    const seg = ev.segments[i];
+    if (seg.properties.offset != null) {
+      offset = seg.properties.offset;
+    }
+    offset += seg.properties.duration;
+  }
+  const seg = ev.segments[segmentIndex];
+  if (seg?.properties.offset != null) {
+    offset = seg.properties.offset;
+  }
+  return ev.startFrame + offset;
+}
+
+function foldRows(rows: DamageTableRow[], mode: FoldMode, events: TimelineEvent[]): DamageTableRow[] {
   if (mode === FoldMode.FRAME) return rows;
+
+  const eventMap = new Map<string, TimelineEvent>();
+  for (const ev of events) eventMap.set(ev.uid, ev);
 
   const groups = new Map<string, DamageTableRow[]>();
   for (const row of rows) {
@@ -146,11 +165,21 @@ function foldRows(rows: DamageTableRow[], mode: FoldMode): DamageTableRow[] {
         totalDamage = (totalDamage ?? 0) + r.damage;
       }
     }
+
+    const ev = eventMap.get(first.eventUid);
+    let startFrame = first.absoluteFrame;
+    if (ev) {
+      startFrame = mode === FoldMode.EVENT
+        ? ev.startFrame
+        : getSegmentStartFrame(ev, first.segmentIndex);
+    }
+
     folded.push({
       ...first,
       key: mode === FoldMode.EVENT
         ? `${first.eventUid}-folded`
         : `${first.eventUid}-s${first.segmentIndex}-folded`,
+      absoluteFrame: startFrame,
       damage: totalDamage,
       hpRemaining: lastRow.hpRemaining,
       params: null,
@@ -404,7 +433,7 @@ export default function CombatSheet({
 
   // Fold mode
   const [foldMode, setFoldMode] = useState(FoldMode.FRAME);
-  const rows = useMemo(() => foldRows(rawRows, foldMode), [rawRows, foldMode]);
+  const rows = useMemo(() => foldRows(rawRows, foldMode, events), [rawRows, foldMode, events]);
 
   // DPS range filter
   const [dpsRangeStart, setDpsRangeStart] = useState('');
