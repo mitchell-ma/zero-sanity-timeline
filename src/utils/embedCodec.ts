@@ -391,7 +391,7 @@ export async function encodeEmbed(
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
 
     // Encode ANIMATION segment duration so it survives round-trip even without column templates
-    const animSeg = origEv?.segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+    const animSeg = origEv?.segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
     if (animSeg?.properties.duration) compact.an = animSeg.properties.duration;
 
     // Segment and frame deltas — compare original event's segments against template.
@@ -697,9 +697,9 @@ export async function decodeEmbed(
     // Legacy: convert compact.an (animationDuration) into an ANIMATION segment
     if (compact.an != null) {
       const segs = ev.segments;
-      const hasAnim = segs.some(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+      const hasAnim = segs.some(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
       if (!hasAnim) {
-        ev.segments = [{ properties: { duration: compact.an, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION } }, ...segs];
+        ev.segments = [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: compact.an, name: 'Animation' } }, ...segs];
       }
     }
 

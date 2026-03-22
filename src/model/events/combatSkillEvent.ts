@@ -19,7 +19,7 @@ export abstract class CombatSkillEvent extends Event {
     clause?: Clause;
   }) {
     super({
-      eventType: EventType.COMBAT_SKILL,
+      eventType: EventType.COMBAT_SKILL_EVENT,
       eventOrigin: params.eventOrigin ?? EventOriginType.OPERATOR,
       name: params.name,
       target: params.target,

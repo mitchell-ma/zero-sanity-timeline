@@ -383,7 +383,9 @@
     ],
     "properties": {
       "name": "Dance of Rime",
-      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "lastRite"
@@ -392,7 +394,9 @@
   "ESOTERIC_LEGACY": {
     "properties": {
       "name": "Esoteric Legacy of Seš'qa",
-      "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence."
+      "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "clause": [
       {
@@ -414,7 +418,7 @@
             "toDeterminer": "THIS",
             "toObject": "OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 16
               }
@@ -507,7 +511,9 @@
     "properties": {
       "name": "Winter's Devourer",
       "description": "Enemy has 3+ Cryo Infliction stacks",
-      "windowFrames": 720
+      "windowFrames": 720,
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "COMBO_SKILL"
     },
     "clause": [
       {
@@ -519,7 +525,7 @@
             "toDeterminer": "THIS",
             "toObject": "OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 85
               }
@@ -531,10 +537,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -751,10 +759,13 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "COOLDOWN"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "COOLDOWN",
+            "IMMEDIATE_COOLDOWN"
+          ],
           "name": "Cooldown",
           "duration": {
             "value": {
@@ -800,7 +811,9 @@
   "VIGIL_SERVICES": {
     "properties": {
       "name": "Vigil Services",
-      "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills."
+      "description": "Last Rite encases herself in frost armor, creates an ice scythe to perform 3 slashes, and gains immunity to all damages while this state is active. \nEach slash deals massive Cryo DMG. \nLast Rite can only gain Ultimate Energy from her own battle skills and combo skills.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "ULTIMATE_SKILL"
     },
     "clause": [
       {
@@ -810,7 +823,7 @@
             "verb": "CONSUME",
             "object": "ULTIMATE_ENERGY",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "VARY_BY",
                 "object": "POTENTIAL",
                 "value": [
@@ -830,10 +843,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -1102,7 +1117,9 @@
         "FINISHER"
       ],
       "name": "Dance of Rime (Finisher)",
-      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "lastRite"
@@ -1176,7 +1193,9 @@
         "DIVE"
       ],
       "name": "Dance of Rime (Dive)",
-      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "lastRite"

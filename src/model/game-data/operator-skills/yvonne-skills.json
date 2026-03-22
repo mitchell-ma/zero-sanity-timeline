@@ -355,7 +355,9 @@
     ],
     "properties": {
       "name": "Exuberant Trigger",
-      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "yvonne"
@@ -364,7 +366,9 @@
   "BRR_BRR_BOMB": {
     "properties": {
       "name": "Brr-Brr-Bomb β",
-      "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies."
+      "description": "Throws a freezing bomb. The bomb explodes when it hits the enemy to deal Cryo DMG. If hitting an enemy with Cryo Infliction or Nature Infliction, then consume all Arts Infliction stacks, forcibly apply Solidification, and deal Cryo DMG to the target based on the number of stacks consumed.\nAfter the battle skill successfully applies Solidification, Yvonne gains additional Ultimate Energy based on the number of stacks consumed. This Ultimate Energy Gain effect can only trigger 1 time, even if the skill hits multiple enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "clause": [
       {
@@ -508,7 +512,9 @@
     "properties": {
       "name": "Flashfreezer υ37",
       "description": "Final Strike on Solidified enemy",
-      "windowFrames": 720
+      "windowFrames": 720,
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "COMBO_SKILL"
     },
     "clause": [
       {
@@ -520,7 +526,7 @@
             "toDeterminer": "THIS",
             "toObject": "OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 20
               }
@@ -532,10 +538,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -599,10 +607,13 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "COOLDOWN"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "COOLDOWN",
+            "IMMEDIATE_COOLDOWN"
+          ],
           "name": "Cooldown",
           "duration": {
             "value": {
@@ -649,7 +660,9 @@
   "CRYOBLASTING_PISTOLIER": {
     "properties": {
       "name": "Cryoblasting Pistolier",
-      "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification."
+      "description": "Immediately deploys the support bot Tink-a-Bella and makes Yvonne the controlled operator.\nTemporarily enhances Yvonne's basic attack (BATK). Each enhanced BATK sequence performed grants a stack of Critical Rate buff. After reaching max stacks, Yvonne also gains a Critical DMG buff. When the skill is about to end, Yvonne's last enhanced BATK becomes an enhanced Final Strike that deals massive Cryo DMG.\nIf the enemy is Solidified, Yvonne performs an additional attack that deals Cryo DMG and then consumes the enemy's Solidification.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "ULTIMATE_SKILL"
     },
     "clause": [
       {
@@ -659,7 +672,7 @@
             "verb": "CONSUME",
             "object": "ULTIMATE_ENERGY",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 200
               }
@@ -671,10 +684,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -690,10 +705,12 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ACTIVE"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ACTIVE"
+          ],
           "duration": {
             "value": {
               "verb": "IS",
@@ -1823,7 +1840,9 @@
     "properties": {
       "enhancementTypes": [
         "EMPOWERED"
-      ]
+      ],
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     }
   },
   "EXUBERANT_TRIGGER_FINISHER": {
@@ -1832,7 +1851,9 @@
         "FINISHER"
       ],
       "name": "Exuberant Trigger (Finisher)",
-      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "yvonne"
@@ -1906,7 +1927,9 @@
         "DIVE"
       ],
       "name": "Exuberant Trigger (Dive)",
-      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "yvonne"

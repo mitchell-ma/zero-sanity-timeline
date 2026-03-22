@@ -26,7 +26,9 @@
       "name": "Positive Feedback (P1)",
       "type": "POTENTIAL",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "POTENTIAL"
     },
     "metadata": {
       "originId": "akekuri",
@@ -68,13 +70,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 5
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
       "originId": "POSITIVE_FEEDBACK_POTENTIAL",

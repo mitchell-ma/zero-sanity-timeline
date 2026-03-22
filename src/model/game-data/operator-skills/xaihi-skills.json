@@ -402,7 +402,9 @@
     ],
     "properties": {
       "name": "Cooldown",
-      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Cryo DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "xaihi"
@@ -411,7 +413,9 @@
   "DISTRIBUTED_DOS": {
     "properties": {
       "name": "Distributed DoS",
-      "description": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. \nAfter the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. \nWhen the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack."
+      "description": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. \nAfter the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. \nWhen the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "clause": [
       {
@@ -452,7 +456,9 @@
     "properties": {
       "name": "Stress Testing",
       "description": "Auxiliary Crystal exhausts HP treatments",
-      "windowFrames": 720
+      "windowFrames": 720,
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "COMBO_SKILL"
     },
     "clause": [
       {
@@ -464,7 +470,7 @@
             "toDeterminer": "THIS",
             "toObject": "OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 10
               }
@@ -476,10 +482,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -581,10 +589,13 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "COOLDOWN"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "COOLDOWN",
+            "IMMEDIATE_COOLDOWN"
+          ],
           "name": "Cooldown",
           "duration": {
             "value": {
@@ -631,7 +642,9 @@
   "STACK_OVERFLOW": {
     "properties": {
       "name": "Stack Overflow",
-      "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect."
+      "description": "Applies temporary Cryo Amp and Nature Amp to the entire team. The attribute of Intellect increases the Amp effect.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "ULTIMATE_SKILL"
     },
     "clause": [
       {
@@ -641,7 +654,7 @@
             "verb": "CONSUME",
             "object": "ULTIMATE_ENERGY",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "VARY_BY",
                 "object": "POTENTIAL",
                 "value": [
@@ -661,10 +674,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -704,7 +719,9 @@
         "FINISHER"
       ],
       "name": "Cooldown (Finisher)",
-      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "xaihi"
@@ -778,7 +795,9 @@
         "DIVE"
       ],
       "name": "Cooldown (Dive)",
-      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "xaihi"

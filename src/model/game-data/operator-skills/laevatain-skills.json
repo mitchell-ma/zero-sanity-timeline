@@ -543,7 +543,9 @@
     ],
     "properties": {
       "name": "Flaming Cinders",
-      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP."
+      "description": "BASIC ATTACK: \nAn attack with up to 5 sequences that deals Heat DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "laevatain"
@@ -555,7 +557,9 @@
         "PREVIOUS_FRAME"
       ],
       "name": "Smouldering Fire",
-      "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active."
+      "description": "Summons a Magma Fragment to continuously attack enemies and deal Heat DMG. Hitting the enemy grants 1 stack of Melting Flame. \nIf Laevatain already has  stack(s) of Melting Flame when casting the skill, then consume all the stacks and perform 1 additional attack that deals Heat DMG and forcibly trigger temporary Combustion to all enemies in a large area.\nWhen the additional attack hits the enemy, restore additional Ultimate Energy.\nBattle skill effects are enhanced while Laevatain's ultimate is active.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "clause": [
       {
@@ -610,6 +614,17 @@
                       "stacks": {
                         "verb": "IS",
                         "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
                       }
                     }
                   },
@@ -1179,17 +1194,6 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "object": "STAGGER",
-                    "toObject": "ENEMY",
-                    "with": {
-                      "value": {
-                        "verb": "IS",
-                        "value": 10
-                      }
-                    }
-                  },
-                  {
-                    "verb": "DEAL",
                     "adjective": "HEAT",
                     "object": "DAMAGE",
                     "to": "ENEMY",
@@ -1235,7 +1239,9 @@
     "properties": {
       "name": "Seethe",
       "description": "Enemy has Combustion or Corrosion",
-      "windowFrames": 720
+      "windowFrames": 720,
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "COMBO_SKILL"
     },
     "clause": [
       {
@@ -1246,7 +1252,7 @@
             "object": "ULTIMATE_ENERGY",
             "toObject": "THIS_OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 30
               }
@@ -1259,12 +1265,14 @@
       {
         "metadata": {
           "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION",
           "dataSources": [
             "SELF"
           ]
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -1336,7 +1344,7 @@
                     "verb": "RECOVER",
                     "object": "ULTIMATE_ENERGY",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 25
                       }
@@ -1388,10 +1396,13 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "COOLDOWN"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "COOLDOWN",
+            "IMMEDIATE_COOLDOWN"
+          ],
           "name": "Cooldown",
           "duration": {
             "value": {
@@ -1433,10 +1444,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -1471,10 +1484,12 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "STASIS"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "STASIS"
+          ],
           "name": "Stasis",
           "duration": {
             "value": {
@@ -1501,10 +1516,12 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ACTIVE"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ACTIVE"
+          ],
           "name": "Active",
           "duration": {
             "value": {
@@ -1538,7 +1555,7 @@
             "verb": "CONSUME",
             "object": "ULTIMATE_ENERGY",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 300
               }
@@ -1549,7 +1566,9 @@
     ],
     "properties": {
       "name": "Twilight",
-      "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction."
+      "description": "Laevatain summons her Sviga Lævi and becomes the controlled operator. \nFor a certain duration, her basic attacks (BATK) are enhanced and the Sviga Lævi strikes together with Laevatain, with each attack dealing Heat DMG. BATK sequence 3 also applies Heat Infliction.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "ULTIMATE_SKILL"
     },
     "metadata": {
       "originId": "laevatain"
@@ -1559,7 +1578,9 @@
     "properties": {
       "enhancementTypes": [
         "ENHANCED"
-      ]
+      ],
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "metadata": {
       "originId": "laevatain"
@@ -1781,7 +1802,9 @@
       "enhancementTypes": [
         "ENHANCED",
         "EMPOWERED"
-      ]
+      ],
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "segments": [
       {
@@ -2040,7 +2063,9 @@
       ],
       "dependencyTypes": [
         "PREVIOUS_FRAME"
-      ]
+      ],
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "segments": [
       {
@@ -2518,7 +2543,7 @@
                     "verb": "RECOVER",
                     "object": "ULTIMATE_ENERGY",
                     "with": {
-                      "cardinality": {
+                      "value": {
                         "verb": "IS",
                         "value": 100
                       }
@@ -2938,7 +2963,9 @@
     "properties": {
       "enhancementTypes": [
         "ENHANCED"
-      ]
+      ],
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     }
   },
   "FLAMING_CINDERS_FINISHER": {
@@ -2947,7 +2974,9 @@
         "FINISHER"
       ],
       "name": "Flaming Cinders (Finisher)",
-      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP."
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "laevatain"
@@ -3021,7 +3050,9 @@
         "DIVE"
       ],
       "name": "Flaming Cinders (Dive)",
-      "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies."
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "laevatain"

@@ -45,7 +45,6 @@ export interface Operator {
   food: string;
   tactical: string;
   skills: Record<SkillType, SkillDef>;
-  ultimateEnergyCost: number;
   maxTalentOneLevel: number;
   maxTalentTwoLevel: number;
   talentOneName: string;
@@ -135,8 +134,8 @@ export interface EventFrameMarker {
   staggerValue?: number;
   /** Label for status-effect frames (e.g. "-12.0 Res"). Non-null marks this as a status frame rather than a damage frame. */
   statusLabel?: string;
-  /** Whether this frame duplicates the source infliction that triggered it. */
-  duplicatesSourceInfliction?: boolean;
+  /** Whether this frame duplicates the trigger infliction that caused it. */
+  duplicatesTriggerInfliction?: boolean;
   /** DSL v2 clause predicates (conditional + unconditional effect groups). */
   clauses?: readonly FrameClausePredicate[];
   /** Inline DEAL DAMAGE data (element + per-level multipliers). */
@@ -169,12 +168,12 @@ export interface SelectedFrame {
 /** A sequence segment within a multi-sequence event (e.g. basic attack chain). */
 export interface EventSegmentData {
   metadata?: {
-    /** The phase type of this segment. Defaults to NORMAL. */
-    segmentType?: SegmentType;
     /** Data sources this segment was derived from. */
     dataSources?: string[];
   };
   properties: {
+    /** The phase types of this segment. */
+    segmentTypes?: SegmentType[];
     /** Duration of this segment in frames. */
     duration: number;
     /**
@@ -430,7 +429,9 @@ export function computeSegmentsSpan(segments: readonly EventSegmentData[]): numb
   let running = 0;
   let maxEnd = 0;
   for (const s of segments) {
-    const off = s.properties.offset != null ? s.properties.offset : running;
+    const off = s.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)
+      ? 0
+      : s.properties.offset != null ? s.properties.offset : running;
     const end = off + s.properties.duration;
     if (end > maxEnd) maxEnd = end;
     running = s.properties.offset == null ? running + s.properties.duration : end;
@@ -440,14 +441,14 @@ export function computeSegmentsSpan(segments: readonly EventSegmentData[]): numb
 
 /** Get animation duration (frames) from an event's ANIMATION segment. Returns 0 if none. */
 export function getAnimationDuration(ev: Pick<TimelineEvent, 'segments'>): number {
-  const seg = ev.segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+  const seg = ev.segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
   return seg?.properties.duration ?? 0;
 }
 
 /** Get animation duration (frames) from a default event or variant definition's segments. Returns 0 if none. */
 export function getAnimationDurationFromSegments(segments: readonly EventSegmentData[] | undefined): number {
   if (!segments) return 0;
-  const seg = segments.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
+  const seg = segments.find(s => s.properties.segmentTypes?.includes(SegmentType.ANIMATION));
   return seg?.properties.duration ?? 0;
 }
 

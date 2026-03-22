@@ -3,6 +3,7 @@ import { EventFrameType, SegmentType, TimeDependency } from "../../consts/enums"
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
 import { formatSegmentShortName } from "../../dsl/semanticsTranslation";
+import type { ValueResolutionContext } from "../calculation/valueResolver";
 
 /** Convert skill event sequences into view-layer segment data. */
 export class SkillSegmentBuilder {
@@ -16,7 +17,7 @@ export class SkillSegmentBuilder {
    */
   static buildSegments(
     sequences: readonly SkillEventSequence[],
-    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string },
+    options?: { labels?: string[]; gaugeGain?: number; teamGaugeGain?: number; gaugeGainByEnemies?: Record<number, number>; delayedHitLabel?: string; ctx?: ValueResolutionContext },
   ): {
     totalDurationFrames: number;
     segments: EventSegmentData[];
@@ -32,7 +33,7 @@ export class SkillSegmentBuilder {
 
     for (let i = 0; i < sequences.length; i++) {
       const seq = sequences[i];
-      const durationFrames = Math.round(seq.getDurationSeconds() * FPS);
+      const durationFrames = Math.round(seq.getDurationSecondsWithContext(options?.ctx) * FPS);
       const seqFrames = seq.getFrames();
 
       const frames = seqFrames.map((f) => {
@@ -78,7 +79,7 @@ export class SkillSegmentBuilder {
         if (consumeStatus) marker.consumeStatus = consumeStatus;
         const dmgEl = f.getDamageElement();
         if (dmgEl) marker.damageElement = dmgEl;
-        if (f.getDuplicatesSourceInfliction()) marker.duplicatesSourceInfliction = true;
+        if (f.getDuplicatesTriggerInfliction()) marker.duplicatesTriggerInfliction = true;
         const clauses = f.getClauses();
         if (clauses.length > 0) marker.clauses = clauses;
         const dd = f.getDealDamage();
@@ -128,14 +129,14 @@ export class SkillSegmentBuilder {
       const inBound = frames.filter(f => f.offsetFrame <= durationFrames);
       const outOfBound = frames.filter(f => f.offsetFrame > durationFrames);
 
-      const seqRecord = seq as SkillEventSequence & { segmentType?: string; timeDependency?: string; clause?: EventSegmentData['clause'] };
+      const seqRecord = seq as SkillEventSequence & { segmentTypes?: string[]; timeDependency?: string; clause?: EventSegmentData['clause'] };
       const segData: EventSegmentData = {
         properties: {
           duration: durationFrames,
           name: label,
           ...(seqRecord.timeDependency ? { timeDependency: seqRecord.timeDependency as TimeDependency } : {}),
+          ...(seqRecord.segmentTypes ? { segmentTypes: seqRecord.segmentTypes as SegmentType[] } : {}),
         },
-        ...(seqRecord.segmentType ? { metadata: { segmentType: seqRecord.segmentType as SegmentType } } : {}),
         frames: inBound.length > 0 ? inBound : undefined,
         ...(seqRecord.clause ? { clause: seqRecord.clause } : {}),
       };

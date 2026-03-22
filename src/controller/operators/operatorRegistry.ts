@@ -74,7 +74,6 @@ const PLACEHOLDER_EQUIPMENT = {
  */
 function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, unknown>): ViewOperator {
   const timings = loadSkillTimings(opJson);
-  const gaugeMax = loadUltimateEnergyCost(opJson);
   const gg = loadSkillGaugeGains(opJson);
   const elementType = opJson.elementType as string;
   const talents = opJson.talents as {
@@ -103,44 +102,30 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const basicActivation = 24;
   const battleActivation = timings.battleDur;
   const battleCooldown = 0;
-  const comboActivation = timings.comboDur;
-  const ultActiveDur = timings.ultActiveDur
-    ?? Math.max(0, timings.ultDur - timings.ultAnimDur);
-  const ultCooldown = timings.ultCd;
-
-  // Build defaultSegments for each skill type
-  const buildSegments = (activation: number, active: number, cooldown: number, isUltimate?: boolean): EventSegmentData[] => {
+  // Build defaultSegments for basic/battle skills only — combo and ultimate are fully data-driven from JSON
+  const buildSegments = (activation: number, cooldown: number): EventSegmentData[] => {
     const segs: EventSegmentData[] = [];
-    if (isUltimate) {
-      // Ultimate: animation (real-time) + active + cooldown (real-time)
-      if (activation > 0) segs.push({ properties: { duration: activation, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } });
-      if (active > 0) segs.push({ properties: { duration: active, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } });
-      if (cooldown > 0) segs.push({ properties: { duration: cooldown, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.COOLDOWN } });
-    } else {
-      if (activation > 0) segs.push({ properties: { duration: activation } });
-      if (cooldown > 0) segs.push({ properties: { duration: cooldown, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } });
-    }
+    if (activation > 0) segs.push({ properties: { duration: activation } });
+    if (cooldown > 0) segs.push({ properties: { segmentTypes: [SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN], duration: cooldown, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME } });
     return segs.length > 0 ? segs : [{ properties: { duration: activation || 24 } }];
   };
 
   const skillSegmentConfigs: Record<string, {
-    defaultSegments: EventSegmentData[];
+    defaultSegments?: EventSegmentData[];
     triggerCondition: string | null;
   }> = {
     basic: {
-      defaultSegments: buildSegments(basicActivation, 0, 0),
+      defaultSegments: buildSegments(basicActivation, 0),
       triggerCondition: null,
     },
     battle: {
-      defaultSegments: buildSegments(battleActivation, 0, battleCooldown),
+      defaultSegments: buildSegments(battleActivation, battleCooldown),
       triggerCondition: null,
     },
     combo: {
-      defaultSegments: buildSegments(comboActivation, 0, timings.comboCd),
       triggerCondition: null,
     },
     ultimate: {
-      defaultSegments: buildSegments(timings.ultAnimDur, ultActiveDur, ultCooldown, true),
       triggerCondition: null,
     },
   };
@@ -193,7 +178,6 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     skills,
-    ultimateEnergyCost: gaugeMax,
     maxTalentOneLevel: talents?.one?.maxLevel ?? 0,
     maxTalentTwoLevel: talents?.two?.maxLevel ?? 0,
     talentOneName: talents?.one?.name ?? '',
@@ -300,7 +284,7 @@ export function deregisterCustomOperatorById(operatorId: string): void {
 
 // ── Ultimate energy cost with potential modifiers ────────────────────────────
 
-function getUltimateEnergyCost(operatorId: string): number {
+export function getUltimateEnergyCost(operatorId: string): number {
   const json = getOperatorJson(operatorId);
   if (!json) return 0;
   return loadUltimateEnergyCost(json);

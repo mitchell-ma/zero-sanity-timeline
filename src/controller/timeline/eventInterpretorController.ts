@@ -18,7 +18,7 @@ import {
   THRESHOLD_MAX,
 } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
-import { resolveValueNode } from '../calculation/valueResolver';
+import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { ElementType, PhysicalStatusType, StatusType, UnitType } from '../../consts/enums';
@@ -108,9 +108,12 @@ function validateVerbObject(verb: VerbType, object?: string) {
   return true;
 }
 
-function resolveCardinality(cardinality: number | typeof THRESHOLD_MAX | undefined, potential: number, defaultMax = 999) {
+function resolveCardinality(cardinality: ValueNode | typeof THRESHOLD_MAX | undefined, _potential: number, defaultMax = 999) {
   if (cardinality === THRESHOLD_MAX) return defaultMax;
-  return cardinality ?? defaultMax;
+  if (cardinality != null && typeof cardinality === 'object') {
+    return getSimpleValue(cardinality) ?? defaultMax;
+  }
+  return defaultMax;
 }
 
 // ── InterpretContext ─────────────────────────────────────────────────────
@@ -311,7 +314,7 @@ export class EventInterpretorController {
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
     const sv = this.resolveWith(effect.with?.stacks, ctx);
     const count = typeof sv === 'number' ? sv : 1;
-    if (sv == null) console.warn(`[EventInterpretor] CONSUME: implicit cardinality 1 — configs should be explicit`);
+    if (sv == null) console.warn(`[EventInterpretor] CONSUME: implicit stacks 1 — configs should have explicit with.stacks`);
 
     if (effect.object === 'INFLICTION') {
       const col = resolveInflictionColumnId(effect.adjective);
@@ -339,11 +342,9 @@ export class EventInterpretorController {
 
   private buildValueContext(ctx: InterpretContext): ValueResolutionContext {
     const loadout = this.loadoutProperties?.[ctx.sourceOwnerId];
-    return {
-      skillLevel: loadout?.skills.battleSkillLevel ?? 12,
-      potential: ctx.potential ?? loadout?.operator.potential ?? 0,
-      stats: {},
-    };
+    const baseCtx = buildContextForSkillColumn(loadout, SKILL_COLUMNS.BATTLE);
+    if (ctx.potential != null) baseCtx.potential = ctx.potential;
+    return baseCtx;
   }
 
   /** Resolve a WITH property ValueNode, returning undefined if absent. */
@@ -410,7 +411,7 @@ export class EventInterpretorController {
 
   private doAll(effect: Effect, ctx: InterpretContext) {
     const maxIter = Math.min(
-      effect.for ? resolveCardinality(effect.for.cardinality, ctx.potential ?? 0) : 1, 10,
+      effect.for ? resolveCardinality(effect.for.value, ctx.potential ?? 0) : 1, 10,
     );
     const preds = effect.predicates ?? [];
     if (preds.length === 0) return true;
@@ -783,7 +784,7 @@ export class EventInterpretorController {
     this.controller.setComboTriggerColumnId(combo.uid, triggerCol);
 
     // Only generate source-mirrored inflictions for frames that explicitly
-    // declare APPLY SOURCE INFLICTION (duplicatesSourceInfliction flag).
+    // declare APPLY TRIGGER INFLICTION (duplicatesTriggerInfliction flag).
     const isArts = INFLICTION_COLUMN_IDS.has(triggerCol);
     const fStops = foreignStopsFor(combo, this.controller.getStops());
     const newEntries: QueueFrame[] = [];
@@ -793,7 +794,7 @@ export class EventInterpretorController {
       if (seg.frames) {
         for (let fi = 0; fi < seg.frames.length; fi++) {
           const frame = seg.frames[fi];
-          if (!frame.duplicatesSourceInfliction) continue;
+          if (!frame.duplicatesTriggerInfliction) continue;
           const absF = absoluteFrame(combo.startFrame, cumOffset, frame.offsetFrame, fStops);
           newEntries.push({
             frame: absF, priority: PRIORITY.INFLICTION_CREATE, type: 'INFLICTION_CREATE',

@@ -68,6 +68,15 @@ export class SkillPointController {
     this.ueController = ue;
   }
 
+  /**
+   * Seed per-slot SP costs for insufficiency zone computation.
+   * Must be called before the pipeline so that finalize() computes zones for
+   * ALL slots — not just those with battle skill events.
+   */
+  seedSlotCosts(costs: ReadonlyMap<string, number>) {
+    costs.forEach((cost, slotId) => this.slotSpCosts.set(slotId, cost));
+  }
+
   // ── Accumulation methods (called by DerivedEventController) ─────────────
 
   /**

@@ -196,8 +196,8 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   }
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   for (const id of remaining) {
-    const segs = (skills[id].segments ?? []) as { metadata?: { segmentType?: string } }[];
-    if (segs.some(s => s.metadata?.segmentType === 'ANIMATION')) { typeMap.ULTIMATE = id; break; }
+    const segs = (skills[id].segments ?? []) as { properties: { segmentTypes?: string[] } }[];
+    if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { typeMap.ULTIMATE = id; break; }
   }
   const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
   if (battleCandidates.length === 1) typeMap.BATTLE_SKILL = battleCandidates[0];
@@ -441,7 +441,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
   test('C3: Combo cooldown is 20 seconds', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value[0]).toBe(20);
@@ -468,7 +468,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
     const totalDuration = comboSkill.segments[0].properties.duration.value + comboSkill.segments[1].properties.duration.value;
     expect(totalDuration).toBe(1);
-    const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(0.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -515,7 +515,7 @@ describe('D. Ultimate (Wolven Fury)', () => {
     const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
     const totalDuration = ultimate.segments[0].properties.duration.value + ultimate.segments[1].properties.duration.value;
     expect(totalDuration).toBe(2.5);
-    const animSeg = ultimate.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = ultimate.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(1.53);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -824,7 +824,7 @@ describe('I. Cooldown Interactions', () => {
   test('I3: Combo skill (Frag Grenade Beta) has 20s cooldown', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value[0]).toBe(20);

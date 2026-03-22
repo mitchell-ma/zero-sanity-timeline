@@ -140,6 +140,10 @@
   "sheet.crit.always": "MAX CRIT",
   "sheet.crit.simulation": "SIM",
 
+  "sheet.fold.frame": "FRAME",
+  "sheet.fold.segment": "SEGMENT",
+  "sheet.fold.event": "EVENT",
+
   "ctx.header.add": "Add @ {frame}",
   "ctx.setControlled": "Set as Controlled Operator",
   "ctx.alreadyControlled": "Already in control",
@@ -341,7 +345,6 @@
 
   "dsl.property.duration": "Duration",
   "dsl.property.stacks": "Stacks",
-  "dsl.property.cardinality": "Amount",
   "dsl.property.multiplier": "Multiplier",
   "dsl.property.staggerValue": "Stagger",
   "dsl.property.skillPoint": "SP",

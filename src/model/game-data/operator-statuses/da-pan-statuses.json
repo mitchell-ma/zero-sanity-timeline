@@ -26,7 +26,9 @@
       "name": "Reduce and Thicken (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "da-pan",
@@ -72,13 +74,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 4
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "REDUCE_AND_THICKEN_TALENT",
@@ -109,7 +113,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "VARY_BY",
           "object": "POTENTIAL",
@@ -123,7 +127,9 @@
           ]
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "da-pan",
@@ -159,7 +165,9 @@
       "name": "Fine Cooking (P1)",
       "type": "POTENTIAL",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "POTENTIAL"
     },
     "metadata": {
       "originId": "da-pan",
@@ -201,13 +209,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
       "originId": "FINE_COOKING_POTENTIAL",

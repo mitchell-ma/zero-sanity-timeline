@@ -96,6 +96,8 @@ export function wouldOverlapNonOverlappable(
   startFrame: number,
   processedEvents?: readonly TimelineEvent[],
 ): boolean {
+  // Enemy inflictions are stackable — skip overlap check
+  if (ev.ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(ev.columnId)) return false;
   const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
     if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
@@ -201,6 +203,36 @@ export function clampDeltaByOverlap(
   // Normal overlap clamping (including revalidated events)
   if (!wouldOverlap(target)) return clampedDelta;
 
+  // Revalidated events: startFrame may be inside an overlap zone.
+  // Use nearest-boundary clamping so the event can't re-enter the zone.
+  if (overlapRevalidated?.has(eventUid)) {
+    let lo = -Infinity;
+    let hi = Infinity;
+    for (const s of siblings) {
+      if (target + evRange <= s.start || target >= s.end) continue;
+      const overlapStart = s.start - evRange;
+      const overlapEnd = s.end;
+      if (startFrame >= overlapStart && startFrame < overlapEnd) {
+        // startFrame is inside this overlap zone — snap to nearest edge
+        const distToLeft = target - overlapStart;
+        const distToRight = overlapEnd - target;
+        if (distToLeft <= distToRight) {
+          hi = Math.min(hi, overlapStart - startFrame);
+        } else {
+          lo = Math.max(lo, overlapEnd - startFrame);
+        }
+      } else {
+        // Normal sibling — directional edge clamping
+        if (clampedDelta >= 0) {
+          hi = Math.min(hi, overlapStart - startFrame);
+        } else {
+          lo = Math.max(lo, overlapEnd - startFrame);
+        }
+      }
+    }
+    return Math.max(lo, Math.min(hi, clampedDelta));
+  }
+
   // Find the nearest valid position by clamping to sibling edges
   if (clampedDelta >= 0) {
     // Moving forward — stop just before the first blocking sibling
@@ -208,8 +240,8 @@ export function clampDeltaByOverlap(
     for (const s of siblings) {
       if (target + evRange > s.start && target < s.end) {
         const edgeDelta = s.start - evRange - startFrame;
-        if (edgeDelta >= 0 || overlapRevalidated?.has(eventUid)) {
-          best = Math.min(best, Math.max(0, edgeDelta));
+        if (edgeDelta >= 0) {
+          best = Math.min(best, edgeDelta);
         }
       }
     }
@@ -220,8 +252,8 @@ export function clampDeltaByOverlap(
     for (const s of siblings) {
       if (target < s.end && target + evRange > s.start) {
         const edgeDelta = s.end - startFrame;
-        if (edgeDelta <= 0 || overlapRevalidated?.has(eventUid)) {
-          best = Math.max(best, Math.min(0, edgeDelta));
+        if (edgeDelta <= 0) {
+          best = Math.max(best, edgeDelta);
         }
       }
     }
@@ -263,7 +295,8 @@ export function createEvent(
     startFrame: atFrame,
     segments,
     ...(isForced ? { isForced: true } : {}),
-    ...(span > 0 ? { nonOverlappableRange: span } : {}),
+    // Enemy inflictions are stackable — no overlap prevention
+    ...(span > 0 && !(ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId)) ? { nonOverlappableRange: span } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),

@@ -6,7 +6,7 @@
 import { Operator, TimelineEvent, ResourceConfig, Enemy, MiniTimeline } from '../consts/viewTypes';
 import { OperatorLoadoutState, EMPTY_LOADOUT } from '../view/OperatorLoadoutHeader';
 import { LoadoutProperties, getDefaultLoadoutProperties } from '../view/InformationPane';
-import { ALL_OPERATORS, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
+import { ALL_OPERATORS, getUltimateEnergyCost, getUltimateEnergyCostForPotential } from './operators/operatorRegistry';
 import { getModelEnemy } from './calculation/enemyRegistry';
 import { BossEnemy } from '../model/enemies/bossEnemy';
 import { StatType } from '../consts/enums';
@@ -173,7 +173,7 @@ export function updatePropertiesWithPotential(
         const existing = prev.resourceConfigs[ultKey];
         if (existing && existing.max !== newCost) {
           nextResourceConfigs = { ...prev.resourceConfigs, [ultKey]: { ...existing, max: newCost } };
-        } else if (!existing && newCost !== op.ultimateEnergyCost) {
+        } else if (!existing && newCost !== getUltimateEnergyCost(op.id)) {
           nextResourceConfigs = {
             ...prev.resourceConfigs,
             [ultKey]: { startValue: GENERAL_MECHANICS.ultimateEnergy.startAtMax ? newCost : 0, max: newCost, regenPerSecond: 0 },
@@ -228,6 +228,8 @@ export function computeSlots(
       tacticalId: lo?.tacticalId ?? undefined,
       gearSetType,
       comboSkillLevel: loadoutProperties[slotId]?.skills.comboSkillLevel,
+      loadoutProperties: loadoutProperties[slotId],
+      loadout: lo,
     };
   });
 }
@@ -265,7 +267,7 @@ export function computeDefaultResourceConfig(
   const potential = props?.operator.potential ?? 5;
   const cost =
     getUltimateEnergyCostForPotential(op.id, potential as 0 | 1 | 2 | 3 | 4 | 5) ??
-    op.ultimateEnergyCost;
+    getUltimateEnergyCost(op.id);
   return { startValue: GENERAL_MECHANICS.ultimateEnergy.startAtMax ? cost : 0, max: cost, regenPerSecond: 0 };
 }
 
@@ -307,16 +309,12 @@ export function attachDefaultSegments(
     // A "placeholder" segment is a single segment with only a duration property (no name, frames, metadata)
     const isPlaceholder = ev.segments.length === 1
       && !ev.segments[0].properties.name && !ev.segments[0].frames && !ev.segments[0].metadata;
-    const needsSegments = isPlaceholder || ev._pendingSegmentOverrides;
-    const needsDefaults = ev.skillPointCost === undefined || ev.gaugeGain === undefined
-      || ev.timeInteraction === undefined;
-    if (!needsSegments && !needsDefaults) return ev;
 
     const defaults = findEventDefaults(ev, columns);
 
     // Attach derivable properties from column definition if missing
     let patched = ev;
-    if (defaults && needsDefaults) {
+    if (defaults) {
       const props: Partial<TimelineEvent> = {};
       if (ev.skillPointCost === undefined && defaults.skillPointCost != null) props.skillPointCost = defaults.skillPointCost;
       const ext = defaults as Record<string, unknown>;
@@ -335,20 +333,22 @@ export function attachDefaultSegments(
 
     if (!defaults?.segments) return patched;
 
-    // Start from existing segments or deep-copy defaults
-    // Truncate to sg length if pending overrides specify fewer segments (user removed some)
+    // Start from column defaults, refreshing typed segment durations (COOLDOWN, ANIMATION, etc.)
+    // from column definitions. Preserve user-customized durations only on untyped segments.
     const overrides = ev._pendingSegmentOverrides;
     const segCount = overrides?.sg ? overrides.sg.length : defaults.segments.length;
-    let segments = !isPlaceholder
-      ? ev.segments
-      : defaults.segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
+    let segments = defaults.segments.slice(0, segCount).map((defSeg, i) => {
+      const copy = { ...defSeg, frames: defSeg.frames?.map((f) => ({ ...f })) };
+      // Preserve user-modified duration only for untyped segments (no segmentTypes)
+      const isTyped = defSeg.properties.segmentTypes && defSeg.properties.segmentTypes.length > 0;
+      if (!isPlaceholder && !isTyped && i < ev.segments.length && ev.segments[i].properties.duration !== undefined) {
+        copy.properties = { ...copy.properties, duration: ev.segments[i].properties.duration };
+      }
+      return copy;
+    });
 
     // Apply pending overrides from share URL decode
     if (overrides) {
-      // Deep-copy if we haven't already (when segments came from ev.segments)
-      if (!isPlaceholder) {
-        segments = segments.slice(0, segCount).map((s) => ({ ...s, frames: s.frames?.map((f) => ({ ...f })) }));
-      }
       if (overrides.sg) {
         for (let si = 0; si < overrides.sg.length && si < segments.length; si++) {
           segments[si] = { ...segments[si], properties: { ...segments[si].properties, duration: overrides.sg[si] } };

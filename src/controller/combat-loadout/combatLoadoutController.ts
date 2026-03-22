@@ -88,6 +88,10 @@ export class CombatLoadoutController {
     return this.spCosts.get(ownerId) ?? 100;
   }
 
+  getAllSpCosts(): ReadonlyMap<string, number> {
+    return this.spCosts;
+  }
+
   // ── Slot queries ───────────────────────────────────────────────────────
 
   getSlots(): readonly Slot[] {

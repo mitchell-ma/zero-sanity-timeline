@@ -25,7 +25,9 @@
       "name": "Catastrophe",
       "rarity": 4,
       "piecesRequired": 3,
-      "description": "3-piece set effect: Wearer's Ultimate Gain Efficiency +{ultimate_gain_up:0%}. The wearer casts a battle skill, the action returns {atb_recover:0} SP. This effect only triggers 1 time per battle."
+      "description": "3-piece set effect: Wearer's Ultimate Gain Efficiency +{ultimate_gain_up:0%}. The wearer casts a battle skill, the action returns {atb_recover:0} SP. This effect only triggers 1 time per battle.",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",
@@ -66,13 +68,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_SET_STATUS"
     },
     "metadata": {
       "originId": "CATASTROPHE"

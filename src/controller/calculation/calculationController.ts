@@ -67,8 +67,9 @@ export function precomputeDamageByFrame(
   loadoutProperties: Record<string, LoadoutProperties>,
   loadouts: Record<string, OperatorLoadoutState> | undefined,
   enemyId: string,
+  hpController?: import('./hpController').HPController,
 ) {
-  if (_bossMaxHp == null) return;
+  if (!hpController && _bossMaxHp == null) return;
 
   const modelEnemy = getModelEnemy(enemyId);
   const enemyDef = modelEnemy ? modelEnemy.getDef() : 100;
@@ -150,12 +151,16 @@ export function precomputeDamageByFrame(
   }
 
   // Sort by frame and build cumulative
-  ticks.sort((a, b) => a.frame - b.frame);
-  let cum = 0;
-  _damageTicks = ticks.map(t => {
-    cum += t.damage;
-    return { frame: t.frame, cumDamage: cum };
-  });
+  if (hpController) {
+    hpController.setEnemyDamageTicks(ticks);
+  } else {
+    ticks.sort((a, b) => a.frame - b.frame);
+    let cum = 0;
+    _damageTicks = ticks.map(t => {
+      cum += t.damage;
+      return { frame: t.frame, cumDamage: cum };
+    });
+  }
 }
 
 /**

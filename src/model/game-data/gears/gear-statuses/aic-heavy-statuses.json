@@ -4,7 +4,9 @@
       "type": "GEAR_SET_EFFECT",
       "id": "AIC_HEAVY",
       "name": "AIC Heavy",
-      "rarity": 2
+      "rarity": 2,
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",

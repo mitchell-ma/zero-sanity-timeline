@@ -98,8 +98,8 @@ function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknow
   // Find ULTIMATE: has ANIMATION segment type
   for (const id of remaining) {
     const skill = skills.get(id);
-    const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
-    if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+    const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
+    if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
       typeMap.ULTIMATE = id;
       break;
     }
@@ -247,7 +247,7 @@ export interface TriggerCondition {
   objectId?: string;
   negated?: boolean;
   cardinalityConstraint?: string;
-  cardinality?: number | string;
+  value?: number | string | Record<string, unknown>;
   element?: string;
   adjective?: string;
   subjectDeterminer?: string;

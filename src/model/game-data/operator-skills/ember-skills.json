@@ -289,7 +289,9 @@
     ],
     "properties": {
       "name": "Sword Art of Assault",
-      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+      "description": "BASIC ATTACK: \nAn attack with up to 4 sequences that deals Physical DMG. As the controlled operator, Final Strike also deals  Stagger. \n\nDIVE ATTACK: \nBasic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies. \n\nFINISHER: \nBasic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "ember"
@@ -298,7 +300,9 @@
   "FORWARD_MARCH": {
     "properties": {
       "name": "Forward March",
-      "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. \nIf Ember takes DMG from enemies during casting, the slam deals more Stagger when it hits."
+      "description": "A leap followed by a heavy slam that deals Heat DMG, Knock Down, and Stagger to all enemies in a fan-shaped area. \nIf Ember takes DMG from enemies during casting, the slam deals more Stagger when it hits.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BATTLE_SKILL"
     },
     "clause": [
       {
@@ -473,7 +477,9 @@
     "properties": {
       "name": "Frontline Support",
       "description": "Controlled operator is attacked",
-      "windowFrames": 720
+      "windowFrames": 720,
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "COMBO_SKILL"
     },
     "clause": [
       {
@@ -485,7 +491,7 @@
             "toDeterminer": "THIS",
             "toObject": "OPERATOR",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 10
               }
@@ -497,10 +503,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -595,10 +603,13 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "COOLDOWN"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "COOLDOWN",
+            "IMMEDIATE_COOLDOWN"
+          ],
           "name": "Cooldown",
           "duration": {
             "value": {
@@ -644,7 +655,9 @@
   "RE_IGNITED_OATH": {
     "properties": {
       "name": "Re-Ignited Oath",
-      "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP."
+      "description": "Slams the ground to deal Heat DMG to nearby enemies, while granting every teammate a Shield based on Ember's Max HP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "ULTIMATE_SKILL"
     },
     "clause": [
       {
@@ -654,7 +667,7 @@
             "verb": "CONSUME",
             "object": "ULTIMATE_ENERGY",
             "with": {
-              "cardinality": {
+              "value": {
                 "verb": "IS",
                 "value": 100
               }
@@ -666,10 +679,12 @@
     "segments": [
       {
         "metadata": {
-          "eventComponentType": "SEGMENT",
-          "segmentType": "ANIMATION"
+          "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "segmentTypes": [
+            "ANIMATION"
+          ],
           "name": "Animation",
           "duration": {
             "value": {
@@ -848,7 +863,9 @@
         "FINISHER"
       ],
       "name": "Sword Art of Assault (Finisher)",
-      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
+      "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "ember"
@@ -922,7 +939,9 @@
         "DIVE"
       ],
       "name": "Sword Art of Assault (Dive)",
-      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
+      "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies.",
+      "eventType": "COMBAT_SKILL_EVENT",
+      "eventCategoryType": "BASIC_ATTACK"
     },
     "metadata": {
       "originId": "ember"

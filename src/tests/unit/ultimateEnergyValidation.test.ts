@@ -373,10 +373,10 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns true when frame falls within a segment with ENHANCE clause', () => {
     const ev = ultWithSegments(0, [
-      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
-      { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
-      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
-      { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
+      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
     ]);
     // During Animation (0-248)
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 100)).toBe(true);
@@ -388,10 +388,10 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false during Cooldown (no ENHANCE clause)', () => {
     const ev = ultWithSegments(0, [
-      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
-      { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
-      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
-      { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
+      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
     ]);
     // During Cooldown (2085-3284)
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 2100)).toBe(false);
@@ -399,15 +399,15 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false before ultimate starts', () => {
     const ev = ultWithSegments(1000, [
-      { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
-      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
     ]);
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 500)).toBe(false);
   });
 
   test('returns false for wrong enhance object type', () => {
     const ev = ultWithSegments(0, [
-      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
     ]);
     // ENHANCE BASIC_ATTACK doesn't match BATTLE_SKILL
     expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATTLE_SKILL', 500)).toBe(false);
@@ -415,7 +415,7 @@ describe('hasEnhanceClauseAtFrame', () => {
 
   test('returns false for different owner', () => {
     const ev = ultWithSegments(0, [
-      { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceClause },
+      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
     ]);
     expect(hasEnhanceClauseAtFrame([ev], 'slot-1', 'BASIC_ATTACK', 500)).toBe(false);
   });
@@ -434,10 +434,10 @@ describe('collectNoGainWindowsForEvent', () => {
     const ev = makeEvent({
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
       segments: [
-        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION } },
-        { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS } },
-        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } },
-        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' } },
+        { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' } },
+        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' } },
+        { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
       ],
     });
     const windows = collectNoGainWindowsForEvent(ev);
@@ -451,10 +451,10 @@ describe('collectNoGainWindowsForEvent', () => {
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0,
       segments: [
         {
-          properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION },
+          properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' },
           clause: [{ conditions: [], effects: [{ verb: 'IGNORE', object: 'ULTIMATE_ENERGY' }] }],
         },
-        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } },
+        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' } },
       ],
     });
     const windows = collectNoGainWindowsForEvent(ev);
@@ -574,10 +574,10 @@ describe('ENHANCE clause variant validation', () => {
     return makeEvent({
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
       segments: [
-        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
-        { properties: { duration: 36, name: 'Stasis' }, metadata: { segmentType: SegmentType.STASIS }, clause: enhanceClause },
-        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: enhanceAndDisableClause },
-        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
+        { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
+        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceAndDisableClause },
+        { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
       ],
     });
   }
@@ -640,9 +640,9 @@ describe('validateEnhanced and validateDisabledVariants', () => {
     return makeEvent({
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
       segments: [
-        { properties: { duration: 249, name: 'Animation' }, metadata: { segmentType: SegmentType.ANIMATION }, clause: enhanceClause },
-        { properties: { duration: 1800, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE }, clause: disableClause },
-        { properties: { duration: 1200, name: 'Cooldown' }, metadata: { segmentType: SegmentType.COOLDOWN } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
+        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: disableClause },
+        { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
       ],
     });
   }

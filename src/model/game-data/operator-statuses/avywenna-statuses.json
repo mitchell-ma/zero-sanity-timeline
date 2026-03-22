@@ -5,12 +5,12 @@
       "name": "Thunderlance",
       "target": "ENEMY",
       "element": "ELECTRIC",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 4
         },
-        "statusLevelInteractionType": "NONE"
+        "interactionType": "NONE"
       },
       "duration": {
         "value": {
@@ -18,7 +18,10 @@
           "value": 20
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "THUNDERLANCE_BLITZ"
@@ -60,7 +63,9 @@
       "name": "EXPEDITED DELIVERY (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "avywenna",

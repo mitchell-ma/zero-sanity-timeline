@@ -31,7 +31,7 @@ export interface Predicate {
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
-  cardinality?: number | string;
+  value?: number | string | Record<string, unknown>;
   element?: string;
   adjective?: string;
   subjectDeterminer?: string;
@@ -43,18 +43,20 @@ export interface Predicate {
 export interface TriggerEffect {
   verb: string;
   cardinalityConstraint?: string;
-  cardinality?: number | string;
+  value?: number | string | Record<string, unknown>;
   effects?: TriggerSubEffect[];
 }
 
 export interface TriggerSubEffect {
   verb: string;
-  cardinality?: number;
+  value?: number | Record<string, unknown>;
   object?: string;
   objectId?: string;
   element?: string;
+  adjective?: string;
   fromObject?: string;
   toObject?: string;
+  toDeterminer?: string;
 }
 
 export interface TriggerMatch {
@@ -365,7 +367,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
       if (ev.columnId !== colId) continue;
       if (!matchesOwner(ev.ownerId)) continue;
 
-      if (primaryCond.cardinality != null) {
+      if (primaryCond.value != null) {
         if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, ev.startFrame)) continue;
       }
       if (!checkSecondary(ctx, ev.startFrame)) continue;

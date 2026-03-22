@@ -32,10 +32,10 @@
  *    - Damage multiplier: 1.51 (lv1) → 3.4 (lv12)
  *
  * C2. Combo Skill Source Infliction Duplication
- *    - DSL effects: APPLY SOURCE INFLICTION TO ENEMY + APPLY SOURCE STATUS TO ENEMY
- *    - Frame class getDuplicatesSourceInfliction() returns true (parsed from DSL)
+ *    - DSL effects: APPLY TRIGGER INFLICTION TO ENEMY + APPLY TRIGGER STATUS TO ENEMY
+ *    - Frame class getDuplicatesTriggerInfliction() returns true (parsed from DSL)
  *    - Basic attack and battle skill frames do NOT duplicate
- *    - No legacy duplicatesSourceInfliction flag on JSON
+ *    - No legacy duplicatesTriggerInfliction flag on JSON
  *
  * D. Ultimate (Overclocked Moment)
  *    - Energy cost: 90
@@ -144,8 +144,8 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   // ULTIMATE: has ANIMATION segment
   for (const id of remaining) {
-    const segs = (skills[id].segments ?? []) as { metadata?: { segmentType?: string } }[];
-    if (segs.some(s => s.metadata?.segmentType === 'ANIMATION')) { typeMap.ULTIMATE = id; break; }
+    const segs = (skills[id].segments ?? []) as { properties: { segmentTypes?: string[] } }[];
+    if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { typeMap.ULTIMATE = id; break; }
   }
   // BATTLE_SKILL: the remaining one
   const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
@@ -400,7 +400,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
   test('C5: Combo cooldown is 24 seconds', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value).toBe(24);
@@ -418,7 +418,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
     const totalDuration = comboSkill.segments[0].properties.duration.value + comboSkill.segments[1].properties.duration.value;
     expect(totalDuration).toBeCloseTo(0.8, 2);
-    const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(0.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -454,39 +454,39 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('C2. Combo Skill Source Infliction Duplication', () => {
-  test('C2.1: Combo frame has APPLY SOURCE INFLICTION DSL effect', () => {
+  test('C2.1: Combo frame has APPLY TRIGGER INFLICTION DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceInfliction = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'INFLICTION'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
     expect(sourceInfliction.toObject).toBe('ENEMY');
   });
 
-  test('C2.2: Combo frame has APPLY SOURCE STATUS DSL effect', () => {
+  test('C2.2: Combo frame has APPLY TRIGGER STATUS DSL effect', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
     const effects = comboFrame.clause[0].effects;
     const sourceStatus = effects.find(
-      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'SOURCE' && e.object === 'STATUS'
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'STATUS'
     );
     expect(sourceStatus).toBeDefined();
     expect(sourceStatus.toObject).toBe('ENEMY');
   });
 
-  test('C2.3: Frame class reports getDuplicatesSourceInfliction() as true from DSL', () => {
+  test('C2.3: Frame class reports getDuplicatesTriggerInfliction() as true from DSL', () => {
     const sequences = getSequences('COMBO_SKILL');
     // segments[0] is ANIMATION (no frames), segments[1] has actual frames, segments[2] is COOLDOWN
     expect(sequences.length).toBeGreaterThanOrEqual(2);
     const frame = sequences[1].getFrames()[0];
-    expect(frame.getDuplicatesSourceInfliction()).toBe(true);
+    expect(frame.getDuplicatesTriggerInfliction()).toBe(true);
   });
 
   test('C2.4: Basic attack frames do NOT duplicate source infliction', () => {
     const sequences = getSequences('BASIC_ATTACK');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getDuplicatesSourceInfliction()).toBe(false);
+        expect(frame.getDuplicatesTriggerInfliction()).toBe(false);
       }
     }
   });
@@ -495,14 +495,14 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
     const sequences = getSequences('BATTLE_SKILL');
     for (const seq of sequences) {
       for (const frame of seq.getFrames()) {
-        expect(frame.getDuplicatesSourceInfliction()).toBe(false);
+        expect(frame.getDuplicatesTriggerInfliction()).toBe(false);
       }
     }
   });
 
-  test('C2.6: No legacy duplicatesSourceInfliction flag on combo frame', () => {
+  test('C2.6: No legacy duplicatesTriggerInfliction flag on combo frame', () => {
     const comboFrame = mockAntalJson.skills.COMBO_SKILL.segments[1].frames[0];
-    expect(comboFrame.duplicatesSourceInfliction).toBeUndefined();
+    expect(comboFrame.duplicatesTriggerInfliction).toBeUndefined();
   });
 });
 
@@ -535,7 +535,7 @@ describe('D. Ultimate (Overclocked Moment)', () => {
     const ultimate = mockAntalJson.skills.ULTIMATE;
     const totalDuration = ultimate.segments[0].properties.duration.value + ultimate.segments[1].properties.duration.value;
     expect(totalDuration).toBeCloseTo(1.87, 2);
-    const animSeg = ultimate.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = ultimate.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(1.4);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -749,7 +749,7 @@ describe('H. Cooldown Interactions', () => {
   test('H3: Combo skill (EMP Test Site) has 24s cooldown', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value).toBe(24);
@@ -848,16 +848,16 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       startFrame,
       comboTriggerColumnId,
       segments: [
-        { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(0.8 * FPS) },
-          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
         },
       ],
     });
   }
 
-  test('H1: Combo with APPLY SOURCE INFLICTION mirrors trigger infliction', () => {
+  test('H1: Combo with APPLY TRIGGER INFLICTION mirrors trigger infliction', () => {
     const focus = makeFocus(0, 120 * FPS);
     const laevBattle = makeLaevBattle(100);
     const antalCombo = makeAntalCombo(250, 'heatInfliction');
@@ -976,7 +976,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     );
     expect(akekuriHeat.length).toBeGreaterThan(0);
 
-    // Antal combo mirrors heat infliction via APPLY SOURCE INFLICTION
+    // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
       (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
     );
@@ -1013,7 +1013,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     expect(combo).toBeDefined();
     expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
 
-    // Antal combo mirrors heat infliction via APPLY SOURCE INFLICTION
+    // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
       (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
     );
@@ -1177,7 +1177,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     expect(combo).toBeDefined();
     expect(combo!.comboTriggerColumnId).toBe('heatInfliction');
 
-    // Antal combo mirrors heat infliction via APPLY SOURCE INFLICTION
+    // Antal combo mirrors heat infliction via APPLY TRIGGER INFLICTION
     const antalHeat = processed.filter(
       (e) => e.columnId === 'heatInfliction' && e.sourceOwnerId === SLOT_ANTAL,
     );
@@ -1235,7 +1235,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
     expect(focusEvents.length).toBe(1);
     expect(focusEvents[0].sourceOwnerId).toBe(SLOT_ANTAL);
 
-    // 2. Two heat inflictions: one from Akekuri BS, one mirrored by Antal combo (APPLY SOURCE INFLICTION)
+    // 2. Two heat inflictions: one from Akekuri BS, one mirrored by Antal combo (APPLY TRIGGER INFLICTION)
     const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
     expect(heatInflictions.length).toBe(2);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI).length).toBe(1);
@@ -1290,7 +1290,7 @@ describe('H. Combo Mirrored Infliction Pipeline', () => {
       undefined, undefined, wirings,
     );
 
-    // Two heat inflictions: Akekuri original + Antal combo mirror (APPLY SOURCE INFLICTION)
+    // Two heat inflictions: Akekuri original + Antal combo mirror (APPLY TRIGGER INFLICTION)
     const heatInflictions = processed.filter((e) => e.columnId === 'heatInfliction');
     expect(heatInflictions.length).toBe(2);
     expect(heatInflictions.filter((e) => e.sourceOwnerId === SLOT_AKEKURI).length).toBe(1);

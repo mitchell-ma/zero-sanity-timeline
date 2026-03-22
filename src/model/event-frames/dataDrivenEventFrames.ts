@@ -1,7 +1,7 @@
 import { ElementType, FrameDependencyType, StatusType } from "../../consts/enums";
 import { DeterminerType, NounType } from "../../dsl/semantics";
 import type { DslTarget, ValueNode } from "../../dsl/semantics";
-import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from "../../controller/calculation/valueResolver";
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
 import { REACTION_COLUMNS } from "../channels";
 import {
   SkillEventFrame,
@@ -43,12 +43,12 @@ interface JsonEffect {
   fromDeterminer?: string;
   fromObject?: string;
   onObject?: string;
-  /** WITH — properties/cardinalities (duration, stacks, multiplier, etc.). */
+  /** WITH — properties (duration, stacks, value, multiplier, etc.). */
   with?: Record<string, JsonWithValue>;
   /** Constraint on cardinality (for compound ALL/ANY grouping). */
   cardinalityConstraint?: string;
-  /** Cardinality for compound constraints. */
-  cardinality?: number;
+  /** Value for compound constraints. */
+  value?: unknown;
   eventName?: string;
   susceptibility?: Record<string, number[]>;
   stackingInteraction?: string;
@@ -82,7 +82,7 @@ interface JsonClauseCondition {
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
-  cardinality?: number;
+  value?: unknown;
 }
 
 interface JsonOffset {
@@ -98,8 +98,8 @@ interface JsonFrame {
 }
 
 interface JsonSegment {
-  metadata?: { eventComponentType?: string; segmentType?: string; dataSources?: string[] };
-  properties?: { duration?: JsonDuration; name?: string; timeDependency?: string; timeInteractionType?: string };
+  metadata?: { eventComponentType?: string; dataSources?: string[] };
+  properties: { segmentTypes?: string[]; duration?: JsonDuration; name?: string; timeDependency?: string; timeInteractionType?: string };
   clause?: { conditions: JsonClauseCondition[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
   frames: JsonFrame[];
 }
@@ -150,10 +150,14 @@ function dslTargetToDslTarget(toObject?: string, toDeterminer?: string): DslTarg
 
 // ── DSL effects → legacy resource interaction bridging ──────────────────────
 
-/** Extract a numeric value from a WITH preposition entry. Returns the IS value or first VARY_BY value. */
-function withValue(wv?: JsonWithValue): number {
+/** Extract a numeric value from a WITH preposition entry, optionally resolving VARY_BY with context. */
+function withValue(wv?: JsonWithValue, ctx?: ValueResolutionContext): number {
   if (!wv) return 0;
-  return typeof wv.value === 'number' ? wv.value : (wv.value[0] ?? 0);
+  if (typeof wv.value === 'number') return wv.value;
+  if (ctx && Array.isArray(wv.value) && wv.object) {
+    return resolveValueNode({ verb: wv.verb, object: wv.object, value: wv.value } as ValueNode, ctx);
+  }
+  return wv.value[0] ?? 0;
 }
 
 /**
@@ -166,13 +170,14 @@ function findEffectValue(
   object: string,
   verb: string,
   target?: string,
+  ctx?: ValueResolutionContext,
 ): number | undefined {
   if (!effects) return undefined;
   for (const ef of effects) {
     if (ef.object === object && ef.verb === verb) {
       const efTarget = dslTargetToLegacy(ef.toObject, ef.toDeterminer);
       if (target && efTarget !== target) continue;
-      return withValue(ef.with?.value);
+      return withValue(ef.with?.value, ctx);
     }
   }
   return undefined;
@@ -190,16 +195,17 @@ function findValue(
   object: string,
   verb: string,
   target?: string,
+  ctx?: ValueResolutionContext,
 ): number | undefined {
-  return findEffectValue(flattenClauseEffects(category), object, verb, target);
+  return findEffectValue(flattenClauseEffects(category), object, verb, target, ctx);
 }
 
 /** Get all conditional gauge gains (by enemies hit) from clause effects. */
-function findConditionalGaugeGains(category: JsonSkillCategory | undefined): Record<number, number> {
+function findConditionalGaugeGains(category: JsonSkillCategory | undefined, ctx?: ValueResolutionContext): Record<number, number> {
   const byEnemies: Record<number, number> = {};
   for (const ef of flattenClauseEffects(category)) {
     if (ef.object === 'ULTIMATE_ENERGY' && ef.verb === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
-      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.value);
+      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.value, ctx);
     }
   }
   return byEnemies;
@@ -219,7 +225,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _consumeStatus: string | null;
   private readonly _damageElement: string | null;
   private readonly _consumeReaction: FrameReactionConsumption | null;
-  private readonly _duplicatesSourceInfliction: boolean;
+  private readonly _duplicatesTriggerInfliction: boolean;
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
@@ -255,7 +261,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         ...(c.object && { object: c.object }),
         ...(c.objectId && { objectId: c.objectId }),
         ...(c.cardinalityConstraint && { cardinalityConstraint: c.cardinalityConstraint }),
-        ...(c.cardinality != null && { cardinality: c.cardinality }),
+        ...(c.value != null && { value: c.value }),
       }));
 
       const clauseEffects: FrameClauseEffect[] = [];
@@ -264,7 +270,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
         const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
         const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
         const isForced = adjectives.includes('FORCED');
-        const isSource = adjectives.includes('SOURCE');
+        const isSource = adjectives.includes('TRIGGER');
         const reactionAdj = adjectives.find(a => ['COMBUSTION', 'SOLIDIFICATION', 'CORROSION', 'ELECTRIFICATION'].includes(a));
 
         switch (ef.verb) {
@@ -385,7 +391,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     this._applyStatuses = applyStatuses;
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
-    this._duplicatesSourceInfliction = duplicatesSource;
+    this._duplicatesTriggerInfliction = duplicatesSource;
     this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as FrameDependencyType[];
   }
 
@@ -401,7 +407,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getConsumeReaction(): FrameReactionConsumption | null { return this._consumeReaction; }
   getConsumeStatus(): string | null { return this._consumeStatus; }
   getDamageElement(): string | null { return this._damageElement; }
-  getDuplicatesSourceInfliction(): boolean { return this._duplicatesSourceInfliction; }
+  getDuplicatesTriggerInfliction(): boolean { return this._duplicatesTriggerInfliction; }
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }
@@ -412,25 +418,33 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
 export class DataDrivenSkillEventSequence extends SkillEventSequence {
   private readonly _durationSeconds: number;
+  private readonly _durationNode: ValueNode | null;
   private readonly _frames: readonly DataDrivenSkillEventFrame[];
   readonly segmentName?: string;
-  readonly segmentType?: string;
+  readonly segmentTypes?: string[];
   readonly timeDependency?: string;
   readonly timeInteractionType?: string;
   readonly clause?: { effects: { verb: string; object: string; toDeterminer?: string; to?: string }[] }[];
 
   constructor(segment: JsonSegment) {
     super();
+    this._durationNode = segment.properties?.duration?.value ?? null;
     this._durationSeconds = resolveDur(segment.properties!.duration!);
     this._frames = segment.frames.map(f => new DataDrivenSkillEventFrame(f));
     this.segmentName = segment.properties?.name;
-    this.segmentType = segment.metadata?.segmentType;
+    this.segmentTypes = segment.properties.segmentTypes;
     this.timeDependency = segment.properties?.timeDependency;
     this.timeInteractionType = segment.properties?.timeInteractionType;
     this.clause = segment.clause;
   }
 
   getDurationSeconds(): number { return this._durationSeconds; }
+
+  getDurationSecondsWithContext(ctx?: ValueResolutionContext): number {
+    if (!ctx || !this._durationNode) return this._durationSeconds;
+    return resolveValueNode(this._durationNode, ctx);
+  }
+
   getFrames(): readonly DataDrivenSkillEventFrame[] { return this._frames; }
 }
 
@@ -488,21 +502,21 @@ export function buildSequencesFromOperatorJson(
 function dur(seconds: number): number { return Math.round(seconds * 120); }
 
 /** Resolve a JsonDuration's ValueNode to seconds. */
-function resolveDur(d?: JsonDuration): number {
+function resolveDur(d?: JsonDuration, ctx?: ValueResolutionContext): number {
   if (!d) return 0;
-  return resolveValueNode(d.value, DEFAULT_VALUE_CONTEXT);
+  return resolveValueNode(d.value, ctx ?? DEFAULT_VALUE_CONTEXT);
 }
 
 /** Get duration from a skill category. */
-function catDuration(cat?: JsonSkillCategory): number {
-  return resolveDur(cat?.properties?.duration);
+function catDuration(cat?: JsonSkillCategory, ctx?: ValueResolutionContext): number {
+  return resolveDur(cat?.properties?.duration, ctx);
 }
 
 /** Get animation duration from a skill category's ANIMATION segment. */
-function catAnimationDur(cat?: JsonSkillCategory): number {
+function catAnimationDur(cat?: JsonSkillCategory, ctx?: ValueResolutionContext): number {
   if (!cat?.segments) return 0;
-  const animSeg = cat.segments.find(s => s.metadata?.segmentType === 'ANIMATION');
-  return resolveDur(animSeg?.properties?.duration);
+  const animSeg = cat.segments.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
+  return resolveDur(animSeg?.properties?.duration, ctx);
 }
 
 export interface SkillTimings {
@@ -517,34 +531,34 @@ export interface SkillTimings {
   ultActiveDur?: number;
 }
 
-export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTimings {
+export function getSkillTimings(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillTimings {
   const skills = (operatorJson.skills ?? {}) as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
 
   // Battle skill duration
   const battleSkill = skills[typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL'];
-  const battleDur = dur(catDuration(battleSkill));
+  const battleDur = dur(catDuration(battleSkill, ctx));
 
   // Combo skill
   const comboSkill = skills[typeMap?.COMBO_SKILL ?? 'COMBO_SKILL'];
   // Duration: prefer top-level property, fall back to sum of non-cooldown segments
-  const comboTopDur = catDuration(comboSkill);
+  const comboTopDur = catDuration(comboSkill, ctx);
   const comboDur = dur(comboTopDur || ((comboSkill?.segments as JsonSegment[] | undefined)
-    ?.filter(s => s.metadata?.segmentType !== 'COOLDOWN')
-    .reduce((sum, s) => sum + resolveDur(s.properties?.duration), 0) ?? 0));
-  const comboCdFromClause = findValue(comboSkill, 'COOLDOWN', 'CONSUME');
+    ?.filter(s => !s.properties.segmentTypes?.includes('COOLDOWN'))
+    .reduce((sum, s) => sum + resolveDur(s.properties?.duration, ctx), 0) ?? 0));
+  const comboCdFromClause = findValue(comboSkill, 'COOLDOWN', 'CONSUME', undefined, ctx);
   const comboCdSeg = (comboSkill?.segments as JsonSegment[] | undefined)
-    ?.find(s => s.metadata?.segmentType === 'COOLDOWN');
+    ?.find(s => s.properties.segmentTypes?.includes('COOLDOWN'));
   const comboCdFromSegment = comboCdSeg?.properties?.duration
-    ? resolveDur(comboCdSeg.properties.duration)
+    ? resolveDur(comboCdSeg.properties.duration, ctx)
     : undefined;
   const comboCd = dur(comboCdFromClause ?? comboCdFromSegment ?? 0);
-  const comboAnimDur = dur(catAnimationDur(comboSkill) || 0.5);
+  const comboAnimDur = dur(catAnimationDur(comboSkill, ctx) || 0.5);
 
   // Ultimate — read from flat properties or derive from typed segments
   const ultimate = skills[typeMap?.ULTIMATE ?? 'ULTIMATE'];
   const ultSegs = (ultimate?.segments as JsonSegment[] | undefined)?.filter(
-    s => s.metadata?.segmentType,
+    s => s.properties.segmentTypes?.length,
   );
   let ultTotalDur: number;
   let ultAnimDur: number;
@@ -553,18 +567,18 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
   if (ultSegs?.length) {
     // Data-driven: derive timings from typed segments
     const segDur = (type: string) => {
-      const s = ultSegs.find(seg => seg.metadata?.segmentType === type);
-      return s ? dur(resolveDur(s.properties?.duration)) : 0;
+      const s = ultSegs.find(seg => seg.properties.segmentTypes?.includes(type));
+      return s ? dur(resolveDur(s.properties?.duration, ctx)) : 0;
     };
     ultAnimDur = segDur('ANIMATION');
     ultTotalDur = ultAnimDur + segDur('STASIS');
     ultCdFrames = segDur('COOLDOWN');
     ultActiveDurFromSegs = segDur('ACTIVE');
   } else {
-    ultTotalDur = dur(catDuration(ultimate));
-    const ultAnimRaw = catAnimationDur(ultimate);
+    ultTotalDur = dur(catDuration(ultimate, ctx));
+    const ultAnimRaw = catAnimationDur(ultimate, ctx);
     ultAnimDur = ultAnimRaw > 0 ? dur(ultAnimRaw) : ultTotalDur;
-    const ultCdRaw = findValue(ultimate, 'COOLDOWN', 'CONSUME');
+    const ultCdRaw = findValue(ultimate, 'COOLDOWN', 'CONSUME', undefined, ctx);
     ultCdFrames = ultCdRaw != null ? dur(ultCdRaw) : 0;
   }
 
@@ -580,11 +594,11 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
   };
 }
 
-export function getUltimateEnergyCost(operatorJson: Record<string, unknown>): number {
+export function getUltimateEnergyCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const ultimate = skills?.[typeMap?.ULTIMATE ?? 'ULTIMATE'];
-  return findValue(ultimate, 'ULTIMATE_ENERGY', 'CONSUME') ?? 0;
+  return findValue(ultimate, 'ULTIMATE_ENERGY', 'CONSUME', undefined, ctx) ?? 0;
 }
 
 export interface SkillGaugeGains {
@@ -595,7 +609,7 @@ export interface SkillGaugeGains {
   comboGaugeGainByEnemies?: Record<number, number>;
 }
 
-export function getSkillGaugeGains(operatorJson: Record<string, unknown>): SkillGaugeGains {
+export function getSkillGaugeGains(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): SkillGaugeGains {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const result: SkillGaugeGains = { battleGaugeGain: 0, battleTeamGaugeGain: 0, comboGaugeGain: 0, comboTeamGaugeGain: 0 };
@@ -604,33 +618,33 @@ export function getSkillGaugeGains(operatorJson: Record<string, unknown>): Skill
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
   const bs = skills?.[battleSkillId];
   if (bs?.clause) {
-    result.battleGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF') ?? 0;
-    result.battleTeamGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM') ?? 0;
+    result.battleGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx) ?? 0;
+    result.battleTeamGaugeGain = findValue(bs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM', ctx) ?? 0;
   }
 
   // Combo skill gauge gains
   const comboSkillId = typeMap?.COMBO_SKILL ?? 'COMBO_SKILL';
   const cs = skills?.[comboSkillId];
   if (cs?.clause) {
-    const byEnemies = findConditionalGaugeGains(cs);
+    const byEnemies = findConditionalGaugeGains(cs, ctx);
     if (Object.keys(byEnemies).length > 0) {
       result.comboGaugeGainByEnemies = byEnemies;
       result.comboGaugeGain = byEnemies[1] ?? 0;
     } else {
-      result.comboGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF') ?? 0;
+      result.comboGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx) ?? 0;
     }
-    result.comboTeamGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM') ?? 0;
+    result.comboTeamGaugeGain = findValue(cs, 'ULTIMATE_ENERGY', 'RECOVER', 'TEAM', ctx) ?? 0;
   }
 
   return result;
 }
 
 /** Extract the SP cost for battle skill from merged operator JSON (skills keyed by skill ID). */
-export function getBattleSkillSpCost(operatorJson: Record<string, unknown>): number {
+export function getBattleSkillSpCost(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory> | undefined;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const battleSkillId = typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL';
-  return findValue(skills?.[battleSkillId], 'SKILL_POINT', 'CONSUME') ?? 0;
+  return findValue(skills?.[battleSkillId], 'SKILL_POINT', 'CONSUME', undefined, ctx) ?? 0;
 }
 
 // ── Per-skill-category data extraction (raw seconds, for event files) ────────
@@ -650,6 +664,7 @@ export interface SkillCategoryData {
 export function getSkillCategoryData(
   operatorJson: Record<string, unknown>,
   skillCategory: string,
+  ctx?: ValueResolutionContext,
 ): SkillCategoryData {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
@@ -657,15 +672,15 @@ export function getSkillCategoryData(
   const baseBattle = skills?.[typeMap?.BATTLE_SKILL ?? 'BATTLE_SKILL'];
 
   return {
-    duration: catDuration(cat),
-    spCost: findValue(cat, 'SKILL_POINT', 'CONSUME')
-         ?? findValue(baseBattle, 'SKILL_POINT', 'CONSUME')
+    duration: catDuration(cat, ctx),
+    spCost: findValue(cat, 'SKILL_POINT', 'CONSUME', undefined, ctx)
+         ?? findValue(baseBattle, 'SKILL_POINT', 'CONSUME', undefined, ctx)
          ?? 0,
-    gaugeGain: findValue(cat, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF')
-            ?? findValue(baseBattle, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF')
+    gaugeGain: findValue(cat, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx)
+            ?? findValue(baseBattle, 'ULTIMATE_ENERGY', 'RECOVER', 'SELF', ctx)
             ?? 0,
-    cooldown: findValue(cat, 'COOLDOWN', 'CONSUME') ?? 0,
-    energyCost: findValue(cat, 'ULTIMATE_ENERGY', 'CONSUME') ?? 0,
+    cooldown: findValue(cat, 'COOLDOWN', 'CONSUME', undefined, ctx) ?? 0,
+    energyCost: findValue(cat, 'ULTIMATE_ENERGY', 'CONSUME', undefined, ctx) ?? 0,
   };
 }
 
@@ -673,12 +688,12 @@ export function getSkillCategoryData(
  * Get the durations of basic attack segments from operator JSON.
  * Returns an array of duration values in seconds.
  */
-export function getBasicAttackDurations(operatorJson: Record<string, unknown>): number[] {
+export function getBasicAttackDurations(operatorJson: Record<string, unknown>, ctx?: ValueResolutionContext): number[] {
   const skills = operatorJson.skills as Record<string, JsonSkillCategory>;
   const typeMap = operatorJson.skillTypeMap as Record<string, string> | undefined;
   const basicEntry = typeMap?.BASIC_ATTACK as string | Record<string, string> | undefined;
   const basicId = typeof basicEntry === 'string' ? basicEntry : (basicEntry as Record<string, string> | undefined)?.BATK ?? 'BASIC_ATTACK';
   const basicAttack = skills?.[basicId];
   if (!basicAttack?.segments) return [];
-  return basicAttack.segments.map(seg => resolveDur(seg.properties!.duration!));
+  return basicAttack.segments.map(seg => resolveDur(seg.properties!.duration!, ctx));
 }

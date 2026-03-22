@@ -34,7 +34,9 @@
       "name": "Love the Stab and Twist",
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "fluorite",
@@ -75,7 +77,9 @@
       "name": "Unpredictable (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "fluorite",
@@ -121,13 +125,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "UNPREDICTABLE_TALENT",

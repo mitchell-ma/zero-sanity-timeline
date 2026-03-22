@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EventBlock from './EventBlock';
-import { wouldOverlapNonOverlappable, clampDeltaByOverlap } from '../controller/timeline/inputEventController';
+import { wouldOverlapNonOverlappable } from '../controller/timeline/inputEventController';
+import { DragState, computeInvalidSet, computeOverlapInvalidSet, clampDragDelta } from './combatPlannerDragUtils';
 import OperatorLoadoutHeader, { OperatorLoadoutState, DropdownTierBar } from './OperatorLoadoutHeader';
 import { ENEMY_TIERS } from '../utils/enemies';
 import {
@@ -43,9 +44,7 @@ import {
   getAlwaysAvailableComboSlots,
   computeResourceInsufficiencyZones,
   computeResourceZonesForDrag,
-  clampDeltaByResourceZones,
   isDuplicatePlacementInResourceZone,
-  clampDeltaByComboWindow,
 } from '../controller/timeline/eventValidator';
 import { computeAllValidations } from '../controller/timeline/eventValidationController';
 import { computeSlotElementColors, computeEventPresentation } from '../controller/timeline/eventPresentationController';
@@ -65,19 +64,6 @@ import { getAxisMap, type Orientation } from '../utils/axisMap';
 
 const MIN_SLOT_COLS = 4;
 
-interface DragState {
-  primaryId: string; // the event the user grabbed
-  eventUids: string[];
-  startMouseFrame: number; // mouse coordinate along the frame axis at drag start
-  startFrames: Map<string, number>; // original startFrame per event
-  monotonicBounds: Map<string, { min: number; max: number }>; // MF drag constraints captured at drag start
-  lastAppliedDelta: number; // tracks the delta already applied to events (for incremental batch moves)
-  resourceZonesSnapshot: Map<string, import('../controller/timeline/eventValidator').ResourceZone[]>; // Resource zones captured at drag start
-  invalidAtDragStart: Set<string>; // events that were already in an invalid zone at drag start — allowed free movement until valid
-  revalidated: Set<string>; // events that transitioned invalid→valid mid-drag — must not skip self-caused zones
-  overlapInvalidAtDragStart: Set<string>; // events that were already overlapping siblings at drag start — allowed free movement until non-overlapping
-  overlapRevalidated: Set<string>; // overlap-invalid events that reached a valid position mid-drag — must now respect overlap clamping
-}
 
 interface MarqueeState {
   startX: number;
@@ -1013,66 +999,9 @@ export default function CombatPlanner({
       );
 
       let primaryNewFrame = 0;
-      const { monotonicBounds } = dragRef.current;
 
-      // Pre-clamp delta by timeline bounds and monotonic (MF) bounds.
-      let clampedDelta = deltaFrames;
-      for (const eid of eventUids) {
-        const orig = startFrames.get(eid) ?? 0;
-        const timelineMin = -orig;
-        const timelineMax = TOTAL_FRAMES - 1 - orig;
-        clampedDelta = Math.max(timelineMin, Math.min(timelineMax, clampedDelta));
-        const bounds = monotonicBounds.get(eid);
-        if (bounds) {
-          const minDelta = bounds.min - orig;
-          const maxDelta = bounds.max - orig;
-          clampedDelta = Math.max(minDelta, Math.min(maxDelta, clampedDelta));
-        }
-      }
-
-      // Resource zone clamping: prevent battle/ultimate events from being dragged
-      // into resource-insufficient zones. Uses snapshot from drag start.
-      // Events that were already invalid at drag start get free movement until valid.
-      if (interactionModeRef.current === InteractionModeType.STRICT) {
-        const resZones = dragRef.current.resourceZonesSnapshot;
-        const invalidSet = dragRef.current.invalidAtDragStart;
-        const revalidated = dragRef.current.revalidated;
-        for (const eid of eventUids) {
-          const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaByResourceZones(clampedDelta, eid, eventsRef.current, orig, resZones, invalidSet, revalidated);
-        }
-      }
-
-      // Combo window clamping: keep combo events within their activation window.
-      // Events that were already outside windows at drag start get free movement.
-      if (interactionModeRef.current === InteractionModeType.STRICT) {
-        const invalidSet = dragRef.current.invalidAtDragStart;
-        for (const eid of eventUids) {
-          const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, eventsRef.current, orig, eventsRef.current, invalidSet);
-        }
-      }
-
-      // Overlap clamping: prevent events from overlapping siblings.
-      // Events that were already overlapping at drag start get free movement
-      // until they reach a non-overlapping position, then clamping kicks in.
-      if (interactionModeRef.current === InteractionModeType.STRICT) {
-        const overlapInvalid = dragRef.current.overlapInvalidAtDragStart;
-        const overlapReval = dragRef.current.overlapRevalidated;
-        const dragSet = new Set(eventUids);
-        for (const eid of eventUids) {
-          const orig = startFrames.get(eid) ?? 0;
-          clampedDelta = clampDeltaByOverlap(clampedDelta, eid, eventsRef.current, orig, dragSet, undefined, overlapInvalid, overlapReval);
-        }
-      }
-
-      // Events still overlap-invalid pass through validateMove's clampNonOverlappable
-      // unclamped (the drag handler manages their free→clamped transition).
-      // Revalidated events are already clamped by clampDeltaByOverlap above.
-      const overlapExempt = interactionModeRef.current === InteractionModeType.STRICT
-        && dragRef.current.overlapInvalidAtDragStart.size > 0
-        ? dragRef.current.overlapInvalidAtDragStart
-        : undefined;
+      const strict = interactionModeRef.current === InteractionModeType.STRICT;
+      const { clampedDelta, overlapExempt } = clampDragDelta(deltaFrames, dragRef.current, eventsRef.current, strict);
 
       // Throttle the expensive move calls (triggers React state + interaction recalc).
       // Hover line stays at full rate below; only the controller dispatch is batched.
@@ -1255,49 +1184,6 @@ export default function CombatPlanner({
     dragMovedRef.current = false;
     onBatchStart?.();
 
-    // Compute which dragged events are already in an invalid zone (resource or
-    // combo). These events get free movement until they reach a valid position.
-    const computeInvalidSet = (draggedEvents: TimelineEvent[]) => {
-      const invalid = new Set<string>();
-      const liveZones = resourceZonesRef.current;
-      for (const de of draggedEvents) {
-        // Resource zone: check live zones (includes the event's own contribution)
-        if (de.columnId === SKILL_COLUMNS.BATTLE || de.columnId === SKILL_COLUMNS.ULTIMATE) {
-          const zones = liveZones.get(`${de.ownerId}:${de.columnId}`);
-          if (zones?.some((z) => de.startFrame >= z.start && de.startFrame < z.end)) {
-            invalid.add(de.uid);
-          }
-        }
-        // Combo window: check if event is outside all combo windows
-        if (de.columnId === SKILL_COLUMNS.COMBO) {
-          const windows = eventsRef.current.filter(
-            (w) => w.columnId === COMBO_WINDOW_COLUMN_ID && w.ownerId === de.ownerId,
-          );
-          const inWindow = windows.some((w) => {
-            const duration = computeSegmentsSpan(w.segments);
-            return de.startFrame >= w.startFrame && de.startFrame < w.startFrame + duration;
-          });
-          if (!inWindow && windows.length > 0) {
-            invalid.add(de.uid);
-          }
-        }
-      }
-      return invalid;
-    };
-
-    // Compute which dragged events are already overlapping siblings at drag start.
-    // These get free movement (through overlapping positions) until they reach
-    // a non-overlapping position, then overlap clamping kicks in.
-    const computeOverlapInvalidSet = (draggedEvents: TimelineEvent[]) => {
-      const invalid = new Set<string>();
-      for (const de of draggedEvents) {
-        if (wouldOverlapNonOverlappable(eventsRef.current, de, de.startFrame)) {
-          invalid.add(de.uid);
-        }
-      }
-      return invalid;
-    };
-
     // If dragging a selected event, drag all selected events together
     if (selectedIds.has(eventUid) && selectedIds.size > 1) {
       const startFrames = new Map<string, number>();
@@ -1314,9 +1200,9 @@ export default function CombatPlanner({
       const resZones = resourceGraphsRef.current
         ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
         : resourceZonesRef.current;
-      const invalidSet = computeInvalidSet(draggedEvents);
-      const overlapInvalid = computeOverlapInvalidSet(draggedEvents);
-      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set() };
+      const invalidSet = computeInvalidSet(draggedEvents, resourceZonesRef.current, eventsRef.current);
+      const overlapInvalid = computeOverlapInvalidSet(draggedEvents, eventsRef.current);
+      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     } else {
@@ -1330,9 +1216,9 @@ export default function CombatPlanner({
         ? computeResourceZonesForDrag(resourceGraphsRef.current, slotsRef.current, dragSet, events)
         : resourceZonesRef.current;
       const draggedEv = events.find((e) => e.uid === eventUid);
-      const invalidSet = draggedEv ? computeInvalidSet([draggedEv]) : new Set<string>();
-      const overlapInvalid = draggedEv ? computeOverlapInvalidSet([draggedEv]) : new Set<string>();
-      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set() };
+      const invalidSet = draggedEv ? computeInvalidSet([draggedEv], resourceZonesRef.current, eventsRef.current) : new Set<string>();
+      const overlapInvalid = draggedEv ? computeOverlapInvalidSet([draggedEv], eventsRef.current) : new Set<string>();
+      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: computeMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     }
@@ -2105,7 +1991,7 @@ export default function CombatPlanner({
                 {/* SP zones on battle columns: permanent stripes with
                     sufficient zones patched over to hide them */}
                 {col.columnId === SKILL_COLUMNS.BATTLE && (() => {
-                  const insuffGaps = resourceInsufficiencyZones.get(`${col.ownerId}:battle`) ?? [];
+                  const insuffGaps = resourceInsufficiencyZones.get(`${col.ownerId}:${SKILL_COLUMNS.BATTLE}`) ?? [];
 
                   // Compute sufficient zones (inverse of insufficient gaps)
                   const sufficient: { start: number; end: number }[] = [];
@@ -2154,7 +2040,6 @@ export default function CombatPlanner({
                       : ev,
                     zoom,
                     axis,
-                    variant: pres.variant,
                     label: pres.label,
                     color: pres.color,
                     comboWarning: pres.comboWarning,

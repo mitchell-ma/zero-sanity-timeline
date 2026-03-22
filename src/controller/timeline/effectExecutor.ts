@@ -16,13 +16,13 @@ import {
   DeterminerType,
   AdjectiveType,
 } from '../../dsl/semantics';
-import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT, buildContextForSkillColumn } from '../calculation/valueResolver';
 import type { ValueNode } from '../../dsl/semantics';
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
 import { FPS } from '../../utils/timeline';
-import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
+import { CritMode, EventStatusType, PhysicalStatusType } from '../../consts/enums';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { activeEventsAtFrame, activeInflictionsOfElement } from './timelineQueries';
@@ -67,8 +67,14 @@ export interface ExecutionContext {
   parentEventEndFrame?: number;
   /** Target operator ID for OTHER/ANY determiner resolution. */
   targetOwnerId?: string;
+  /** Operator who triggered the effect (for TRIGGER determiner). */
+  triggerOwnerId?: string;
   /** Query which operator slot is controlled at a given frame. */
   getControlledSlotAtFrame?: (frame: number) => string;
+  /** CritMode for resolving CHANCE verbs. */
+  critMode?: CritMode;
+  /** Cumulative chance multiplier for EXPECTED mode (default 1.0). */
+  chanceMultiplier?: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -80,16 +86,15 @@ function emptyMutationSet(): MutationSet {
 
 function buildValueContext(ctx: ExecutionContext): ValueResolutionContext {
   const loadout = ctx.loadoutProperties?.[ctx.sourceOwnerId];
-  return {
-    skillLevel: loadout?.skills.battleSkillLevel ?? DEFAULT_VALUE_CONTEXT.skillLevel,
-    potential: ctx.potential ?? loadout?.operator.potential ?? DEFAULT_VALUE_CONTEXT.potential,
-    stats: {},
-  };
+  const baseCtx = buildContextForSkillColumn(loadout, SKILL_COLUMNS.BATTLE);
+  // Override potential from execution context if provided (e.g. cross-operator effects)
+  if (ctx.potential != null) baseCtx.potential = ctx.potential;
+  return baseCtx;
 }
 
 function resolveWith(node: ValueNode | undefined, ctx: ExecutionContext): number | undefined {
   if (!node) return undefined;
-  return resolveValueNode(node, buildValueContext(ctx));
+  return resolveValueNode(node, buildValueContext(ctx)) * (ctx.chanceMultiplier ?? 1);
 }
 
 /** Merge source MutationSet into target (in place). */
@@ -109,6 +114,8 @@ function resolveOwnerId(target: string | undefined, ctx: ExecutionContext, deter
       case DeterminerType.ANY: return ctx.targetOwnerId ?? ctx.sourceOwnerId;
       case DeterminerType.CONTROLLED:
         return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
+      case DeterminerType.TRIGGER: return ctx.triggerOwnerId ?? ctx.sourceOwnerId;
+      case DeterminerType.SOURCE: return ctx.sourceOwnerId;
       default: return ctx.sourceOwnerId;
     }
   }
@@ -125,9 +132,9 @@ function resolveOwnerId(target: string | undefined, ctx: ExecutionContext, deter
   }
 }
 
-/** Resolve cardinality, handling THRESHOLD_MAX → potential-based max. */
+/** Resolve cardinality, handling THRESHOLD_MAX → potential-based max, ValueNode → number. */
 function resolveCardinality(
-  cardinality: number | typeof THRESHOLD_MAX | undefined,
+  cardinality: ValueNode | typeof THRESHOLD_MAX | undefined,
   potential: number,
   defaultMax = 999,
 ): number {
@@ -136,7 +143,10 @@ function resolveCardinality(
     // In practice, the caller provides the resolved max from operator JSON.
     return defaultMax;
   }
-  return cardinality ?? defaultMax;
+  if (cardinality != null && typeof cardinality === 'object') {
+    return resolveValueNode(cardinality, DEFAULT_VALUE_CONTEXT) ?? defaultMax;
+  }
+  return defaultMax;
 }
 
 // ── Column ID resolution ─────────────────────────────────────────────────
@@ -348,16 +358,20 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  // Only iterate multiple times when an explicit FOR cardinality is set (e.g. ALL FOR AT_MOST MAX).
+  // Iterate multiple times when an explicit cardinality is set (e.g. ALL AT_MOST MAX, ALL FOR AT_MOST 4).
   // Without it, ALL executes its predicates once (single pass). Hard cap at 10 for safety.
+  const explicitCardinality = effect.for?.value ?? effect.value;
   const maxIterations = Math.min(
-    effect.for
-      ? resolveCardinality(effect.for.cardinality, ctx.potential ?? 0)
+    explicitCardinality != null
+      ? resolveCardinality(explicitCardinality, ctx.potential ?? 0)
       : 1,
     10,
   );
 
-  const predicates = effect.predicates ?? [];
+  // Support both predicated (conditions + effects) and flat (effects only) forms.
+  // Flat effects are treated as a single unconditional predicate.
+  const predicates = effect.predicates ??
+    (effect.effects?.length ? [{ conditions: [], effects: effect.effects }] : []);
   if (predicates.length === 0) return result;
 
   // Track evolving event state across iterations so that consumed/clamped
@@ -441,6 +455,43 @@ function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
   return emptyMutationSet();
 }
 
+// ── Compound: CHANCE ─────────────────────────────────────────────────────
+
+function executeChance(effect: Effect, ctx: ExecutionContext): MutationSet {
+  const childEffects = effect.effects ?? [];
+  if (childEffects.length === 0) return emptyMutationSet();
+
+  const chanceNode = effect.with?.value;
+  const chance = chanceNode
+    ? resolveValueNode(chanceNode, buildValueContext(ctx))
+    : 1;
+  const critMode = ctx.critMode ?? CritMode.EXPECTED;
+
+  let shouldExecute: boolean;
+  let childChanceMultiplier = ctx.chanceMultiplier ?? 1;
+
+  switch (critMode) {
+    case CritMode.ALWAYS:     shouldExecute = true; break;
+    case CritMode.NEVER:      shouldExecute = false; break;
+    case CritMode.SIMULATION: shouldExecute = Math.random() < chance; break;
+    case CritMode.EXPECTED:
+      shouldExecute = true;
+      childChanceMultiplier *= chance;
+      break;
+  }
+
+  if (!shouldExecute) return emptyMutationSet();
+
+  const result = emptyMutationSet();
+  const childCtx = { ...ctx, chanceMultiplier: childChanceMultiplier };
+  for (const child of childEffects) {
+    const childResult = executeEffect(child, childCtx);
+    if (childResult.failed) return childResult;
+    mergeMutations(result, childResult);
+  }
+  return result;
+}
+
 // ── Main dispatcher ──────────────────────────────────────────────────────
 
 /**
@@ -451,6 +502,7 @@ export function executeEffect(effect: Effect, ctx: ExecutionContext): MutationSe
   switch (effect.verb) {
     case VerbType.ALL:    return executeAll(effect, ctx);
     case VerbType.ANY:    return executeAny(effect, ctx);
+    case VerbType.CHANCE: return executeChance(effect, ctx);
     case VerbType.APPLY:  return executeApply(effect, ctx);
     case VerbType.CONSUME: return executeConsume(effect, ctx);
     case VerbType.RESET:   return executeReset(effect, ctx);

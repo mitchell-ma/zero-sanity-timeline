@@ -147,8 +147,8 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
     const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
     for (const id of remaining) {
       const skill = skills[id] as Record<string, unknown>;
-      const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
-      if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+      const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
+      if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
         map.ULTIMATE = id;
         break;
       }
@@ -377,8 +377,8 @@ function _inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
   const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
   for (const id of remaining) {
     const skill = skills[id] as Record<string, unknown>;
-    const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
-    if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+    const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
+    if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
       map.ULTIMATE = id;
       break;
     }
@@ -594,7 +594,7 @@ describe('E. Ultimate & Enhanced Variants', () => {
 
   test('E6: Ultimate active duration is 15 seconds (from skill segments)', () => {
     const ultSkill = mockLaevatainJson.skills.TWILIGHT;
-    const activeSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'ACTIVE');
+    const activeSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('ACTIVE'));
     expect(activeSeg).toBeDefined();
     expect(activeSeg.properties.duration.value).toBe(15);
   });
@@ -717,7 +717,7 @@ describe('H. Cooldown Interactions', () => {
   test('H1: Battle skill (Smouldering Fire) has no COOLDOWN segment or effect', () => {
     const bs = mockLaevatainJson.skills.BATTLE_SKILL;
     // No COOLDOWN segment
-    const cooldownSeg = bs.segments?.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    const cooldownSeg = bs.segments?.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cooldownSeg).toBeUndefined();
     // No COOLDOWN effect in clause
     const cooldownEffect = bs.clause?.flatMap((c: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ c.effects ?? [])
@@ -727,7 +727,7 @@ describe('H. Cooldown Interactions', () => {
 
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
-    const cdSeg = cs.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    const cdSeg = cs.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value).toBe(10);
   });
@@ -735,7 +735,7 @@ describe('H. Cooldown Interactions', () => {
   test('H3: Ultimate (Twilight) has no COOLDOWN segment (ultimate cooldown is global)', () => {
     const ultSkill = mockLaevatainJson.skills.TWILIGHT;
     // Ultimate cooldown is not in skill segments — it's handled by the global ultimate cooldown system
-    const cdSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    const cdSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cdSeg).toBeUndefined();
   });
 
@@ -831,7 +831,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
       comboTriggerColumnId: 'heatInfliction',
       segments: [{
         properties: { duration: Math.round(0.8 * FPS) },
-        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
       }],
     });
     // Laevatain final strike after both heat inflictions exist

@@ -6,6 +6,7 @@
  * they don't mutate it.
  */
 import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType } from '../../dsl/semantics';
+import { getSimpleValue } from '../calculation/valueResolver';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -100,7 +101,7 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
     if (!ctx.getEnemyHpPercentage) return false;
     const hpPct = ctx.getEnemyHpPercentage(ctx.frame);
     if (hpPct == null) return false;
-    const target = cond.cardinality ?? 100;
+    const target = (cond.value ? getSimpleValue(cond.value) : undefined) ?? 100;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.AT_MOST: return hpPct <= target;
       case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
@@ -120,8 +121,8 @@ function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
 
   if (count === 0) return false;
 
-  if (cond.cardinality != null) {
-    const target = cond.cardinality;
+  if (cond.value != null) {
+    const target = getSimpleValue(cond.value) ?? 0;
     switch (cond.cardinalityConstraint) {
       case CardinalityConstraintType.EXACTLY: return count === target;
       case CardinalityConstraintType.AT_LEAST: return count >= target;

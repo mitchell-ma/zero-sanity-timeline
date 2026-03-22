@@ -6,12 +6,12 @@
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
       "element": "HEAT",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -19,7 +19,10 @@
           "value": 15
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "THERMITE_TRACERS"
@@ -60,12 +63,12 @@
       "name": "Natural Predator",
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "NONE"
+        "interactionType": "NONE"
       },
       "duration": {
         "value": {
@@ -74,7 +77,10 @@
         },
         "unit": "SECOND"
       },
-      "minPotential": 5
+      "minPotential": 5,
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "NATURAL_PREDATOR"
@@ -138,7 +144,9 @@
       "name": "Code of Restraint (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "wulfgard",

@@ -2,17 +2,17 @@
  * Expression tree editor.
  *
  * Renders a recursive binary expression tree (ValueNode) with editable
- * leaf nodes and operator selectors.
+ * leaf nodes and operation selectors.
  *
  * Tree grammar:
  *   ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpression
  *   ValueLiteral    = { verb: "IS", value: number }
  *   ValueVariable   = { verb: "VARY_BY", object: string, value?: number[] }
  *   ValueStat       = { verb: "IS", object: "STAT", objectId: string }
- *   ValueExpression = { operator: ValueOperator, left: ValueNode, right: ValueNode }
+ *   ValueExpression = { operation: ValueOperation, left: ValueNode, right: ValueNode }
  */
 import {
-  VerbType, ValueOperator,
+  VerbType, ValueOperation,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
 } from '../../dsl/semantics';
 import { CoreNounType } from '../../dsl/semantics';
@@ -22,7 +22,7 @@ import CustomSelect from './CustomSelect';
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const OPERATOR_OPTIONS = Object.values(ValueOperator).map((op) => ({
+const OPERATOR_OPTIONS = Object.values(ValueOperation).map((op) => ({
   value: op,
   label: op.replace(/_/g, ' '),
 }));
@@ -97,7 +97,7 @@ function convertNode(node: ValueNode, toType: string): ValueNode {
   }
   if (toType === 'expression') {
     if (isValueExpression(node)) return node;
-    return { operator: ValueOperator.MULT, left: node, right: defaultLiteral() };
+    return { operation: ValueOperation.MULT, left: node, right: defaultLiteral() };
   }
   return node;
 }
@@ -137,9 +137,9 @@ function NodeEditor({ node, onChange }: {
         {isValueExpression(node) && (
           <CustomSelect
             className="expr-op-select"
-            value={node.operator}
+            value={node.operation}
             options={OPERATOR_OPTIONS}
-            onChange={(op) => onChange({ ...node, operator: op as ValueOperator })}
+            onChange={(op) => onChange({ ...node, operation: op as ValueOperation })}
           />
         )}
         {isValueLiteral(node) && (
@@ -192,7 +192,7 @@ function StatEditor({ node, onChange }: { node: ValueStat; onChange: (n: ValueNo
   return (
     <CustomSelect
       className="expr-var-select"
-      value={node.objectId}
+      value={node.objectId ?? node.stat ?? ''}
       options={STAT_OPTIONS}
       onChange={(obj) => onChange({ verb: VerbType.IS, object: CoreNounType.STAT, objectId: obj })}
     />

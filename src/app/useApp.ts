@@ -11,7 +11,7 @@ import { useHistory } from '../utils/useHistory';
 import type { Orientation } from '../utils/axisMap';
 import { LoadoutProperties } from '../view/InformationPane';
 import { OperatorLoadoutState } from '../view/OperatorLoadoutHeader';
-import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
+import { ALL_OPERATORS, getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
@@ -84,7 +84,7 @@ import {
   getDefaultEnemyStats,
 } from '../controller/appStateController';
 import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType, InfoLevel } from '../consts/enums';
+import { StatType, InteractionModeType, InfoLevel, CritMode } from '../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -262,9 +262,9 @@ export function useApp() {
   const [critMode, setCritMode] = useState<import('../consts/enums').CritMode>(() => {
     try {
       const v = localStorage.getItem('zst-crit-mode');
-      if (v === 'NONE' || v === 'ALWAYS') return v as import('../consts/enums').CritMode;
+      if (v && Object.values(CritMode).includes(v as CritMode)) return v as CritMode;
     } catch { /* ignore */ }
-    return 'NONE' as import('../consts/enums').CritMode;
+    return CritMode.NEVER;
   });
   useEffect(() => {
     try { localStorage.setItem('zst-crit-mode', critMode); } catch { /* ignore */ }
@@ -432,7 +432,7 @@ export function useApp() {
         const slotId = SLOT_IDS[i];
         const cfg = resourceConfigs?.[`${slotId}-ultimate`];
         ue.configureSlot(slotId, {
-          max: cfg?.max ?? op.ultimateEnergyCost,
+          max: cfg?.max ?? getUltimateEnergyCost(op.id),
           startValue: cfg?.startValue ?? 0,
           chargePerFrame: (cfg?.regenPerSecond ?? 0) / FPS,
           efficiency: base[slotId] ?? 0,
@@ -444,6 +444,8 @@ export function useApp() {
         bossMaxHp, enemy.id, loadouts,
         combatLoadout.commonSlot.skillPoints,
         combatLoadout.commonSlot.ultimateEnergy,
+        combatLoadout.commonSlot.hp,
+        combatLoadout.getAllSpCosts(),
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

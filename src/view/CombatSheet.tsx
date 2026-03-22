@@ -12,7 +12,7 @@ import { runCalculation } from '../controller/calculation/calculationController'
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CritMode, CombatSkillsType } from '../consts/enums';
+import { CritMode, CombatSkillsType, FoldMode } from '../consts/enums';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { OPERATORS } from '../utils/loadoutRegistry';
@@ -27,6 +27,7 @@ import { SkillType } from '../consts/viewTypes';
 import { t } from '../locales/locale';
 
 const ROW_HEIGHT = 22;
+const MARQUEE_THRESHOLD = 4;
 
 // ── Sheet column definitions ────────────────────────────────────────────────
 
@@ -115,6 +116,49 @@ const CRIT_MODE_LABELS: Record<CritMode, string> = {
   [CritMode.SIMULATION]: t('sheet.crit.simulation'),
 };
 
+const FOLD_MODE_CYCLE: FoldMode[] = [FoldMode.FRAME, FoldMode.SEGMENT, FoldMode.EVENT];
+const FOLD_MODE_LABELS: Record<FoldMode, string> = {
+  [FoldMode.FRAME]: t('sheet.fold.frame'),
+  [FoldMode.SEGMENT]: t('sheet.fold.segment'),
+  [FoldMode.EVENT]: t('sheet.fold.event'),
+};
+
+function foldRows(rows: DamageTableRow[], mode: FoldMode): DamageTableRow[] {
+  if (mode === FoldMode.FRAME) return rows;
+
+  const groups = new Map<string, DamageTableRow[]>();
+  for (const row of rows) {
+    const key = mode === FoldMode.EVENT
+      ? `${row.eventUid}`
+      : `${row.eventUid}-s${row.segmentIndex}`;
+    const group = groups.get(key);
+    if (group) group.push(row);
+    else groups.set(key, [row]);
+  }
+
+  const folded: DamageTableRow[] = [];
+  for (const group of Array.from(groups.values())) {
+    const first = group[0];
+    const lastRow = group[group.length - 1];
+    let totalDamage: number | null = null;
+    for (const r of group) {
+      if (r.damage != null) {
+        totalDamage = (totalDamage ?? 0) + r.damage;
+      }
+    }
+    folded.push({
+      ...first,
+      key: mode === FoldMode.EVENT
+        ? `${first.eventUid}-folded`
+        : `${first.eventUid}-s${first.segmentIndex}-folded`,
+      damage: totalDamage,
+      hpRemaining: lastRow.hpRemaining,
+      params: null,
+    });
+  }
+  return folded;
+}
+
 function formatDamage(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   const rounded = Math.round(n);
@@ -193,7 +237,7 @@ export default function CombatSheet({
   slots, events, columns, enemy, loadoutProperties, loadouts, zoom, loadoutRowHeight, headerRowHeight,
   selectedFrames, hoverFrame, onScrollRef, onScroll: onScrollProp, onZoom,
   staggerBreaks, compact, showRealTime = true, contentFrames: contentFramesProp, onDamageClick, onDamageRows,
-  critMode = CritMode.EXPECTED, onCritModeChange, plannerHidden, resourceGraphs,
+  critMode = CritMode.NEVER, onCritModeChange, plannerHidden, resourceGraphs,
 }: CombatSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formatTime = useCallback(
@@ -348,7 +392,7 @@ export default function CombatSheet({
     return map;
   }, [slots]);
 
-  const { rows } = useMemo(
+  const { rows: rawRows } = useMemo(
     () => runCalculation(events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [events, columns, slots, enemy, loadoutProperties, loadouts, staggerBreaks, critMode],
@@ -358,6 +402,10 @@ export default function CombatSheet({
     return model ? model.getHp() : null;
   }, [enemy.id]);
 
+  // Fold mode
+  const [foldMode, setFoldMode] = useState(FoldMode.FRAME);
+  const rows = useMemo(() => foldRows(rawRows, foldMode), [rawRows, foldMode]);
+
   // DPS range filter
   const [dpsRangeStart, setDpsRangeStart] = useState('');
   const [dpsRangeEnd, setDpsRangeEnd] = useState('');
@@ -365,12 +413,12 @@ export default function CombatSheet({
   const rangeEndFrame = dpsRangeEnd ? secondsToFrames(dpsRangeEnd) : undefined;
 
   const statistics = useMemo(
-    () => computeDamageStatistics(rows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame),
-    [rows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame],
+    () => computeDamageStatistics(rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame),
+    [rawRows, tableColumns, bossMaxHp, rangeStartFrame, rangeEndFrame],
   );
 
   // Lift damage rows to parent
-  useEffect(() => { onDamageRows?.(rows); }, [rows, onDamageRows]);
+  useEffect(() => { onDamageRows?.(rawRows); }, [rawRows, onDamageRows]);
 
   // Forward shift+scroll to zoom handler
   useEffect(() => {
@@ -413,6 +461,108 @@ export default function CombatSheet({
     return best?.key ?? null;
   }, [hoverFrame, rows, zoom]);
 
+  // ── Marquee selection ────────────────────────────────────────────────────
+  const [marqueeSelectedKeys, setMarqueeSelectedKeys] = useState<Set<string>>(new Set());
+  const marqueeRef = useRef<{
+    startX: number;
+    startY: number;
+    active: boolean;
+  } | null>(null);
+  const [marqueeRect, setMarqueeRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const rowLayoutRef = useRef<{ row: DamageTableRow; top: number }[]>([]);
+
+  const getRowsInRect = useCallback((scrollEl: HTMLDivElement, y1: number, y2: number) => {
+    const bodyRect = scrollEl.getBoundingClientRect();
+    const scrollTop = scrollEl.scrollTop;
+    // Convert viewport Y coords to body-relative positions
+    const topRel = Math.min(y1, y2) - bodyRect.top + scrollTop;
+    const bottomRel = Math.max(y1, y2) - bodyRect.top + scrollTop;
+    const keys = new Set<string>();
+    for (const { row, top } of rowLayoutRef.current) {
+      if (top + ROW_HEIGHT >= topRel && top <= bottomRel) {
+        keys.add(row.key);
+      }
+    }
+    return keys;
+  }, []);
+
+  const handleBodyMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only left click, not on clickable cells
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('.dmg-cell-clickable')) return;
+
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    const ctrlKey = e.ctrlKey || e.metaKey;
+    marqueeRef.current = { startX: e.clientX, startY: e.clientY, active: false };
+
+    const onMouseMove = (me: MouseEvent) => {
+      const m = marqueeRef.current;
+      if (!m) return;
+
+      if (!m.active && (Math.abs(me.clientX - m.startX) > MARQUEE_THRESHOLD || Math.abs(me.clientY - m.startY) > MARQUEE_THRESHOLD)) {
+        m.active = true;
+      }
+
+      if (!m.active) return;
+
+      const bodyRect = scrollEl.getBoundingClientRect();
+      const scrollTop = scrollEl.scrollTop;
+      const x1 = Math.max(Math.min(m.startX, me.clientX), bodyRect.left) - bodyRect.left;
+      const x2 = Math.min(Math.max(m.startX, me.clientX), bodyRect.right) - bodyRect.left;
+      const y1 = Math.max(Math.min(m.startY, me.clientY), bodyRect.top) - bodyRect.top + scrollTop;
+      const y2 = Math.min(Math.max(m.startY, me.clientY), bodyRect.bottom) - bodyRect.top + scrollTop;
+      setMarqueeRect({ x: x1, y: y1, w: x2 - x1, h: y2 - y1 });
+
+      const keys = getRowsInRect(scrollEl, Math.min(m.startY, me.clientY), Math.max(m.startY, me.clientY));
+      setMarqueeSelectedKeys(keys);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      const didDrag = marqueeRef.current?.active ?? false;
+      setMarqueeRect(null);
+      marqueeRef.current = null;
+
+      // Plain click (no drag, no ctrl) → clear selection
+      if (!didDrag && !ctrlKey) {
+        setMarqueeSelectedKeys(new Set());
+      }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [getRowsInRect]);
+
+  const handleRowClick = useCallback((key: string, e: React.MouseEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.stopPropagation();
+    setMarqueeSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  // Compute selected damage sum
+  const marqueeSelectionStats = useMemo(() => {
+    if (marqueeSelectedKeys.size === 0) return null;
+    let totalDamage = 0;
+    let count = 0;
+    for (const row of rows) {
+      if (marqueeSelectedKeys.has(row.key) && row.damage != null) {
+        totalDamage += row.damage;
+        count++;
+      }
+    }
+    if (count === 0) return null;
+    return { totalDamage, count };
+  }, [marqueeSelectedKeys, rows]);
+
   // Compute row layout (top positions) — one row per DamageTableRow
   const rowLayout = useMemo(() => {
     const layout: { row: DamageTableRow; top: number }[] = [];
@@ -424,6 +574,7 @@ export default function CombatSheet({
       layout.push({ row, top });
       prevBottom = top + ROW_HEIGHT;
     }
+    rowLayoutRef.current = layout;
     return layout;
   }, [rows, zoom, compact]);
 
@@ -488,6 +639,17 @@ export default function CombatSheet({
               title={`Crit mode: ${CRIT_MODE_LABELS[critMode]}. Click to cycle.`}
             >
               {CRIT_MODE_LABELS[critMode]}
+            </button>
+            <button
+              className={`dmg-fold-toggle dmg-fold-toggle--${foldMode.toLowerCase()}`}
+              onClick={() => {
+                const idx = FOLD_MODE_CYCLE.indexOf(foldMode);
+                const next = FOLD_MODE_CYCLE[(idx + 1) % FOLD_MODE_CYCLE.length];
+                setFoldMode(next);
+              }}
+              title={`Fold mode: ${FOLD_MODE_LABELS[foldMode]}. Click to cycle.`}
+            >
+              {FOLD_MODE_LABELS[foldMode]}
             </button>
             <div className="dmg-team-total-bars">
               {statistics.operators.map((op) => {
@@ -646,7 +808,12 @@ export default function CombatSheet({
         />
       )}
 
-      <div ref={scrollRef} className="dmg-table-scroll" onScroll={handleScroll}>
+      <div
+        ref={scrollRef}
+        className={`dmg-table-scroll${marqueeRect ? ' dmg-table-scroll--selecting' : ''}`}
+        onScroll={handleScroll}
+        onMouseDown={handleBodyMouseDown}
+      >
         <div
           className="dmg-body"
           style={{ height: tlHeight }}
@@ -664,7 +831,9 @@ export default function CombatSheet({
                 top={top}
                 selectedFrames={selectedFrames}
                 hovered={row.key === hoveredRowKey}
+                marqueeSelected={marqueeSelectedKeys.has(row.key)}
                 onDamageClick={onDamageClick}
+                onRowClick={handleRowClick}
                 visibleCols={visibleCols}
                 bossMaxHp={bossMaxHp}
                 formatTime={formatTime}
@@ -672,7 +841,25 @@ export default function CombatSheet({
               />
             ))
           )}
+          {marqueeRect && (
+            <div
+              className="selection-marquee"
+              style={{
+                position: 'absolute',
+                left: marqueeRect.x,
+                top: marqueeRect.y,
+                width: marqueeRect.w,
+                height: marqueeRect.h,
+              }}
+            />
+          )}
         </div>
+        {marqueeSelectionStats && (
+          <div className="dmg-marquee-summary">
+            <span className="dmg-marquee-summary-label">{marqueeSelectionStats.count} rows</span>
+            <span className="dmg-marquee-summary-value">{formatDamage(marqueeSelectionStats.totalDamage)}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -680,13 +867,15 @@ export default function CombatSheet({
 
 // ── Row component ───────────────────────────────────────────────────────────
 
-function FlatRow({ row, opInfo, top, selectedFrames, hovered, onDamageClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
+function FlatRow({ row, opInfo, top, selectedFrames, hovered, marqueeSelected, onDamageClick, onRowClick, visibleCols, bossMaxHp, formatTime, resourceGraphs }: {
   row: DamageTableRow;
   opInfo?: OperatorInfo;
   top: number;
   selectedFrames?: SelectedFrame[];
   hovered: boolean;
+  marqueeSelected?: boolean;
   onDamageClick?: (row: DamageTableRow) => void;
+  onRowClick?: (key: string, e: React.MouseEvent) => void;
   visibleCols: SheetColDef[];
   bossMaxHp: number | null;
   formatTime: (frame: number) => string;
@@ -695,12 +884,13 @@ function FlatRow({ row, opInfo, top, selectedFrames, hovered, onDamageClick, vis
   const hasSelection = selectedFrames?.some(
     (sf) => sf.eventUid === row.eventUid && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex,
   ) ?? false;
+  const selected = hasSelection || marqueeSelected;
 
   const opColor = opInfo?.color ?? '#666';
-  const cls = `dmg-row${hasSelection ? ' dmg-row--selected' : ''}${hovered && !hasSelection ? ' dmg-row--hovered' : ''}`;
+  const cls = `dmg-row${selected ? ' dmg-row--selected' : ''}${hovered && !selected ? ' dmg-row--hovered' : ''}`;
 
   return (
-    <div className={cls} style={{ top }}>
+    <div className={cls} style={{ top }} onClick={(e) => onRowClick?.(row.key, e)}>
       {visibleCols.map((def) => (
         <SheetCell
           key={def.id}

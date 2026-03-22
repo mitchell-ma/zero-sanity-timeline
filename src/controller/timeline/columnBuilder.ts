@@ -9,12 +9,13 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import { FPS } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
-import type { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
 import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import { getBaseSkillId, formatSkillDisplayName } from '../../dsl/semanticsTranslation';
+import { buildContextForSkillColumn } from '../calculation/valueResolver';
+import { aggregateLoadoutStats } from '../calculation/loadoutAggregator';
 
 export interface Slot {
   slotId: string;
@@ -28,6 +29,10 @@ export interface Slot {
   gearSetType?: import('../../consts/enums').GearSetType;
   /** Combo skill level (1–12) for level-dependent cooldown computation. */
   comboSkillLevel?: number;
+  /** Full loadout properties for context-aware value resolution. */
+  loadoutProperties?: import('../../view/InformationPane').LoadoutProperties;
+  /** Equipment loadout for stat aggregation. */
+  loadout?: import('../../view/OperatorLoadoutHeader').OperatorLoadoutState;
 }
 
 
@@ -288,6 +293,13 @@ export function buildColumns(
     const hasBattleVariants = battleName && (!!opSkills[battleName + '_ENHANCED'] || !!opSkills[battleName + '_EMPOWERED']);
     const hasComboOverride = false; // Combo frame overrides now handled generically
     let slotHasCols = false;
+    // ── Aggregated stats for value resolution context ──
+    const slotAggStats = op && slot.loadout && slot.loadoutProperties
+      ? aggregateLoadoutStats(op.id, slot.loadout, slot.loadoutProperties)?.stats
+      : undefined;
+    /** Build a ValueResolutionContext for a given skill column on this slot. */
+    const ctxFor = (skillColumn: string) =>
+      buildContextForSkillColumn(slot.loadoutProperties, skillColumn, slotAggStats);
     if (op) {
       // Input subtimeline — dash, dodge, finisher, dive, controlled
       const DASH_FRAMES = Math.round(0.416 * 120); // 0.416s
@@ -313,7 +325,7 @@ export function buildColumns(
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
             timeDependency: TimeDependency.REAL_TIME,
-            segments: [{ properties: { duration: DODGE_FRAMES, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } }],
+            segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: DODGE_FRAMES, name: 'Animation', timeDependency: TimeDependency.REAL_TIME } }],
           },
         ],
         defaultEvent: {
@@ -352,8 +364,9 @@ export function buildColumns(
             col.matchColumnIds = [SKILL_COLUMNS.COMBO, 'comboActivationWindow'];
           }
           // Basic attack variants (derived from ENHANCED_*/EMPOWERED_* skill categories)
+          const skillCtx = ctxFor(skillType);
           if (hasBasicVariants && skillType === SKILL_COLUMNS.BASIC && op) {
-            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name));
+            const base = SkillSegmentBuilder.buildSegments(getFrameSequences(op.id, skill.name), { ctx: skillCtx });
             col.defaultEvent = {
               name: skill.name,
               segments: base.segments,
@@ -366,7 +379,7 @@ export function buildColumns(
               if (!varSkill) continue;
               const variantSeqs = getFrameSequences(op.id, varId);
               if (variantSeqs?.length) {
-                const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs);
+                const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { ctx: skillCtx });
                 const enhancementType = suffix === '_ENHANCED' ? EnhancementType.ENHANCED : EnhancementType.EMPOWERED;
                 col.eventVariants!.push({
                   name: varId,
@@ -387,10 +400,10 @@ export function buildColumns(
             const diveSeqs = diveId ? getFrameSequences(op.id, diveId) : [];
 
             const finSeg = finSeqs.length
-              ? SkillSegmentBuilder.buildSegments(finSeqs, { labels: ['Finisher'] })
+              ? SkillSegmentBuilder.buildSegments(finSeqs, { labels: ['Finisher'], ctx: skillCtx })
               : { totalDurationFrames: FINISHER_FRAMES, segments: [{ properties: { duration: FINISHER_FRAMES, name: 'Finisher' }, frames: [{ offsetFrame: FINISHER_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.FINISHER] }] }] };
             const diveSeg = diveSeqs.length
-              ? SkillSegmentBuilder.buildSegments(diveSeqs, { labels: ['Dive'] })
+              ? SkillSegmentBuilder.buildSegments(diveSeqs, { labels: ['Dive'], ctx: skillCtx })
               : { totalDurationFrames: DIVE_FRAMES, segments: [{ properties: { duration: DIVE_FRAMES, name: 'Dive' }, frames: [{ offsetFrame: DIVE_FRAMES, skillPointRecovery: 0, stagger: 0, frameTypes: [EventFrameType.DIVE] }] }] };
 
             col.eventVariants!.push(
@@ -408,7 +421,7 @@ export function buildColumns(
           if (hasBattleVariants && skillType === SKILL_COLUMNS.BATTLE && op) {
             const baseSeg = SkillSegmentBuilder.buildSegments(
               getFrameSequences(op.id, skill.name),
-              { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain },
+              { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx },
             );
             col.defaultEvent = {
               ...col.defaultEvent!,
@@ -429,7 +442,7 @@ export function buildColumns(
               const isEnhanced = suffix.includes('ENHANCED');
               const gg = isEnhanced ? 0 : skill.gaugeGain;
               const tgg = isEnhanced ? 0 : skill.teamGaugeGain;
-              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { gaugeGain: gg, teamGaugeGain: tgg });
+              const variantSeg = SkillSegmentBuilder.buildSegments(variantSeqs, { gaugeGain: gg, teamGaugeGain: tgg, ctx: skillCtx });
               // Apply frame modifications if defined on the variant
               if (varSkill.frameModifications) {
                 for (const fm of varSkill.frameModifications as { segmentIndex: number; frameIndex: number; stagger?: number; gaugeGain?: number; consumeStatus?: string; removeConsumeArtsInfliction?: boolean; spReturnP1?: number }[]) {
@@ -464,7 +477,7 @@ export function buildColumns(
           // Generic basic attack: data-driven frame sequences
           const basicSeqs = op && basicName ? getFrameSequences(op.id, basicName) : undefined;
           if (basicSeqs?.length && skillType === SKILL_COLUMNS.BASIC) {
-            const base = SkillSegmentBuilder.buildSegments(basicSeqs);
+            const base = SkillSegmentBuilder.buildSegments(basicSeqs, { ctx: skillCtx });
             col.defaultEvent = {
               name: skill.name,
               segments: base.segments,
@@ -473,17 +486,17 @@ export function buildColumns(
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
-            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, ctx: skillCtx });
             // Only append cooldown if the data-driven segments don't already include one
-            const hasBattleCdSegment = seg.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            const hasBattleCdSegment = seg.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
             let battleSegments: import('../../consts/viewTypes').EventSegmentData[];
             if (hasBattleCdSegment) {
               battleSegments = seg.segments;
             } else {
-              const battleCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const battleCdSeg = skill.defaultSegments?.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
               const battleCd = battleCdSeg?.properties.duration ?? 0;
               battleSegments = battleCd > 0
-                ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
+                ? [...seg.segments, { properties: { segmentTypes: [SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN], duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME } }]
                 : seg.segments;
             }
             col.defaultEvent = {
@@ -494,11 +507,11 @@ export function buildColumns(
             const empoweredBattleId = battleName + '_EMPOWERED';
             const empoweredBattleSeqs = battleName ? getFrameSequences(op!.id, empoweredBattleId) : undefined;
             if (empoweredBattleSeqs?.length) {
-              const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs);
+              const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { ctx: skillCtx });
               const empoweredName = empoweredBattleId as CombatSkillsType;
-              const hasEmpCdSegment = empowered.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const hasEmpCdSegment = empowered.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
               // Append cooldown from base skill if empowered segments don't have one
-              const cdSeg = battleSegments.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const cdSeg = battleSegments.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
               const empVarSegs = hasEmpCdSegment || !cdSeg
                 ? empowered.segments
                 : [...empowered.segments, cdSeg];
@@ -521,63 +534,19 @@ export function buildColumns(
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
-            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies });
-            // Only append cooldown if the data-driven segments don't already include one
-            const hasCdSegment = seg.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
-            if (hasCdSegment) {
-              col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };
-            } else {
-              const comboCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
-              const comboCd = comboCdSeg?.properties.duration ?? 0;
-              col.defaultEvent = {
-                ...col.defaultEvent!,
-                segments: [...seg.segments, { properties: { duration: comboCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }],
-              };
-            }
+            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, ctx: skillCtx });
+            col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };
           }
-          // Generic ultimate: build segments from JSON data or fall back to manual construction
+          // Generic ultimate: build segments from JSON data
           if (skillType === SKILL_COLUMNS.ULTIMATE) {
             const ultName = op?.skills.ultimate?.name;
             const ultSeqs = op && ultName ? getFrameSequences(op!.id, ultName) : undefined;
-            // Use data-driven segments when the JSON has explicit segmentType metadata
-            const hasTypedSegments = ultSeqs?.length && ultSeqs.some(s => 'segmentType' in s && (s as SkillEventSequence & { segmentType?: string }).segmentType);
-            if (hasTypedSegments) {
+            if (ultSeqs?.length) {
               const ultLabels = getSegmentLabels(op!.id, ultName!);
-              const seg = SkillSegmentBuilder.buildSegments(ultSeqs!, { labels: ultLabels });
+              const seg = SkillSegmentBuilder.buildSegments(ultSeqs!, { labels: ultLabels, ctx: skillCtx });
               col.defaultEvent = {
                 ...col.defaultEvent!,
                 segments: seg.segments,
-              };
-            } else {
-              // Extract durations from the skill's defaultSegments
-              const defSegs = col.defaultEvent!.segments ?? [];
-              const animSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.ANIMATION);
-              const activeSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
-              const cooldownSeg = defSegs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
-              const animDur = animSeg?.properties.duration ?? 0;
-              const activeDur = activeSeg?.properties.duration ?? 0;
-              const cooldownDur = cooldownSeg?.properties.duration ?? 0;
-              const statisDur = 0;
-
-              let activeSegment: import('../../consts/viewTypes').EventSegmentData;
-              if (ultSeqs?.length) {
-                const ultLabels = getSegmentLabels(op!.id, ultName!);
-                const seg = SkillSegmentBuilder.buildSegments(ultSeqs, { labels: ultLabels });
-                activeSegment = { ...seg.segments[0], properties: { ...seg.segments[0].properties, duration: activeDur > 0 ? activeDur : seg.segments[0].properties.duration, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } };
-              } else {
-                activeSegment = { properties: { duration: activeDur, name: 'Active' }, metadata: { segmentType: SegmentType.ACTIVE } };
-              }
-
-              const ultSegments: import('../../consts/viewTypes').EventSegmentData[] = [
-                { properties: { duration: animDur, name: 'Animation', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
-                { properties: { duration: statisDur, name: 'Statis' }, metadata: { segmentType: SegmentType.NORMAL } },
-                activeSegment,
-                { properties: { duration: cooldownDur, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.COOLDOWN } },
-              ];
-
-              col.defaultEvent = {
-                ...col.defaultEvent!,
-                segments: ultSegments,
               };
             }
           }
@@ -595,7 +564,7 @@ export function buildColumns(
                 const csCd = Math.round((cs.cooldownSeconds ?? 0) * FPS);
                 const csSegs: import('../../consts/viewTypes').EventSegmentData[] = [
                   { properties: { duration: Math.round(cs.durationSeconds * FPS) } },
-                  ...(csCd > 0 ? [{ properties: { duration: csCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }] : []),
+                  ...(csCd > 0 ? [{ properties: { segmentTypes: [SegmentType.COOLDOWN, SegmentType.IMMEDIATE_COOLDOWN], duration: csCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME } }] : []),
                 ];
                 col.eventVariants.push({
                   name: cs.id,

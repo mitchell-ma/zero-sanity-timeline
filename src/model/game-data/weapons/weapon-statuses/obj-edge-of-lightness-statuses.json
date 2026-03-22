@@ -63,7 +63,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 3
@@ -71,7 +71,9 @@
         "interactionType": "NONE"
       },
       "to": "OPERATOR",
-      "toDeterminer": "OTHER"
+      "toDeterminer": "OTHER",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "OBJ_EDGE_OF_LIGHTNESS",

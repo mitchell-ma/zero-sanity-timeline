@@ -5,13 +5,15 @@
       "name": "Originium Crystal",
       "type": "SKILL_STATUS",
       "to": "ENEMY",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 4
         },
         "interactionType": "NONE"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "endministrator",
@@ -97,7 +99,9 @@
       "name": "Essence Disintegration (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "endministrator",
@@ -143,13 +147,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "ESSENCE_DISINTEGRATION_TALENT",
@@ -193,13 +199,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "endministrator",
@@ -245,13 +253,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "POTENTIAL_STATUS"
     },
     "metadata": {
       "originId": "ESSENCE_DISINTEGRATION_TALENT",

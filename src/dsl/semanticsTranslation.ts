@@ -111,7 +111,6 @@ export const OBJECT_LABELS: Record<string, string> = {
 const PROPERTY_LABELS: Record<string, string> = {
   duration: t('dsl.property.duration'),
   stacks: t('dsl.property.stacks'),
-  cardinality: t('dsl.property.cardinality'),
   multiplier: t('dsl.property.multiplier'),
   staggerValue: t('dsl.property.staggerValue'),
   skillPoint: t('dsl.property.skillPoint'),
@@ -143,10 +142,10 @@ function formatWithValue(key: string, node: ValueNode): string {
     return `${label}: depends on ${dep}`;
   }
   if (isValueStat(node)) {
-    return `${label}: ${titleCase(node.objectId)}`;
+    return `${label}: ${titleCase(node.objectId ?? node.stat ?? '?')}`;
   }
   if (isValueExpression(node)) {
-    return `${label}: (${node.operator} expression)`;
+    return `${label}: (${node.operation} expression)`;
   }
   return `${label}: ?`;
 }
@@ -187,7 +186,7 @@ function formatTarget(type: string, determiner?: string): string {
   return TARGET_LABELS[type] ?? titleCase(type);
 }
 
-/** Object types where a WITH `value` or `cardinality` should be inlined into the sentence. */
+/** Object types where a WITH `value` should be inlined into the sentence. */
 const INLINE_VALUE_OBJECTS = new Set(['STAGGER', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'HP', 'COOLDOWN']);
 
 export function translateEffect(e: Effect): TranslatedEffect {
@@ -197,7 +196,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
   // Handle PERFORM DAMAGE specially → "Deal"
   const displayVerb = e.verb === 'PERFORM' && e.object === 'DAMAGE' ? 'Deal' : verb;
 
-  // Inline simple WITH value/cardinality for resource-like objects
+  // Inline simple WITH value for resource-like objects
   // e.g. APPLY STAGGER TO ENEMY WITH value IS 18 → "Apply 18 stagger to the enemy"
   let inlinedValue = '';
   if (e.with && INLINE_VALUE_OBJECTS.has(String(e.object ?? ''))) {
@@ -208,9 +207,9 @@ export function translateEffect(e: Effect): TranslatedEffect {
   }
 
   // Cardinality (e.g. "Apply 3 Heat infliction")
-  const card = !inlinedValue && e.cardinality != null && e.cardinality !== 'MAX'
-    ? `${e.cardinality} `
-    : !inlinedValue && e.cardinality === 'MAX' ? 'max ' : '';
+  const card = !inlinedValue && e.value != null && e.value !== 'MAX'
+    ? `${isValueLiteral(e.value) ? e.value.value : e.value} `
+    : !inlinedValue && e.value === 'MAX' ? 'max ' : '';
 
   // Object
   const obj = formatObject(e);
@@ -229,18 +228,19 @@ export function translateEffect(e: Effect): TranslatedEffect {
   // FOR
   if (e.for) {
     const fc = e.for.cardinalityConstraint.replace(/_/g, ' ').toLowerCase();
-    parts.push(`for ${fc} ${e.for.cardinality}`);
-  } else if (e.cardinalityConstraint && e.cardinality == null) {
+    const forVal = e.for.value === 'MAX' ? 'max' : isValueLiteral(e.for.value) ? e.for.value.value : e.for.value;
+    parts.push(`for ${fc} ${forVal}`);
+  } else if (e.cardinalityConstraint && e.value == null) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' ').toLowerCase());
   }
 
   const sentence = parts.join(' ');
 
-  // Properties from WITH preposition (skip inlined value/cardinality)
+  // Properties from WITH preposition (skip inlined value)
   const properties: string[] = [];
   if (e.with) {
     for (const [k, wv] of Object.entries(e.with)) {
-      if (inlinedValue && (k === 'value' || k === 'cardinality')) continue;
+      if (inlinedValue && k === 'value') continue;
       properties.push(formatWithValue(k, wv));
     }
   }
@@ -329,7 +329,7 @@ export function interactionToJson(i: Interaction): Record<string, unknown> {
   if (i.objectId) out.objectId = i.objectId;
   if (i.element) out.element = i.element;
   if (i.cardinalityConstraint) out.cardinalityConstraint = i.cardinalityConstraint;
-  if (i.cardinality != null) out.cardinality = i.cardinality;
+  if (i.value != null) out.value = i.value;
   if (i.stacks != null) out.stacks = i.stacks;
   return out;
 }
@@ -345,7 +345,7 @@ export function effectToJson(e: Effect): Record<string, unknown> {
   if (e.object) out.object = e.object;
   if (e.objectId) out.objectId = e.objectId;
   if (e.cardinalityConstraint) out.cardinalityConstraint = e.cardinalityConstraint;
-  if (e.cardinality != null) out.cardinality = e.cardinality;
+  if (e.value != null) out.value = e.value;
   if (e.toDeterminer) out.toDeterminer = e.toDeterminer;
   if (e.toObject) out.to = e.toObject;
   if (e.toObjectClassFilter) out.toClassFilter = e.toObjectClassFilter;
@@ -382,7 +382,7 @@ function valueNodeToJson(node: ValueNode): unknown {
     return { verb: node.verb, object: node.object, objectId: node.objectId };
   }
   if (isValueExpression(node)) {
-    return { operator: node.operator, left: valueNodeToJson(node.left), right: valueNodeToJson(node.right) };
+    return { operation: node.operation, left: valueNodeToJson(node.left), right: valueNodeToJson(node.right) };
   }
   return node;
 }

@@ -355,6 +355,7 @@ export class DerivedEventController {
       for (let i = 0; i < sorted.length - 1; i++) {
         const cur = sorted[i];
         const next = sorted[i + 1];
+        if (!cur.nonOverlappableRange) continue;
         const curRange = computeSegmentsSpan(cur.segments);
         if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
           overlapIds.add(cur.uid);
@@ -1081,6 +1082,6 @@ export class DerivedEventController {
 /** Set the ANIMATION segment's durationFrames, returning updated segments. */
 function setAnimationSegmentDuration(segments: EventSegmentData[], duration: number): EventSegmentData[] {
   return segments.map(s =>
-    s.metadata?.segmentType === SegmentType.ANIMATION ? { ...s, properties: { ...s.properties, duration } } : s,
+    s.properties.segmentTypes?.includes(SegmentType.ANIMATION) ? { ...s, properties: { ...s.properties, duration } } : s,
   );
 }

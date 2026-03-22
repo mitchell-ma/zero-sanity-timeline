@@ -5,6 +5,7 @@
  * Auto-discovers operator-skills/*-skills.json via require.context.
  * Each file contains skill entries keyed by skill ID (e.g. "FLAMING_CINDERS").
  */
+import { EventType, EventCategoryType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ const VALID_SKILL_ENTRY_KEYS = new Set([
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
   'name', 'description', 'duration', 'windowFrames',
   'enhancementTypes', 'dependencyTypes',
+  'eventType', 'eventCategoryType',
 ]);
 
 const VALID_SKILL_METADATA_KEYS = new Set(['originId']);
@@ -83,6 +85,8 @@ export class OperatorSkill {
   readonly windowFrames?: number;
   readonly enhancementTypes?: string[];
   readonly dependencyTypes?: string[];
+  readonly eventType: EventType;
+  readonly eventCategoryType?: EventCategoryType;
   readonly originId?: string;
 
   constructor(id: string, json: Record<string, unknown>) {
@@ -99,6 +103,8 @@ export class OperatorSkill {
     if (props.windowFrames != null) this.windowFrames = props.windowFrames as number;
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     if (props.dependencyTypes) this.dependencyTypes = props.dependencyTypes as string[];
+    this.eventType = (props.eventType as EventType) ?? EventType.COMBAT_SKILL_EVENT;
+    if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as EventCategoryType;
     if (meta.originId) this.originId = meta.originId as string;
   }
 
@@ -115,6 +121,8 @@ export class OperatorSkill {
         ...(this.windowFrames != null ? { windowFrames: this.windowFrames } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         ...(this.dependencyTypes ? { dependencyTypes: this.dependencyTypes } : {}),
+        eventType: this.eventType,
+        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
       ...(this.originId ? { metadata: { originId: this.originId } } : {}),
     };

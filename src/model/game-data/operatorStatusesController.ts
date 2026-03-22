@@ -5,6 +5,7 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
+import { EventType, EventCategoryType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesController';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
@@ -16,7 +17,7 @@ interface TriggerCondition {
   verb: string;
   object?: string;
   objectId?: string;
-  cardinality?: number;
+  value?: unknown;
   cardinalityConstraint?: string;
   to?: string;
   toDeterminer?: string;
@@ -40,15 +41,15 @@ interface StatusSegment {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'toObject', 'with', 'cardinality', 'cardinalityConstraint', 'effects']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'toObject', 'with', 'value', 'cardinalityConstraint', 'effects']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
-const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'cardinality', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
+const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'value', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
 const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential', 'eventType', 'eventCategoryType']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
@@ -165,6 +166,8 @@ export class OperatorStatus {
   readonly duration?: DurationConfig;
   readonly stacks?: StacksConfig;
   readonly enhancementTypes?: string[];
+  readonly eventType: EventType;
+  readonly eventCategoryType?: EventCategoryType;
   readonly originId: string;
   readonly dataSources: string[];
 
@@ -193,6 +196,8 @@ export class OperatorStatus {
       this.stacks = props.stacks as StacksConfig;
     }
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
+    this.eventType = (props.eventType as EventType) ?? EventType.STATUS_EVENT;
+    if (props.eventCategoryType) this.eventCategoryType = props.eventCategoryType as EventCategoryType;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
   }
@@ -226,6 +231,8 @@ export class OperatorStatus {
         ...(this.stacks ? { stacks: this.stacks } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         ...(this.minPotential != null ? { minPotential: this.minPotential } : {}),
+        eventType: this.eventType,
+        ...(this.eventCategoryType ? { eventCategoryType: this.eventCategoryType } : {}),
       },
       metadata: {
         originId: this.originId,

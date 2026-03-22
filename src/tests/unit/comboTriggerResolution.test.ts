@@ -143,10 +143,10 @@ function makeAntalCombo(startFrame: number, comboTriggerColumnId: string): Timel
     startFrame,
     comboTriggerColumnId,
     segments: [
-      { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
       {
         properties: { duration: Math.round(0.8 * FPS) },
-        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+        frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
       },
     ],
   });
@@ -292,7 +292,7 @@ describe('C. Pipeline integration', () => {
     expect(processedCombo).toBeDefined();
     expect(processedCombo!.comboTriggerColumnId).toBe('heatInfliction');
 
-    // Antal has APPLY SOURCE INFLICTION — should mirror the resolved trigger
+    // Antal has APPLY TRIGGER INFLICTION — should mirror the resolved trigger
     const derivedInflictions = processed.filter(
       (e) => e.uid.startsWith(`${antalCombo.uid}-combo-inflict`),
     );

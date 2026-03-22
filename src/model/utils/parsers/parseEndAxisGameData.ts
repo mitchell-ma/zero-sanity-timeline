@@ -55,9 +55,9 @@ interface Segment {
   metadata: {
     eventComponentType: string;
     dataSources: string[];
-    segmentType?: string;
   };
   properties: {
+    segmentTypes?: string[];
     duration: Duration;
     name?: string;
     timeDependency?: string;
@@ -401,8 +401,8 @@ function parseComboSkill(char: GameDataCharacter): SkillCategory {
       duration: dur(char.link_duration),
     },
     segments: [{
-      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
-      properties: { duration: dur(0.5), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES },
+      properties: { segmentTypes: ['ANIMATION'], duration: dur(0.5), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
       frames: [],
     }],
     frames,
@@ -473,8 +473,8 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
     // Animation time-stop — prepend ANIMATION segment
     if (char.ultimate_animationTime) {
       segments.unshift({
-        metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
-        properties: { duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+        metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES },
+        properties: { segmentTypes: ['ANIMATION'], duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
         frames: [],
       });
     }
@@ -495,8 +495,8 @@ function parseUltimate(char: GameDataCharacter): SkillCategory {
   if (char.ultimate_animationTime) {
     if (!result.segments) result.segments = [];
     result.segments.unshift({
-      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES, segmentType: 'ANIMATION' },
-      properties: { duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+      metadata: { eventComponentType: 'SEGMENT', dataSources: DATA_SOURCES },
+      properties: { segmentTypes: ['ANIMATION'], duration: dur(char.ultimate_animationTime), name: 'Animation', timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
       frames: [],
     });
   }

@@ -2812,24 +2812,21 @@
   filter: brightness(1.4);
 }
 
-.warning-tooltip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+.warning-tooltip--fixed {
+  position: fixed;
+  transform: translateX(-50%) translateY(-100%);
+  margin-top: -6px;
   background: var(--bg-panel);
   border: 1px solid var(--border-dim);
   border-left: 3px solid var(--border-bright);
   padding: 0.375rem 0.625rem;
   white-space: nowrap;
-  z-index: 600;
+  z-index: 10000;
   box-shadow: 0 4px 20px var(--scrim-70);
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
 }
 
-.warning-tooltip::after {
+.warning-tooltip--fixed::after {
   content: '';
   position: absolute;
   top: 100%;
@@ -2837,10 +2834,6 @@
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-top-color: var(--border-dim);
-}
-
-.event-segment-warning:hover .warning-tooltip {
-  opacity: 1;
 }
 
 .warning-tooltip-line {
@@ -3882,6 +3875,7 @@
 }
 
 .dmg-table-scroll {
+  position: relative;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -4074,6 +4068,39 @@
   color: var(--text-muted);
 }
 
+/* ── Fold mode toggle button ───────────────────────── */
+.dmg-fold-toggle {
+  flex-shrink: 0;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--border-med);
+  border-radius: 3px;
+  background: var(--overlay-05);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.dmg-fold-toggle:hover {
+  background: var(--overlay-10);
+  color: var(--text-primary);
+}
+.dmg-fold-toggle--frame {
+  border-color: var(--border-med);
+  color: var(--text-muted);
+}
+.dmg-fold-toggle--segment {
+  border-color: #55aadd;
+  color: #55aadd;
+}
+.dmg-fold-toggle--event {
+  border-color: #aa77ee;
+  color: #aa77ee;
+}
+
 /* ── Collapse toggle button ─────────────────────────── */
 .dmg-collapse-toggle {
   flex-shrink: 0;
@@ -4259,6 +4286,41 @@
 /* Multi-hit rows get a subtle left accent */
 .dmg-row--multi {
   border-left: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Marquee selection ────────────────────────────── */
+.dmg-table-scroll--selecting {
+  user-select: none;
+}
+
+.dmg-marquee-summary {
+  position: sticky;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4px 12px;
+  margin: 0 auto;
+  width: fit-content;
+  background: rgba(20, 22, 28, 0.92);
+  border: 1px solid rgba(100, 180, 255, 0.35);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  z-index: 14;
+  pointer-events: none;
+}
+
+.dmg-marquee-summary-label {
+  color: var(--text-muted);
+}
+
+.dmg-marquee-summary-value {
+  color: rgba(100, 200, 255, 0.9);
+  font-weight: 600;
 }
 
 /* ── Cells ─────────────────────────────────────────── */

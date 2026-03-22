@@ -72,7 +72,7 @@ export interface FrameCondition {
   object?: string;
   objectId?: string;
   cardinalityConstraint?: string;
-  cardinality?: number;
+  value?: unknown;
 }
 
 /** Inline damage data from a DEAL DAMAGE effect. */
@@ -134,7 +134,7 @@ export abstract class SkillEventFrame {
   getDamageElement(): string | null { return null; }
 
   /** Whether this frame duplicates the source infliction that triggered it. */
-  getDuplicatesSourceInfliction(): boolean { return false; }
+  getDuplicatesTriggerInfliction(): boolean { return false; }
 
   /** Frame clauses (DSL v2): conditional and unconditional effect groups. */
   getClauses(): readonly FrameClausePredicate[] { return []; }

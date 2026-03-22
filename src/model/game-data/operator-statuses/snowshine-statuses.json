@@ -36,7 +36,9 @@
       "name": "Polar Survival",
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "snowshine",
@@ -81,7 +83,9 @@
       "name": "SAR Professional (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "snowshine",

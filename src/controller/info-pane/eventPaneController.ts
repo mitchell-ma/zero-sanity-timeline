@@ -4,7 +4,7 @@ import {
   REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
 } from '../../consts/timelineColumnLabels';
-import { interactionToLabel } from '../../dsl/semantics';
+import { interactionToLabel, THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../dsl/semanticsTranslation';
@@ -468,8 +468,9 @@ export function interactionToText(i: Interaction): string {
   parts.push(i.verb.replace(/_/g, ' '));
   parts.push(i.object.replace(/_/g, ' '));
   if (i.objectId) parts.push(`(${i.objectId})`);
-  if (i.cardinalityConstraint && i.cardinality != null) {
-    parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${i.cardinality}`);
+  if (i.cardinalityConstraint && i.value != null) {
+    const resolved = getSimpleValue(i.value);
+    parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${resolved ?? '?'}`);
   }
   if (i.element) parts.push(`[${i.element}]`);
   return parts.join(' ');
@@ -479,7 +480,10 @@ export function interactionToText(i: Interaction): string {
 export function effectToText(e: Effect): string {
   const parts: string[] = [];
   parts.push(e.verb.replace(/_/g, ' '));
-  if (e.cardinality != null) parts.push(String(e.cardinality));
+  if (e.value != null) {
+    const resolved = e.value === THRESHOLD_MAX ? 'MAX' : getSimpleValue(e.value);
+    parts.push(String(resolved ?? '?'));
+  }
   if (e.adjective) {
     const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
@@ -490,7 +494,8 @@ export function effectToText(e: Effect): string {
   if (e.fromObject) parts.push(`FROM ${String(e.fromObject).replace(/_/g, ' ')}`);
   if (e.onObject) parts.push(`ON ${String(e.onObject).replace(/_/g, ' ')}`);
   if (e.for) {
-    parts.push(`FOR ${e.for.cardinalityConstraint.replace(/_/g, ' ')} ${e.for.cardinality}`);
+    const forResolved = e.for.value === THRESHOLD_MAX ? 'MAX' : getSimpleValue(e.for.value);
+    parts.push(`FOR ${e.for.cardinalityConstraint.replace(/_/g, ' ')} ${forResolved ?? '?'}`);
   } else if (e.cardinalityConstraint) {
     parts.push(e.cardinalityConstraint.replace(/_/g, ' '));
   }

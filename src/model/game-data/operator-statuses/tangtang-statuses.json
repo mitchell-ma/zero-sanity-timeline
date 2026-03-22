@@ -43,7 +43,9 @@
       "name": "Fam of Honor",
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
-      "toDeterminer": "ALL"
+      "toDeterminer": "ALL",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "tangtang",

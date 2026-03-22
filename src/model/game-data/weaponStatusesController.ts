@@ -5,7 +5,7 @@
  * Auto-discovers weapons/weapon-statuses/*.json via require.context.
  * Each file contains an array of weapon status entries sharing an originId.
  */
-import { UnitType } from '../../consts/enums';
+import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
@@ -45,7 +45,7 @@ const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
 
@@ -138,6 +138,8 @@ export class WeaponStatus {
   readonly toDeterminer: string;
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
+  readonly eventType: EventType;
+  readonly eventCategoryType: EventCategoryType;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -155,6 +157,8 @@ export class WeaponStatus {
       limit: { verb: VerbType.IS, value: 1 },
       interactionType: 'NONE',
     }) as StacksConfig;
+    this.eventType = (props.eventType as EventType) ?? EventType.STATUS_EVENT;
+    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.WEAPON_STATUS;
     this.originId = (meta.originId ?? '') as string;
   }
 
@@ -178,6 +182,8 @@ export class WeaponStatus {
         toDeterminer: this.toDeterminer,
         duration: this.duration,
         stacks: this.stacks,
+        eventType: this.eventType,
+        eventCategoryType: this.eventCategoryType,
       },
       metadata: {
         originId: this.originId,

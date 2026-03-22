@@ -46,6 +46,7 @@ import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { GearSetType, GearCategory, SegmentType } from '../../consts/enums';
 import type { SkillType, SkillDef } from '../../consts/viewTypes';
 import { computeSegmentsSpan } from '../../consts/viewTypes';
+import { THRESHOLD_MAX } from '../../dsl/semantics';
 import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { operatorToCustomOperator, weaponToCustomWeapon, gearSetToCustomGearSet } from '../../controller/custom/builtinToCustomConverter';
@@ -580,14 +581,14 @@ function interactionToText(i: Interaction): string {
   parts.push(i.verb.replace(/_/g, ' '));
   parts.push(i.object.replace(/_/g, ' '));
   if (i.objectId) parts.push(`(${i.objectId})`);
-  if (i.cardinalityConstraint && i.cardinality != null) parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${i.cardinality}`);
+  if (i.cardinalityConstraint && i.value != null) parts.push(`${i.cardinalityConstraint.replace(/_/g, ' ')} ${typeof i.value === 'object' && 'value' in i.value ? i.value.value : i.value}`);
   return parts.join(' ');
 }
 
 function effectToText(e: Effect): string {
   const parts: string[] = [];
   parts.push(e.verb.replace(/_/g, ' '));
-  if (e.cardinality != null) parts.push(String(e.cardinality));
+  if (e.value != null) parts.push(e.value === THRESHOLD_MAX ? 'MAX' : (typeof e.value === 'object' && 'value' in e.value ? String(e.value.value) : String(e.value)));
   if (e.adjective) {
     const adjs = Array.isArray(e.adjective) ? e.adjective : [e.adjective];
     parts.push(adjs.map((a) => a.replace(/_/g, ' ')).join(' '));
@@ -1003,17 +1004,16 @@ function BuiltinOperatorSkillSection({ operatorId, skillType, skill }: {
     [operatorId, skillType],
   );
 
-  const op = ALL_OPERATORS.find((o) => o.id === operatorId);
   const ultEnergy = useMemo(
-    () => skillType === 'ultimate' && op ? resolveUltimateEnergy(operatorId, 0, op.ultimateEnergyCost, skill.gaugeGain, skill.teamGaugeGain) : null,
-    [operatorId, skillType, op, skill.gaugeGain, skill.teamGaugeGain],
+    () => skillType === 'ultimate' ? resolveUltimateEnergy(operatorId, 0, skill.gaugeGain, skill.teamGaugeGain) : null,
+    [operatorId, skillType, skill.gaugeGain, skill.teamGaugeGain],
   );
 
   // Compute timing values
   const segs = skill.defaultSegments ?? [];
   const totalDur = computeSegmentsSpan(segs);
-  const activeSeg = segs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
-  const cooldownSeg = segs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+  const activeSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.ACTIVE));
+  const cooldownSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
   const activeDur = activeSeg?.properties.duration ?? 0;
   const cooldownDur = cooldownSeg?.properties.duration ?? 0;
   const activationDur = totalDur - cooldownDur;
@@ -1605,8 +1605,8 @@ function BuiltinSkillView({ id }: { id: string }) {
           {(() => {
             const segs = skill.defaultSegments ?? [];
             const totalDur = computeSegmentsSpan(segs);
-            const activeSeg = segs.find(s => s.metadata?.segmentType === SegmentType.ACTIVE);
-            const cooldownSeg = segs.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            const activeSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.ACTIVE));
+            const cooldownSeg = segs.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
             const activeDur = activeSeg?.properties.duration ?? 0;
             const cooldownDur = cooldownSeg?.properties.duration ?? 0;
             const activationDur = totalDur - cooldownDur;

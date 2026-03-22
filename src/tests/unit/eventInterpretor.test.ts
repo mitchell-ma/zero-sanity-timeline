@@ -256,7 +256,7 @@ describe('EventInterpretorController: CONSUME', () => {
 
     interp.interpret(effect, ctx);
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('implicit cardinality'),
+      expect.stringContaining('implicit stacks'),
     );
     consoleSpy.mockRestore();
   });
@@ -278,7 +278,7 @@ describe('EventInterpretorController: ALL', () => {
       verb: VerbType.ALL,
       for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
-        cardinality: 4,
+        value: { verb: VerbType.IS, value: 4 },
       },
       predicates: [{
         conditions: [],
@@ -364,7 +364,7 @@ describe('EventInterpretorController: ALL', () => {
       verb: VerbType.ALL,
       for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
-        cardinality: 4,
+        value: { verb: VerbType.IS, value: 4 },
       },
       predicates: [{
         conditions: [],

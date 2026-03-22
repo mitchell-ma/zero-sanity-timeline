@@ -14,7 +14,7 @@ import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueRes
 import { fmtN } from '../../utils/timeline';
 import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
 import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
-import { getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
+import { getUltimateEnergyCost, getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
 import type { Potential } from '../../consts/types';
 import type { SkillType } from '../../consts/viewTypes';
 import { VerbType } from '../../dsl/semantics';
@@ -634,13 +634,13 @@ export function resolveComboTrigger(operatorId: string): ComboTriggerDisplay | n
 export function resolveUltimateEnergy(
   operatorId: string,
   potential: Potential,
-  ultimateEnergyCost: number,
   gaugeGain?: number,
   teamGaugeGain?: number,
 ): UltimateEnergyDisplay {
-  const adjustedCost = getUltimateEnergyCostForPotential(operatorId, potential) ?? ultimateEnergyCost;
+  const baseCost = getUltimateEnergyCost(operatorId);
+  const adjustedCost = getUltimateEnergyCostForPotential(operatorId, potential) ?? baseCost;
   return {
-    baseCost: ultimateEnergyCost,
+    baseCost,
     adjustedCost,
     gaugeGain,
     teamGaugeGain,

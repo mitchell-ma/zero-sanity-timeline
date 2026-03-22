@@ -59,7 +59,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
@@ -67,7 +67,9 @@
         "interactionType": "RESET"
       },
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "WHITE_NIGHT_NOVA",

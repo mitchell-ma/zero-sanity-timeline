@@ -137,8 +137,8 @@ function inferSkillTypeMap(skills: Record<string, Record<string, unknown>>): Rec
   }
   const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
   for (const id of remaining) {
-    const segs = (skills[id].segments ?? []) as { metadata?: { segmentType?: string } }[];
-    if (segs.some(s => s.metadata?.segmentType === 'ANIMATION')) { typeMap.ULTIMATE = id; break; }
+    const segs = (skills[id].segments ?? []) as { properties: { segmentTypes?: string[] } }[];
+    if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { typeMap.ULTIMATE = id; break; }
   }
   const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
   if (battleCandidates.length === 1) typeMap.BATTLE_SKILL = battleCandidates[0];
@@ -366,7 +366,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
   test('C3: Combo cooldown is 18 seconds', () => {
     const comboSkill = mockJson.skills.COMBO_SKILL;
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value[0]).toBe(18);
@@ -403,7 +403,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
 
   test('C7: Combo animation is TIME_STOP (0.729s)', () => {
     const combo = mockJson.skills.COMBO_SKILL;
-    const animSeg = combo.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = combo.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(0.729);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -456,7 +456,7 @@ describe('D. Ultimate (Wooly Party)', () => {
   test('D2: Ultimate active duration is 4.47 seconds (from ACTIVE segment)', () => {
     const ultimate = mockJson.skills.ULTIMATE;
     const activeSeg = ultimate.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ACTIVE'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
     );
     expect(activeSeg.properties.duration.value).toBe(4.47);
   });
@@ -467,7 +467,7 @@ describe('D. Ultimate (Wooly Party)', () => {
       (sum: number, s: Record<string, unknown>) => sum + ((s.properties as Record<string, Record<string, number>>)?.duration?.value ?? 0), 0
     );
     expect(totalDuration).toBeCloseTo(6.97, 2);
-    const animSeg = ult.segments.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
+    const animSeg = ult.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
     expect(animSeg.properties.duration.value).toBe(2.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
@@ -722,7 +722,7 @@ describe('I. Cooldown Interactions', () => {
   test('H3: Combo skill (Eruption Column) has 18s cooldown', () => {
     const comboSkill = mockJson.skills.COMBO_SKILL;
     const cdSeg = comboSkill.segments.find(
-      (s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'COOLDOWN'
+      (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value[0]).toBe(18);
@@ -909,7 +909,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       ownerId: SLOT_OTHER,
       columnId: SKILL_COLUMNS.COMBO,
       startFrame: 350,
-            segments: [{ properties: { duration: 120, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } }],
+            segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
     });
     // Raw 450 → extended to 570 by timestop. Active at 496, expired at 616.
     const heat = makeInflictionEvent('heat', 0, 450);
@@ -946,7 +946,7 @@ describe('J. Combo Activation Window Pipeline', () => {
       ownerId: SLOT_OTHER,
       columnId: SKILL_COLUMNS.COMBO,
       startFrame: 350,
-            segments: [{ properties: { duration: 120, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } }],
+            segments: [{ properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } }],
     });
     // Raw 550 → extended 670. Active at both 496 and 616.
     const heat = makeInflictionEvent('heat', 0, 550);

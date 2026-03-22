@@ -5,6 +5,7 @@ import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointController } from './skillPointController';
 import { StaggerController } from './staggerController';
 import { UltimateEnergyController } from '../timeline/ultimateEnergyController';
+import { HPController } from '../calculation/hpController';
 
 // ── Column IDs ───────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export class CommonSlotController {
   readonly skillPoints: SkillPointController;
   readonly stagger: StaggerController;
   readonly ultimateEnergy: UltimateEnergyController;
+  readonly hp: HPController;
 
   private readonly teamStatusSubtimeline: Subtimeline;
   private readonly changeListeners = new Set<CommonSlotChangeListener>();
@@ -44,6 +46,7 @@ export class CommonSlotController {
     this.skillPoints = new SkillPointController();
     this.stagger = new StaggerController();
     this.ultimateEnergy = new UltimateEnergyController();
+    this.hp = new HPController();
     this.skillPoints.setUltimateEnergyController(this.ultimateEnergy);
     this.teamStatusSubtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.TEAM_STATUS);
   }
@@ -111,6 +114,7 @@ export class CommonSlotController {
     this.skillPoints.clear();
     this.stagger.clear();
     this.ultimateEnergy.clear();
+    this.hp.clear();
     this.teamStatusSubtimeline.clear();
     this.notifyChange();
   }

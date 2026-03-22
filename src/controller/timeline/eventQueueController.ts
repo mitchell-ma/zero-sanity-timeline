@@ -44,6 +44,7 @@ import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/eve
 import { getAllTriggerAssociations } from '../gameDataController';
 import { classifyEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
+import type { HPController } from '../calculation/hpController';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 
@@ -293,8 +294,8 @@ function collectInflictionEntries(
             }
           }
 
-          // APPLY SOURCE INFLICTION: mirror the combo's trigger infliction
-          if (frame.duplicatesSourceInfliction && event.comboTriggerColumnId) {
+          // APPLY TRIGGER INFLICTION: mirror the combo's trigger infliction
+          if (frame.duplicatesTriggerInfliction && event.comboTriggerColumnId) {
             const triggerCol = event.comboTriggerColumnId;
             if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
               entries.push({
@@ -679,9 +680,17 @@ export function processCombatSimulation(
   spController?: SkillPointController,
   /** UE controller singleton for incremental UE tracking. */
   ueController?: import('../timeline/ultimateEnergyController').UltimateEnergyController,
+  /** HP controller for operator/enemy HP tracking. */
+  hpController?: HPController,
+  /** All slots' SP costs for insufficiency zone computation. */
+  allSlotSpCosts?: ReadonlyMap<string, number>,
 ): TimelineEvent[] {
   // ── 0. Initialize HP tracker for live HP% queries during queue processing ─
-  initHpTracker(bossMaxHp ?? null);
+  if (hpController) {
+    hpController.initEnemyHp(bossMaxHp ?? null);
+  } else {
+    initHpTracker(bossMaxHp ?? null);
+  }
 
   // ── 0b. Clear resource controllers for this pipeline run ──────────────────
   if (spController) spController.clearPending();
@@ -710,7 +719,7 @@ export function processCombatSimulation(
   // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
     const slotInfo = Object.entries(slotOperatorMap).map(([slotId, opId]) => ({ slotId, operatorId: opId }));
-    precomputeDamageByFrame(state.getRegisteredEvents(), slotInfo, loadoutProperties, loadouts, enemyId);
+    precomputeDamageByFrame(state.getRegisteredEvents(), slotInfo, loadoutProperties, loadouts, enemyId, hpController);
   }
 
   // ── 3c. Resolve controlled operator ──────────────────────────────────────
@@ -719,16 +728,23 @@ export function processCombatSimulation(
   );
 
   // ── 4. EventQueueController: seed derived + run queue ─────────────────────
+  const hpPercentageFn = hpController
+    ? hpController.getEnemyHpPercentage
+    : (bossMaxHp != null ? getEnemyHpPercentage : undefined);
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
-    bossMaxHp != null ? getEnemyHpPercentage : undefined, getControlledSlotAtFrame);
+    hpPercentageFn, getControlledSlotAtFrame);
 
   // ── 5. Finalize resource controllers ──────────────────────────────────────
   if (spController) {
+    if (allSlotSpCosts) spController.seedSlotCosts(allSlotSpCosts);
     spController.finalize(state.getStops());
   }
   if (ueController) {
     const gainFrames = spController ? new Map(spController.getBattleSkillGainFrames()) : new Map<string, { frame: number; slotId: string }>();
     ueController.finalize(gainFrames);
+  }
+  if (hpController) {
+    hpController.finalize();
   }
 
   // ── 6. Output ─────────────────────────────────────────────────────────────

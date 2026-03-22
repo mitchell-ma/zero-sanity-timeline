@@ -14,8 +14,8 @@
  *   └── [+]
  */
 import { useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { VerbType, CardinalityConstraintType, EFFECT_VERBS, THRESHOLD_MAX, VERB_LABELS, CARDINALITY_LABELS } from '../../dsl/semantics';
-import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
+import { VerbType, CardinalityConstraintType, EFFECT_VERBS, THRESHOLD_MAX, VERB_LABELS, CARDINALITY_LABELS, isValueLiteral } from '../../dsl/semantics';
+import type { Clause, Predicate, Interaction, Effect, ValueNode } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
 import CustomSelect from './CustomSelect';
@@ -238,6 +238,17 @@ function ThenBranch({ hasEffects, effects, addEffect, updateEffect, removeEffect
       <ul className="ce-ul">
         {effects.map((eff, ei) => {
           const isCompound = eff.verb === VerbType.ALL || eff.verb === VerbType.ANY;
+          if (eff.verb === VerbType.CHANCE) {
+            return (
+              <li key={ei} className="ce-li">
+                <button className="ce-line-btn ce-line-btn--remove" onClick={() => removeEffect(ei)} title="Remove">&times;</button>
+                <ChanceEffectBranch
+                  effect={eff}
+                  onChange={(e) => updateEffect(ei, e)}
+                />
+              </li>
+            );
+          }
           if (isCompound) {
             return (
               <li key={ei} className="ce-li">
@@ -260,6 +271,85 @@ function ThenBranch({ hasEffects, effects, addEffect, updateEffect, removeEffect
             </li>
           );
         })}
+        <li className="ce-li ce-li--last ce-li--addrow">
+          <button className="ce-line-btn ce-line-btn--add" onClick={addEffect} title="Add effect">+</button>
+        </li>
+      </ul>
+    </>
+  );
+}
+
+// ── Chance effect branch (CHANCE) ─────────────────────────────────────────────
+// CHANCE wraps child effects with a probability gate. No predicates/conditions.
+
+function ChanceEffectBranch({ effect, onChange }: {
+  effect: Effect;
+  onChange: (e: Effect) => void;
+}) {
+  const childEffects = effect.effects ?? [];
+
+  const addEffect = () => {
+    onChange({ ...effect, effects: [...childEffects, defaultEffect()] });
+  };
+  const updateChildEffect = (i: number, e: Effect) => {
+    const next = [...childEffects];
+    next[i] = e;
+    onChange({ ...effect, effects: next });
+  };
+  const removeChildEffect = (i: number) => {
+    onChange({ ...effect, effects: childEffects.filter((_, j) => j !== i) });
+  };
+
+  const chanceValue = effect.with?.value && isValueLiteral(effect.with.value)
+    ? effect.with.value.value : 0;
+
+  return (
+    <>
+      <div className="ce-label-row">
+        <CustomSelect
+          className="ib-verb"
+          value={effect.verb}
+          options={EFFECT_VERBS.map((v) => ({ value: v, label: VERB_LABELS[v] }))}
+          onChange={(v) => {
+            const newVerb = v as VerbType;
+            if (newVerb === VerbType.CHANCE) {
+              onChange({ ...effect, verb: newVerb });
+            } else if (newVerb !== VerbType.ALL && newVerb !== VerbType.ANY) {
+              onChange({ verb: newVerb, object: undefined, predicates: undefined, effects: undefined });
+            } else {
+              onChange({ ...effect, verb: newVerb });
+            }
+          }}
+        />
+        <span className="ce-badge ce-badge--keyword">IS</span>
+        <input
+          className="ib-input"
+          type="number"
+          step="any"
+          min={0}
+          max={1}
+          value={chanceValue}
+          onChange={(e) => {
+            const val = Number(e.target.value) || 0;
+            onChange({
+              ...effect,
+              with: { ...effect.with, value: { verb: VerbType.IS, value: val } },
+            });
+          }}
+        />
+      </div>
+
+      <ul className="ce-ul">
+        {childEffects.map((eff, ei) => (
+          <li key={ei} className="ce-li ce-li--leaf">
+            <button className="ce-line-btn ce-line-btn--remove" onClick={() => removeChildEffect(ei)} title="Remove">&times;</button>
+            <EffectBuilder
+              value={eff}
+              onChange={(e) => updateChildEffect(ei, e)}
+              compact
+            />
+          </li>
+        ))}
         <li className="ce-li ce-li--last ce-li--addrow">
           <button className="ce-line-btn ce-line-btn--add" onClick={addEffect} title="Add effect">+</button>
         </li>
@@ -303,7 +393,9 @@ function CompoundEffectBranch({ effect, onChange }: {
           options={EFFECT_VERBS.map((v) => ({ value: v, label: VERB_LABELS[v] }))}
           onChange={(v) => {
             const newVerb = v as VerbType;
-            if (newVerb !== VerbType.ALL && newVerb !== VerbType.ANY) {
+            if (newVerb === VerbType.CHANCE) {
+              onChange({ verb: newVerb, effects: effect.effects ?? [], with: effect.with });
+            } else if (newVerb !== VerbType.ALL && newVerb !== VerbType.ANY) {
               onChange({ verb: newVerb, object: undefined, predicates: undefined, effects: undefined });
             } else {
               onChange({ ...effect, verb: newVerb });
@@ -321,20 +413,20 @@ function CompoundEffectBranch({ effect, onChange }: {
           ]}
           onChange={(v) => {
             const cc = (v || undefined) as CardinalityConstraintType | undefined;
-            onChange({ ...effect, for: cc ? { cardinalityConstraint: cc, cardinality: effect.for?.cardinality ?? 1 } : undefined });
+            onChange({ ...effect, for: cc ? { cardinalityConstraint: cc, value: effect.for?.value ?? { verb: VerbType.IS as const, value: 1 } } : undefined });
           }}
         />
         {effect.for && (
           <input
             className="ib-input ib-cardinality-value"
-            type={effect.for.cardinality === THRESHOLD_MAX ? 'text' : 'number'}
+            type={effect.for.value === THRESHOLD_MAX ? 'text' : 'number'}
             min={0}
-            value={effect.for.cardinality === THRESHOLD_MAX ? 'MAX' : (effect.for.cardinality ?? '')}
+            value={effect.for.value === THRESHOLD_MAX ? 'MAX' : (isValueLiteral(effect.for.value) ? effect.for.value.value : '')}
             placeholder="#"
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
-              const val = raw === 'MAX' ? THRESHOLD_MAX : (Number(e.target.value) || 1);
-              onChange({ ...effect, for: { ...effect.for!, cardinality: val as number } });
+              const val: ValueNode | typeof THRESHOLD_MAX = raw === 'MAX' ? THRESHOLD_MAX : { verb: VerbType.IS as const, value: Number(e.target.value) || 1 };
+              onChange({ ...effect, for: { ...effect.for!, value: val } });
             }}
           />
         )}

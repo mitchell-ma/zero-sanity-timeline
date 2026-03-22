@@ -38,7 +38,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
@@ -46,7 +46,9 @@
         "interactionType": "RESET"
       },
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "CLANNIBAL",
@@ -96,14 +98,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
       },
-      "to": "ENEMY"
+      "to": "ENEMY",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "CLANNIBAL",

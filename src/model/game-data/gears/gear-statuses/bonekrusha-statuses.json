@@ -25,7 +25,9 @@
       "name": "Bonekrusha",
       "rarity": 5,
       "piecesRequired": 3,
-      "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When the wearer casts a combo skill, the wearer gains 1 stack of Bonekrushing Smash that grants the wearer's next battle skill DMG Dealt +{dmg_up:0%}. Bonekrushing Smash can stack {max_stack:0} time(s)."
+      "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. When the wearer casts a combo skill, the wearer gains 1 stack of Bonekrushing Smash that grants the wearer's next battle skill DMG Dealt +{dmg_up:0%}. Bonekrushing Smash can stack {max_stack:0} time(s).",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",
@@ -68,14 +70,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 2
         },
         "interactionType": "NONE"
       },
-      "description": "Consumed on next battle skill cast"
+      "description": "Consumed on next battle skill cast",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_SET_STATUS"
     },
     "metadata": {
       "originId": "BONEKRUSHA"

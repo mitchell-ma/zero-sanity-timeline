@@ -44,7 +44,9 @@
       "name": "Æthertech",
       "rarity": 5,
       "piecesRequired": 3,
-      "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has {stack_cond:0} stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack."
+      "description": "3-piece set effect: Wearer's ATK +{atk_up:0%}. After the wearer applies Vulnerability, the wearer gains Physical DMG +{phy_dmg_up:0%} for {duration}s. This effect can reach {max_stack:0} stacks. If the target already has {stack_cond:0} stack(s) of Vulnerability, the wearer gains an additional Physical DMG +{phy_dmg_up2:0%} for {duration2}s. This effect cannot stack.",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",
@@ -87,14 +89,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 4
         },
         "interactionType": "NONE"
       },
-      "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks."
+      "description": "Physical DMG +8% for 15s after applying Vulnerability. Max 4 stacks.",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_SET_STATUS"
     },
     "metadata": {
       "originId": "AETHERTECH"
@@ -131,14 +135,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
       },
-      "description": "Activates at 4 stacks of Vulnerability"
+      "description": "Activates at 4 stacks of Vulnerability",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_SET_STATUS"
     },
     "metadata": {
       "originId": "AETHERTECH"

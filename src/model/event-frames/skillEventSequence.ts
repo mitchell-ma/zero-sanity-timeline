@@ -1,9 +1,15 @@
 import { SkillEventFrame } from "./skillEventFrame";
+import type { ValueResolutionContext } from "../../controller/calculation/valueResolver";
 
 /** A sequence within a skill, containing ordered damage frames. */
 export abstract class SkillEventSequence {
   /** Duration of this sequence in seconds. */
   abstract getDurationSeconds(): number;
+
+  /** Resolve duration with a specific context. Default: returns getDurationSeconds(). */
+  getDurationSecondsWithContext(_ctx?: ValueResolutionContext): number {
+    return this.getDurationSeconds();
+  }
 
   /** All damage frames in this sequence (ordered by offset). */
   abstract getFrames(): readonly SkillEventFrame[];

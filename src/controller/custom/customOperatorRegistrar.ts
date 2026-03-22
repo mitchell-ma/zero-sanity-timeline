@@ -75,15 +75,15 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         duration: { value: { verb: VerbType.IS, value: skills.battleSkill.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.battleSkill.animationSeconds
           ? { segments: [{
-            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.battleSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            metadata: { eventComponentType: 'SEGMENT' },
+            properties: { segmentTypes: ['ANIMATION'], name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.battleSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),
         ...(skills.battleSkill.resourceInteractions?.length
           ? { effects: skills.battleSkill.resourceInteractions.map(r => ({
             toDeterminer: 'THIS', toObject: 'OPERATOR',
-            verb: r.verb, object: r.resourceType, cardinality: r.value,
+            verb: r.verb, object: r.resourceType, with: { value: { verb: VerbType.IS, value: r.value } },
           })) }
           : {}),
       },
@@ -91,12 +91,12 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         id: skills.comboSkill.name,
         duration: { value: { verb: VerbType.IS, value: skills.comboSkill.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.comboSkill.cooldownSeconds
-          ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
+          ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', with: { value: { verb: VerbType.IS, value: skills.comboSkill.cooldownSeconds } } }] }
           : {}),
         ...(skills.comboSkill.animationSeconds
           ? { segments: [{
-            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.comboSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            metadata: { eventComponentType: 'SEGMENT' },
+            properties: { segmentTypes: ['ANIMATION'], name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.comboSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),
@@ -114,13 +114,13 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         duration: { value: { verb: VerbType.IS, value: skills.ultimate.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.ultimate.animationSeconds
           ? { segments: [{
-            metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.ultimate.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            metadata: { eventComponentType: 'SEGMENT' },
+            properties: { segmentTypes: ['ANIMATION'], name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.ultimate.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),
         effects: [
-          { toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', cardinality: 300 },
+          { toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', with: { value: { verb: VerbType.IS, value: 300 } } },
         ],
       },
     },

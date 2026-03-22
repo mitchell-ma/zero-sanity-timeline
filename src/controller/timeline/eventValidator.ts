@@ -525,7 +525,8 @@ export function isDuplicatePlacementInResourceZone(
  * If `invalidAtDragStart` contains this event, the event was outside all
  * combo windows when the drag began. In that case, free movement is allowed
  * until the target enters a window, at which point the event is removed
- * from the set and clamped within that window going forward.
+ * from the set and added to `comboRevalidated`. Revalidated events are
+ * clamped to the nearest window boundary so they cannot escape back out.
  */
 export function clampDeltaByComboWindow(
   clampedDelta: number,
@@ -534,6 +535,7 @@ export function clampDeltaByComboWindow(
   startFrame: number,
   processedEvents: readonly TimelineEvent[],
   invalidAtDragStart?: Set<string>,
+  comboRevalidated?: Set<string>,
 ): number {
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev || ev.columnId !== SKILL_COLUMNS.COMBO) {
@@ -555,8 +557,9 @@ export function clampDeltaByComboWindow(
   if (invalidAtDragStart?.has(eventUid)) {
     const targetWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
     if (!targetWindow) return clampedDelta; // still outside, free movement
-    // Entered a window — transition to clamped mode
+    // Entered a window — transition to revalidated (clamped going forward)
     invalidAtDragStart.delete(eventUid);
+    comboRevalidated?.add(eventUid);
     const wStart = targetWindow.startFrame;
     const wEnd = windowEndFrame(targetWindow);
     if (target < wStart) return wStart - startFrame;
@@ -579,6 +582,18 @@ export function clampDeltaByComboWindow(
       return (startFrame < w.startFrame && wEnd <= target)
         || (startFrame >= wEnd && w.startFrame >= target);
     });
+  }
+  // Revalidated event that escaped all windows (startFrame is outside and
+  // target overshot) — snap to the nearest window boundary.
+  if (!origWindow && comboRevalidated?.has(eventUid)) {
+    let bestDist = Infinity;
+    for (const w of windows) {
+      const wEnd = windowEndFrame(w);
+      const dStart = Math.abs(target - w.startFrame);
+      const dEnd = Math.abs(target - (wEnd - 1));
+      if (dStart < bestDist) { bestDist = dStart; origWindow = w; }
+      if (dEnd < bestDist) { bestDist = dEnd; origWindow = w; }
+    }
   }
   if (!origWindow) return clampedDelta;
 

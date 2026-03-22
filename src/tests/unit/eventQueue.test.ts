@@ -75,8 +75,8 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
     const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
     for (const id of remaining) {
       const skill = skills[id] as Record<string, unknown>;
-      const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
-      if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+      const segs = skill?.segments as { properties: { segmentTypes?: string[] } }[] | undefined;
+      if (segs?.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) {
         map.ULTIMATE = id;
         break;
       }
@@ -1171,11 +1171,11 @@ describe('Freeform Inflictions', () => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Combo skill infliction — data-driven via duplicatesSourceInfliction
+// Combo skill infliction — data-driven via duplicatesTriggerInfliction
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('Combo skill infliction behavior', () => {
-  /** Laevatain Seethe — does NOT have APPLY SOURCE INFLICTION. */
+  /** Laevatain Seethe — does NOT have APPLY TRIGGER INFLICTION. */
   function seetheCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
     return {
       uid: `seethe-${eventIdCounter++}`,
@@ -1186,7 +1186,7 @@ describe('Combo skill infliction behavior', () => {
       startFrame,
       comboTriggerColumnId,
       segments: [
-        { properties: { duration: Math.round(0.566 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.566 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(1.37 * FPS) },
           frames: [{ offsetFrame: Math.round(0.67 * FPS) }],
@@ -1195,7 +1195,7 @@ describe('Combo skill infliction behavior', () => {
     };
   }
 
-  /** Antal EMP Test Site — HAS APPLY SOURCE INFLICTION on its frame. */
+  /** Antal EMP Test Site — HAS APPLY TRIGGER INFLICTION on its frame. */
   function empTestSiteCombo(startFrame: number, comboTriggerColumnId?: string): TimelineEvent {
     return {
       uid: `emp-${eventIdCounter++}`,
@@ -1206,10 +1206,10 @@ describe('Combo skill infliction behavior', () => {
       startFrame,
       comboTriggerColumnId,
       segments: [
-        { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(0.8 * FPS) },
-          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesSourceInfliction: true }],
+          frames: [{ offsetFrame: Math.round(0.7 * FPS), duplicatesTriggerInfliction: true }],
         },
       ],
     };
@@ -1249,9 +1249,9 @@ describe('Combo skill infliction behavior', () => {
     expect(enemyInflictions.length).toBe(0);
   });
 
-  test('G6: Combo without duplicatesSourceInfliction does not mirror even with trigger column', () => {
+  test('G6: Combo without duplicatesTriggerInfliction does not mirror even with trigger column', () => {
     // Wulfgard Frag Grenade Beta — has explicit APPLY HEAT INFLICTION (via applyArtsInfliction),
-    // NOT SOURCE mirroring. Simulated here as a combo without the flag.
+    // NOT TRIGGER mirroring. Simulated here as a combo without the flag.
     const combo: TimelineEvent = {
       uid: `frag-${eventIdCounter++}`,
       id: 'FRAG_GRENADE_BETA',
@@ -1261,10 +1261,10 @@ describe('Combo skill infliction behavior', () => {
       startFrame: 500,
       comboTriggerColumnId: INFLICTION_COLUMNS.HEAT,
       segments: [
-        { properties: { duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: Math.round(1.0 * FPS) },
-          // No duplicatesSourceInfliction — has explicit applyArtsInfliction instead
+          // No duplicatesTriggerInfliction — has explicit applyArtsInfliction instead
           frames: [{
             offsetFrame: Math.round(0.5 * FPS),
             applyArtsInfliction: { element: 'HEAT', stacks: 1 },
@@ -1299,6 +1299,7 @@ describe('Sibling overlap warnings', () => {
       columnId: SKILL_COLUMNS.BASIC,
       startFrame: 100,
             segments: [{ properties: { duration: 200 }, frames: [{ offsetFrame: 50 }] }],
+      nonOverlappableRange: 200,
     };
     const basic2: TimelineEvent = {
       uid: 'basic-overlap-2',
@@ -1308,6 +1309,7 @@ describe('Sibling overlap warnings', () => {
       columnId: SKILL_COLUMNS.BASIC,
       startFrame: 300,
             segments: [{ properties: { duration: 200 }, frames: [{ offsetFrame: 50 }] }],
+      nonOverlappableRange: 200,
     };
     // Combo with timestop at frame 150, animation duration 120 frames
     // This extends basic1's game-time segments by 120 frames,
@@ -1320,7 +1322,7 @@ describe('Sibling overlap warnings', () => {
       columnId: SKILL_COLUMNS.COMBO,
       startFrame: 150,
             segments: [
-        { properties: { duration: 120, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 120, timeDependency: TimeDependency.REAL_TIME } },
         { properties: { duration: 180 }, frames: [{ offsetFrame: 100 }] },
       ],
     };
@@ -1419,6 +1421,92 @@ describe('Sibling overlap warnings', () => {
     expect(s1!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
     expect(s2!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
   });
+
+  test('O5: Overlapping inflictions without nonOverlappableRange do NOT trigger warnings', () => {
+    // Engine-derived inflictions stack and overlap normally — no warnings expected
+    const infliction1: TimelineEvent = {
+      uid: 'inflict-1',
+      id: 'HEAT',
+      name: 'HEAT',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT,
+      startFrame: 0,
+      segments: [{ properties: { duration: 600 } }],
+    };
+    const infliction2: TimelineEvent = {
+      uid: 'inflict-2',
+      id: 'HEAT',
+      name: 'HEAT',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: INFLICTION_COLUMNS.HEAT,
+      startFrame: 100,
+      segments: [{ properties: { duration: 600 } }],
+    };
+
+    const result = processCombatSimulation([infliction1, infliction2]);
+    const i1 = result.find(ev => ev.uid === 'inflict-1');
+    const i2 = result.find(ev => ev.uid === 'inflict-2');
+    expect(i1!.warnings ?? []).toEqual([]);
+    expect(i2!.warnings ?? []).toEqual([]);
+  });
+
+  test('O6: Overlapping statuses without nonOverlappableRange do NOT trigger warnings', () => {
+    // Statuses (e.g. MF stacks) overlap and get clamped by the engine — no warnings
+    const mf1: TimelineEvent = {
+      uid: 'mf-1',
+      id: 'MELTING_FLAME',
+      name: 'MELTING_FLAME',
+      ownerId: SLOT_ID,
+      columnId: OPERATOR_COLUMNS.MELTING_FLAME,
+      startFrame: 0,
+      segments: [{ properties: { duration: 500 } }],
+    };
+    const mf2: TimelineEvent = {
+      uid: 'mf-2',
+      id: 'MELTING_FLAME',
+      name: 'MELTING_FLAME',
+      ownerId: SLOT_ID,
+      columnId: OPERATOR_COLUMNS.MELTING_FLAME,
+      startFrame: 100,
+      segments: [{ properties: { duration: 500 } }],
+    };
+
+    const result = processCombatSimulation([mf1, mf2]);
+    const s1 = result.find(ev => ev.uid === 'mf-1');
+    const s2 = result.find(ev => ev.uid === 'mf-2');
+    expect(s1!.warnings ?? []).toEqual([]);
+    expect(s2!.warnings ?? []).toEqual([]);
+  });
+
+  test('O7: Freeform-placed events with nonOverlappableRange DO trigger overlap warnings', () => {
+    // User-placed events in any column that set nonOverlappableRange should still warn
+    const ev1: TimelineEvent = {
+      uid: 'freeform-1',
+      id: 'CUSTOM_STATUS',
+      name: 'CUSTOM_STATUS',
+      ownerId: USER_ID,
+      columnId: 'custom-column',
+      startFrame: 0,
+      segments: [{ properties: { duration: 400 } }],
+      nonOverlappableRange: 400,
+    };
+    const ev2: TimelineEvent = {
+      uid: 'freeform-2',
+      id: 'CUSTOM_STATUS',
+      name: 'CUSTOM_STATUS',
+      ownerId: USER_ID,
+      columnId: 'custom-column',
+      startFrame: 200,
+      segments: [{ properties: { duration: 400 } }],
+      nonOverlappableRange: 400,
+    };
+
+    const result = processCombatSimulation([ev1, ev2]);
+    const r1 = result.find(ev => ev.uid === 'freeform-1');
+    const r2 = result.find(ev => ev.uid === 'freeform-2');
+    expect(r1!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+    expect(r2!.warnings?.some(w => w.includes('Overlaps'))).toBe(true);
+  });
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1446,8 +1534,8 @@ describe('Combo skill effects — all operators', () => {
       return sk?.onTriggerClause && (sk.onTriggerClause as unknown[]).length > 0;
     }) ?? (json['COMBO_SKILL'] ? 'COMBO_SKILL' : undefined);
     const skill = comboId ? json[comboId] : undefined;
-    const animSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
-    const mainSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType !== 'ANIMATION');
+    const animSeg = skill.segments?.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
+    const mainSeg = skill.segments?.find((s: Record<string, unknown>) => !((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const animProps = animSeg?.properties as any;
     const anim = Math.round((animProps?.duration?.value ?? 0.5) * FPS);
@@ -1469,11 +1557,11 @@ describe('Combo skill effects — all operators', () => {
       const effects = ((f.clause as any)?.[0]?.effects ?? []) as any[];
       for (const ef of effects) {
         const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
-        const isSource = adjectives.includes('SOURCE');
+        const isSource = adjectives.includes('TRIGGER');
         const elementAdj = adjectives.find((a: string) => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC'].includes(a));
 
         if (ef.verb === 'APPLY' && isSource && (ef.object === 'INFLICTION' || ef.object === 'STATUS')) {
-          marker.duplicatesSourceInfliction = true;
+          marker.duplicatesTriggerInfliction = true;
         }
         if (ef.verb === 'APPLY' && !isSource && ef.object === 'INFLICTION' && elementAdj) {
           marker.applyArtsInfliction = { element: elementAdj, stacks: 1 };
@@ -1491,7 +1579,7 @@ describe('Combo skill effects — all operators', () => {
       startFrame,
       comboTriggerColumnId,
       segments: [
-        { properties: { duration: anim, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: anim, timeDependency: TimeDependency.REAL_TIME } },
         { properties: { duration: dur }, frames },
       ],
     };
@@ -1507,7 +1595,7 @@ describe('Combo skill effects — all operators', () => {
     return counts;
   }
 
-  // ── Combos that produce NO enemy inflictions (no APPLY INFLICTION, no SOURCE) ──
+  // ── Combos that produce NO enemy inflictions (no APPLY INFLICTION, no TRIGGER) ──
 
   const noInflictionCombos: [string, string, string][] = [
     ['akekuri-skills.json', 'slot-akekuri', 'FLASH_AND_DASH'],
@@ -1544,7 +1632,7 @@ describe('Combo skill effects — all operators', () => {
     });
   }
 
-  // ── Antal: APPLY SOURCE INFLICTION mirrors trigger ──
+  // ── Antal: APPLY TRIGGER INFLICTION mirrors trigger ──
 
   test('EMP_TEST_SITE: mirrors exactly 1 heat infliction with heat trigger', () => {
     const combo = buildComboFromJson('antal-skills.json', 'slot-antal', 500, INFLICTION_COLUMNS.HEAT);
@@ -1574,13 +1662,13 @@ describe('Combo skill effects — all operators', () => {
     expect(enemyCounts.get(INFLICTION_COLUMNS.NATURE) ?? 0).toBe(0);
   });
 
-  // ── Wulfgard: explicit APPLY HEAT INFLICTION (not SOURCE) ──
+  // ── Wulfgard: explicit APPLY HEAT INFLICTION (not TRIGGER) ──
 
   test('FRAG_GRENADE_BETA: produces exactly 1 heat infliction from explicit APPLY INFLICTION', () => {
     const combo = buildComboFromJson('wulfgard-skills.json', 'slot-wulfgard', 500, INFLICTION_COLUMNS.HEAT);
     const result = processCombatSimulation([combo]);
     const enemyCounts = enemyEventsByColumn(result);
-    // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicatesSourceInfliction)
+    // 1 from explicit APPLY HEAT INFLICTION, 0 from trigger mirroring (no duplicatesTriggerInfliction)
     expect(enemyCounts.get(INFLICTION_COLUMNS.HEAT) ?? 0).toBe(1);
     expect(enemyCounts.get(INFLICTION_COLUMNS.CRYO) ?? 0).toBe(0);
     expect(enemyCounts.get(INFLICTION_COLUMNS.ELECTRIC) ?? 0).toBe(0);

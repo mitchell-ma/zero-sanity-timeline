@@ -469,7 +469,7 @@ describe('F. StaggerController.sync', () => {
       columnId: SKILL_COLUMNS.COMBO,
       startFrame: 100,
             segments: [
-        { properties: { duration: 60, timeDependency: TimeDependency.REAL_TIME }, metadata: { segmentType: SegmentType.ANIMATION } },
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 60, timeDependency: TimeDependency.REAL_TIME } },
         {
           properties: { duration: 200 },
           frames: [{

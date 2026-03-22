@@ -8,7 +8,7 @@ import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURAT
   VERB_LABELS, ADJECTIVE_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_ADJECTIVES,
   EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WITH_PROPERTY_LABELS,
   OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE,
-  isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperator } from '../../dsl/semantics';
+  isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperation } from '../../dsl/semantics';
 import type { Effect, ValueNode } from '../../dsl/semantics';
 import { StatusIdSelect, InflictionIdSelect, ReactionIdSelect } from './InteractionBuilder';
 import SentenceSlot from './SentenceSlot';
@@ -28,7 +28,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
   const objects = getObjectsForEffectVerb(value.verb);
   const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
   const vis = getEffectFieldVisibility(value);
-  const isMax = value.cardinality === THRESHOLD_MAX;
+  const isMax = value.value === THRESHOLD_MAX;
 
   const update = (patch: Partial<Effect>) => onChange({ ...value, ...patch });
 
@@ -54,14 +54,14 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
             className="ib-input ib-quantity"
             type={isMax ? 'text' : 'number'}
             min={0}
-            value={isMax ? 'MAX' : (value.cardinality ?? '')}
+            value={isMax ? 'MAX' : (value.value && typeof value.value === 'object' && isValueLiteral(value.value) ? value.value.value : '')}
             placeholder="#"
             onChange={(e) => {
               const raw = e.target.value.toUpperCase();
               if (raw === 'MAX') {
-                update({ cardinality: THRESHOLD_MAX });
+                update({ value: THRESHOLD_MAX });
               } else {
-                update({ cardinality: Number(e.target.value) || undefined });
+                update({ value: Number(e.target.value) ? { verb: VerbType.IS as const, value: Number(e.target.value) } : undefined });
               }
             }}
           />
@@ -231,10 +231,10 @@ function summarizeNode(node: ValueNode): string {
     return obj;
   }
   if (isValueStat(node)) {
-    return node.objectId.replace(/_/g, ' ').toLowerCase();
+    return (node.objectId ?? node.stat ?? '?').replace(/_/g, ' ').toLowerCase();
   }
   if (isValueExpression(node)) {
-    const op = node.operator.replace(/_/g, ' ');
+    const op = node.operation.replace(/_/g, ' ');
     return `${op}(${summarizeNode(node.left)}, ${summarizeNode(node.right)})`;
   }
   return '?';
@@ -271,7 +271,7 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
       setModalOpen(true);
       // If not already an expression, wrap current value
       if (!isExpr) {
-        onChange({ operator: ValueOperator.MULT, left: node ?? { verb: VerbType.IS, value: 0 }, right: { verb: VerbType.IS, value: 1 } });
+        onChange({ operation: ValueOperation.MULT, left: node ?? { verb: VerbType.IS, value: 0 }, right: { verb: VerbType.IS, value: 1 } });
       }
       return;
     }

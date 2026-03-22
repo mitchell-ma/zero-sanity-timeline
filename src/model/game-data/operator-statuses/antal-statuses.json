@@ -77,12 +77,12 @@
       "id": "FOCUS",
       "name": "Focus",
       "target": "ENEMY",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -90,7 +90,10 @@
           "value": 60
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "SPECIFIED_RESEARCH_SUBJECT"
@@ -248,12 +251,12 @@
       "enhancementTypes": [
         "EMPOWERED"
       ],
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -261,7 +264,10 @@
           "value": 60
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "SPECIFIED_RESEARCH_SUBJECT"
@@ -283,7 +289,7 @@
             "verb": "APPLY",
             "object": "STATUS",
             "objectId": "IMPROVISER",
-            "toDeterminer": "THIS",
+            "toDeterminer": "TRIGGER",
             "to": "OPERATOR"
           }
         ]
@@ -294,7 +300,9 @@
       "name": "IMPROVISER (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "antal",
@@ -304,25 +312,109 @@
     }
   },
   {
-    "clause": [
+    "segments": [
       {
-        "conditions": [],
-        "effects": [
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": {
+              "verb": "IS",
+              "value": 2
+            },
+            "unit": "SECOND"
+          }
+        },
+        "frames": [
           {
-            "verb": "APPLY",
-            "object": "TREATMENT",
-            "toDeterminer": "THIS",
-            "to": "TEAMMATE"
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RESTORE",
+                    "object": "HP",
+                    "toDeterminer": "THIS",
+                    "to": "OPERATOR",
+                    "with": {
+                      "value": {
+                        "operation": "MULT",
+                        "left": {
+                          "verb": "VARY_BY",
+                          "object": "TALENT_ONE_LEVEL",
+                          "ofDeterminer": "SOURCE",
+                          "of": "OPERATOR",
+                          "value": [
+                            72,
+                            108
+                          ]
+                        },
+                        "right": {
+                          "operation": "MULT",
+                          "left": {
+                            "verb": "VARY_BY",
+                            "object": "TALENT_ONE_LEVEL",
+                            "ofDeterminer": "SOURCE",
+                            "of": "OPERATOR",
+                            "value": [
+                              0.6,
+                              0.9
+                            ]
+                          },
+                          "right": {
+                            "verb": "IS",
+                            "valueType": "STAT",
+                            "stat": "STRENGTH",
+                            "ofDeterminer": "SOURCE"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
           }
         ]
+      },
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "segmentTypes": [
+            "COOLDOWN"
+          ],
+          "name": "Cooldown",
+          "duration": {
+            "value": {
+              "verb": "IS",
+              "value": 15
+            },
+            "unit": "SECOND"
+          }
+        },
+        "frames": []
       }
     ],
     "properties": {
       "id": "IMPROVISER",
       "name": "IMPROVISER",
       "type": "TALENT_STATUS",
-      "to": "TEAMMATE",
-      "toDeterminer": "THIS"
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "IMPROVISER_TALENT",

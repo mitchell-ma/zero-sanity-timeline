@@ -38,7 +38,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 5
@@ -46,7 +46,9 @@
         "interactionType": "NONE"
       },
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "NEVER_REST",
@@ -96,7 +98,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 5
@@ -104,7 +106,9 @@
         "interactionType": "NONE"
       },
       "to": "OPERATOR",
-      "toDeterminer": "OTHER"
+      "toDeterminer": "OTHER",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "NEVER_REST",

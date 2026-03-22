@@ -8,7 +8,7 @@
             "verb": "HAVE",
             "object": "STACKS",
             "cardinalityConstraint": "EXACTLY",
-            "cardinality": "MAX"
+            "value": "MAX"
           }
         ],
         "effects": [
@@ -28,13 +28,16 @@
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
       "element": "HEAT",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 4
         },
-        "statusLevelInteractionType": "NONE"
-      }
+        "interactionType": "NONE"
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "SMOULDERING_FIRE"
@@ -93,12 +96,12 @@
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
       "element": "HEAT",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -106,7 +109,10 @@
           "value": 20
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "MELTING_FLAME"
@@ -126,14 +132,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "NONE"
       },
-      "element": "HEAT"
+      "element": "HEAT",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "laevatain"
@@ -158,18 +166,16 @@
           {
             "verb": "ALL",
             "cardinalityConstraint": "AT_MOST",
-            "cardinality": "MAX",
+            "value": "MAX",
             "effects": [
               {
                 "verb": "CONSUME",
-                "cardinality": 1,
                 "object": "INFLICTION",
-                "element": "HEAT",
+                "adjective": "HEAT",
                 "fromObject": "ENEMY"
               },
               {
                 "verb": "APPLY",
-                "cardinality": 1,
                 "object": "STATUS",
                 "objectId": "MELTING_FLAME",
                 "toDeterminer": "THIS",
@@ -214,7 +220,9 @@
       "name": "Re-Ignition (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "laevatain",
@@ -272,13 +280,15 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "segments": [
       {

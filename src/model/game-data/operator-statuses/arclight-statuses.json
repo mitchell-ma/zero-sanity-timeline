@@ -8,7 +8,7 @@
             "verb": "HAVE",
             "object": "STACKS",
             "cardinalityConstraint": "EXACTLY",
-            "cardinality": "MAX"
+            "value": "MAX"
           }
         ],
         "effects": [
@@ -28,7 +28,7 @@
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
       "element": "ELECTRIC",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "VARY_BY",
           "object": "POTENTIAL",
@@ -41,8 +41,11 @@
             2
           ]
         },
-        "statusLevelInteractionType": "NONE"
-      }
+        "interactionType": "NONE"
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "TEMPESTUOUS_ARC"
@@ -121,12 +124,12 @@
       "target": "OPERATOR",
       "targetDeterminer": "ALL",
       "element": "ELECTRIC",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -134,7 +137,10 @@
           "value": 15
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "WILDLAND_TREKKER_TRIGGER"
@@ -169,12 +175,12 @@
       "name": "Tactful Approach",
       "target": "ENEMY",
       "element": "ELECTRIC",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
-        "statusLevelInteractionType": "RESET"
+        "interactionType": "RESET"
       },
       "duration": {
         "value": {
@@ -182,7 +188,10 @@
           "value": 10
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "EXPLODING_BLITZ"

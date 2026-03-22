@@ -64,7 +64,7 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
@@ -72,7 +72,9 @@
         "interactionType": "RESET"
       },
       "to": "OPERATOR",
-      "toDeterminer": "OTHER"
+      "toDeterminer": "OTHER",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "WEAPON_STATUS"
     },
     "metadata": {
       "originId": "OBJ_ARTS_IDENTIFIER",

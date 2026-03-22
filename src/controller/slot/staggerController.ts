@@ -85,7 +85,7 @@ export class StaggerController {
       let segOffset = 0;
       for (const seg of ev.segments) {
         // Skip ANIMATION segments — their offset is already in animOffset
-        if (seg.metadata?.segmentType === SegmentType.ANIMATION) continue;
+        if (seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)) continue;
         if (seg.frames) {
           for (const f of seg.frames) {
             if (f.stagger && f.stagger > 0) {

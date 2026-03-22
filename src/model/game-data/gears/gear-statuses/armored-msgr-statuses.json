@@ -4,7 +4,9 @@
       "type": "GEAR_SET_EFFECT",
       "id": "ARMORED_MSGR",
       "name": "Armored MSGR",
-      "rarity": 4
+      "rarity": 4,
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",

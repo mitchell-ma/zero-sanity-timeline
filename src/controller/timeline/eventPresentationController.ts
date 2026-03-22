@@ -1,12 +1,12 @@
 /**
- * Event presentation controller — computes display properties (variant, label,
+ * Event presentation controller — computes display properties (label,
  * color, flags) for timeline events.
  *
  * CombatPlanner replaces buildBaseEventProps + inline overrides with a single
  * call to computeEventPresentation().
  */
 import { TimelineEvent, Column, EventSegmentData, eventEndFrame } from '../../consts/viewTypes';
-import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType, SegmentType } from '../../consts/enums';
+import { TimelineSourceType, ELEMENT_COLORS, ElementType, InteractionModeType } from '../../consts/enums';
 import { COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { CombatSkillsType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -27,7 +27,6 @@ function isWindowConsumed(windowEv: TimelineEvent, events: readonly TimelineEven
 }
 
 export interface EventPresentation {
-  variant: 'default' | 'ultimate' | 'sequenced';
   label: string;
   color: string;
   comboWarning: string | null;
@@ -100,15 +99,9 @@ export function computeEventPresentation(
   },
 ): EventPresentation {
   const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
-  const isSequenced = ev.segments.length > 0;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
-
-  const hasAnimationSegment = ev.segments.some(s => s.metadata?.segmentType === SegmentType.ANIMATION);
-  const variant = (col.type === 'mini-timeline' && (col.columnId === SKILL_COLUMNS.ULTIMATE || hasAnimationSegment)
-    ? 'ultimate'
-    : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced';
 
   // Status view override: stack-aware label + visual truncation
   const statusOverride = statusViewOverrides?.get(ev.uid);
@@ -154,7 +147,6 @@ export function computeEventPresentation(
   }
 
   return {
-    variant,
     label,
     color,
     comboWarning,

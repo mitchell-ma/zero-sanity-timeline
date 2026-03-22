@@ -6,7 +6,7 @@
  * where game-time-dependent processes pause (durations stretch).
  */
 import { TimelineEvent, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
-import { TimeDependency } from '../../consts/enums';
+import { SegmentType, TimeDependency } from '../../consts/enums';
 import {
   TOTAL_FRAMES,
 } from '../../utils/timeline';
@@ -241,8 +241,10 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
       let maxEndFrame = 0;
 
       for (const seg of ev.segments) {
-        // Use explicit offset if provided, otherwise start after previous segment
-        const eventLocalOffset = seg.properties.offset != null ? seg.properties.offset : runningOffset;
+        // IMMEDIATE_COOLDOWN starts at event frame 0; explicit offset overrides; otherwise chain
+        const eventLocalOffset = seg.properties.segmentTypes?.includes(SegmentType.IMMEDIATE_COOLDOWN)
+          ? 0
+          : seg.properties.offset != null ? seg.properties.offset : runningOffset;
         const segRealOffset = computeRealOffset(
           ev.startFrame, eventLocalOffset, animDur, isOwn, foreignStops,
         );

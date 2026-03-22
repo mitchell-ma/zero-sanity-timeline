@@ -46,6 +46,10 @@ export enum DeterminerType {
   ANY = "ANY",
   /** The operator currently controlled by the player. */
   CONTROLLED = "CONTROLLED",
+  /** The operator who triggered this effect (e.g. dealt damage that activated a talent). */
+  TRIGGER = "TRIGGER",
+  /** The operator who owns the talent/status definition (the source/origin operator). */
+  SOURCE = "SOURCE",
 }
 
 // ── Noun ────────────────────────────────────────────────────────────────────
@@ -113,8 +117,8 @@ export enum CoreNounType {
 
 /** Noun adjuncts — nouns used in adjective position to modify other nouns. */
 export enum NounAdjunctType {
-  /** The triggering effect — "APPLY SOURCE INFLICTION TO ENEMY" (duplicate what triggered this). */
-  SOURCE = "SOURCE",
+  /** The triggering event — "APPLY TRIGGER INFLICTION TO ENEMY" (duplicate what triggered this). */
+  TRIGGER = "TRIGGER",
 }
 
 /** All nouns = core nouns + noun adjuncts. */
@@ -145,6 +149,8 @@ export enum VerbType {
   ALL = "ALL",
   /** Evaluate predicates in order, execute the first that passes. */
   ANY = "ANY",
+  /** Probability gate — wraps child effects with an RNG check (resolved per CritMode). */
+  CHANCE = "CHANCE",
 
   // ── Action ──────────────────────────────────────────────────────────────
   /** Execute a skill or action. */
@@ -353,14 +359,14 @@ export const OBJECT_DEFAULT_ADJECTIVE: Partial<Record<ObjectType, AdjectiveType>
 /**
  * Valid noun adjuncts per object noun.
  * Noun adjuncts are NounType values used in adjective position to modify another noun.
- * e.g. APPLY SOURCE INFLICTION TO ENEMY — SOURCE modifies INFLICTION.
+ * e.g. APPLY TRIGGER INFLICTION TO ENEMY — TRIGGER modifies INFLICTION.
  */
 export const NOUN_ADJUNCTS: Partial<Record<NounType, NounAdjunctType[]>> = {
   [NounType.INFLICTION]: [
-    NounAdjunctType.SOURCE,
+    NounAdjunctType.TRIGGER,
   ],
   [NounType.STATUS]: [
-    NounAdjunctType.SOURCE,
+    NounAdjunctType.TRIGGER,
   ],
 };
 
@@ -381,12 +387,13 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
 };
 
 /**
- * Valid noun adjunct modifiers per noun.
- * Maps nouns to the NounType values that can appear in adjunct position to qualify them.
- * e.g. "ULTIMATE COOLDOWN", "COMBO_SKILL COOLDOWN".
+ * Valid qualifier modifiers per noun.
+ * Maps nouns to the NounType or AdjectiveType values that can appear in qualifier position.
+ * e.g. "ULTIMATE COOLDOWN", "COMBO_SKILL COOLDOWN", "HEAT DAMAGE".
  */
-export const NOUN_ADJUNCT_MAPPINGS: Partial<Record<NounType, NounType[]>> = {
+export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, (NounType | AdjectiveType)[]>> = {
   [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
+  [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
 };
 
 /**
@@ -396,6 +403,15 @@ export const NOUN_ADJUNCT_MAPPINGS: Partial<Record<NounType, NounType[]>> = {
  */
 export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
   [NounType.COOLDOWN]: [NounType.OPERATOR, NounType.EVENT],
+};
+
+/**
+ * Valid object nouns per verb.
+ * Defines which nouns a verb can take as its object via the BY preposition.
+ * e.g. "RECOVER HP TO THIS OPERATOR BY [value]".
+ */
+export const VERB_OBJECT_MAPPING: Partial<Record<VerbType, NounType[]>> = {
+  [VerbType.RECOVER]: [NounType.HP, NounType.SKILL_POINT, NounType.ULTIMATE_ENERGY],
 };
 
 // ── Cardinality Constraint ───────────────────────────────────────────────────
@@ -431,7 +447,7 @@ export interface Interaction {
   /** Constraint type for cardinality assertions (EXACTLY, AT_LEAST, AT_MOST). */
   cardinalityConstraint?: CardinalityConstraintType;
   /** The count N in a cardinality assertion. */
-  cardinality?: number;
+  value?: ValueNode;
   /** Stacks to apply/consume. */
   stacks?: number;
   /** Element filter. */
@@ -466,12 +482,14 @@ export enum PrepositionType {
  */
 export const VERB_PREPOSITION_MAPPING: Partial<Record<VerbType, PrepositionType[]>> = {
   [VerbType.REDUCE]: [PrepositionType.BY],
+  [VerbType.APPLY]: [PrepositionType.WITH],
+  [VerbType.RECOVER]: [PrepositionType.BY],
 };
 
 // ── Value expression tree ────────────────────────────────────────────────────
 
 /** Binary operators for composing values in the expression tree. */
-export enum ValueOperator {
+export enum ValueOperation {
   MULT        = "MULT",
   ADD         = "ADD",
   SUB         = "SUB",
@@ -490,28 +508,44 @@ export interface ValueLiteral {
  * Leaf node: a variable lookup — indexed table.
  *
  * The `value` array is indexed by the dependency (SKILL_LEVEL → 12 entries, POTENTIAL → 6).
+ * When `ofDeterminer` is set (e.g. SOURCE), the lookup uses that operator's context instead of THIS.
  */
 export interface ValueVariable {
   verb: VerbType.VARY_BY;
   object: string;
   value?: number | number[];
+  /** Whose context to resolve against (e.g. SOURCE for talent owner's talent level). */
+  ofDeterminer?: string;
+  /** The entity type for the determiner (e.g. OPERATOR). */
+  of?: string;
 }
 
 /**
  * Leaf node: a raw stat reference.
  *
  * Resolves to the operator's current stat value (e.g. INTELLECT, STRENGTH).
- * The `objectId` must be a valid StatType key.
+ *
+ * Two forms:
+ *   Existing: { verb: IS, object: STAT, objectId: "INTELLECT" }
+ *   Extended: { verb: IS, valueType: STAT, stat: "STRENGTH", ofDeterminer: "SOURCE" }
  */
 export interface ValueStat {
   verb: VerbType.IS;
-  object: CoreNounType.STAT;
-  objectId: string;
+  /** Existing form: object is CoreNounType.STAT. */
+  object?: CoreNounType.STAT;
+  /** Existing form: stat key. */
+  objectId?: string;
+  /** Extended form: discriminator indicating this is a stat reference. */
+  valueType?: CoreNounType.STAT;
+  /** Extended form: stat key. */
+  stat?: string;
+  /** Whose stat to look up (e.g. SOURCE for the talent owner's stats). */
+  ofDeterminer?: string;
 }
 
-/** Binary operator node: applies an operator to two operands. */
+/** Binary operation node: applies an operation to two operands. */
 export interface ValueExpression {
-  operator: ValueOperator;
+  operation: ValueOperation;
   left: ValueNode;
   right: ValueNode;
 }
@@ -523,14 +557,14 @@ export interface ValueExpression {
  *   { verb: "IS", value: 15 }
  *   { verb: "VARY_BY", object: "SKILL_LEVEL", value: [0.5, 0.6, ...] }
  *   { verb: "IS", object: "STAT", objectId: "INTELLECT" }
- *   { operator: "MULT", left: { verb: "IS", value: 7.5 }, right: { verb: "IS", object: "STAT", objectId: "INTELLECT" } }
+ *   { operation: "MULT", left: { verb: "IS", value: 7.5 }, right: { verb: "IS", object: "STAT", objectId: "INTELLECT" } }
  */
 export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpression;
 
 // ── Type guards ─────────────────────────────────────────────────────────────
 
 export function isValueLiteral(node: ValueNode): node is ValueLiteral {
-  return 'verb' in node && node.verb === VerbType.IS && !('object' in node);
+  return 'verb' in node && node.verb === VerbType.IS && !('object' in node) && !('valueType' in node);
 }
 
 export function isValueVariable(node: ValueNode): node is ValueVariable {
@@ -538,11 +572,14 @@ export function isValueVariable(node: ValueNode): node is ValueVariable {
 }
 
 export function isValueStat(node: ValueNode): node is ValueStat {
-  return 'verb' in node && node.verb === VerbType.IS && 'object' in node && node.object === CoreNounType.STAT;
+  if (!('verb' in node) || node.verb !== VerbType.IS) return false;
+  if ('object' in node && (node as ValueStat).object === CoreNounType.STAT) return true;
+  if ('valueType' in node && (node as ValueStat).valueType === CoreNounType.STAT) return true;
+  return false;
 }
 
 export function isValueExpression(node: ValueNode): node is ValueExpression {
-  return 'operator' in node;
+  return 'operation' in node;
 }
 
 // ── Legacy aliases ───────────────────────────────────────────────────────────
@@ -556,7 +593,7 @@ export type WithValue = ValueLiteral | ValueVariable | ValueStat;
  * Each key is a named property whose value is a ValueNode expression tree.
  *
  * Key hierarchy:
- *   cardinality      — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
+ *   value            — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
  *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
  *   multiplier       — damage multiplier (VARY_BY SKILL_LEVEL → per-level array)
  *   staggerValue     — stagger amount
@@ -600,8 +637,8 @@ export interface Effect {
   nounAdjunct?: NounType;
   /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
-  /** Cardinality for compound constraints (e.g. ALL AT_MOST MAX). */
-  cardinality?: number | typeof THRESHOLD_MAX;
+  /** Value for compound constraints (e.g. ALL AT_MOST MAX). */
+  value?: ValueNode | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
   toObject?: SubjectType | string;
   /** Determiner for TO target (THIS, OTHER, ALL, ANY). */
@@ -616,10 +653,10 @@ export interface Effect {
   onObject?: SubjectType | string;
   /** Determiner for ON target (THIS, OTHER, ALL, ANY). */
   onDeterminer?: DeterminerType;
-  /** WITH — properties/cardinalities of this effect (duration, stacks, multiplier, etc.). */
+  /** WITH — properties of this effect (duration, stacks, value, multiplier, etc.). */
   with?: WithPreposition;
   /** FOR — cardinality limit on compound actions: "ALL FOR AT_MOST 4". */
-  for?: { cardinalityConstraint: CardinalityConstraintType; cardinality: number | typeof THRESHOLD_MAX };
+  for?: { cardinalityConstraint: CardinalityConstraintType; value: ValueNode | typeof THRESHOLD_MAX };
   /** UNTIL — duration cap: "EXTEND STATUS UNTIL END". */
   until?: typeof DURATION_END;
   /** OF — ownership/possession: "REDUCE COOLDOWN OF THIS OPERATOR". */
@@ -745,7 +782,7 @@ export const OPERATOR_VERBS = [
 /** Verbs available for effects (alphabetical, ANY disabled). */
 export const EFFECT_VERBS = [
   VerbType.ALL, // VerbType.ANY,
-  VerbType.APPLY, VerbType.CONSUME, VerbType.DEAL,
+  VerbType.APPLY, VerbType.CHANCE, VerbType.CONSUME, VerbType.DEAL,
   VerbType.DISABLE, VerbType.ENHANCE, VerbType.EXTEND,
   VerbType.IGNORE, VerbType.MERGE, VerbType.PERFORM,
   VerbType.RECOVER, VerbType.REFRESH, VerbType.RESET,
@@ -826,14 +863,14 @@ export interface EffectFieldVisibility {
   showDuration: boolean;
   showUntilEnd: boolean;
   showQualifierRow: boolean;
-  nounAdjuncts: NounType[];
+  nounAdjuncts: (NounType | AdjectiveType)[];
   withProperties: string[];
 }
 
 /** Compute effect field visibility based on current effect state. */
 export function getEffectFieldVisibility(value: Effect): EffectFieldVisibility {
   const adjectives = value.object ? (OBJECT_ADJECTIVES[value.object] ?? []) : [];
-  const nounAdjuncts = value.object ? (NOUN_ADJUNCT_MAPPINGS[value.object as NounType] ?? []) : [];
+  const nounAdjuncts = value.object ? (NOUN_QUALIFIER_MAPPING[value.object as NounType] ?? []) : [];
   const showObjectId = NEEDS_OBJECT_ID.has(value.object ?? '');
   const showTo = NEEDS_TO.has(value.verb);
   const showFrom = NEEDS_FROM.has(value.verb);
@@ -912,6 +949,7 @@ export const VERB_OBJECT_WITH_PROPERTIES: Record<string, Record<string, string[]
     [ObjectType.STATUS]:     ['stacks'],
     [ObjectType.INFLICTION]: ['stacks'],
   },
+  [VerbType.CHANCE]: { _default: ['value'] },
   [VerbType.EXTEND]:  { _default: ['duration'] },
   [VerbType.REFRESH]: { _default: ['duration'] },
   [VerbType.RECOVER]: { _default: ['stacks'] },
@@ -978,6 +1016,7 @@ const titleCase = (s: string) =>
 export const VERB_LABELS: Record<string, string> = {
   [VerbType.ALL]: 'All',
   [VerbType.ANY]: 'Any',
+  [VerbType.CHANCE]: 'Chance',
   [VerbType.PERFORM]: 'Perform',
   [VerbType.APPLY]: 'Apply',
   [VerbType.CONSUME]: 'Consume',

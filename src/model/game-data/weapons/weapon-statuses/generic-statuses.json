@@ -32,6 +32,8 @@
       "properties": {
         "id": "EMERGENCY_BOOST",
         "name": "Emergency Boost",
+        "eventType": "STATUS_EVENT",
+        "eventCategoryType": "WEAPON_STATUS",
         "duration": {
           "value": {
             "verb": "IS",
@@ -39,7 +41,7 @@
           },
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 1
@@ -90,6 +92,8 @@
       "properties": {
         "id": "UNENDING_CYCLE",
         "name": "Unending Cycle",
+        "eventType": "STATUS_EVENT",
+        "eventCategoryType": "WEAPON_STATUS",
         "duration": {
           "value": {
             "verb": "IS",
@@ -97,7 +101,7 @@
           },
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 1

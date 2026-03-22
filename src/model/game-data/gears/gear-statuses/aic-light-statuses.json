@@ -25,7 +25,9 @@
       "name": "AIC Light",
       "rarity": 2,
       "piecesRequired": 3,
-      "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s."
+      "description": "3-piece set effect: Wearer's HP +{hp_up}. After the wearer defeats an enemy, the wearer gains ATK +{atk_up} for {duration}s.",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_STATUS"
     },
     "metadata": {
       "originId": "game",
@@ -65,14 +67,16 @@
         },
         "unit": "SECOND"
       },
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "RESET"
       },
-      "description": "ATK +20 for 5s after defeating an enemy."
+      "description": "ATK +20 for 5s after defeating an enemy.",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "GEAR_SET_STATUS"
     },
     "metadata": {
       "originId": "AIC_LIGHT"

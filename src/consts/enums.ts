@@ -318,8 +318,26 @@ export enum GearSetEffectType {
 }
 
 export enum EventType {
-  COMBAT_SKILL = "COMBAT_SKILL",
-  STATUS = "STATUS",
+  COMBAT_SKILL_EVENT = "COMBAT_SKILL_EVENT",
+  STATUS_EVENT = "STATUS_EVENT",
+}
+
+export enum EventCategoryType {
+  // ── Combat skill categories ──────────────────────────────────────────────────
+  BASIC_ATTACK = "BASIC_ATTACK",
+  BATTLE_SKILL = "BATTLE_SKILL",
+  COMBO_SKILL = "COMBO_SKILL",
+  ULTIMATE_SKILL = "ULTIMATE_SKILL",
+
+  // ── Status categories ────────────────────────────────────────────────────────
+  TALENT = "TALENT",
+  TALENT_STATUS = "TALENT_STATUS",
+  POTENTIAL = "POTENTIAL",
+  POTENTIAL_STATUS = "POTENTIAL_STATUS",
+  SKILL_STATUS = "SKILL_STATUS",
+  WEAPON_STATUS = "WEAPON_STATUS",
+  GEAR_STATUS = "GEAR_STATUS",
+  GEAR_SET_STATUS = "GEAR_SET_STATUS",
 }
 
 export enum EventOriginType {
@@ -360,6 +378,7 @@ export enum SegmentType {
   NORMAL = "NORMAL",
   ACTIVE = "ACTIVE",
   COOLDOWN = "COOLDOWN",
+  IMMEDIATE_COOLDOWN = "IMMEDIATE_COOLDOWN",
   INPUT_DELAY = "INPUT_DELAY",
 }
 
@@ -490,6 +509,12 @@ export enum CritMode {
   EXPECTED = 'EXPECTED',
   ALWAYS = 'ALWAYS',
   SIMULATION = 'SIMULATION',
+}
+
+export enum FoldMode {
+  FRAME = 'FRAME',
+  SEGMENT = 'SEGMENT',
+  EVENT = 'EVENT',
 }
 
 export enum DamageType {

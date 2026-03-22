@@ -179,7 +179,7 @@ describe('embedCodec', () => {
             ownerId: 'slot-3',
             columnId: 'combo',
             startFrame: 720,
-                        segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
+                        segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           },
         ],
         nextEventId: 3,
@@ -194,7 +194,7 @@ describe('embedCodec', () => {
       expect(eventDuration(decoded.events[0])).toBe(188);
       expect(decoded.events[1].name).toBe('ERUPTION_COLUMN');
       expect(decoded.events[1].ownerId).toBe('slot-3');
-      const animSeg = decoded.events[1].segments?.find(s => s.metadata?.segmentType === 'ANIMATION');
+      const animSeg = decoded.events[1].segments?.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
       expect(animSeg?.properties.duration).toBe(60);
     });
 
@@ -721,7 +721,7 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActivationDuration: 92,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
+        segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
         timeInteraction: 'TIME_STOP',
         gaugeGain: 15,
         teamGaugeGain: 5,
@@ -740,7 +740,7 @@ describe('full state round-trip (current state → share → load → assert equ
         defaultActivationDuration: 180,
         defaultActiveDuration: 0,
         defaultCooldownDuration: 0,
-        segments: [{ properties: { duration: 120, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
+        segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 120, timeDependency: 'REAL_TIME' } }],
         timeInteraction: 'TIME_STOP',
       },
     },
@@ -789,7 +789,7 @@ describe('full state round-trip (current state → share → load → assert equ
           ownerId: 'slot-0',
           columnId: 'combo',
           startFrame: 600,
-                    segments: [{ properties: { duration: 60, timeDependency: 'REAL_TIME' }, metadata: { segmentType: 'ANIMATION' } }],
+                    segments: [{ properties: { segmentTypes: ['ANIMATION'], duration: 60, timeDependency: 'REAL_TIME' } }],
           timeInteraction: 'TIME_STOP',
         },
         // Unedited basic attack (no segments on raw event)
@@ -862,7 +862,7 @@ describe('full state round-trip (current state → share → load → assert equ
     expect(resolved[1].skillPointCost).toBe(100);
 
     // ── Assertions: combo skill properties ──────────────────────────────
-    const comboAnimSeg = resolved[2].segments?.find(s => s.metadata?.segmentType === 'ANIMATION');
+    const comboAnimSeg = resolved[2].segments?.find(s => s.properties.segmentTypes?.includes('ANIMATION'));
     expect(comboAnimSeg?.properties.duration).toBe(60);
     expect(resolved[2].timeInteraction).toBe('TIME_STOP');
     // gaugeGain/teamGaugeGain reattached from column definition

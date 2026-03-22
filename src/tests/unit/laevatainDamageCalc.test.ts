@@ -220,7 +220,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
     const base = ids.filter(i => i !== bId && !vs.some(s => i.endsWith(s)));
     for (const i of base) { if ((skills[i].onTriggerClause as unknown[])?.length) { tm.COMBO_SKILL = i; break; } }
     const rem = base.filter(i => i !== tm.COMBO_SKILL);
-    for (const i of rem) { const segs = (skills[i].segments ?? []) as { metadata?: { segmentType?: string } }[]; if (segs.some(s => s.metadata?.segmentType === 'ANIMATION')) { tm.ULTIMATE = i; break; } }
+    for (const i of rem) { const segs = (skills[i].segments ?? []) as { properties: { segmentTypes?: string[] } }[]; if (segs.some(s => s.properties.segmentTypes?.includes('ANIMATION'))) { tm.ULTIMATE = i; break; } }
     const bc = rem.filter(i => i !== tm.ULTIMATE); if (bc.length === 1) tm.BATTLE_SKILL = bc[0];
     return tm;
   };

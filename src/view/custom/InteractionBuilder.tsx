@@ -5,7 +5,7 @@
  */
 import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType,
   VERB_LABELS, OBJECT_LABELS, SUBJECT_LABELS, DETERMINER_LABELS, CARDINALITY_LABELS, TARGET_LABELS, WITH_PROPERTY_LABELS, WITH_BOOLEAN_PROPERTIES,
-  getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb } from '../../dsl/semantics';
+  getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb, isValueLiteral } from '../../dsl/semantics';
 import type { Interaction, Effect, WithPreposition } from '../../dsl/semantics';
 import { getAllStatusIds, getAllInflictionIds, getAllReactionIds } from '../../model/event-frames/operatorJsonLoader';
 import SentenceSlot from './SentenceSlot';
@@ -141,8 +141,8 @@ export default function InteractionBuilder({ value, onChange, onRemove, compact 
               className="ib-input ib-cardinality-value"
               type="number"
               min={0}
-              value={value.cardinality ?? 0}
-              onChange={(e) => update({ cardinality: Number(e.target.value) })}
+              value={value.value && isValueLiteral(value.value) ? value.value.value : 0}
+              onChange={(e) => update({ value: { verb: VerbType.IS as const, value: Number(e.target.value) } })}
             />
           </SentenceSlot>
         </div>

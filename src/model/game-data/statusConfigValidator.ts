@@ -10,7 +10,7 @@
  *   FRAME   → { metadata, properties, clause }
  */
 
-import { VerbType } from '../../dsl/semantics';
+import { VerbType, ObjectType } from '../../dsl/semantics';
 
 // ── Allowed key sets ────────────────────────────────────────────────────────
 
@@ -24,6 +24,7 @@ const EVENT_PROPERTIES_KEYS = new Set([
   'target', 'targetDeterminer',
   'isForced', 'enhancementTypes',
   'stacks', 'duration',
+  'eventType', 'eventCategoryType',
 ]);
 
 const EVENT_METADATA_KEYS = new Set([
@@ -58,7 +59,7 @@ const CLAUSE_ENTRY_KEYS = new Set([
 const CONDITION_KEYS = new Set([
   'subjectDeterminer', 'subject', 'verb', 'negated',
   'object', 'objectId', 'element', 'adjective',
-  'cardinalityConstraint', 'cardinality',
+  'cardinalityConstraint', 'value',
 ]);
 
 const EFFECT_KEYS = new Set([
@@ -66,7 +67,7 @@ const EFFECT_KEYS = new Set([
   'to', 'toObject', 'toDeterminer',
   'fromObject', 'onObject',
   'with', 'for', 'until',
-  'cardinality', 'cardinalityConstraint',
+  'value', 'cardinalityConstraint',
   // Nested sub-effects (ALL → effects[])
   'effects',
 ]);
@@ -470,11 +471,12 @@ const SKILL_PROPERTIES_KEYS = new Set([
   'name', 'description',
   'duration', 'trigger', 'hasDelayedHit', 'delayedHitLabel',
   'enhancementTypes', 'dependencyTypes',
+  'eventType', 'eventCategoryType',
 ]);
 
 /** Deprecated skill property keys with migration guidance. */
 const SKILL_LEGACY_PROPERTIES: Record<string, string> = {
-  animation: 'use an ANIMATION segment (segmentType: "ANIMATION") instead',
+  animation: 'use an ANIMATION segment (segmentTypes: ["ANIMATION"]) instead',
   animationDuration: 'use an ANIMATION segment instead',
 };
 
@@ -483,11 +485,11 @@ const SKILL_SEGMENT_KEYS = new Set([
 ]);
 
 const SKILL_SEGMENT_METADATA_KEYS = new Set([
-  'eventComponentType', 'segmentType', 'dataSources',
+  'eventComponentType', 'dataSources',
 ]);
 
 const SKILL_SEGMENT_PROPERTIES_KEYS = new Set([
-  'name', 'duration', 'timeDependency', 'timeInteractionType', 'dependencyTypes',
+  'name', 'duration', 'segmentTypes', 'timeDependency', 'timeInteractionType', 'dependencyTypes',
 ]);
 
 const SKILL_FRAME_KEYS = new Set([
@@ -584,16 +586,45 @@ const validateSkillCategory = (skill: Record<string, unknown>, path: string) => 
   return errors;
 };
 
+/** Check whether a skill category's clauses contain a CONSUME ULTIMATE_ENERGY effect. */
+const hasConsumeUltimateEnergy = (skill: Record<string, unknown>): boolean => {
+  const clause = skill.clause;
+  if (!Array.isArray(clause)) return false;
+  for (const entry of clause) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const effects = (entry as Record<string, unknown>).effects;
+    if (!Array.isArray(effects)) continue;
+    for (const eff of effects) {
+      if (typeof eff !== 'object' || eff === null) continue;
+      const e = eff as Record<string, unknown>;
+      if (e.verb === VerbType.CONSUME && e.object === ObjectType.ULTIMATE_ENERGY) return true;
+    }
+  }
+  return false;
+};
+
 /** Validate an operator-skills JSON file (keyed by skill ID, plus skillTypeMap). */
 export const validateSkillConfig = (
   skillJson: Record<string, unknown>,
   operatorId: string,
 ): ValidationError[] => {
   const errors: ValidationError[] = [];
+  const typeMap = skillJson.skillTypeMap as Record<string, string> | undefined;
+
   for (const [key, value] of Object.entries(skillJson)) {
     if (key === 'skillTypeMap') continue;
     if (typeof value !== 'object' || value === null) continue;
     errors.push(...validateSkillCategory(value as Record<string, unknown>, `${operatorId}.${key}`));
   }
+
+  // Warn if ultimate skill is missing CONSUME ULTIMATE_ENERGY effect
+  const ultSkillId = typeMap?.ULTIMATE ?? 'ULTIMATE';
+  const ultSkill = skillJson[ultSkillId];
+  if (ultSkill && typeof ultSkill === 'object' && ultSkill !== null) {
+    if (!hasConsumeUltimateEnergy(ultSkill as Record<string, unknown>)) {
+      console.warn(`[${operatorId}] ultimate skill "${ultSkillId}" is missing a ${VerbType.CONSUME} ${ObjectType.ULTIMATE_ENERGY} effect`);
+    }
+  }
+
   return errors;
 };

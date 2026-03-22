@@ -3,6 +3,7 @@ import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadoutController } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
+import { getUltimateEnergyCost } from '../controller/operators/operatorRegistry';
 
 
 export type ResourceGraphData = {
@@ -67,7 +68,7 @@ export function useResourceGraphs(
       const slotId = slotIds[i];
       const key = `${slotId}-ultimate`;
       const cfg = resourceConfigs?.[key];
-      const max = cfg?.max ?? op.ultimateEnergyCost;
+      const max = cfg?.max ?? getUltimateEnergyCost(op.id);
 
       const result = ueCtrl.getGraph(slotId);
       if (result) {

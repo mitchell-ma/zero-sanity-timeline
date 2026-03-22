@@ -9,7 +9,7 @@ import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail, resolveEventTiming } from '../../controller/info-pane/eventPaneController';
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction, ValueNode } from '../../dsl/semantics';
-import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../../dsl/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression, THRESHOLD_MAX } from '../../dsl/semantics';
 import { getLeafValue, resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
@@ -69,9 +69,9 @@ function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrame
           )}
         </div>
       )}
-      {f.duplicatesSourceInfliction && (
+      {f.duplicatesTriggerInfliction && (
         <div className="frame-dsl-effect" style={{ color: 'var(--text-muted)' }}>
-          APPLY SOURCE INFLICTION TO ENEMY
+          APPLY TRIGGER INFLICTION TO ENEMY
         </div>
       )}
     </>
@@ -113,7 +113,7 @@ function frameHasEffects(f: import('../../consts/viewTypes').EventFrameMarker, d
   return !!(
     f.applyArtsInfliction || f.absorbArtsInfliction || f.consumeArtsInfliction ||
     f.consumeStatus || f.applyStatus || f.applyStatuses?.length ||
-    f.applyForcedReaction || f.consumeReaction || f.duplicatesSourceInfliction ||
+    f.applyForcedReaction || f.consumeReaction || f.duplicatesTriggerInfliction ||
     (dslFrameEffects && dslFrameEffects.length > 0)
   );
 }
@@ -196,7 +196,7 @@ function InteractionLine({ interaction }: { interaction: Interaction }) {
       <span style={{ color: 'var(--gold)' }}> {fmt(interaction.verb)}</span>
       <span style={{ color: '#55aadd' }}> {fmt(interaction.object)}</span>
       {interaction.objectId && <span style={{ color: 'var(--text-muted)' }}> ({interaction.objectId})</span>}
-      {interaction.cardinalityConstraint && <span style={{ color: '#88cc44' }}> {fmt(interaction.cardinalityConstraint)} {interaction.cardinality}</span>}
+      {interaction.cardinalityConstraint && interaction.value != null && <span style={{ color: '#88cc44' }}> {fmt(interaction.cardinalityConstraint)} {isValueLiteral(interaction.value) ? interaction.value.value : String(interaction.value)}</span>}
       {interaction.element && <span style={{ color: ELEMENT_COLORS[interaction.element.toUpperCase() as ElementType] ?? '#aaa' }}> [{interaction.element}]</span>}
       {interaction.stacks != null && <span style={{ color: 'var(--text-muted)' }}> stacks={interaction.stacks}</span>}
     </div>
@@ -212,7 +212,7 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
     <div style={{ paddingLeft: 8 + depth * 10 }}>
       <div style={DETAIL_MONO}>
         <span style={{ color: 'var(--gold)' }}>{fmt(effect.verb)}</span>
-        {effect.cardinality != null && <span style={{ color: '#88cc44' }}> {String(effect.cardinality)}</span>}
+        {effect.value != null && <span style={{ color: '#88cc44' }}> {effect.value === THRESHOLD_MAX ? 'MAX' : (isValueLiteral(effect.value) ? effect.value.value : String(effect.value))}</span>}
         {adjs.length > 0 && <span style={{ color: '#dd8844' }}> {adjs.map(a => fmt(a)).join(' ')}</span>}
         {effect.object && <span style={{ color: '#55aadd' }}> {fmt(String(effect.object))}</span>}
         {effect.objectId && <span style={{ color: 'var(--text-muted)' }}> ({effect.objectId})</span>}
@@ -220,7 +220,7 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
         {effect.fromObject && <span style={{ color: '#cc88dd' }}> FROM {fmt(String(effect.fromObject))}</span>}
         {effect.onObject && <span style={{ color: '#cc88dd' }}> ON {fmt(String(effect.onObject))}</span>}
         {effect.for && (
-          <span style={{ color: '#88cc44' }}> FOR {fmt(effect.for.cardinalityConstraint)} {effect.for.cardinality}</span>
+          <span style={{ color: '#88cc44' }}> FOR {fmt(effect.for.cardinalityConstraint)} {effect.for.value === THRESHOLD_MAX ? 'MAX' : (isValueLiteral(effect.for.value) ? effect.for.value.value : String(effect.for.value))}</span>
         )}
         {effect.cardinalityConstraint && !effect.for && (
           <span style={{ color: '#88cc44' }}> {fmt(effect.cardinalityConstraint)}</span>
@@ -233,8 +233,8 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
             const val = typeof leaf === 'number' ? String(leaf)
               : Array.isArray(leaf) ? `[${leaf.slice(0, 4).join(', ')}${leaf.length > 4 ? ` ...+${leaf.length - 4}` : ''}]`
               : '(expr)';
-            const verb = isValueLiteral(v) ? v.verb : isValueVariable(v) ? v.verb : isValueStat(v) ? v.verb : isValueExpression(v) ? v.operator : '?';
-            const obj = isValueVariable(v) ? v.object : isValueStat(v) ? `${v.object} ${v.objectId}` : undefined;
+            const verb = isValueLiteral(v) ? v.verb : isValueVariable(v) ? v.verb : isValueStat(v) ? v.verb : isValueExpression(v) ? v.operation : '?';
+            const obj = isValueVariable(v) ? v.object : isValueStat(v) ? `${v.object ?? v.valueType} ${v.objectId ?? v.stat}` : undefined;
             return (
               <div key={k}>
                 <span style={{ color: '#888' }}>WITH</span>{' '}
@@ -600,7 +600,7 @@ function EventPane({
     const animSegmentUpdate = event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments
       ? {
           segments: event.segments.map((seg) =>
-            seg.metadata?.segmentType === SegmentType.ANIMATION
+            seg.properties.segmentTypes?.includes(SegmentType.ANIMATION)
               ? { ...seg, properties: { ...seg.properties, duration: toFrames(animSec) } }
               : seg,
           ),
@@ -1641,10 +1641,10 @@ function EventPane({
                         )}
                       </div>
                     )}
-                    {(seg.metadata?.segmentType || seg.properties.timeDependency) && (
+                    {(seg.properties.segmentTypes?.length || seg.properties.timeDependency) && (
                       <div className="edit-info-text" style={{ marginTop: 2 }}>
-                        {seg.metadata?.segmentType && seg.metadata.segmentType !== SegmentType.NORMAL && (
-                          <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{seg.metadata.segmentType}</div>
+                        {seg.properties.segmentTypes?.length && !seg.properties.segmentTypes?.includes(SegmentType.NORMAL) && (
+                          <div><span style={{ color: 'var(--text-muted)' }}>Type: </span>{seg.properties.segmentTypes}</div>
                         )}
                         {seg.properties.timeDependency && (
                           <div><span style={{ color: 'var(--text-muted)' }}>Time: </span>{seg.properties.timeDependency}</div>

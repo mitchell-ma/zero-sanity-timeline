@@ -21,7 +21,7 @@ import type { Effect, Interaction } from '../../dsl/semantics';
 import { COMMON_OWNER_ID } from '../../controller/slot/commonSlotController';
 import { eventDuration } from '../../consts/viewTypes';
 import type { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType } from '../../consts/enums';
+import { CritMode, EventStatusType } from '../../consts/enums';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -353,7 +353,7 @@ describe('ALL compound effects', () => {
       verb: VerbType.ALL,
       for: {
         cardinalityConstraint: CardinalityConstraintType.AT_MOST,
-        cardinality: 2,
+        value: { verb: VerbType.IS, value: 2 },
       },
       predicates: [{
         conditions: [],
@@ -588,7 +588,7 @@ describe('Condition evaluation', () => {
       object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
       cardinalityConstraint: CardinalityConstraintType.AT_LEAST,
-      cardinality: 3,
+      value: { verb: VerbType.IS, value: 3 },
     }];
 
     const ctx = makeCondCtx({ events: statuses });
@@ -966,5 +966,195 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
     const result = executeEffect(effect, ctx);
     expect(result.clamped.size).toBe(1);
     expect(result.clamped.has('inf-1')).toBe(true);
+  });
+});
+
+// ── CHANCE tests ─────────────────────────────────────────────────────────
+
+describe('CHANCE compound effects', () => {
+  const chanceEffect = (chance: number, children: Effect[]): Effect => ({
+    verb: VerbType.CHANCE,
+    with: { value: { verb: VerbType.IS, value: chance } },
+    effects: children,
+  });
+
+  const applyStatus = (objectId: string): Effect => ({
+    verb: VerbType.APPLY,
+    object: NounType.STATUS,
+    objectId,
+    toDeterminer: DeterminerType.THIS,
+    toObject: NounType.OPERATOR,
+  });
+
+  const applyInflictionWithDuration = (durationSec: number): Effect => ({
+    verb: VerbType.APPLY,
+    object: NounType.INFLICTION,
+    adjective: AdjectiveType.HEAT,
+    toObject: NounType.ENEMY,
+    with: { duration: { verb: VerbType.IS, value: durationSec } },
+  });
+
+  test('ALWAYS mode: child effects always execute', () => {
+    const effect = chanceEffect(0.3, [applyStatus('BUFF')]);
+    const ctx = makeCtx({ critMode: CritMode.ALWAYS });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.failed).toBe(false);
+    expect(result.produced).toHaveLength(1);
+    expect(result.produced[0].name).toBe('BUFF');
+  });
+
+  test('NEVER mode: child effects never execute', () => {
+    const effect = chanceEffect(0.3, [applyStatus('BUFF')]);
+    const ctx = makeCtx({ critMode: CritMode.NEVER });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.failed).toBe(false);
+    expect(result.produced).toHaveLength(0);
+  });
+
+  test('NEVER mode: even chance=1.0 does not execute', () => {
+    const effect = chanceEffect(1.0, [applyStatus('BUFF')]);
+    const ctx = makeCtx({ critMode: CritMode.NEVER });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.produced).toHaveLength(0);
+  });
+
+  test('EXPECTED mode: child effects execute with scaled values', () => {
+    // 30% chance, 10s duration → expected duration = 3s = 360 frames
+    const effect = chanceEffect(0.3, [applyInflictionWithDuration(10)]);
+    const ctx = makeCtx({ critMode: CritMode.EXPECTED });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.failed).toBe(false);
+    expect(result.produced).toHaveLength(1);
+    expect(eventDuration(result.produced[0])).toBe(360); // 10 * 0.3 * 120
+  });
+
+  test('EXPECTED mode: default when critMode omitted', () => {
+    // No critMode → defaults to EXPECTED
+    const effect = chanceEffect(0.5, [applyInflictionWithDuration(10)]);
+    const ctx = makeCtx();
+    const result = executeEffect(effect, ctx);
+
+    expect(result.produced).toHaveLength(1);
+    expect(eventDuration(result.produced[0])).toBe(600); // 10 * 0.5 * 120
+  });
+
+  test('SIMULATION mode: respects Math.random', () => {
+    const effect = chanceEffect(0.5, [applyStatus('BUFF')]);
+
+    // Mock Math.random to return 0.3 (< 0.5, passes)
+    const origRandom = Math.random;
+    Math.random = () => 0.3;
+    const passCtx = makeCtx({ critMode: CritMode.SIMULATION });
+    const passResult = executeEffect(effect, passCtx);
+    expect(passResult.produced).toHaveLength(1);
+
+    // Mock Math.random to return 0.7 (>= 0.5, fails)
+    Math.random = () => 0.7;
+    const failCtx = makeCtx({ critMode: CritMode.SIMULATION });
+    const failResult = executeEffect(effect, failCtx);
+    expect(failResult.produced).toHaveLength(0);
+
+    Math.random = origRandom;
+  });
+
+  test('empty children returns empty mutation set', () => {
+    const effect = chanceEffect(0.5, []);
+    const ctx = makeCtx({ critMode: CritMode.ALWAYS });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.failed).toBe(false);
+    expect(result.produced).toHaveLength(0);
+  });
+
+  test('nested CHANCE: multipliers compound in EXPECTED mode', () => {
+    // Outer 0.5, inner 0.3 → effective 0.15
+    // 10s duration → expected 1.5s = 180 frames
+    const inner = chanceEffect(0.3, [applyInflictionWithDuration(10)]);
+    const outer = chanceEffect(0.5, [inner]);
+    const ctx = makeCtx({ critMode: CritMode.EXPECTED });
+    const result = executeEffect(outer, ctx);
+
+    expect(result.produced).toHaveLength(1);
+    expect(eventDuration(result.produced[0])).toBe(180); // 10 * 0.5 * 0.3 * 120
+  });
+
+  test('nested CHANCE in SIMULATION: both rolls must pass', () => {
+    const inner = chanceEffect(0.5, [applyStatus('BUFF')]);
+    const outer = chanceEffect(0.5, [inner]);
+
+    const origRandom = Math.random;
+    let callCount = 0;
+
+    // First call (outer) returns 0.3 (pass), second call (inner) returns 0.7 (fail)
+    Math.random = () => {
+      callCount++;
+      return callCount === 1 ? 0.3 : 0.7;
+    };
+    const ctx = makeCtx({ critMode: CritMode.SIMULATION });
+    const result = executeEffect(outer, ctx);
+    expect(result.produced).toHaveLength(0);
+
+    // Both pass
+    callCount = 0;
+    Math.random = () => 0.1;
+    const ctx2 = makeCtx({ critMode: CritMode.SIMULATION });
+    const result2 = executeEffect(outer, ctx2);
+    expect(result2.produced).toHaveLength(1);
+
+    Math.random = origRandom;
+  });
+
+  test('CHANCE inside ALL: works as a child effect', () => {
+    const effect: Effect = {
+      verb: VerbType.ALL,
+      predicates: [{
+        conditions: [],
+        effects: [
+          applyStatus('GUARANTEED'),
+          chanceEffect(0.5, [applyStatus('PROBABILISTIC')]),
+        ],
+      }],
+    };
+
+    // ALWAYS mode: both fire
+    const ctx = makeCtx({ critMode: CritMode.ALWAYS });
+    const result = executeEffect(effect, ctx);
+    expect(result.produced).toHaveLength(2);
+    expect(result.produced[0].name).toBe('GUARANTEED');
+    expect(result.produced[1].name).toBe('PROBABILISTIC');
+
+    // NEVER mode: only guaranteed fires
+    const ctx2 = makeCtx({ critMode: CritMode.NEVER });
+    const result2 = executeEffect(effect, ctx2);
+    expect(result2.produced).toHaveLength(1);
+    expect(result2.produced[0].name).toBe('GUARANTEED');
+  });
+
+  test('CHANCE with failed child propagates failure', () => {
+    // CHANCE wrapping a CONSUME that will fail (no infliction to consume)
+    const effect = chanceEffect(1.0, [{
+      verb: VerbType.CONSUME,
+      object: NounType.INFLICTION,
+      adjective: AdjectiveType.HEAT,
+      fromObject: NounType.ENEMY,
+    }]);
+    const ctx = makeCtx({ critMode: CritMode.ALWAYS, events: [] });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.failed).toBe(true);
+  });
+
+  test('ALWAYS mode: unscaled values (chanceMultiplier stays 1.0)', () => {
+    // In ALWAYS mode, duration should NOT be scaled
+    const effect = chanceEffect(0.3, [applyInflictionWithDuration(10)]);
+    const ctx = makeCtx({ critMode: CritMode.ALWAYS });
+    const result = executeEffect(effect, ctx);
+
+    expect(result.produced).toHaveLength(1);
+    expect(eventDuration(result.produced[0])).toBe(1200); // full 10s * 120fps, not scaled
   });
 });

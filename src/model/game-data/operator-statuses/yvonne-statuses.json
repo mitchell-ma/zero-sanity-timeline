@@ -6,12 +6,12 @@
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
       "element": "CRYO",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 10
         },
-        "statusLevelInteractionType": "NONE"
+        "interactionType": "NONE"
       },
       "duration": {
         "value": {
@@ -19,7 +19,10 @@
           "value": 7
         },
         "unit": "SECOND"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
     },
     "metadata": {
       "originId": "CRYOBLASTING_PISTOLIER"
@@ -52,7 +55,9 @@
       "name": "Barrage of Technology (Talent)",
       "type": "TALENT",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT"
     },
     "metadata": {
       "originId": "yvonne",
@@ -87,13 +92,15 @@
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
       "toDeterminer": "THIS",
-      "statusLevel": {
+      "stacks": {
         "limit": {
           "verb": "IS",
           "value": 1
         },
         "interactionType": "CONSUME"
-      }
+      },
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
@@ -145,7 +152,9 @@
       "name": "Freezing Point",
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "yvonne",

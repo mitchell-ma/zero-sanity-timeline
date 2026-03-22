@@ -35,7 +35,7 @@ interface JsonFrame {
 interface JsonSegment {
   name?: string;
   frames: JsonFrame[];
-  metadata?: { segmentType?: string };
+  properties?: { segmentTypes?: string[] };
 }
 
 interface JsonSkillCategory {
@@ -121,7 +121,7 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   if (skillCat.segments) {
     for (const seg of skillCat.segments) {
       // Skip ANIMATION segments (no frames, no damage data)
-      if (seg.metadata?.segmentType === 'ANIMATION') continue;
+      if (seg.properties?.segmentTypes?.includes('ANIMATION')) continue;
       segments.push({ frames: seg.frames ?? [], label: seg.name });
     }
   } else if (skillCat.frames) {

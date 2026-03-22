@@ -34,7 +34,9 @@
       "name": "Obliteration Protocol",
       "type": "TALENT_STATUS",
       "to": "OPERATOR",
-      "toDeterminer": "THIS"
+      "toDeterminer": "THIS",
+      "eventType": "STATUS_EVENT",
+      "eventCategoryType": "TALENT_STATUS"
     },
     "metadata": {
       "originId": "perlica",

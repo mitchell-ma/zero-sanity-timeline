@@ -186,14 +186,14 @@ export function collectNoGainWindowsForEvent(
   let cursor = ev.startFrame;
   let foundTypedSegment = false;
   for (const seg of ev.segments) {
-    const isActive = seg.metadata?.segmentType === SegmentType.ACTIVE;
+    const isActive = seg.properties.segmentTypes?.includes(SegmentType.ACTIVE);
     const ignoresUlt = seg.clause?.some(c =>
       c.effects.some(e => e.verb === 'IGNORE' && e.object === 'ULTIMATE_ENERGY')
     );
     if (isActive || ignoresUlt) {
       windows.push({ start: cursor, end: cursor + seg.properties.duration });
       foundTypedSegment = true;
-    } else if (seg.metadata?.segmentType) {
+    } else if (seg.properties.segmentTypes?.length) {
       foundTypedSegment = true;
     }
     cursor += seg.properties.duration;

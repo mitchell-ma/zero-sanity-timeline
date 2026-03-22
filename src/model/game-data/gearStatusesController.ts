@@ -6,7 +6,7 @@
  * Each file is an array: first entry is the set-level effect (GEAR_SET_EFFECT),
  * followed by individual status entries (GEAR_SET_STATUS).
  */
-import { UnitType } from '../../consts/enums';
+import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesController';
@@ -60,7 +60,7 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 // ── GearSetEffect validation ────────────────────────────────────────────────
 
 const VALID_SET_EFFECT_TOP_KEYS = new Set(['onTriggerClause', 'properties', 'metadata']);
-const VALID_SET_EFFECT_PROPS_KEYS = new Set(['type', 'id', 'name', 'rarity', 'piecesRequired', 'description']);
+const VALID_SET_EFFECT_PROPS_KEYS = new Set(['type', 'id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 
 /** Validate a raw gear set effect JSON entry. */
@@ -93,7 +93,7 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
 // ── GearStatus validation ───────────────────────────────────────────────────
 
 const VALID_STATUS_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
-const VALID_STATUS_PROPS_KEYS = new Set(['type', 'id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds']);
+const VALID_STATUS_PROPS_KEYS = new Set(['type', 'id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'eventType', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
 const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
@@ -151,6 +151,8 @@ export class GearSetEffect {
   readonly rarity: number;
   readonly piecesRequired?: number;
   readonly description?: string;
+  readonly eventType: EventType;
+  readonly eventCategoryType: EventCategoryType;
   readonly originId: string;
   readonly dataSources: string[];
 
@@ -165,6 +167,8 @@ export class GearSetEffect {
     this.rarity = (props.rarity ?? 0) as number;
     if (props.piecesRequired) this.piecesRequired = props.piecesRequired as number;
     if (props.description) this.description = props.description as string;
+    this.eventType = (props.eventType as EventType) ?? EventType.STATUS_EVENT;
+    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.GEAR_STATUS;
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
   }
@@ -187,6 +191,8 @@ export class GearSetEffect {
         rarity: this.rarity,
         ...(this.piecesRequired ? { piecesRequired: this.piecesRequired } : {}),
         ...(this.description ? { description: this.description } : {}),
+        eventType: this.eventType,
+        eventCategoryType: this.eventCategoryType,
       },
       metadata: {
         originId: this.originId,
@@ -217,6 +223,8 @@ export class GearStatus {
   readonly duration: DurationConfig;
   readonly stacks: StacksConfig;
   readonly cooldownSeconds?: number;
+  readonly eventType: EventType;
+  readonly eventCategoryType: EventCategoryType;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -234,6 +242,8 @@ export class GearStatus {
       interactionType: 'NONE',
     }) as StacksConfig;
     if (props.cooldownSeconds) this.cooldownSeconds = props.cooldownSeconds as number;
+    this.eventType = (props.eventType as EventType) ?? EventType.STATUS_EVENT;
+    this.eventCategoryType = (props.eventCategoryType as EventCategoryType) ?? EventCategoryType.GEAR_SET_STATUS;
     this.originId = (meta.originId ?? '') as string;
   }
 
@@ -256,6 +266,8 @@ export class GearStatus {
         duration: this.duration,
         stacks: this.stacks,
         ...(this.cooldownSeconds ? { cooldownSeconds: this.cooldownSeconds } : {}),
+        eventType: this.eventType,
+        eventCategoryType: this.eventCategoryType,
       },
       metadata: {
         originId: this.originId,
