@@ -46,9 +46,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.35
-                ]
+                "value": 0.35
               }
             },
             "toDeterminer": "THIS",
@@ -62,18 +60,16 @@
       "id": "TIDE_SURGE",
       "name": "Tide Surge",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          15
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

@@ -8,8 +8,9 @@ import { getWeaponEffectDefs, getGearEffectDefs, resolveTargetDisplay, resolveDu
 import { getGearSetEffects } from '../../consts/gearSetEffects';
 import { ALL_OPERATORS } from '../operators/operatorRegistry';
 import { legacyTargetToObjectType, encodeLegacyTarget } from './bridgeUtils';
-import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../consts/semantics';
-import type { Predicate } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType, DeterminerType } from '../../dsl/semantics';
+import type { Predicate } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { OperatorClassType } from '../../model/enums/operators';
 import type { CustomWeapon, CustomWeaponSkillDef } from '../../model/custom/customWeaponTypes';
 import type { CustomGearSet, CustomGearPiece, CustomGearSetEffect } from '../../model/custom/customGearTypes';
@@ -50,11 +51,11 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
             triggers: resolveTriggerInteractions(def),
             target: encodeLegacyTarget(legacyTargetToObjectType(target as 'wielder' | 'team' | 'enemy')),
             durationSeconds: resolveDurationSeconds(def),
-            maxStacks: def.statusLevel?.limit?.value ?? 1,
+            maxStacks: def.stacks?.limit ? resolveValueNode(def.stacks.limit, DEFAULT_VALUE_CONTEXT) : 1,
             cooldownSeconds: def.cooldownSeconds ?? 0,
             buffs: clauseEffects.map((e) => {
               const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-              const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
+              const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
               return {
                 stat: e.object as string,
                 valueMin: (wv.valueMin as number) ?? (wv.value as number) ?? 0,
@@ -114,11 +115,11 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
           triggers: resolveTriggerInteractions(def),
           target: encodeLegacyTarget(legacyTargetToObjectType(resolveTargetDisplay(def) as 'wielder' | 'team' | 'enemy')),
           durationSeconds: resolveDurationSeconds(def),
-          maxStacks: def.statusLevel?.limit?.value ?? 1,
+          maxStacks: def.stacks?.limit ? resolveValueNode(def.stacks.limit, DEFAULT_VALUE_CONTEXT) : 1,
           cooldownSeconds: def.cooldownSeconds ?? 0,
           buffs: clauseEffects.map((e) => {
             const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-            const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
+            const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
             return {
               stat: e.object as string,
               value: (wv.value as number) ?? (wv.valueMin as number) ?? 0,

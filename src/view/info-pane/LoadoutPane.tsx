@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { TimelineEvent, Operator } from '../../consts/viewTypes';
-import { StatType, StatOwnerType } from '../../consts/enums';
+import { StatType, StatOwnerType, InfoLevel } from '../../consts/enums';
 import { fmtN } from '../../utils/timeline';
 import { OperatorLoadoutState } from '../OperatorLoadoutHeader';
 import { getStarredOperators, toggleStarredOperator } from '../../utils/starredOperators';
@@ -23,59 +23,65 @@ import {
   resolveAggregatedStats,
 } from '../../controller/info-pane/loadoutPaneController';
 import type { StatSourceEntry } from '../../controller/calculation/loadoutAggregator';
+import { t } from '../../locales/locale';
 
 // ── Stat display labels ─────────────────────────────────────────────────────
 
-const STAT_LABELS: Record<StatType, string> = {
-  [StatType.BASE_HP]: 'HP (Base)',
-  [StatType.BASE_DEFENSE]: 'DEF',
-  [StatType.BASE_ATTACK]: 'ATK (Base)',
-  [StatType.ATTACK_BONUS]: 'ATK%',
-  [StatType.STRENGTH]: 'Strength',
-  [StatType.STRENGTH_BONUS]: 'Strength%',
-  [StatType.AGILITY]: 'Agility',
-  [StatType.AGILITY_BONUS]: 'Agility%',
-  [StatType.INTELLECT]: 'Intellect',
-  [StatType.INTELLECT_BONUS]: 'Intellect%',
-  [StatType.WILL]: 'Will',
-  [StatType.WILL_BONUS]: 'Will%',
-  [StatType.CRITICAL_RATE]: 'Crit Rate',
-  [StatType.CRITICAL_DAMAGE]: 'Crit DMG',
-  [StatType.ARTS_INTENSITY]: 'Arts Intensity',
-  [StatType.PHYSICAL_RESISTANCE]: 'Phys RES',
-  [StatType.HEAT_RESISTANCE]: 'Heat RES',
-  [StatType.ELECTRIC_RESISTANCE]: 'Elec RES',
-  [StatType.CRYO_RESISTANCE]: 'Cryo RES',
-  [StatType.NATURE_RESISTANCE]: 'Nature RES',
-  [StatType.AETHER_RESISTANCE]: 'Aether RES',
-  [StatType.TREATMENT_BONUS]: 'Treatment',
-  [StatType.TREATMENT_RECEIVED_BONUS]: 'Treatment Recv',
-  [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 'Combo CD Red',
-  [StatType.ULTIMATE_GAIN_EFFICIENCY]: 'Ult Gain Eff',
-  [StatType.STAGGER_EFFICIENCY_BONUS]: 'Stagger Eff',
-  [StatType.PHYSICAL_DAMAGE_BONUS]: 'Phys DMG%',
-  [StatType.HEAT_DAMAGE_BONUS]: 'Heat DMG%',
-  [StatType.ELECTRIC_DAMAGE_BONUS]: 'Elec DMG%',
-  [StatType.CRYO_DAMAGE_BONUS]: 'Cryo DMG%',
-  [StatType.NATURE_DAMAGE_BONUS]: 'Nature DMG%',
-  [StatType.BASIC_ATTACK_DAMAGE_BONUS]: 'Basic ATK DMG%',
-  [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 'Battle Skill DMG%',
-  [StatType.COMBO_SKILL_DAMAGE_BONUS]: 'Combo Skill DMG%',
-  [StatType.ULTIMATE_DAMAGE_BONUS]: 'Ultimate DMG%',
-  [StatType.STAGGER_DAMAGE_BONUS]: 'Stagger DMG%',
-  [StatType.FINAL_DAMAGE_REDUCTION]: 'Final DMG Red',
-  [StatType.SKILL_DAMAGE_BONUS]: 'Skill DMG%',
-  [StatType.ARTS_DAMAGE_BONUS]: 'Arts DMG%',
-  [StatType.HP_BONUS]: 'HP%',
-  [StatType.FLAT_HP]: 'HP',
+/** Locale-key mapping for every StatType. Resolved at call-time via `t()`. */
+const STAT_LABEL_KEYS: Record<StatType, string> = {
+  [StatType.BASE_HP]: 'stat.BASE_HP',
+  [StatType.BASE_DEFENSE]: 'stat.BASE_DEFENSE',
+  [StatType.BASE_ATTACK]: 'stat.BASE_ATTACK',
+  [StatType.ATTACK_BONUS]: 'stat.ATTACK_BONUS',
+  [StatType.STRENGTH]: 'stat.STRENGTH',
+  [StatType.STRENGTH_BONUS]: 'stat.STRENGTH_BONUS',
+  [StatType.AGILITY]: 'stat.AGILITY',
+  [StatType.AGILITY_BONUS]: 'stat.AGILITY_BONUS',
+  [StatType.INTELLECT]: 'stat.INTELLECT',
+  [StatType.INTELLECT_BONUS]: 'stat.INTELLECT_BONUS',
+  [StatType.WILL]: 'stat.WILL',
+  [StatType.WILL_BONUS]: 'stat.WILL_BONUS',
+  [StatType.CRITICAL_RATE]: 'stat.CRITICAL_RATE',
+  [StatType.CRITICAL_DAMAGE]: 'stat.CRITICAL_DAMAGE',
+  [StatType.ARTS_INTENSITY]: 'stat.ARTS_INTENSITY',
+  [StatType.PHYSICAL_RESISTANCE]: 'stat.PHYSICAL_RESISTANCE',
+  [StatType.HEAT_RESISTANCE]: 'stat.HEAT_RESISTANCE',
+  [StatType.ELECTRIC_RESISTANCE]: 'stat.ELECTRIC_RESISTANCE',
+  [StatType.CRYO_RESISTANCE]: 'stat.CRYO_RESISTANCE',
+  [StatType.NATURE_RESISTANCE]: 'stat.NATURE_RESISTANCE',
+  [StatType.AETHER_RESISTANCE]: 'stat.AETHER_RESISTANCE',
+  [StatType.TREATMENT_BONUS]: 'stat.TREATMENT_BONUS',
+  [StatType.TREATMENT_RECEIVED_BONUS]: 'stat.TREATMENT_RECEIVED_BONUS',
+  [StatType.COMBO_SKILL_COOLDOWN_REDUCTION]: 'stat.COMBO_SKILL_COOLDOWN_REDUCTION',
+  [StatType.ULTIMATE_GAIN_EFFICIENCY]: 'stat.ULTIMATE_GAIN_EFFICIENCY',
+  [StatType.STAGGER_EFFICIENCY_BONUS]: 'stat.STAGGER_EFFICIENCY_BONUS',
+  [StatType.PHYSICAL_DAMAGE_BONUS]: 'stat.PHYSICAL_DAMAGE_BONUS',
+  [StatType.HEAT_DAMAGE_BONUS]: 'stat.HEAT_DAMAGE_BONUS',
+  [StatType.ELECTRIC_DAMAGE_BONUS]: 'stat.ELECTRIC_DAMAGE_BONUS',
+  [StatType.CRYO_DAMAGE_BONUS]: 'stat.CRYO_DAMAGE_BONUS',
+  [StatType.NATURE_DAMAGE_BONUS]: 'stat.NATURE_DAMAGE_BONUS',
+  [StatType.BASIC_ATTACK_DAMAGE_BONUS]: 'stat.BASIC_ATTACK_DAMAGE_BONUS',
+  [StatType.BATTLE_SKILL_DAMAGE_BONUS]: 'stat.BATTLE_SKILL_DAMAGE_BONUS',
+  [StatType.COMBO_SKILL_DAMAGE_BONUS]: 'stat.COMBO_SKILL_DAMAGE_BONUS',
+  [StatType.ULTIMATE_DAMAGE_BONUS]: 'stat.ULTIMATE_DAMAGE_BONUS',
+  [StatType.STAGGER_DAMAGE_BONUS]: 'stat.STAGGER_DAMAGE_BONUS',
+  [StatType.FINAL_DAMAGE_REDUCTION]: 'stat.FINAL_DAMAGE_REDUCTION',
+  [StatType.SKILL_DAMAGE_BONUS]: 'stat.SKILL_DAMAGE_BONUS',
+  [StatType.ARTS_DAMAGE_BONUS]: 'stat.ARTS_DAMAGE_BONUS',
+  [StatType.HP_BONUS]: 'stat.HP_BONUS',
+  [StatType.FLAT_HP]: 'stat.FLAT_HP',
   // ── Enemy stats ──────────────────────────────────────────────────────────────
-  [StatType.STAGGER_HP]: 'Stagger HP',
-  [StatType.STAGGER_RECOVERY]: 'Stagger Recovery',
-  [StatType.FINISHER_ATK_MULTIPLIER]: 'Finisher ATK Mult',
-  [StatType.FINISHER_SP_GAIN]: 'Finisher SP Gain',
-  [StatType.ATTACK_RANGE]: 'Attack Range',
-  [StatType.WEIGHT]: 'Weight',
+  [StatType.STAGGER_HP]: 'stat.STAGGER_HP',
+  [StatType.STAGGER_RECOVERY]: 'stat.STAGGER_RECOVERY',
+  [StatType.FINISHER_ATK_MULTIPLIER]: 'stat.FINISHER_ATK_MULTIPLIER',
+  [StatType.FINISHER_SP_GAIN]: 'stat.FINISHER_SP_GAIN',
+  [StatType.ATTACK_RANGE]: 'stat.ATTACK_RANGE',
+  [StatType.WEIGHT]: 'stat.WEIGHT',
 };
+
+function getStatLabel(stat: StatType) {
+  return t(STAT_LABEL_KEYS[stat]);
+}
 
 const DESC_FONT_SIZE = 14;
 
@@ -401,13 +407,13 @@ interface LoadoutPaneProps {
   onStatsChange: (stats: LoadoutProperties) => void;
   onClose: () => void;
   allProcessedEvents?: readonly TimelineEvent[];
-  verbose?: 0 | 1 | 2;
+  verbose?: InfoLevel;
   allOperators?: Operator[];
   onSelectOperator?: (operatorId: string | null) => void;
   onLoadoutChange?: (loadout: OperatorLoadoutState) => void;
 }
 
-function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChange, onClose, allProcessedEvents, verbose = 1, allOperators, onSelectOperator, onLoadoutChange }: LoadoutPaneProps) {
+function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChange, onClose, allProcessedEvents, verbose = InfoLevel.DETAILED, allOperators, onSelectOperator, onLoadoutChange }: LoadoutPaneProps) {
   const setOperator = (key: keyof LoadoutProperties['operator']) => (v: number) =>
     onStatsChange({ ...stats, operator: { ...stats.operator, [key]: v } });
   const setSkill = (key: keyof LoadoutProperties['skills']) => (v: number) =>
@@ -462,7 +468,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           )}
           <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Operator Level</span>} value={stats.operator.level} min={1} max={90} holdSnaps={[1, 10, 20, 30, 40, 50, 60, 70, 80, 90]} showMinMax onChange={setOperator('level')} />
           <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Potential</span>} value={stats.operator.potential} min={0} max={5} showMinMax onChange={setOperator('potential')} />
-          {verbose >= 1 &&operator.potentialDescriptions && stats.operator.potential > 0 && operator.potentialDescriptions.slice(0, stats.operator.potential).map((desc, i) => (
+          {verbose >= InfoLevel.DETAILED &&operator.potentialDescriptions && stats.operator.potential > 0 && operator.potentialDescriptions.slice(0, stats.operator.potential).map((desc, i) => (
             <div key={i} style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px' }}>
               <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginRight: 4 }}>P{i + 1}</span>
               {desc}
@@ -473,17 +479,17 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
         <div className="edit-panel-section">
           <span className="edit-section-label">Talents</span>
           <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Attribute Increase</span>} value={stats.operator.attributeIncreaseLevel} min={0} max={operator.maxAttributeIncreaseLevel} showMinMax onChange={setOperator('attributeIncreaseLevel')} />
-          {verbose >= 1 &&stats.operator.attributeIncreaseLevel > 0 && (
+          {verbose >= InfoLevel.DETAILED &&stats.operator.attributeIncreaseLevel > 0 && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.attributeIncreaseName}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 13, lineHeight: 1.4, padding: '2px 6px 4px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>{STAT_LABELS[operator.attributeIncreaseAttribute as StatType] ?? operator.attributeIncreaseAttribute}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{getStatLabel(operator.attributeIncreaseAttribute as StatType)}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>+{[0, 10, 15, 15, 20][stats.operator.attributeIncreaseLevel]} <span style={{ color: 'var(--text-muted)' }}>(+{[0, 10, 25, 40, 60][stats.operator.attributeIncreaseLevel]} total)</span></span>
               </div>
             </>
           )}
           <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 1</span>} value={stats.operator.talentOneLevel} min={0} max={operator.maxTalentOneLevel} showMinMax onChange={setOperator('talentOneLevel')} />
-          {verbose >= 1 &&stats.operator.talentOneLevel > 0 && operator.talentDescriptions?.[1]?.length && (
+          {verbose >= InfoLevel.DETAILED &&stats.operator.talentOneLevel > 0 && operator.talentDescriptions?.[1]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentOneName}</div>
               <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
@@ -492,7 +498,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             </>
           )}
           <StatField label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>Talent 2</span>} value={stats.operator.talentTwoLevel} min={0} max={operator.maxTalentTwoLevel} showMinMax onChange={setOperator('talentTwoLevel')} />
-          {verbose >= 1 &&stats.operator.talentTwoLevel > 0 && operator.talentDescriptions?.[2]?.length && (
+          {verbose >= InfoLevel.DETAILED &&stats.operator.talentTwoLevel > 0 && operator.talentDescriptions?.[2]?.length && (
             <>
               <div style={{ fontSize: DESC_FONT_SIZE, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', padding: '2px 6px 0' }}>{operator.talentTwoName}</div>
               <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
@@ -518,7 +524,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                   showMinMax
                   onChange={setSkill(levelKey)}
                 />
-                {verbose >= 1 &&skill.description && (
+                {verbose >= InfoLevel.DETAILED &&skill.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, padding: '2px 6px 4px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{skill.name.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}</div>
                     {skill.description}
@@ -559,13 +565,13 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             </div>
             {weaponData.statContributions.map((c) => (
               <div key={`stat-${c.skillIndex}`} style={statRowStyle}>
-                <span style={statLabelStyle}>Skill {c.skillIndex + 1}: {STAT_LABELS[c.stat] ?? c.stat}</span>
+                <span style={statLabelStyle}>Skill {c.skillIndex + 1}: {getStatLabel(c.stat as StatType)}</span>
                 <span style={statValueStyle}>{formatStatValue(c.stat, c.value)}</span>
               </div>
             ))}
             {weaponData.passiveStats.map((p) => (
               <div key={`stat-${p.skillIndex}-${p.stat}`} style={statRowStyle}>
-                <span style={statLabelStyle}>Skill {p.skillIndex + 1}: {STAT_LABELS[p.stat] ?? p.stat}</span>
+                <span style={statLabelStyle}>Skill {p.skillIndex + 1}: {getStatLabel(p.stat as StatType)}</span>
                 <span style={statValueStyle}>{formatStatValue(p.stat, p.value)}</span>
               </div>
             ))}
@@ -574,24 +580,24 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                 <div style={{ ...statRowStyle, marginTop: ei === 0 ? 4 : 8 }}>
                   <span style={statLabelStyle}>Skill 3: {eff.label}</span>
                 </div>
-                {verbose >= 1 &&eff.description && (
+                {verbose >= InfoLevel.DETAILED &&eff.description && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 2, marginTop: -1 }}>
                     {eff.description}
                   </div>
                 )}
                 {eff.secondaryAttrBonus && (
                   <div style={statRowStyle}>
-                    <span style={statLabelStyle}>Secondary Attr% ({STAT_LABELS[eff.secondaryAttrBonus.label as StatType] ?? eff.secondaryAttrBonus.label}%)</span>
+                    <span style={statLabelStyle}>Secondary Attr% ({getStatLabel(eff.secondaryAttrBonus.label as StatType)}%)</span>
                     <span style={statValueStyle}>{fmtN(eff.secondaryAttrBonus.value * 100)}%</span>
                   </div>
                 )}
                 {eff.buffs.map((b, bi) => (
                   <div key={`eff-${ei}-${bi}`} style={statRowStyle}>
-                    <span style={statLabelStyle}>{STAT_LABELS[b.statLabel as StatType] ?? b.statLabel} ({eff.durationSeconds}s)</span>
+                    <span style={statLabelStyle}>{getStatLabel(b.statLabel as StatType)} ({eff.durationSeconds}s)</span>
                     <span style={statValueStyle}>{b.valueStr}{b.perStack ? eff.stackSuffix : ''}</span>
                   </div>
                 ))}
-                {verbose >= 1 &&eff.metaStr && (
+                {verbose >= InfoLevel.DETAILED &&eff.metaStr && (
                   <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: 2 }}>
                     {eff.metaStr}
                   </div>
@@ -609,7 +615,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
                 Set: {gearData.setName}
               </div>
-              {verbose >= 1 && gearData.setDescription && (
+              {verbose >= InfoLevel.DETAILED && gearData.setDescription && (
                 <div style={{ fontSize: DESC_FONT_SIZE, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
                   {gearData.setDescription}
                 </div>
@@ -645,7 +651,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                     {piece.statKeys.map((statType) => (
                       <StatField
                         key={statType}
-                        label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{STAT_LABELS[statType] ?? statType}</span>}
+                        label={<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-secondary)' }}>{getStatLabel(statType)}</span>}
                         value={piece.ranks[statType] ?? 4}
                         min={1}
                         max={4}
@@ -655,7 +661,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
                     ))}
                     {piece.statKeys.map((statType) => (
                       <div key={`val-${statType}`} style={statRowStyle}>
-                        <span style={statLabelStyle}>{STAT_LABELS[statType] ?? statType}</span>
+                        <span style={statLabelStyle}>{getStatLabel(statType)}</span>
                         <span style={statValueStyle}>{formatStatValue(statType, piece.resolvedStats[statType] ?? 0)}</span>
                       </div>
                     ))}
@@ -677,7 +683,7 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
             )}
             {gearBonus.stats.map((s) => (
               <div key={s.stat} style={statRowStyle}>
-                <span style={statLabelStyle}>{STAT_LABELS[s.stat] ?? s.stat}</span>
+                <span style={statLabelStyle}>{getStatLabel(s.stat as StatType)}</span>
                 <span style={statValueStyle}>{formatStatValue(s.stat, s.value)}</span>
               </div>
             ))}
@@ -722,77 +728,115 @@ function LoadoutPane({ operatorId, slotId, operator, loadout, stats, onStatsChan
           )}
         </div>
 
-        <AggregatedStatsSection operatorId={operatorId} loadout={loadout} stats={stats} color={operator.color} />
+        <AggregatedStatsSection operatorId={operatorId} loadout={loadout} stats={stats} color={operator.color} verbose={verbose} />
       </div>
     </>
   );
 }
 
-function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
-  operatorId: string; loadout: OperatorLoadoutState; stats: LoadoutProperties; color: string;
+function AggregatedStatsSection({ operatorId, loadout, stats, color, verbose }: {
+  operatorId: string; loadout: OperatorLoadoutState; stats: LoadoutProperties; color: string; verbose: InfoLevel;
 }) {
   const data = resolveAggregatedStats(operatorId, loadout, stats, StatOwnerType.OPERATOR);
   if (!data) return null;
 
   const { agg } = data;
-  const totalDefense = agg.stats[StatType.BASE_DEFENSE] ?? 0;
+  const hasHpBonus = agg.hpBonus !== 0 || agg.flatHpBonuses !== 0;
+  const hasDefSources = agg.statSources[StatType.BASE_DEFENSE] && agg.statSources[StatType.BASE_DEFENSE]!.length > 0;
+
+  const showBreakdowns = verbose >= InfoLevel.DETAILED;
 
   return (
     <>
       <div className="edit-panel-section">
         <span className="edit-section-label">Main Stats</span>
+        {/* ── HP ────────────────────────────────────────────────────────── */}
         <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12 }}>
           <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>HP</span>
-          <span style={statValueStyle}>—</span>
+          <span style={statValueStyle}>{fmtN(agg.effectiveHp)}</span>
         </div>
+        {showBreakdowns && hasHpBonus && (
+          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+            <div style={statRowStyle}>
+              <span style={statLabelStyle}>Base HP</span>
+              <span style={statValueStyle}>{fmtN(agg.operatorBaseHp)}</span>
+            </div>
+            {agg.hpBonus !== 0 && (
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>HP Bonus</span>
+                <span style={statValueStyle}>{formatStatValue(StatType.HP_BONUS, agg.hpBonus)} → {fmtN(agg.hpPercentageBonus)}</span>
+              </div>
+            )}
+            {agg.flatHpBonuses !== 0 && (
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>Flat HP</span>
+                <span style={statValueStyle}>+{fmtN(agg.flatHpBonuses)}</span>
+              </div>
+            )}
+          </div>
+        )}
+        {/* ── ATK ───────────────────────────────────────────────────────── */}
         <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
           <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK</span>
           <span style={statValueStyle}>{fmtN(agg.effectiveAttack)}</span>
         </div>
-        <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-          <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-            <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Base ATK</span>
-            <span style={statValueStyle}>{fmtN(agg.baseAttack)}</span>
-          </div>
+        {showBreakdowns && (
           <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Operator</span>
-              <span style={statValueStyle}>{fmtN(agg.operatorBaseAttack)}</span>
+            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
+              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Base ATK</span>
+              <span style={statValueStyle}>{fmtN(agg.baseAttack)}</span>
             </div>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Weapon</span>
-              <span style={statValueStyle}>{fmtN(agg.weaponBaseAttack)}</span>
+            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>Operator</span>
+                <span style={statValueStyle}>{fmtN(agg.operatorBaseAttack)}</span>
+              </div>
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>Weapon</span>
+                <span style={statValueStyle}>{fmtN(agg.weaponBaseAttack)}</span>
+              </div>
+            </div>
+            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
+              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK Bonus</span>
+              <span style={statValueStyle}>{fmtN(agg.atkPercentageBonus)}</span>
+            </div>
+            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>Percentage Bonus</span>
+                <span style={statValueStyle}>{formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → {fmtN(agg.atkPercentageBonus)}</span>
+              </div>
+            </div>
+            <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
+              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Attribute Bonus</span>
+              <span style={statValueStyle}>{fmtN((agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus) * 100)}%</span>
+            </div>
+            <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>ATK bonus from {getStatLabel(agg.mainAttributeType)}</span>
+                <span style={statValueStyle}>{fmtN(agg.displayMainAttributeBonus * 100)}%</span>
+              </div>
+              <div style={statRowStyle}>
+                <span style={statLabelStyle}>ATK bonus from {getStatLabel(agg.secondaryAttributeType)}</span>
+                <span style={statValueStyle}>{fmtN(agg.displaySecondaryAttributeBonus * 100)}%</span>
+              </div>
             </div>
           </div>
-          <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-            <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>ATK Bonus</span>
-            <span style={statValueStyle}>{fmtN(agg.atkPercentageBonus)}</span>
-          </div>
-          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Percentage Bonus</span>
-              <span style={statValueStyle}>{formatStatValue(StatType.ATTACK_BONUS, agg.atkBonus)} → {fmtN(agg.atkPercentageBonus)}</span>
-            </div>
-          </div>
-          <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 13, marginTop: 2 }}>
-            <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Attribute Bonus</span>
-            <span style={statValueStyle}>{fmtN((agg.displayMainAttributeBonus + agg.displaySecondaryAttributeBonus) * 100)}%</span>
-          </div>
-          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>ATK bonus from {STAT_LABELS[agg.mainAttributeType]}</span>
-              <span style={statValueStyle}>{fmtN(agg.displayMainAttributeBonus * 100)}%</span>
-            </div>
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>ATK bonus from {STAT_LABELS[agg.secondaryAttributeType]}</span>
-              <span style={statValueStyle}>{fmtN(agg.displaySecondaryAttributeBonus * 100)}%</span>
-            </div>
-          </div>
-        </div>
+        )}
+        {/* ── DEF ───────────────────────────────────────────────────────── */}
         <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
           <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>Defense</span>
-          <span style={{ ...statValueStyle, color: totalDefense === 0 ? 'var(--text-muted)' : undefined }}>{totalDefense > 0 ? totalDefense.toFixed(0) : '—'}</span>
+          <span style={{ ...statValueStyle, color: agg.totalDefense === 0 ? 'var(--text-muted)' : undefined }}>{agg.totalDefense > 0 ? agg.totalDefense.toFixed(0) : '—'}</span>
         </div>
+        {showBreakdowns && hasDefSources && agg.totalDefense > 0 && (
+          <div style={{ borderLeft: '2px solid var(--text-muted)', marginLeft: 4, paddingLeft: 8 }}>
+            {agg.statSources[StatType.BASE_DEFENSE]!.map((s, i) => (
+              <div key={i} style={statRowStyle}>
+                <span style={statLabelStyle}>{s.source}</span>
+                <span style={statValueStyle}>{s.value.toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="edit-panel-section">
@@ -802,7 +846,7 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
             key={a.stat}
             stat={a.stat}
             value={a.isZero ? undefined : a.value}
-            sources={agg.statSources[a.stat]}
+            sources={showBreakdowns ? agg.statSources[a.stat] : undefined}
           />
         ))}
       </div>
@@ -815,7 +859,7 @@ function AggregatedStatsSection({ operatorId, loadout, stats, color }: {
             stat={s.stat}
             value={s.isZero ? undefined : s.value}
             displayValue={s.isZero ? undefined : formatStatValue(s.stat, s.value)}
-            sources={agg.statSources[s.stat]}
+            sources={showBreakdowns ? agg.statSources[s.stat] : undefined}
           />
         ))}
       </div>
@@ -838,7 +882,7 @@ function StatWithSources({ stat, value, displayValue, sources }: {
     <>
       <div style={{ ...statRowStyle, fontWeight: 600, fontSize: 12, marginTop: 4 }}>
         <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-          {STAT_LABELS[stat]}
+          {getStatLabel(stat)}
         </span>
         <span style={{ ...statValueStyle, color: isZero ? 'var(--text-muted)' : undefined }}>
           {isZero ? '—' : (displayValue ?? formatStatValue(stat, value!))}

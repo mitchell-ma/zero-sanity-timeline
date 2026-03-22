@@ -14,7 +14,10 @@
         "statusLevelInteractionType": "NONE"
       },
       "duration": {
-        "value": 7,
+        "value": {
+          "verb": "IS",
+          "value": 7
+        },
         "unit": "SECOND"
       }
     },
@@ -71,9 +74,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.5
-                ]
+                "value": 0.5
               }
             }
           }
@@ -89,9 +90,7 @@
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "CONSUME"
       }
@@ -123,7 +122,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   0.1,
                   0.2
                 ]
@@ -131,7 +130,7 @@
               "vsSolidified": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   0.2,
                   0.4
                 ]

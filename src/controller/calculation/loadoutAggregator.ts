@@ -62,6 +62,23 @@ export interface AggregatedStats {
   displayMainAttributeBonus: number;
   /** Unrounded secondary attribute bonus for display. */
   displaySecondaryAttributeBonus: number;
+
+  // ── HP breakdown ───────────────────────────────────────────────────────
+  /** Operator base HP from level table. */
+  operatorBaseHp: number;
+  /** Total HP% bonus from all sources. */
+  hpBonus: number;
+  /** Flat HP gained from percentage bonus (baseHP * hpBonus). */
+  hpPercentageBonus: number;
+  /** Flat HP bonuses from gear set effects, etc. */
+  flatHpBonuses: number;
+  /** Effective HP: baseHP * (1 + HP%) + flatHP. */
+  effectiveHp: number;
+
+  // ── DEF breakdown ──────────────────────────────────────────────────────
+  /** Total defense from all sources (gear, gear set, consumables, etc.). */
+  totalDefense: number;
+
   /** All stats merged from all sources (excludes base ATK and flat ATK bonuses). */
   stats: Record<StatType, number>;
   /** Per-stat breakdown of where each contribution came from. */
@@ -158,9 +175,11 @@ export function aggregateLoadoutStats(
   model.ultimateLevel = loadoutProperties.skills.ultimateLevel as SkillLevel;
 
   const operatorBaseAttack = model.getBaseAttack();
+  const operatorBaseHp = model.stats[StatType.BASE_HP] ?? 0;
   const stats: Record<StatType, number> = { ...model.stats };
   const statSources: Partial<Record<StatType, StatSourceEntry[]>> = {};
   let flatAttackBonuses = 0;
+  let flatHpBonuses = 0;
 
   // Helper: track a source contribution for a stat
   function trackSource(stat: StatType, source: string, value: number): void {
@@ -188,10 +207,12 @@ export function aggregateLoadoutStats(
     trackSource(model.attributeIncreaseAttribute, 'Attr Increase', attrIncreaseValue);
   }
 
-  // Helper: add a stat value, routing flat ATK to the separate counter
+  // Helper: add a stat value, routing flat ATK/HP to separate counters
   function addStat(stat: StatType, value: number, source?: string): void {
     if (stat === StatType.BASE_ATTACK) {
       flatAttackBonuses += value;
+    } else if (stat === StatType.FLAT_HP) {
+      flatHpBonuses += value;
     } else {
       stats[stat] += value;
     }
@@ -222,7 +243,7 @@ export function aggregateLoadoutStats(
             const statType = resolveClauseStatType(stat, model.mainAttributeType);
             if (statType != null) {
               stats[statType] += value;
-              trackSource(statType, 'Weapon Skill', value);
+              trackSource(statType, weaponPiece.name, value);
             }
           }
           continue;
@@ -233,7 +254,7 @@ export function aggregateLoadoutStats(
         for (const { stat, value } of namedStats) {
           const resolvedStat = resolveClauseStatType(stat, model.mainAttributeType);
           if (resolvedStat != null) {
-            addStat(resolvedStat, value, 'Weapon Passive');
+            addStat(resolvedStat, value, weaponPiece.name);
           }
         }
       }
@@ -256,7 +277,7 @@ export function aggregateLoadoutStats(
     const lineRanks = loadoutProperties.gear[piece.ranksKey] ?? {};
     const gearStats = gearPiece.getStatsPerLine(lineRanks);
     for (const [key, value] of Object.entries(gearStats)) {
-      addStat(key as StatType, value as number, 'Gear');
+      addStat(key as StatType, value as number, gearPiece.name);
     }
     // Count gear set for set bonus
     effectCounts.set(
@@ -325,6 +346,14 @@ export function aggregateLoadoutStats(
   const attributeBonus = 1 + mainAttributeBonus + secondaryAttributeBonus;
   const effectiveAttack = totalAttack * attributeBonus;
 
+  // HP breakdown: baseHP * (1 + HP%) + flatHP
+  const hpBonus = stats[StatType.HP_BONUS] ?? 0;
+  const hpPercentageBonus = operatorBaseHp * hpBonus;
+  const effectiveHp = operatorBaseHp * (1 + hpBonus) + flatHpBonuses;
+
+  // DEF: sum from all sources
+  const totalDefense = stats[StatType.BASE_DEFENSE] ?? 0;
+
   return {
     operatorBaseAttack,
     weaponBaseAttack,
@@ -339,6 +368,12 @@ export function aggregateLoadoutStats(
     secondaryAttributeBonus,
     displayMainAttributeBonus,
     displaySecondaryAttributeBonus,
+    operatorBaseHp,
+    hpBonus,
+    hpPercentageBonus,
+    flatHpBonuses,
+    effectiveHp,
+    totalDefense,
     stats,
     statSources,
     mainAttributeType: model.mainAttributeType,

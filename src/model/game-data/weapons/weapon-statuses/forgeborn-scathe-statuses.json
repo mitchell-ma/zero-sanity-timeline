@@ -13,7 +13,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.75,
                   0.9,
                   1.05,
@@ -36,18 +36,16 @@
       "toDeterminer": "THIS",
       "to": "OPERATOR",
       "duration": {
-        "verb": "IS",
-        "values": [
-          20
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }

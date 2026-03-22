@@ -28,13 +28,13 @@ export class Corrosion extends ArtsReaction {
   static readonly DURATION_UNTIL_FULL_EFFECT_SECONDS = 10;
 
   constructor(params: {
-    statusLevel: StatusLevel;
+    stacks: StatusLevel;
     isForced?: boolean;
   }) {
     super({
       statusType: StatusType.CORROSION,
-      statusLevel: params.statusLevel,
-      maxStatusLevel: 4,
+      stacks: params.stacks,
+      maxStacks: 4,
       element: ElementType.NATURE,
       isForced: params.isForced ?? false,
       durationSeconds: Corrosion.DURATION_SECONDS,
@@ -43,14 +43,14 @@ export class Corrosion extends ArtsReaction {
 
   getInitialDamage(): number {
     if (this.isForced) return 0;
-    return INITIAL_DAMAGE[this.statusLevel];
+    return INITIAL_DAMAGE[this.stacks];
   }
 
   getInitialReduction(): number {
-    return INITIAL_REDUCTION[this.statusLevel];
+    return INITIAL_REDUCTION[this.stacks];
   }
 
   getMaximumReduction(): number {
-    return MAXIMUM_REDUCTION[this.statusLevel];
+    return MAXIMUM_REDUCTION[this.stacks];
   }
 }

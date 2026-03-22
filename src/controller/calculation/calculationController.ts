@@ -106,7 +106,7 @@ export function precomputeDamageByFrame(
     if (!op) continue;
 
     const props = loadoutProperties[ev.ownerId] ?? DEFAULT_LOADOUT_PROPERTIES;
-    const effectiveColumnId = ev.name.includes('_ENHANCED') ? SKILL_COLUMNS.ULTIMATE : ev.columnId;
+    const effectiveColumnId = ev.id.includes('_ENHANCED') ? SKILL_COLUMNS.ULTIMATE : ev.columnId;
     const skillLevel = getSkillLevelForColumn(effectiveColumnId, props);
     const potential = (props.operator.potential ?? 5) as Potential;
 

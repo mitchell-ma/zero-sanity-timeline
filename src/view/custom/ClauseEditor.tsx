@@ -4,7 +4,7 @@
  * A clause is a list of predicates. Each predicate has conditions (IF) and effects (THEN).
  * This editor renders predicates as titled sections with row-based condition/effect builders.
  */
-import type { Clause, Predicate, Interaction, Effect } from '../../consts/semantics';
+import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
 

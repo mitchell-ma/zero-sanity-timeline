@@ -9,7 +9,8 @@ import { CombatSkillsType, StatusType, TimeDependency } from '../../consts/enums
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
-import type { Interaction, Predicate } from '../../consts/semantics';
+import { VerbType } from '../../dsl/semantics';
+import type { Interaction, Predicate } from '../../dsl/semantics';
 import { extendByTimeStops } from './processTimeStop';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
@@ -97,7 +98,7 @@ export function computeTimeStopRegions(events: TimelineEvent[]): TimeStopRegion[
     const anim = getAnimationDuration(ev);
     if (anim <= 0) continue;
     const isTimeStop = ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
-      (ev.columnId === 'dash' && ev.isPerfectDodge);
+      (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({ startFrame: ev.startFrame, durationFrames: anim, ownerId: ev.ownerId, sourceColumnId: ev.columnId });
   }
@@ -263,7 +264,7 @@ export function computeResourceZonesForDrag(
   // Collect SP exclusions from dragged battle events
   const spExclusions: { frame: number; cost: number }[] = [];
   for (const ev of events) {
-    if (!draggedIds.has(ev.id)) continue;
+    if (!draggedIds.has(ev.uid)) continue;
     if (ev.columnId === SKILL_COLUMNS.BATTLE) {
       const cost = ev.skillPointCost ?? 0;
       if (cost > 0) spExclusions.push({ frame: ev.startFrame, cost });
@@ -273,7 +274,7 @@ export function computeResourceZonesForDrag(
   // Collect ultimate exclusions from dragged ultimate events
   const ultExclusions = new Map<string, { frame: number; cost: number }[]>();
   for (const ev of events) {
-    if (!draggedIds.has(ev.id)) continue;
+    if (!draggedIds.has(ev.uid)) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
       const ultKey = `${ev.ownerId}-${SKILL_COLUMNS.ULTIMATE}`;
       const graph = resourceGraphs.get(ultKey);
@@ -361,14 +362,14 @@ export function computeResourceInsufficiencyZones(
  */
 export function clampDeltaByResourceZones(
   clampedDelta: number,
-  eventId: string,
+  eventUid: string,
   events: TimelineEvent[],
   startFrame: number,
   resourceZones: Map<string, ResourceZone[]>,
   invalidAtDragStart?: Set<string>,
   revalidated?: Set<string>,
 ): number {
-  const ev = events.find((e) => e.id === eventId);
+  const ev = events.find((e) => e.uid === eventUid);
   if (!ev || (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE)) return clampedDelta;
   const zones = resourceZones.get(`${ev.ownerId}:${ev.columnId}`);
   if (!zones || zones.length === 0) return clampedDelta;
@@ -377,18 +378,18 @@ export function clampDeltaByResourceZones(
 
   // Event was invalid at drag start — allow free movement through zones
   // until the target reaches a valid (non-zone) position.
-  if (invalidAtDragStart?.has(eventId)) {
+  if (invalidAtDragStart?.has(eventUid)) {
     const inZone = zones.some((z) => target >= z.start && target < z.end);
     if (inZone) return clampedDelta; // still in a zone, free movement
     // Target is now valid — transition: block ALL zones including the original
-    invalidAtDragStart.delete(eventId);
-    revalidated?.add(eventId);
+    invalidAtDragStart.delete(eventUid);
+    revalidated?.add(eventUid);
     return clampedDelta; // current position is valid, no clamping needed
   }
 
   // Whether to skip the self-caused zone exemption (revalidated events must
   // be blocked from every zone, including the one at their drag-start origin).
-  const skipSelfExemption = revalidated?.has(eventId);
+  const skipSelfExemption = revalidated?.has(eventUid);
 
   for (const zone of zones) {
     // Skip zones containing the event's drag-start position (self-caused),
@@ -488,7 +489,7 @@ export function wouldSegmentAdditionOverlap(
   const newRange = currentRange + addedDurationFrames;
 
   return events.some((sib) => {
-    if (sib.id === event.id || sib.ownerId !== event.ownerId || sib.columnId !== event.columnId) return false;
+    if (sib.uid === event.uid || sib.ownerId !== event.ownerId || sib.columnId !== event.columnId) return false;
     const sibRange = sib.nonOverlappableRange
       ?? (sib.segments ? computeSegmentsSpan(sib.segments) : 0);
     if (sibRange > 0 && event.startFrame >= sib.startFrame && event.startFrame < sib.startFrame + sibRange) return true;
@@ -528,13 +529,13 @@ export function isDuplicatePlacementInResourceZone(
  */
 export function clampDeltaByComboWindow(
   clampedDelta: number,
-  eventId: string,
+  eventUid: string,
   events: TimelineEvent[],
   startFrame: number,
   processedEvents: readonly TimelineEvent[],
   invalidAtDragStart?: Set<string>,
 ): number {
-  const ev = events.find((e) => e.id === eventId);
+  const ev = events.find((e) => e.uid === eventUid);
   if (!ev || ev.columnId !== SKILL_COLUMNS.COMBO) {
     return clampedDelta;
   }
@@ -551,11 +552,11 @@ export function clampDeltaByComboWindow(
 
   // Event was invalid at drag start (outside all windows) — allow free
   // movement until the target enters a window, then clamp within it.
-  if (invalidAtDragStart?.has(eventId)) {
+  if (invalidAtDragStart?.has(eventUid)) {
     const targetWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
     if (!targetWindow) return clampedDelta; // still outside, free movement
     // Entered a window — transition to clamped mode
-    invalidAtDragStart.delete(eventId);
+    invalidAtDragStart.delete(eventUid);
     const wStart = targetWindow.startFrame;
     const wEnd = windowEndFrame(targetWindow);
     if (target < wStart) return wStart - startFrame;
@@ -903,12 +904,12 @@ export function validateComboWindows(
 
   // First pass: non-dragged events consume windows
   for (const ev of events) {
-    if (draggingIds?.has(ev.id)) continue;
+    if (draggingIds?.has(ev.uid)) continue;
     if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     if (alwaysAvailable.has(ev.ownerId)) continue;
     const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
     if (ownerWindows.length === 0) {
-      map.set(ev.id, 'No combo trigger window available');
+      map.set(ev.uid, 'No combo trigger window available');
       continue;
     }
     const matchingWindow = ownerWindows.find((w) => {
@@ -916,26 +917,26 @@ export function validateComboWindows(
       return ev.startFrame >= w.startFrame && ev.startFrame < endFrame;
     });
     if (!matchingWindow) {
-      map.set(ev.id, 'Outside combo trigger window');
+      map.set(ev.uid, 'Outside combo trigger window');
       continue;
     }
-    const existing = consumedWindows.get(matchingWindow.id);
+    const existing = consumedWindows.get(matchingWindow.uid);
     if (existing) {
-      map.set(ev.id, 'Combo skill already activated by another combo');
+      map.set(ev.uid, 'Combo skill already activated by another combo');
     } else {
-      consumedWindows.set(matchingWindow.id, ev.id);
+      consumedWindows.set(matchingWindow.uid, ev.uid);
     }
   }
 
   // Second pass: dragged events check windows without consuming
   if (draggingIds) {
     for (const ev of events) {
-      if (!draggingIds.has(ev.id)) continue;
+      if (!draggingIds.has(ev.uid)) continue;
       if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
       if (alwaysAvailable.has(ev.ownerId)) continue;
       const ownerWindows = windowEvents.filter((w) => w.ownerId === ev.ownerId);
       if (ownerWindows.length === 0) {
-        map.set(ev.id, 'No combo trigger window available');
+        map.set(ev.uid, 'No combo trigger window available');
         continue;
       }
       const matchingWindow = ownerWindows.find((w) => {
@@ -943,12 +944,12 @@ export function validateComboWindows(
         return ev.startFrame >= w.startFrame && ev.startFrame < endFrame;
       });
       if (!matchingWindow) {
-        map.set(ev.id, 'Outside combo trigger window');
+        map.set(ev.uid, 'Outside combo trigger window');
         continue;
       }
-      const existing = consumedWindows.get(matchingWindow.id);
+      const existing = consumedWindows.get(matchingWindow.uid);
       if (existing) {
-        map.set(ev.id, 'Combo skill already activated by another combo');
+        map.set(ev.uid, 'Combo skill already activated by another combo');
       }
     }
   }
@@ -966,14 +967,14 @@ export function validateResources(
   const spKey = `${COMMON_OWNER_ID}-${COMMON_COLUMN_IDS.SKILL_POINTS}`;
 
   for (const ev of events) {
-    if (skipIds?.has(ev.id)) continue;
+    if (skipIds?.has(ev.uid)) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
       const ultKey = `${ev.ownerId}-${SKILL_COLUMNS.ULTIMATE}`;
       const graph = resourceGraphs.get(ultKey);
       if (!graph) continue;
       const val = preConsumptionValue(graph, ev.startFrame);
       if (val !== null && belowThreshold(val, graph.max)) {
-        map.set(ev.id, `Not enough ultimate energy (${Math.floor(val)}/${graph.max})`);
+        map.set(ev.uid, `Not enough ultimate energy (${Math.floor(val)}/${graph.max})`);
       }
     } else if (ev.columnId === SKILL_COLUMNS.BATTLE) {
       const spCost = ev.skillPointCost ?? 100;
@@ -981,7 +982,7 @@ export function validateResources(
       if (!spGraph) continue;
       const val = preConsumptionValue(spGraph, ev.startFrame);
       if (val !== null && belowThreshold(val, spCost)) {
-        map.set(ev.id, `Not enough SP (${Math.floor(val)}/${spCost})`);
+        map.set(ev.uid, `Not enough SP (${Math.floor(val)}/${spCost})`);
       }
     }
   }
@@ -991,11 +992,11 @@ export function validateResources(
 export function validateEmpowered(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   const empoweredNames = new Set([
-    CombatSkillsType.SMOULDERING_FIRE_EMPOWERED,
-    CombatSkillsType.SMOULDERING_FIRE_ENHANCED_EMPOWERED,
+    'SMOULDERING_FIRE_EMPOWERED',
+    'SMOULDERING_FIRE_ENHANCED_EMPOWERED',
   ]);
   for (const ev of events) {
-    if (!empoweredNames.has(ev.name as CombatSkillsType)) continue;
+    if (!empoweredNames.has(ev.name)) continue;
     const mfEvents = events.filter(
       (mf) =>
         mf.ownerId === ev.ownerId &&
@@ -1004,7 +1005,7 @@ export function validateEmpowered(events: TimelineEvent[]): Map<string, string> 
         eventEndFrame(mf) > ev.startFrame,
     );
     if (mfEvents.length < 4) {
-      map.set(ev.id, `Requires max Melting Flame stacks (${mfEvents.length}/4)`);
+      map.set(ev.uid, `Requires max Melting Flame stacks (${mfEvents.length}/4)`);
     }
   }
   return map;
@@ -1013,7 +1014,7 @@ export function validateEmpowered(events: TimelineEvent[]): Map<string, string> 
 export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
-    if (!ev.name?.includes('ENHANCED') || ev.name?.includes('EMPOWERED')) continue;
+    if (!ev.id?.includes('ENHANCED') || ev.id?.includes('EMPOWERED')) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
 
     const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
@@ -1034,7 +1035,7 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
     // Every segment start must fall within an active ENHANCE clause
     for (const frame of segStarts) {
       if (!hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
-        map.set(ev.id, 'Enhanced skill must be within an active ENHANCE effect');
+        map.set(ev.uid, 'Enhanced skill must be within an active ENHANCE effect');
         break;
       }
     }
@@ -1052,8 +1053,8 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
     // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
-    if (!ev.name || ev.name.includes('ENHANCED') || ev.name.includes('EMPOWERED')) continue;
-    if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
+    if (!ev.id || ev.id.includes('ENHANCED') || ev.id.includes('EMPOWERED')) continue;
+    if (ev.id === CombatSkillsType.FINISHER || ev.id === CombatSkillsType.DIVE) continue;
 
     const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
     if (!enhanceObject) continue;
@@ -1072,7 +1073,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
 
     for (const frame of segStarts) {
       if (hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
-        map.set(ev.id, 'Regular basic attack cannot be used during ENHANCE effect (use enhanced variant)');
+        map.set(ev.uid, 'Regular basic attack cannot be used during ENHANCE effect (use enhanced variant)');
         break;
       }
     }
@@ -1108,7 +1109,7 @@ interface ClauseContext {
 /** Evaluate a single interaction condition against the current state. */
 function evaluateCondition(cond: Interaction, ctx: ClauseContext): boolean {
   let result = true;
-  if (cond.verb === 'IS' && cond.object === 'ACTIVE') {
+  if (cond.verb === VerbType.IS && cond.object === 'ACTIVE') {
     if (cond.subjectProperty === 'ULTIMATE') {
       // "ULTIMATE IS ACTIVE" is equivalent to an active ENHANCE clause
       result = ctx.enhanceActive;
@@ -1161,7 +1162,7 @@ export function validateVariantClauses(
 
     const result = evaluateClause(clause, { enhanceActive });
     if (!result.pass) {
-      map.set(ev.id, result.reason ?? 'Activation condition not met');
+      map.set(ev.uid, result.reason ?? 'Activation condition not met');
     }
   }
   return map;
@@ -1215,7 +1216,7 @@ export function getAutoFinisherIds(
   for (const brk of staggerBreaks) {
     // Check if a manually placed finisher already exists in this break
     const hasManualFinisher = events.some(
-      (ev) => ev.name === CombatSkillsType.FINISHER
+      (ev) => ev.id === CombatSkillsType.FINISHER
         && ev.startFrame >= brk.startFrame && ev.startFrame < brk.endFrame,
     );
     if (hasManualFinisher) continue;
@@ -1224,15 +1225,15 @@ export function getAutoFinisherIds(
     const firstBasic = events
       .filter((ev) =>
         ev.columnId === SKILL_COLUMNS.BASIC
-        && ev.name !== CombatSkillsType.FINISHER
-        && ev.name !== CombatSkillsType.DIVE
+        && ev.id !== CombatSkillsType.FINISHER
+        && ev.id !== CombatSkillsType.DIVE
         && ev.startFrame >= brk.startFrame
         && ev.startFrame < brk.endFrame,
       )
       .sort((a, b) => a.startFrame - b.startFrame)[0];
 
     if (firstBasic) {
-      autoFinishers.add(firstBasic.id);
+      autoFinishers.add(firstBasic.uid);
     }
   }
   return autoFinishers;
@@ -1247,7 +1248,7 @@ export function validateFinisherStaggerBreak(
   staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const finishers = events.filter((ev) => ev.name === CombatSkillsType.FINISHER);
+  const finishers = events.filter((ev) => ev.id === CombatSkillsType.FINISHER);
   if (finishers.length === 0) return map;
 
   for (const ev of finishers) {
@@ -1255,16 +1256,16 @@ export function validateFinisherStaggerBreak(
       (b) => ev.startFrame >= b.startFrame && ev.startFrame < b.endFrame,
     );
     if (!inBreak) {
-      map.set(ev.id, 'Finisher can only be used during stagger break');
+      map.set(ev.uid, 'Finisher can only be used during stagger break');
       continue;
     }
     // Check if another finisher (from any operator) already exists in the same break
     const duplicate = finishers.some(
-      (other) => other.id !== ev.id
+      (other) => other.uid !== ev.uid
         && other.startFrame >= inBreak.startFrame && other.startFrame < inBreak.endFrame,
     );
     if (duplicate) {
-      map.set(ev.id, 'Only one Finisher allowed per stagger break');
+      map.set(ev.uid, 'Only one Finisher allowed per stagger break');
     }
   }
   return map;
@@ -1287,15 +1288,15 @@ export function validateTimeStops(
     for (const stop of ultStops) {
       if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
         const skillType = ev.columnId.charAt(0).toUpperCase() + ev.columnId.slice(1) + ' skill';
-        map.set(ev.id, `${skillType} input is not possible during ultimate animations`);
+        map.set(ev.uid, `${skillType} input is not possible during ultimate animations`);
         break;
       }
     }
-    if ((isBattle || isBasic) && !map.has(ev.id)) {
+    if ((isBattle || isBasic) && !map.has(ev.uid)) {
       for (const stop of comboStops) {
         if (ev.startFrame >= stop.startFrame && ev.startFrame < stop.startFrame + stop.durationFrames) {
           const label = ev.columnId === SKILL_COLUMNS.BASIC ? 'Basic attack' : 'Battle skill';
-          map.set(ev.id, `${label} input is not possible during combo animations`);
+          map.set(ev.uid, `${label} input is not possible during combo animations`);
           break;
         }
       }
@@ -1340,14 +1341,14 @@ export function validateInflictionStacks(events: TimelineEvent[]): Map<string, s
       let activeCount = 0;
       for (let j = 0; j < sorted.length; j++) {
         if (j === i) continue;
-        if (map.has(sorted[j].id)) continue; // already flagged as excess
+        if (map.has(sorted[j].uid)) continue; // already flagged as excess
         const endFrame = eventEndFrame(sorted[j]);
         if (sorted[j].startFrame <= incoming.startFrame && endFrame > incoming.startFrame) {
           activeCount++;
         }
       }
       if (activeCount >= MAX_INFLICTION_STACKS) {
-        map.set(incoming.id, `Exceeds max ${MAX_INFLICTION_STACKS} stacks of same element`);
+        map.set(incoming.uid, `Exceeds max ${MAX_INFLICTION_STACKS} stacks of same element`);
       }
     }
   });

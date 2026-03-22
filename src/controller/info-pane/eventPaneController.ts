@@ -4,11 +4,11 @@ import {
   REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
   INFLICTION_EVENT_LABELS, PHYSICAL_INFLICTION_LABELS, PHYSICAL_STATUS_LABELS,
 } from '../../consts/timelineColumnLabels';
-import { interactionToLabel } from '../../consts/semantics';
-import type { Interaction, Effect, Predicate } from '../../consts/semantics';
+import { interactionToLabel } from '../../dsl/semantics';
+import type { Interaction, Effect, Predicate } from '../../dsl/semantics';
 import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
-import { translateEffect } from '../../utils/semanticsTranslation';
-import type { TranslatedEffect } from '../../utils/semanticsTranslation';
+import { translateEffect } from '../../dsl/semanticsTranslation';
+import type { TranslatedEffect } from '../../dsl/semanticsTranslation';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { computeSpReturnSummary, SpReturnSummary } from '../calculation/frameCalculator';
 import { ELECTRIFICATION_ARTS_FRAGILITY, BREACH_PHYSICAL_FRAGILITY, DEFAULT_AMP_BONUS } from '../timeline/eventsQueryService';
@@ -45,7 +45,7 @@ export interface StatusEventDetail {
   id?: string;
   target?: string;
   element?: string;
-  statusLevel?: { limit?: number | Record<string, unknown> };
+  stacks?: { limit?: number | Record<string, unknown> };
   clause?: Predicate[];
   [key: string]: unknown;
 }
@@ -129,11 +129,11 @@ export function resolveEventIdentity(
     if (op) {
       ownerName = op.name;
       ownerColor = op.color;
-      if (event.columnId === OPERATOR_COLUMNS.DASH) {
+      if (event.columnId === OPERATOR_COLUMNS.INPUT) {
         skillName = 'Dash';
         columnLabel = 'DASH';
       } else if (event.columnId === OPERATOR_COLUMNS.MELTING_FLAME) {
-        skillName = STATUS_LABELS[StatusType.MELTING_FLAME];
+        skillName = STATUS_LABELS['MELTING_FLAME'];
         ownerColor = '#f07030';
         columnLabel = 'STATUS';
       } else if (event.columnId === COMBO_WINDOW_COLUMN_ID) {
@@ -386,7 +386,7 @@ export function resolveActiveModifiers(
 
     // Electrification fragility
     if (ev.columnId === REACTION_COLUMNS.ELECTRIFICATION) {
-      const level = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
+      const level = Math.min(ev.stacks ?? 1, 4);
       const bonus = ELECTRIFICATION_ARTS_FRAGILITY[level] ?? 0;
       modifiers.push({
         label: `Electrification Lv.${level}`,
@@ -398,7 +398,7 @@ export function resolveActiveModifiers(
 
     // Breach fragility
     if (ev.columnId === PHYSICAL_STATUS_COLUMNS.BREACH) {
-      const level = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
+      const level = Math.min(ev.stacks ?? 1, 4);
       const bonus = BREACH_PHYSICAL_FRAGILITY[level] ?? 0;
       modifiers.push({
         label: `Breach Lv.${level}`,
@@ -538,7 +538,7 @@ function isRedundantEffect(e: Effect): boolean {
   if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
   // Zero-value recoveries are noise
   if (verb === 'RECOVER' && (obj === 'SKILL_POINT' || obj === 'STAGGER')) {
-    const val = getSimpleValue(e.with?.cardinality) ?? getSimpleValue(e.with?.value);
+    const val = getSimpleValue(e.with?.value);
     if (val === 0) return true;
   }
   // Zero-value stagger applications are noise
@@ -842,7 +842,7 @@ export function resolveEventTiming(
 
   // Base activation: check controller's raw duration first (derived events),
   // then fall back to the event's own segment duration (user-placed events).
-  const rawActivation = controller?.getBaseDuration(event.id);
+  const rawActivation = controller?.getBaseDuration(event.uid);
   const baseActivation = rawActivation ?? eventDuration(event);
 
   // Extended activation: for derived events the event itself has the extended value;

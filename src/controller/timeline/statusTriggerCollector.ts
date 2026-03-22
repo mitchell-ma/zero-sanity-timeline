@@ -17,14 +17,16 @@ import { LoadoutProperties } from '../../view/InformationPane';
 import { evaluateInteraction, evaluateConditions, ConditionContext } from './conditionEvaluator';
 import { executeEffects, applyMutations } from './effectExecutor';
 import type { ExecutionContext } from './effectExecutor';
-import type { Interaction, Effect as SemanticEffect } from '../../consts/semantics';
+import { VerbType } from '../../dsl/semantics';
+import type { Interaction, Effect as SemanticEffect, ValueNode } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { findClauseTriggerMatches, statusNameToColumnId } from './triggerMatch';
-import type { TriggerMatch, TriggerEffect, TriggerSubEffect, Predicate } from './triggerMatch';
+import type { TriggerMatch, TriggerEffect, Predicate } from './triggerMatch';
 
 // ── Types from JSON ─────────────────────────────────────────────────────────
 
 interface StatusSegmentDef {
-  properties?: { name?: string; duration?: { value: number | number[]; unit: string } };
+  properties?: { name?: string; duration?: { value: ValueNode; unit: string } };
   clause?: EffectClause[];
   onTriggerClause?: TriggerClause[];
   onEntryClause?: EffectClause[];
@@ -41,11 +43,11 @@ interface StatusProperties {
   targetDeterminer?: string;
   isForced?: boolean;
   enhancementTypes?: string[];
-  statusLevel: {
-    statusLevelInteractionType: string;
-    limit: { verb: string; value: number };
+  stacks: {
+    interactionType: string;
+    limit: ValueNode;
   };
-  duration?: { value: number | number[]; unit: string };
+  duration?: { value: ValueNode; unit: string };
   susceptibility?: Record<string, number[]>;
   cooldownSeconds?: number;
 }
@@ -192,8 +194,8 @@ function resolveClauseEffectsFromClauses(
       if (!wp) continue;
 
       const resolveValue = (): number | undefined => {
-        if (wp.verb === 'IS' && typeof wp.value === 'number') return wp.value;
-        if (wp.verb !== 'VARY_BY') return undefined;
+        if (wp.verb === VerbType.IS && typeof wp.value === 'number') return wp.value;
+        if (wp.verb !== VerbType.VARY_BY) return undefined;
 
         const dims = wp.object;
         const val = wp.value;
@@ -346,15 +348,12 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
     }
     if (!target) { target = 'OPERATOR'; targetDeterminer = 'THIS'; }
   }
-  const sl = raw.statusLevel ?? (rp?.statusLevel as NormalizedEffectDef['statusLevel']);
+  const sl = raw.stacks ?? (rp?.stacks as NormalizedEffectDef['stacks']);
 
-  const slLimit = sl?.limit as { verb?: string; value?: number; values?: number[] } | undefined;
-  const limitValue = slLimit?.value ?? slLimit?.values?.[0] ?? 1;
-  const statusLevel: StatusEventDef['properties']['statusLevel'] = {
-    limit: slLimit?.verb
-      ? { verb: slLimit.verb, value: limitValue }
-      : { verb: 'IS', value: 1 },
-    statusLevelInteractionType: sl?.statusLevelInteractionType ?? (sl as Record<string, unknown>)?.interactionType as string ?? 'NONE',
+  const limit = (sl?.limit ?? { verb: VerbType.IS, value: 1 }) as ValueNode;
+  const stacks: StatusEventDef['properties']['stacks'] = {
+    limit,
+    interactionType: (sl as Record<string, unknown>)?.interactionType as string ?? 'NONE',
   };
 
   return {
@@ -366,12 +365,8 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
       targetDeterminer,
       isForced: raw.isForced ?? (rp?.isForced as boolean),
       enhancementTypes: raw.enhancementTypes ?? (rp?.enhancementTypes as string[]),
-      statusLevel,
-      duration: rp?.duration ? (() => {
-        const d = rp.duration as { value?: number | number[]; values?: number[]; unit: string };
-        const v = d.value ?? d.values;
-        return v != null ? { value: v, unit: d.unit } : undefined;
-      })() : undefined,
+      stacks,
+      duration: rp?.duration as StatusEventDef['properties']['duration'],
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
       cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
     },
@@ -381,16 +376,15 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
 
 // ── Max stacks by potential ─────────────────────────────────────────────────
 
-function getMaxStacks(limit: { verb: string; value: number }, _potential: number): number {
-  return limit.value ?? 1;
+function getMaxStacks(limit: ValueNode, _potential: number): number {
+  return resolveValueNode(limit, DEFAULT_VALUE_CONTEXT);
 }
 
 // ── Duration resolution ─────────────────────────────────────────────────────
 
-function getDurationFrames(duration: { value?: number | number[]; values?: number[]; unit: string }): number {
-  const raw = duration.value ?? duration.values;
-  const val = Array.isArray(raw) ? raw[0] : raw;
-  if (val == null || val < 0) return TOTAL_FRAMES; // -1 or missing = permanent
+function getDurationFrames(duration: { value: ValueNode; unit: string }): number {
+  const val = resolveValueNode(duration.value, DEFAULT_VALUE_CONTEXT);
+  if (val < 0) return TOTAL_FRAMES; // -1 = permanent
   if (duration.unit === 'SECOND') return Math.round(val * 120);
   return val;
 }
@@ -398,7 +392,7 @@ function getDurationFrames(duration: { value?: number | number[]; values?: numbe
 // ── Trigger evaluation ──────────────────────────────────────────────────────
 
 interface AbsorbedInfliction {
-  eventId: string;
+  eventUid: string;
   clampFrame: number;
   sourceOwnerId: string;
   sourceSkillName: string;
@@ -501,7 +495,7 @@ function deriveStatusEvents(
   const statusId = outputDef.properties.id ?? outputDef.properties.name;
   if (!statusId) return empty;
   const columnId = statusNameToColumnId(statusId);
-  const limitMap = outputDef.properties.statusLevel.limit;
+  const limitMap = outputDef.properties.stacks.limit;
   const maxStacks = getMaxStacks(limitMap, ctx.potential);
 
   const triggers = findTriggerMatches(def, events, operatorSlotId);
@@ -555,7 +549,7 @@ function deriveStatusEvents(
           ev.startFrame <= trigger.frame &&
           trigger.frame < eventEndFrame(ev) &&
           ev.eventStatus !== EventStatusType.CONSUMED &&
-          !absorbedIds.has(ev.id)
+          !absorbedIds.has(ev.uid)
         ).sort((a, b) => a.startFrame - b.startFrame);
 
         createCount = Math.min(maxStacks - activeAtFrame, inflictionsToAbsorb.length);
@@ -567,7 +561,7 @@ function deriveStatusEvents(
       const evId = `${outputDef.properties.id.toLowerCase()}-${operatorSlotId}-${idCounter++}`;
 
       // For RESET stacks: clamp previous instances
-      if (outputDef.properties.statusLevel.statusLevelInteractionType === 'RESET' && derived.length > 0) {
+      if (outputDef.properties.stacks.interactionType === 'RESET' && derived.length > 0) {
         const prev = derived[derived.length - 1];
         const prevEnd = eventEndFrame(prev);
         if (trigger.frame < prevEnd) {
@@ -583,7 +577,8 @@ function deriveStatusEvents(
       }
 
       const ev: TimelineEvent = {
-        id: evId,
+        uid: evId,
+        id: outputDef.properties.id,
         name: outputDef.properties.id,
         ownerId,
         columnId,
@@ -644,9 +639,9 @@ function deriveStatusEvents(
 
       // Track absorption
       if (ci < inflictionsToAbsorb.length) {
-        absorbedIds.add(inflictionsToAbsorb[ci].id);
+        absorbedIds.add(inflictionsToAbsorb[ci].uid);
         absorbedInflictions.push({
-          eventId: inflictionsToAbsorb[ci].id,
+          eventUid: inflictionsToAbsorb[ci].uid,
           clampFrame: trigger.frame,
           sourceOwnerId: trigger.sourceOwnerId,
           sourceSkillName: trigger.sourceSkillName,
@@ -667,7 +662,7 @@ function evaluateThresholdClauses(
 ): TimelineEvent[] {
   if (!def.clause || def.clause.length === 0) return [];
 
-  const maxStacks = getMaxStacks(def.properties.statusLevel.limit, ctx.potential);
+  const maxStacks = getMaxStacks(def.properties.stacks.limit, ctx.potential);
   const thresholdDerived: TimelineEvent[] = [];
   let idCounter = 0;
 
@@ -693,7 +688,7 @@ function evaluateThresholdClauses(
         const otherEnd = eventEndFrame(other);
         if (other.startFrame <= ev.startFrame && ev.startFrame < otherEnd) {
           activeCount++;
-          if (other.id !== ev.id) countWithout++;
+          if (other.uid !== ev.uid) countWithout++;
         }
       }
 
@@ -743,7 +738,8 @@ function evaluateThresholdClauses(
           }
 
           thresholdDerived.push({
-            id: `${targetStatusName.toLowerCase()}-${ctx.operatorSlotId}-${idCounter++}`,
+            uid: `${targetStatusName.toLowerCase()}-${ctx.operatorSlotId}-${idCounter++}`,
+            id: targetStatusName,
             name: targetStatusName,
             ownerId: targetOwnerId,
             columnId: targetColumnId,
@@ -862,7 +858,7 @@ function evaluateLifecycleClauses(
     const columnId = statusNameToColumnId(def.properties.id);
 
     // Find all status events in the timeline matching this def
-    const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.name === def.properties.id);
+    const matchingEvents = result.filter(ev => ev.columnId === columnId && ev.id === def.properties.id);
 
     for (const statusEv of matchingEvents) {
       result = evaluateLifecycleForEvent(result, def, statusEv, operatorSlotMap);
@@ -968,7 +964,8 @@ export function deriveStatusesFromEngine(
         // Only create if not already present
         if (!result.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           result.push({
-            id: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            id: def.properties.id,
             name: def.properties.id,
             ownerId: talentOwnerId,
             columnId: talentColumnId,
@@ -985,7 +982,7 @@ export function deriveStatusesFromEngine(
       // Apply absorption clamping to infliction events (e.g. heat infliction consumed by Final Strike)
       if (absorbedInflictions.length > 0) {
         result = result.map(ev => {
-          const absorption = absorbedInflictions.find(a => a.eventId === ev.id);
+          const absorption = absorbedInflictions.find(a => a.eventUid === ev.uid);
           if (!absorption) return ev;
           const clamped = { ...ev, segments: [...ev.segments] };
           setEventDuration(clamped, Math.max(0, absorption.clampFrame - ev.startFrame));
@@ -1062,261 +1059,6 @@ export function deriveStatusesFromEngine(
   return result;
 }
 
-// ── Exchange status queue support ──────────────────────────────────────────
-
-/** Trigger match for queue-based exchange status processing. */
-export interface ExchangeStatusTrigger {
-  frame: number;
-  sourceOwnerId: string;
-  sourceSkillName: string;
-}
-
-/** Context for a single exchange status definition, used by the event queue. */
-export interface ExchangeStatusQueueContext {
-  statusName: string;
-  columnId: string;
-  ownerId: string;
-  maxStacks: number;
-  durationFrames: number;
-  operatorSlotId: string;
-  operatorId: string;
-  potential: number;
-  triggers: ExchangeStatusTrigger[];
-  /** @internal Raw def for threshold evaluation. */
-  _def: StatusEventDef;
-}
-
-/**
- * Collect trigger contexts for exchange status defs.
- * These defs are skipped by deriveStatusesFromEngine and processed
- * by the event queue instead.
- */
-export function collectExchangeStatusTriggers(
-  events: TimelineEvent[],
-  exchangeStatusNames: ReadonlySet<string>,
-  loadoutProperties?: Record<string, LoadoutProperties>,
-  slotOperatorMap?: Record<string, string>,
-): ExchangeStatusQueueContext[] {
-  const contexts: ExchangeStatusQueueContext[] = [];
-
-  const operatorSlotMap: Record<string, string> = {};
-  if (slotOperatorMap) {
-    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
-      operatorSlotMap[opId] = slotId;
-    }
-  }
-  for (const opId of getAllOperatorIds()) {
-    if (operatorSlotMap[opId]) continue;
-    const slot = findOperatorSlot(events, opId);
-    if (slot) operatorSlotMap[opId] = slot;
-  }
-
-  for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
-    const json = getOperatorJson(operatorId);
-    if (!json?.statusEvents) continue;
-
-    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
-    if (!slotId) continue;
-
-    const props = loadoutProperties?.[slotId];
-    const potential = props?.operator.potential ?? 0;
-
-    for (const def of json.statusEvents as StatusEventDef[]) {
-      if (!exchangeStatusNames.has(def.properties.id)) continue;
-
-      const duration = def.properties.duration;
-
-      contexts.push({
-        statusName: def.properties.id,
-        columnId: statusNameToColumnId(def.properties.id),
-        ownerId: resolveOwnerId(def.properties.target, slotId, operatorSlotMap, def.properties.targetDeterminer),
-        maxStacks: getMaxStacks(def.properties.statusLevel.limit, potential),
-        durationFrames: duration ? getDurationFrames(duration) : TOTAL_FRAMES,
-        operatorSlotId: slotId,
-        operatorId,
-        potential,
-        triggers: findTriggerMatches(def, events, slotId),
-        _def: def,
-      });
-    }
-  }
-
-  return contexts;
-}
-
-/**
- * Evaluate threshold for a specific exchange status crossing at a given frame.
- * Called inline by the queue when an exchange event creation pushes the active
- * count to the threshold. Returns any threshold-derived events to create.
- */
-export function evaluateThresholdForExchange(
-  ctx: ExchangeStatusQueueContext,
-  crossingFrame: number,
-  previousThresholdEvents: TimelineEvent[],
-  slotOperatorMap?: Record<string, string>,
-): TimelineEvent[] {
-  const def = ctx._def;
-  if (!def.clause || def.clause.length === 0) return [];
-
-  const maxStacks = getMaxStacks(def.properties.statusLevel.limit, ctx.potential);
-  const result: TimelineEvent[] = [];
-
-  const operatorSlotMap: Record<string, string> = {};
-  if (slotOperatorMap) {
-    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
-      operatorSlotMap[opId] = slotId;
-    }
-  }
-
-  for (const clause of def.clause) {
-    const stackCond = clause.conditions.find(c =>
-      c.subject === 'EVENT' && c.verb === 'HAVE' && c.object === 'STACKS'
-    );
-    if (!stackCond) continue;
-
-    const targetCount = stackCond.cardinality === 'MAX' ? maxStacks : Number(stackCond.cardinality);
-    if (targetCount !== maxStacks) continue; // only fire at the configured threshold
-
-    for (const effect of clause.effects) {
-      if (effect.verb !== 'APPLY' || effect.object !== 'STATUS' || !effect.objectId) continue;
-      const targetStatusName = effect.objectId;
-
-      const json = getOperatorJson(ctx.operatorId);
-      const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
-        .find(d => d.properties.id === targetStatusName);
-
-      const targetField = targetDef?.properties.target ?? effect.toObject;
-      const targetDet = targetDef?.properties.targetDeterminer ?? effect.toDeterminer;
-      const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, operatorSlotMap, targetDet ?? 'THIS');
-
-      const targetDuration = targetDef
-        ? (targetDef.properties.duration)
-        : undefined;
-      const duration = targetDuration ? getDurationFrames(targetDuration) : 2400;
-      const targetColumnId = statusNameToColumnId(targetStatusName);
-
-      // Refresh: clamp previous threshold events of same column
-      for (const prev of previousThresholdEvents) {
-        if (prev.columnId !== targetColumnId) continue;
-        const prevEnd = eventEndFrame(prev);
-        if (crossingFrame < prevEnd) {
-          setEventDuration(prev, crossingFrame - prev.startFrame);
-          prev.eventStatus = EventStatusType.REFRESHED;
-          prev.eventStatusOwnerId = ctx.operatorSlotId;
-          prev.eventStatusSkillName = def.properties.id;
-        }
-      }
-
-      result.push({
-        id: `${targetStatusName.toLowerCase()}-${ctx.operatorSlotId}-inline-${crossingFrame}`,
-        name: targetStatusName,
-        ownerId: targetOwnerId,
-        columnId: targetColumnId,
-        startFrame: crossingFrame,
-        segments: durationSegment(duration),
-        sourceOwnerId: ctx.operatorSlotId,
-        sourceSkillName: def.properties.id,
-      });
-    }
-  }
-
-  return result;
-}
-
-// ── Absorption trigger support (queue-evaluated) ──────────────────────────
-
-/** Context for a talent absorption trigger (e.g. Scorching Heart). */
-export interface AbsorptionContext {
-  /** Infliction element column to absorb from enemy (e.g. infliction-heat). */
-  inflictionColumnId: string;
-  /** Exchange status to create per absorbed infliction (e.g. MELTING_FLAME). */
-  exchangeStatusName: string;
-  exchangeColumnId: string;
-  exchangeOwnerId: string;
-  exchangeMaxStacks: number;
-  exchangeDurationFrames: number;
-  operatorSlotId: string;
-}
-
-/**
- * Collect absorption trigger contexts from talent definitions.
- *
- * Scans talent JSONs for compound PERFORM FINAL_STRIKE + HAVE INFLICTION
- * triggers. These can't be pre-evaluated because infliction events don't
- * exist yet — the queue evaluates them at processing time against DerivedEventController.
- */
-export function collectAbsorptionContexts(
-  events: TimelineEvent[],
-  loadoutProperties?: Record<string, LoadoutProperties>,
-  slotOperatorMap?: Record<string, string>,
-): AbsorptionContext[] {
-  const contexts: AbsorptionContext[] = [];
-
-  const operatorSlotMap: Record<string, string> = {};
-  if (slotOperatorMap) {
-    for (const [slotId, opId] of Object.entries(slotOperatorMap)) {
-      operatorSlotMap[opId] = slotId;
-    }
-  }
-  for (const opId of getAllOperatorIds()) {
-    if (operatorSlotMap[opId]) continue;
-    const slot = findOperatorSlot(events, opId);
-    if (slot) operatorSlotMap[opId] = slot;
-  }
-
-  for (const operatorId of Array.from(ENGINE_HANDLED_OPERATORS)) {
-    const json = getOperatorJson(operatorId);
-    if (!json?.statusEvents) continue;
-
-    const slotId = operatorSlotMap[operatorId] ?? findOperatorSlot(events, operatorId);
-    if (!slotId) continue;
-
-    const props = loadoutProperties?.[slotId];
-    const potential = props?.operator.potential ?? 0;
-
-    for (const def of json.statusEvents as StatusEventDef[]) {
-      if (def.properties.type !== 'TALENT') continue;
-
-      for (const clause of def.onTriggerClause ?? []) {
-        const performConds = clause.conditions.filter((c: Predicate) => c.verb === 'PERFORM');
-        const haveConds = clause.conditions.filter((c: Predicate) => c.verb === 'HAVE');
-        if (performConds.length === 0 || haveConds.length === 0) continue;
-
-        const isFinalStrike = performConds[0].object === 'FINAL_STRIKE';
-        if (!isFinalStrike) continue;
-
-        const haveInfliction = haveConds.find((c: Predicate) => c.object === 'INFLICTION');
-        if (!haveInfliction?.objectId) continue;
-        const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[haveInfliction.objectId];
-        if (!inflictionColumnId) continue;
-
-        const allEffect = (clause.effects ?? []).find((e: TriggerEffect) => e.verb === 'ALL');
-        const applyEffect = (allEffect?.effects ?? []).find(
-          (e: TriggerSubEffect) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId
-        );
-        if (!applyEffect?.objectId) continue;
-
-        const targetDef = (json.statusEvents as StatusEventDef[])
-          .find(d => d.properties.id === applyEffect.objectId);
-        if (!targetDef) continue;
-
-        const duration = targetDef.properties.duration;
-
-        contexts.push({
-          inflictionColumnId,
-          exchangeStatusName: targetDef.properties.id,
-          exchangeColumnId: statusNameToColumnId(targetDef.properties.id),
-          exchangeOwnerId: resolveOwnerId(targetDef.properties.target, slotId, operatorSlotMap, targetDef.properties.targetDeterminer),
-          exchangeMaxStacks: getMaxStacks(targetDef.properties.statusLevel.limit, potential),
-          exchangeDurationFrames: duration ? getDurationFrames(duration) : TOTAL_FRAMES,
-          operatorSlotId: slotId,
-        });
-      }
-    }
-  }
-
-  return contexts;
-}
 
 // ── ENGINE_TRIGGER queue support ──────────────────────────────────────────
 
@@ -1385,7 +1127,8 @@ export function collectEngineTriggerEntries(
         const talentColumnId = statusNameToColumnId(def.properties.id);
         if (!events.some(ev => ev.columnId === talentColumnId && ev.ownerId === talentOwnerId)) {
           talentEvents.push({
-            id: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            uid: `${def.properties.id.toLowerCase()}-talent-${slotId}`,
+            id: def.properties.id,
             name: def.properties.id,
             ownerId: talentOwnerId,
             columnId: talentColumnId,
@@ -1526,7 +1269,7 @@ export function evaluateEngineTrigger(
   const eqStatusId = outputDef.properties.id ?? outputDef.properties.name;
   if (!eqStatusId) return;
   const columnId = statusNameToColumnId(eqStatusId);
-  const eqLimitMap = outputDef.properties.statusLevel.limit;
+  const eqLimitMap = outputDef.properties.stacks.limit;
   const maxStacks = getMaxStacks(eqLimitMap, ctx.potential);
 
   if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
@@ -1545,7 +1288,8 @@ export function evaluateEngineTrigger(
     ? COMMON_OWNER_ID : ownerId;
 
   const ev: TimelineEvent = {
-    id: `${outputDef.properties.id.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
+    uid: `${outputDef.properties.id.toLowerCase()}-${ctx.operatorSlotId}-q-${entry.frame}`,
+    id: outputDef.properties.id,
     name: outputDef.properties.id,
     ownerId: finalOwnerId,
     columnId,

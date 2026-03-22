@@ -30,7 +30,7 @@
             "value": {
               "verb": "VARY_BY",
               "object": "WEAPON_LEVEL",
-              "values": [
+              "value": [
                 49,
                 54,
                 59,

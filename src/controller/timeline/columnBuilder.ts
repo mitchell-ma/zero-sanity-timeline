@@ -14,7 +14,7 @@ import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../mode
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { getBaseSkillId, formatSkillDisplayName } from '../../utils/semanticsTranslation';
+import { getBaseSkillId, formatSkillDisplayName } from '../../dsl/semanticsTranslation';
 
 export interface Slot {
   slotId: string;
@@ -51,7 +51,7 @@ export function buildColumns(
   type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number; minPotentialForTeam: number };
   const teamStatusDefs: TeamStatusDef[] = [];
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
-  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string };
+  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string };
   const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
   // Pre-scan: collect team-targeting weapon/gear effects
   type TeamEquipDef = { slotId: string; statusName: string; label: string; durationFrames: number; color: string };
@@ -77,6 +77,7 @@ export function buildColumns(
           const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
           const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId as string]
             ?? (seId as string).toLowerCase().replace(/_/g, '-');
+          const seType = (seProps?.type ?? se.type) as string | undefined;
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
             statusName: seId as string,
@@ -84,6 +85,8 @@ export function buildColumns(
             columnId: colId,
             duration: durationFrames,
             color: s.operator.color,
+            source: 'talent',
+            statusType: seType ?? 'STATUS',
           });
           operatorStatusMap.set(s.slotId, defs);
         }
@@ -91,7 +94,7 @@ export function buildColumns(
     }
 
     // Scan weapon effect DSL defs
-    const addEquipDefs = (dslDefs: Record<string, unknown>[]) => {
+    const addEquipDefs = (dslDefs: Record<string, unknown>[], equipSource: 'weapon' | 'gear') => {
       for (const se of dslDefs) {
         const sePropsEquip = se.properties as Record<string, Record<string, unknown[]>> | undefined;
         const dur = sePropsEquip?.duration?.value?.[0] as number ?? 10;
@@ -107,6 +110,8 @@ export function buildColumns(
             columnId: colId,
             duration: durationFrames,
             color: s.operator!.color,
+            source: equipSource,
+            statusType: equipSource === 'weapon' ? 'WEAPON_STATUS' : 'GEAR_STATUS',
           });
           operatorStatusMap.set(s.slotId, defs);
         } else if (se.target === 'OPERATOR' && se.targetDeterminer === 'OTHER') {
@@ -129,8 +134,8 @@ export function buildColumns(
       }
     };
     const weaponDisplayName = s.weaponId ? getWeapon(s.weaponId)?.name : undefined;
-    if (weaponDisplayName) addEquipDefs(getWeaponEffectDefs(weaponDisplayName));
-    if (s.gearSetType) addEquipDefs(getGearEffectDefs(s.gearSetType));
+    if (weaponDisplayName) addEquipDefs(getWeaponEffectDefs(weaponDisplayName), 'weapon');
+    if (s.gearSetType) addEquipDefs(getGearEffectDefs(s.gearSetType), 'gear');
   }
 
   // Common (global) columns — before operator slots
@@ -219,7 +224,7 @@ export function buildColumns(
       type: 'mini-timeline',
       source: TimelineSourceType.COMMON,
       ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.WILDLAND_TREKKER,
+      columnId: 'WILDLAND_TREKKER',
       label: ColumnLabel.WILDLAND_TREKKER,
       color: '#eebb44',
       headerVariant: 'skill',
@@ -233,7 +238,7 @@ export function buildColumns(
       type: 'mini-timeline',
       source: TimelineSourceType.COMMON,
       ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.MESSENGERS_SONG,
+      columnId: 'MESSENGERS_SONG',
       label: ColumnLabel.MESSENGERS_SONG,
       color: '#88cc88',
       headerVariant: 'skill',
@@ -284,18 +289,18 @@ export function buildColumns(
     const hasComboOverride = false; // Combo frame overrides now handled generically
     let slotHasCols = false;
     if (op) {
-      // Dash subtimeline — before basic attack
+      // Input subtimeline — dash, dodge, finisher, dive, controlled
       const DASH_FRAMES = Math.round(0.416 * 120); // 0.416s
       const DODGE_FRAMES = Math.round(0.351 * 120); // 0.351s game-time
       const FINISHER_FRAMES = Math.round(GENERAL_MECHANICS.basicAttack.finisherDurationSeconds * FPS);
       const DIVE_FRAMES = Math.round(GENERAL_MECHANICS.basicAttack.diveDurationSeconds * FPS);
       columns.push({
-        key: `${slot.slotId}-dash`,
+        key: `${slot.slotId}-input`,
         type: 'mini-timeline',
         source: TimelineSourceType.OPERATOR,
         ownerId: slot.slotId,
-        columnId: OPERATOR_COLUMNS.DASH,
-        label: 'DASH',
+        columnId: OPERATOR_COLUMNS.INPUT,
+        label: 'INPUT',
         color: ELEMENT_COLORS[ElementType.PHYSICAL],
         headerVariant: 'skill',
         eventVariants: [
@@ -469,11 +474,18 @@ export function buildColumns(
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
             const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
-            const battleCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
-            const battleCd = battleCdSeg?.properties.duration ?? 0;
-            const battleSegments = battleCd > 0
-              ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
-              : seg.segments;
+            // Only append cooldown if the data-driven segments don't already include one
+            const hasBattleCdSegment = seg.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            let battleSegments: import('../../consts/viewTypes').EventSegmentData[];
+            if (hasBattleCdSegment) {
+              battleSegments = seg.segments;
+            } else {
+              const battleCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const battleCd = battleCdSeg?.properties.duration ?? 0;
+              battleSegments = battleCd > 0
+                ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
+                : seg.segments;
+            }
             col.defaultEvent = {
               ...col.defaultEvent!,
               segments: battleSegments,
@@ -484,16 +496,16 @@ export function buildColumns(
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs);
               const empoweredName = empoweredBattleId as CombatSkillsType;
-              const empBaseSegs = battleCd > 0
-                ? [...seg.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
-                : seg.segments;
-              const empVarSegs = battleCd > 0
-                ? [...empowered.segments, { properties: { duration: battleCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }]
-                : empowered.segments;
+              const hasEmpCdSegment = empowered.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              // Append cooldown from base skill if empowered segments don't have one
+              const cdSeg = battleSegments.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const empVarSegs = hasEmpCdSegment || !cdSeg
+                ? empowered.segments
+                : [...empowered.segments, cdSeg];
               col.eventVariants = [
                 {
                   name: col.defaultEvent!.name!,
-                  segments: empBaseSegs,
+                  segments: battleSegments,
                 },
                 {
                   name: empoweredName,
@@ -510,12 +522,18 @@ export function buildColumns(
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
             const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies });
-            const comboCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
-            const comboCd = comboCdSeg?.properties.duration ?? 0;
-            col.defaultEvent = {
-              ...col.defaultEvent!,
-              segments: [...seg.segments, { properties: { duration: comboCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }],
-            };
+            // Only append cooldown if the data-driven segments don't already include one
+            const hasCdSegment = seg.segments.some(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+            if (hasCdSegment) {
+              col.defaultEvent = { ...col.defaultEvent!, segments: seg.segments };
+            } else {
+              const comboCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
+              const comboCd = comboCdSeg?.properties.duration ?? 0;
+              col.defaultEvent = {
+                ...col.defaultEvent!,
+                segments: [...seg.segments, { properties: { duration: comboCd, name: 'Cooldown', timeDependency: TimeDependency.REAL_TIME, offset: 0 }, metadata: { segmentType: SegmentType.COOLDOWN } }],
+              };
+            }
           }
           // Generic ultimate: build segments from JSON data or fall back to manual construction
           if (skillType === SKILL_COLUMNS.ULTIMATE) {
@@ -625,28 +643,22 @@ export function buildColumns(
       }
     }
 
-    // ── Operator status column (Controlled, Melting Flame, Scorching Fangs, etc.) ──
+    // ── Operator status column (Melting Flame, Scorching Fangs, etc.) ────────
     let statusColCount = 0;
     if (op) {
-      // Collect micro-columns: controlled + own statuses + team-shared statuses
-      const statusMicroCols: { id: string; label: string; color: string; maxWidth?: number; defaultEvent?: { name: string; segments?: import('../../consts/viewTypes').EventSegmentData[] } }[] = [];
+      // Collect micro-columns: own statuses + team-shared statuses from other operators
+      const statusMicroCols: import('../../consts/viewTypes').MicroColumn[] = [];
       const matchIds: string[] = [];
-
-      // Controlled indicator — always first, narrow
-      statusMicroCols.push({
-        id: OPERATOR_COLUMNS.CONTROLLED,
-        label: ColumnLabel.CONTROLLED,
-        color: op.color,
-        maxWidth: 10,
-      });
-      matchIds.push(OPERATOR_COLUMNS.CONTROLLED);
-
-      const ownDefs = operatorStatusMap.get(slot.slotId) ?? [];
+      const STATUS_SOURCE_ORDER: Record<string, number> = { talent: 0, weapon: 1, gear: 2, other: 3 };
+      const ownDefs = (operatorStatusMap.get(slot.slotId) ?? [])
+        .slice()
+        .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
         statusMicroCols.push({
           id: def.columnId,
           label: def.label,
           color: def.color,
+          statusType: def.statusType,
           defaultEvent: {
             name: def.label,
             segments: [{ properties: { duration: def.duration } }],
@@ -676,22 +688,23 @@ export function buildColumns(
           if (kebab !== tsd.statusName) matchIds.push(kebab);
         }
       }
-      // Always create status column (at minimum it has the controlled indicator)
-      columns.push({
-        key: `${slot.slotId}-operator-status`,
-        type: 'mini-timeline',
-        source: TimelineSourceType.OPERATOR,
-        ownerId: slot.slotId,
-        columnId: 'operator-status',
-        label: ColumnLabel.STATUS,
-        color: op.color,
-        headerVariant: 'skill',
-        derived: true,
-        microColumns: statusMicroCols,
-        microColumnAssignment: 'dynamic-split',
-        matchColumnIds: matchIds,
-      });
+      if (statusMicroCols.length > 0) {
+        columns.push({
+          key: `${slot.slotId}-operator-status`,
+          type: 'mini-timeline',
+          source: TimelineSourceType.OPERATOR,
+          ownerId: slot.slotId,
+          columnId: 'operator-status',
+          label: ColumnLabel.STATUS,
+          color: op.color,
+          headerVariant: 'skill',
+          derived: true,
+          microColumns: statusMicroCols,
+          microColumnAssignment: 'dynamic-split',
+          matchColumnIds: matchIds,
+        });
       statusColCount++;
+      }
     }
 
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible

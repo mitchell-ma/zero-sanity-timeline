@@ -3,7 +3,7 @@
  * Used by operators, weapon effects, gear effects, operator statuses, and operator talents.
  */
 import { ElementType } from '../../consts/enums';
-import type { Clause, Interaction } from '../../consts/semantics';
+import type { Clause, Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 
 /** A resource interaction within a skill or frame. */

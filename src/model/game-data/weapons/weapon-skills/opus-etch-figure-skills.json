@@ -12,7 +12,7 @@
             "multiplier": {
               "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
-              "values": [
+              "value": [
                 0.07,
                 0.084,
                 0.098,

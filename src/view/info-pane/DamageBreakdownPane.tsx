@@ -2,6 +2,7 @@ import React from 'react';
 import { frameToTimeLabelPrecise } from '../../utils/timeline';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import { buildMultiplierEntries, buildStatusMultiplierEntries, MultiplierEntry } from '../../controller/info-pane/damageBreakdownController';
+import { t } from '../../locales/locale';
 
 function SubEntryRows({ entries }: { entries: MultiplierEntry[] }) {
   return (
@@ -33,7 +34,7 @@ function DamageBreakdownPane({ row }: { row: DamageTableRow }) {
         </div>
         <div className="edit-panel-body">
           <div className="edit-panel-section">
-            <span className="edit-info-text">No damage data available for this tick.</span>
+            <span className="edit-info-text">{t('damageBreakdown.noData')}</span>
           </div>
         </div>
       </>
@@ -53,15 +54,14 @@ function DamageBreakdownPane({ row }: { row: DamageTableRow }) {
           {frameToTimeLabelPrecise(row.absoluteFrame)}
         </div>
         <div className="dmg-breakdown-total">
-          {finalDamage.toFixed(1)}
-          <span className="dmg-breakdown-total-label"> damage</span>
+          {t('damageBreakdown.total', { value: finalDamage.toFixed(1) })}
         </div>
       </div>
       <div className="edit-panel-body">
         <div className="dmg-breakdown-formula">
           <div className="dmg-breakdown-header">
-            <span>Multiplier</span>
-            <span>Value</span>
+            <span>{t('damageBreakdown.header.multiplier')}</span>
+            <span>{t('damageBreakdown.header.value')}</span>
           </div>
           {entries.map((entry) => (
             <React.Fragment key={entry.label}>

@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.075,
                   0.09,
                   0.105,
@@ -32,18 +32,16 @@
       "id": "OPUS_THE_LIVING_ROAD_HOME_FOR_ALL_LIFE",
       "name": "Road Home for All Life",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          20
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            2
-          ]
+          "value": 2
         },
         "interactionType": "NONE"
       },

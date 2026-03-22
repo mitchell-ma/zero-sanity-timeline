@@ -6,7 +6,7 @@
  * targets (e.g. "THIS_OPERATOR", "ALL_OPERATOR") and plain noun strings for
  * non-operator targets (e.g. "ENEMY").
  */
-import { ObjectType, DeterminerType } from '../../consts/semantics';
+import { ObjectType, DeterminerType } from '../../dsl/semantics';
 
 type LegacyTarget = 'wielder' | 'team' | 'enemy';
 

@@ -10,13 +10,15 @@ import {
 } from '../gameDataController';
 import { aggregateLoadoutStats, AggregatedStats } from '../calculation/loadoutAggregator';
 import { getWeaponEffectDefs, resolveDurationSeconds } from '../../model/game-data/weaponGearEffectLoader';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
 import { fmtN } from '../../utils/timeline';
 import { getSkillMultiplier } from '../calculation/jsonMultiplierEngine';
 import { getSkillTypeMap, getRawSkillTypeMap, getComboTriggerInfo, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getUltimateEnergyCostForPotential } from '../operators/operatorRegistry';
 import type { Potential } from '../../consts/types';
 import type { SkillType } from '../../consts/viewTypes';
-import type { Clause } from '../../consts/semantics';
+import { VerbType } from '../../dsl/semantics';
+import type { Clause } from '../../dsl/semantics';
 
 // ── Stat display helpers (shared with view) ─────────────────────────────────
 
@@ -136,7 +138,7 @@ export function resolveWeaponBreakdown(
   if (dslDefs.length > 0) {
     for (let ei = 0; ei < dslDefs.length; ei++) {
       const def = dslDefs[ei];
-      const maxStacks = def.statusLevel?.limit?.value ?? 1;
+      const maxStacks = def.stacks?.limit ? resolveValueNode(def.stacks.limit, DEFAULT_VALUE_CONTEXT) : 1;
       const durationSeconds = resolveDurationSeconds(def);
 
       // Secondary attribute bonus — check if the named skill has conditional stats
@@ -150,7 +152,7 @@ export function resolveWeaponBreakdown(
             .flatMap(c => c.effects);
           for (const ef of conditionalEffects) {
             const wv = ef.with?.multiplier ?? ef.with?.value;
-            if (wv?.values && (ef.object.endsWith('_DAMAGE_BONUS') || ef.object === 'BASIC_ATTACK_DAMAGE_BONUS')) {
+            if ((wv as { value?: unknown })?.value != null && (ef.object.endsWith('_DAMAGE_BONUS') || ef.object === 'BASIC_ATTACK_DAMAGE_BONUS')) {
               // Skip — these are shown as triggered effect buffs, not secondary attr
             }
           }
@@ -166,7 +168,7 @@ export function resolveWeaponBreakdown(
         const stat = e.object;
         const wv = e.with!.value!;
         const isPercent = PERCENT_STATS.has(stat as StatType);
-        const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
+        const perStack = wv.verb === VerbType.VARY_BY && wv.object === 'STATUS_LEVEL';
         const valueStr = wv.valueMin != null && wv.valueMax != null
           ? (isPercent
             ? `${fmtN(wv.valueMin * 100)}–${fmtN(wv.valueMax * 100)}%`

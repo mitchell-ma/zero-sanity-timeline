@@ -5,7 +5,8 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
-import type { ClauseEffect, ClausePredicate, StatusLevelConfig, DurationConfig, WithValue } from './weaponStatusesController';
+import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesController';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -38,16 +39,16 @@ interface StatusSegment {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'toObject', 'with', 'cardinality', 'cardinalityConstraint', 'effects']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'cardinality', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
-const VALID_DURATION_KEYS = new Set(['verb', 'values', 'unit']);
-const VALID_LIMIT_KEYS = new Set(['verb', 'values']);
+const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
+const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'statusLevel', 'enhancementTypes', 'minPotential']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
@@ -59,10 +60,10 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
   return errors;
 }
 
-function validateWithValue(wv: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(wv, VALID_WITH_VALUE_KEYS, path);
-  if (typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (!Array.isArray(wv.values)) errors.push(`${path}.values: must be an array`);
+function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
+  const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
+  if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
+  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
   return errors;
 }
 
@@ -73,7 +74,7 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
-    if (w.value) errors.push(...validateWithValue(w.value as Record<string, unknown>, `${path}.with.value`));
+    if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
   return errors;
 }
@@ -128,10 +129,10 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
     errors.push(...checkKeys(dur, VALID_DURATION_KEYS, 'properties.duration'));
   }
 
-  if (props.statusLevel) {
-    const sl = props.statusLevel as Record<string, unknown>;
-    errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.statusLevel'));
-    if (sl.limit) errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_LIMIT_KEYS, 'properties.statusLevel.limit'));
+  if (props.stacks) {
+    const sl = props.stacks as Record<string, unknown>;
+    errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.stacks'));
+    if (sl.limit) errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_LIMIT_KEYS, 'properties.stacks.limit'));
   }
 
   const meta = json.metadata as Record<string, unknown> | undefined;
@@ -162,7 +163,7 @@ export class OperatorStatus {
   readonly toDeterminer?: string;
   readonly minPotential?: number;
   readonly duration?: DurationConfig;
-  readonly statusLevel?: StatusLevelConfig;
+  readonly stacks?: StacksConfig;
   readonly enhancementTypes?: string[];
   readonly originId: string;
   readonly dataSources: string[];
@@ -186,41 +187,10 @@ export class OperatorStatus {
     if (props.toDeterminer) this.toDeterminer = props.toDeterminer as string;
     if (props.minPotential != null) this.minPotential = props.minPotential as number;
     if (props.duration) {
-      // Normalize: raw JSON may have { value: N, unit: S } or { verb, values: [...], unit }
-      const rawDur = props.duration as Record<string, unknown>;
-      if (rawDur.values) {
-        this.duration = rawDur as unknown as DurationConfig;
-      } else {
-        const v = rawDur.value;
-        this.duration = {
-          verb: (rawDur.verb ?? 'IS') as string,
-          values: Array.isArray(v) ? v as number[] : [v as number],
-          unit: (rawDur.unit ?? 'SECOND') as string,
-        };
-      }
+      this.duration = props.duration as DurationConfig;
     }
-    if (props.statusLevel) {
-      // Normalize: raw JSON may have { limit: { verb, value: N }, statusLevelInteractionType }
-      // or { limit: WithValue, interactionType }
-      const rawSL = props.statusLevel as Record<string, unknown>;
-      const rawLimit = rawSL.limit as Record<string, unknown> | undefined;
-      let normalizedLimit: WithValue;
-      if (rawLimit?.values) {
-        normalizedLimit = rawLimit as unknown as WithValue;
-      } else if (rawLimit) {
-        const v = rawLimit.value;
-        normalizedLimit = {
-          verb: (rawLimit.verb ?? 'IS') as string,
-          ...(rawLimit.object ? { object: rawLimit.object as string } : {}),
-          values: Array.isArray(v) ? v as number[] : [v as number],
-        };
-      } else {
-        normalizedLimit = { verb: 'IS', values: [1] };
-      }
-      this.statusLevel = {
-        limit: normalizedLimit,
-        interactionType: ((rawSL.interactionType ?? rawSL.statusLevelInteractionType) ?? 'NONE') as string,
-      };
+    if (props.stacks) {
+      this.stacks = props.stacks as StacksConfig;
     }
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     this.originId = (meta.originId ?? '') as string;
@@ -228,11 +198,13 @@ export class OperatorStatus {
   }
 
   get durationSeconds(): number {
-    return this.duration?.values[0] ?? 0;
+    if (!this.duration) return 0;
+    return resolveValueNode(this.duration.value, DEFAULT_VALUE_CONTEXT);
   }
 
   get maxStacks(): number {
-    return this.statusLevel?.limit.values[0] ?? 1;
+    if (!this.stacks) return 1;
+    return resolveValueNode(this.stacks.limit, DEFAULT_VALUE_CONTEXT);
   }
 
   /** Serialize back to the JSON shape. */
@@ -251,7 +223,7 @@ export class OperatorStatus {
         target: this.target,
         ...(this.targetDeterminer ? { targetDeterminer: this.targetDeterminer } : {}),
         ...(this.duration ? { duration: this.duration } : {}),
-        ...(this.statusLevel ? { statusLevel: this.statusLevel } : {}),
+        ...(this.stacks ? { stacks: this.stacks } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
         ...(this.minPotential != null ? { minPotential: this.minPotential } : {}),
       },

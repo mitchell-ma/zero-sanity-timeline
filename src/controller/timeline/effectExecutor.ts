@@ -15,10 +15,12 @@ import {
   NounType,
   DeterminerType,
   AdjectiveType,
-  DURATION_END,
-} from '../../consts/semantics';
-import { getSimpleValue } from '../calculation/valueResolver';
-import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from '../../consts/viewTypes';
+} from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../calculation/valueResolver';
+import type { ValueNode } from '../../dsl/semantics';
+import type { ValueResolutionContext } from '../calculation/valueResolver';
+import { TimelineEvent, durationSegment, setEventDuration } from '../../consts/viewTypes';
+import { FPS } from '../../utils/timeline';
 import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -44,7 +46,7 @@ export interface ClampInfo {
 export interface MutationSet {
   /** New events to add to the timeline. */
   produced: TimelineEvent[];
-  /** Events to clamp (shorten duration), keyed by event ID. */
+  /** Events to clamp (shorten duration), keyed by event UID. */
   clamped: Map<string, ClampInfo>;
   /** Whether the execution failed (e.g. CONSUME target not found). */
   failed: boolean;
@@ -59,7 +61,7 @@ export interface ExecutionContext {
   loadoutProperties?: Record<string, LoadoutProperties>;
   operatorSlotMap?: Record<string, string>;
   potential?: number;
-  /** Counter for generating unique event IDs within a single execution. */
+  /** Counter for generating unique event UIDs within a single execution. */
   idCounter: number;
   /** End frame of the parent status event (for EXTEND UNTIL END). */
   parentEventEndFrame?: number;
@@ -75,6 +77,20 @@ function emptyMutationSet(): MutationSet {
   return { produced: [], clamped: new Map(), failed: false };
 }
 
+
+function buildValueContext(ctx: ExecutionContext): ValueResolutionContext {
+  const loadout = ctx.loadoutProperties?.[ctx.sourceOwnerId];
+  return {
+    skillLevel: loadout?.skills.battleSkillLevel ?? DEFAULT_VALUE_CONTEXT.skillLevel,
+    potential: ctx.potential ?? loadout?.operator.potential ?? DEFAULT_VALUE_CONTEXT.potential,
+    stats: {},
+  };
+}
+
+function resolveWith(node: ValueNode | undefined, ctx: ExecutionContext): number | undefined {
+  if (!node) return undefined;
+  return resolveValueNode(node, buildValueContext(ctx));
+}
 
 /** Merge source MutationSet into target (in place). */
 function mergeMutations(target: MutationSet, source: MutationSet) {
@@ -170,11 +186,12 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const columnId = resolveInflictionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = getSimpleValue(effect.with?.duration);
-    const duration = durationValue != null ? Math.round(durationValue * 120) : 120;
+    const durationValue = resolveWith(effect.with?.duration, ctx);
+    const duration = durationValue != null ? Math.round(durationValue * FPS) : FPS;
 
     const ev: TimelineEvent = {
-      id: `infliction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `infliction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      id: effect.objectId ?? String(effect.adjective),
       name: effect.objectId ?? String(effect.adjective),
       ownerId,
       columnId,
@@ -190,11 +207,12 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (effect.object === 'STATUS') {
     const columnId = resolveStatusColumnId(effect.objectId);
 
-    const durationValue = getSimpleValue(effect.with?.duration);
-    const duration = durationValue != null ? Math.round(durationValue * 120) : 2400;
+    const durationValue = resolveWith(effect.with?.duration, ctx);
+    const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
 
     const ev: TimelineEvent = {
-      id: `status-${effect.objectId?.toLowerCase() ?? 'unknown'}-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `status-${effect.objectId?.toLowerCase() ?? 'unknown'}-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      id: effect.objectId ?? 'UNKNOWN_STATUS',
       name: effect.objectId ?? 'UNKNOWN_STATUS',
       ownerId,
       columnId,
@@ -211,12 +229,13 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const columnId = resolveReactionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = getSimpleValue(effect.with?.duration);
-    const duration = durationValue != null ? Math.round(durationValue * 120) : 2400;
-    const statusLevel = getSimpleValue(effect.with?.statusLevel);
+    const durationValue = resolveWith(effect.with?.duration, ctx);
+    const duration = durationValue != null ? Math.round(durationValue * FPS) : 2400;
+    const stacksValue = resolveWith(effect.with?.stacks, ctx);
 
     const ev: TimelineEvent = {
-      id: `reaction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      uid: `reaction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
+      id: String(effect.adjective),
       name: String(effect.adjective),
       ownerId,
       columnId,
@@ -224,7 +243,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
       segments: durationSegment(duration),
       sourceOwnerId: ctx.sourceOwnerId,
       sourceSkillName: ctx.sourceSkillName,
-      statusLevel: typeof statusLevel === 'number' ? statusLevel : undefined,
+      stacks: typeof stacksValue === 'number' ? stacksValue : undefined,
     };
     result.produced.push(ev);
     return result;
@@ -248,7 +267,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 
     // Consume the oldest active infliction
     const target = targets.sort((a, b) => a.startFrame - b.startFrame)[0];
-    result.clamped.set(target.id, {
+    result.clamped.set(target.uid, {
       newDuration: Math.max(0, ctx.frame - target.startFrame),
       eventStatus: EventStatusType.CONSUMED,
       sourceOwnerId: ctx.sourceOwnerId,
@@ -265,12 +284,12 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 
     if (targets.length === 0) { result.failed = true; return result; }
 
-    // If statusLevel is specified, consume that many stacks (oldest first);
+    // If stacks is specified, consume that many stacks (oldest first);
     // otherwise consume all active stacks.
-    const consumeCount = getSimpleValue(effect.with?.statusLevel) ?? targets.length;
+    const consumeCount = resolveWith(effect.with?.stacks, ctx) ?? targets.length;
     const toConsume = targets.slice(0, consumeCount);
     for (const target of toConsume) {
-      result.clamped.set(target.id, {
+      result.clamped.set(target.uid, {
         newDuration: Math.max(0, ctx.frame - target.startFrame),
         eventStatus: EventStatusType.CONSUMED,
         sourceOwnerId: ctx.sourceOwnerId,
@@ -290,7 +309,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
     if (targets.length === 0) { result.failed = true; return result; }
 
     const target = targets.sort((a, b) => a.startFrame - b.startFrame)[0];
-    result.clamped.set(target.id, {
+    result.clamped.set(target.uid, {
       newDuration: Math.max(0, ctx.frame - target.startFrame),
       eventStatus: EventStatusType.CONSUMED,
       sourceOwnerId: ctx.sourceOwnerId,
@@ -304,103 +323,6 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   return result;
 }
 
-function executeRefresh(effect: Effect, ctx: ExecutionContext): MutationSet {
-  const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
-
-  const columnId = effect.object === 'INFLICTION'
-    ? resolveInflictionColumnId(effect.adjective)
-    : effect.object === 'REACTION'
-      ? resolveReactionColumnId(effect.adjective)
-      : resolveStatusColumnId(effect.objectId);
-
-  if (!columnId) { result.failed = true; return result; }
-
-  const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-    .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
-
-  for (const target of targets) {
-    result.clamped.set(target.id, {
-      newDuration: Math.max(0, ctx.frame - target.startFrame),
-      eventStatus: EventStatusType.REFRESHED,
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    });
-  }
-  return result;
-}
-
-function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
-  const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.onObject as string ?? effect.toObject as string, ctx, effect.onDeterminer ?? effect.toDeterminer);
-
-  const columnId = effect.object === 'INFLICTION'
-    ? resolveInflictionColumnId(effect.adjective)
-    : resolveStatusColumnId(effect.objectId);
-
-  if (!columnId) { result.failed = true; return result; }
-
-  const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-    .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
-
-  // UNTIL END: extend target to the parent event's end frame (never shorten)
-  if (effect.until === DURATION_END && ctx.parentEventEndFrame != null) {
-    for (const target of targets) {
-      const untilDuration = ctx.parentEventEndFrame - target.startFrame;
-      if (untilDuration <= eventDuration(target)) continue; // don't shorten
-      result.clamped.set(target.id, {
-        newDuration: untilDuration,
-        eventStatus: EventStatusType.EXTENDED,
-        sourceOwnerId: ctx.sourceOwnerId,
-        sourceSkillName: ctx.sourceSkillName,
-      });
-    }
-    return result;
-  }
-
-  // Standard EXTEND: add duration frames
-  const extensionValue = getSimpleValue(effect.with?.duration);
-  const extensionFrames = extensionValue != null ? Math.round(extensionValue * 120) : 0;
-
-  for (const target of targets) {
-    result.clamped.set(target.id, {
-      newDuration: eventDuration(target) + extensionFrames,
-      eventStatus: EventStatusType.EXTENDED,
-      sourceOwnerId: ctx.sourceOwnerId,
-      sourceSkillName: ctx.sourceSkillName,
-    });
-  }
-  return result;
-}
-
-function executeMerge(effect: Effect, ctx: ExecutionContext): MutationSet {
-  const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
-
-  const columnId = effect.object === 'INFLICTION'
-    ? resolveInflictionColumnId(effect.adjective)
-    : resolveStatusColumnId(effect.objectId);
-
-  if (!columnId) { result.failed = true; return result; }
-
-  const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
-    .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED)
-    .sort((a, b) => a.startFrame - b.startFrame);
-
-  // Merge: newer subsumes older — clamp all but the latest
-  if (targets.length > 1) {
-    for (let i = 0; i < targets.length - 1; i++) {
-      result.clamped.set(targets[i].id, {
-        newDuration: Math.max(0, ctx.frame - targets[i].startFrame),
-        eventStatus: EventStatusType.CONSUMED,
-        sourceOwnerId: ctx.sourceOwnerId,
-        sourceSkillName: ctx.sourceSkillName,
-      });
-    }
-  }
-  return result;
-}
-
 function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
@@ -411,7 +333,7 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
 
     for (const target of targets) {
-      result.clamped.set(target.id, {
+      result.clamped.set(target.uid, {
         newDuration: Math.max(0, ctx.frame - target.startFrame),
         eventStatus: EventStatusType.CONSUMED,
         sourceOwnerId: ctx.sourceOwnerId,
@@ -531,12 +453,12 @@ export function executeEffect(effect: Effect, ctx: ExecutionContext): MutationSe
     case VerbType.ANY:    return executeAny(effect, ctx);
     case VerbType.APPLY:  return executeApply(effect, ctx);
     case VerbType.CONSUME: return executeConsume(effect, ctx);
-    case VerbType.REFRESH: return executeRefresh(effect, ctx);
-    case VerbType.EXTEND:  return executeExtend(effect, ctx);
-    case VerbType.MERGE:   return executeMerge(effect, ctx);
     case VerbType.RESET:   return executeReset(effect, ctx);
 
-    // Resource verbs — don't produce timeline mutations
+    // Resource verbs and verbs handled by the interpretor — no timeline mutations here
+    case VerbType.REFRESH:
+    case VerbType.EXTEND:
+    case VerbType.MERGE:
     case VerbType.RECOVER:
     case VerbType.RETURN:
     case VerbType.DEAL:
@@ -545,6 +467,7 @@ export function executeEffect(effect: Effect, ctx: ExecutionContext): MutationSe
     case VerbType.IGNORE:
     case VerbType.OVERHEAL:
     case VerbType.EXPERIENCE:
+    case VerbType.REDUCE:
       return emptyMutationSet();
 
     default:
@@ -572,7 +495,7 @@ export function executeEffects(effects: readonly Effect[], ctx: ExecutionContext
  */
 export function applyMutations(events: readonly TimelineEvent[], mutations: MutationSet): TimelineEvent[] {
   const result = events.map(ev => {
-    const clamp = mutations.clamped.get(ev.id);
+    const clamp = mutations.clamped.get(ev.uid);
     if (!clamp) return ev;
     const clamped = {
       ...ev,

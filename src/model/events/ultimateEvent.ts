@@ -1,4 +1,5 @@
-import { CombatSkillType, OperatorType, TargetType, TimeInteractionType } from "../../consts/enums";
+import { CombatSkillType, OperatorType, TimeInteractionType } from "../../consts/enums";
+import type { DslTarget } from "../../dsl/semantics";
 import { EmpowerSkillTarget } from "../../consts/types";
 import { CombatSkillEvent } from "./combatSkillEvent";
 
@@ -14,7 +15,7 @@ export class UltimateEvent extends CombatSkillEvent {
 
   constructor(params: {
     name: string;
-    target: TargetType;
+    target: DslTarget;
     sourceOperator: OperatorType;
     duration: number;
     cooldownSeconds: number;

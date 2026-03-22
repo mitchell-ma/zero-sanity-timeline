@@ -58,7 +58,7 @@ Who is performing the action or being checked.
 | **Skills** | `BASIC_ATTACK`, `BATTLE_SKILL`, `COMBO_SKILL`, `ULTIMATE`, `FINAL_STRIKE`, `CRITICAL_HIT` | Skill types and combat events |
 | **Statuses** | `STATUS`, `INFLICTION`, `REACTION`, `ARTS_REACTION`, `STACKS` | Status effects and stack counts |
 | **Resources** | `SKILL_POINT`, `ULTIMATE_ENERGY`, `STAGGER`, `COOLDOWN`, `HP` | Combat resources |
-| **Entities** | `THIS_OPERATOR`, `OTHER_OPERATOR`, `OTHER_OPERATORS`, `ALL_OPERATORS`, `ENEMY` | Targets (merged from TargetType) |
+| **Entities** | `THIS_OPERATOR`, `OTHER_OPERATOR`, `ALL_OTHER_OPERATORS`, `ALL_OPERATORS`, `ENEMY` | Targets (DeterminerType + NounType) |
 | **States** | `ACTIVE`, `LIFTED`, `KNOCKED_DOWN`, `BREACHED`, `CRUSHED`, `COMBUSTED`, `CORRODED`, `ELECTRIFIED`, `SOLIDIFIED` | For IS verb (with optional `negated: true` for NOT) |
 
 ### CardinalityConstraintType
@@ -136,7 +136,7 @@ event = {
   // Use PERMANENT (-1) for events that never expire naturally.
   "duration": {
     "value": number[],                     // e.g. [12, 18, 24, 30] or [-1]
-    "unit": DurationUnit                   // SECOND or FRAME
+    "unit": UnitType                   // SECOND or FRAME
   },
 
   // ── Clause ──
@@ -167,7 +167,7 @@ By default, a segment experiences `TIME_STOP` (game time paused). Cooldown segme
   "properties": {
     "duration": {
       "value": number[],                    // array length matches parent event's level count
-      "unit": DurationUnit
+      "unit": UnitType
     },
     "name"?: string                         // e.g. "EXPLOSION", "MAGMA_FRAGMENT", "COOLDOWN"
   },
@@ -193,7 +193,7 @@ All damage, resource recovery, stagger, inflictions, and status applications are
   "properties": {
     "offset": {
       "value": number,                      // when this frame fires relative to segment start
-      "unit": DurationUnit
+      "unit": UnitType
     }
   },
   "effects"?: Effect[],                     // e.g. PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER ...
@@ -237,10 +237,7 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 | `multiplier` | Damage multiplier | DAMAGE |
 | `staggerValue` | Stagger amount | STAGGER |
 | `skillPoint` | SP value | SKILL_POINT |
-| `stacks` | Stack count (implies stacking mechanism) | STATUS, INFLICTION |
-| `statusLevel` | Reaction/status tier (1-4), specialization of stacks | ARTS_REACTION, PHYSICAL_STATUS, INFLICTION |
-
-`statusLevel` is-a `stacks` is-a quantity. Each carries different semantic weight.
+| `stacks` | Stack count (reactions, operator statuses, inflictions) | STATUS, INFLICTION, ARTS_REACTION, PHYSICAL_STATUS |
 
 #### WITH value verbs
 
@@ -336,7 +333,7 @@ statusEvent = {
   "name": string,                          // StatusType enum value
   "source": OperatorType | EnemyType | WeaponType | GearEffectType | ...,
   "element"?: ElementType,
-  "duration": { "value": number[], "unit": DurationUnit },  // length = stack.max
+  "duration": { "value": number[], "unit": UnitType },  // length = stack.max
   "segments"?: Segment[],
 
   // ── StatusEvent-specific ──
@@ -1488,7 +1485,7 @@ All combo skill triggers expressed as SVO Interactions.
 | `CombatSkillType` | `src/consts/enums.ts` |
 | `ElementType` | `src/consts/enums.ts` |
 | `StatusType` | `src/consts/enums.ts` |
-| `DurationUnit` | `src/consts/enums.ts` |
+| `UnitType` | `src/consts/enums.ts` |
 | `TimeDependencyType` | `src/consts/enums.ts` |
 | `DamageType` | `src/consts/enums.ts` |
 | `StatType` | `src/model/enums/stats.ts` |

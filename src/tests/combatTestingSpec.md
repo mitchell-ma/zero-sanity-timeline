@@ -1,8 +1,13 @@
 # Combat Simulation Testing Specification
 
+## Test Organization
+
+- **Unit tests** (`src/tests/unit/`): Test individual controllers, functions, and operator data in isolation with mocks. Verify frame data, segment structure, DSL verb handling, damage formulas, etc.
+- **Integration tests** (`src/tests/integration/`): Test the full user flow through `useApp` — add events via `handleAddEvent`, verify results via `allProcessedEvents` and view controllers. These use `@jest-environment jsdom` and `renderHook` to exercise the real pipeline end-to-end.
+
 ## Goals
 
-Validate that the controller layer correctly models operator interactions, status derivation, and chain effects. These tests operate on controller logic only — no UI, no visual assertions. The data-driven operator JSONs define **what** effects occur and **where** in the event-segment-frame hierarchy they occur; tests verify that the engine processes these correctly.
+Validate that the controller layer correctly models operator interactions, status derivation, and chain effects. Unit tests operate on controller logic only — no UI, no visual assertions. Integration tests verify the full pipeline from user action to processed output. The data-driven operator JSONs define **what** effects occur and **where** in the event-segment-frame hierarchy they occur; tests verify that the engine processes these correctly.
 
 Frame timing offsets (e.g. 0.73s, 2.067s) are intentionally NOT asserted — they are volatile and may change with game patches. Tests assert **position** (first frame, last frame, segment N) and **effect type** (apply status, forced reaction, infliction, absorption).
 

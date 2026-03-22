@@ -34,24 +34,24 @@ const DURATION_SECONDS: Readonly<Record<StatusLevel, number>> = {
 };
 
 export class Breach extends PhysicalStatus {
-  constructor(params: { statusLevel: StatusLevel; isForced?: boolean }) {
+  constructor(params: { stacks: StatusLevel; isForced?: boolean }) {
     super({
       statusType: StatusType.BREACH,
-      statusLevel: params.statusLevel,
-      maxStatusLevel: 4,
+      stacks: params.stacks,
+      maxStacks: 4,
       isForced: params.isForced,
     });
   }
 
   getInitialDamage(): number {
-    return INITIAL_DAMAGE[this.statusLevel];
+    return INITIAL_DAMAGE[this.stacks];
   }
 
   getPhysicalDmgTaken(): number {
-    return PHYSICAL_DMG_TAKEN[this.statusLevel];
+    return PHYSICAL_DMG_TAKEN[this.stacks];
   }
 
   getDurationSeconds(): number {
-    return DURATION_SECONDS[this.statusLevel];
+    return DURATION_SECONDS[this.stacks];
   }
 }

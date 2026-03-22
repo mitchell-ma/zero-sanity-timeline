@@ -385,7 +385,7 @@ export async function encodeEmbed(
     }
 
     if (ev.enemiesHit != null) compact.eh = ev.enemiesHit;
-    if (ev.statusLevel != null) compact.sl = ev.statusLevel;
+    if (ev.stacks != null) compact.sl = ev.stacks;
     if (ev.isPerfectDodge) compact.pd = true;
     if (ev.isForced) compact.fc = true;
     if (ev.timeInteraction) compact.ti = ev.timeInteraction;
@@ -685,7 +685,8 @@ export async function decodeEmbed(
     const templateDuration = template?.segments ? computeSegmentsSpan(template.segments) : 0;
     const totalDuration = compact.ad ?? templateDuration;
     const ev: TimelineEvent = {
-      id: `ev-${i + 1}`,
+      uid: `ev-${i + 1}`,
+      id: compact.s,
       name: compact.s,
       ownerId,
       columnId: compact.c,
@@ -703,7 +704,7 @@ export async function decodeEmbed(
     }
 
     if (compact.eh != null) ev.enemiesHit = compact.eh;
-    if (compact.sl != null) ev.statusLevel = compact.sl;
+    if (compact.sl != null) ev.stacks = compact.sl;
     if (compact.pd) ev.isPerfectDodge = true;
     if (compact.fc) ev.isForced = true;
     if (compact.ti) ev.timeInteraction = compact.ti;

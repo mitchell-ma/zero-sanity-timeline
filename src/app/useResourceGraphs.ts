@@ -1,13 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Operator, TimelineEvent, ResourceConfig } from '../consts/viewTypes';
-import { SKILL_COLUMNS } from '../model/channels';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
 import { CombatLoadoutController } from '../controller/combat-loadout';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../controller/slot/commonSlotController';
-import { FPS } from '../utils/timeline';
-import { generateTacticalEvents } from '../controller/events/tacticalEventGenerator';
-import { computeUltimateEnergyGraph, UltEnergyEvent } from '../controller/timeline/ultimateEnergyTimeline';
-import { collectRawGaugeGains, applyGainEfficiency, collectNoGainWindows } from '../controller/timeline/ultimateEnergyController';
+
 
 export type ResourceGraphData = {
   points: ReadonlyArray<ResourcePoint>;
@@ -17,16 +13,13 @@ export type ResourceGraphData = {
   wasted?: number;
 };
 
-/** Computes and merges SP + ultimate energy resource graphs. */
+/** Computes and merges SP + stagger + ultimate energy resource graphs. */
 export function useResourceGraphs(
   operators: (Operator | null)[],
   slotIds: string[],
   events: TimelineEvent[],
   combatLoadout: CombatLoadoutController,
   resourceConfigs?: Record<string, ResourceConfig>,
-  tacticalNames?: Record<string, string | undefined>,
-  tacticalMaxUsesOverrides?: Record<string, number | undefined>,
-  gaugeGainMultipliers?: Record<string, number>,
 ) {
   // ── Skill point graphs (from CommonSlot resource timeline) ──────────────
   const [spGraphs, setSpGraphs] = useState<Map<string, ResourceGraphData>>(new Map());
@@ -62,13 +55,11 @@ export function useResourceGraphs(
     return stCtrl.onGraphChange(update);
   }, [combatLoadout]);
 
-  // ── Ultimate energy graphs + tactical events ────────────────────────────
-  const { ultimateGraphs, tacticalEvents } = useMemo(() => {
+  // ── Ultimate energy graphs ──────────────────────────────────────────────
+  // UE graphs are computed inside processCombatSimulation via UltimateEnergyController.
+  const ultimateGraphs = useMemo(() => {
+    const ueCtrl = combatLoadout.commonSlot.ultimateEnergy;
     const graphs = new Map<string, ResourceGraphData>();
-    const allTacticalEvents: TimelineEvent[] = [];
-
-    // Collect raw gauge gain events from battle/combo skill first frames
-    const gaugeEvents = collectRawGaugeGains(events);
 
     for (let i = 0; i < slotIds.length; i++) {
       const op = operators[i];
@@ -77,53 +68,15 @@ export function useResourceGraphs(
       const key = `${slotId}-ultimate`;
       const cfg = resourceConfigs?.[key];
       const max = cfg?.max ?? op.ultimateEnergyCost;
-      const startValue = cfg?.startValue ?? 0;
-      const chargePerFrame = (cfg?.regenPerSecond ?? 0) / FPS;
 
-      // Merge ultimate consumption events and gauge gain events for this slot
-      const timeline: UltEnergyEvent[] = [];
-
-      // Ultimate activations consume the full gauge
-      for (const ev of events) {
-        if (ev.ownerId === slotId && ev.columnId === SKILL_COLUMNS.ULTIMATE) {
-          timeline.push({ frame: ev.startFrame, type: 'consume', amount: max });
-        }
+      const result = ueCtrl.getGraph(slotId);
+      if (result) {
+        graphs.set(key, { points: result.points, min: 0, max, wasted: result.wastedCharge });
       }
-
-      const ultActiveWindows = collectNoGainWindows(events, slotId);
-
-      // Gauge gains from skills (self + team), scaled by ultimate gain efficiency
-      const efficiencyBonus = gaugeGainMultipliers?.[slotId] ?? 0;
-      const gains = applyGainEfficiency(gaugeEvents, slotId, efficiencyBonus, ultActiveWindows);
-      timeline.push(...gains);
-
-      timeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
-
-      // Generate tactical events (iteratively inserts gauge gains)
-      const tacticalName = tacticalNames?.[slotId];
-      if (tacticalName) {
-        const result = generateTacticalEvents(
-          slotId, tacticalName, max, timeline, chargePerFrame, startValue,
-          tacticalMaxUsesOverrides?.[slotId],
-        );
-        if (result) {
-          allTacticalEvents.push(...result.events);
-          // Inject tactical gauge gains into the timeline for graph computation
-          for (const g of result.gaugeGains) {
-            timeline.push({ frame: g.frame, type: 'gain', amount: g.amount });
-          }
-          timeline.sort((a, b) => a.frame - b.frame || (a.type === 'gain' ? -1 : 1));
-        }
-      }
-
-      // Compute the ult energy graph (now including tactical gains)
-      const result = computeUltimateEnergyGraph(timeline, max, startValue, chargePerFrame);
-      graphs.set(key, { points: result.points, min: 0, max, wasted: result.wastedCharge });
     }
-    return { ultimateGraphs: graphs, tacticalEvents: allTacticalEvents };
+    return graphs;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [operators, slotIds, events, resourceConfigs, tacticalNames, tacticalMaxUsesOverrides, gaugeGainMultipliers]);
+  }, [operators, slotIds, events, resourceConfigs, combatLoadout]);
 
   // ── Merge SP + stagger + ultimate graphs ───────────────────────────────
   const resourceGraphs = useMemo(() => {
@@ -137,5 +90,5 @@ export function useResourceGraphs(
     return merged;
   }, [spGraphs, staggerGraphs, ultimateGraphs]);
 
-  return { resourceGraphs, tacticalEvents };
+  return { resourceGraphs };
 }

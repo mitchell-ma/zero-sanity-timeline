@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.12,
                   0.144,
                   0.168,
@@ -32,18 +32,16 @@
       "id": "CLANNIBAL_VICIOUS_PURGE",
       "name": "Vicious Purge",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },
@@ -70,7 +68,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1,
                   0.12,
                   0.14,
@@ -92,18 +90,16 @@
       "name": "Vicious Purge (Enemy)",
       "description": "Enemy Arts DMG Taken (Fragility)",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

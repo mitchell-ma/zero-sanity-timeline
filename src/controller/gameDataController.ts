@@ -8,6 +8,9 @@
 
 // ── Typed controllers (data layer) ──────────────────────────────────────────
 
+import { CombatSkillsType, ElementType, ArtsReactionType } from '../consts/enums';
+import { t } from '../locales/locale';
+
 import {
   getWeapon,
   getAllWeapons,
@@ -56,7 +59,30 @@ import {
 import {
   getOperatorStatuses,
   getAllOperatorStatusOriginIds,
+  getAllOperatorStatuses,
+  type OperatorStatus,
 } from '../model/game-data/operatorStatusesController';
+
+import {
+  getOperatorBase,
+  getAllOperatorBases,
+  getAllOperatorBaseIds,
+  getOperatorBasesByClass,
+  getOperatorBasesByElement,
+  getOperatorBaseByType,
+  getOperatorIdByName,
+  registerCustomOperatorBase,
+  deregisterCustomOperatorBase,
+  type OperatorBase,
+} from '../model/game-data/operatorsController';
+
+import {
+  getOperatorSkills,
+  getOperatorSkill,
+  getOperatorSkillIds,
+  getAllOperatorSkillSetIds,
+  type OperatorSkill,
+} from '../model/game-data/operatorSkillsController';
 
 // ── Operator configs + trigger associations (controller layer) ──────────────
 
@@ -101,12 +127,12 @@ export interface TacticalEntry {
 }
 
 const CONSUMABLE_ENTRIES: ConsumableEntry[] = [
-  { id: 'GINSENG_MEAT_STEW', name: 'Ginseng Meat Stew', icon: ginsengMeatStewIcon, rarity: 3, create: () => new GinsengMeatStew() },
-  { id: 'PERPLEXING_MEDICATION', name: 'Perplexing Medication', icon: perplexingMedicationIcon, rarity: 4, create: () => new PerplexingMedication() },
+  { id: 'GINSENG_MEAT_STEW', name: t('consumable.GINSENG_MEAT_STEW'), icon: ginsengMeatStewIcon, rarity: 3, create: () => new GinsengMeatStew() },
+  { id: 'PERPLEXING_MEDICATION', name: t('consumable.PERPLEXING_MEDICATION'), icon: perplexingMedicationIcon, rarity: 4, create: () => new PerplexingMedication() },
 ];
 
 const TACTICAL_ENTRIES: TacticalEntry[] = [
-  { id: 'STEW_MEETING', name: 'Stew Meeting', icon: stewMeetingIcon, rarity: 3, create: () => new StewMeeting() },
+  { id: 'STEW_MEETING', name: t('tactical.STEW_MEETING'), icon: stewMeetingIcon, rarity: 3, create: () => new StewMeeting() },
 ];
 
 // ── Re-export types ─────────────────────────────────────────────────────────
@@ -118,6 +144,9 @@ export type {
   GearStatus,
   WeaponSkill,
   WeaponSkillStatResult,
+  OperatorBase,
+  OperatorSkill,
+  OperatorStatus,
   SkillConfig,
   StatusEventConfig,
   OperatorConfig,
@@ -148,9 +177,19 @@ export { getGenericSkillStats, getNamedSkillPassiveStats };
 
 export { getWeaponStatuses, getAllWeaponStatusOriginIds };
 
+// ── Operator base ───────────────────────────────────────────────────────
+
+export { getOperatorBase, getAllOperatorBases, getAllOperatorBaseIds };
+export { getOperatorBasesByClass, getOperatorBasesByElement, getOperatorBaseByType, getOperatorIdByName };
+export { registerCustomOperatorBase, deregisterCustomOperatorBase };
+
+// ── Operator skills ─────────────────────────────────────────────────────
+
+export { getOperatorSkills, getOperatorSkill, getOperatorSkillIds, getAllOperatorSkillSetIds };
+
 // ── Operator statuses ───────────────────────────────────────────────────────
 
-export { getOperatorStatuses, getAllOperatorStatusOriginIds };
+export { getOperatorStatuses, getAllOperatorStatusOriginIds, getAllOperatorStatuses };
 
 // ── Operator configs & trigger associations ─────────────────────────────────
 
@@ -190,3 +229,58 @@ export { getWeaponIdByName as resolveWeaponId };
 export { getGearPieceIdByName as resolveGearPieceId };
 export { getConsumableIdByName as resolveConsumableId };
 export { getTacticalIdByName as resolveTacticalId };
+
+// ── Derived label / metadata maps ────────────────────────────────────────────
+
+let _skillLabels: Record<string, string> | null = null;
+
+/** All combat skill display labels (common + all operators), built from JSON. */
+export function getAllSkillLabels(): Record<string, string> {
+  if (_skillLabels) return _skillLabels;
+  const labels: Record<string, string> = {
+    [CombatSkillsType.DASH]: t('skill.DASH'),
+    [CombatSkillsType.FINISHER]: t('skill.FINISHER'),
+    [CombatSkillsType.DIVE]: t('skill.DIVE'),
+    [CombatSkillsType.CONTROL]: t('skill.CONTROL'),
+  };
+  for (const operatorId of getAllOperatorSkillSetIds()) {
+    const skills = getOperatorSkills(operatorId);
+    if (!skills) continue;
+    skills.forEach((skill) => {
+      if (skill.name) labels[skill.id] = skill.name;
+    });
+  }
+  _skillLabels = labels;
+  return _skillLabels;
+}
+
+let _statusLabels: Record<string, string> | null = null;
+
+/** All status display labels (game-mechanic + all operator statuses), built from JSON. */
+export function getAllStatusLabels(): Record<string, string> {
+  if (_statusLabels) return _statusLabels;
+  const labels: Record<string, string> = {};
+  for (const status of getAllOperatorStatuses()) {
+    if (status.name) labels[status.id] = status.name;
+  }
+  _statusLabels = labels;
+  return _statusLabels;
+}
+
+let _statusElementMap: Record<string, string> | null = null;
+
+/** Status → element mapping (reactions + operator statuses with element), built from JSON. */
+export function getStatusElementMap(): Record<string, string> {
+  if (_statusElementMap) return _statusElementMap;
+  const map: Record<string, string> = {
+    [ArtsReactionType.COMBUSTION]: ElementType.HEAT,
+    [ArtsReactionType.SOLIDIFICATION]: ElementType.CRYO,
+    [ArtsReactionType.CORROSION]: ElementType.NATURE,
+    [ArtsReactionType.ELECTRIFICATION]: ElementType.ELECTRIC,
+  };
+  for (const status of getAllOperatorStatuses()) {
+    if (status.element) map[status.id] = status.element;
+  }
+  _statusElementMap = map;
+  return _statusElementMap;
+}

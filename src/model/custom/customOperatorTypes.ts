@@ -3,7 +3,7 @@
  * See docs/customizationSpec.md § 1.
  */
 import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '../../consts/enums';
-import type { Clause, Predicate } from '../../consts/semantics';
+import type { Clause, Predicate } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 import type { OperatorClassType } from '../enums/operators';
 import type { CustomResourceInteraction, CustomSegmentDef } from './customStatusEventTypes';

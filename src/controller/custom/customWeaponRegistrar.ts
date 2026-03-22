@@ -5,6 +5,8 @@
  */
 import { registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import type { CustomWeapon } from '../../model/custom/customWeaponTypes';
+import { UnitType } from '../../consts/enums';
+import { VerbType } from '../../dsl/semantics';
 import { registerCustomWeapon as registerInController, deregisterCustomWeapon as deregisterFromController } from '../../model/game-data/weaponsController';
 
 export function registerCustomWeapon(weapon: CustomWeapon): void {
@@ -54,7 +56,7 @@ function buildDslDefsFromCustomWeapon(weapon: CustomWeapon): Record<string, unkn
       onTriggerClause: ne.triggers.map((t) => ({ conditions: [t] })),
       clause: [],
       buffs: ne.buffs,
-      properties: { duration: { value: [ne.durationSeconds], unit: 'SECOND' } },
+      properties: { duration: { value: { verb: VerbType.IS, value: ne.durationSeconds }, unit: UnitType.SECOND } },
       ...(ne.cooldownSeconds ? { cooldownSeconds: ne.cooldownSeconds } : {}),
     });
   }

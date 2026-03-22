@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.16,
                   0.192,
                   0.224,
@@ -33,18 +33,16 @@
       "name": "Artzy Exaggeration",
       "description": "Crit with battle/combo skill",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          30
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 30
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            3
-          ]
+          "value": 3
         },
         "interactionType": "NONE"
       },

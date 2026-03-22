@@ -10,7 +10,7 @@ import { VERTICAL_AXIS, type AxisMap } from './axisMap';
 
 interface TouchDragState {
   touchId: number;
-  eventId: string;
+  eventUid: string;
   startClientFrame: number; // touch coordinate along the frame axis at drag start
   startFrame: number;
 }
@@ -28,7 +28,7 @@ export function useTouchHandlers(opts: {
   combinedHeaderHeight: number;
   axis?: AxisMap;
 }): {
-  handleEventTouchStart: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
+  handleEventTouchStart: (e: React.TouchEvent, eventUid: string, startFrame: number) => void;
 } {
   const {
     scrollRef,
@@ -76,14 +76,14 @@ export function useTouchHandlers(opts: {
   // ─── Event drag start (called from EventBlock's onTouchStart) ─────────────
   const handleEventTouchStart = useCallback((
     e: React.TouchEvent,
-    eventId: string,
+    eventUid: string,
     startFrame: number,
   ) => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     dragRef.current = {
       touchId: touch.identifier,
-      eventId,
+      eventUid,
       startClientFrame: touch[axis.clientFrame],
       startFrame,
     };
@@ -127,8 +127,8 @@ export function useTouchHandlers(opts: {
           // Check if an event block was long-pressed
           const eventWrap = target.closest('.event-wrap') as HTMLElement | null;
           if (eventWrap) {
-            const eventId = eventWrap.dataset.eventId;
-            if (eventId) {
+            const eventUid = eventWrap.dataset.eventUid;
+            if (eventUid) {
               onContextMenuRef.current({
                 x: origin.x,
                 y: origin.y,
@@ -196,12 +196,12 @@ export function useTouchHandlers(opts: {
         if (!touch) return;
         e.preventDefault();
 
-        const { eventId, startClientFrame, startFrame } = dragRef.current;
+        const { eventUid, startClientFrame, startFrame } = dragRef.current;
         const deltaFrames = Math.round(
           (touch[axis.clientFrame] - startClientFrame) / getPxPerFrame(zoomRef.current),
         );
         const newFrame = Math.max(0, Math.min(TOTAL_FRAMES - 1, startFrame + deltaFrames));
-        onMoveEventRef.current(eventId, newFrame);
+        onMoveEventRef.current(eventUid, newFrame);
 
         // Update hover guide line to the dragged event's new position
         const scrollEl = scrollRef.current;

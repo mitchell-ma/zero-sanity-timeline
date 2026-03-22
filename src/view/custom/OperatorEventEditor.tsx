@@ -10,7 +10,7 @@ import { getOperatorJson, getRawSkillTypeMap } from '../../model/event-frames/op
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
 import type { CombatSkillsType } from '../../consts/enums';
-import type { Clause } from '../../consts/semantics';
+import type { Clause } from '../../dsl/semantics';
 import ClauseEditor from './ClauseEditor';
 
 /** Shape for JSON skill/segment/frame/status data flowing through the editor. */
@@ -24,7 +24,7 @@ export interface JsonSkillData {
   properties?: { name?: string; description?: string; duration?: { value: number; unit: string }; offset?: { value: number; unit: string } };
   metadata?: { dataSources?: string[]; originId?: string };
   dataSources?: string[];
-  statusLevel?: JsonSkillData;
+  stacks?: JsonSkillData;
   onTriggerClause?: Clause;
   onEntryClause?: Clause;
   onExitClause?: Clause;
@@ -229,62 +229,30 @@ function CategorySection({ title, children, defaultOpen }: {
 // ── Skill entry section ─────────────────────────────────────────────────────
 
 export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { id: string; label: string; data: JsonSkillData; subLabel?: string }; readOnly?: boolean; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen ?? false);
+  void defaultOpen;
   const data = entry.data;
   const segments = data.segments ?? [];
   const frames = data.frames ?? [];
   const clause: Clause = data.clause ?? [];
-  const hasContent = segments.length > 0 || frames.length > 0 || clause.length > 0;
 
   return (
-    <div className="oee-entry">
-      <div className="oee-entry-header" onClick={() => setOpen(!open)}>
-        <span className="oee-entry-chevron">{open ? '\u25BE' : '\u25B8'}</span>
-        <span className="oee-entry-name">{entry.label}</span>
-        {entry.subLabel && <span className="oee-entry-badge">{entry.subLabel}</span>}
-        {!hasContent && <span className="oee-entry-empty">no event data</span>}
-      </div>
-
-      {open && (
-        <div className="oee-entry-body">
-          {/* Skill-level metadata */}
-          {data.properties?.name && (
-            <div className="oee-meta-row">
-              <span className="oee-meta-label">Name</span>
-              <span className="oee-meta-value">{data.properties?.name}</span>
-            </div>
-          )}
-          {data.properties?.description && (
-            <div className="oee-meta-row oee-meta-row--desc">
-              <span className="oee-meta-label">Description</span>
-              <span className="oee-meta-value oee-meta-desc">{data.properties?.description}</span>
-            </div>
-          )}
-
-          {/* Skill-level clause */}
-          {clause.length > 0 && (
-            <ClauseSection title="Skill Clause" clause={clause} readOnly={readOnly} />
-          )}
-
-          {/* Segments (basic attack combo chain) */}
-          {segments.length > 0 && (
-            <div className="oee-segments">
-              {segments.map((seg, si) => (
-                <SegmentSection key={si} segment={seg} index={si} readOnly={readOnly} />
-              ))}
-            </div>
-          )}
-
-          {/* Frames (non-segmented skills) */}
-          {frames.length > 0 && segments.length === 0 && (
-            <div className="oee-frames">
-              {frames.map((frame, fi) => (
-                <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="ev">
+      {data.properties?.name && (
+        <div className="ev-row"><span className="ev-row-label">Name</span><div className="ev-row-controls"><span className="ev-field-value">{data.properties.name}</span></div></div>
       )}
+      {data.properties?.description && (
+        <div className="ev-row"><span className="ev-row-label">Description</span><div className="ev-row-controls"><span className="ev-field-value" style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{data.properties.description}</span></div></div>
+      )}
+
+      {clause.length > 0 && <ClauseSection title="Clause" clause={clause} readOnly={readOnly} />}
+
+      {segments.map((seg, si) => (
+        <SegmentSection key={si} segment={seg} index={si} readOnly={readOnly} />
+      ))}
+
+      {frames.length > 0 && segments.length === 0 && frames.map((frame, fi) => (
+        <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
+      ))}
     </div>
   );
 }
@@ -293,37 +261,38 @@ export function SkillEntrySection({ entry, readOnly, defaultOpen }: { entry: { i
 
 const HIT_NAMES = ['Hit 1', 'Hit 2', 'Hit 3', 'Hit 4', 'Hit 5', 'Hit 6', 'Hit 7', 'Hit 8'];
 
+function resolveLeafNumber(v: unknown): number | null {
+  if (typeof v === 'number') return v;
+  if (v && typeof v === 'object' && 'value' in v) return resolveLeafNumber((v as Record<string, unknown>).value);
+  return null;
+}
+
 function SegmentSection({ segment, index, readOnly }: { segment: JsonSkillData; index: number; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const name = segment.properties?.name || (index < HIT_NAMES.length ? HIT_NAMES[index] : `Hit ${index + 1}`);
   const dur = segment.properties?.duration ?? segment.duration;
-  const durStr = dur ? `${dur.value}${dur.unit === 'FRAME' ? 'f' : 's'}` : '';
-  const frames = segment.frames ?? [];
+  const durVal = dur ? resolveLeafNumber(dur.value) : null;
+  const durStr = durVal != null ? `${durVal}${dur!.unit === 'FRAME' ? 'f' : 's'}` : '';
+  const segFrames = segment.frames ?? [];
   const clause: Clause = segment.clause ?? [];
 
   return (
-    <div className="oee-segment">
-      <div className="oee-segment-header" onClick={() => setOpen(!open)}>
-        <span className="oee-entry-chevron">{open ? '\u25BE' : '\u25B8'}</span>
-        <span className="oee-segment-name">{name}</span>
-        {durStr && <span className="oee-segment-dur">{durStr}</span>}
-        <span className="oee-segment-hits">{frames.length} frame{frames.length !== 1 ? 's' : ''}</span>
+    <>
+      <div className="ev-seg-bar" onClick={() => setOpen(!open)}>
+        <span className="ev-seg-chevron">{open ? '\u25BE' : '\u25B8'}</span>
+        <span className="ev-seg-name">{name}</span>
+        {durStr && <span className="ev-seg-meta">{durStr}</span>}
       </div>
 
       {open && (
-        <div className="oee-segment-body">
-          {/* Segment-level clause */}
-          {clause.length > 0 && (
-            <ClauseSection title="Segment Clause" clause={clause} readOnly={readOnly} />
-          )}
-
-          {/* Frames within segment */}
-          {frames.map((frame, fi) => (
+        <>
+          {clause.length > 0 && <ClauseSection title="Clause" clause={clause} readOnly={readOnly} />}
+          {segFrames.map((frame, fi) => (
             <FrameSection key={fi} frame={frame} index={fi} readOnly={readOnly} />
           ))}
-        </div>
+        </>
       )}
-    </div>
+    </>
   );
 }
 
@@ -334,25 +303,21 @@ function FrameSection({ frame, index, readOnly }: { frame: JsonSkillData; index:
   const offset = frame.properties?.offset ?? frame.offset;
   const offsetStr = offset ? `${offset.value}${offset.unit === 'FRAME' ? 'f' : 's'}` : '0';
   const clause: Clause = frame.clause ?? [];
-  const dataSources: string[] = frame.metadata?.dataSources ?? frame.dataSources ?? [];
   const hasClause = clause.length > 0;
 
   return (
-    <div className="oee-frame">
-      <div className="oee-frame-header" onClick={() => setOpen(!open)}>
-        <span className="oee-entry-chevron">{open ? '\u25BE' : '\u25B8'}</span>
-        <span className="oee-frame-offset">@{offsetStr}</span>
-        <span className="oee-frame-index">Frame #{index + 1}</span>
-        {dataSources.length > 0 && <span className="oee-frame-source">{dataSources.join(', ')}</span>}
-        {!hasClause && <span className="oee-entry-empty">damage only</span>}
+    <>
+      <div className="ev-frame-bar" onClick={() => setOpen(!open)}>
+        <span className="ev-seg-chevron">{open ? '\u25BE' : '\u25B8'}</span>
+        <span className="ev-frame-offset">@{offsetStr}</span>
+        <span className="ev-seg-meta">Frame #{index + 1}</span>
+        {!hasClause && <span className="ev-frame-empty">damage only</span>}
       </div>
 
       {open && hasClause && (
-        <div className="oee-frame-body">
-          <ClauseSection title="Frame Clause" clause={clause} readOnly={readOnly} />
-        </div>
+        <ClauseSection title="Clause" clause={clause} readOnly={readOnly} />
       )}
-    </div>
+    </>
   );
 }
 
@@ -363,7 +328,7 @@ function StatusEntrySection({ status, index }: { status: JsonSkillData; index: n
   const statusProps = status.properties as Record<string, unknown> | undefined;
   const statusId = (statusProps?.id as string) ?? (statusProps?.name as string) ?? `Status ${index + 1}`;
   const element = (statusProps?.element as string) ?? 'NONE';
-  const sl = status.statusLevel ?? {};
+  const sl = status.stacks ?? {};
   const onTriggerClause: Clause = status.onTriggerClause ?? [];
   const clause: Clause = status.clause ?? [];
   const onEntryClause: Clause = status.onEntryClause ?? [];
@@ -371,9 +336,9 @@ function StatusEntrySection({ status, index }: { status: JsonSkillData; index: n
   const segments = status.segments ?? [];
   const originId = (status.metadata?.originId as string) ?? '';
 
-  const limitRaw = sl.limit;
+  const limitRaw = sl.limit as Record<string, unknown> | undefined;
   const limitStr = typeof limitRaw === 'object' && limitRaw !== null
-    ? Object.values(limitRaw).join('/')
+    ? String((limitRaw.value as number) ?? 1)
     : String(limitRaw ?? 1);
 
   return (
@@ -391,7 +356,7 @@ function StatusEntrySection({ status, index }: { status: JsonSkillData; index: n
           <div className="oee-meta-grid">
             <div className="oee-meta-row">
               <span className="oee-meta-label">Interaction</span>
-              <span className="oee-meta-value">{String(sl.statusLevelInteractionType ?? 'NONE')}</span>
+              <span className="oee-meta-value">{String(sl.interactionType ?? 'NONE')}</span>
             </div>
             <div className="oee-meta-row">
               <span className="oee-meta-label">Max Stacks</span>
@@ -453,30 +418,19 @@ function ClauseSection({ title, clause, conditionsOnly, readOnly }: {
   conditionsOnly?: boolean;
   readOnly?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true);
-
   const handleChange = useCallback((updated: Clause) => {
-    // Read-only for now — changes are logged but not persisted
     console.log(`[OEE] ${title} changed:`, updated);
   }, [title]);
 
   return (
-    <div className="oee-clause-section">
-      <div className="oee-clause-header" onClick={() => setExpanded(!expanded)}>
-        <span className="oee-entry-chevron">{expanded ? '\u25BE' : '\u25B8'}</span>
-        <span className="oee-clause-title">{title}</span>
-        <span className="oee-clause-count">{clause.length} predicate{clause.length !== 1 ? 's' : ''}</span>
-      </div>
-      {expanded && (
-        <div className="oee-clause-body">
-          <ClauseEditor
-            initialValue={clause}
-            onChange={handleChange}
-            conditionsOnly={conditionsOnly}
-            readOnly={readOnly}
-          />
-        </div>
-      )}
-    </div>
+    <>
+      <div className="ev-label">{title}</div>
+      <ClauseEditor
+        initialValue={clause}
+        onChange={handleChange}
+        conditionsOnly={conditionsOnly}
+        readOnly={readOnly}
+      />
+    </>
   );
 }

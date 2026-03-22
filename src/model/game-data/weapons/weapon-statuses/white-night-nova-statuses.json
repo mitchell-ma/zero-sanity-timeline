@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.12,
                   0.144,
                   0.168,
@@ -32,7 +32,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   25,
                   30,
                   35,
@@ -53,18 +53,16 @@
       "id": "WHITE_NIGHT_NOVA_WHITE_NIGHT_NOVA",
       "name": "White Night Nova",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

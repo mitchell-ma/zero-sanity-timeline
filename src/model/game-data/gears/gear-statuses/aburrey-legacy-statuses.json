@@ -58,7 +58,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "STATUS_LEVEL",
-                "values": [
+                "value": [
                   0.05
                 ]
               }
@@ -74,18 +74,16 @@
       "id": "ABURREY_LEGACY",
       "name": "Aburrey's Legacy",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          15
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            3
-          ]
+          "value": 3
         },
         "interactionType": "NONE"
       },

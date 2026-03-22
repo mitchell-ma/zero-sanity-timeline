@@ -1,4 +1,5 @@
 import { DamageType, ElementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
+import type { DslTarget } from '../dsl/semantics';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
 /** String union for the four operator combat skills, matching the data keys in operators.ts. */
@@ -115,13 +116,13 @@ export interface EventFrameMarker {
   /** Arts infliction consumed on this frame hit (removed without exchange). */
   consumeArtsInfliction?: { element: string; stacks: number };
   /** Forced arts reaction applied on this frame hit (bypasses infliction stacks). */
-  applyForcedReaction?: { reaction: string; statusLevel: number; durationFrames?: number };
+  applyForcedReaction?: { reaction: string; stacks: number; durationFrames?: number };
   /** Status applied by this frame to a target (self or enemy). */
-  applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string };
+  applyStatus?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string };
   /** Multiple status applications on this frame (conditional on potential). */
-  applyStatuses?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string }[];
+  applyStatuses?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; stackingInteraction?: string; potentialMin?: number; potentialMax?: number; segments?: { name: string; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>> }[]; eventName?: string }[];
   /** Consume an active reaction on the enemy; if successful, conditionally apply a status. */
-  consumeReaction?: { columnId: string; applyStatus?: { target: string; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string } };
+  consumeReaction?: { columnId: string; applyStatus?: { target: DslTarget; status: string; stacks: number; durationFrames: number; susceptibility?: Partial<Record<ElementType, readonly number[]>>; eventName?: string } };
   /** Operator status consumed by this frame (e.g. Thunderlance consumed by ultimate). */
   consumeStatus?: string;
   /** Damage type: NORMAL (default) or DAMAGE_OVER_TIME (cannot crit). */
@@ -160,7 +161,7 @@ export interface EventFrameMarker {
 
 /** Identifies a specific frame within a sequenced event. */
 export interface SelectedFrame {
-  eventId: string;
+  eventUid: string;
   segmentIndex: number;
   frameIndex: number;
 }
@@ -197,8 +198,11 @@ export interface EventSegmentData {
 }
 
 export interface TimelineEvent {
+  /** Unique instance identifier (e.g. `ev-1-abc4`). Not the game-data config ID. */
+  uid: string;
+  /** Game-data config ID (e.g. `CombatSkillsType.DASH`, `"BURST_OF_PASSION"`). Used for all identity comparisons. */
   id: string;
-  /** CombatSkillsType enum value identifying this event's skill variant. */
+  /** Display name. Not used for logic — use `id` for comparisons. */
   name: string;
   ownerId: string;
   columnId: string;
@@ -207,8 +211,8 @@ export interface TimelineEvent {
   segments: EventSegmentData[];
   /** True for manually-added arts reaction events (not derived from infliction interactions). */
   isForced?: boolean;
-  /** Arts reaction status level (1–4). Higher = stronger effect. */
-  statusLevel?: number;
+  /** Stack count (e.g. infliction stacks consumed for reactions, operator status stacks). */
+  stacks?: number;
   /**
    * Frame count from startFrame during which no other event in the same
    * mini-timeline or micro-timeline column may overlap.
@@ -247,8 +251,6 @@ export interface TimelineEvent {
   eventStatusSkillName?: string;
   /** True if this reaction was forced (bypassed infliction stacks). */
   forcedReaction?: boolean;
-  /** Number of infliction stacks consumed to trigger this arts reaction (determines status level). */
-  inflictionStacks?: number;
   /** True if this infliction event was a same-element stack (Arts Burst). */
   isArtsBurst?: boolean;
   /** Inherited reduction floor from a merged corrosion (resistance points). */
@@ -309,8 +311,8 @@ export interface MicroColumn {
   id: string;         // used as columnId for events in this micro-column
   label: string;      // short display label (e.g. "HEAT", "1")
   color: string;      // render color for events in this micro-column
-  /** Maximum pixel width for this micro-column in dynamic-split layout. */
-  maxWidth?: number;
+  /** Status category type (TALENT, TALENT_STATUS, GEAR_STATUS, WEAPON_STATUS, etc.). */
+  statusType?: string;
   /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
   defaultEvent?: {
     name: string;

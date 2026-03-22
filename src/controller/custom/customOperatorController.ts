@@ -3,7 +3,7 @@
  */
 import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '../../consts/enums';
 import { OperatorClassType } from '../../model/enums/operators';
-import { SubjectType, VerbType, ObjectType } from '../../consts/semantics';
+import { SubjectType, VerbType, ObjectType } from '../../dsl/semantics';
 import type { CustomOperator } from '../../model/custom/customOperatorTypes';
 import { loadCustomOperators, saveCustomOperators, validateCustomOperator } from '../../utils/customContentStorage';
 import type { ValidationError } from '../../utils/customContentStorage';

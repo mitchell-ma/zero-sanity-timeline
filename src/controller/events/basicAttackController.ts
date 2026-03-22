@@ -2,7 +2,7 @@ import { SkillEventSequence } from "../../model/event-frames/skillEventSequence"
 import { EventFrameType, SegmentType, TimeDependency } from "../../consts/enums";
 import { EventFrameMarker, EventSegmentData } from "../../consts/viewTypes";
 import { FPS } from "../../utils/timeline";
-import { formatSegmentShortName } from "../../utils/semanticsTranslation";
+import { formatSegmentShortName } from "../../dsl/semanticsTranslation";
 
 /** Convert skill event sequences into view-layer segment data. */
 export class SkillSegmentBuilder {
@@ -55,7 +55,7 @@ export class SkillSegmentBuilder {
         const forced = f.getApplyForcedReaction();
         if (forced) marker.applyForcedReaction = {
           reaction: forced.reaction,
-          statusLevel: forced.statusLevel,
+          stacks: forced.stacks,
           ...(forced.durationFrames != null && { durationFrames: forced.durationFrames }),
         };
         const statuses = f.getApplyStatuses();

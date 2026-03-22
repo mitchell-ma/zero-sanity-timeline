@@ -11,6 +11,7 @@ import {
   moveNode,
   uniqueName,
 } from '../utils/loadoutStorage';
+import { t } from '../locales/locale';
 
 export type SidebarMode = 'loadouts' | 'workbench' | null;
 
@@ -397,12 +398,12 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
               <>
                 <button
                   className="loadout-action-btn"
-                  title="New loadout"
+                  title={t('sidebar.btn.newLoadout')}
                   onClick={() => handleAddLoadout(node.id)}
                 >+</button>
                 <button
                   className="loadout-action-btn"
-                  title="New folder"
+                  title={t('sidebar.btn.newFolder')}
                   onClick={() => handleAddFolder(node.id)}
                 >
                   <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
@@ -413,7 +414,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             )}
             <button
               className="loadout-action-btn loadout-action-btn--delete"
-              title="Delete"
+              title={t('sidebar.btn.delete')}
               onClick={() => handleDelete(node.id)}
             >
               <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor">
@@ -455,7 +456,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         <button
           className={`sidebar-mode-btn${sidebarMode === 'loadouts' ? ' sidebar-mode-btn--active' : ''}`}
           onClick={() => handleIconClick('loadouts')}
-          title="Loadouts"
+          title={t('sidebar.tooltip.loadouts')}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
@@ -464,7 +465,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
         <button
           className={`sidebar-mode-btn${sidebarMode === 'workbench' ? ' sidebar-mode-btn--active' : ''}`}
           onClick={() => handleIconClick('workbench')}
-          title="Workbench"
+          title={t('sidebar.tooltip.workbench')}
         >
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
@@ -476,16 +477,16 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
       {sidebarMode === 'loadouts' && (
         <div className="sidebar-panel">
           <div className="loadout-sidebar-header">
-            <span className="loadout-sidebar-title">LOADOUTS</span>
+            <span className="loadout-sidebar-title">{t('sidebar.title')}</span>
             <div className="loadout-sidebar-header-actions">
               <button
                 className="loadout-action-btn"
-                title="New loadout"
+                title={t('sidebar.btn.newLoadout')}
                 onClick={() => handleAddLoadout(null)}
               >+</button>
               <button
                 className="loadout-action-btn"
-                title="New folder"
+                title={t('sidebar.btn.newFolder')}
                 onClick={() => handleAddFolder(null)}
               >
                 <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
@@ -498,7 +499,7 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
           <div className="loadout-filter-row">
             <input
               className="loadout-filter-input"
-              placeholder="Filter..."
+              placeholder={t('sidebar.filter.placeholder')}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
@@ -530,11 +531,11 @@ const LoadoutSidebar = forwardRef<HTMLDivElement, LoadoutSidebarProps>(function 
             }}
           >
             {rootNodes.length === 0 && !filter && (
-              <div className="loadout-empty">No loadouts yet</div>
+              <div className="loadout-empty">{t('sidebar.empty')}</div>
             )}
             {rootNodes.map((node) => renderNode(node, 0))}
             {filter && visibleIds?.size === 0 && (
-              <div className="loadout-empty">No matches</div>
+              <div className="loadout-empty">{t('sidebar.emptyFilter')}</div>
             )}
           </div>
 
@@ -636,27 +637,27 @@ function LoadoutContextMenu({
       {!confirmDelete ? (
         <>
           <button className="loadout-ctx-item" onClick={() => onNewLoadout(parentId)}>
-            New Loadout
+            {t('sidebar.ctx.newLoadout')}
           </button>
           <button className="loadout-ctx-item" onClick={() => onNewFolder(parentId)}>
-            New Folder
+            {t('sidebar.ctx.newFolder')}
           </button>
           {nodeId && node && !isBatch && (
             <>
               <div className="loadout-ctx-separator" />
               {node.type === 'loadout' && (
                 <button className="loadout-ctx-item" onClick={() => onDuplicate(nodeId)}>
-                  Duplicate
+                  {t('sidebar.ctx.duplicate')}
                 </button>
               )}
               <button className="loadout-ctx-item" onClick={() => onRename(nodeId)}>
-                Rename
+                {t('sidebar.ctx.rename')}
               </button>
               <button
                 className="loadout-ctx-item loadout-ctx-item--danger"
                 onClick={() => setConfirmDelete(true)}
               >
-                Delete
+                {t('sidebar.ctx.delete')}
               </button>
             </>
           )}
@@ -667,7 +668,7 @@ function LoadoutContextMenu({
                 className="loadout-ctx-item loadout-ctx-item--danger"
                 onClick={() => setConfirmDelete(true)}
               >
-                {`Delete ${batchCount} items`}
+                {t('sidebar.ctx.batchDelete', { count: batchCount })}
               </button>
             </>
           )}
@@ -675,7 +676,7 @@ function LoadoutContextMenu({
       ) : (
         <>
           <div className="loadout-ctx-confirm-label">
-            {isBatch ? `Delete ${batchCount} items?` : `Delete "${node?.name}"?`}
+            {isBatch ? t('sidebar.confirm.batchDelete', { count: batchCount }) : t('sidebar.confirm.deleteItem', { name: node?.name ?? '' })}
           </div>
           <div className="loadout-ctx-separator" />
           <button
@@ -685,10 +686,10 @@ function LoadoutContextMenu({
               else if (nodeId) onDelete(nodeId);
             }}
           >
-            Confirm Delete
+            {t('sidebar.confirm.confirmDelete')}
           </button>
           <button className="loadout-ctx-item" onClick={() => setConfirmDelete(false)}>
-            Cancel
+            {t('sidebar.confirm.cancel')}
           </button>
         </>
       )}

@@ -1,5 +1,5 @@
-import { CombatSkillType, DurationUnit, EventOriginType, EventType, OperatorType, TargetType } from "../../consts/enums";
-import type { Clause } from "../../consts/semantics";
+import { CombatSkillType, UnitType, EventOriginType, EventType, OperatorType } from "../../consts/enums";
+import type { Clause, DslTarget } from "../../dsl/semantics";
 import { Event } from "./event";
 
 export abstract class CombatSkillEvent extends Event {
@@ -12,7 +12,7 @@ export abstract class CombatSkillEvent extends Event {
     combatSkillType: CombatSkillType;
     eventOrigin?: EventOriginType;
     name?: string;
-    target: TargetType;
+    target: DslTarget;
     sourceOperator: OperatorType;
     duration: number;
     cooldownSeconds: number;
@@ -24,7 +24,7 @@ export abstract class CombatSkillEvent extends Event {
       name: params.name,
       target: params.target,
       sourceOperator: params.sourceOperator,
-      duration: { value: params.duration, unit: DurationUnit.SECOND },
+      duration: { value: params.duration, unit: UnitType.SECOND },
       clause: params.clause,
     });
     this.combatSkillType = params.combatSkillType;

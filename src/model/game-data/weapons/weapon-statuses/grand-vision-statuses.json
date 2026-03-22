@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   30,
                   36,
                   42,
@@ -32,7 +32,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.36,
                   0.432,
                   0.504,
@@ -54,18 +54,16 @@
       "name": "Long Time Wish",
       "description": "Phys DMG bonus on next battle/ult skill",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          20
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

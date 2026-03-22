@@ -80,9 +80,13 @@ export function getElementDamageBonusStat(element: ElementType): StatType {
 export function getSkillTypeDamageBonusStat(skillType: CombatSkillType): StatType {
   const map: Record<CombatSkillType, StatType> = {
     [CombatSkillType.BASIC_ATTACK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.BATK]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.FINAL_STRIKE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.NORMAL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
     [CombatSkillType.BATTLE_SKILL]: StatType.BATTLE_SKILL_DAMAGE_BONUS,
     [CombatSkillType.COMBO_SKILL]: StatType.COMBO_SKILL_DAMAGE_BONUS,
     [CombatSkillType.ULTIMATE]: StatType.ULTIMATE_DAMAGE_BONUS,
+    [CombatSkillType.ULTIMATE_SKILL]: StatType.ULTIMATE_DAMAGE_BONUS,
   };
   return map[skillType];
 }
@@ -293,22 +297,22 @@ export function getArtsBurstBaseMultiplier(): number {
 /**
  * Arts Reaction base multiplier: 80% + 80% per infliction stack.
  */
-export function getArtsReactionBaseMultiplier(inflictionStacks: number): number {
-  return 0.8 + 0.8 * inflictionStacks;
+export function getArtsReactionBaseMultiplier(stacks: number): number {
+  return 0.8 + 0.8 * stacks;
 }
 
 /**
- * Shatter base multiplier: 120% + 120% per status level.
+ * Shatter base multiplier: 120% + 120% per stack.
  */
-export function getShatterBaseMultiplier(statusLevel: StatusLevel): number {
-  return 1.2 + 1.2 * statusLevel;
+export function getShatterBaseMultiplier(stacks: StatusLevel): number {
+  return 1.2 + 1.2 * stacks;
 }
 
 /**
- * Combustion DoT multiplier per tick: 12% + 12% per status level.
+ * Combustion DoT multiplier per tick: 12% + 12% per stack.
  */
-export function getCombustionDotMultiplier(statusLevel: StatusLevel): number {
-  return 0.12 + 0.12 * statusLevel;
+export function getCombustionDotMultiplier(stacks: StatusLevel): number {
+  return 0.12 + 0.12 * stacks;
 }
 
 // ── Corrosion ──────────────────────────────────────────────────────────────
@@ -317,20 +321,20 @@ export function getCombustionDotMultiplier(statusLevel: StatusLevel): number {
  * Corrosion initial Nature DMG multiplier (percentage of ATK).
  * Only applies to naturally triggered corrosion, NOT forced reactions.
  *
- * Status Level  |  1    |  2    |  3    |  4
+ * Stacks  |  1    |  2    |  3    |  4
  * Multiplier    | 160%  | 240%  | 320%  | 400%
  */
-export function getCorrosionInitialMultiplier(statusLevel: StatusLevel): number {
-  return 0.8 + 0.8 * statusLevel;
+export function getCorrosionInitialMultiplier(stacks: StatusLevel): number {
+  return 0.8 + 0.8 * stacks;
 }
 
 /**
- * Corrosion resistance reduction table by status level.
+ * Corrosion resistance reduction table by stacks.
  * Returns { initial, max } reduction values (flat, not percentage).
  *
- * Status Level  |  1       |  2       |  3      |  4
- * Initial       |  3.6     |  4.8     |  6      |  7.2
- * Maximum       | 12       | 16       | 20      | 24
+ * Stacks   |  1       |  2       |  3      |  4
+ * Initial  |  3.6     |  4.8     |  6      |  7.2
+ * Maximum  | 12       | 16       | 20      | 24
  */
 const CORROSION_REDUCTION: Record<StatusLevel, { initial: number; max: number }> = {
   1: { initial: 3.6, max: 12 },
@@ -343,8 +347,8 @@ const CORROSION_REDUCTION: Record<StatusLevel, { initial: number; max: number }>
  * Base corrosion resistance reduction at a given elapsed time.
  * Linearly interpolates from initial to max over 10 seconds, then stays at max.
  */
-export function getCorrosionBaseReduction(statusLevel: StatusLevel, elapsedSeconds: number): number {
-  const { initial, max } = CORROSION_REDUCTION[statusLevel];
+export function getCorrosionBaseReduction(stacks: StatusLevel, elapsedSeconds: number): number {
+  const { initial, max } = CORROSION_REDUCTION[stacks];
   if (elapsedSeconds >= 10) return max;
   if (elapsedSeconds <= 0) return initial;
   return initial + (max - initial) * (elapsedSeconds / 10);
@@ -364,11 +368,11 @@ export function getCorrosionReductionMultiplier(artsIntensity: number): number {
  * This value is subtracted from enemy resistance to all damage types.
  */
 export function getCorrosionReduction(
-  statusLevel: StatusLevel,
+  stacks: StatusLevel,
   elapsedSeconds: number,
   artsIntensity: number,
 ): number {
-  return getCorrosionBaseReduction(statusLevel, elapsedSeconds)
+  return getCorrosionBaseReduction(stacks, elapsedSeconds)
     * getCorrosionReductionMultiplier(artsIntensity);
 }
 

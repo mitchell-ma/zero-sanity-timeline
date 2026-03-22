@@ -131,7 +131,7 @@ export class EventsQueryService {
     this.protectionEvents = events.filter(e => e.columnId === StatusType.PROTECTION);
     this.weaponFragilityEvents = events.filter(e => e.columnId.startsWith(FRAGILITY_COLUMN_PREFIX));
     this.scorchingHeartEvents = events.filter(e => e.columnId === 'scorching-heart-effect');
-    this.wildlandTrekkerEvents = events.filter(e => e.columnId === StatusType.WILDLAND_TREKKER);
+    this.wildlandTrekkerEvents = events.filter(e => e.columnId === 'WILDLAND_TREKKER');
     this.cryoInflictionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === INFLICTION_COLUMNS.CRYO);
     this.solidificationEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.SOLIDIFICATION);
     this.originiumCrystalEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL);
@@ -277,15 +277,15 @@ export class EventsQueryService {
     if (ARTS_ELEMENTS.has(element)) {
       for (const ev of this.electrificationEvents) {
         if (!this.isActive(ev, frame)) continue;
-        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
-        sum += ELECTRIFICATION_ARTS_FRAGILITY[statusLevel] ?? 0;
+        const stackCount = Math.min(ev.stacks ?? 1, 4);
+        sum += ELECTRIFICATION_ARTS_FRAGILITY[stackCount] ?? 0;
       }
     }
     if (element === ElementType.PHYSICAL) {
       for (const ev of this.breachEvents) {
         if (!this.isActive(ev, frame)) continue;
-        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
-        sum += BREACH_PHYSICAL_FRAGILITY[statusLevel] ?? 0;
+        const stackCount = Math.min(ev.stacks ?? 1, 4);
+        sum += BREACH_PHYSICAL_FRAGILITY[stackCount] ?? 0;
       }
     }
     for (const ev of this.weaponFragilityEvents) {
@@ -311,15 +311,14 @@ export class EventsQueryService {
     let maxReduction = 0;
     for (const ev of this.corrosionEvents) {
       if (!this.isActive(ev, frame)) continue;
-      const stacks = ev.inflictionStacks ?? 1;
-      const statusLevel = Math.min(stacks, 4) as StatusLevel;
+      const cappedStacks = Math.min(ev.stacks ?? 1, 4) as StatusLevel;
       const elapsedSeconds = (frame - ev.startFrame) / FPS;
       let artsIntensity = 0;
       if (ev.sourceOwnerId) {
         const agg = this.aggregatedStats?.[ev.sourceOwnerId];
         if (agg) artsIntensity = agg.stats[StatType.ARTS_INTENSITY] ?? 0;
       }
-      maxReduction = Math.max(maxReduction, getCorrosionReduction(statusLevel, elapsedSeconds, artsIntensity));
+      maxReduction = Math.max(maxReduction, getCorrosionReduction(cappedStacks, elapsedSeconds, artsIntensity));
     }
     return maxReduction;
   }
@@ -347,17 +346,17 @@ export class EventsQueryService {
     if (ARTS_ELEMENTS.has(element)) {
       for (const ev of this.electrificationEvents) {
         if (!this.isActive(ev, frame)) continue;
-        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
-        const value = ELECTRIFICATION_ARTS_FRAGILITY[statusLevel] ?? 0;
-        if (value > 0) sources.push({ label: `Electrification Lv${statusLevel}`, value });
+        const stackCount = Math.min(ev.stacks ?? 1, 4);
+        const value = ELECTRIFICATION_ARTS_FRAGILITY[stackCount] ?? 0;
+        if (value > 0) sources.push({ label: `Electrification Lv${stackCount}`, value });
       }
     }
     if (element === ElementType.PHYSICAL) {
       for (const ev of this.breachEvents) {
         if (!this.isActive(ev, frame)) continue;
-        const statusLevel = Math.min(ev.statusLevel ?? ev.inflictionStacks ?? 1, 4);
-        const value = BREACH_PHYSICAL_FRAGILITY[statusLevel] ?? 0;
-        if (value > 0) sources.push({ label: `Breach Lv${statusLevel}`, value });
+        const stackCount = Math.min(ev.stacks ?? 1, 4);
+        const value = BREACH_PHYSICAL_FRAGILITY[stackCount] ?? 0;
+        if (value > 0) sources.push({ label: `Breach Lv${stackCount}`, value });
       }
     }
     for (const ev of this.weaponFragilityEvents) {

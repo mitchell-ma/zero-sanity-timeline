@@ -8,14 +8,15 @@
  *   ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpression
  *   ValueLiteral    = { verb: "IS", value: number }
  *   ValueVariable   = { verb: "VARY_BY", object: string, value?: number[] }
- *   ValueStat       = { verb: "STAT", object: string }
+ *   ValueStat       = { verb: "IS", object: "STAT", objectId: string }
  *   ValueExpression = { operator: ValueOperator, left: ValueNode, right: ValueNode }
  */
 import {
-  ValueOperator,
+  VerbType, ValueOperator,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
-} from '../../consts/semantics';
-import type { ValueNode, ValueLiteral, ValueVariable, ValueStat } from '../../consts/semantics';
+} from '../../dsl/semantics';
+import { CoreNounType } from '../../dsl/semantics';
+import type { ValueNode, ValueLiteral, ValueVariable, ValueStat } from '../../dsl/semantics';
 import { StatType } from '../../model/enums/stats';
 import CustomSelect from './CustomSelect';
 
@@ -63,11 +64,11 @@ const VARIABLE_ARRAY_LENGTHS: Record<string, number> = {
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function defaultLiteral(): ValueLiteral {
-  return { verb: 'IS', value: 0 };
+  return { verb: VerbType.IS, value: 0 };
 }
 
 function defaultVariable(): ValueVariable {
-  return { verb: 'VARY_BY', object: 'SKILL_LEVEL', value: Array(12).fill(0) };
+  return { verb: VerbType.VARY_BY, object: 'SKILL_LEVEL', value: Array(12).fill(0) };
 }
 
 function getNodeType(node: ValueNode): string {
@@ -81,18 +82,18 @@ function getNodeType(node: ValueNode): string {
 function convertNode(node: ValueNode, toType: string): ValueNode {
   if (toType === 'literal') {
     if (isValueLiteral(node)) return node;
-    if (isValueVariable(node) && typeof node.value === 'number') return { verb: 'IS', value: node.value };
-    if (isValueVariable(node) && Array.isArray(node.value)) return { verb: 'IS', value: node.value[0] ?? 0 };
+    if (isValueVariable(node) && typeof node.value === 'number') return { verb: VerbType.IS, value: node.value };
+    if (isValueVariable(node) && Array.isArray(node.value)) return { verb: VerbType.IS, value: node.value[0] ?? 0 };
     return defaultLiteral();
   }
   if (toType === 'variable') {
     if (isValueVariable(node)) return node;
-    if (isValueLiteral(node)) return { verb: 'VARY_BY', object: 'SKILL_LEVEL', value: Array(12).fill(node.value) };
+    if (isValueLiteral(node)) return { verb: VerbType.VARY_BY, object: 'SKILL_LEVEL', value: Array(12).fill(node.value) };
     return defaultVariable();
   }
   if (toType === 'stat') {
     if (isValueStat(node)) return node;
-    return { verb: 'STAT', object: StatType.INTELLECT };
+    return { verb: VerbType.IS, object: CoreNounType.STAT, objectId: StatType.INTELLECT };
   }
   if (toType === 'expression') {
     if (isValueExpression(node)) return node;
@@ -182,7 +183,7 @@ function LiteralEditor({ node, onChange }: { node: ValueLiteral; onChange: (n: V
       type="number"
       step="any"
       value={node.value}
-      onChange={(e) => onChange({ verb: 'IS', value: Number(e.target.value) || 0 })}
+      onChange={(e) => onChange({ verb: VerbType.IS, value: Number(e.target.value) || 0 })}
     />
   );
 }
@@ -191,9 +192,9 @@ function StatEditor({ node, onChange }: { node: ValueStat; onChange: (n: ValueNo
   return (
     <CustomSelect
       className="expr-var-select"
-      value={node.object}
+      value={node.objectId}
       options={STAT_OPTIONS}
-      onChange={(obj) => onChange({ verb: 'STAT', object: obj })}
+      onChange={(obj) => onChange({ verb: VerbType.IS, object: CoreNounType.STAT, objectId: obj })}
     />
   );
 }
@@ -204,7 +205,7 @@ function VariableEditor({ node, onChange }: { node: ValueVariable; onChange: (n:
     const arr = Array.isArray(node.value) ? node.value : [];
     const newLen = VARIABLE_ARRAY_LENGTHS[obj] ?? 12;
     const newArr = Array(newLen).fill(0).map((_, i) => arr[i] ?? 0);
-    onChange({ verb: 'VARY_BY', object: obj, value: newArr });
+    onChange({ verb: VerbType.VARY_BY, object: obj, value: newArr });
   };
 
   return (
@@ -245,7 +246,7 @@ function VariableLevelTable({ node, onChange }: { node: ValueVariable; onChange:
                   onChange={(e) => {
                     const next = [...arr];
                     next[i] = Number(e.target.value) || 0;
-                    onChange({ verb: 'VARY_BY', object: node.object, value: next });
+                    onChange({ verb: VerbType.VARY_BY, object: node.object, value: next });
                   }}
                 />
               </td>

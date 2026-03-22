@@ -5,8 +5,8 @@
  */
 import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType,
   VERB_LABELS, OBJECT_LABELS, SUBJECT_LABELS, DETERMINER_LABELS, CARDINALITY_LABELS, TARGET_LABELS, WITH_PROPERTY_LABELS, WITH_BOOLEAN_PROPERTIES,
-  getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb } from '../../consts/semantics';
-import type { Interaction, Effect, WithPreposition } from '../../consts/semantics';
+  getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb } from '../../dsl/semantics';
+import type { Interaction, Effect, WithPreposition } from '../../dsl/semantics';
 import { getAllStatusIds, getAllInflictionIds, getAllReactionIds } from '../../model/event-frames/operatorJsonLoader';
 import SentenceSlot from './SentenceSlot';
 import CustomSelect from './CustomSelect';
@@ -311,7 +311,7 @@ function WithPropertyInput({ prop, value, update }: {
             if (checked) {
               delete next[prop];
             } else {
-              next[prop] = { verb: 'IS' as const, value: 1 };
+              next[prop] = { verb: VerbType.IS, value: 1 };
             }
             setWith(next);
           }}
@@ -338,7 +338,7 @@ function WithPropertyInput({ prop, value, update }: {
           if (e.target.value === '' || isNaN(num)) {
             delete next[prop];
           } else {
-            next[prop] = { verb: 'IS' as const, value: num };
+            next[prop] = { verb: VerbType.IS, value: num };
           }
           setWith(next);
         }}

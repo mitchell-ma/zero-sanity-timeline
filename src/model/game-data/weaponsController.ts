@@ -4,11 +4,11 @@
  *
  * Auto-discovers weapons/weapon-pieces/*.json via require.context.
  */
-import type { ClausePredicate, WithValue } from './weaponStatusesController';
+import type { ClausePredicate } from './weaponStatusesController';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'toDeterminer', 'to', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
@@ -24,10 +24,10 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
   return errors;
 }
 
-function validateWithValue(wv: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(wv, VALID_WITH_VALUE_KEYS, path);
-  if (typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (!Array.isArray(wv.values)) errors.push(`${path}.values: must be an array`);
+function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
+  const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
+  if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
+  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
   return errors;
 }
 
@@ -38,7 +38,7 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
-    if (w.value) errors.push(...validateWithValue(w.value as Record<string, unknown>, `${path}.with.value`));
+    if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
   return errors;
 }
@@ -111,7 +111,9 @@ export class Weapon {
     for (const clause of this.clause) {
       for (const ef of clause.effects) {
         if (ef.verb === 'APPLY' && ef.object === 'BASE_ATTACK') {
-          return (ef.with as Record<string, WithValue>)?.value?.values ?? [];
+          const wv = (ef.with as Record<string, unknown>)?.value as { value?: number | number[] } | undefined;
+          const v = wv?.value;
+          return v == null ? [] : Array.isArray(v) ? v : [v];
         }
       }
     }

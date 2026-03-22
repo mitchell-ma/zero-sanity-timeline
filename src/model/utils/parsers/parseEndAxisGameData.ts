@@ -12,6 +12,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { UnitType } from '../../../consts/enums';
+import { VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
 const OPERATORS_DIR = path.resolve(__dirname, '../../game-data/operators');
@@ -30,9 +32,8 @@ interface Effect {
   toDeterminer?: string;
   toObject?: string;
   with?: {
-    cardinality?: { verb: string; value: number };
+    value?: { verb: string; value: number };
     stacks?: { verb: string; value: number };
-    statusLevel?: { verb: string; value: number };
     duration?: { verb: string; value: number };
   };
   conversion?: { statusType: string; ratio: string };
@@ -187,7 +188,7 @@ interface AnomalyMapping {
   object: string;
   adjective?: string | string[];
   isForced?: boolean;
-  statusLevel?: number;
+  stacks?: number;
   conversion?: { statusType: string; ratio: string };
 }
 
@@ -196,7 +197,7 @@ const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
   cold_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'CRYO' },
   emag_attach:    { verb: 'APPLY', object: 'INFLICTION', adjective: 'ELECTRIC' },
   nature_attach:  { verb: 'APPLY', object: 'INFLICTION', adjective: 'NATURE' },
-  magma_0:        { verb: 'APPLY', object: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, statusLevel: 1 },
+  magma_0:        { verb: 'APPLY', object: 'REACTION', adjective: ['FORCED', 'COMBUSTION'], isForced: true, stacks: 1 },
   magma_1:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
   magma_2:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
   magma_3:        { verb: 'APPLY', object: 'INFLICTION', adjective: 'MELTING_FLAME' },
@@ -209,7 +210,7 @@ const ANOMALY_TYPE_MAP: Record<string, AnomalyMapping | null> = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function dur(value: number): Duration {
-  return { value, unit: 'SECOND' };
+  return { value, unit: UnitType.SECOND };
 }
 
 const DATA_SOURCES = ['END_AXIS'];
@@ -244,7 +245,7 @@ function convertTick(
     verb: 'RECOVER',
     object: 'SKILL_POINT',
     with: {
-      cardinality: { verb: 'IS', value: tick.sp },
+      value: { verb: VerbType.IS, value: tick.sp },
     },
   });
 
@@ -253,7 +254,7 @@ function convertTick(
     verb: 'RECOVER',
     object: 'STAGGER',
     with: {
-      cardinality: { verb: 'IS', value: tick.stagger },
+      value: { verb: VerbType.IS, value: tick.stagger },
     },
   });
 
@@ -271,9 +272,9 @@ function convertTick(
     };
 
     const withPrep: Effect['with'] = {};
-    if (anomaly.stacks > 0) withPrep.stacks = { verb: 'IS', value: anomaly.stacks };
-    if (mapping.statusLevel !== undefined) withPrep.statusLevel = { verb: 'IS', value: mapping.statusLevel };
-    if (anomaly.duration > 0) withPrep.duration = { verb: 'IS', value: anomaly.duration };
+    if (anomaly.stacks > 0) withPrep.stacks = { verb: VerbType.IS, value: anomaly.stacks };
+    if (mapping.stacks !== undefined) withPrep.stacks = { verb: VerbType.IS, value: mapping.stacks };
+    if (anomaly.duration > 0) withPrep.duration = { verb: VerbType.IS, value: anomaly.duration };
 
     if (Object.keys(withPrep).length > 0) effect.with = withPrep;
     if (mapping.conversion) effect.conversion = mapping.conversion;
@@ -305,7 +306,7 @@ function buildResourceEffect(
     verb: interactionType,
     object: resourceType,
     with: {
-      cardinality: { verb: 'IS', value },
+      value: { verb: VerbType.IS, value },
     },
   };
 

@@ -7,7 +7,7 @@
  * Used by loadoutAggregator for passive stat aggregation.
  */
 import { GearSetEffectType, GearSetType, StatType } from './enums';
-import type { Interaction } from './semantics';
+import type { Interaction } from '../dsl/semantics';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

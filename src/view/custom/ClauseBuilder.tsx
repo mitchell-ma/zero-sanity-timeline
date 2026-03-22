@@ -15,7 +15,7 @@
  *   │                                     [+ OR]  │
  *   └─────────────────────────────────────────────┘
  */
-import type { Clause, Predicate, Interaction, Effect } from '../../consts/semantics';
+import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
 

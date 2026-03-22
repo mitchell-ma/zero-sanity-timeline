@@ -6,7 +6,7 @@ import { GearCategory } from '../../../consts/enums';
 import type { CustomGearSet, CustomGearPiece, CustomGearEffect as CustomGearEffectDef } from '../../../model/custom/customGearTypes';
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
-import type { Interaction } from '../../../consts/semantics';
+import type { Interaction } from '../../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
 
 const GEAR_CATEGORIES = Object.values(GearCategory);

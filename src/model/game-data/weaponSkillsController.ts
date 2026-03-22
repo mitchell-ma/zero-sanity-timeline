@@ -6,12 +6,12 @@
  * Generic skills (shared stat boosts) are in generic-skills.json keyed by ID.
  * Named skills (per-weapon) are in <weapon>-skills.json with metadata.originId.
  */
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesController';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'objectId', 'to', 'toDeterminer', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['multiplier', 'value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
@@ -28,10 +28,10 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
   return errors;
 }
 
-function validateWithValue(wv: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(wv, VALID_WITH_VALUE_KEYS, path);
-  if (typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (!Array.isArray(wv.values)) errors.push(`${path}.values: must be an array`);
+function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
+  const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
+  if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
+  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
   return errors;
 }
 
@@ -42,8 +42,8 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
-    if (w.multiplier) errors.push(...validateWithValue(w.multiplier as Record<string, unknown>, `${path}.with.multiplier`));
-    if (w.value) errors.push(...validateWithValue(w.value as Record<string, unknown>, `${path}.with.value`));
+    if (w.multiplier) errors.push(...validateValueNode(w.multiplier as Record<string, unknown>, `${path}.with.multiplier`));
+    if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
   return errors;
 }
@@ -135,7 +135,8 @@ export class WeaponSkill {
     for (const effect of this.passiveEffects) {
       if (effect.object === statObject) {
         const wv = effect.with?.multiplier ?? effect.with?.value;
-        if (wv?.values) return wv.values;
+        const v = (wv as { value?: number | number[] })?.value;
+        if (v != null) return Array.isArray(v) ? v : [v];
       }
     }
     return [];
@@ -227,8 +228,9 @@ export function getGenericSkillStats(skillId: string, level: number): WeaponSkil
   const results: WeaponSkillStatResult[] = [];
   for (const effect of skill.passiveEffects) {
     const wv = effect.with?.multiplier ?? effect.with?.value;
-    if (!wv?.values) continue;
-    const value = wv.values[level - 1] ?? 0;
+    if ((wv as { value?: unknown })?.value == null) continue;
+    const vals = Array.isArray((wv as { value: unknown }).value) ? (wv as { value: number[] }).value : [(wv as { value: number }).value];
+    const value = vals[level - 1] ?? 0;
     if (value !== 0) results.push({ stat: effect.object, value });
   }
   return results;
@@ -244,8 +246,9 @@ export function getNamedSkillPassiveStats(weaponOriginId: string, level: number)
   const results: WeaponSkillStatResult[] = [];
   for (const effect of skill.passiveEffects) {
     const wv = effect.with?.multiplier ?? effect.with?.value;
-    if (!wv?.values) continue;
-    const value = wv.values.length === 1 ? wv.values[0] : (wv.values[level - 1] ?? 0);
+    if ((wv as { value?: unknown })?.value == null) continue;
+    const vals = Array.isArray((wv as { value: unknown }).value) ? (wv as { value: number[] }).value : [(wv as { value: number }).value];
+    const value = vals.length === 1 ? vals[0] : (vals[level - 1] ?? 0);
     if (value !== 0) results.push({ stat: effect.object, value });
   }
   return results;

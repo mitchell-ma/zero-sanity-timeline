@@ -5,7 +5,7 @@
  * Conditions use verbs IS, HAVE, PERFORM, BECOME — they assert state,
  * they don't mutate it.
  */
-import { Interaction, CardinalityConstraintType, NounType, DeterminerType } from '../../consts/semantics';
+import { Interaction, CardinalityConstraintType, NounType, DeterminerType, VerbType } from '../../dsl/semantics';
 import { TimelineEvent } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels/index';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -211,7 +211,7 @@ export function evaluateInteraction(cond: Interaction, ctx: ConditionContext): b
   }
 
   // Apply negation (IS handles its own negation for state checks)
-  if (cond.negated && cond.verb !== 'IS') return !result;
+  if (cond.negated && cond.verb !== VerbType.IS) return !result;
   return result;
 }
 

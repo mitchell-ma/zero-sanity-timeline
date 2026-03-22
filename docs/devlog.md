@@ -1,5 +1,15 @@
 # Devlog
 
+## 2026-03-22
+- **Content browser and editor** — browse all operators, weapons, gear sets, and their skills, statuses, talents, and effects in one unified panel with inline editing and a "clone to custom" workflow
+- **Event viewer** — multi-page event inspector showing event details, segment breakdowns, and per-frame hit data with a live timeline preview
+- **Status event editor** — dedicated editor for operator status configs with property, metadata, and clause sections
+- **Human-readable effect descriptions** — status effects and skill clauses now display as plain-language descriptions (e.g. "Apply Focus to the enemy for 10s") instead of raw data
+- **Localization framework** — all UI text now uses a translation system, preparing for future multi-language support
+- **Ultimate energy and skill point tracking improvements** — these resource systems now update incrementally as events are processed, improving accuracy for complex rotations
+- Updated skill data, status configs, and gear stats across all operators and equipment
+- Reorganized tests into unit and integration categories
+
 ## 2026-03-21
 - **Enemy HP tracking** — the simulation now estimates cumulative damage dealt to the boss over time, enabling HP-threshold conditions (e.g. "below 50% HP") for status effects and triggers
 - **Value expressions** — status effect values can now use math expressions (multiply, add, min/max) combining stats, stack counts, and skill levels, enabling more complex buff formulas

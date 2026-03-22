@@ -19,7 +19,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   3,
                   4
                 ]

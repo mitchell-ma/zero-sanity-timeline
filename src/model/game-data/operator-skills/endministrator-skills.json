@@ -10,7 +10,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.33,
+            "value": {
+              "verb": "IS",
+              "value": 0.33
+            },
             "unit": "SECOND"
           }
         },
@@ -73,7 +76,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.43,
+            "value": {
+              "verb": "IS",
+              "value": 0.43
+            },
             "unit": "SECOND"
           }
         },
@@ -136,7 +142,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.6,
+            "value": {
+              "verb": "IS",
+              "value": 0.6
+            },
             "unit": "SECOND"
           }
         },
@@ -246,7 +255,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.1,
+            "value": {
+              "verb": "IS",
+              "value": 1.1
+            },
             "unit": "SECOND"
           }
         },
@@ -450,7 +462,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.867,
+            "value": {
+              "verb": "IS",
+              "value": 0.867
+            },
             "unit": "SECOND"
           }
         },
@@ -705,7 +720,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 0.8,
+            "value": {
+              "verb": "IS",
+              "value": 0.8
+            },
             "unit": "SECOND"
           }
         }
@@ -746,7 +764,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -760,7 +781,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.27,
+            "value": {
+              "verb": "IS",
+              "value": 0.27
+            },
             "unit": "SECOND"
           }
         },
@@ -826,22 +850,24 @@
                     "to": "ENEMY",
                     "with": {
                       "duration": {
-                        "verb": "VARY_BY",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          4,
-                          4,
-                          4,
-                          4,
-                          4,
-                          4,
-                          4,
-                          4,
-                          4,
-                          4.5,
-                          4.5,
-                          5
-                        ],
+                        "value": {
+                          "verb": "VARY_BY",
+                          "object": "SKILL_LEVEL",
+                          "value": [
+                            4,
+                            4,
+                            4,
+                            4,
+                            4,
+                            4,
+                            4,
+                            4,
+                            4,
+                            4.5,
+                            4.5,
+                            5
+                          ]
+                        },
                         "unit": "SECOND"
                       },
                       "SHATTER_DAMAGE_MULTIPLIER": {
@@ -878,22 +904,24 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              15
-            ],
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                15
+              ]
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -948,7 +976,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 1.467,
+            "value": {
+              "verb": "IS",
+              "value": 1.467
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -962,7 +993,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.363,
+            "value": {
+              "verb": "IS",
+              "value": 0.363
+            },
             "unit": "SECOND"
           }
         },
@@ -1145,7 +1179,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.5,
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
             "unit": "SECOND"
           }
         }
@@ -1216,7 +1253,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         }

@@ -45,9 +45,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  20
-                ]
+                "value": 20
               }
             },
             "toDeterminer": "THIS",
@@ -61,18 +59,16 @@
       "id": "AIC_LIGHT",
       "name": "AIC Light",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          5
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 5
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

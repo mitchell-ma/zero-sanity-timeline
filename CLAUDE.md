@@ -32,6 +32,7 @@ Commands:
 - `npx eslint src/` — run linter
 
 Rules:
+- Never write temporary files (screenshots, debug images, logs) to the project root. Use `.claude-temp/` for all throwaway files.
 - Always run `npx eslint src/` after making code changes and fix any warnings before finishing.
 - After completing any task, run `npx tsc --noEmit` and fix all compilation errors in changed files before reporting done.
 - Avoid explicit TypeScript typing unless absolutely necessary. Prefer type inference; only add annotations when the compiler cannot infer correctly or when a public API requires clarity.
@@ -53,7 +54,9 @@ Processes:
 - **New feature implementation** — When implementing new features that involve core controller logic:
   1. Review the input-output expectations of the new controller functions.
   2. Come up with a test plan covering key scenarios, edge cases, and integration points.
-  3. Implement tests in `src/tests/` after the feature is working, validating the controller logic in isolation.
+  3. Implement tests after the feature is working:
+     - **Unit tests** (`src/tests/unit/`): Test individual controllers, functions, and data in isolation with mocks.
+     - **Integration tests** (`src/tests/integration/`): Test the full user flow through `useApp` — add events via `handleAddEvent`, verify results via `allProcessedEvents` and view controllers. Integration tests must use `@jest-environment jsdom` and `renderHook`.
 - **"wrap up"** — End-of-session process:
   1. Summarize all changes done today (including earlier commits) and the current file changes; this will be the git commit message body.
   2. Update the devlog (`public/devlog.md`) for today's local date. **Devlog must be written for players, not developers.** Describe what changed for the user — new features, UI changes, behavior improvements. Never mention code structure, class names, refactors, file names, internal systems, or architecture. If a change is purely internal, either omit it or describe only its user-facing benefit.

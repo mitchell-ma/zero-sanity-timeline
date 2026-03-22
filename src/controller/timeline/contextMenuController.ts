@@ -8,8 +8,10 @@
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { CombatSkillsType, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
+import { t } from '../../locales/locale';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { getLastController } from './eventQueueController';
 import { MicroColumnController } from './microColumnController';
 import {
   checkComboWindowAvailability,
@@ -25,7 +27,7 @@ import {
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import type { StaggerBreak } from './staggerTimeline';
-import { frameToDetailLabel } from '../../utils/timeline';
+import { frameToDetailLabel, TOTAL_FRAMES } from '../../utils/timeline';
 
 export interface ColumnContextMenuContext {
   events: TimelineEvent[];
@@ -45,10 +47,18 @@ export interface ColumnContextMenuContext {
 /** Build "Set as Controlled Operator" item for operator-owned columns. */
 export function controlledItem(ownerId: string, atFrame: number): ContextMenuItem | null {
   if (ownerId === ENEMY_OWNER_ID || ownerId === COMMON_OWNER_ID) return null;
+  const alreadyControlled = getLastController()?.isControlledAt(ownerId, atFrame) ?? false;
   return {
-    label: 'Set as Controlled Operator',
+    label: t('ctx.setControlled'),
     actionId: 'addEvent',
-    actionPayload: { ownerId, columnId: OPERATOR_COLUMNS.CONTROLLED, atFrame, defaultSkill: null },
+    actionPayload: {
+      ownerId,
+      columnId: OPERATOR_COLUMNS.INPUT,
+      atFrame,
+      defaultSkill: { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
+    },
+    disabled: alreadyControlled,
+    disabledReason: alreadyControlled ? t('ctx.alreadyControlled') : undefined,
   };
 }
 
@@ -69,13 +79,13 @@ export function buildColumnContextMenu(
   if (col.noAdd && resourceGraphs?.has(col.key)) {
     return [
       { label: col.label, header: true },
-      { label: 'Edit Resource', actionId: 'editResource', actionPayload: col.key },
+      { label: t('ctx.editResource'), actionId: 'editResource', actionPayload: col.key },
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
   if (col.noAdd && interactionMode === InteractionModeType.STRICT) return null;
 
-  const headerItem: ContextMenuItem = { label: `Add @ ${frameToDetailLabel(atFrame)}`, header: true };
+  const headerItem: ContextMenuItem = { label: t('ctx.header.add', { frame: frameToDetailLabel(atFrame) }), header: true };
 
   const checkOverlap = (ownerId: string, columnId: string, range: number) =>
     wouldOverlapSiblings(ownerId, columnId, atFrame, range, events);
@@ -87,7 +97,7 @@ export function buildColumnContextMenu(
   if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
     return [
       headerItem,
-      ...col.microColumns.filter((mc) => mc.id !== OPERATOR_COLUMNS.CONTROLLED).map((mc) => ({
+      ...col.microColumns.map((mc) => ({
         label: REACTION_LABELS[mc.id]?.label ?? mc.label,
         actionId: 'addEvent' as const,
         actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
@@ -152,11 +162,11 @@ export function buildColumnContextMenu(
     const rawName = col.defaultEvent?.name ?? col.label;
     const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
     const disabledReason = inTimeStop
-      ? 'Ultimate animation active'
+      ? t('ctx.ultimateActive')
       : full
-        ? `(${col.maxEvents ?? '?'}/${col.maxEvents ?? '?'} stacks)`
+        ? t('ctx.stacksFull', { current: String(col.maxEvents ?? '?'), max: String(col.maxEvents ?? '?') })
         : beforePrev
-          ? `(must be after stack ${existing.length})`
+          ? t('ctx.stacksOrder', { number: String(existing.length) })
           : '';
     return [
       headerItem,
@@ -181,7 +191,7 @@ export function buildColumnContextMenu(
     const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || !comboAvail.available || overlap);
     const reason = inTimeStop ? timeStopReason
       : !comboAvail.available ? comboAvail.reason
-      : overlap ? 'Would overlap another event' : undefined;
+      : overlap ? t('ctx.overlap') : undefined;
 
     return [
       headerItem,
@@ -218,25 +228,25 @@ export function buildColumnContextMenu(
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
           const inBreak = effectiveBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
           if (!inBreak) {
-            finisherBlock = 'Finisher can only be used during stagger break';
+            finisherBlock = t('ctx.finisher.outsideBreak');
           } else {
             const existing = events.some((ev) =>
-              ev.name === CombatSkillsType.FINISHER
+              ev.id === CombatSkillsType.FINISHER
               && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
             );
-            if (existing) finisherBlock = 'Only one Finisher allowed per stagger break';
+            if (existing) finisherBlock = t('ctx.finisher.duplicate');
           }
         }
         const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
         const displayName = v.isPerfectDodge ? 'Dodge'
-          : col.columnId === 'dash' ? 'Dash'
+          : col.columnId === OPERATOR_COLUMNS.INPUT ? 'Dash'
           : v.displayName ?? COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
         const reason = v.disabledReason
           ?? (inTimeStop ? timeStopReason
           : spInsufficient ? spReason
           : availability.disabled ? availability.reason
           : finisherBlock ? finisherBlock
-          : overlap ? 'Would overlap another event'
+          : overlap ? t('ctx.overlap')
           : undefined);
         return {
           label: displayName,
@@ -271,11 +281,11 @@ export function buildColumnContextMenu(
     ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots)
     : { sufficient: true };
   const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || overlap || !resAvail.sufficient);
-  const reason = inTimeStop ? timeStopReason : overlap ? 'Would overlap another event' : resAvail.reason;
+  const reason = inTimeStop ? timeStopReason : overlap ? t('ctx.overlap') : resAvail.reason;
   return [
     headerItem,
     ...(resourceGraphs?.has(col.key) ? [
-      { label: 'Edit Resource', actionId: 'editResource' as const, actionPayload: col.key },
+      { label: t('ctx.editResource'), actionId: 'editResource' as const, actionPayload: col.key },
       { separator: true } as ContextMenuItem,
     ] : []),
     {
@@ -311,7 +321,7 @@ export function buildEventAddItems(
 
   if (col.matchColumnIds && col.microColumns) {
     return col.microColumns.map((mc) => ({
-      label: `Add ${mc.label} at ${label}`,
+      label: t('ctx.addAt', { item: mc.label, location: label }),
       actionId: onAddEventActionId,
       actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: col.defaultEvent ?? null },
     }));
@@ -335,7 +345,7 @@ export function buildEventAddItems(
       ? `Must be after stack ${existing.length}`
       : undefined;
   return [{
-    label: `Add ${eventName} at ${label}`,
+    label: t('ctx.addAt', { item: eventName, location: label }),
     actionId: onAddEventActionId,
     actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
     disabled,
@@ -347,12 +357,12 @@ export function buildEventAddItems(
  * Builds "Add Segment" items for a sequenced event.
  */
 export function buildSegmentAddItems(
-  eventId: string,
+  eventUid: string,
   events: TimelineEvent[],
   columns: Column[],
   interactionMode?: InteractionModeType,
 ): ContextMenuItem[] {
-  const ev = events.find((e) => e.id === eventId);
+  const ev = events.find((e) => e.uid === eventUid);
   if (!ev) return [];
   const col = columns.find((c): c is MiniTimeline =>
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
@@ -363,11 +373,11 @@ export function buildSegmentAddItems(
   return addable.map((s) => {
     const wouldOverlap = wouldSegmentAdditionOverlap(ev, s.properties.duration, events);
     return {
-      label: `Add Sequence ${s.properties.name}`,
+      label: t('ctx.addSequence', { name: s.properties.name! }),
       actionId: 'addSegment',
-      actionPayload: { eventId, segmentLabel: s.properties.name! },
+      actionPayload: { eventUid, segmentLabel: s.properties.name! },
       disabled: interactionMode === InteractionModeType.STRICT && wouldOverlap,
-      disabledReason: wouldOverlap ? 'Would overlap another event' : undefined,
+      disabledReason: wouldOverlap ? t('ctx.overlap') : undefined,
     };
   });
 }
@@ -376,12 +386,12 @@ export function buildSegmentAddItems(
  * Builds "Add Frame" items for a segment.
  */
 export function buildFrameAddItems(
-  eventId: string,
+  eventUid: string,
   segmentIndex: number,
   events: TimelineEvent[],
   columns: Column[],
 ): ContextMenuItem[] {
-  const ev = events.find((e) => e.id === eventId);
+  const ev = events.find((e) => e.uid === eventUid);
   if (!ev?.segments[segmentIndex]) return [];
   const col = columns.find((c): c is MiniTimeline =>
     c.type === 'mini-timeline' && c.ownerId === ev.ownerId && c.columnId === ev.columnId);
@@ -396,9 +406,9 @@ export function buildFrameAddItems(
   return missing.map((f) => {
     const allIdx = allFrames.indexOf(f);
     return {
-      label: `Add Frame ${allIdx + 1}`,
+      label: t('ctx.addFrame', { number: String(allIdx + 1) }),
       actionId: 'addFrame',
-      actionPayload: { eventId, segmentIndex, frameOffsetFrame: f.offsetFrame },
+      actionPayload: { eventUid, segmentIndex, frameOffsetFrame: f.offsetFrame },
     };
   });
 }

@@ -95,7 +95,7 @@ export const OPERATOR_COLUMNS = {
   CRIT_STACKS:    'crit-stacks',
   ORIGINIUM_CRYSTAL: 'originium-crystal',
   WILDLAND_TREKKER_TRIGGER: 'wildland-trekker-trigger',
-  DASH:           'dash',
+  INPUT:          'input',
   CONTROLLED:     'controlled',
   OTHER:          'other',
 } as const;
@@ -139,7 +139,7 @@ export const FORCED_REACTION_COLUMN: Record<string, string> = {
 
 /** Maps self-targeted grant status → team-level derived column. */
 export const TEAM_STATUS_COLUMN: Record<string, string> = {
-  [StatusType.SQUAD_BUFF]: StatusType.LINK,
+  SQUAD_BUFF: StatusType.LINK,
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */

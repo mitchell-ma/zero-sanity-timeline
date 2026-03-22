@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { IS_DEV } from '../consts/devFlags';
 import { InteractionModeType } from '../consts/enums';
+import { t } from '../locales/locale';
 
 interface AppBarProps {
   activeLoadoutName: string;
@@ -74,8 +75,8 @@ export default function AppBar({
       <div className="app-brand">
         <span className="brand-hex">&#x2B21;</span>
         <div className="brand-text">
-          <span className="brand-title">ENDFIELD</span>
-          <span className="brand-sub">ZERO SANITY SIMULATIONS</span>
+          <span className="brand-title">{t('app.brand.title')}</span>
+          <span className="brand-sub">{t('app.brand.subtitle')}</span>
         </div>
       </div>
 
@@ -100,7 +101,7 @@ export default function AppBar({
           </span>
         )}
         {!renaming && (
-          <button className="app-bar-loadout-rename" onClick={handleRenameStart} title="Rename loadout">
+          <button className="app-bar-loadout-rename" onClick={handleRenameStart} title={t('app.tooltip.renameLoadout')}>
             <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
               <path d="M12.146.854a.5.5 0 01.708 0l2.292 2.292a.5.5 0 010 .708L5.854 13.146a.5.5 0 01-.233.131l-3.5 1a.5.5 0 01-.612-.612l1-3.5a.5.5 0 01.131-.233L12.146.854zM11.5 2.207L3.207 10.5l-.646 2.262 2.261-.646L13.086 3.854 11.5 2.207z"/>
             </svg>
@@ -111,48 +112,48 @@ export default function AppBar({
       <div className="app-bar-divider" />
 
       <button className="btn-clear" onClick={onClearLoadout}>
-        CLEAR
+        {t('app.btn.clear')}
       </button>
       <button className="btn-clear" onClick={onClearAll}>
-        CLEAR ALL
+        {t('app.btn.clearAll')}
       </button>
       <button className="btn-devlog" onClick={onExport}>
-        EXPORT
+        {t('app.btn.export')}
       </button>
       <button className="btn-devlog" onClick={onImport}>
-        IMPORT
+        {t('app.btn.import')}
       </button>
       <button className="btn-devlog" onClick={onCustomContent}>
-        CUSTOM
+        {t('app.btn.custom')}
       </button>
       {IS_DEV && onClauseEditor && (
         <button className="btn-devlog" onClick={onClauseEditor}>
-          EVENT
+          {t('app.btn.event')}
         </button>
       )}
       {IS_DEV && onStatusEditor && (
         <button className="btn-devlog" onClick={onStatusEditor}>
-          STATUS
+          {t('app.btn.status')}
         </button>
       )}
       {IS_DEV && onExprEditor && (
         <button className="btn-devlog" onClick={onExprEditor}>
-          EXPR
+          {t('app.btn.expr')}
         </button>
       )}
       <button
         className={`btn-devlog${shareStatus === 'copied' ? ' btn-share--copied' : ''}`}
         onClick={handleShare}
         disabled={shareStatus === 'copying'}
-        title="Copy shareable URL to clipboard"
+        title={t('app.tooltip.share')}
       >
-        {shareStatus === 'copied' ? 'COPIED!' : shareStatus === 'error' ? 'FAILED' : 'SHARE'}
+        {shareStatus === 'copied' ? t('app.btn.share.copied') : shareStatus === 'error' ? t('app.btn.share.failed') : t('app.btn.share')}
       </button>
       <div className="app-bar-right">
         <button
           className="btn-theme"
           onClick={onToggleTheme}
-          title={lightMode ? 'Switch to dark mode' : 'Switch to light mode'}
+          title={lightMode ? t('app.tooltip.darkMode') : t('app.tooltip.lightMode')}
         >
           {lightMode ? (
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -167,13 +168,13 @@ export default function AppBar({
         <button
           className={`btn-debug${interactionMode !== InteractionModeType.STRICT ? ' btn-debug--active' : ''}`}
           onClick={onToggleInteractionMode}
-          title="Freeform mode: bypass all validation"
+          title={t('app.tooltip.freeformMode')}
         >
-          FREEFORM
+          {t('app.btn.freeform')}
         </button>
-        {!IS_DEV && <span className="wip-badge">WIP</span>}
+        {!IS_DEV && <span className="wip-badge">{t('app.badge.wip')}</span>}
         <button className="btn-devlog" onClick={onDevlog}>
-          DEVLOG
+          {t('app.btn.devlog')}
         </button>
 
         <button className="btn-keys" onClick={onKeys}>
@@ -184,7 +185,7 @@ export default function AppBar({
           href="https://github.com/mitchell-ma/zero-sanity-timeline"
           target="_blank"
           rel="noopener noreferrer"
-          title="View on GitHub"
+          title={t('app.tooltip.github')}
         >
           <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>

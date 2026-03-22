@@ -63,7 +63,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "STATUS_LEVEL",
-                "values": [
+                "value": [
                   0.05
                 ]
               }
@@ -79,18 +79,16 @@
       "id": "MI_SECURITY",
       "name": "MI Security",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          5
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 5
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            5
-          ]
+          "value": 5
         },
         "interactionType": "NONE"
       },
@@ -111,9 +109,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.05
-                ]
+                "value": 0.05
               }
             },
             "toDeterminer": "THIS",
@@ -127,18 +123,16 @@
       "id": "MI_SECURITY_MAX",
       "name": "MI Security (Max)",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          5
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 5
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

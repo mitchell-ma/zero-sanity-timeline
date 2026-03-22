@@ -30,12 +30,12 @@
           ],
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 1
           },
-          "statusLevelInteractionType": "RESET"
+          "interactionType": "RESET"
         }
       },
       "metadata": {
@@ -87,12 +87,12 @@
           ],
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 1
           },
-          "statusLevelInteractionType": "RESET"
+          "interactionType": "RESET"
         }
       },
       "metadata": {

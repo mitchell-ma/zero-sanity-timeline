@@ -9,7 +9,9 @@
 
 import type { EventSegmentData } from '../consts/viewTypes';
 import type { FrameClausePredicate } from '../model/event-frames/skillEventFrame';
-import type { Interaction } from '../consts/semantics';
+import { VerbType } from '../dsl/semantics';
+import type { Interaction, ValueNode } from '../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from './calculation/valueResolver';
 import {
   getOperatorJson,
   getAllOperatorIds,
@@ -46,9 +48,9 @@ export interface StatusEventConfig {
   type?: string;
   element?: string;
   duration?: number;
-  statusLevel?: {
+  stacks?: {
     interactionType: string;
-    limit: { verb: string; values: number[] };
+    limit: ValueNode;
   };
   susceptibility?: Record<string, number[]>;
   minPotential?: number;
@@ -91,16 +93,16 @@ const FPS = 120;
 
 function parseDurationFrames(props: Record<string, unknown> | undefined): number | undefined {
   if (!props?.duration) return undefined;
-  const dur = props.duration as { value: number | number[]; unit: string };
-  const val = Array.isArray(dur.value) ? dur.value[0] : dur.value;
-  if (val == null || val < 0) return undefined;
+  const dur = props.duration as { value: ValueNode; unit: string };
+  const val = resolveValueNode(dur.value, DEFAULT_VALUE_CONTEXT);
+  if (val < 0) return undefined;
   return dur.unit === 'SECOND' ? Math.round(val * FPS) : val;
 }
 
 function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
   const props = (raw.properties ?? {}) as Record<string, unknown>;
   const id = (props.id ?? props.name ?? '') as string;
-  const sl = props.statusLevel as { interactionType?: string; limit?: { verb?: string; values?: number[]; value?: number } } | undefined;
+  const sl = props.stacks as { interactionType?: string; limit?: ValueNode } | undefined;
 
   return {
     id,
@@ -111,12 +113,9 @@ function parseStatusEvent(raw: Record<string, unknown>): StatusEventConfig {
     element: props.element as string | undefined,
     duration: parseDurationFrames(props),
     ...(sl ? {
-      statusLevel: {
+      stacks: {
         interactionType: sl.interactionType ?? 'NONE',
-        limit: {
-          verb: sl.limit?.verb ?? 'IS',
-          values: sl.limit?.values ?? (sl.limit?.value != null ? [sl.limit.value as number] : [1]),
-        },
+        limit: sl.limit ?? { verb: VerbType.IS, value: 1 },
       },
     } : {}),
     ...(props.susceptibility ? { susceptibility: props.susceptibility as Record<string, number[]> } : {}),

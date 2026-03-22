@@ -5,18 +5,16 @@
       "name": "Redemption of Faith",
       "description": "Heal controlled operator; 15s CD",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

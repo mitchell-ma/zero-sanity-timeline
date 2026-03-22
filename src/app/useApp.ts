@@ -22,13 +22,13 @@ import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader'
 import { buildColumns } from '../controller/timeline/columnBuilder';
 import {
   createEvent,
-  genEventId,
+  genEventUid,
   validateUpdate,
   validateMove,
   validateBatchMoveDelta,
   wouldOverlapNonOverlappable,
-  setNextEventId,
-  getNextEventId,
+  setNextEventUid,
+  getNextEventUid,
   filterEventsToColumns,
   buildValidColumnPairs,
   setCombatLoadout,
@@ -83,8 +83,8 @@ import {
   attachDefaultSegments,
   getDefaultEnemyStats,
 } from '../controller/appStateController';
-import { resolveGainEfficiencies, resolveMessengersSongBonuses } from '../controller/timeline/ultimateEnergyController';
-import { StatType, InteractionModeType } from '../consts/enums';
+import { resolveGainEfficiencies } from '../controller/timeline/ultimateEnergyController';
+import { StatType, InteractionModeType, InfoLevel } from '../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 import type { SkillPointConsumptionHistory, ResourceZone } from '../controller/timeline/skillPointTimeline';
 
@@ -115,7 +115,7 @@ function initLoadouts() {
       initialLoad.loaded?.loadouts ?? INITIAL_LOADOUTS,
       initialLoad.loaded?.loadoutProperties ?? INITIAL_LOADOUT_PROPERTIES,
       initialLoad.loaded?.visibleSkills ?? INITIAL_VISIBLE,
-      getNextEventId(),
+      getNextEventUid(),
       initialLoad.loaded?.resourceConfigs ?? {},
     );
     saveLoadoutData(activeId, sheetData);
@@ -188,7 +188,7 @@ export function useApp() {
   );
   const [infoPaneClosing,  setInfoPaneClosing]  = useState(false);
   const [infoPanePinned,   setInfoPanePinned]   = useState(false);
-  const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(1 as 0 | 1 | 2);
+  const [infoPaneVerbose,  setInfoPaneVerbose]  = useState(InfoLevel.DETAILED);
   const [selectedFrames,   setSelectedFrames]   = useState<SelectedFrame[]>([]);
   const [hoverFrame,       setHoverFrame]       = useState<number | null>(null);
   const [scrollSynced,     setScrollSynced]     = useState(true);
@@ -316,12 +316,12 @@ export function useApp() {
     if (pending.length === 0) return;
     const resolved = new Map<string, TimelineEvent['segments']>();
     for (const ev of pending) {
-      const valid = validEvents.find((v) => v.id === ev.id);
-      if (valid?.segments) resolved.set(ev.id, valid.segments);
+      const valid = validEvents.find((v) => v.uid === ev.uid);
+      if (valid?.segments) resolved.set(ev.uid, valid.segments);
     }
     if (resolved.size === 0) return;
     setEvents((prev) => prev.map((ev) => {
-      const segs = resolved.get(ev.id);
+      const segs = resolved.get(ev.uid);
       if (!segs) return ev;
       const { _pendingSegmentOverrides, ...rest } = ev;
       return { ...rest, segments: segs };
@@ -352,7 +352,7 @@ export function useApp() {
       setLoadoutTree(newTree);
       saveLoadoutTree(newTree);
 
-      setNextEventId(sheetData.nextEventId);
+      setNextEventUid(sheetData.nextEventId);
       resetUndoable({
         events: resolved.events,
         operators: resolved.operators,
@@ -416,42 +416,42 @@ export function useApp() {
     return model ? model.getHp() : null;
   }, [enemy.id]);
 
+  // CombatLoadout must be created before processCombatSimulation so we can
+  // pass SP and UE controllers into the pipeline.
+  const { combatLoadout } =
+    useCombatLoadout(SLOT_IDS, slots, validEvents);
+
   const processedEvents = useMemo(
-    () => processCombatSimulation(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts),
+    () => {
+      // Configure UE slots before pipeline run
+      const ue = combatLoadout.commonSlot.ultimateEnergy;
+      const base = resolveGainEfficiencies(operators, SLOT_IDS, loadouts, loadoutProperties);
+      for (let i = 0; i < SLOT_IDS.length; i++) {
+        const op = operators[i];
+        if (!op) continue;
+        const slotId = SLOT_IDS[i];
+        const cfg = resourceConfigs?.[`${slotId}-ultimate`];
+        ue.configureSlot(slotId, {
+          max: cfg?.max ?? op.ultimateEnergyCost,
+          startValue: cfg?.startValue ?? 0,
+          chargePerFrame: (cfg?.regenPerSecond ?? 0) / FPS,
+          efficiency: base[slotId] ?? 0,
+        });
+      }
+
+      return processCombatSimulation(
+        validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets,
+        bossMaxHp, enemy.id, loadouts,
+        combatLoadout.commonSlot.skillPoints,
+        combatLoadout.commonSlot.ultimateEnergy,
+      );
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts],
+    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts, combatLoadout, operators, resourceConfigs],
   );
 
-  const { combatLoadout } =
-    useCombatLoadout(SLOT_IDS, slots, processedEvents);
-
-  const tacticalNamesBySlot = useMemo(() => {
-    const map: Record<string, string | undefined> = {};
-    for (const slotId of SLOT_IDS) {
-      map[slotId] = loadouts[slotId]?.tacticalId ?? undefined;
-    }
-    return map;
-  }, [loadouts]);
-
-  const tacticalMaxUsesOverrides = useMemo(() => {
-    const map: Record<string, number | undefined> = {};
-    for (const slotId of SLOT_IDS) {
-      map[slotId] = loadoutProperties[slotId]?.tacticalMaxUses;
-    }
-    return map;
-  }, [loadoutProperties]);
-
-  const gaugeGainMultipliers = useMemo(() => {
-    const base = resolveGainEfficiencies(operators, SLOT_IDS, loadouts, loadoutProperties);
-    const msBonuses = resolveMessengersSongBonuses(operators, SLOT_IDS, loadoutProperties);
-    for (const [slotId, bonus] of Object.entries(msBonuses)) {
-      base[slotId] = (base[slotId] ?? 0) + bonus;
-    }
-    return base;
-  }, [operators, loadouts, loadoutProperties]);
-
-  const { resourceGraphs, tacticalEvents } = useResourceGraphs(
-    operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs, tacticalNamesBySlot, tacticalMaxUsesOverrides, gaugeGainMultipliers,
+  const { resourceGraphs } = useResourceGraphs(
+    operators, SLOT_IDS, processedEvents, combatLoadout, resourceConfigs,
   );
 
   // ─── Stagger sync (config + events + frailty, all in one controller call) ─
@@ -465,10 +465,9 @@ export function useApp() {
 
   const allProcessedEventsRaw = useMemo(
     () => {
-      const extra = [...tacticalEvents, ...staggerFrailtyEvents];
-      return extra.length > 0 ? [...processedEvents, ...extra] : processedEvents;
+      return staggerFrailtyEvents.length > 0 ? [...processedEvents, ...staggerFrailtyEvents] : processedEvents;
     },
-    [processedEvents, tacticalEvents, staggerFrailtyEvents],
+    [processedEvents, staggerFrailtyEvents],
   );
 
   // Apply user overrides to derived events
@@ -476,7 +475,7 @@ export function useApp() {
     const keys = Object.keys(derivedEventOverrides);
     if (keys.length === 0) return allProcessedEventsRaw;
     return allProcessedEventsRaw.map((ev) => {
-      const override = derivedEventOverrides[ev.id];
+      const override = derivedEventOverrides[ev.uid];
       return override ? { ...ev, ...override } : ev;
     });
   }, [allProcessedEventsRaw, derivedEventOverrides]);
@@ -488,7 +487,7 @@ export function useApp() {
   useEffect(() => {
     const keys = Object.keys(derivedEventOverrides);
     if (keys.length === 0) return;
-    const processedIds = new Set(allProcessedEventsRaw.map((ev) => ev.id));
+    const processedIds = new Set(allProcessedEventsRaw.map((ev) => ev.uid));
     const hasStale = keys.some((id) => !processedIds.has(id));
     if (hasStale) {
       setDerivedEventOverrides((prev) => {
@@ -517,13 +516,13 @@ export function useApp() {
   const staggerKey = `enemy-${COMMON_COLUMN_IDS.STAGGER}`;
 
   const editingEvent = editingEventId
-    ? validEvents.find((e) => e.id === editingEventId)
-      ?? allProcessedEvents.find((e) => e.id === editingEventId)
+    ? validEvents.find((e) => e.uid === editingEventId)
+      ?? allProcessedEvents.find((e) => e.uid === editingEventId)
       ?? null
     : null;
 
   const processedEditingEvent = editingEventId
-    ? allProcessedEvents.find((e) => e.id === editingEventId) ?? null
+    ? allProcessedEvents.find((e) => e.uid === editingEventId) ?? null
     : null;
 
   const editingEventReadOnly = editingEvent
@@ -531,7 +530,7 @@ export function useApp() {
     : false;
 
   const editingEventIsDerived = editingEvent
-    ? !validEvents.some((e) => e.id === editingEvent.id)
+    ? !validEvents.some((e) => e.uid === editingEvent.uid)
     : false;
 
   const editingSlot = editingSlotId
@@ -572,20 +571,20 @@ export function useApp() {
     undoRedoSnapshotRef.current = null;
 
     const prevMap = new Map<string, TimelineEvent>();
-    for (const ev of prev) prevMap.set(ev.id, ev);
-    const nextIds = new Set(events.map((e) => e.id));
+    for (const ev of prev) prevMap.set(ev.uid, ev);
+    const nextIds = new Set(events.map((e) => e.uid));
 
     const changed = new Set<string>();
     let earliestFrame = Infinity;
     for (const ev of events) {
-      const prevEv = prevMap.get(ev.id);
+      const prevEv = prevMap.get(ev.uid);
       if (!prevEv || prevEv.startFrame !== ev.startFrame) {
-        changed.add(ev.id);
+        changed.add(ev.uid);
         earliestFrame = Math.min(earliestFrame, ev.startFrame);
       }
     }
     for (const ev of prev) {
-      if (!nextIds.has(ev.id)) {
+      if (!nextIds.has(ev.uid)) {
         earliestFrame = Math.min(earliestFrame, ev.startFrame);
       }
     }
@@ -624,21 +623,12 @@ export function useApp() {
 
   // (Stagger sync handled by commonSlot.syncStaggerEvents above)
 
+  // SP results are computed inside processCombatSimulation via finalize().
+  // Read the already-computed results after each pipeline run.
   useEffect(() => {
-    const slotSpCosts = new Map<string, number>();
-    for (const slot of slots) {
-      if (slot.operator) {
-        slotSpCosts.set(slot.slotId, slot.operator.skills.battle?.skillPointCost ?? 100);
-      }
-    }
-    combatLoadout.commonSlot.skillPoints.sync(processedEvents, slotSpCosts);
-    // After sync, recompute runs synchronously — read the updated consumption log
     setSpConsumptionHistory(combatLoadout.commonSlot.skillPoints.consumptionHistory);
     setSpInsufficiencyZones(combatLoadout.commonSlot.skillPoints.insufficiencyZones);
-  }, [processedEvents, combatLoadout, slots]);
-
-
-  // (Time-stops extracted inside skillPoints.sync() and stagger.sync())
+  }, [processedEvents, combatLoadout]);
 
   // ─── Ctrl+S to save, Escape to close info pane ─────────────────────────
   useEffect(() => {
@@ -670,10 +660,10 @@ export function useApp() {
     if (process.env.NODE_ENV === 'development') {
       const idSet = new Set<string>();
       for (const ev of events) {
-        if (idSet.has(ev.id)) {
-          console.error(`[zst] DUPLICATE EVENT ID "${ev.id}" detected at save time`, ev);
+        if (idSet.has(ev.uid)) {
+          console.error(`[zst] DUPLICATE EVENT ID "${ev.uid}" detected at save time`, ev);
         }
-        idSet.add(ev.id);
+        idSet.add(ev.uid);
       }
     }
     return serializeSheet(
@@ -684,7 +674,7 @@ export function useApp() {
       loadouts,
       loadoutProperties,
       visibleSkills,
-      getNextEventId(),
+      getNextEventUid(),
       resourceConfigs,
       derivedEventOverrides,
     );
@@ -917,7 +907,7 @@ export function useApp() {
         // Check SP sufficiency for battle skills
         if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
         // Empowered battle skills require 4 active Melting Flame stacks
-        if (ev.name?.includes('EMPOWERED')) {
+        if (ev.id?.includes('EMPOWERED')) {
           const processed = processedEventsRef.current;
           const mfCount = (processed ?? prev).filter(
             (e) => e.ownerId === ownerId && e.columnId === 'melting-flame'
@@ -926,7 +916,7 @@ export function useApp() {
           if (mfCount < 4) return prev;
         }
         // Enhanced battle skills require an active ultimate
-        if (ev.name?.includes('ENHANCED') && !ev.name?.includes('EMPOWERED')) {
+        if (ev.id?.includes('ENHANCED') && !ev.id?.includes('EMPOWERED')) {
           const ultActive = prev.some(
             (e) => {
               if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
@@ -954,7 +944,7 @@ export function useApp() {
   const handleUpdateEvent = useCallback((id: string, updates: Partial<TimelineEvent>) => {
     // Try raw events first; if not found, store as derived event override
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === id);
+      const target = prev.find((ev) => ev.uid === id);
       if (!target) {
         // Derived event — store override outside setEvents to avoid side effects
         queueMicrotask(() => {
@@ -968,7 +958,7 @@ export function useApp() {
       const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
       const merged = validateUpdate(prev, target, updates, processed);
       if (!merged) return prev;
-      return prev.map((ev) => (ev.id === id ? merged : ev));
+      return prev.map((ev) => (ev.uid === id ? merged : ev));
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -976,26 +966,26 @@ export function useApp() {
 
   const handleMoveEvent = useCallback((id: string, newStartFrame: number, overlapExemptIds?: Set<string>) => {
     setEvents((prev) => {
-      let target = prev.find((ev) => ev.id === id);
+      let target = prev.find((ev) => ev.uid === id);
       if (!target && interactionModeRef.current !== InteractionModeType.STRICT) {
         // Derived event drag — redirect to source infliction if this is a freeform reaction
         const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
-        if (sourceId) target = prev.find((ev) => ev.id === sourceId);
+        if (sourceId) target = prev.find((ev) => ev.uid === sourceId);
       }
       if (!target) return prev;
       // When redirected from a reaction, compute delta from the reaction's position
-      const isRedirected = target.id !== id;
+      const isRedirected = target.uid !== id;
       let adjustedFrame = newStartFrame;
       if (isRedirected) {
-        const reaction = processedEventsRef.current?.find((ev) => ev.id === id);
+        const reaction = processedEventsRef.current?.find((ev) => ev.uid === id);
         if (reaction) adjustedFrame = target.startFrame + (newStartFrame - reaction.startFrame);
       }
       const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
       const clamped = validateMove(prev, target, adjustedFrame, processed, overlapExemptIds);
       if (clamped === target.startFrame) return prev;
-      const targetId = target.id;
+      const targetId = target.uid;
       const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(target, clamped, processed);
-      return prev.map((ev) => (ev.id === targetId ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
+      return prev.map((ev) => (ev.uid === targetId ? { ...ev, startFrame: clamped, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) } : ev));
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1008,19 +998,19 @@ export function useApp() {
       let resolvedIds = ids;
       if (interactionModeRef.current !== InteractionModeType.STRICT) {
         resolvedIds = ids.map((id) => {
-          if (prev.some((ev) => ev.id === id)) return id;
+          if (prev.some((ev) => ev.uid === id)) return id;
           const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;
-          if (sourceId && prev.some((ev) => ev.id === sourceId)) return sourceId;
+          if (sourceId && prev.some((ev) => ev.uid === sourceId)) return sourceId;
           return id;
         });
       }
-      const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.id === id));
+      const rawIds = resolvedIds.filter((id) => prev.some((ev) => ev.uid === id));
       const idSet = new Set(rawIds);
       if (rawIds.length === 0) return prev;
       const clampedDelta = validateBatchMoveDelta(prev, rawIds, delta, processed, overlapExemptIds);
       if (clampedDelta === 0) return prev;
       return prev.map((ev) => {
-        if (!idSet.has(ev.id)) return ev;
+        if (!idSet.has(ev.uid)) return ev;
         const newFrame = ev.startFrame + clampedDelta;
         const triggerCol = ComboSkillEventController.resolveComboTriggerColumnId(ev, newFrame, processed);
         return { ...ev, startFrame: newFrame, ...(triggerCol !== undefined ? { comboTriggerColumnId: triggerCol } : {}) };
@@ -1030,7 +1020,7 @@ export function useApp() {
   }, []);
 
   const handleRemoveEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((ev) => ev.id !== id));
+    setEvents((prev) => prev.filter((ev) => ev.uid !== id));
     setEditingEventId((cur) => (cur === id ? null : cur));
     setContextMenu(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1038,19 +1028,19 @@ export function useApp() {
 
   const handleRemoveEvents = useCallback((ids: string[]) => {
     const idSet = new Set(ids);
-    setEvents((prev) => prev.filter((ev) => !idSet.has(ev.id)));
+    setEvents((prev) => prev.filter((ev) => !idSet.has(ev.uid)));
     setEditingEventId((cur) => (cur && idSet.has(cur) ? null : cur));
     setContextMenu(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDuplicateEvents = useCallback((sourceEvents: TimelineEvent[], frameOffset: number): string[] => {
-    const newIds: string[] = [];
+    const newUids: string[] = [];
     const clones: TimelineEvent[] = [];
     for (const src of sourceEvents) {
-      const newId = genEventId();
-      newIds.push(newId);
-      clones.push({ ...src, id: newId, startFrame: src.startFrame + frameOffset });
+      const newUid = genEventUid();
+      newUids.push(newUid);
+      clones.push({ ...src, uid: newUid, startFrame: src.startFrame + frameOffset });
     }
     setEvents((prev) => {
       const combined = [...prev, ...clones];
@@ -1059,7 +1049,7 @@ export function useApp() {
       }
       return combined;
     });
-    return newIds;
+    return newUids;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1069,11 +1059,11 @@ export function useApp() {
 
   const handleResetEvent = useCallback((id: string) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === id);
+      const target = prev.find((ev) => ev.uid === id);
       if (!target) return prev;
       const defaults = findDefaults(target);
       if (!defaults) return prev;
-      return prev.map((ev) => (ev.id === id ? {
+      return prev.map((ev) => (ev.uid === id ? {
         ...ev,
         ...(defaults.segments ? { segments: defaults.segments } : {}),
         ...(defaults.skillPointCost !== undefined ? { skillPointCost: defaults.skillPointCost } : {}),
@@ -1085,11 +1075,11 @@ export function useApp() {
 
   const handleResetSegments = useCallback((id: string) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === id);
+      const target = prev.find((ev) => ev.uid === id);
       if (!target) return prev;
       const defaults = findDefaults(target);
       if (!defaults?.segments) return prev;
-      return prev.map((ev) => (ev.id === id ? {
+      return prev.map((ev) => (ev.uid === id ? {
         ...ev,
         segments: defaults.segments!.map((defSeg, i) => ({
           ...defSeg,
@@ -1103,11 +1093,11 @@ export function useApp() {
 
   const handleResetFrames = useCallback((id: string) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === id);
+      const target = prev.find((ev) => ev.uid === id);
       if (!target) return prev;
       const defaults = findDefaults(target);
       if (!defaults?.segments) return prev;
-      return prev.map((ev) => (ev.id === id ? {
+      return prev.map((ev) => (ev.uid === id ? {
         ...ev,
         segments: ev.segments.map((seg, i) => ({
           ...seg,
@@ -1123,7 +1113,7 @@ export function useApp() {
     setEvents((prev) => {
       let changed = false;
       const result = prev.map((ev) => {
-        if (!ids.includes(ev.id)) return ev;
+        if (!ids.includes(ev.uid)) return ev;
         const defaults = findDefaults(ev);
         if (!defaults) return ev;
         changed = true;
@@ -1139,9 +1129,9 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [findDefaults]);
 
-  const handleRemoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
+  const handleRemoveFrame = useCallback((eventUid: string, segmentIndex: number, frameIndex: number) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === eventId);
+      const target = prev.find((ev) => ev.uid === eventUid);
       if (!target) return prev;
       const segments = target.segments;
       if (!segments[segmentIndex]?.frames) return prev;
@@ -1149,21 +1139,21 @@ export function useApp() {
         if (si !== segmentIndex) return seg;
         return { ...seg, frames: seg.frames?.filter((_, fi) => fi !== frameIndex) };
       });
-      return prev.map((ev) => (ev.id === eventId ? { ...ev, segments: newSegments } : ev));
+      return prev.map((ev) => (ev.uid === eventUid ? { ...ev, segments: newSegments } : ev));
     });
-    setSelectedFrames((prev) => prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex)));
+    setSelectedFrames((prev) => prev.filter((f) => !(f.eventUid === eventUid && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex)));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
   const handleRemoveFrames = useCallback((frames: SelectedFrame[]) => {
     const byEvent = new Map<string, { segmentIndex: number; frameIndex: number }[]>();
     for (const f of frames) {
-      const arr = byEvent.get(f.eventId) ?? [];
+      const arr = byEvent.get(f.eventUid) ?? [];
       arr.push({ segmentIndex: f.segmentIndex, frameIndex: f.frameIndex });
-      byEvent.set(f.eventId, arr);
+      byEvent.set(f.eventUid, arr);
     }
     setEvents((prev) => prev.map((ev) => {
-      const toRemove = byEvent.get(ev.id);
+      const toRemove = byEvent.get(ev.uid);
       if (!toRemove) return ev;
       const segments = ev.segments;
       const removeSet = new Set(toRemove.map((r) => `${r.segmentIndex}-${r.frameIndex}`));
@@ -1178,9 +1168,9 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
-  const handleAddSegment = useCallback((eventId: string, segmentLabel: string) => {
+  const handleAddSegment = useCallback((eventUid: string, segmentLabel: string) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === eventId);
+      const target = prev.find((ev) => ev.uid === eventUid);
       if (!target) return prev;
       const col = columns.find((c) =>
         c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
@@ -1196,7 +1186,7 @@ export function useApp() {
         return ai - bi;
       });
       const totalDuration = computeSegmentsSpan(newSegments);
-      return prev.map((ev) => (ev.id === eventId ? {
+      return prev.map((ev) => (ev.uid === eventUid ? {
         ...ev,
         segments: newSegments,
         nonOverlappableRange: totalDuration,
@@ -1205,25 +1195,25 @@ export function useApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
-  const handleRemoveSegment = useCallback((eventId: string, segmentIndex: number) => {
+  const handleRemoveSegment = useCallback((eventUid: string, segmentIndex: number) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === eventId);
+      const target = prev.find((ev) => ev.uid === eventUid);
       if (!target || target.segments.length <= 1) return prev;
       const newSegments = target.segments.filter((_, si) => si !== segmentIndex);
       const totalDuration = computeSegmentsSpan(newSegments);
-      return prev.map((ev) => (ev.id === eventId ? {
+      return prev.map((ev) => (ev.uid === eventUid ? {
         ...ev,
         segments: newSegments,
         nonOverlappableRange: totalDuration,
       } : ev));
     });
-    setSelectedFrames((prev) => prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex)));
+    setSelectedFrames((prev) => prev.filter((f) => !(f.eventUid === eventUid && f.segmentIndex === segmentIndex)));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAddFrame = useCallback((eventId: string, segmentIndex: number, frameOffsetFrame: number) => {
+  const handleAddFrame = useCallback((eventUid: string, segmentIndex: number, frameOffsetFrame: number) => {
     setEvents((prev) => {
-      const target = prev.find((ev) => ev.id === eventId);
+      const target = prev.find((ev) => ev.uid === eventUid);
       if (!target?.segments[segmentIndex]) return prev;
       const col = columns.find((c) =>
         c.type === 'mini-timeline' && c.ownerId === target.ownerId && c.columnId === target.columnId,
@@ -1240,28 +1230,28 @@ export function useApp() {
       const newSegments = target.segments.map((s, si) =>
         si === segmentIndex ? { ...s, frames: newFrames } : s,
       );
-      return prev.map((ev) => (ev.id === eventId ? { ...ev, segments: newSegments } : ev));
+      return prev.map((ev) => (ev.uid === eventUid ? { ...ev, segments: newSegments } : ev));
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columns]);
 
-  const handleFrameClick = useCallback((eventId: string, segmentIndex: number, frameIndex: number) => {
+  const handleFrameClick = useCallback((eventUid: string, segmentIndex: number, frameIndex: number) => {
     setSelectedFrames((prev) => {
-      const exists = prev.some((f) => f.eventId === eventId && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex);
+      const exists = prev.some((f) => f.eventUid === eventUid && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex);
       if (exists) {
-        const next = prev.filter((f) => !(f.eventId === eventId && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex));
+        const next = prev.filter((f) => !(f.eventUid === eventUid && f.segmentIndex === segmentIndex && f.frameIndex === frameIndex));
         if (next.length === 0) setInfoPaneClosing(true);
         return next;
       }
-      return [{ eventId, segmentIndex, frameIndex }];
+      return [{ eventUid, segmentIndex, frameIndex }];
     });
-    setEditingEventId(eventId);
+    setEditingEventId(eventUid);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleMoveFrame = useCallback((eventId: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
+  const handleMoveFrame = useCallback((eventUid: string, segmentIndex: number, frameIndex: number, newOffsetFrame: number) => {
     setEvents((prev) => prev.map((ev) => {
-      if (ev.id !== eventId) return ev;
+      if (ev.uid !== eventUid) return ev;
       const segments = ev.segments;
       const newSegments = segments.map((seg, si) => {
         if (si !== segmentIndex || !seg.frames) return seg;
@@ -1347,7 +1337,7 @@ export function useApp() {
     setLoadoutTree(newTree);
     saveLoadoutTree(newTree);
 
-    setNextEventId(1);
+    setNextEventUid(1);
     const emptyState: UndoableState = {
       events: [],
       operators: [...INITIAL_OPERATORS],
@@ -1451,7 +1441,7 @@ export function useApp() {
       setVisibleSkills(resolved.visibleSkills);
       setDerivedEventOverrides(resolved.derivedEventOverrides);
     } else {
-      setNextEventId(1);
+      setNextEventUid(1);
       resetUndoable({
         events: [],
         operators: [...INITIAL_OPERATORS],
@@ -1485,7 +1475,7 @@ export function useApp() {
       const { tree: newTree, node } = addLoadoutNode(freshTree, 'Loadout 1', null);
       resetLoadoutTree(newTree);
 
-      setNextEventId(1);
+      setNextEventUid(1);
       const emptyState: UndoableState = {
         events: [],
         operators: [...INITIAL_OPERATORS],
@@ -1543,7 +1533,7 @@ export function useApp() {
   }, [loadoutTree, setLoadoutTree]);
 
   const handleClearLoadout = useCallback(() => {
-    setNextEventId(1);
+    setNextEventUid(1);
     resetUndoable({
       events: [],
       operators: [...INITIAL_OPERATORS],
@@ -1580,7 +1570,7 @@ export function useApp() {
     const { tree: newTree, node } = addLoadoutNode(freshTree, 'Loadout 1', null);
     resetLoadoutTree(newTree);
 
-    setNextEventId(1);
+    setNextEventUid(1);
     const emptyState: UndoableState = {
       events: [],
       operators: [...INITIAL_OPERATORS],

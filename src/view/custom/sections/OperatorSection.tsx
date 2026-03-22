@@ -13,7 +13,7 @@ import { WeaponType, ElementType, CombatSkillType, TimeInteractionType } from '.
 import { OperatorClassType } from '../../../model/enums/operators';
 import type { CustomOperator, CustomCombatSkillDef, CustomPotentialEntry } from '../../../model/custom/customOperatorTypes';
 import type { CustomStatusEventDef } from '../../../model/custom/customStatusEventTypes';
-import type { Interaction, Predicate } from '../../../consts/semantics';
+import type { Interaction, Predicate } from '../../../dsl/semantics';
 import IdField from '../IdField';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
 import StatusEventFields from './StatusEventFields';

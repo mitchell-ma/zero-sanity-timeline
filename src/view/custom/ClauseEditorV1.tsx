@@ -14,8 +14,8 @@
  *   └── [+]
  */
 import { useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { VerbType, CardinalityConstraintType, EFFECT_VERBS, THRESHOLD_MAX, VERB_LABELS, CARDINALITY_LABELS } from '../../consts/semantics';
-import type { Clause, Predicate, Interaction, Effect } from '../../consts/semantics';
+import { VerbType, CardinalityConstraintType, EFFECT_VERBS, THRESHOLD_MAX, VERB_LABELS, CARDINALITY_LABELS } from '../../dsl/semantics';
+import type { Clause, Predicate, Interaction, Effect } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 import EffectBuilder, { defaultEffect } from './EffectBuilder';
 import CustomSelect from './CustomSelect';

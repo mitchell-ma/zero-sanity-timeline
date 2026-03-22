@@ -2,7 +2,7 @@ import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
 import { getTacticalEntry } from '../gameDataController';
 import { Tactical } from '../../model/consumables/tactical';
 import { StewMeeting } from '../../model/consumables/stewMeeting';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import { FPS } from '../../utils/timeline';
 
 /**
@@ -101,7 +101,8 @@ export function generateTacticalEvents(
     };
 
     events.push({
-      id: `tactical-${slotId}-${use}`,
+      uid: `tactical-${slotId}-${use}`,
+      id: config.name,
       name: config.name,
       ownerId: slotId,
       columnId: 'tactical',

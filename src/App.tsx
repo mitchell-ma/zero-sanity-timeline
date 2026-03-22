@@ -16,7 +16,8 @@ import { createCustomGearEffect, updateCustomGearEffect } from './controller/cus
 import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
-import { InteractionModeType, CombatSkillsType, CombatSkillType } from './consts/enums';
+import { InteractionModeType, CombatSkillsType, CombatSkillType, InfoLevel } from './consts/enums';
+import { VerbType } from './dsl/semantics';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
 import type { CustomWeapon } from './model/custom/customWeaponTypes';
@@ -450,7 +451,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
             interactionMode={app.interactionMode}
             rawEvents={app.events}
             allProcessedEvents={app.allProcessedEvents}
@@ -473,7 +474,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
             allProcessedEvents={app.allProcessedEvents}
             allOperators={app.allOperators}
             onSelectOperator={(opId) => app.handleSwapOperator(app.editingSlot!.slotId, opId)}
@@ -490,7 +491,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
           />
         ) : app.editingResourceCol && app.editingResourceConfig ? (
           <InformationPane
@@ -504,7 +505,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
             wasted={app.editingResourceKey ? app.resourceGraphs?.get(app.editingResourceKey)?.wasted : undefined}
           />
         ) : app.editingDamageRow ? (
@@ -516,7 +517,7 @@ export default function App() {
             pinned={app.infoPanePinned}
             onTogglePin={() => app.setInfoPanePinned((p) => !p)}
             verbose={app.infoPaneVerbose}
-            onToggleVerbose={() => app.setInfoPaneVerbose((v) => ((v + 1) % 3) as 0 | 1 | 2)}
+            onToggleVerbose={() => app.setInfoPaneVerbose((v) => { const max = app.interactionMode === InteractionModeType.DEBUG ? InfoLevel.DEBUG : InfoLevel.VERBOSE; return (v >= max ? InfoLevel.CONCISE : v + 1) as InfoLevel; })}
           />
         ) : null}
 
@@ -524,7 +525,7 @@ export default function App() {
         {app.clauseEditorOpen && <ClauseEditorModal onClose={() => app.setClauseEditorOpen(false)} />}
         {app.statusEditorOpen && <StatusEditorModal onClose={() => app.setStatusEditorOpen(false)} />}
         {app.exprEditorOpen && <ExpressionEditorModal
-          value={{ verb: 'IS' as const, value: 0 }}
+          value={{ verb: VerbType.IS, value: 0 }}
           onChange={(node) => {
             // eslint-disable-next-line no-console
             console.log('[ExprEditor] result:', JSON.stringify(node, null, 2));

@@ -34,12 +34,13 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
       inputEvents.push(ev);
     }
   }
+  inputEvents.sort((a, b) => a.startFrame - b.startFrame);
   return { inputEvents, derivedEvents };
 }
 
-// ── ID generation ───────────────────────────────────────────────────────────
+// ── UID generation ──────────────────────────────────────────────────────────
 
-let _id = 1;
+let _uid = 1;
 
 // ── Combat context ──────────────────────────────────────────────────────────
 
@@ -53,16 +54,16 @@ export function hasSufficientSP(ownerId: string, frame: number): boolean {
   return _combatLoadout?.hasSufficientSP(ownerId, frame) ?? true;
 }
 
-export function genEventId(): string {
-  return `ev-${_id++}-${Math.random().toString(36).slice(2, 6)}`;
+export function genEventUid(): string {
+  return `ev-${_uid++}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-export function setNextEventId(id: number): void {
-  _id = id;
+export function setNextEventUid(id: number): void {
+  _uid = id;
 }
 
-export function getNextEventId(): number {
-  return _id;
+export function getNextEventUid(): number {
+  return _uid;
 }
 
 // ── Non-overlappable range helpers ──────────────────────────────────────────
@@ -78,7 +79,7 @@ function getRange(ev: TimelineEvent): number {
  * calculation. Falls back to the raw event if no processed list is provided.
  */
 function getSibRange(sib: TimelineEvent, processedEvents?: readonly TimelineEvent[]): number {
-  const resolved = processedEvents?.find((e) => e.id === sib.id) ?? sib;
+  const resolved = processedEvents?.find((e) => e.uid === sib.uid) ?? sib;
   return getRange(resolved);
 }
 
@@ -97,7 +98,7 @@ export function wouldOverlapNonOverlappable(
 ): boolean {
   const evRange = getSibRange(ev, processedEvents);
   for (const sib of allEvents) {
-    if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange > 0 && startFrame >= sib.startFrame && startFrame < sib.startFrame + sibRange) return true;
     if (evRange > 0 && sib.startFrame >= startFrame && sib.startFrame < startFrame + evRange) return true;
@@ -123,7 +124,7 @@ export function clampNonOverlappable(
   const movingForward = desiredFrame >= ev.startFrame;
   let result = desiredFrame;
   for (const sib of allEvents) {
-    if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange === 0 && evRange === 0) continue;
     const sibEnd = sib.startFrame + sibRange;
@@ -158,7 +159,7 @@ export function clampNonOverlappable(
  */
 export function clampDeltaByOverlap(
   clampedDelta: number,
-  eventId: string,
+  eventUid: string,
   allEvents: TimelineEvent[],
   startFrame: number,
   draggedIds: Set<string>,
@@ -166,7 +167,7 @@ export function clampDeltaByOverlap(
   overlapInvalidAtDragStart?: Set<string>,
   overlapRevalidated?: Set<string>,
 ): number {
-  const ev = allEvents.find((e) => e.id === eventId);
+  const ev = allEvents.find((e) => e.uid === eventUid);
   if (!ev) return clampedDelta;
   const evRange = getSibRange(ev, processedEvents);
   if (evRange === 0) return clampedDelta;
@@ -176,8 +177,8 @@ export function clampDeltaByOverlap(
   // Collect non-dragged siblings in the same column
   const siblings: { start: number; end: number }[] = [];
   for (const sib of allEvents) {
-    if (sib.id === ev.id || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
-    if (draggedIds.has(sib.id)) continue; // skip other dragged events
+    if (sib.uid === ev.uid || sib.ownerId !== ev.ownerId || sib.columnId !== ev.columnId) continue;
+    if (draggedIds.has(sib.uid)) continue; // skip other dragged events
     const sibRange = getSibRange(sib, processedEvents);
     if (sibRange <= 0) continue;
     siblings.push({ start: sib.startFrame, end: sib.startFrame + sibRange });
@@ -189,11 +190,11 @@ export function clampDeltaByOverlap(
 
   // Event was overlapping at drag start — allow free movement until it
   // reaches a non-overlapping position.
-  if (overlapInvalidAtDragStart?.has(eventId)) {
+  if (overlapInvalidAtDragStart?.has(eventUid)) {
     if (wouldOverlap(target)) return clampedDelta; // still overlapping, free movement
     // Target is now valid — transition to revalidated
-    overlapInvalidAtDragStart.delete(eventId);
-    overlapRevalidated?.add(eventId);
+    overlapInvalidAtDragStart.delete(eventUid);
+    overlapRevalidated?.add(eventUid);
     return clampedDelta; // current position is valid, no clamping needed
   }
 
@@ -207,7 +208,7 @@ export function clampDeltaByOverlap(
     for (const s of siblings) {
       if (target + evRange > s.start && target < s.end) {
         const edgeDelta = s.start - evRange - startFrame;
-        if (edgeDelta >= 0 || overlapRevalidated?.has(eventId)) {
+        if (edgeDelta >= 0 || overlapRevalidated?.has(eventUid)) {
           best = Math.min(best, Math.max(0, edgeDelta));
         }
       }
@@ -219,7 +220,7 @@ export function clampDeltaByOverlap(
     for (const s of siblings) {
       if (target < s.end && target + evRange > s.start) {
         const edgeDelta = s.end - startFrame;
-        if (edgeDelta <= 0 || overlapRevalidated?.has(eventId)) {
+        if (edgeDelta <= 0 || overlapRevalidated?.has(eventUid)) {
           best = Math.max(best, Math.min(0, edgeDelta));
         }
       }
@@ -254,7 +255,8 @@ export function createEvent(
   const segments = defaultSkill?.segments ?? durationSegment(120);
   const span = computeSegmentsSpan(segments);
   return {
-    id: genEventId(),
+    uid: genEventUid(),
+    id: defaultSkill?.name ?? columnId,
     name: defaultSkill?.name ?? columnId,
     ownerId,
     columnId,
@@ -288,7 +290,7 @@ export function isInUltimateAnimation(
   excludeEventId?: string,
 ): boolean {
   for (const ev of allEvents) {
-    if (ev.id === excludeEventId) continue;
+    if (ev.uid === excludeEventId) continue;
     if (ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
@@ -310,7 +312,7 @@ function clampToUltimateEdge(
   const movingForward = desiredFrame >= target.startFrame;
   let result = desiredFrame;
   for (const ev of allEvents) {
-    if (ev.id === target.id || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+    if (ev.uid === target.uid || ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
@@ -333,7 +335,7 @@ export function isInComboAnimation(
   excludeEventId?: string,
 ): boolean {
   for (const ev of allEvents) {
-    if (ev.id === excludeEventId) continue;
+    if (ev.uid === excludeEventId) continue;
     if (ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
@@ -354,7 +356,7 @@ function clampToComboEdge(
   const movingForward = desiredFrame >= target.startFrame;
   let result = desiredFrame;
   for (const ev of allEvents) {
-    if (ev.id === target.id || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
+    if (ev.uid === target.uid || ev.columnId !== SKILL_COLUMNS.COMBO) continue;
     const animDur = getAnimationDuration(ev);
     if (animDur <= 0) continue;
     const animEnd = ev.startFrame + animDur;
@@ -446,11 +448,11 @@ export function validateUpdate(
   const merged = { ...target, ...validated };
   if (wouldOverlapNonOverlappable(allEvents, merged, merged.startFrame, processedEvents ?? undefined)) return null;
   // Block non-ultimate events from being placed during an ultimate animation
-  if (merged.columnId !== SKILL_COLUMNS.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.id)) return null;
+  if (merged.columnId !== SKILL_COLUMNS.ULTIMATE && isInUltimateAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Block battle skills from being placed during a combo animation
-  if (merged.columnId === SKILL_COLUMNS.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.id)) return null;
+  if (merged.columnId === SKILL_COLUMNS.BATTLE && isInComboAnimation(allEvents, merged.startFrame, merged.uid)) return null;
   // Empowered battle skills require 4 active Melting Flame stacks
-  if (merged.name?.includes('EMPOWERED')) {
+  if (merged.id?.includes('EMPOWERED')) {
     const mfSource = processedEvents ?? allEvents;
     const mfCount = mfSource.filter(
       (e) => e.ownerId === merged.ownerId && e.columnId === OPERATOR_COLUMNS.MELTING_FLAME
@@ -459,9 +461,9 @@ export function validateUpdate(
     if (mfCount < 4) return null;
   }
   // Enhanced battle skills require an active ultimate
-  if (merged.name?.includes('ENHANCED') && !merged.name?.includes('EMPOWERED')) {
+  if (merged.id?.includes('ENHANCED') && !merged.id?.includes('EMPOWERED')) {
     const ultActive = allEvents.some(
-      (e) => e.id !== merged.id && e.ownerId === merged.ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
+      (e) => e.uid !== merged.uid && e.ownerId === merged.ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE
         && merged.startFrame >= e.startFrame + getAnimationDuration(e)
         && merged.startFrame < eventEndFrame(e),
     );
@@ -483,7 +485,7 @@ export function validateMove(
 ): number {
   let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
   clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
-  if (!overlapExemptIds?.has(target.id)) {
+  if (!overlapExemptIds?.has(target.uid)) {
     clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
   }
   // Clamp non-ultimate events to the edge of ultimate animation regions
@@ -495,7 +497,7 @@ export function validateMove(
     clamped = clampToComboEdge(allEvents, target, clamped);
   }
   // Clamp enhanced events within the ENHANCE clause window
-  if (target.name?.includes('ENHANCED') && !target.name?.includes('EMPOWERED')) {
+  if (target.id?.includes('ENHANCED') && !target.id?.includes('EMPOWERED')) {
     clamped = clampToEnhanceWindow(allEvents, target, clamped);
   }
   return clamped;
@@ -515,7 +517,7 @@ export function validateBatchMoveDelta(
 ): number {
   let clampedDelta = delta;
   for (const id of targetIds) {
-    const target = allEvents.find((ev) => ev.id === id);
+    const target = allEvents.find((ev) => ev.uid === id);
     if (!target) continue;
     const desired = target.startFrame + clampedDelta;
     const clamped = validateMove(allEvents, target, desired, processedEvents, overlapExemptIds);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ResourceConfig } from '../../consts/viewTypes';
 import { StatField } from './SharedFields';
+import { t } from '../../locales/locale';
 
 interface ResourcePaneProps {
   label: string;
@@ -26,23 +27,23 @@ function ResourcePane({ label, color, config, onChange, onClose, wasted }: Resou
         <div className="edit-panel-title-wrap">
           <div className="edit-panel-skill-name">{label}</div>
           <div className="edit-panel-op-name" style={{ color }}>
-            RESOURCE
+            {t('resourcePane.badge')}
           </div>
         </div>
       </div>
 
       <div className="edit-panel-body">
         <div className="edit-panel-section">
-          <span className="edit-section-label">Parameters</span>
+          <span className="edit-section-label">{t('resourcePane.section.parameters')}</span>
           <StatField
-            label="Starting Value"
+            label={t('resourcePane.label.startingValue')}
             value={config.startValue}
             min={0}
             max={config.max}
             onChange={(v) => onChange({ ...config, startValue: v })}
           />
           <StatField
-            label="Max Limit"
+            label={t('resourcePane.label.maxLimit')}
             value={config.max}
             min={1}
             max={99999}
@@ -53,7 +54,7 @@ function ResourcePane({ label, color, config, onChange, onClose, wasted }: Resou
             })}
           />
           <StatField
-            label="Regen / sec"
+            label={t('resourcePane.label.regenPerSecond')}
             value={config.regenPerSecond}
             min={0}
             max={9999}
@@ -64,12 +65,12 @@ function ResourcePane({ label, color, config, onChange, onClose, wasted }: Resou
 
         {wasted != null && wasted > 0 && (
           <div className="edit-panel-section">
-            <span className="edit-section-label">Summary</span>
+            <span className="edit-section-label">{t('resourcePane.section.summary')}</span>
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
               padding: '2px 6px', fontSize: 13,
             }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Wasted (overflow)</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{t('resourcePane.label.wasted')}</span>
               <span style={{ fontFamily: 'var(--font-mono)', color: '#cc6644' }}>
                 {wasted.toFixed(1)}
               </span>

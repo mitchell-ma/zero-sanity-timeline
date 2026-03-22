@@ -1,8 +1,14 @@
+import { t } from '../locales/locale';
+
 export enum CombatSkillType {
   BASIC_ATTACK = "BASIC_ATTACK",
+  BATK = "BATK",
+  FINAL_STRIKE = "FINAL_STRIKE",
+  NORMAL = "NORMAL",
   BATTLE_SKILL = "BATTLE_SKILL",
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE = "ULTIMATE",
+  ULTIMATE_SKILL = "ULTIMATE_SKILL",
 }
 
 export enum MainStatType {
@@ -40,9 +46,13 @@ export enum DataSourceType {
   SELF = "SELF",
 }
 
-export enum DurationUnit {
+export enum UnitType {
   FRAME = "FRAME",
   SECOND = "SECOND",
+  PERCENTAGE = "PERCENTAGE",
+  FLAT = "FLAT",
+  LEVEL = "LEVEL",
+  MULTIPLIER = "MULTIPLIER",
 }
 
 export enum EventFrameType {
@@ -86,11 +96,9 @@ export enum ComparisonType {
 
 export enum StackInteractionType {
   NONE = "NONE",
-  REFRESH = "REFRESH",
-  EXTEND = "EXTEND",
+  RESET = "RESET",
   MERGE = "MERGE",
-  APPLY = "APPLY",
-  CONSUME = "CONSUME",
+  REFRESH = "REFRESH",
 }
 
 export enum ElementType {
@@ -102,25 +110,22 @@ export enum ElementType {
   ELECTRIC = "ELECTRIC",
 }
 
-/** Maps status types to their associated element (for coloring). */
+/** Maps status types to their associated element (for coloring).
+ *  Reaction entries are hardcoded; operator status entries are built from JSON via gameDataController.getStatusElementMap(). */
 export const STATUS_ELEMENT: Record<string, string> = {
-  MELTING_FLAME:    ElementType.HEAT,
-  SCORCHING_HEART_EFFECT: ElementType.HEAT,
   COMBUSTION:       ElementType.HEAT,
   SOLIDIFICATION:   ElementType.CRYO,
-  CRIT_STACKS:      ElementType.CRYO,
   CORROSION:        ElementType.NATURE,
   ELECTRIFICATION:  ElementType.ELECTRIC,
-  THUNDERLANCE:     ElementType.ELECTRIC,
 };
 
 export const ELEMENT_LABELS: Record<ElementType, string> = {
-  [ElementType.NONE]:     'None',
-  [ElementType.PHYSICAL]: 'Physical',
-  [ElementType.HEAT]:     'Heat',
-  [ElementType.CRYO]:     'Cryo',
-  [ElementType.NATURE]:   'Nature',
-  [ElementType.ELECTRIC]: 'Electric',
+  [ElementType.NONE]:     t('element.NONE'),
+  [ElementType.PHYSICAL]: t('element.PHYSICAL'),
+  [ElementType.HEAT]:     t('element.HEAT'),
+  [ElementType.CRYO]:     t('element.CRYO'),
+  [ElementType.NATURE]:   t('element.NATURE'),
+  [ElementType.ELECTRIC]: t('element.ELECTRIC'),
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
@@ -155,24 +160,12 @@ export type ReactionType = ArtsReactionType | PhysicalStatusType;
 export const ReactionType = { ...ArtsReactionType, ...PhysicalStatusType } as typeof ArtsReactionType & typeof PhysicalStatusType;
 
 enum _StatusType {
-  // ── Operator buffs ─────────────────────────────────────────────────────────
-  MELTING_FLAME = "MELTING_FLAME",
-  THUNDERLANCE = "THUNDERLANCE",
-  CRIT_STACKS = "CRIT_STACKS",
-  SQUAD_BUFF = "SQUAD_BUFF",
-  SCORCHING_FANGS = "SCORCHING_FANGS",
   // ── Gear set effects ──────────────────────────────────────────────────────
   GEAR_BUFF = "GEAR_BUFF",
   // ── Team statuses ─────────────────────────────────────────────────────────
   LINK = "LINK",
   ARTS_AMP = "ARTS_AMP",
   SHIELD = "SHIELD",
-  UNBRIDLED_EDGE = "UNBRIDLED_EDGE",
-  WILDLAND_TREKKER = "WILDLAND_TREKKER",
-  MESSENGERS_SONG = "MESSENGERS_SONG",
-  // ── Operator talents ──────────────────────────────────────────────────────
-  SCORCHING_HEART = "SCORCHING_HEART",
-  SCORCHING_HEART_EFFECT = "SCORCHING_HEART_EFFECT",
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
   SUSCEPTIBILITY = "SUSCEPTIBILITY",
@@ -181,26 +174,6 @@ enum _StatusType {
   WEAKEN = "WEAKEN",
   DMG_REDUCTION = "DMG_REDUCTION",
   PROTECTION = "PROTECTION",
-  // ── Potential buffs ───────────────────────────────────────────────────────
-  LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE = "LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE",
-  AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK = "AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK",
-  AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS = "AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS",
-  ARDELIA_POTENTIAL5_VOLCANIC_STEAM = "ARDELIA_POTENTIAL5_VOLCANIC_STEAM",
-  ENDMINISTRATOR_POTENTIAL1_FINAL_AWAKENING = "ENDMINISTRATOR_POTENTIAL1_FINAL_AWAKENING",
-  ENDMINISTRATOR_POTENTIAL2_REFLECTION_OF_AUTHORITY = "ENDMINISTRATOR_POTENTIAL2_REFLECTION_OF_AUTHORITY",
-  ENDMINISTRATOR_POTENTIAL5 = "ENDMINISTRATOR_POTENTIAL5",
-  CHEN_QIANYU_POTENTIAL1_SHADOWLESS = "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
-  GILBERTA_POTENTIAL5_SPECIAL_MAIL = "GILBERTA_POTENTIAL5_SPECIAL_MAIL",
-  LIFENG_POTENTIAL5_UNREMITTING = "LIFENG_POTENTIAL5_UNREMITTING",
-  EMBER_POTENTIAL5_THE_STEEL_OATH = "EMBER_POTENTIAL5_THE_STEEL_OATH",
-  PERLICA_POTENTIAL3_SUPERVISORY_DUTIES = "PERLICA_POTENTIAL3_SUPERVISORY_DUTIES",
-  ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS = "ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS",
-  ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN = "ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN",
-  CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS = "CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS",
-  FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS = "FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS",
-  LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING = "LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING",
-  YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER = "YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER",
-  POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE = "POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE",
 }
 
 export type StatusType = _StatusType | ReactionType;
@@ -223,29 +196,20 @@ export enum DamageFactorType {
   RESISTANCE = "RESISTANCE",
 }
 
-/** Maps known StatusTypes to the damage formula factor they contribute to. Unknown types default to NONE. */
+/** Maps known StatusTypes to the damage formula factor they contribute to. Unknown types default to NONE.
+ *  Only game-mechanic statuses are listed here; operator status damage factors are derived from their clause effects. */
 export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
-  // Arts reactions — deal damage, don't directly map to a single multiplier factor
+  // Arts reactions
   [StatusType.COMBUSTION]: DamageFactorType.NONE,
   [StatusType.SOLIDIFICATION]: DamageFactorType.NONE,
   [StatusType.CORROSION]: DamageFactorType.RESISTANCE,
   [StatusType.ELECTRIFICATION]: DamageFactorType.FRAGILITY,
-  // Operator buffs
-  [StatusType.MELTING_FLAME]: DamageFactorType.NONE,
-  [StatusType.THUNDERLANCE]: DamageFactorType.NONE,
-  [StatusType.CRIT_STACKS]: DamageFactorType.NONE,
-  [StatusType.SQUAD_BUFF]: DamageFactorType.MULTIPLIER_GROUP,
-  [StatusType.SCORCHING_FANGS]: DamageFactorType.RESISTANCE,
   // Gear set effects
   [StatusType.GEAR_BUFF]: DamageFactorType.NONE,
   // Team statuses
   [StatusType.LINK]: DamageFactorType.LINK,
   [StatusType.ARTS_AMP]: DamageFactorType.AMP,
   [StatusType.SHIELD]: DamageFactorType.NONE,
-  [StatusType.UNBRIDLED_EDGE]: DamageFactorType.MULTIPLIER_GROUP,
-  [StatusType.WILDLAND_TREKKER]: DamageFactorType.MULTIPLIER_GROUP,
-  [StatusType.SCORCHING_HEART]: DamageFactorType.NONE,
-  [StatusType.SCORCHING_HEART_EFFECT]: DamageFactorType.RESISTANCE,
   // Enemy debuffs
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
   [StatusType.SUSCEPTIBILITY]: DamageFactorType.SUSCEPTIBILITY,
@@ -260,28 +224,6 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [PhysicalStatusType.CRUSH]: DamageFactorType.NONE,
   [PhysicalStatusType.BREACH]: DamageFactorType.FRAGILITY,
   [PhysicalStatusType.SHATTER]: DamageFactorType.NONE,
-  // Team passives
-  [StatusType.MESSENGERS_SONG]: DamageFactorType.NONE,
-  // Potential buffs
-  [StatusType.LAEVATAIN_POTENTIAL5_PROOF_OF_EXISTENCE]: DamageFactorType.NONE,
-  [StatusType.AKEKURI_POTENTIAL1_POSITIVE_FEEDBACK]: DamageFactorType.NONE,
-  [StatusType.AKEKURI_POTENTIAL5_TEMPO_OF_AWARENESS]: DamageFactorType.NONE,
-  [StatusType.ARDELIA_POTENTIAL5_VOLCANIC_STEAM]: DamageFactorType.NONE,
-  [StatusType.ENDMINISTRATOR_POTENTIAL1_FINAL_AWAKENING]: DamageFactorType.NONE,
-  [StatusType.ENDMINISTRATOR_POTENTIAL2_REFLECTION_OF_AUTHORITY]: DamageFactorType.NONE,
-  [StatusType.ENDMINISTRATOR_POTENTIAL5]: DamageFactorType.NONE,
-  [StatusType.CHEN_QIANYU_POTENTIAL1_SHADOWLESS]: DamageFactorType.NONE,
-  [StatusType.GILBERTA_POTENTIAL5_SPECIAL_MAIL]: DamageFactorType.NONE,
-  [StatusType.LIFENG_POTENTIAL5_UNREMITTING]: DamageFactorType.NONE,
-  [StatusType.EMBER_POTENTIAL5_THE_STEEL_OATH]: DamageFactorType.NONE,
-  [StatusType.PERLICA_POTENTIAL3_SUPERVISORY_DUTIES]: DamageFactorType.NONE,
-  [StatusType.ARCLIGHT_POTENTIAL5_SERVANT_OF_THE_WILDLANDS]: DamageFactorType.NONE,
-  [StatusType.ESTELLA_POTENTIAL5_SURVIVAL_IS_A_WIN]: DamageFactorType.NONE,
-  [StatusType.CATCHER_POTENTIAL1_MULTI_LAYERED_READINESS]: DamageFactorType.NONE,
-  [StatusType.FLUORITE_POTENTIAL5_CRAVER_OF_CHAOS]: DamageFactorType.NONE,
-  [StatusType.LAST_RITE_POTENTIAL5_WINTER_IS_RETURNING]: DamageFactorType.NONE,
-  [StatusType.YVONNE_POTENTIAL5_EXPERT_MECHCRAFTER]: DamageFactorType.NONE,
-  [StatusType.POGRANICHNIK_POTENTIAL5_NEWLY_FORGED_BLADE]: DamageFactorType.NONE,
 };
 
 /** Arts inflictions — elemental inflictions that trigger arts reactions. */
@@ -437,144 +379,23 @@ export enum InteractionModeType {
   DEBUG = "DEBUG",
 }
 
-export enum TargetType {
-  ENEMY = "ENEMY",
-  SELF = "SELF",
-  TEAM = "TEAM",
-  TEAM_MEMBER = "TEAM_MEMBER",
-  OTHER_OPERATORS = "OTHER_OPERATORS",
+export enum InfoLevel {
+  CONCISE = 0,
+  DETAILED = 1,
+  VERBOSE = 2,
+  DEBUG = 3,
 }
+
 
 export { StatType, StatOwnerType, STAT_ATTRIBUTION, getStatsForTarget } from '../model/enums/stats';
 export { GearType } from '../model/enums/gears';
 
+/** Common (built-in) combat skill types. Operator-specific skill IDs come from JSON via game data controllers. */
 export enum CombatSkillsType {
-  // Common
   DASH = "DASH",
   FINISHER = "FINISHER",
   DIVE = "DIVE",
-
-  // Laevatain
-  FLAMING_CINDERS = "FLAMING_CINDERS",
-  FLAMING_CINDERS_ENHANCED = "FLAMING_CINDERS_ENHANCED",
-  SMOULDERING_FIRE = "SMOULDERING_FIRE",
-  SMOULDERING_FIRE_ENHANCED = "SMOULDERING_FIRE_ENHANCED",
-  SMOULDERING_FIRE_EMPOWERED = "SMOULDERING_FIRE_EMPOWERED",
-  SMOULDERING_FIRE_ENHANCED_EMPOWERED = "SMOULDERING_FIRE_ENHANCED_EMPOWERED",
-  SEETHE = "SEETHE",
-  TWILIGHT = "TWILIGHT",
-  // Antal
-  EXCHANGE_CURRENT = "EXCHANGE_CURRENT",
-  SPECIFIED_RESEARCH_SUBJECT = "SPECIFIED_RESEARCH_SUBJECT",
-  EMP_TEST_SITE = "EMP_TEST_SITE",
-  OVERCLOCKED_MOMENT = "OVERCLOCKED_MOMENT",
-  // Akekuri
-  SWORD_OF_ASPIRATION = "SWORD_OF_ASPIRATION",
-  BURST_OF_PASSION = "BURST_OF_PASSION",
-  FLASH_AND_DASH = "FLASH_AND_DASH",
-  SQUAD_ON_ME = "SQUAD_ON_ME",
-  // Wulfgard
-  RAPID_FIRE_AKIMBO = "RAPID_FIRE_AKIMBO",
-  THERMITE_TRACERS = "THERMITE_TRACERS",
-  FRAG_GRENADE_BETA = "FRAG_GRENADE_BETA",
-  WOLVEN_FURY = "WOLVEN_FURY",
-  // Ardelia
-  ROCKY_WHISPERS = "ROCKY_WHISPERS",
-  DOLLY_RUSH = "DOLLY_RUSH",
-  ERUPTION_COLUMN = "ERUPTION_COLUMN",
-  WOOLY_PARTY = "WOOLY_PARTY",
-  // Endministrator
-  DESTRUCTIVE_SEQUENCE = "DESTRUCTIVE_SEQUENCE",
-  CONSTRUCTIVE_SEQUENCE = "CONSTRUCTIVE_SEQUENCE",
-  SEALING_SEQUENCE = "SEALING_SEQUENCE",
-  BOMBARDMENT_SEQUENCE = "BOMBARDMENT_SEQUENCE",
-  // Lifeng
-  RUINATION = "RUINATION",
-  TURBID_AVATAR = "TURBID_AVATAR",
-  ASPECT_OF_WRATH = "ASPECT_OF_WRATH",
-  HEART_OF_THE_UNMOVING = "HEART_OF_THE_UNMOVING",
-  // Chen Qianyu
-  SOARING_BREAK = "SOARING_BREAK",
-  ASCENDING_STRIKE = "ASCENDING_STRIKE",
-  SOAR_TO_THE_STARS = "SOAR_TO_THE_STARS",
-  BLADE_GALE = "BLADE_GALE",
-  // Estella
-  AUDIO_NOISE = "AUDIO_NOISE",
-  ONOMATOPOEIA = "ONOMATOPOEIA",
-  DISTORTION = "DISTORTION",
-  TREMOLO = "TREMOLO",
-  // Ember
-  SWORD_ART_OF_ASSAULT = "SWORD_ART_OF_ASSAULT",
-  FORWARD_MARCH = "FORWARD_MARCH",
-  FRONTLINE_SUPPORT = "FRONTLINE_SUPPORT",
-  RE_IGNITED_OATH = "RE_IGNITED_OATH",
-  // Snowshine
-  HYPOTHERMIC_ASSAULT = "HYPOTHERMIC_ASSAULT",
-  SATURATED_DEFENSE = "SATURATED_DEFENSE",
-  POLAR_RESCUE = "POLAR_RESCUE",
-  FRIGID_SNOWFIELD = "FRIGID_SNOWFIELD",
-  // Catcher
-  RIGID_INTERDICTION_BASIC = "RIGID_INTERDICTION_BASIC",
-  RIGID_INTERDICTION = "RIGID_INTERDICTION",
-  TIMELY_SUPPRESSION = "TIMELY_SUPPRESSION",
-  TEXTBOOK_ASSAULT = "TEXTBOOK_ASSAULT",
-  // Gilberta
-  BEAM_COHESION_ARTS = "BEAM_COHESION_ARTS",
-  GRAVITY_MODE = "GRAVITY_MODE",
-  MATRIX_DISPLACEMENT = "MATRIX_DISPLACEMENT",
-  GRAVITY_FIELD = "GRAVITY_FIELD",
-  // Xaihi
-  XAIHI_BASIC_ATTACK = "XAIHI_BASIC_ATTACK",
-  DISTRIBUTED_DOS = "DISTRIBUTED_DOS",
-  STRESS_TESTING = "STRESS_TESTING",
-  STACK_OVERFLOW = "STACK_OVERFLOW",
-  // Perlica
-  PROTOCOL_ALPHA_BREACH = "PROTOCOL_ALPHA_BREACH",
-  PROTOCOL_OMEGA_STRIKE = "PROTOCOL_OMEGA_STRIKE",
-  INSTANT_PROTOCOL_CHAIN = "INSTANT_PROTOCOL_CHAIN",
-  PROTOCOL_EPSILON = "PROTOCOL_EPSILON",
-  // Fluorite
-  SIGNATURE_GUN_KATA = "SIGNATURE_GUN_KATA",
-  TINY_SURPRISE = "TINY_SURPRISE",
-  FREE_GIVEAWAY = "FREE_GIVEAWAY",
-  APEX_PRANKSTER = "APEX_PRANKSTER",
-  // Last Rite
-  DANCE_OF_RIME = "DANCE_OF_RIME",
-  ESOTERIC_LEGACY = "ESOTERIC_LEGACY",
-  WINTERS_DEVOURER = "WINTERS_DEVOURER",
-  VIGIL_SERVICES = "VIGIL_SERVICES",
-  // Yvonne
-  EXUBERANT_TRIGGER = "EXUBERANT_TRIGGER",
-  EXUBERANT_TRIGGER_ENHANCED = "EXUBERANT_TRIGGER_ENHANCED",
-  BRR_BRR_BOMB = "BRR_BRR_BOMB",
-  FLASHFREEZER = "FLASHFREEZER",
-  CRYOBLASTING_PISTOLIER = "CRYOBLASTING_PISTOLIER",
-  // Avywenna
-  THUNDERLANCE_BLITZ = "THUNDERLANCE_BLITZ",
-  THUNDERLANCE_INTERDICTION = "THUNDERLANCE_INTERDICTION",
-  THUNDERLANCE_STRIKE = "THUNDERLANCE_STRIKE",
-  THUNDERLANCE_FINAL_SHOCK = "THUNDERLANCE_FINAL_SHOCK",
-  // Da Pan
-  ROLLING_CUT = "ROLLING_CUT",
-  FLIP_DA_WOK = "FLIP_DA_WOK",
-  MORE_SPICE = "MORE_SPICE",
-  CHOP_N_DUNK = "CHOP_N_DUNK",
-  // Pogranichnik
-  ALL_OUT_OFFENSIVE = "ALL_OUT_OFFENSIVE",
-  THE_PULVERIZING_FRONT = "THE_PULVERIZING_FRONT",
-  FULL_MOON_SLASH = "FULL_MOON_SLASH",
-  SHIELDGUARD_BANNER = "SHIELDGUARD_BANNER",
-  // Alesh
-  ROD_CASTING = "ROD_CASTING",
-  UNCONVENTIONAL_LURE = "UNCONVENTIONAL_LURE",
-  AUGER_ANGLING = "AUGER_ANGLING",
-  ONE_MONSTER_CATCH = "ONE_MONSTER_CATCH",
-  // Arclight
-  SEEK_AND_HUNT = "SEEK_AND_HUNT",
-  TEMPESTUOUS_ARC = "TEMPESTUOUS_ARC",
-  TEMPESTUOUS_ARC_EMPOWERED = "TEMPESTUOUS_ARC_EMPOWERED",
-  PEAL_OF_THUNDER = "PEAL_OF_THUNDER",
-  EXPLODING_BLITZ = "EXPLODING_BLITZ",
+  CONTROL = "CONTROL",
 }
 
 

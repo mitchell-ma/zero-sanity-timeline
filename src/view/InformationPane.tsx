@@ -3,12 +3,13 @@ import { TimelineEvent, Operator, Enemy, SelectedFrame, ResourceConfig, Column }
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { EnemyStats } from '../controller/appStateController';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
-import type { InteractionModeType } from '../consts/enums';
+import { InfoLevel, type InteractionModeType } from '../consts/enums';
 import EventPane from './info-pane/EventPane';
 import LoadoutPane from './info-pane/LoadoutPane';
 import EnemyPane from './info-pane/EnemyPane';
 import ResourcePane from './info-pane/ResourcePane';
 import DamageBreakdownPane from './info-pane/DamageBreakdownPane';
+import { t } from '../locales/locale';
 
 // ── Loadout properties type (shared across app) ─────────────────────────────
 
@@ -98,8 +99,7 @@ export function getDefaultLoadoutProperties(op: { rarity: number; maxTalentOneLe
 type InformationPaneProps = {
   pinned?: boolean;
   onTogglePin?: () => void;
-  /** 0 = succinct, 1 = detailed, 2 = verbose */
-  verbose?: 0 | 1 | 2;
+  verbose?: InfoLevel;
   onToggleVerbose?: () => void;
   triggerClose?: boolean;
   interactionMode?: InteractionModeType;
@@ -123,7 +123,7 @@ type InformationPaneProps = {
       allProcessedEvents?: readonly TimelineEvent[];
       loadoutProperties?: Record<string, LoadoutProperties>;
       damageRows?: DamageTableRow[];
-      spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
+      spConsumptionHistory?: { eventUid: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
       onSaveAsCustomSkill?: (event: TimelineEvent) => void;
     }
   | {
@@ -167,7 +167,7 @@ type InformationPaneProps = {
 export default function InformationPane(props: InformationPaneProps) {
   const [closing, setClosing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const verbose = props.verbose ?? 1;
+  const verbose = props.verbose ?? InfoLevel.DETAILED;
 
   const handleClose = useCallback(() => {
     setClosing(true);
@@ -195,21 +195,21 @@ export default function InformationPane(props: InformationPaneProps) {
     >
       <div className="edit-panel-actions">
         {props.onToggleVerbose && <button
-          className={`edit-panel-verbose${verbose > 0 ? ' edit-panel-verbose--active' : ''}`}
+          className={`edit-panel-verbose${verbose > InfoLevel.CONCISE ? ' edit-panel-verbose--active' : ''}`}
           onClick={props.onToggleVerbose}
-          title={verbose === 0 ? 'Succinct' : verbose === 1 ? 'Detailed' : 'Verbose'}
+          title={verbose === InfoLevel.CONCISE ? t('infoLevel.concise') : verbose === InfoLevel.DETAILED ? t('infoLevel.detailed') : verbose === InfoLevel.VERBOSE ? t('infoLevel.verbose') : t('infoLevel.debug')}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 12h16"/>
-            {verbose >= 1 && <path d="M4 7h10"/>}
-            {verbose >= 2 && <path d="M4 17h14"/>}
+            {verbose >= InfoLevel.DETAILED && <path d="M4 7h10"/>}
+            {verbose >= InfoLevel.VERBOSE && <path d="M4 17h14"/>}
           </svg>
         </button>}
         {props.onTogglePin && (
           <button
             className={`edit-panel-pin${props.pinned ? ' edit-panel-pin--active' : ''}`}
             onClick={props.onTogglePin}
-            title={props.pinned ? 'Unpin panel' : 'Pin panel open'}
+            title={props.pinned ? t('infoPane.tooltip.unpin') : t('infoPane.tooltip.pin')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 17v5"/>

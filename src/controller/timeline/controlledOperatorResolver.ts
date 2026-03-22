@@ -9,7 +9,8 @@
  * Only one operator can be controlled at a time. The first operator (slot-0) starts controlled.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
+import { CombatSkillsType } from '../../consts/enums';
+import { SKILL_COLUMNS } from '../../model/channels';
 
 /** Skill columns that imply the player is controlling the operator. */
 const CONTROL_IMPLYING_COLUMNS = new Set<string>([
@@ -37,7 +38,7 @@ export function resolveControlledOperator(
   const transferPoints: { frame: number; slotId: string }[] = [];
 
   for (const ev of events) {
-    if (ev.columnId === OPERATOR_COLUMNS.CONTROLLED) {
+    if (ev.id === CombatSkillsType.CONTROL) {
       transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });
     } else if (CONTROL_IMPLYING_COLUMNS.has(ev.columnId)) {
       transferPoints.push({ frame: ev.startFrame, slotId: ev.ownerId });

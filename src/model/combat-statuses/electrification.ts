@@ -25,25 +25,25 @@ const DURATION_SECONDS: Readonly<Record<StatusLevel, number>> = {
 
 export class Electrification extends ArtsReaction {
   constructor(params: {
-    statusLevel: StatusLevel;
+    stacks: StatusLevel;
     isForced?: boolean;
   }) {
     super({
       statusType: StatusType.ELECTRIFICATION,
-      statusLevel: params.statusLevel,
-      maxStatusLevel: 4,
+      stacks: params.stacks,
+      maxStacks: 4,
       element: ElementType.ELECTRIC,
       isForced: params.isForced ?? false,
-      durationSeconds: DURATION_SECONDS[params.statusLevel],
+      durationSeconds: DURATION_SECONDS[params.stacks],
     });
   }
 
   getInitialDamage(): number {
     if (this.isForced) return 0;
-    return INITIAL_DAMAGE[this.statusLevel];
+    return INITIAL_DAMAGE[this.stacks];
   }
 
   getExtraArtsDamageTaken(): number {
-    return EXTRA_ARTS_DAMAGE_TAKEN[this.statusLevel];
+    return EXTRA_ARTS_DAMAGE_TAKEN[this.stacks];
   }
 }

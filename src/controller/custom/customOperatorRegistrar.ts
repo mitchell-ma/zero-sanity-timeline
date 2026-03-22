@@ -10,7 +10,8 @@ import {
 } from '../operators/operatorRegistry';
 import { OPERATORS } from '../../utils/loadoutRegistry';
 import type { CustomOperator, CustomCombatSkillDef } from '../../model/custom/customOperatorTypes';
-import { CombatSkillType } from '../../consts/enums';
+import { CombatSkillType, UnitType } from '../../consts/enums';
+import { VerbType } from '../../dsl/semantics';
 
 const DEFAULT_SKILL: CustomCombatSkillDef = {
   name: 'Unnamed Skill',
@@ -42,7 +43,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
     operatorRarity: operator.operatorRarity,
     operatorClassType: operator.operatorClassType,
     elementType: operator.elementType,
-    weaponType: operator.weaponTypes,
+    weaponTypes: operator.weaponTypes,
     mainAttributeType: operator.mainAttributeType,
     secondaryAttributeType: operator.secondaryAttributeType ?? operator.mainAttributeType,
     splashArt: operator.splashArt,
@@ -66,16 +67,16 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
       BASIC_ATTACK: {
         id: skills.basicAttack.name,
         segments: [{
-          duration: { value: skills.basicAttack.durationSeconds, unit: 'SECOND' },
+          duration: { value: { verb: VerbType.IS, value: skills.basicAttack.durationSeconds }, unit: UnitType.SECOND },
         }],
       },
       BATTLE_SKILL: {
         id: skills.battleSkill.name,
-        duration: { value: skills.battleSkill.durationSeconds, unit: 'SECOND' },
+        duration: { value: { verb: VerbType.IS, value: skills.battleSkill.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.battleSkill.animationSeconds
           ? { segments: [{
             metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: skills.battleSkill.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.battleSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),
@@ -88,14 +89,14 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
       },
       COMBO_SKILL: {
         id: skills.comboSkill.name,
-        duration: { value: skills.comboSkill.durationSeconds, unit: 'SECOND' },
+        duration: { value: { verb: VerbType.IS, value: skills.comboSkill.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.comboSkill.cooldownSeconds
           ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', cardinality: skills.comboSkill.cooldownSeconds }] }
           : {}),
         ...(skills.comboSkill.animationSeconds
           ? { segments: [{
             metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: skills.comboSkill.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.comboSkill.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),
@@ -110,11 +111,11 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
       },
       ULTIMATE: {
         id: skills.ultimate.name,
-        duration: { value: skills.ultimate.durationSeconds, unit: 'SECOND' },
+        duration: { value: { verb: VerbType.IS, value: skills.ultimate.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.ultimate.animationSeconds
           ? { segments: [{
             metadata: { eventComponentType: 'SEGMENT', segmentType: 'ANIMATION' },
-            properties: { name: 'Animation', duration: { value: skills.ultimate.animationSeconds, unit: 'SECOND' }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
+            properties: { name: 'Animation', duration: { value: { verb: VerbType.IS, value: skills.ultimate.animationSeconds }, unit: UnitType.SECOND }, timeDependency: 'REAL_TIME', timeInteractionType: 'TIME_STOP' },
             frames: [],
           }] }
           : {}),

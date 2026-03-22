@@ -12,7 +12,7 @@
                 "value": {
                   "verb": "VARY_BY",
                   "object": "SKILL_LEVEL",
-                  "values": [
+                  "value": [
                     0.12,
                     0.144,
                     0.168,
@@ -33,18 +33,16 @@
         "id": "EMERGENCY_BOOST",
         "name": "Emergency Boost",
         "duration": {
-          "unit": "SECOND",
-          "verb": "IS",
-          "values": [
-            20
-          ]
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
         },
         "statusLevel": {
           "limit": {
             "verb": "IS",
-            "values": [
-              1
-            ]
+            "value": 1
           },
           "interactionType": "RESET"
         },
@@ -72,7 +70,7 @@
                 "value": {
                   "verb": "VARY_BY",
                   "object": "SKILL_LEVEL",
-                  "values": [
+                  "value": [
                     0.12,
                     0.144,
                     0.168,
@@ -93,18 +91,16 @@
         "id": "UNENDING_CYCLE",
         "name": "Unending Cycle",
         "duration": {
-          "unit": "SECOND",
-          "verb": "IS",
-          "values": [
-            20
-          ]
+          "value": {
+            "verb": "IS",
+            "value": 20
+          },
+          "unit": "SECOND"
         },
         "statusLevel": {
           "limit": {
             "verb": "IS",
-            "values": [
-              1
-            ]
+            "value": 1
           },
           "interactionType": "RESET"
         },

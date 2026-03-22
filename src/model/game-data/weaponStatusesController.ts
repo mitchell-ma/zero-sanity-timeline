@@ -5,15 +5,12 @@
  * Auto-discovers weapons/weapon-statuses/*.json via require.context.
  * Each file contains an array of weapon status entries sharing an originId.
  */
-import type { Interaction } from '../../consts/semantics';
+import { UnitType } from '../../consts/enums';
+import { VerbType } from '../../dsl/semantics';
+import type { Interaction, ValueNode } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
-
-export interface WithValue {
-  verb: string;
-  object?: string;
-  values: number[];
-}
 
 export interface ClauseEffect {
   verb: string;
@@ -21,7 +18,7 @@ export interface ClauseEffect {
   adjective?: string;
   to?: string;
   toDeterminer?: string;
-  with?: Record<string, WithValue>;
+  with?: Record<string, ValueNode>;
 }
 
 export interface ClausePredicate {
@@ -29,27 +26,26 @@ export interface ClausePredicate {
   effects: ClauseEffect[];
 }
 
-export interface StatusLevelConfig {
-  limit: WithValue;
+export interface StacksConfig {
+  limit: ValueNode;
   interactionType: string;
 }
 
 export interface DurationConfig {
-  verb: string;
-  values: number[];
+  value: ValueNode;
   unit: string;
 }
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'to', 'toDeterminer', 'with', 'objectId']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
-const VALID_DURATION_KEYS = new Set(['verb', 'values', 'unit']);
-const VALID_LIMIT_KEYS = new Set(['verb', 'values']);
+const VALID_DURATION_KEYS = new Set(['value', 'unit']);
+const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'statusLevel']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
 
@@ -61,10 +57,10 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
   return errors;
 }
 
-function validateWithValue(wv: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(wv, VALID_WITH_VALUE_KEYS, path);
-  if (typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (!Array.isArray(wv.values)) errors.push(`${path}.values: must be an array`);
+function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
+  const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
+  if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
+  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
   return errors;
 }
 
@@ -75,7 +71,7 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
-    if (w.value) errors.push(...validateWithValue(w.value as Record<string, unknown>, `${path}.with.value`));
+    if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
   return errors;
 }
@@ -106,18 +102,18 @@ export function validateWeaponStatus(json: Record<string, unknown>): string[] {
   if (props.duration) {
     const dur = props.duration as Record<string, unknown>;
     errors.push(...checkKeys(dur, VALID_DURATION_KEYS, 'properties.duration'));
-    if (typeof dur.verb !== 'string') errors.push('properties.duration.verb: must be a string');
-    if (!Array.isArray(dur.values)) errors.push('properties.duration.values: must be an array');
+    if (typeof dur.value !== 'object' || dur.value === null) errors.push('properties.duration.value: must be a ValueNode object');
     if (typeof dur.unit !== 'string') errors.push('properties.duration.unit: must be a string');
   }
 
-  if (props.statusLevel) {
-    const sl = props.statusLevel as Record<string, unknown>;
-    errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.statusLevel'));
-    if (typeof sl.interactionType !== 'string') errors.push('properties.statusLevel.interactionType: must be a string');
+  if (props.stacks) {
+    const sl = props.stacks as Record<string, unknown>;
+    errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.stacks'));
+    if (typeof sl.interactionType !== 'string') errors.push('properties.stacks.interactionType: must be a string');
     if (sl.limit) {
-      errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_LIMIT_KEYS, 'properties.statusLevel.limit'));
-      errors.push(...validateWithValue(sl.limit as Record<string, unknown>, 'properties.statusLevel.limit'));
+      const limit = sl.limit as Record<string, unknown>;
+      errors.push(...checkKeys(limit, VALID_LIMIT_KEYS, 'properties.stacks.limit'));
+      if (typeof limit.verb !== 'string') errors.push('properties.stacks.limit.verb: must be a string');
     }
   }
 
@@ -141,7 +137,7 @@ export class WeaponStatus {
   readonly to: string;
   readonly toDeterminer: string;
   readonly duration: DurationConfig;
-  readonly statusLevel: StatusLevelConfig;
+  readonly stacks: StacksConfig;
   readonly originId: string;
 
   constructor(json: Record<string, unknown>) {
@@ -154,20 +150,20 @@ export class WeaponStatus {
     if (props.description) this.description = props.description as string;
     this.to = (props.to ?? 'OPERATOR') as string;
     this.toDeterminer = (props.toDeterminer ?? 'THIS') as string;
-    this.duration = (props.duration ?? { verb: 'IS', values: [0], unit: 'SECOND' }) as DurationConfig;
-    this.statusLevel = (props.statusLevel ?? {
-      limit: { verb: 'IS', values: [1] },
+    this.duration = (props.duration ?? { value: { verb: VerbType.IS, value: 0 }, unit: UnitType.SECOND }) as DurationConfig;
+    this.stacks = (props.stacks ?? {
+      limit: { verb: VerbType.IS, value: 1 },
       interactionType: 'NONE',
-    }) as StatusLevelConfig;
+    }) as StacksConfig;
     this.originId = (meta.originId ?? '') as string;
   }
 
   get durationSeconds(): number {
-    return this.duration.values[0] ?? 0;
+    return resolveValueNode(this.duration.value, DEFAULT_VALUE_CONTEXT);
   }
 
   get maxStacks(): number {
-    return this.statusLevel.limit.values[0] ?? 1;
+    return resolveValueNode(this.stacks.limit, DEFAULT_VALUE_CONTEXT);
   }
 
   /** Serialize back to the JSON shape. */
@@ -181,7 +177,7 @@ export class WeaponStatus {
         to: this.to,
         toDeterminer: this.toDeterminer,
         duration: this.duration,
-        statusLevel: this.statusLevel,
+        stacks: this.stacks,
       },
       metadata: {
         originId: this.originId,

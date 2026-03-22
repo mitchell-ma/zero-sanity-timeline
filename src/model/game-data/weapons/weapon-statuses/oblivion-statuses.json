@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.24,
                   0.288,
                   0.336,
@@ -33,18 +33,16 @@
       "name": "Humiliation",
       "description": "Ultimate: 24-48%, Combo: 12-24%",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

@@ -3,24 +3,24 @@ import { StatusLevel } from "../../consts/types";
 
 export abstract class Status {
   readonly statusType: StatusType;
-  statusLevel: StatusLevel;
-  readonly maxStatusLevel: StatusLevel;
+  stacks: StatusLevel;
+  readonly maxStacks: StatusLevel;
 
   constructor(params: {
     statusType: StatusType;
-    statusLevel: StatusLevel;
-    maxStatusLevel: StatusLevel;
+    stacks: StatusLevel;
+    maxStacks: StatusLevel;
   }) {
-    const { statusType, statusLevel, maxStatusLevel } = params;
+    const { statusType, stacks, maxStacks } = params;
 
-    if (statusLevel > maxStatusLevel) {
+    if (stacks > maxStacks) {
       throw new RangeError(
-        `statusLevel (${statusLevel}) cannot exceed maxStatusLevel (${maxStatusLevel})`,
+        `stacks (${stacks}) cannot exceed maxStacks (${maxStacks})`,
       );
     }
 
     this.statusType = statusType;
-    this.statusLevel = statusLevel;
-    this.maxStatusLevel = maxStatusLevel;
+    this.stacks = stacks;
+    this.maxStacks = maxStacks;
   }
 }

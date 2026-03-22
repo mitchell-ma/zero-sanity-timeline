@@ -12,7 +12,7 @@ const SP_REGEN_PER_SECOND = GENERAL_MECHANICS.skillPoints.regenPerSecond;
 
 /** Record of how SP was consumed for a single battle skill cost event. */
 export interface SkillPointConsumptionHistory {
-  eventId: string;
+  eventUid: string;
   frame: number;
   naturalConsumed: number;
   returnedConsumed: number;
@@ -70,7 +70,7 @@ export class SkillPointTimeline extends ResourceTimeline {
         points.push({ frame: ev.startFrame, value: preTotal });
       }
 
-      if (ev.name === 'sp-return') {
+      if (ev.id === 'sp-return') {
         // Return event: add to returned pool, capped so total ≤ max
         const returnAmount = eventDuration(ev);
         const headroom = Math.max(0, this.max - naturalPool - returnedPool);
@@ -85,10 +85,10 @@ export class SkillPointTimeline extends ResourceTimeline {
         returnedPool -= fromReturned;
         naturalPool -= fromNatural;
 
-        // Extract the original event ID (strip '-sp' suffix)
-        const originalEventId = ev.id.endsWith('-sp') ? ev.id.slice(0, -3) : ev.id;
+        // Extract the original event UID (strip '-sp' suffix)
+        const originalEventUid = ev.uid.endsWith('-sp') ? ev.uid.slice(0, -3) : ev.uid;
         log.push({
-          eventId: originalEventId,
+          eventUid: originalEventUid,
           frame: ev.startFrame,
           naturalConsumed: fromNatural,
           returnedConsumed: fromReturned,

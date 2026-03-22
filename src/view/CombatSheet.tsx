@@ -24,6 +24,7 @@ import {
 } from '../controller/gameDataController';
 import { COMBAT_SKILL_LABELS, SKILL_LABELS } from '../consts/timelineColumnLabels';
 import { SkillType } from '../consts/viewTypes';
+import { t } from '../locales/locale';
 
 const ROW_HEIGHT = 22;
 
@@ -52,15 +53,15 @@ interface SheetColDef {
 }
 
 const SHEET_COL_DEFS: SheetColDef[] = [
-  { id: SheetCol.TIME,          label: 'Time',          flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--time',   cellClass: 'dmg-cell-time',          defaultVisible: true },
-  { id: SheetCol.OPERATOR,      label: 'Operator',      flex: 4, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--op',     cellClass: 'dmg-cell-flat-op',       defaultVisible: true },
-  { id: SheetCol.TYPE,          label: 'Type',          flex: 2, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--type',   cellClass: 'dmg-cell-flat-type',     defaultVisible: true },
-  { id: SheetCol.SOURCE,        label: 'Source',        flex: 3, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--source', cellClass: 'dmg-cell-flat-source',   defaultVisible: true },
-  { id: SheetCol.DAMAGE,        label: 'Damage',        flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--dmg',    cellClass: 'dmg-cell-flat-dmg',      defaultVisible: true },
-  { id: SheetCol.BOSS_HP,       label: 'Boss HP',       flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--hp',     cellClass: 'dmg-cell-hp',            defaultVisible: true },
-  { id: SheetCol.BOSS_STAGGER,  label: 'Boss Stagger',  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
-  { id: SheetCol.ULT_CHARGE,    label: 'Ult Charge',    flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
-  { id: SheetCol.SKILL_POINTS,  label: 'Skill Points',  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+  { id: SheetCol.TIME,          label: t('sheet.col.time'),          flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--time',   cellClass: 'dmg-cell-time',          defaultVisible: true },
+  { id: SheetCol.OPERATOR,      label: t('sheet.col.operator'),      flex: 4, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--op',     cellClass: 'dmg-cell-flat-op',       defaultVisible: true },
+  { id: SheetCol.TYPE,          label: t('sheet.col.type'),          flex: 2, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--type',   cellClass: 'dmg-cell-flat-type',     defaultVisible: true },
+  { id: SheetCol.SOURCE,        label: t('sheet.col.source'),        flex: 3, align: 'left',  headerClass: 'dmg-header-flat dmg-header-flat--source', cellClass: 'dmg-cell-flat-source',   defaultVisible: true },
+  { id: SheetCol.DAMAGE,        label: t('sheet.col.damage'),        flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--dmg',    cellClass: 'dmg-cell-flat-dmg',      defaultVisible: true },
+  { id: SheetCol.BOSS_HP,       label: t('sheet.col.bossHp'),       flex: 3, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--hp',     cellClass: 'dmg-cell-hp',            defaultVisible: true },
+  { id: SheetCol.BOSS_STAGGER,  label: t('sheet.col.bossStagger'),  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+  { id: SheetCol.ULT_CHARGE,    label: t('sheet.col.ultCharge'),    flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
+  { id: SheetCol.SKILL_POINTS,  label: t('sheet.col.skillPoints'),  flex: 2, align: 'right', headerClass: 'dmg-header-flat dmg-header-flat--generic', cellClass: 'dmg-cell-flat-generic',  defaultVisible: false },
 ];
 
 const COL_DEF_MAP = new Map(SHEET_COL_DEFS.map((d) => [d.id, d]));
@@ -108,10 +109,10 @@ function loadColOrder(): SheetCol[] {
 
 const CRIT_MODE_CYCLE: CritMode[] = [CritMode.EXPECTED, CritMode.NEVER, CritMode.ALWAYS, CritMode.SIMULATION];
 const CRIT_MODE_LABELS: Record<CritMode, string> = {
-  [CritMode.EXPECTED]: 'E[CRIT]',
-  [CritMode.NEVER]: 'NO CRIT',
-  [CritMode.ALWAYS]: 'MAX CRIT',
-  [CritMode.SIMULATION]: 'SIM',
+  [CritMode.EXPECTED]: t('sheet.crit.expected'),
+  [CritMode.NEVER]: t('sheet.crit.never'),
+  [CritMode.ALWAYS]: t('sheet.crit.always'),
+  [CritMode.SIMULATION]: t('sheet.crit.simulation'),
 };
 
 function formatDamage(n: number): string {
@@ -692,7 +693,7 @@ function FlatRow({ row, opInfo, top, selectedFrames, hovered, onDamageClick, vis
   resourceGraphs?: Map<string, { points: ReadonlyArray<ResourcePoint>; min: number; max: number }>;
 }) {
   const hasSelection = selectedFrames?.some(
-    (sf) => sf.eventId === row.eventId && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex,
+    (sf) => sf.eventUid === row.eventUid && sf.segmentIndex === row.segmentIndex && sf.frameIndex === row.frameIndex,
   ) ?? false;
 
   const opColor = opInfo?.color ?? '#666';

@@ -14,6 +14,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { UnitType } from '../../../consts/enums';
+import { VerbType } from '../../../dsl/semantics';
 
 const GAMEDATA_URL = 'https://raw.githubusercontent.com/Lieyuan621/Endaxis/main/public/gamedata.json';
 
@@ -465,7 +467,7 @@ function assignMultipliersToFrames(
       (lastFrame.effects as unknown[]).push({
         verb: 'RECOVER',
         object: 'ULTIMATE_ENERGY',
-        with: { cardinality: { verb: 'IS', value: extraUsp } },
+        with: { value: { verb: VerbType.IS, value: extraUsp } },
       });
     }
   }
@@ -482,7 +484,7 @@ function assignMultipliersToFrames(
       (firstFrame.effects as unknown[]).push({
         verb: 'RECOVER',
         object: 'ULTIMATE_ENERGY',
-        with: { cardinality: { verb: 'IS', value: uspDisplay } },
+        with: { value: { verb: VerbType.IS, value: uspDisplay } },
       });
     }
   }
@@ -605,7 +607,7 @@ async function parseOne(slug: string, roster: unknown[]) {
                   dataSources: ['WARFARIN'],
                 },
                 properties: {
-                  duration: { value: 0, unit: 'SECOND' },
+                  duration: { value: { verb: VerbType.IS, value: 0 }, unit: UnitType.SECOND },
                 },
                 frames: Array.from({ length: hitCount }, () => ({
                   metadata: {
@@ -613,7 +615,7 @@ async function parseOne(slug: string, roster: unknown[]) {
                     dataSources: ['WARFARIN'],
                   },
                   properties: {
-                    offset: { value: 0, unit: 'SECOND' },
+                    offset: { value: 0, unit: UnitType.SECOND },
                   },
                   effects: [],
                 })),
@@ -632,7 +634,7 @@ async function parseOne(slug: string, roster: unknown[]) {
                   dataSources: ['WARFARIN'],
                 },
                 properties: {
-                  offset: { value: 0, unit: 'SECOND' },
+                  offset: { value: 0, unit: UnitType.SECOND },
                 },
                 effects: [],
               })),

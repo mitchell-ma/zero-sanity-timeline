@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1,
                   0.12,
                   0.14,
@@ -32,7 +32,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.12,
                   0.144,
                   0.168,
@@ -54,18 +54,16 @@
       "name": "Princely Deterrence",
       "description": "ATK doubled when controlled (+20-56%)",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          8
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 8
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

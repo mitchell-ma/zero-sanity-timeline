@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LoadoutTree, flattenTreeNodes, loadLoadoutData } from '../utils/loadoutStorage';
 import { exportMultiLoadoutBundle } from '../utils/sheetStorage';
+import { t } from '../locales/locale';
 
 interface ExportModalProps {
   open: boolean;
@@ -64,7 +65,7 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
     <div className="devlog-overlay" onClick={onClose}>
       <div className="export-modal" onClick={(e) => e.stopPropagation()}>
         <div className="devlog-header">
-          <span className="devlog-title">EXPORT LOADOUTS</span>
+          <span className="devlog-title">{t('export.title')}</span>
           <button className="devlog-close" onClick={onClose}>&times;</button>
         </div>
 
@@ -75,7 +76,7 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
               checked={allSelected}
               onChange={handleToggleAll}
             />
-            <span>Select All</span>
+            <span>{t('export.selectAll')}</span>
           </label>
         </div>
 
@@ -102,20 +103,20 @@ export default function ExportModal({ open, tree, activeLoadoutId, onClose }: Ex
                   onChange={() => handleToggle(node.id)}
                 />
                 <span className="export-item-name">{node.name}</span>
-                {isActive && <span className="export-item-badge">active</span>}
+                {isActive && <span className="export-item-badge">{t('export.badge.active')}</span>}
               </label>
             );
           })}
         </div>
 
         <div className="export-modal-footer">
-          <button className="confirm-btn confirm-btn--cancel" onClick={onClose}>Cancel</button>
+          <button className="confirm-btn confirm-btn--cancel" onClick={onClose}>{t('export.cancel')}</button>
           <button
             className="confirm-btn confirm-btn--primary"
             onClick={handleExport}
             disabled={selectedIds.size === 0}
           >
-            Export {selectedIds.size} loadout{selectedIds.size !== 1 ? 's' : ''}
+            {t('export.exportCount', { count: selectedIds.size })}
           </button>
         </div>
       </div>

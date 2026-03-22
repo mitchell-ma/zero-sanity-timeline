@@ -91,7 +91,8 @@ export class StaggerController {
             if (f.stagger && f.stagger > 0) {
               const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
               staggerEvents.push({
-                id: `${ev.id}-stagger-${frame}`,
+                uid: `${ev.uid}-stagger-${frame}`,
+                id: 'stagger',
                 name: 'stagger',
                 ownerId: ev.ownerId,
                 columnId: COMMON_COLUMN_IDS.STAGGER,

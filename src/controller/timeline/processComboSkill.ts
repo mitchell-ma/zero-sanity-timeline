@@ -34,7 +34,7 @@ export function deriveComboActivationWindows(
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.COMBO || !isTimeStopEvent(ev)) continue;
     if (!comboStopIdsBySlot.has(ev.ownerId)) comboStopIdsBySlot.set(ev.ownerId, new Set());
-    comboStopIdsBySlot.get(ev.ownerId)!.add(ev.id);
+    comboStopIdsBySlot.get(ev.ownerId)!.add(ev.uid);
   }
 
   // Pre-index combo events per slot for cooldown checks
@@ -75,7 +75,7 @@ export function deriveComboActivationWindows(
     const info = getComboTriggerInfo(wiring.operatorId);
     const baseDuration = info?.windowFrames ?? 720;
     const ownComboStops = comboStopIdsBySlot.get(wiring.slotId);
-    const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventId)) : stops;
+    const windowStops = ownComboStops ? stops.filter((s) => !ownComboStops.has(s.eventUid)) : stops;
     const extendedDuration = extendByTimeStops(triggerFrame, baseDuration, windowStops);
 
     if (!windowsBySlot.has(wiring.slotId)) windowsBySlot.set(wiring.slotId, []);
@@ -117,7 +117,8 @@ export function deriveComboActivationWindows(
       const w = merged[i];
       const duration = w.endFrame - w.startFrame;
       derived.push({
-        id: `combo-window-${slotId}-${i}`,
+        uid: `combo-window-${slotId}-${i}`,
+        id: COMBO_WINDOW_COLUMN_ID,
         name: COMBO_WINDOW_COLUMN_ID,
         ownerId: slotId,
         columnId: COMBO_WINDOW_COLUMN_ID,

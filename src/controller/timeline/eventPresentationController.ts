@@ -111,7 +111,7 @@ export function computeEventPresentation(
     : isSequenced ? 'sequenced' : 'default') as 'default' | 'ultimate' | 'sequenced';
 
   // Status view override: stack-aware label + visual truncation
-  const statusOverride = statusViewOverrides?.get(ev.id);
+  const statusOverride = statusViewOverrides?.get(ev.uid);
   const label = isWindow
     ? (events && isWindowConsumed(ev, events) ? '' : 'COMBO ACTIVATION WINDOW')
     : (statusOverride?.label ?? resolveEventLabel(ev));
@@ -120,7 +120,7 @@ export function computeEventPresentation(
   // Aggregate warnings — infliction-only for micro-column events, full for single-column
   const validationWarning = isWindow
     ? null
-    : aggregateEventWarnings(ev.id, validationMaps);
+    : aggregateEventWarnings(ev.uid, validationMaps);
   // Include warnings from the event queue processing (e.g. time-stop overlap)
   const eventWarnings = ev.warnings && ev.warnings.length > 0
     ? ev.warnings.join('\n')
@@ -137,7 +137,7 @@ export function computeEventPresentation(
   const passive = isWindow;
   const notDraggable = isWindow || isDerivedCol || (isEnemy && interactionMode === InteractionModeType.STRICT);
   const derived = isDerivedCol;
-  const isAutoFinisher = autoFinisherIds.has(ev.id);
+  const isAutoFinisher = autoFinisherIds.has(ev.uid);
 
   const skillElement = isWindow
     ? undefined
@@ -147,7 +147,7 @@ export function computeEventPresentation(
   let allSegmentLabels: string[] | undefined;
   let allDefaultSegments: EventSegmentData[] | undefined;
   if (!isWindow && col.type === 'mini-timeline') {
-    const variantSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
+    const variantSegs = col.eventVariants?.find((v) => v.name === ev.id)?.segments
       ?? col.defaultEvent?.segments;
     allSegmentLabels = variantSegs?.map((s) => s.properties.name!);
     allDefaultSegments = variantSegs;

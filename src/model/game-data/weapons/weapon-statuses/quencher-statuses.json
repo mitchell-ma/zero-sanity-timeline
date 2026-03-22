@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.12,
                   0.144,
                   0.168,
@@ -32,18 +32,16 @@
       "id": "QUENCHER_HONED_INTO_LEGION",
       "name": "Honed into Legion",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          10
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

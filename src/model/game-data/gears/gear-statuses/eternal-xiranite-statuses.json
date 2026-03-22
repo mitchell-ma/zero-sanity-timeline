@@ -48,9 +48,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.16
-                ]
+                "value": 0.16
               }
             }
           }
@@ -62,18 +60,16 @@
       "id": "ETERNAL_XIRANITE",
       "name": "Eternal Xiranite",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          15
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

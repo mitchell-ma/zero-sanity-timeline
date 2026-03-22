@@ -40,9 +40,9 @@ export class Subtimeline {
     return [...this.events];
   }
 
-  /** Find an event by id, or undefined. */
+  /** Find an event by uid, or undefined. */
   getEvent(id: string): TimelineEvent | undefined {
-    return this.events.find((ev) => ev.id === id);
+    return this.events.find((ev) => ev.uid === id);
   }
 
   /** Add a new event with the given parameters. Returns the created event. */
@@ -52,7 +52,8 @@ export class Subtimeline {
     segments: TimelineEvent['segments'];
   }): TimelineEvent {
     const ev: TimelineEvent = {
-      id: genId(),
+      uid: genId(),
+      id: params.name ?? this.columnId,
       name: params.name ?? this.columnId,
       ownerId: this.ownerId,
       columnId: this.columnId,
@@ -64,9 +65,9 @@ export class Subtimeline {
     return ev;
   }
 
-  /** Remove an event by id. Returns true if found and removed. */
+  /** Remove an event by uid. Returns true if found and removed. */
   removeEvent(id: string): boolean {
-    const idx = this.events.findIndex((ev) => ev.id === id);
+    const idx = this.events.findIndex((ev) => ev.uid === id);
     if (idx === -1) return false;
     this.events.splice(idx, 1);
     this.notify();
@@ -74,8 +75,8 @@ export class Subtimeline {
   }
 
   /** Update an event's fields. Re-sorts if startFrame changed. */
-  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "id" | "ownerId" | "columnId">>): boolean {
-    const idx = this.events.findIndex((ev) => ev.id === id);
+  updateEvent(id: string, updates: Partial<Omit<TimelineEvent, "uid" | "ownerId" | "columnId">>): boolean {
+    const idx = this.events.findIndex((ev) => ev.uid === id);
     if (idx === -1) return false;
     const ev = this.events[idx];
     const startChanged = updates.startFrame !== undefined && updates.startFrame !== ev.startFrame;

@@ -13,32 +13,32 @@ Each operator file (e.g., `operators/laevatain.json`) contains a single operator
   "operatorRarity": 6,
   "operatorClassType": "STRIKER",
   "elementType": "HEAT",
-  "weaponType": "SWORD",
+  "weaponTypes": ["SWORD"],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "STRENGTH",
   "potentials": [...],
-  "allLevels": [...],
-  "skills": {...},
-  "skillOverrides": {...}
+  "talents": {...},
+  "talentEffects": [...],
+  "statsByLevel": [...],
+  "metadata": { "originId": "game", "dataSources": ["WARFARIN"] }
 }
 ```
 
-The top-level key is the `OperatorType` enum value. All string keys and values use their corresponding enum type strings where applicable.
+All string keys and values use their corresponding enum type strings where applicable.
 
 ### Operator Information Keys
 
-Keyed by `OperatorInformationType` enum values:
-
-| Key                    | Type   | Enum                 | Description                        |
-|------------------------|--------|----------------------|------------------------------------|
-| `operatorType`         | string | `OperatorType`       | Unique operator identifier         |
-| `name`                 | string | —                    | Display name                       |
-| `operatorRarity`       | number | —                    | Star rating (1–6)                  |
-| `operatorClassType`    | string | `OperatorClassType`  | GUARD, CASTER, STRIKER, etc.       |
-| `elementType`          | string | `ElementType`        | HEAT, CRYO, NATURE, ELECTRIC, PHYSICAL |
-| `weaponType`           | string | `WeaponType`         | SWORD, GREAT_SWORD, POLEARM, etc.  |
-| `mainAttributeType`    | string | `StatType`           | Primary scaling stat               |
-| `secondaryAttributeType` | string | `StatType`         | Secondary scaling stat             |
+| Key                      | Type     | Description                                    |
+|--------------------------|----------|------------------------------------------------|
+| `operatorType`           | string   | Unique operator identifier (UPPER_CASE)        |
+| `name`                   | string   | Display name                                   |
+| `operatorRarity`         | number   | Star rating (4–6)                              |
+| `operatorClassType`      | string   | GUARD, CASTER, STRIKER, SUPPORTER, VANGUARD    |
+| `elementType`            | string   | HEAT, CRYO, NATURE, ELECTRIC, PHYSICAL         |
+| `weaponTypes`            | string[] | Array of weapon types (e.g. ["SWORD"])         |
+| `mainAttributeType`      | string   | Primary scaling stat (StatType)                |
+| `secondaryAttributeType` | string   | Secondary scaling stat (StatType)              |
+| `metadata`               | object   | `{ originId: "game", dataSources?: string[] }` |
 
 ---
 
@@ -136,10 +136,10 @@ Attaches or modifies a buff (status effect).
 
 ---
 
-## All Levels
+## Stats by Level
 
 ```json
-"allLevels": [
+"statsByLevel": [
   {
     "level": 1,
     "operatorPromotionStage": 0,
@@ -167,22 +167,27 @@ Attaches or modifies a buff (status effect).
 
 ## Skills
 
-Skills are organized by skill category under the `skills` key.
+Skills live in a separate file (`operator-skills/<slug>-skills.json`), keyed by skill ID.
 
 ```json
-"skills": {
-  "BASIC_ATTACK": {...},
-  "BATTLE_SKILL": {...},
-  "COMBO_SKILL": {...},
-  "ULTIMATE": {...},
-  "ENHANCED_BASIC_ATTACK": {...},
-  "ENHANCED_BATTLE_SKILL": {...},
-  "EMPOWERED_BATTLE_SKILL": {...},
-  "ENHANCED_EMPOWERED_BATTLE_SKILL": {...}
+{
+  "FLAMING_CINDERS": {...},
+  "FLAMING_CINDERS_FINISHER": {...},
+  "FLAMING_CINDERS_DIVE": {...},
+  "FLAMING_CINDERS_ENHANCED": {...},
+  "SMOULDERING_FIRE": {...},
+  "SEETHE": {...},
+  "TWILIGHT": {...}
 }
 ```
 
-Skill category keys correspond to `CombatSkillType` enum values plus variant prefixes (`ENHANCED_`, `EMPOWERED_`). Not all operators have all categories — only `BASIC_ATTACK`, `BATTLE_SKILL`, `COMBO_SKILL`, and `ULTIMATE` are universal.
+Skill categories are inferred from naming conventions:
+- **BASIC_ATTACK**: The skill that has `_FINISHER` and `_DIVE` variants
+- **COMBO_SKILL**: The skill with a top-level `onTriggerClause`
+- **ULTIMATE**: The skill with `ANIMATION` segment type
+- **BATTLE_SKILL**: The remaining base skill
+
+Variant suffixes: `_ENHANCED` (during ultimate), `_EMPOWERED` (from status stacks), `_ENHANCED_EMPOWERED` (both).
 
 ### Enhancement Types
 
@@ -211,7 +216,7 @@ Event (skill activation — e.g., one use of Battle Skill)
 ```
 
 - **Event**: The top-level skill activation. Each skill category is one event type.
-- **Segment**: A phase within an event. Basic attacks have explicit segments (one per sequence in the attack chain). Ultimates and combo skills have explicit segments for each phase (Animation, Stasis, Active, Cooldown). Battle skills and single-phase skills are **single-segment events by default** — their flat `duration` + `frames[]` structure is shorthand for one implicit segment containing all frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation). The ANIMATION segment type (`segmentType: "ANIMATION"`) denotes the time-stop phase.
+- **Segment**: A phase within an event. All skills use explicit `segments` arrays. Basic attacks have one segment per sequence in the attack chain. Ultimates and combo skills have segments for each phase (Animation, Stasis, Active, Cooldown). Battle skills have a single segment wrapping their frames. Segments can have `clause` arrays with effects that are active for the segment's duration (e.g. `IGNORE ULTIMATE_ENERGY` during ultimate animation). The ANIMATION segment type (`segmentType: "ANIMATION"`) denotes the time-stop phase.
 - **Frame**: A single hit or tick within a segment. Frames carry timing (`offset`), resource interactions (SP, stagger), status interactions (inflictions), and per-level multipliers.
 
 Warfarin multiplier data is scoped to the **segment level** — each Warfarin skill ID (e.g., `attack1`, `attack2`, `normal_skill`) corresponds to one segment. Within a segment, `atk_scale` is the per-frame multiplier, and `display_atk_scale` is the approximate total across all frames in that segment.
@@ -254,7 +259,7 @@ All durations use a structured format:
 { "value": 2.2, "unit": "SECOND" }
 ```
 
-- `unit`: `DurationUnit` enum — `SECONDS` or `FRAMES`
+- `unit`: `UnitType` enum — `SECOND`, `FRAME`, or `PERCENTAGE`
 
 ### Event Component Type
 
@@ -392,7 +397,7 @@ Resource interactions describe how a skill produces or consumes combat resources
 | `resourceType`    | string | `CombatResourceType`      | The resource being interacted with   |
 | `interactionType` | string | `ResourceInteractionType` | The verb describing the interaction  |
 | `value`           | number | —                         | Amount                               |
-| `target`          | string | `TargetType`              | Optional. Who receives the resource  |
+| `target`          | object | `DslTarget`               | Optional. Who receives the resource (`{ determiner?, noun }`) |
 | `conditions`      | object | —                         | Optional. Conditions for activation  |
 
 #### CombatResourceType
@@ -412,12 +417,15 @@ Resource interactions describe how a skill produces or consumes combat resources
 | `RECOVER`| Acquire a resource (SP on hit, gauge gain, stagger)     |
 | `RETURN` | SP return mechanic (empowered skills returning SP)      |
 
-#### TargetType (for resources)
+#### DslTarget (for resources)
 
-| Value   | Description                           |
-|---------|---------------------------------------|
-| `SELF`  | The casting operator receives it      |
-| `TEAM`  | All team members receive it           |
+Uses `DeterminerType` + `NounType` from `src/dsl/semantics.ts`:
+
+| Example                                    | Description                           |
+|--------------------------------------------|---------------------------------------|
+| `{ determiner: "THIS", noun: "OPERATOR" }` | The casting operator receives it      |
+| `{ determiner: "ALL", noun: "OPERATOR" }`  | All team members receive it           |
+| `{ noun: "ENEMY" }`                        | The enemy receives it                 |
 
 #### Conditions
 
@@ -438,7 +446,6 @@ Status interactions describe how a frame applies, absorbs, or consumes statuses.
   "stacks": 1,
   "target": "ENEMY",
   "isForced": true,
-  "statusLevel": 1,
   "durationSeconds": 7,
   "conversion": { "statusType": "MELTING_FLAME", "ratio": "1:1" }
 }
@@ -449,9 +456,8 @@ Status interactions describe how a frame applies, absorbs, or consumes statuses.
 | `interactionType` | string  | `StatusInteractionType` | APPLY, ABSORB, or CONSUME           |
 | `statusType`      | string  | `StatusType`            | The status being interacted with    |
 | `stacks`          | number  | —                       | Optional. Number of stacks          |
-| `target`          | string  | `TargetType`            | Optional. Who the status is applied to (ENEMY, SELF, TEAM, TEAM_MEMBER) |
+| `target`          | object  | `DslTarget`             | Optional. Who the status is applied to (`{ determiner?, noun }`) |
 | `isForced`        | boolean | —                       | Optional. True for forced reactions |
-| `statusLevel`     | number  | —                       | Optional. Level of the status       |
 | `durationSeconds` | number  | —                       | Optional. Override duration         |
 | `conversion`      | object  | —                       | Optional. For ABSORB — what the absorbed stacks convert into |
 
@@ -671,9 +677,9 @@ A status event has three top-level sections: `properties` (fixed identity/config
     "id": "FOCUS",
     "name": "Focus",
     "element": "ELECTRIC",
-    "statusLevel": {
+    "stacks": {
       "limit": { "verb": "IS", "value": 1 },
-      "statusLevelInteractionType": "RESET"
+      "interactionType": "RESET"
     },
     "duration": { "value": 60, "unit": "SECOND" }
   },
@@ -711,22 +717,22 @@ No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`
 | `targetDeterminer` | string | No | `THIS`, `OTHER`, `ALL`, `ANY`. Defaults to `THIS` |
 | `isForced` | boolean | No | Whether application bypasses normal rules |
 | `enhancementTypes` | string[] | No | `EnhancementType` values (e.g. `["EMPOWERED"]`) |
-| `statusLevel` | object | Yes | Stacking configuration (see below) |
+| `stacks` | object | Yes | Stacking configuration (see below) |
 | `duration` | object | No | Duration struct (`{ value, unit }`). Omit for permanent statuses |
 
-#### Status Level (Stacking)
+#### Stacks
 
 ```json
 {
   "limit": { "verb": "IS", "value": 4 },
-  "statusLevelInteractionType": "NONE"
+  "interactionType": "NONE"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `limit` | object | Max stacks — `{ "verb": "IS", "value": N }` for fixed, `{ "verb": "VARY_BY", "value": [...] }` for level-dependent |
-| `statusLevelInteractionType` | string | `NONE` (independent stacks) or `RESET` (refresh duration on reapply) |
+| `interactionType` | string | `NONE` (drop at limit), `RESET` (FIFO eviction), `MERGE` (arts reactions), `REFRESH` (extend all durations + FIFO eviction) |
 
 ### Clause Types
 
@@ -900,9 +906,9 @@ All enums used in this file are defined in the codebase:
 | `ResourceInteractionType`| `src/consts/enums.ts`         |
 | `StatusInteractionType`  | `src/consts/enums.ts`         |
 | `EventComponentType`     | `src/consts/enums.ts`         |
-| `DurationUnit`           | `src/consts/enums.ts`         |
+| `UnitType`               | `src/consts/enums.ts`         |
 | `TimeInteractionType`    | `src/consts/enums.ts`         |
-| `TargetType`             | `src/consts/enums.ts`         |
+| `DslTarget`              | `src/dsl/semantics.ts`        |
 | `CombatSkillType`        | `src/consts/enums.ts`         |
 | `EnhancementType`        | `src/consts/enums.ts`         |
 | `DataSourceType`         | `src/consts/enums.ts`         |

@@ -5,12 +5,12 @@
  * Auto-discovers operator-skills/*-skills.json via require.context.
  * Each file contains skill entries keyed by skill ID (e.g. "FLAMING_CINDERS").
  */
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction, ValueNode } from '../../dsl/semantics';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
 interface SkillDuration {
-  value: number;
+  value: ValueNode;
   unit: string;
 }
 

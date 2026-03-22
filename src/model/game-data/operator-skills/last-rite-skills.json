@@ -10,7 +10,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.7,
+            "value": {
+              "verb": "IS",
+              "value": 0.7
+            },
             "unit": "SECOND"
           }
         },
@@ -73,7 +76,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         },
@@ -183,7 +189,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.23,
+            "value": {
+              "verb": "IS",
+              "value": 1.23
+            },
             "unit": "SECOND"
           }
         },
@@ -293,7 +302,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.567,
+            "value": {
+              "verb": "IS",
+              "value": 1.567
+            },
             "unit": "SECOND"
           }
         },
@@ -481,7 +493,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           }
         }
@@ -522,7 +537,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -536,7 +554,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.67,
+            "value": {
+              "verb": "IS",
+              "value": 1.67
+            },
             "unit": "SECOND"
           }
         },
@@ -736,22 +757,24 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              9,
-              8
-            ],
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                9,
+                8
+              ]
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -813,7 +836,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 2.867,
+            "value": {
+              "verb": "IS",
+              "value": 2.867
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -827,7 +853,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.803,
+            "value": {
+              "verb": "IS",
+              "value": 1.803
+            },
             "unit": "SECOND"
           }
         },
@@ -1131,7 +1160,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.5,
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
             "unit": "SECOND"
           }
         }
@@ -1202,7 +1234,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         }

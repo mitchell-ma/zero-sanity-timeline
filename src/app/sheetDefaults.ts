@@ -11,7 +11,7 @@ import { LoadoutProperties, DEFAULT_LOADOUT_PROPERTIES, getDefaultLoadoutPropert
 import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { loadFromLocalStorage, SheetData } from '../utils/sheetStorage';
-import { setNextEventId, genEventId } from '../controller/timeline/inputEventController';
+import { setNextEventUid, genEventUid } from '../controller/timeline/inputEventController';
 import { IS_DEV } from '../consts/devFlags';
 
 export const NUM_SLOTS = 4;
@@ -63,25 +63,25 @@ function resolveOperatorId(id: string | null): Operator | null {
 }
 
 export function applySheetData(data: SheetData) {
-  setNextEventId(data.nextEventId);
+  setNextEventUid(data.nextEventId);
   let events: TimelineEvent[] = data.events;
-  // Deduplicate: if saved data has duplicate IDs (data corruption), assign fresh IDs
+  // Deduplicate: if saved data has duplicate UIDs (data corruption), assign fresh UIDs
   const seen = new Set<string>();
   let hasDupes = false;
   for (const ev of events) {
-    if (seen.has(ev.id)) { hasDupes = true; break; }
-    seen.add(ev.id);
+    if (seen.has(ev.uid)) { hasDupes = true; break; }
+    seen.add(ev.uid);
   }
   if (hasDupes) {
-    console.warn('[zst] Duplicate event IDs detected in saved data — reassigning IDs');
+    console.warn('[zst] Duplicate event UIDs detected in saved data — reassigning UIDs');
     const deduped = new Set<string>();
     events = events.map((ev) => {
-      if (deduped.has(ev.id)) {
-        const newId = genEventId();
-        console.warn(`[zst]   ${ev.id} (${ev.ownerId}/${ev.columnId}) → ${newId}`);
-        return { ...ev, id: newId };
+      if (deduped.has(ev.uid)) {
+        const newUid = genEventUid();
+        console.warn(`[zst]   ${ev.uid} (${ev.ownerId}/${ev.columnId}) → ${newUid}`);
+        return { ...ev, uid: newUid };
       }
-      deduped.add(ev.id);
+      deduped.add(ev.uid);
       return ev;
     });
   }

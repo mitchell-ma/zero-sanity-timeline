@@ -5,10 +5,12 @@
  * Auto-discovers gears/gear-pieces/*.json via require.context.
  * Each file is an array of gear pieces belonging to a single gear set.
  */
+import type { ValueNode } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'toDeterminer', 'to', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
@@ -23,10 +25,10 @@ function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: strin
   return errors;
 }
 
-function validateWithValue(wv: Record<string, unknown>, path: string): string[] {
-  const errors = checkKeys(wv, VALID_WITH_VALUE_KEYS, path);
-  if (typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
-  if (!Array.isArray(wv.values)) errors.push(`${path}.values: must be an array`);
+function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
+  const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
+  if ('verb' in wv && typeof wv.verb !== 'string') errors.push(`${path}.verb: must be a string`);
+  if ('operator' in wv && typeof wv.operator !== 'string') errors.push(`${path}.operator: must be a string`);
   return errors;
 }
 
@@ -37,7 +39,7 @@ function validateEffect(ef: Record<string, unknown>, path: string): string[] {
   if (ef.with) {
     const w = ef.with as Record<string, unknown>;
     errors.push(...checkKeys(w, VALID_EFFECT_WITH_KEYS, `${path}.with`));
-    if (w.value) errors.push(...validateWithValue(w.value as Record<string, unknown>, `${path}.with.value`));
+    if (w.value) errors.push(...validateValueNode(w.value as Record<string, unknown>, `${path}.with.value`));
   }
   return errors;
 }
@@ -70,18 +72,12 @@ export function validateGearPiece(json: Record<string, unknown>): string[] {
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-interface WithValue {
-  verb: string;
-  object?: string;
-  values: number[];
-}
-
 interface ClauseEffect {
   verb: string;
   object: string;
   toDeterminer?: string;
   to?: string;
-  with?: { value: WithValue };
+  with?: { value: ValueNode };
 }
 
 interface ClausePredicate {
@@ -116,7 +112,7 @@ export class GearPiece {
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
         if (ef.verb === 'APPLY' && ef.object === 'BASE_DEFENSE') {
-          return ef.with?.value?.values[0] ?? 0;
+          return ef.with?.value ? resolveValueNode(ef.with.value, DEFAULT_VALUE_CONTEXT) : 0;
         }
       }
     }
@@ -128,7 +124,8 @@ export class GearPiece {
     const stats: Record<string, number> = {};
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
-        const values = ef.with?.value?.values;
+        const wvNode = ef.with?.value as { value?: number | number[] } | undefined;
+        const values = wvNode?.value != null ? (Array.isArray(wvNode.value) ? wvNode.value : [wvNode.value]) : undefined;
         if (!values) continue;
         // IS verb → single value for all ranks; VARY_BY → indexed by rank
         stats[ef.object] = values.length === 1 ? values[0] : (values[rank - 1] ?? 0);
@@ -153,7 +150,8 @@ export class GearPiece {
     const stats: Record<string, number> = {};
     for (const pred of this.clause) {
       for (const ef of pred.effects) {
-        const values = ef.with?.value?.values;
+        const wvNode = ef.with?.value as { value?: number | number[] } | undefined;
+        const values = wvNode?.value != null ? (Array.isArray(wvNode.value) ? wvNode.value : [wvNode.value]) : undefined;
         if (!values) continue;
         const lineRank = ranks[ef.object] ?? defaultRank;
         stats[ef.object] = values.length === 1 ? values[0] : (values[lineRank - 1] ?? 0);

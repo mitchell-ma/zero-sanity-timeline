@@ -10,8 +10,8 @@ export abstract class ArtsReaction extends Reaction {
 
   constructor(params: {
     statusType: StatusType;
-    statusLevel: StatusLevel;
-    maxStatusLevel: StatusLevel;
+    stacks: StatusLevel;
+    maxStacks: StatusLevel;
     element: ElementType;
     isForced?: boolean;
     durationSeconds: number;

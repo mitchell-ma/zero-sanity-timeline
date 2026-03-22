@@ -13,7 +13,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.09,
                   0.108,
                   0.126,
@@ -34,18 +34,16 @@
       "id": "CHIVALRIC_VIRTUES_BLIGHT_FERVOR",
       "name": "Blight Fervor",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          15
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

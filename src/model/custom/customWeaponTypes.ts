@@ -3,7 +3,7 @@
  * See docs/customizationSpec.md § 2.
  */
 import { WeaponType, ElementType } from '../../consts/enums';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 
 /** A user-created custom weapon. */

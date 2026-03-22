@@ -45,9 +45,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  50
-                ]
+                "value": 50
               }
             },
             "toDeterminer": "THIS",
@@ -62,18 +60,16 @@
       "name": "Catastrophe",
       "description": "Returns +50 SP on battle skill cast. Triggers once per battle.",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          0
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 0
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }

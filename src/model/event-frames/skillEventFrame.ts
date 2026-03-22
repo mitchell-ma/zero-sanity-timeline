@@ -1,4 +1,5 @@
-import { ElementType, FrameDependencyType, StatusType, TargetType } from "../../consts/enums";
+import { ElementType, FrameDependencyType, StatusType } from "../../consts/enums";
+import type { DslTarget } from "../../dsl/semantics";
 
 /** Arts infliction applied by a frame tick. */
 export interface FrameArtsInfliction {
@@ -10,7 +11,7 @@ export interface FrameArtsInfliction {
 export interface FrameArtsAbsorption {
   element: string;       // e.g. "HEAT"
   stacks: number;        // max stacks absorbed
-  exchangeStatus: StatusType;  // what the absorbed stacks convert into
+  exchangeStatus: string;  // what the absorbed stacks convert into (operator status ID from JSON)
   ratio: string;         // e.g. "1:1"
 }
 
@@ -23,7 +24,7 @@ export interface FrameArtsConsumption {
 /** Forced arts reaction applied by a frame tick (bypasses infliction stacks). */
 export interface FrameForcedReaction {
   reaction: StatusType;  // e.g. COMBUSTION
-  statusLevel: number;   // reaction intensity level
+  stacks: number;        // reaction intensity level
   durationFrames?: number; // override default reaction duration
 }
 
@@ -42,7 +43,7 @@ export interface StatusSegment {
 
 /** Status applied by a frame tick to a target. */
 export interface FrameApplyStatus {
-  target: TargetType;          // SELF (e.g. Melting Flame) or ENEMY (e.g. Focus)
+  target: DslTarget;
   status: string;              // StatusType or columnId — determines which column the event routes to
   stacks: number;              // stack count (for self-targeted statuses)
   durationFrames: number;      // duration in frames (for enemy-targeted statuses)

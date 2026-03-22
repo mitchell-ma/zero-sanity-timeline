@@ -10,7 +10,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.83,
+            "value": {
+              "verb": "IS",
+              "value": 0.83
+            },
             "unit": "SECOND"
           }
         },
@@ -120,7 +123,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.63,
+            "value": {
+              "verb": "IS",
+              "value": 0.63
+            },
             "unit": "SECOND"
           }
         },
@@ -183,7 +189,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           }
         },
@@ -246,7 +255,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.2,
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
             "unit": "SECOND"
           }
         },
@@ -594,8 +606,10 @@
                         ]
                       },
                       "duration": {
-                        "verb": "IS",
-                        "value": 12,
+                        "value": {
+                          "verb": "IS",
+                          "value": 12
+                        },
                         "unit": "SECOND"
                       }
                     }
@@ -607,7 +621,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 2.23,
+            "value": {
+              "verb": "IS",
+              "value": 2.23
+            },
             "unit": "SECOND"
           }
         }
@@ -648,7 +665,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -662,7 +682,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.17,
+            "value": {
+              "verb": "IS",
+              "value": 1.17
+            },
             "unit": "SECOND"
           }
         },
@@ -718,8 +741,10 @@
                     "toObject": "OPERATOR",
                     "with": {
                       "duration": {
-                        "verb": "IS",
-                        "value": 20,
+                        "value": {
+                          "verb": "IS",
+                          "value": 20
+                        },
                         "unit": "SECOND"
                       }
                     }
@@ -796,22 +821,24 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              16,
-              15
-            ],
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                16,
+                15
+              ]
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -849,7 +876,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 1.867,
+            "value": {
+              "verb": "IS",
+              "value": 1.867
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -866,7 +896,10 @@
         },
         "properties": {
           "duration": {
-            "value": 2.2,
+            "value": {
+              "verb": "IS",
+              "value": 2.2
+            },
             "unit": "SECOND"
           }
         },
@@ -948,7 +981,10 @@
         },
         "properties": {
           "duration": {
-            "value": 2.03,
+            "value": {
+              "verb": "IS",
+              "value": 2.03
+            },
             "unit": "SECOND"
           },
           "name": "Vajra Impact"
@@ -1164,7 +1200,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.5,
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
             "unit": "SECOND"
           }
         }
@@ -1235,7 +1274,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         }

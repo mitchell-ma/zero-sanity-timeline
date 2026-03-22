@@ -101,7 +101,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 20,
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
         "unit": "SECOND"
       }
     },
@@ -117,18 +120,16 @@
       "targetDeterminer": "THIS",
       "name": "Scorching Heart",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          -1
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": -1
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "NONE"
       },
@@ -235,9 +236,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.9
-                ]
+                "value": 0.9
               }
             }
           },
@@ -249,9 +248,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.05
-                ]
+                "value": 0.05
               }
             }
           }
@@ -265,20 +262,20 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "VARY_BY",
-        "object": "TALENT_TWO_LEVEL",
-        "values": [
-          4,
-          8
-        ],
+        "value": {
+          "verb": "VARY_BY",
+          "object": "TALENT_TWO_LEVEL",
+          "value": [
+            4,
+            8
+          ]
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }
@@ -290,7 +287,10 @@
         },
         "properties": {
           "duration": {
-            "value": 120,
+            "value": {
+              "verb": "IS",
+              "value": 120
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"

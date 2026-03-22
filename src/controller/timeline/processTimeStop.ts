@@ -1,6 +1,6 @@
 import { TimelineEvent, getAnimationDuration } from '../../consts/viewTypes';
 import { TimeDependency } from '../../consts/enums';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import type { TimeStopRange } from './resourceTimeline';
 
 // ── Time-stop region types ──────────────────────────────────────────────────
@@ -8,14 +8,14 @@ import type { TimeStopRange } from './resourceTimeline';
 export interface TimeStopRegion {
   startFrame: number;
   durationFrames: number;
-  eventId: string;
+  eventUid: string;
 }
 
 export function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
   return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
-    (ev.columnId === 'dash' && !!ev.isPerfectDodge);
+    (ev.columnId === OPERATOR_COLUMNS.INPUT && !!ev.isPerfectDodge);
 }
 
 /** Collect all time-stop regions from combo/ultimate/dodge events. */
@@ -26,7 +26,7 @@ export function collectTimeStopRegions(events: TimelineEvent[]): readonly TimeSt
     stops.push({
       startFrame: ev.startFrame,
       durationFrames: getAnimationDuration(ev),
-      eventId: ev.id,
+      eventUid: ev.uid,
     });
   }
   stops.sort((a, b) => a.startFrame - b.startFrame);
@@ -66,7 +66,7 @@ export function absoluteFrame(
  * Compute foreign time-stop regions for an event (all stops except its own).
  */
 export function foreignStopsFor(ev: TimelineEvent, stops: readonly TimeStopRegion[]): readonly TimeStopRegion[] {
-  return isTimeStopEvent(ev) ? stops.filter((s) => s.eventId !== ev.id) : stops;
+  return isTimeStopEvent(ev) ? stops.filter((s) => s.eventUid !== ev.uid) : stops;
 }
 
 /**
@@ -122,14 +122,14 @@ export function applyTimeStopExtension(
   const extended = alreadyExtended ?? new Set<string>();
 
   const result = events.map((ev) => {
-    if (extended.has(ev.id)) return ev;
+    if (extended.has(ev.uid)) return ev;
 
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
 
     // Foreign stops = all stops except this event's own
     const foreignStops = isOwn
-      ? stops.filter((s) => s.eventId !== ev.id)
+      ? stops.filter((s) => s.eventUid !== ev.uid)
       : stops;
     if (foreignStops.length === 0) return ev;
 
@@ -172,7 +172,7 @@ export function applyTimeStopExtension(
       });
 
       if (!changed) return ev;
-      extended.add(ev.id);
+      extended.add(ev.uid);
       return { ...ev, segments: newSegments };
     }
 
@@ -248,24 +248,24 @@ export function validateTimeStopStarts(
 ): TimelineEvent[] {
   if (stops.length === 0) return events;
 
-  // Build a lookup from eventId → event for time-stop source identification
-  const evById = new Map<string, TimelineEvent>();
-  for (const ev of events) evById.set(ev.id, ev);
+  // Build a lookup from eventUid → event for time-stop source identification
+  const evByUid = new Map<string, TimelineEvent>();
+  for (const ev of events) evByUid.set(ev.uid, ev);
 
   return events.map((ev) => {
     const warnings: string[] = [];
 
     for (const stop of stops) {
-      if (stop.eventId === ev.id) continue;
+      if (stop.eventUid === ev.uid) continue;
       const stopEnd = stop.startFrame + stop.durationFrames;
       if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
 
       // ev starts inside this time-stop region — check if allowed
-      const source = evById.get(stop.eventId);
+      const source = evByUid.get(stop.eventUid);
       if (!source) continue;
 
       const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
-      const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
+      const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
 
       // All time-stops can start within dodge's time-stop
       if (sourceIsDodge) continue;

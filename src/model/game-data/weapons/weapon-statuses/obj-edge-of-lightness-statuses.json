@@ -13,7 +13,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.03,
                   0.036,
                   0.042,
@@ -36,7 +36,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.03,
                   0.036,
                   0.042,
@@ -57,18 +57,16 @@
       "id": "OBJ_EDGE_OF_LIGHTNESS_UNBRIDLED_EDGE",
       "name": "Unbridled Edge",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          20
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            3
-          ]
+          "value": 3
         },
         "interactionType": "NONE"
       },

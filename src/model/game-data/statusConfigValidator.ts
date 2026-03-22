@@ -10,6 +10,8 @@
  *   FRAME   → { metadata, properties, clause }
  */
 
+import { VerbType } from '../../dsl/semantics';
+
 // ── Allowed key sets ────────────────────────────────────────────────────────
 
 const EVENT_KEYS = new Set([
@@ -21,7 +23,7 @@ const EVENT_PROPERTIES_KEYS = new Set([
   'id', 'name', 'type', 'element',
   'target', 'targetDeterminer',
   'isForced', 'enhancementTypes',
-  'statusLevel', 'duration',
+  'stacks', 'duration',
 ]);
 
 const EVENT_METADATA_KEYS = new Set([
@@ -74,8 +76,8 @@ const EFFECT_KEYS = new Set([
 const VALID_ELEMENTS = new Set(['HEAT', 'ELECTRIC', 'CRYO', 'NATURE']);
 const VALID_STATUS_LEVEL_INTERACTIONS = new Set(['NONE', 'RESET']);
 const VALID_ENHANCEMENT_TYPES = new Set(['EMPOWERED', 'ENHANCED']);
-const VALID_LIMIT_VERBS = new Set(['IS', 'VARY_BY']);
-const VALID_DURATION_UNITS = new Set(['SECOND', 'FRAME']);
+const VALID_LIMIT_VERBS = new Set([VerbType.IS, VerbType.VARY_BY]);
+const VALID_DURATION_UNITS = new Set(['SECOND', 'FRAME', 'PERCENTAGE']);
 const VALID_TARGETS = new Set(['OPERATOR', 'ENEMY']);
 const VALID_TARGET_DETERMINERS = new Set(['THIS', 'OTHER', 'ALL', 'ANY', 'CONTROLLED']);
 const ID_PATTERN = /^[A-Z][A-Z0-9_]*$/;
@@ -90,8 +92,7 @@ const LEGACY_RENAMES: Record<string, string> = {
   name: 'properties.name',
   target: 'properties.target',
   targetDeterminer: 'properties.targetDeterminer',
-  statusLevel: 'properties.statusLevel',
-  stack: 'properties.statusLevel',
+  stack: 'properties.stacks',
   isNamedEvent: '(remove)',
   isForceApplied: '(remove)',
   minTalentLevel: '(remove)',
@@ -136,6 +137,8 @@ const checkKeys = (
 
 // ── Duration ────────────────────────────────────────────────────────────────
 
+const VALID_DURATION_TOP_KEYS = new Set(['value', 'unit', 'modifier']);
+
 const validateDuration = (duration: unknown, path: string) => {
   const errors: ValidationError[] = [];
   if (typeof duration !== 'object' || duration === null) {
@@ -145,6 +148,8 @@ const validateDuration = (duration: unknown, path: string) => {
   const d = duration as Record<string, unknown>;
   if (d.value === undefined) {
     errors.push({ path, message: 'duration must have "value"' });
+  } else if (typeof d.value !== 'object' || d.value === null) {
+    errors.push({ path, message: 'duration.value must be a ValueNode object' });
   }
   if (d.unit === undefined) {
     errors.push({ path, message: 'duration must have "unit"' });
@@ -152,7 +157,7 @@ const validateDuration = (duration: unknown, path: string) => {
     errors.push({ path, message: `unknown duration unit "${d.unit}"` });
   }
   for (const key of Object.keys(d)) {
-    if (key !== 'value' && key !== 'unit') {
+    if (!VALID_DURATION_TOP_KEYS.has(key)) {
       errors.push({ path, message: `unexpected duration key "${key}"` });
     }
   }
@@ -234,19 +239,19 @@ const validateAllClauses = (obj: Record<string, unknown>, path: string) => {
   return errors;
 };
 
-// ── StatusLevel ─────────────────────────────────────────────────────────────
+// ── Stacks ──────────────────────────────────────────────────────────────────
 
-const validateStatusLevel = (statusLevel: unknown, path: string) => {
+const validateStacks = (stacks: unknown, path: string) => {
   const errors: ValidationError[] = [];
-  if (typeof statusLevel !== 'object' || statusLevel === null) {
-    errors.push({ path, message: 'statusLevel must be an object' });
+  if (typeof stacks !== 'object' || stacks === null) {
+    errors.push({ path, message: 'stacks must be an object' });
     return errors;
   }
-  const sl = statusLevel as Record<string, unknown>;
-  errors.push(...checkKeys(sl, new Set(['limit', 'statusLevelInteractionType']), path, 'statusLevel'));
+  const sl = stacks as Record<string, unknown>;
+  errors.push(...checkKeys(sl, new Set(['limit', 'interactionType']), path, 'stacks'));
 
   if (sl.limit === undefined) {
-    errors.push({ path, message: 'statusLevel must have "limit"' });
+    errors.push({ path, message: 'stacks must have "limit"' });
   } else if (typeof sl.limit !== 'object' || sl.limit === null) {
     errors.push({ path: `${path}.limit`, message: 'limit must be an object' });
   } else {
@@ -254,7 +259,7 @@ const validateStatusLevel = (statusLevel: unknown, path: string) => {
     errors.push(...checkKeys(limit, new Set(['verb', 'value', 'object']), `${path}.limit`, 'limit'));
     if (limit.verb === undefined) {
       errors.push({ path: `${path}.limit`, message: 'limit must have "verb"' });
-    } else if (!VALID_LIMIT_VERBS.has(limit.verb as string)) {
+    } else if (!VALID_LIMIT_VERBS.has(limit.verb as VerbType)) {
       errors.push({ path: `${path}.limit`, message: `unknown limit verb "${limit.verb}"` });
     }
     if (limit.value === undefined) {
@@ -262,10 +267,10 @@ const validateStatusLevel = (statusLevel: unknown, path: string) => {
     }
   }
 
-  if (sl.statusLevelInteractionType === undefined) {
-    errors.push({ path, message: 'statusLevel must have "statusLevelInteractionType"' });
-  } else if (!VALID_STATUS_LEVEL_INTERACTIONS.has(sl.statusLevelInteractionType as string)) {
-    errors.push({ path, message: `unknown statusLevelInteractionType "${sl.statusLevelInteractionType}"` });
+  if (sl.interactionType === undefined) {
+    errors.push({ path, message: 'stacks must have "interactionType"' });
+  } else if (!VALID_STATUS_LEVEL_INTERACTIONS.has(sl.interactionType as string)) {
+    errors.push({ path, message: `unknown interactionType "${sl.interactionType}"` });
   }
 
   return errors;
@@ -401,11 +406,11 @@ const validateStatusEntry = (entry: Record<string, unknown>, path: string) => {
       }
     }
 
-    // statusLevel: required
-    if (props.statusLevel === undefined) {
-      errors.push({ path: `${path}.properties`, message: 'missing required "statusLevel"' });
+    // stacks: required
+    if (props.stacks === undefined) {
+      errors.push({ path: `${path}.properties`, message: 'missing required "stacks"' });
     } else {
-      errors.push(...validateStatusLevel(props.statusLevel, `${path}.properties.statusLevel`));
+      errors.push(...validateStacks(props.stacks, `${path}.properties.stacks`));
     }
 
     // duration: optional

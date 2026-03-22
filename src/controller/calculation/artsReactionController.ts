@@ -35,6 +35,7 @@ import { Enemy } from '../../model/enemies/enemy';
 import type { DamageTableRow } from './damageTableBuilder';
 import type { EventsQueryService } from '../timeline/eventsQueryService';
 import { FPS } from '../../utils/timeline';
+import { VerbType } from '../../dsl/semantics';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -134,9 +135,8 @@ function isForced(ev: TimelineEvent): boolean {
   return !!(ev.isForced || ev.forcedReaction);
 }
 
-function getStatusLevel(ev: TimelineEvent): StatusLevel {
-  const stacks = ev.inflictionStacks ?? 1;
-  return Math.min(stacks, MAX_STATUS_LEVEL) as StatusLevel;
+function getStacks(ev: TimelineEvent): StatusLevel {
+  return Math.min(ev.stacks ?? 1, MAX_STATUS_LEVEL) as StatusLevel;
 }
 
 /**
@@ -153,8 +153,8 @@ function buildInitialTick(
 ): ReactionDamageTick | null {
   if (isForced(reactionEvent)) return null;
 
-  const stacks = reactionEvent.inflictionStacks ?? 1;
-  const initialMultiplier = getArtsReactionBaseMultiplier(stacks);
+  const stackCount = reactionEvent.stacks ?? 1;
+  const initialMultiplier = getArtsReactionBaseMultiplier(stackCount);
   const base = buildBaseParams(opCtx, modelEnemy, element, statusQuery, reactionEvent.startFrame, reactionEvent.sourceOwnerId);
   const params: StatusDamageParams = { ...base, statusBaseMultiplier: initialMultiplier };
   return {
@@ -177,7 +177,7 @@ export function computeCombustionDamage(
   statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.HEAT;
-  const statusLevel = getStatusLevel(reactionEvent);
+  const stacks = getStacks(reactionEvent);
   const ticks: ReactionDamageTick[] = [];
 
   // Talent reaction multiplier (e.g. Laevatain P3 — Fragments from the Past: Combustion DMG x1.5)
@@ -193,7 +193,7 @@ export function computeCombustionDamage(
     ticks.push(initial);
   }
 
-  const dotMultiplier = getCombustionDotMultiplier(statusLevel);
+  const dotMultiplier = getCombustionDotMultiplier(stacks);
   for (let i = 1; i <= COMBUSTION_TICKS; i++) {
     const tickFrame = reactionEvent.startFrame + i * FPS;
     const reactionEndFrame = eventEndFrame(reactionEvent);
@@ -217,7 +217,7 @@ export function computeCombustionDamage(
 
 /**
  * Solidification: initial hit + shatter damage at the end of the duration.
- * Shatter = 120% + 120% ATK per status level.
+ * Shatter = 120% + 120% ATK per stack.
  */
 export function computeSolidificationDamage(
   reactionEvent: TimelineEvent,
@@ -226,7 +226,7 @@ export function computeSolidificationDamage(
   statusQuery?: EventsQueryService,
 ): ReactionDamageTick[] {
   const element = REACTION_ELEMENT[reactionEvent.columnId] ?? ElementType.CRYO;
-  const statusLevel = getStatusLevel(reactionEvent);
+  const stacks = getStacks(reactionEvent);
   const ticks: ReactionDamageTick[] = [];
 
   const initial = buildInitialTick(reactionEvent, 'Solidification', opCtx, modelEnemy, element, statusQuery);
@@ -234,7 +234,7 @@ export function computeSolidificationDamage(
 
   // Shatter at the end of the reaction duration
   const shatterFrame = eventEndFrame(reactionEvent);
-  const shatterMultiplier = getShatterBaseMultiplier(statusLevel);
+  const shatterMultiplier = getShatterBaseMultiplier(stacks);
   const shatterBase = buildBaseParams(opCtx, modelEnemy, element, statusQuery, shatterFrame, reactionEvent.sourceOwnerId);
   const shatterParams: StatusDamageParams = { ...shatterBase, statusBaseMultiplier: shatterMultiplier };
   ticks.push({
@@ -322,13 +322,13 @@ export function buildReactionDamageRows(
   const ticks = computeReactionDamage(reactionEvent, opCtx, modelEnemy, statusQuery);
 
   return ticks.map((tick, i) => ({
-    key: `${reactionEvent.id}-reaction-${i}`,
+    key: `${reactionEvent.uid}-reaction-${i}`,
     absoluteFrame: tick.absoluteFrame,
     label: tick.label,
     columnKey,
     ownerId: reactionEvent.sourceOwnerId ?? reactionEvent.ownerId,
     columnId: reactionEvent.columnId,
-    eventId: reactionEvent.id,
+    eventUid: reactionEvent.uid,
     segmentIndex: 0,
     frameIndex: i,
     damage: tick.damage,
@@ -370,7 +370,7 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
     if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
     if (effect.condition?.reactionType !== reactionType) continue;
 
-    if (effect.value?.verb === 'VARY_BY') {
+    if (effect.value?.verb === VerbType.VARY_BY) {
       const resolved = resolveBasedOnValueForCalc(effect.value, { potential });
       if (resolved != null) multiplier *= resolved;
     }
@@ -387,7 +387,7 @@ function resolveBasedOnValueForCalc(
   wp: { verb?: string; object?: string | string[]; value?: unknown },
   ctx: { potential: number; talentLevel?: number; skillLevel?: number },
 ): number | undefined {
-  if (wp.verb !== 'VARY_BY') return typeof wp.value === 'number' ? wp.value : undefined;
+  if (wp.verb !== VerbType.VARY_BY) return typeof wp.value === 'number' ? wp.value : undefined;
 
   const dims = wp.object;
   const val = wp.value;

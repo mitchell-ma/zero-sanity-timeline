@@ -5,7 +5,9 @@
  * Provides lookup functions used by the status derivation engine.
  */
 import type { GearSetType } from '../../consts/enums';
-import type { Interaction } from '../../consts/semantics';
+import { VerbType } from '../../dsl/semantics';
+import type { Interaction, ValueNode } from '../../dsl/semantics';
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 import { getGearStatuses } from './gearStatusesController';
 
 // ── Normalized effect def shape ──────────────────────────────────────────────
@@ -22,15 +24,15 @@ export interface NormalizedEffectDef {
   target: string;
   targetDeterminer: string;
   originId?: string;
-  statusLevel: {
-    limit: { verb: string; value: number };
-    statusLevelInteractionType: string;
+  stacks: {
+    limit: ValueNode;
+    interactionType: string;
   };
   onTriggerClause: { conditions: Interaction[] }[];
   clause?: { conditions: Interaction[]; effects: Record<string, unknown>[] }[];
   note?: string;
   cooldownSeconds?: number;
-  properties?: { duration?: { value: number[]; unit: string } };
+  properties?: { duration?: { value: ValueNode; unit: string } };
   stack?: { max?: Record<string, number> };
   buffs?: { stat: string; value?: number; valueMin?: number; valueMax?: number; perStack?: boolean }[];
   isForced?: boolean;
@@ -113,14 +115,8 @@ function inferTarget(se: Record<string, unknown>): { target: string; targetDeter
  */
 function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef {
   const props = (raw.properties ?? {}) as Record<string, unknown>;
-  const sl = (props.statusLevel ?? {}) as Record<string, unknown>;
-
-  // Pass through statusLevel.limit as { verb, value } DSL format — handle both value and values
-  const limit = sl.limit as { verb?: string; value?: unknown; values?: number[] } | undefined;
-  const limitVal = limit?.value ?? (limit?.values?.[0]);
-  const resolvedLimit = limit
-    ? { verb: limit.verb ?? 'IS', value: (limitVal as number) ?? 1 }
-    : { verb: 'IS', value: 1 };
+  const sl = (props.stacks ?? {}) as Record<string, unknown>;
+  const limit = (sl.limit ?? { verb: VerbType.IS, value: 1 }) as ValueNode;
 
   const { target, targetDeterminer } = inferTarget(raw);
 
@@ -133,9 +129,9 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     target,
     targetDeterminer,
     originId: raw.originId as string | undefined,
-    statusLevel: {
-      limit: resolvedLimit,
-      statusLevelInteractionType: ((sl.statusLevelInteractionType ?? sl.interactionType) as string) ?? 'NONE',
+    stacks: {
+      limit,
+      interactionType: (sl.interactionType as string) ?? 'NONE',
     },
     onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
@@ -143,13 +139,8 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
   };
 
-  // Duration — handle both { value } and { values } formats
   if (props.duration) {
-    const dur = props.duration as { value?: number | number[]; values?: number[]; unit: string };
-    const dv = dur.value ?? dur.values;
-    if (dv != null) {
-      out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
-    }
+    out.properties = { duration: props.duration as { value: ValueNode; unit: string } };
   }
 
   return out;
@@ -271,8 +262,9 @@ export function resolveTargetDisplay(def: { target?: string; targetDeterminer?: 
 }
 
 /** Get duration in seconds from a DSL def. */
-export function resolveDurationSeconds(def: { properties?: { duration?: { value: number[] } } }): number {
-  return def.properties?.duration?.value?.[0] ?? 0;
+export function resolveDurationSeconds(def: { properties?: { duration?: { value: ValueNode } } }): number {
+  if (!def.properties?.duration?.value) return 0;
+  return resolveValueNode(def.properties.duration.value, DEFAULT_VALUE_CONTEXT);
 }
 
 /** Resolve onTriggerClause conditions to flat Interaction-like objects for display. */

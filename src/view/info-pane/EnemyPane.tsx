@@ -4,6 +4,7 @@ import { Enemy } from '../../consts/viewTypes';
 import { EnemyStats, getDefaultEnemyStats } from '../../controller/appStateController';
 import { getModelEnemy, getEnemyLevels } from '../../controller/calculation/enemyRegistry';
 import { StatField, LevelSelect } from './SharedFields';
+import { t } from '../../locales/locale';
 
 const statRowStyle: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
@@ -17,17 +18,17 @@ const statValueStyle: React.CSSProperties = {
 };
 
 /** Resistance fields derived from STAT_ATTRIBUTION — only stats attributed to ALL or ENEMY. */
-const ALL_RESISTANCE_ENTRIES: { stat: StatType; label: string }[] = [
-  { stat: StatType.PHYSICAL_RESISTANCE, label: 'Physical RES' },
-  { stat: StatType.HEAT_RESISTANCE,     label: 'Heat RES' },
-  { stat: StatType.ELECTRIC_RESISTANCE, label: 'Electric RES' },
-  { stat: StatType.CRYO_RESISTANCE,     label: 'Cryo RES' },
-  { stat: StatType.NATURE_RESISTANCE,   label: 'Nature RES' },
+const ALL_RESISTANCE_ENTRIES: { stat: StatType; labelKey: string }[] = [
+  { stat: StatType.PHYSICAL_RESISTANCE, labelKey: 'enemyPane.label.physicalRES' },
+  { stat: StatType.HEAT_RESISTANCE,     labelKey: 'enemyPane.label.heatRES' },
+  { stat: StatType.ELECTRIC_RESISTANCE, labelKey: 'enemyPane.label.electricRES' },
+  { stat: StatType.CRYO_RESISTANCE,     labelKey: 'enemyPane.label.cryoRES' },
+  { stat: StatType.NATURE_RESISTANCE,   labelKey: 'enemyPane.label.natureRES' },
 ];
 
 const ENEMY_RESISTANCE_FIELDS = ALL_RESISTANCE_ENTRIES.filter(
   ({ stat }) => STAT_ATTRIBUTION[stat].includes(StatOwnerType.ENEMY),
-);
+) as { stat: StatType; labelKey: string }[];
 
 function EnemyPane({ enemy, stats, onStatsChange, onClose }: {
   enemy: Enemy;
@@ -67,48 +68,48 @@ function EnemyPane({ enemy, stats, onStatsChange, onClose }: {
           <div className="edit-panel-skill-name">{enemy.name}</div>
           <div className="edit-panel-op-name" style={{ color: enemyColor }}>
             {enemy.tier}
-            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· ENEMY</span>
+            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>· {t('enemyPane.badge')}</span>
           </div>
         </div>
       </div>
 
       <div className="edit-panel-body">
         <div className="edit-panel-section">
-          <span className="edit-section-label">General</span>
-          <LevelSelect label="Level" value={stats.level} options={levels} onChange={handleLevelChange} />
-          <StatField label={labelSpan('HP')} value={stats[StatType.BASE_HP]} min={0} max={9999999} step={1} holdStep={1000} showMinMax onChange={setStat(StatType.BASE_HP)} />
+          <span className="edit-section-label">{t('enemyPane.section.general')}</span>
+          <LevelSelect label={t('enemyPane.label.level')} value={stats.level} options={levels} onChange={handleLevelChange} />
+          <StatField label={labelSpan(t('enemyPane.label.hp'))} value={stats[StatType.BASE_HP]} min={0} max={9999999} step={1} holdStep={1000} showMinMax onChange={setStat(StatType.BASE_HP)} />
           {model && (
             <div style={statRowStyle}>
-              <span style={statLabelStyle}>ATK</span>
+              <span style={statLabelStyle}>{t('enemyPane.label.atk')}</span>
               <span style={statValueStyle}>{model.stats[StatType.BASE_ATTACK] >= 1_000_000 ? model.stats[StatType.BASE_ATTACK].toLocaleString() : model.stats[StatType.BASE_ATTACK]}</span>
             </div>
           )}
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Defense</span>
-          <StatField label={labelSpan('DEF')} value={stats[StatType.BASE_DEFENSE]} min={0} max={9999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.BASE_DEFENSE)} />
+          <span className="edit-section-label">{t('enemyPane.section.defense')}</span>
+          <StatField label={labelSpan(t('enemyPane.label.def'))} value={stats[StatType.BASE_DEFENSE]} min={0} max={9999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.BASE_DEFENSE)} />
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Resistance</span>
-          {ENEMY_RESISTANCE_FIELDS.map(({ stat, label }) => (
-            <StatField key={stat} label={labelSpan(label)} value={stats[stat]} min={0} max={10} step={0.1} holdStep={1} showMinMax onChange={setStat(stat)} />
+          <span className="edit-section-label">{t('enemyPane.section.resistance')}</span>
+          {ENEMY_RESISTANCE_FIELDS.map(({ stat, labelKey }) => (
+            <StatField key={stat} label={labelSpan(t(labelKey))} value={stats[stat]} min={0} max={10} step={0.1} holdStep={1} showMinMax onChange={setStat(stat)} />
           ))}
         </div>
 
         <div className="edit-panel-section">
-          <span className="edit-section-label">Stagger</span>
-          <StatField label={labelSpan('Stagger HP')} value={stats[StatType.STAGGER_HP]} min={0} max={99999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.STAGGER_HP)} />
-          <StatField label={labelSpan('Initial Value')} value={stats.staggerStartValue ?? 0} min={0} max={stats[StatType.STAGGER_HP]} step={1} holdStep={10} showMinMax onChange={setMeta('staggerStartValue')} />
-          <StatField label={labelSpan('Nodes')} value={stats.staggerNodes} min={0} max={10} showMinMax onChange={setMeta('staggerNodes')} />
-          <StatField label={labelSpan('Break Duration (s)')} value={stats[StatType.STAGGER_RECOVERY]} min={0} max={60} step={0.5} showMinMax onChange={setStat(StatType.STAGGER_RECOVERY)} />
-          <StatField label={labelSpan('Node Recovery (s)')} value={stats.staggerNodeRecoverySeconds} min={0} max={60} step={0.5} showMinMax onChange={setMeta('staggerNodeRecoverySeconds')} />
+          <span className="edit-section-label">{t('enemyPane.section.stagger')}</span>
+          <StatField label={labelSpan(t('enemyPane.label.staggerHP'))} value={stats[StatType.STAGGER_HP]} min={0} max={99999} step={1} holdStep={10} showMinMax onChange={setStat(StatType.STAGGER_HP)} />
+          <StatField label={labelSpan(t('enemyPane.label.staggerInitialValue'))} value={stats.staggerStartValue ?? 0} min={0} max={stats[StatType.STAGGER_HP]} step={1} holdStep={10} showMinMax onChange={setMeta('staggerStartValue')} />
+          <StatField label={labelSpan(t('enemyPane.label.staggerNodes'))} value={stats.staggerNodes} min={0} max={10} showMinMax onChange={setMeta('staggerNodes')} />
+          <StatField label={labelSpan(t('enemyPane.label.staggerBreakDuration'))} value={stats[StatType.STAGGER_RECOVERY]} min={0} max={60} step={0.5} showMinMax onChange={setStat(StatType.STAGGER_RECOVERY)} />
+          <StatField label={labelSpan(t('enemyPane.label.staggerNodeRecovery'))} value={stats.staggerNodeRecoverySeconds} min={0} max={60} step={0.5} showMinMax onChange={setMeta('staggerNodeRecoverySeconds')} />
         </div>
 
         <div style={{ marginTop: 'auto', padding: '0.75rem 0 0' }}>
-          <button className="enemy-reset-btn" onClick={handleReset} title="Reset to defaults">
-            Reset to Defaults
+          <button className="enemy-reset-btn" onClick={handleReset} title={t('enemyPane.btn.resetDefaults')}>
+            {t('enemyPane.btn.resetDefaults')}
           </button>
         </div>
       </div>

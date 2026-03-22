@@ -1,5 +1,5 @@
 import { StatType } from "../../consts/enums";
-import type { Interaction } from "../../consts/semantics";
+import type { Interaction } from "../../dsl/semantics";
 import { Consumable } from "./consumable";
 
 export abstract class Tactical extends Consumable {

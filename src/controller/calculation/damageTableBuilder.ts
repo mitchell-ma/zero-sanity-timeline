@@ -53,7 +53,7 @@ export interface DamageTableRow {
   columnKey: string;
   ownerId: string;
   columnId: string;
-  eventId: string;
+  eventUid: string;
   segmentIndex: number;
   frameIndex: number;
   /** Computed expected damage (crit-averaged). Null if multiplier data unavailable. */
@@ -278,7 +278,7 @@ export function buildDamageTableRows(
     const potential = (props.operator.potential ?? 5) as Potential;
 
     // Look up default segments for max frame counts (users can delete frames)
-    const defaultSegs = col.eventVariants?.find((v) => v.name === ev.name)?.segments
+    const defaultSegs = col.eventVariants?.find((v) => v.name === ev.id)?.segments
       ?? col.defaultEvent?.segments;
 
     if (ev.segments.length > 0) {
@@ -450,7 +450,7 @@ export function buildDamageTableRows(
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
-                const isFinisher = ev.name === CombatSkillsType.FINISHER;
+                const isFinisher = ev.id === CombatSkillsType.FINISHER;
                 const enemyTier = modelEnemy?.tier ?? EnemyTierType.COMMON;
 
                 // Link bonus depends on stacks and skill type (battle skill vs ultimate)
@@ -537,13 +537,13 @@ export function buildDamageTableRows(
             resolvedFrameDamage[fi] = damage;
 
             rows.push({
-              key: `${ev.id}-s${si}-f${fi}`,
+              key: `${ev.uid}-s${si}-f${fi}`,
               absoluteFrame: absFrame,
               label: `${eventName} > ${segLabel} > Tick ${fi + 1}`,
               columnKey: col.key,
               ownerId: ev.ownerId,
               columnId: effectiveColumnId,
-              eventId: ev.id,
+              eventUid: ev.uid,
               segmentIndex: si,
               frameIndex: fi,
               damage,
@@ -588,13 +588,13 @@ export function buildDamageTableRows(
         if (te.source === 'TALENT_2' && evProps.operator.talentTwoLevel < (te.minLevel ?? 1)) continue;
 
         rows.push({
-          key: `${ev.id}-${te.name.toLowerCase().replace(/\s+/g, '-')}`,
+          key: `${ev.uid}-${te.name.toLowerCase().replace(/\s+/g, '-')}`,
           absoluteFrame: ev.startFrame,
           label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name}`,
           columnKey: col.key,
           ownerId: ev.ownerId,
           columnId: ev.columnId,
-          eventId: ev.id,
+          eventUid: ev.uid,
           segmentIndex: 0,
           frameIndex: 0,
           damage: te.values[0],
@@ -616,13 +616,13 @@ export function buildDamageTableRows(
         const waveDamage = opData.totalAttack * waveMultiplier * opData.attributeBonus;
         for (let w = 0; w < waveCount; w++) {
           rows.push({
-            key: `${ev.id}-${te.name.toLowerCase().replace(/\s+/g, '-')}-${w}`,
+            key: `${ev.uid}-${te.name.toLowerCase().replace(/\s+/g, '-')}-${w}`,
             absoluteFrame: ev.startFrame,
             label: `${getEventDisplayName(ev.name)} > ${te.label ?? te.name} ${w + 1}`,
             columnKey: col.key,
             ownerId: ev.ownerId,
             columnId: ev.columnId,
-            eventId: ev.id,
+            eventUid: ev.uid,
             segmentIndex: 0,
             frameIndex: w,
             damage: waveDamage,
@@ -688,7 +688,7 @@ export function buildDamageTableRows(
  * Returns only operator skill columns (no common, no enemy, no placeholders, no derived).
  */
 /** Column IDs excluded from the damage sheet (no damage data). */
-const EXCLUDED_SHEET_COLUMNS = new Set<string>([OPERATOR_COLUMNS.DASH]);
+const EXCLUDED_SHEET_COLUMNS = new Set<string>([OPERATOR_COLUMNS.INPUT]);
 
 export function buildDamageTableColumns(columns: Column[]): DamageTableColumn[] {
   const result: DamageTableColumn[] = [];

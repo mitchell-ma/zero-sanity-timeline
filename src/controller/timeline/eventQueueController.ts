@@ -8,24 +8,23 @@
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
 import { TimelineEvent, EventSegmentData, eventDuration } from '../../consts/viewTypes';
-import { CombatSkillsType, ElementType, StatusType, TargetType } from '../../consts/enums';
-import type { Interaction } from '../../consts/semantics';
+import { ElementType, StatusType } from '../../consts/enums';
+import { NounType } from '../../dsl/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import { evaluateConditions } from './conditionEvaluator';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
+import { TOTAL_FRAMES } from '../../utils/timeline';
 import { DerivedEventController } from './derivedEventController';
-import { deriveComboActivationWindows, getFinalStrikeTriggerFrame } from './processComboSkill';
+import { deriveComboActivationWindows } from './processComboSkill';
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import {
-  EXCHANGE_EVENT_DURATION,
   resolveSusceptibility,
 } from './processInfliction';
 import { SkillPointController } from '../slot/skillPointController';
-import { getExchangeStatusConfig, getExchangeStatusIds } from '../../model/event-frames/operatorJsonLoader';
 import {
-  collectExchangeStatusTriggers, collectAbsorptionContexts, collectEngineTriggerEntries,
+  collectEngineTriggerEntries,
 } from './statusTriggerCollector';
-import type { ExchangeStatusQueueContext } from './statusTriggerCollector';
 import {
   PRIORITY, MAX_INFLICTION_STACKS, getConsumeStatusConfig,
 } from './eventQueueTypes';
@@ -85,8 +84,7 @@ function collectFrameEffectEntries(
             if (statusEffect.potentialMin != null && pot < statusEffect.potentialMin) continue;
             if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
 
-            if (statusEffect.target === TargetType.SELF) {
-              if (getExchangeStatusIds().has(statusEffect.status)) continue;
+            if (statusEffect.target.noun === NounType.OPERATOR) {
 
               const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
               if (teamColumnId) {
@@ -106,7 +104,8 @@ function collectFrameEffectEntries(
                   durationFrames: linkDuration,
                   operatorSlotId: event.ownerId,
                   derivedEvent: {
-                    id: `${event.id}-team-status-${si}-${fi}`,
+                    uid: `${event.uid}-team-status-${si}-${fi}`,
+                    id: 'Squad Buff (Link)',
                     name: 'Squad Buff (Link)',
                     ownerId: COMMON_OWNER_ID,
                     columnId: teamColumnId,
@@ -117,7 +116,7 @@ function collectFrameEffectEntries(
                   },
                 });
               }
-            } else if (statusEffect.target === TargetType.ENEMY) {
+            } else if (statusEffect.target.noun === NounType.ENEMY) {
               let segments: EventSegmentData[] | undefined;
               let susceptibility: Partial<Record<ElementType, number>> | undefined;
 
@@ -153,7 +152,8 @@ function collectFrameEffectEntries(
                 operatorSlotId: event.ownerId,
                 stackingInteraction: statusEffect.stackingInteraction,
                 derivedEvent: {
-                  id: `${event.id}-status-${si}-${fi}-${sti}`,
+                  uid: `${event.uid}-status-${si}-${fi}-${sti}`,
+                  id: statusEffect.eventName ?? statusEffect.status,
                   name: statusEffect.eventName ?? statusEffect.status,
                   ownerId: ENEMY_OWNER_ID,
                   columnId: statusEffect.status,
@@ -185,13 +185,14 @@ function collectFrameEffectEntries(
                 durationFrames: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
                 operatorSlotId: event.ownerId,
                 derivedEvent: {
-                  id: `${event.id}-forced-${si}-${fi}`,
+                  uid: `${event.uid}-forced-${si}-${fi}`,
+                  id: reactionColumnId,
                   name: reactionColumnId,
                   ownerId: ENEMY_OWNER_ID,
                   columnId: reactionColumnId,
                   startFrame: absFrame,
                   segments: [{ properties: { duration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION } }],
-                  statusLevel: frame.applyForcedReaction.statusLevel,
+                  stacks: frame.applyForcedReaction.stacks,
                   sourceOwnerId: event.ownerId,
                   sourceSkillName: event.name,
                   forcedReaction: true,
@@ -208,7 +209,7 @@ function collectFrameEffectEntries(
   // Endministrator: Originium Crystals
   for (const event of events) {
     if (event.ownerId === ENEMY_OWNER_ID) continue;
-    if (event.name !== CombatSkillsType.SEALING_SEQUENCE) continue;
+    if (event.name !== 'SEALING_SEQUENCE') continue;
     entries.push({
       frame: event.startFrame,
       priority: PRIORITY.FRAME_EFFECT,
@@ -219,15 +220,16 @@ function collectFrameEffectEntries(
       sourceOwnerId: event.ownerId,
       sourceSkillName: event.name,
       maxStacks: 0,
-      durationFrames: EXCHANGE_EVENT_DURATION,
+      durationFrames: TOTAL_FRAMES,
       operatorSlotId: event.ownerId,
       derivedEvent: {
-        id: `${event.id}-crystal`,
+        uid: `${event.uid}-crystal`,
+        id: StatusType.ORIGINIUM_CRYSTAL,
         name: StatusType.ORIGINIUM_CRYSTAL,
         ownerId: ENEMY_OWNER_ID,
         columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
         startFrame: event.startFrame,
-        segments: [{ properties: { duration: EXCHANGE_EVENT_DURATION } }],
+        segments: [{ properties: { duration: TOTAL_FRAMES } }],
         sourceOwnerId: event.ownerId,
         sourceSkillName: event.name,
       },
@@ -278,7 +280,7 @@ function collectInflictionEntries(
                 frame: absFrame,
                 priority: PRIORITY.INFLICTION_CREATE,
                 type: 'INFLICTION_CREATE',
-                id: `${event.id}-inflict-${si}-${fi}`,
+                uid: `${event.uid}-inflict-${si}-${fi}`,
                 statusName: columnId,
                 columnId,
                 ownerId: ENEMY_OWNER_ID,
@@ -299,7 +301,7 @@ function collectInflictionEntries(
                 frame: absFrame,
                 priority: PRIORITY.INFLICTION_CREATE,
                 type: 'INFLICTION_CREATE',
-                id: `${event.id}-combo-inflict-${si}-${fi}`,
+                uid: `${event.uid}-combo-inflict-${si}-${fi}`,
                 statusName: triggerCol,
                 columnId: triggerCol,
                 ownerId: ENEMY_OWNER_ID,
@@ -323,10 +325,9 @@ function collectInflictionEntries(
 
 // ── Status consumption collection ───────────────────────────────────────────
 
-/** Scan events for consumeStatus frame markers targeting exchange/operator statuses. */
+/** Scan events for consumeStatus frame markers targeting operator statuses. */
 function collectConsumeEntries(
   events: TimelineEvent[],
-  contexts: ExchangeStatusQueueContext[],
   stops: readonly TimeStopRegion[],
 ): QueueFrame[] {
   const entries: QueueFrame[] = [];
@@ -343,29 +344,8 @@ function collectConsumeEntries(
           const frame = seg.frames[fi];
           if (!frame.consumeStatus) continue;
 
-          const exchInfo = getExchangeStatusConfig()[frame.consumeStatus];
-          if (exchInfo) {
-            const ctx = contexts.find(c => c.columnId === exchInfo.columnId && c.ownerId === event.ownerId);
-            if (ctx) {
-              entries.push({
-                frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
-                priority: PRIORITY.CONSUME,
-                type: 'CONSUME',
-                statusName: frame.consumeStatus,
-                columnId: exchInfo.columnId,
-                ownerId: ctx.ownerId,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: ctx.maxStacks,
-                durationFrames: ctx.durationFrames,
-                operatorSlotId: ctx.operatorSlotId,
-              });
-              continue;
-            }
-          }
-
           const config = getConsumeStatusConfig()[frame.consumeStatus];
-          if (config && !exchInfo) {
+          if (config) {
             const targetOwnerId = config.targetOwnerId ?? event.ownerId;
             entries.push({
               frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
@@ -380,121 +360,6 @@ function collectConsumeEntries(
               durationFrames: 0,
               operatorSlotId: event.ownerId,
             });
-          }
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-    }
-  }
-
-  return entries;
-}
-
-// ── Final Strike absorption ─────────────────────────────────────────────────
-
-/** Collect ABSORPTION_CHECK entries from basic attacks with Final Strike frames. */
-function collectFinalStrikeEntries(
-  events: TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
-    if (event.columnId !== SKILL_COLUMNS.BASIC) continue;
-    if (event.name === CombatSkillsType.FINISHER || event.name === CombatSkillsType.DIVE) continue;
-
-    const fStops = foreignStopsFor(event, stops);
-    const triggerFrame = getFinalStrikeTriggerFrame(event, fStops);
-    if (triggerFrame == null) continue;
-
-    entries.push({
-      frame: triggerFrame,
-      priority: PRIORITY.ABSORPTION_CHECK,
-      type: 'ABSORPTION_CHECK',
-      statusName: 'FINAL_STRIKE',
-      columnId: '',
-      ownerId: event.ownerId,
-      sourceOwnerId: event.ownerId,
-      sourceSkillName: event.name,
-      maxStacks: 0,
-      durationFrames: 0,
-      operatorSlotId: event.ownerId,
-    });
-  }
-
-  return entries;
-}
-
-// ── Absorption frame markers ────────────────────────────────────────────────
-
-/** Collect absorption (absorbArtsInfliction) and infliction consumption (consumeArtsInfliction) entries. */
-function collectAbsorptionFrameEntries(
-  events: TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID) continue;
-
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-      if (seg.frames) {
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-
-          if (frame.absorbArtsInfliction) {
-            const marker = frame.absorbArtsInfliction;
-            const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[marker.element];
-            const absExchInfo = getExchangeStatusConfig()[marker.exchangeStatus];
-            if (inflictionColumnId && absExchInfo) {
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.ABSORPTION_CHECK,
-                type: 'ABSORPTION_CHECK',
-                statusName: marker.exchangeStatus,
-                columnId: absExchInfo.columnId,
-                ownerId: event.ownerId,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: marker.stacks,
-                durationFrames: EXCHANGE_EVENT_DURATION,
-                operatorSlotId: event.ownerId,
-                absorptionMarker: {
-                  inflictionColumnId,
-                  exchangeStatus: marker.exchangeStatus,
-                  exchangeColumnId: absExchInfo.columnId,
-                  maxAbsorb: marker.stacks,
-                  eventId: event.id,
-                  segmentIndex: si,
-                  frameIndex: fi,
-                },
-              });
-            }
-          }
-
-          if (frame.consumeArtsInfliction) {
-            const inflictionColumnId = ELEMENT_TO_INFLICTION_COLUMN[frame.consumeArtsInfliction.element];
-            if (inflictionColumnId) {
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.CONSUME,
-                type: 'CONSUME',
-                statusName: inflictionColumnId,
-                columnId: inflictionColumnId,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: 0,
-                durationFrames: 0,
-                operatorSlotId: event.ownerId,
-                maxConsume: frame.consumeArtsInfliction.stacks,
-              });
-            }
           }
         }
       }
@@ -669,13 +534,6 @@ export function runEventQueue(
   // Collect trigger contexts from configs
   const { entries: engineEntries } = collectEngineTriggerEntries(
     registeredEvents, loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-    getExchangeStatusIds(),
-  );
-  const exchangeContexts = collectExchangeStatusTriggers(
-    registeredEvents, getExchangeStatusIds(), loadoutProperties, slotOperatorMap,
-  );
-  const absorptionContexts = collectAbsorptionContexts(
-    registeredEvents, loadoutProperties, slotOperatorMap,
   );
 
   // ── Seed priority queue ───────────────────────────────────────────────────
@@ -686,7 +544,7 @@ export function runEventQueue(
 
   // Create interpreter backed by the single DEC
   const interpretor = new EventInterpretorController(state, registeredEvents, {
-    exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
+    loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
     getControlledSlotAtFrame,
   });
 
@@ -698,7 +556,7 @@ export function runEventQueue(
         frame: ev.startFrame,
         priority: PRIORITY.INFLICTION_CREATE,
         type: 'INFLICTION_CREATE',
-        id: ev.id,
+        uid: ev.uid,
         statusName: ev.columnId,
         columnId: ev.columnId,
         ownerId: ev.ownerId,
@@ -747,28 +605,9 @@ export function runEventQueue(
       });
     }
   }
-  seed(collectFinalStrikeEntries(registeredEvents, stops));
-  seed(collectAbsorptionFrameEntries(registeredEvents, stops));
   seed(collectConsumeReactionEntries(registeredEvents, stops));
   seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
-  seed(collectConsumeEntries(registeredEvents, exchangeContexts, stops));
-  for (const ctx of exchangeContexts) {
-    for (const trigger of ctx.triggers) {
-      queue.insert({
-        frame: trigger.frame,
-        priority: PRIORITY.EXCHANGE_CREATE,
-        type: 'EXCHANGE_CREATE',
-        statusName: ctx.statusName,
-        columnId: ctx.columnId,
-        ownerId: ctx.ownerId,
-        sourceOwnerId: trigger.sourceOwnerId,
-        sourceSkillName: trigger.sourceSkillName,
-        maxStacks: ctx.maxStacks,
-        durationFrames: ctx.durationFrames,
-        operatorSlotId: ctx.operatorSlotId,
-      });
-    }
-  }
+  seed(collectConsumeEntries(registeredEvents, stops));
   seed(engineEntries.map(e => ({
     frame: e.frame,
     priority: PRIORITY.ENGINE_TRIGGER,
@@ -793,7 +632,7 @@ export function runEventQueue(
 
   // Register queue-created events + combo windows into DEC
   const queueEvents = state.output;
-  state.markExtended(queueEvents.map(ev => ev.id));
+  state.markExtended(queueEvents.map(ev => ev.uid));
 
   const allEvents = [...registeredEvents, ...queueEvents];
   const comboWindows = slotWirings && slotWirings.length > 0
@@ -836,16 +675,26 @@ export function processCombatSimulation(
   enemyId?: string,
   /** Loadout states per slot (weapon/gear selection, needed for ATK in HP tracking). */
   loadouts?: Record<string, OperatorLoadoutState>,
+  /** SP controller singleton for incremental SP tracking. */
+  spController?: SkillPointController,
+  /** UE controller singleton for incremental UE tracking. */
+  ueController?: import('../timeline/ultimateEnergyController').UltimateEnergyController,
 ): TimelineEvent[] {
   // ── 0. Initialize HP tracker for live HP% queries during queue processing ─
   initHpTracker(bossMaxHp ?? null);
+
+  // ── 0b. Clear resource controllers for this pipeline run ──────────────────
+  if (spController) spController.clearPending();
+  if (ueController) ueController.clear();
 
   // ── 1. InputEventController: classify ─────────────────────────────────────
   const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
 
   // ── 2. DerivedEventController: register input events ──────────────────────
   const triggerAssociations = getAllTriggerAssociations();
-  const state = new DerivedEventController(undefined, triggerAssociations, slotWirings);
+  const state = new DerivedEventController(undefined, triggerAssociations, slotWirings, spController, ueController);
+  const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
+  state.seedControlledOperator(slotIds[0]);
   state.registerEvents(inputEvents);
 
   // ── 3. SP recovery + talent events ────────────────────────────────────────
@@ -855,7 +704,6 @@ export function processCombatSimulation(
 
   const { talentEvents } = collectEngineTriggerEntries(
     state.getRegisteredEvents(), loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-    getExchangeStatusIds(),
   );
   state.registerEvents(talentEvents);
 
@@ -866,7 +714,6 @@ export function processCombatSimulation(
   }
 
   // ── 3c. Resolve controlled operator ──────────────────────────────────────
-  const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
   const getControlledSlotAtFrame = resolveControlledOperator(
     state.getRegisteredEvents(), slotIds,
   );
@@ -875,7 +722,16 @@ export function processCombatSimulation(
   runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
     bossMaxHp != null ? getEnemyHpPercentage : undefined, getControlledSlotAtFrame);
 
-  // ── 5. Output ─────────────────────────────────────────────────────────────
+  // ── 5. Finalize resource controllers ──────────────────────────────────────
+  if (spController) {
+    spController.finalize(state.getStops());
+  }
+  if (ueController) {
+    const gainFrames = spController ? new Map(spController.getBattleSkillGainFrames()) : new Map<string, { frame: number; slotId: string }>();
+    ueController.finalize(gainFrames);
+  }
+
+  // ── 6. Output ─────────────────────────────────────────────────────────────
   _lastController = state;
   return state.getProcessedEvents();
 }

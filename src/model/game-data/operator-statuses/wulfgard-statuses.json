@@ -14,7 +14,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 15,
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
         "unit": "SECOND"
       }
     },
@@ -65,7 +68,10 @@
         "statusLevelInteractionType": "NONE"
       },
       "duration": {
-        "value": -1,
+        "value": {
+          "verb": "IS",
+          "value": -1
+        },
         "unit": "SECOND"
       },
       "minPotential": 5
@@ -117,7 +123,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   5,
                   10
                 ]

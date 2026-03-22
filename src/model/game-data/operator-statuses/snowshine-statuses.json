@@ -13,7 +13,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   0.15,
                   0.25
                 ]
@@ -21,7 +21,7 @@
               "hpThreshold": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   0.45,
                   0.55
                 ]
@@ -66,7 +66,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   6,
                   10
                 ]

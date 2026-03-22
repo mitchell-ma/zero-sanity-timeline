@@ -6,16 +6,16 @@
 import { useState } from 'react';
 import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURATION_END,
   VERB_LABELS, ADJECTIVE_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_ADJECTIVES,
-  EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WithValueVerb, WITH_PROPERTY_LABELS,
+  EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WITH_PROPERTY_LABELS,
   OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE,
-  isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperator } from '../../consts/semantics';
-import type { Effect, ValueNode } from '../../consts/semantics';
+  isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperator } from '../../dsl/semantics';
+import type { Effect, ValueNode } from '../../dsl/semantics';
 import { StatusIdSelect, InflictionIdSelect, ReactionIdSelect } from './InteractionBuilder';
 import SentenceSlot from './SentenceSlot';
 import CustomSelect from './CustomSelect';
 import ExpressionEditorModal from './ExpressionEditorModal';
 
-import type { AdjectiveType } from '../../consts/semantics';
+import type { AdjectiveType } from '../../dsl/semantics';
 
 interface EffectBuilderProps {
   value: Effect;
@@ -194,7 +194,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               value={value.with?.duration && isValueLiteral(value.with.duration) ? value.with.duration.value : 0}
               onChange={(e) => {
                 const dur = Number(e.target.value) || undefined;
-                update({ with: dur != null ? { ...value.with, duration: { verb: 'IS' as const, value: dur } } : value.with });
+                update({ with: dur != null ? { ...value.with, duration: { verb: VerbType.IS, value: dur } } : value.with });
               }}
             />
             <span className="ib-label">s</span>
@@ -231,7 +231,7 @@ function summarizeNode(node: ValueNode): string {
     return obj;
   }
   if (isValueStat(node)) {
-    return node.object.replace(/_/g, ' ').toLowerCase();
+    return node.objectId.replace(/_/g, ' ').toLowerCase();
   }
   if (isValueExpression(node)) {
     const op = node.operator.replace(/_/g, ' ');
@@ -264,23 +264,23 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
     : isVariable ? node.value
     : undefined;
 
-  const verbValue = isExpr ? 'EXPR' : isVariable ? 'VARY_BY' : 'IS';
+  const verbValue = isExpr ? 'EXPR' : isVariable ? VerbType.VARY_BY : VerbType.IS;
 
   const updateVerb = (newVerb: string) => {
     if (newVerb === 'EXPR') {
       setModalOpen(true);
       // If not already an expression, wrap current value
       if (!isExpr) {
-        onChange({ operator: ValueOperator.MULT, left: node ?? { verb: 'IS' as const, value: 0 }, right: { verb: 'IS' as const, value: 1 } });
+        onChange({ operator: ValueOperator.MULT, left: node ?? { verb: VerbType.IS, value: 0 }, right: { verb: VerbType.IS, value: 1 } });
       }
       return;
     }
-    if (newVerb === WithValueVerb.VARY_BY) {
+    if (newVerb === VerbType.VARY_BY) {
       const arr = Array.isArray(val) ? val : Array(12).fill(typeof val === 'number' ? val : 0);
-      onChange({ verb: 'VARY_BY' as const, object: 'SKILL_LEVEL', value: arr });
+      onChange({ verb: VerbType.VARY_BY, object: 'SKILL_LEVEL', value: arr });
     } else {
       const num = Array.isArray(val) ? val[0] ?? 0 : typeof val === 'number' ? val : 0;
-      onChange({ verb: 'IS' as const, value: num });
+      onChange({ verb: VerbType.IS, value: num });
     }
   };
 
@@ -305,7 +305,7 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
           type="number"
           step="any"
           value={(val as number) ?? 0}
-          onChange={(e) => onChange({ verb: 'IS' as const, value: Number(e.target.value) || 0 })}
+          onChange={(e) => onChange({ verb: VerbType.IS, value: Number(e.target.value) || 0 })}
         />
       ) : (
         <>
@@ -330,7 +330,7 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
                       onChange={(e) => {
                         const arr = Array.isArray(val) ? [...val] : Array(12).fill(0);
                         arr[i] = Number(e.target.value) || 0;
-                        onChange({ verb: 'VARY_BY' as const, object: isVariable ? node.object : 'SKILL_LEVEL', value: arr });
+                        onChange({ verb: VerbType.VARY_BY, object: isVariable ? node.object : 'SKILL_LEVEL', value: arr });
                       }}
                     />
                   </td>
@@ -342,7 +342,7 @@ function WithPropertyRow({ propKey, withValue: node, onChange }: {
       )}
       {modalOpen && (
         <ExpressionEditorModal
-          value={node ?? { verb: 'IS' as const, value: 0 }}
+          value={node ?? { verb: VerbType.IS, value: 0 }}
           onChange={onChange}
           onClose={() => setModalOpen(false)}
           label={label}

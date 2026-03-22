@@ -14,7 +14,7 @@
  */
 import { TimelineEvent, Column, eventEndFrame } from '../../consts/viewTypes';
 import { INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
-import { formatSegmentShortName } from '../../utils/semanticsTranslation';
+import { formatSegmentShortName } from '../../dsl/semanticsTranslation';
 import { getOperatorJson, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
 import { REACTION_COLUMNS } from '../../model/channels';
 
@@ -42,12 +42,12 @@ function getStatusStackInfo(statusName: string): StatusStackInfo | undefined {
     statusStackCache = new Map();
     for (const opId of getAllOperatorIds()) {
       const json = getOperatorJson(opId);
-      const statusEvents = json?.statusEvents as { id: string; statusLevel?: { limit?: { P0?: number }; statusLevelInteractionType?: string } }[] | undefined;
+      const statusEvents = json?.statusEvents as { id: string; stacks?: { limit?: { P0?: number }; interactionType?: string } }[] | undefined;
       if (!statusEvents) continue;
       for (const se of statusEvents) {
         if (statusStackCache.has(se.id)) continue;
-        const limitP0 = se.statusLevel?.limit?.P0 ?? 1;
-        const verb = se.statusLevel?.statusLevelInteractionType ?? 'NONE';
+        const limitP0 = se.stacks?.limit?.P0 ?? 1;
+        const verb = se.stacks?.interactionType ?? 'NONE';
         statusStackCache.set(se.id, { instances: limitP0, verb });
       }
     }
@@ -83,7 +83,7 @@ export interface StatusViewOverride {
  * - Earlier events are visually truncated to end where the next same-type event starts
  * - Statuses with max 1 instance and no stacking use the base name without numerals
  *
- * Returns a map of eventId → StatusViewOverride.
+ * Returns a map of eventUid → StatusViewOverride.
  */
 export function computeStatusViewOverrides(
   events: TimelineEvent[],
@@ -109,11 +109,11 @@ export function computeStatusViewOverrides(
     }
 
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
-      // Reaction columns get their level from segment labels (based on inflictionStacks),
+      // Reaction columns get their level from segment labels (based on stacks),
       // not positional numerals — skip them here.
       if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
-      const sorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.id.localeCompare(b.id));
+      const sorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
       const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[sorted[0].name] ?? sorted[0].name;
 
       // Check if this status type is single-instance (no stacking numerals needed)
@@ -154,7 +154,7 @@ export function computeStatusViewOverrides(
           }
         }
 
-        overrides.set(ev.id, override);
+        overrides.set(ev.uid, override);
       }
     }
   }

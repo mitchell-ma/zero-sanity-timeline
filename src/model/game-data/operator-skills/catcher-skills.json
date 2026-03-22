@@ -10,7 +10,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.73,
+            "value": {
+              "verb": "IS",
+              "value": 0.73
+            },
             "unit": "SECOND"
           }
         },
@@ -73,7 +76,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.73,
+            "value": {
+              "verb": "IS",
+              "value": 0.73
+            },
             "unit": "SECOND"
           }
         },
@@ -136,7 +142,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.967,
+            "value": {
+              "verb": "IS",
+              "value": 0.967
+            },
             "unit": "SECOND"
           }
         },
@@ -199,7 +208,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.53,
+            "value": {
+              "verb": "IS",
+              "value": 1.53
+            },
             "unit": "SECOND"
           }
         },
@@ -453,7 +465,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 3.17,
+            "value": {
+              "verb": "IS",
+              "value": 3.17
+            },
             "unit": "SECOND"
           }
         }
@@ -494,7 +509,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -508,7 +526,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.3,
+            "value": {
+              "verb": "IS",
+              "value": 0.3
+            },
             "unit": "SECOND"
           }
         },
@@ -611,8 +632,10 @@
                         ]
                       },
                       "duration": {
-                        "verb": "IS",
-                        "value": 10,
+                        "value": {
+                          "verb": "IS",
+                          "value": 10
+                        },
                         "unit": "SECOND"
                       }
                     }
@@ -631,22 +654,24 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "VARY_BY",
-            "object": "SKILL_LEVEL",
-            "value": [
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              35,
-              33
-            ],
+            "value": {
+              "verb": "VARY_BY",
+              "object": "SKILL_LEVEL",
+              "value": [
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                35,
+                33
+              ]
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -708,7 +733,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 1.3,
+            "value": {
+              "verb": "IS",
+              "value": 1.3
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -722,7 +750,10 @@
         },
         "properties": {
           "duration": {
-            "value": 2.13,
+            "value": {
+              "verb": "IS",
+              "value": 2.13
+            },
             "unit": "SECOND"
           }
         },
@@ -806,8 +837,10 @@
                         ]
                       },
                       "duration": {
-                        "verb": "IS",
-                        "value": 8,
+                        "value": {
+                          "verb": "IS",
+                          "value": 8
+                        },
                         "unit": "SECOND"
                       }
                     }
@@ -1008,7 +1041,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.5,
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
             "unit": "SECOND"
           }
         }
@@ -1079,7 +1115,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         }

@@ -47,12 +47,12 @@
           ],
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 3
           },
-          "statusLevelInteractionType": "NONE"
+          "interactionType": "NONE"
         }
       },
       "metadata": {

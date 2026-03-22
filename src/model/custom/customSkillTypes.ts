@@ -3,7 +3,7 @@
  * Skills are standalone entities that can be assigned to operators.
  */
 import { CombatSkillType, ElementType, TimeInteractionType } from '../../consts/enums';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 
 /** A user-created custom skill. */

@@ -21,7 +21,7 @@ import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { evaluateInteraction } from './conditionEvaluator';
 import type { ConditionContext } from './conditionEvaluator';
 import type { TimeStopRegion } from './processTimeStop';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -286,7 +286,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-      if (ev.name === CombatSkillsType.FINISHER || ev.name === CombatSkillsType.DIVE) continue;
+      if (ev.id === CombatSkillsType.FINISHER || ev.id === CombatSkillsType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
@@ -303,7 +303,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-      if (ev.name !== targetName) continue;
+      if (ev.id !== targetName) continue;
 
       const triggerFrame = getFirstEventFrame(ev);
       if (!checkSecondary(ctx, triggerFrame)) continue;
@@ -337,10 +337,10 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   const colId = statusNameToColumnId(primaryCond.objectId);
   const { matchesOwner } = resolveOwnerFilter(primaryCond, ctx.operatorSlotId, 'HAVE');
 
-  // Extract statusLevel threshold from `with.statusLevel` if present
-  const statusLevelThreshold = extractStatusLevelThreshold(primaryCond);
+  // Extract stacks threshold from `with.stacks` if present
+  const stacksThreshold = extractStacksThreshold(primaryCond);
 
-  if (statusLevelThreshold != null) {
+  if (stacksThreshold != null) {
     // Count concurrent events on the column to find when the threshold is reached.
     const colEvents = ctx.events
       .filter(ev => ev.columnId === colId && matchesOwner(ev.ownerId))
@@ -355,7 +355,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
           activeCount++;
         }
       }
-      if (activeCount >= statusLevelThreshold) {
+      if (activeCount >= stacksThreshold) {
         if (!checkSecondary(ctx, candidateFrame)) continue;
         matches.push(makeMatch(candidateFrame, colEvents[i], ctx.clauseEffects));
       }
@@ -376,11 +376,11 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
   return matches;
 }
 
-/** Extract a statusLevel threshold from a predicate's `with.statusLevel` block. */
-function extractStatusLevelThreshold(cond: Predicate): number | null {
+/** Extract a stacks threshold from a predicate's `with.stacks` block. */
+function extractStacksThreshold(cond: Predicate): number | null {
   const w = cond.with;
   if (!w) return null;
-  const sl = w.statusLevel as { verb?: string; cardinalityConstraint?: string; values?: number[] } | undefined;
+  const sl = w.stacks as { verb?: string; cardinalityConstraint?: string; values?: number[] } | undefined;
   if (!sl?.values?.length) return null;
   if (sl.cardinalityConstraint === 'AT_LEAST') return sl.values[0];
   return null;
@@ -571,7 +571,7 @@ export function findClauseTriggerMatches(
  * (i.e., all conditions use verbs like HIT or HAVE that don't require specific
  * event-based triggers — the combo window spans the entire timeline).
  *
- * HAVE with a statusLevel threshold (e.g. HAVE VULNERABLE WITH statusLevel AT_LEAST 4)
+ * HAVE with a stacks threshold (e.g. HAVE VULNERABLE WITH stacks AT_LEAST 4)
  * is NOT always available — it requires a specific stack count to be reached.
  */
 const ALWAYS_AVAILABLE_VERBS = new Set(['HIT', 'HAVE']);
@@ -583,8 +583,8 @@ export function isClauseAlwaysAvailable(
     clause.conditions.length > 0 &&
     clause.conditions.every(c => {
       if (!ALWAYS_AVAILABLE_VERBS.has(c.verb)) return false;
-      // HAVE with a statusLevel threshold is event-dependent, not always available
-      if (c.verb === 'HAVE' && c.with?.statusLevel) return false;
+      // HAVE with a stacks threshold is event-dependent, not always available
+      if (c.verb === 'HAVE' && c.with?.stacks) return false;
       return true;
     }),
   );

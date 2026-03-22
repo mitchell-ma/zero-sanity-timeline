@@ -19,7 +19,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   0.1,
                   0.2
                 ]
@@ -98,7 +98,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   0.1,
                   0.2
                 ]
@@ -115,18 +115,16 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "IS",
-        "values": [
-          10
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }

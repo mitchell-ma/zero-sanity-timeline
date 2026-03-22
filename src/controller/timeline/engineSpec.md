@@ -23,9 +23,10 @@ Specifically prohibited:
 
 ```
 processCombatSimulation(rawEvents, loadoutContext...)
-  1. InputEventController.classifyEvents(rawEvents)     → { inputEvents, derivedEvents }
+  1. InputEventController.classifyEvents(rawEvents)     → { inputEvents (sorted by startFrame), derivedEvents }
   2. new DerivedEventController(triggerAssociations)      → state
-  3. state.registerEvents(inputEvents)                    → inline: extension, frame positions, combo triggers, validation
+  2b. state.seedControlledOperator(firstOccupiedSlotId)  → seeds CONTROL for first operator (full timeline)
+  3. state.registerEvents(inputEvents)                    → inline: extension, frame positions, combo triggers, CONTROL clamping, validation
   4. SkillPointController.deriveSPRecoveryEvents(...)     → SP recovery events → state.registerEvents
   5. statusTriggerCollector.collectEngineTriggerEntries   → talent events → state.registerEvents
   6. runEventQueue(state, derivedEvents, ...)             → seeds derived into queue, runs EventInterpretorController
@@ -36,7 +37,7 @@ processCombatSimulation(rawEvents, loadoutContext...)
 
 | Component | File | Lifecycle | Role |
 |-----------|------|-----------|------|
-| `InputEventController` | `inputEventController.ts` | Stateless functions | `classifyEvents`: splits raw events into input (operator skills) and derived (freeform inflictions/reactions). Also provides event creation/validation for the view layer. |
+| `InputEventController` | `inputEventController.ts` | Stateless functions | `classifyEvents`: splits raw events into input (operator skills) and derived (freeform inflictions/reactions), sorts input events by `startFrame`. Also provides event creation/validation for the view layer. |
 | `DerivedEventController` | `derivedEventController.ts` | Per-invocation | Single source of truth. Inline registration (extension, frame positions, combo triggers, validation). Domain methods for creation/consumption. `addEvent` for queue-created events. |
 | `EventQueueController` | `eventQueueController.ts` | Stateless function | `runEventQueue`: seeds priority queue from frame markers + derived events, runs EventInterpretorController loop, registers output. |
 | `EventInterpretorController` | `eventInterpretorController.ts` | Per-invocation | DSL interpreter + PROCESS_FRAME handler. Routes effects through DerivedEventController domain methods. |

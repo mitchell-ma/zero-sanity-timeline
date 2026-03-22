@@ -3,7 +3,7 @@
  * Draft state — edits apply on "Apply", discard on "Cancel" / overlay click.
  */
 import { useState } from 'react';
-import type { ValueNode } from '../../consts/semantics';
+import type { ValueNode } from '../../dsl/semantics';
 import ExpressionEditor from './ExpressionEditor';
 
 interface Props {

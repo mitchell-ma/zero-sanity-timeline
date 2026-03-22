@@ -68,7 +68,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   0.3,
                   0.5
                 ]
@@ -87,9 +87,7 @@
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }
@@ -152,7 +150,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
-                "values": [
+                "value": [
                   0.06,
                   0.09
                 ]
@@ -169,18 +167,16 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "IS",
-        "values": [
-          7
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 7
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            3
-          ]
+          "value": 3
         },
         "interactionType": "RESET"
       }
@@ -200,18 +196,16 @@
       "to": "OPERATOR",
       "toDeterminer": "ALL",
       "duration": {
-        "verb": "IS",
-        "values": [
-          10
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }
@@ -236,9 +230,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.1
-                ]
+                "value": 0.1
               }
             }
           }
@@ -252,18 +244,16 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "IS",
-        "values": [
-          10
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       }

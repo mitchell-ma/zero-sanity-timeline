@@ -25,8 +25,8 @@ REDUCE [determiner] [OPERATOR] [objectId] COOLDOWN WITH
 - Add `REDUCE = "REDUCE"` to VerbType
 - Add `[VerbType.REDUCE]: ['COOLDOWN']` to VERB_OBJECTS
 - Add `objectSource?: string` and `objectSourceDeterminer?: DeterminerType` to Effect
-- Add `unit?: DurationUnit` to WithValue
-- Add `PERCENTAGE = "PERCENTAGE"` to DurationUnit enum in enums.ts
+- Add `unit?: UnitType` to WithValue
+- `PERCENTAGE` already exists in `UnitType` enum (renamed from `DurationUnit`)
 
 ### eventInterpretor.ts (runs in queue)
 - Add `doReduce(effect, ctx)` handler

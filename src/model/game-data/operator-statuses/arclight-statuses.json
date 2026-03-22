@@ -129,7 +129,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 15,
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
         "unit": "SECOND"
       }
     },
@@ -174,7 +177,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 10,
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
         "unit": "SECOND"
       }
     },

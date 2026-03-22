@@ -7,7 +7,7 @@ import type { CustomWeapon, CustomWeaponSkillDef } from '../../../model/custom/c
 import { maxSkillsForRarity } from '../../../model/custom/customWeaponTypes';
 import CollapsibleSection from '../CollapsibleSection';
 import IdField from '../IdField';
-import type { Interaction } from '../../../consts/semantics';
+import type { Interaction } from '../../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from '../InteractionBuilder';
 
 const WEAPON_TYPES = Object.values(WeaponType);

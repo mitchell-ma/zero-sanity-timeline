@@ -10,7 +10,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.33,
+            "value": {
+              "verb": "IS",
+              "value": 0.33
+            },
             "unit": "SECOND"
           }
         },
@@ -73,7 +76,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.367,
+            "value": {
+              "verb": "IS",
+              "value": 0.367
+            },
             "unit": "SECOND"
           }
         },
@@ -136,7 +142,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.7,
+            "value": {
+              "verb": "IS",
+              "value": 0.7
+            },
             "unit": "SECOND"
           }
         },
@@ -246,7 +255,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.93,
+            "value": {
+              "verb": "IS",
+              "value": 0.93
+            },
             "unit": "SECOND"
           }
         },
@@ -309,7 +321,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         },
@@ -529,7 +544,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.2,
+            "value": {
+              "verb": "IS",
+              "value": 1.2
+            },
             "unit": "SECOND"
           }
         }
@@ -570,7 +588,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 0.5,
+            "value": {
+              "verb": "IS",
+              "value": 0.5
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -584,7 +605,10 @@
         },
         "properties": {
           "duration": {
-            "value": 0.4,
+            "value": {
+              "verb": "IS",
+              "value": 0.4
+            },
             "unit": "SECOND"
           }
         },
@@ -761,7 +785,10 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 3,
+            "value": {
+              "verb": "IS",
+              "value": 3
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -798,7 +825,10 @@
         "properties": {
           "name": "Animation",
           "duration": {
-            "value": 1.9,
+            "value": {
+              "verb": "IS",
+              "value": 1.9
+            },
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME",
@@ -815,7 +845,10 @@
         },
         "properties": {
           "duration": {
-            "value": 2.57,
+            "value": {
+              "verb": "IS",
+              "value": 2.57
+            },
             "unit": "SECOND"
           }
         },
@@ -907,7 +940,10 @@
         },
         "properties": {
           "duration": {
-            "value": 1.4300000000000002,
+            "value": {
+              "verb": "IS",
+              "value": 1.4300000000000002
+            },
             "unit": "SECOND"
           },
           "name": "DELAYED"
@@ -1083,7 +1119,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.6,
+            "value": {
+              "verb": "IS",
+              "value": 1.6
+            },
             "unit": "SECOND"
           }
         }
@@ -1154,7 +1193,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1.5,
+            "value": {
+              "verb": "IS",
+              "value": 1.5
+            },
             "unit": "SECOND"
           }
         }
@@ -1225,7 +1267,10 @@
         ],
         "properties": {
           "duration": {
-            "value": 1,
+            "value": {
+              "verb": "IS",
+              "value": 1
+            },
             "unit": "SECOND"
           }
         }

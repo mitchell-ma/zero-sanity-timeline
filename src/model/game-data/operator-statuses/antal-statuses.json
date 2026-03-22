@@ -4,7 +4,10 @@
       {
         "properties": {
           "duration": {
-            "value": 60,
+            "value": {
+              "verb": "IS",
+              "value": 60
+            },
             "unit": "SECOND"
           },
           "name": "Focus"
@@ -82,7 +85,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 60,
+        "value": {
+          "verb": "IS",
+          "value": 60
+        },
         "unit": "SECOND"
       }
     },
@@ -95,7 +101,10 @@
       {
         "properties": {
           "duration": {
-            "value": 20,
+            "value": {
+              "verb": "IS",
+              "value": 20
+            },
             "unit": "SECOND"
           },
           "name": "Focus"
@@ -163,7 +172,10 @@
       {
         "properties": {
           "duration": {
-            "value": 40,
+            "value": {
+              "verb": "IS",
+              "value": 40
+            },
             "unit": "SECOND"
           },
           "name": "Empowered Focus"
@@ -244,7 +256,10 @@
         "statusLevelInteractionType": "RESET"
       },
       "duration": {
-        "value": 60,
+        "value": {
+          "verb": "IS",
+          "value": 60
+        },
         "unit": "SECOND"
       }
     },

@@ -28,13 +28,13 @@ export class Combustion extends ArtsReaction {
   static readonly TICKS_PER_SECOND = 1;
 
   constructor(params: {
-    statusLevel: StatusLevel;
+    stacks: StatusLevel;
     isForced?: boolean;
   }) {
     super({
       statusType: StatusType.COMBUSTION,
-      statusLevel: params.statusLevel,
-      maxStatusLevel: 4,
+      stacks: params.stacks,
+      maxStacks: 4,
       element: ElementType.HEAT,
       isForced: params.isForced ?? false,
       durationSeconds: Combustion.DURATION_SECONDS,
@@ -42,14 +42,14 @@ export class Combustion extends ArtsReaction {
   }
 
   getInitialDamage(): number {
-    return INITIAL_DAMAGE[this.statusLevel];
+    return INITIAL_DAMAGE[this.stacks];
   }
 
   getDamageOverTime(): number {
-    return DAMAGE_OVER_TIME[this.statusLevel];
+    return DAMAGE_OVER_TIME[this.stacks];
   }
 
   getTotalDamage(): number {
-    return TOTAL_DAMAGE[this.statusLevel];
+    return TOTAL_DAMAGE[this.stacks];
   }
 }

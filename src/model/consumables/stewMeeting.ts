@@ -1,4 +1,4 @@
-import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType } from "../../consts/semantics";
+import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType } from "../../dsl/semantics";
 import { Tactical } from "./tactical";
 
 export class StewMeeting extends Tactical {

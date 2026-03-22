@@ -14,8 +14,8 @@ export class KnockDown extends PhysicalStatus {
   constructor(params: { isForced?: boolean }) {
     super({
       statusType: StatusType.KNOCK_DOWN,
-      statusLevel: 1,
-      maxStatusLevel: 1,
+      stacks: 1,
+      maxStacks: 1,
       isForced: params.isForced,
     });
   }

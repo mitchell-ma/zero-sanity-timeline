@@ -13,7 +13,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.08,
                   0.096,
                   0.112,
@@ -35,18 +35,16 @@
       "name": "Lustrous Pyre",
       "description": "Applies to different-element operators",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          20
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

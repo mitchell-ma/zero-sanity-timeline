@@ -23,8 +23,8 @@ export class Lift extends PhysicalStatus {
   constructor(params: { isForced?: boolean }) {
     super({
       statusType: StatusType.LIFT,
-      statusLevel: 1,
-      maxStatusLevel: 1,
+      stacks: 1,
+      maxStacks: 1,
       isForced: params.isForced,
     });
   }

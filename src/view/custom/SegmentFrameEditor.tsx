@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { ElementType } from '../../consts/enums';
 import type { CustomSegmentDef, CustomFrameDef } from '../../model/custom/customOperatorTypes';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import InteractionBuilder, { defaultInteraction } from './InteractionBuilder';
 
 interface SegmentFrameEditorProps {

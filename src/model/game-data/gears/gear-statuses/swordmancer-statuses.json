@@ -48,15 +48,11 @@
             "with": {
               "multiplier": {
                 "verb": "IS",
-                "values": [
-                  2.5
-                ]
+                "value": 2.5
               },
               "staggerValue": {
                 "verb": "IS",
-                "values": [
-                  10
-                ]
+                "value": 10
               }
             }
           }
@@ -69,18 +65,16 @@
       "name": "Swordmancer",
       "description": "Deals 250% ATK Physical DMG + 10 Stagger. 15s cooldown.",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          0
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 0
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InteractionModeType, SegmentType, StatusType, STATUS_ELEMENT } from '../../consts/enums';
+import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
+import { getStatusElementMap } from '../../controller/gameDataController';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
 import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail, resolveEventTiming } from '../../controller/info-pane/eventPaneController';
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
-import type { Effect, Interaction } from '../../consts/semantics';
-import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../../consts/semantics';
-import { getLeafValue } from '../../controller/calculation/valueResolver';
-import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
+import type { Effect, Interaction, ValueNode } from '../../dsl/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../../dsl/semantics';
+import { getLeafValue, resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
 import type { DamageTableRow } from '../../controller/calculation/damageTableBuilder';
 import type { SkillLevel, Potential } from '../../consts/types';
-import { type TranslatedEffect } from '../../utils/semanticsTranslation';
+import { type TranslatedEffect } from '../../dsl/semanticsTranslation';
 
 function formatSegNum(index: number): string {
   return `Seg ${index + 1}`;
@@ -51,13 +52,13 @@ function FrameDslEffects({ f }: { f: import('../../consts/viewTypes').EventFrame
         </div>
       )}
       {f.applyStatus && !(f.applyStatuses && f.applyStatuses.every(s => s.potentialMin != null || s.potentialMax != null)) && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
-          APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target === 'ENEMY' ? 'ENEMY' : f.applyStatus.target === 'SELF' ? 'THIS OPERATOR' : f.applyStatus.target.toUpperCase()}
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[getStatusElementMap()[f.applyStatus.status] as ElementType] ?? '#55aadd' }}>
+          APPLY {f.applyStatus.stacks > 0 ? `${f.applyStatus.stacks} ` : ''}{(STATUS_LABELS[f.applyStatus.status as StatusType] ?? f.applyStatus.status).toUpperCase().replace(/ /g, '_')} STATUS TO {f.applyStatus.target.noun === 'ENEMY' ? 'ENEMY' : `${f.applyStatus.target.determiner ?? 'THIS'} OPERATOR`}
         </div>
       )}
       {f.applyForcedReaction && (
-        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[STATUS_ELEMENT[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
-          APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.statusLevel})
+        <div className="frame-dsl-effect" style={{ color: ELEMENT_COLORS[getStatusElementMap()[f.applyForcedReaction.reaction] as ElementType] ?? '#ff5522' }}>
+          APPLY FORCED {(STATUS_LABELS[f.applyForcedReaction.reaction as StatusType] ?? f.applyForcedReaction.reaction).toUpperCase().replace(/ /g, '_')} REACTION TO ENEMY (Lv.{f.applyForcedReaction.stacks})
         </div>
       )}
       {f.consumeReaction && (
@@ -233,7 +234,7 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
               : Array.isArray(leaf) ? `[${leaf.slice(0, 4).join(', ')}${leaf.length > 4 ? ` ...+${leaf.length - 4}` : ''}]`
               : '(expr)';
             const verb = isValueLiteral(v) ? v.verb : isValueVariable(v) ? v.verb : isValueStat(v) ? v.verb : isValueExpression(v) ? v.operator : '?';
-            const obj = isValueVariable(v) ? v.object : isValueStat(v) ? v.object : undefined;
+            const obj = isValueVariable(v) ? v.object : isValueStat(v) ? `${v.object} ${v.objectId}` : undefined;
             return (
               <div key={k}>
                 <span style={{ color: '#888' }}>WITH</span>{' '}
@@ -273,7 +274,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
           {detail.originId && (
             <div>Origin: <span style={{ color: 'var(--text-primary)' }}>{detail.originId}</span></div>
           )}
-          <div>Event ID: <span style={{ color: 'var(--text-muted)' }}>{event.id}</span></div>
+          <div>Event UID: <span style={{ color: 'var(--text-muted)' }}>{event.uid}</span></div>
           <div>Column: <span style={{ color: 'var(--text-primary)' }}>{event.columnId}</span></div>
           <div>Owner: <span style={{ color: 'var(--text-primary)' }}>{event.ownerId}</span></div>
         </div>
@@ -301,7 +302,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
         </div>
 
         {/* Event metadata */}
-        {(event.skillPointCost != null || event.gaugeGain != null || event.teamGaugeGain != null || event.forcedReaction || event.inflictionStacks != null || event.statusLevel != null || event.statusValue != null) && (
+        {(event.skillPointCost != null || event.gaugeGain != null || event.teamGaugeGain != null || event.forcedReaction || event.stacks != null || event.statusValue != null) && (
           <>
             <div style={DETAIL_LABEL}>Event Data</div>
             <div style={DETAIL_VALUE}>
@@ -309,8 +310,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
               {event.gaugeGain != null && <div>gaugeGain: <span style={{ color: '#55aadd' }}>{event.gaugeGain}</span></div>}
               {event.teamGaugeGain != null && <div>teamGaugeGain: <span style={{ color: '#55aadd' }}>{event.teamGaugeGain}</span></div>}
               {event.gaugeGainByEnemies != null && <div>gaugeGainByEnemies: <span style={{ color: '#55aadd' }}>{JSON.stringify(event.gaugeGainByEnemies)}</span></div>}
-              {event.inflictionStacks != null && <div>inflictionStacks: <span style={{ color: '#dd8844' }}>{event.inflictionStacks}</span></div>}
-              {event.statusLevel != null && <div>statusLevel: <span style={{ color: '#88cc44' }}>{event.statusLevel}</span></div>}
+              {event.stacks != null && <div>stacks: <span style={{ color: '#dd8844' }}>{event.stacks}</span></div>}
               {event.statusValue != null && <div>statusValue: <span style={{ color: '#88cc44' }}>{fmtN(event.statusValue * 100)}%</span></div>}
               {event.forcedReaction && <div style={{ color: '#ff5522' }}>forcedReaction: true</div>}
               {event.isForced && <div style={{ color: '#ff5522' }}>isForced: true</div>}
@@ -366,7 +366,7 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                   Segment {seg.index + 1}
                   {seg.properties?.duration && (
                     <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
-                      {' '}— {seg.properties.duration.value}{seg.properties.duration.unit ? `${seg.properties.duration.unit.toLowerCase().replace('second', 's')}` : ''}
+                      {' '}— {resolveValueNode(seg.properties.duration.value as unknown as ValueNode, DEFAULT_VALUE_CONTEXT)}{seg.properties.duration.unit ? `${seg.properties.duration.unit.toLowerCase().replace('second', 's')}` : ''}
                     </span>
                   )}
                   {Array.isArray(seg.metadata?.dataSources) && (
@@ -419,9 +419,9 @@ function EventFullDetailPanel({ detail, event }: { detail: EventFullDetail; even
                 <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{se.id}</div>
                 {se.target && <div>target: {se.target}</div>}
                 {se.element && <div>element: <span style={{ color: ELEMENT_COLORS[se.element?.toUpperCase() as ElementType] ?? 'inherit' }}>{se.element}</span></div>}
-                {se.statusLevel && (
+                {se.stacks && (
                   <div>
-                    stacks: limit={typeof se.statusLevel.limit === 'object' ? JSON.stringify(se.statusLevel.limit) : se.statusLevel.limit}
+                    stacks: limit={typeof se.stacks.limit === 'object' ? JSON.stringify(se.stacks.limit) : se.stacks.limit}
                   </div>
                 )}
                 {se.clause && se.clause.length > 0 && (
@@ -477,9 +477,9 @@ interface EventPaneProps {
   allProcessedEvents?: readonly TimelineEvent[];
   loadoutProperties?: Record<string, LoadoutProperties>;
   damageRows?: DamageTableRow[];
-  spConsumptionHistory?: { eventId: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
+  spConsumptionHistory?: { eventUid: string; frame: number; naturalConsumed: number; returnedConsumed: number }[];
   onSaveAsCustomSkill?: (event: TimelineEvent) => void;
-  verbose?: 0 | 1 | 2;
+  verbose?: InfoLevel;
 }
 
 function EventPane({
@@ -503,7 +503,7 @@ function EventPane({
   damageRows,
   spConsumptionHistory,
   onSaveAsCustomSkill,
-  verbose = 1,
+  verbose = InfoLevel.DETAILED,
 }: EventPaneProps) {
   /** Format a real-time frame as a detail label. */
   const dualTimeLabel = (frame: number) => frameToDetailLabel(frame);
@@ -557,12 +557,12 @@ function EventPane({
     if (!damageRows) return new Map<string, DamageTableRow>();
     const map = new Map<string, DamageTableRow>();
     for (const row of damageRows) {
-      if (row.eventId === event.id) {
+      if (row.eventUid === event.uid) {
         map.set(`${row.segmentIndex}-${row.frameIndex}`, row);
       }
     }
     return map;
-  }, [damageRows, event.id]);
+  }, [damageRows, event.uid]);
 
   const selectedFrameElRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -589,7 +589,7 @@ function EventPane({
     setActivePhaseSec(framesToSeconds(0));
     setCooldownSec(framesToSeconds(0));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [event.id, event.startFrame, event.segments]);
+  }, [event.uid, event.startFrame, event.segments]);
 
   const computedStartFrame = Math.max(0, (parseInt(startWholeSec) || 0) * FPS + (parseInt(startModFrame) || 0));
 
@@ -613,7 +613,7 @@ function EventPane({
         ? [{ ...event.segments[0], properties: { ...event.segments[0].properties, duration: newDuration } }]
         : event.segments);
 
-    onUpdate(event.id, {
+    onUpdate(event.uid, {
       startFrame: computedStartFrame,
       segments: newSegments,
     });
@@ -873,7 +873,7 @@ function EventPane({
 
         {/* ── Status Properties (reaction events on enemy timeline) ────────── */}
         {event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId) && (() => {
-          const element = STATUS_ELEMENT[event.columnId.toUpperCase()] as ElementType | undefined;
+          const element = getStatusElementMap()[event.columnId.toUpperCase()] as ElementType | undefined;
           const elColor = element ? ELEMENT_COLORS[element] : 'var(--text-muted)';
           const elLabel = element ? ELEMENT_LABELS[element] : event.columnId;
           const isAutoReaction = !event.isForced;
@@ -886,11 +886,11 @@ function EventPane({
               </div>
               <StatField
                 label="Status Level"
-                value={event.statusLevel ?? 1}
+                value={event.stacks ?? 1}
                 min={1}
                 max={4}
                 step={1}
-                onChange={(v) => onUpdate(event.id, { statusLevel: v })}
+                onChange={(v) => onUpdate(event.uid, { stacks: v })}
               />
               {event.statusValue != null && (
                 <div className="edit-field">
@@ -904,7 +904,7 @@ function EventPane({
                       value={fmtN(event.statusValue * 100)}
                       onChange={(e) => {
                         const pct = parseFloat(e.target.value);
-                        if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
+                        if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
                       }}
                     />
                     <span className="edit-input-unit">%</span>
@@ -918,7 +918,7 @@ function EventPane({
                     type="checkbox"
                     checked={!!event.isForced}
                     disabled={isAutoReaction || readOnly}
-                    onChange={(e) => onUpdate(event.id, { isForced: e.target.checked, forcedReaction: e.target.checked })}
+                    onChange={(e) => onUpdate(event.uid, { isForced: e.target.checked, forcedReaction: e.target.checked })}
                     style={{ accentColor: elColor }}
                   />
                   <span style={{ fontSize: 11, color: event.isForced ? '#ff5522' : 'var(--text-muted)' }}>
@@ -926,10 +926,10 @@ function EventPane({
                   </span>
                 </label>
               </div>
-              {isAutoReaction && event.inflictionStacks != null && (
+              {isAutoReaction && event.stacks != null && (
                 <div className="edit-field">
-                  <span className="edit-field-label">Infliction Stacks</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{event.inflictionStacks}</span>
+                  <span className="edit-field-label">Stacks</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{event.stacks}</span>
                 </div>
               )}
             </div>
@@ -938,18 +938,18 @@ function EventPane({
 
         {/* ── Status Properties (non-reaction status events: buffs, debuffs) ─── */}
         {isDerived && !(event.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(event.columnId)) && (
-          event.statusLevel != null || event.statusValue != null
+          event.stacks != null || event.statusValue != null
         ) && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Status Properties</span>
-            {event.statusLevel != null && (
+            {event.stacks != null && (
               <StatField
-                label="Status Level"
-                value={event.statusLevel}
+                label="Stacks"
+                value={event.stacks}
                 min={1}
                 max={4}
                 step={1}
-                onChange={(v) => onUpdate(event.id, { statusLevel: v })}
+                onChange={(v) => onUpdate(event.uid, { stacks: v })}
               />
             )}
             {event.statusValue != null && (
@@ -964,7 +964,7 @@ function EventPane({
                     value={fmtN(event.statusValue * 100)}
                     onChange={(e) => {
                       const pct = parseFloat(e.target.value);
-                      if (!isNaN(pct)) onUpdate(event.id, { statusValue: pct / 100 });
+                      if (!isNaN(pct)) onUpdate(event.uid, { statusValue: pct / 100 });
                     }}
                   />
                   <span className="edit-input-unit">%</span>
@@ -1242,7 +1242,7 @@ function EventPane({
           );
         })()}
 
-        {event.columnId === 'dash' && (
+        {event.columnId === OPERATOR_COLUMNS.INPUT && (
           <div className="edit-panel-section">
             <span className="edit-section-label">Type</span>
             <div className="edit-info-text">
@@ -1269,7 +1269,7 @@ function EventPane({
                     updatedFrames[0] = { ...updatedFrames[0], gaugeGain: gain };
                     segments[0] = { ...segments[0], frames: updatedFrames };
                   }
-                  onUpdate(event.id, {
+                  onUpdate(event.uid, {
                     enemiesHit: n,
                     gaugeGain: gain,
                     segments,
@@ -1290,7 +1290,7 @@ function EventPane({
         )}
 
         {(() => {
-          const consumptionRecord = spConsumptionHistory?.find((r) => r.eventId === event.id);
+          const consumptionRecord = spConsumptionHistory?.find((r) => r.eventUid === event.uid);
           const spData = resolveSpReturn(event, slots, consumptionRecord);
           if (!spData) return null;
           const { summary: sp, spNotes } = spData;
@@ -1323,7 +1323,7 @@ function EventPane({
                         value={event.skillPointCost}
                         onChange={(e) => {
                           const val = Math.max(0, Number(e.target.value) || 0);
-                          onUpdate(event.id, { skillPointCost: val });
+                          onUpdate(event.uid, { skillPointCost: val });
                         }}
                       />
                     </div>
@@ -1376,7 +1376,7 @@ function EventPane({
                     )}
                     {seg.frames.map((f, fi) => {
                       const isSelected = selectedFrames?.some(
-                        (sf) => sf.eventId === event.id && sf.segmentIndex === si && sf.frameIndex === fi,
+                        (sf) => sf.eventUid === event.uid && sf.segmentIndex === si && sf.frameIndex === fi,
                       ) ?? false;
                       const hitDmgRow = eventDamageRows.get(`${si}-${fi}`);
                       return (
@@ -1392,7 +1392,7 @@ function EventPane({
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
-                          {verbose >= 1 && (() => {
+                          {verbose >= InfoLevel.DETAILED && (() => {
                             const absFrame = event.startFrame + segOffsetFrames + f.offsetFrame;
                             return (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
@@ -1480,7 +1480,7 @@ function EventPane({
                     )}
                     {seg.frames.map((f, fi) => {
                       const isSelected = selectedFrames?.some(
-                        (sf) => sf.eventId === event.id && sf.segmentIndex === si && sf.frameIndex === fi,
+                        (sf) => sf.eventUid === event.uid && sf.segmentIndex === si && sf.frameIndex === fi,
                       ) ?? false;
                       const hitDmgRow = eventDamageRows.get(`${si}-${fi}`);
                       return (
@@ -1496,7 +1496,7 @@ function EventPane({
                           }}
                         >
                           <span className="edit-field-label">Frame {fi + 1}</span>
-                          {verbose >= 1 && (() => {
+                          {verbose >= InfoLevel.DETAILED && (() => {
                             const absFrame = event.startFrame + editSegOffsetFrames + f.offsetFrame;
                             return (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
@@ -1506,7 +1506,7 @@ function EventPane({
                           })()}
                           <div style={TREE_LINE_2}>
                             <FrameOffsetField
-                              eventId={event.id}
+                              eventId={event.uid}
                               segmentIndex={si}
                               frameIndex={fi}
                               offsetFrame={f.offsetFrame}
@@ -1604,7 +1604,7 @@ function EventPane({
                 <div key={si} className="edit-panel-section">
                   <span className="edit-section-label">{segLabel}</span>
                   <div style={{ padding: '4px 6px' }}>
-                    {verbose >= 1 && (
+                    {verbose >= InfoLevel.DETAILED && (
                       <div className="edit-info-text" style={{ marginBottom: 2 }}>
                         <div>@ {frameToDetailLabel(segStartFrame)} — {frameToDetailLabel(segStartFrame + seg.properties.duration)}</div>
                         <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>F{segStartFrame}–F{segStartFrame + seg.properties.duration}</div>
@@ -1616,7 +1616,7 @@ function EventPane({
                       </div>
                     ) : (
                       <SegmentDurationField
-                        eventId={event.id}
+                        eventId={event.uid}
                         segmentIndex={si}
                         durationFrames={seg.properties.duration}
                         onUpdate={onUpdate}
@@ -1668,7 +1668,7 @@ function EventPane({
                     <div style={{ marginTop: 4 }}>
                       {seg.frames.map((f, fi) => {
                         const isSelected = selectedFrames?.some(
-                          (sf) => sf.eventId === event.id && sf.segmentIndex === si && sf.frameIndex === fi,
+                          (sf) => sf.eventUid === event.uid && sf.segmentIndex === si && sf.frameIndex === fi,
                         ) ?? false;
                         const hitDmgRow = eventDamageRows.get(`${si}-${fi}`);
                         return (
@@ -1683,7 +1683,7 @@ function EventPane({
                             }}
                           >
                             <span className="edit-field-label">Frame {fi + 1}</span>
-                            {verbose >= 1 && (
+                            {verbose >= InfoLevel.DETAILED && (
                               <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
                                 @ {frameToDetailLabel(segStartFrame + f.offsetFrame)} (F{segStartFrame + f.offsetFrame})
                               </div>
@@ -1695,7 +1695,7 @@ function EventPane({
                             ) : (
                               <div style={TREE_LINE_2}>
                                 <FrameOffsetField
-                                  eventId={event.id}
+                                  eventId={event.uid}
                                   segmentIndex={si}
                                   frameIndex={fi}
                                   offsetFrame={f.offsetFrame}
@@ -1725,7 +1725,7 @@ function EventPane({
                                               ffi === fi ? { ...fr, frameTypes: [newEventFrameType] } : fr,
                                             )};
                                           });
-                                          onUpdate(event.id, { segments: newSegments });
+                                          onUpdate(event.uid, { segments: newSegments });
                                         }}
                                       >
                                         <option value={EventFrameType.NORMAL}>Normal</option>
@@ -1759,7 +1759,7 @@ function EventPane({
                                               ffi === fi ? { ...fr, skillPointRecovery: val } : fr,
                                             )};
                                           });
-                                          onUpdate(event.id, { segments: newSegments });
+                                          onUpdate(event.uid, { segments: newSegments });
                                         }}
                                       />
                                     </div>
@@ -1777,7 +1777,7 @@ function EventPane({
                                               ffi === fi ? { ...fr, stagger: val } : fr,
                                             )};
                                           });
-                                          onUpdate(event.id, { segments: newSegments });
+                                          onUpdate(event.uid, { segments: newSegments });
                                         }}
                                       />
                                     </div>
@@ -1803,7 +1803,7 @@ function EventPane({
                                               ffi === fi ? { ...fr, stagger: val } : fr,
                                             )};
                                           });
-                                          onUpdate(event.id, { segments: newSegments });
+                                          onUpdate(event.uid, { segments: newSegments });
                                         }}
                                       />
                                     </div>
@@ -1901,7 +1901,7 @@ function EventPane({
               {event.segments.length > 1 && dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
             </div>
           </div>
-        ) : event.columnId === 'dash' ? (
+        ) : event.columnId === OPERATOR_COLUMNS.INPUT ? (
           <div className="edit-panel-section">
             <span className="edit-section-label">Duration</span>
             <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
@@ -1959,7 +1959,7 @@ function EventPane({
               SAVE AS CUSTOM
             </button>
           )}
-          <button className="btn-delete-event" onClick={() => onRemove(event.id)}>
+          <button className="btn-delete-event" onClick={() => onRemove(event.uid)}>
             REMOVE EVENT
           </button>
         </div>
@@ -1989,7 +1989,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       {/* Event-level */}
       <div style={{ marginBottom: 6 }}>
         <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>Event</div>
-        <div>id: {event.id}</div>
+        <div>id: {event.uid}</div>
         <div>startFrame: {event.startFrame} ({framesToSeconds(event.startFrame)}s, f{event.startFrame % 120})</div>
         <div>columnId: {event.columnId}</div>
         {getAnimationDuration(event) > 0 && <div>animationDuration: {fmt(getAnimationDuration(event))}</div>}
@@ -2010,7 +2010,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
       {/* Time-stop region */}
       {getAnimationDuration(event) > 0 && (
         event.columnId === SKILL_COLUMNS.ULTIMATE || event.columnId === SKILL_COLUMNS.COMBO ||
-        (event.columnId === 'dash' && event.isPerfectDodge)
+        (event.columnId === OPERATOR_COLUMNS.INPUT && event.isPerfectDodge)
       ) && (() => {
         const rawStart = event.startFrame;
         const rawAnimDur = getAnimationDuration(event);
@@ -2116,21 +2116,21 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
 
       {/* Controller Objects — tree view */}
       {(rawEvents || allProcessedEvents) && (() => {
-        const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.id)) : null;
+        const rawIds = rawEvents ? new Set(rawEvents.map((ev) => ev.uid)) : null;
         const allEvents = allProcessedEvents ?? [];
-        const derivedIds = new Set(allEvents.filter((ev) => rawIds ? !rawIds.has(ev.id) : !!ev.sourceOwnerId).map((ev) => ev.id));
-        const rawList = allEvents.filter((ev) => !derivedIds.has(ev.id));
-        const derivedList = allEvents.filter((ev) => derivedIds.has(ev.id));
+        const derivedIds = new Set(allEvents.filter((ev) => rawIds ? !rawIds.has(ev.uid) : !!ev.sourceOwnerId).map((ev) => ev.uid));
+        const rawList = allEvents.filter((ev) => !derivedIds.has(ev.uid));
+        const derivedList = allEvents.filter((ev) => derivedIds.has(ev.uid));
 
         // Build parent→children map: a derived event's parent is the longest
         // raw/derived event ID that is a prefix of its own ID.
-        const allIds = allEvents.map((ev) => ev.id).sort((a, b) => b.length - a.length);
+        const allIds = allEvents.map((ev) => ev.uid).sort((a, b) => b.length - a.length);
         const childrenMap = new Map<string, TimelineEvent[]>();
         const hasParent = new Set<string>();
         for (const dev of derivedList) {
           let parentId: string | null = null;
           for (const cid of allIds) {
-            if (cid !== dev.id && dev.id.startsWith(cid + '-')) {
+            if (cid !== dev.uid && dev.uid.startsWith(cid + '-')) {
               parentId = cid;
               break; // longest prefix first due to sort
             }
@@ -2139,20 +2139,20 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
             const children = childrenMap.get(parentId) ?? [];
             children.push(dev);
             childrenMap.set(parentId, children);
-            hasParent.add(dev.id);
+            hasParent.add(dev.uid);
           }
         }
 
         // Render an event row with depth indicators
         const renderRow = (ev: TimelineEvent, depth: number) => {
-          const isRaw = !derivedIds.has(ev.id);
+          const isRaw = !derivedIds.has(ev.uid);
           const pipes = '│'.repeat(depth);
           const prefix = depth > 0 ? pipes + ' ' : '';
           const color = isRaw ? '#88cc44' : '#dd8844';
           const label = COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? STATUS_LABELS[ev.name as StatusType] ?? ev.name;
-          const children = childrenMap.get(ev.id) ?? [];
+          const children = childrenMap.get(ev.uid) ?? [];
           return (
-            <div key={ev.id}>
+            <div key={ev.uid}>
               <div style={{ marginBottom: 1, fontFamily: 'var(--font-mono)', fontSize: 11 }}>
                 <span style={{ color: 'var(--text-muted)', whiteSpace: 'pre' }}>{prefix}</span>
                 <span style={{ color }}>{ev.ownerId}:{ev.columnId}</span>
@@ -2167,7 +2167,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
         };
 
         // Orphaned derived events (no parent found via ID prefix)
-        const orphanDerived = derivedList.filter((ev) => !hasParent.has(ev.id));
+        const orphanDerived = derivedList.filter((ev) => !hasParent.has(ev.uid));
 
         return (
           <div style={{ marginTop: 6 }}>
@@ -2202,8 +2202,8 @@ function PipelineTimeline() {
   const entries: Entry[] = [];
 
   for (const s of stops) {
-    const source = registered.find(e => e.id === s.eventId);
-    const label = source ? `${source.columnId}` : s.eventId;
+    const source = registered.find(e => e.uid === s.eventUid);
+    const label = source ? `${source.columnId}` : s.eventUid;
     entries.push({
       frame: s.startFrame,
       type: 'TIME_STOP',
@@ -2218,7 +2218,7 @@ function PipelineTimeline() {
       frame: cs.startFrame,
       type: 'COMBO_CHAIN',
       label: `⛓ combo`,
-      detail: `${cs.id} animDur=${cs.animDur}f`,
+      detail: `${cs.uid} animDur=${cs.animDur}f`,
       color: '#cc8844',
     });
   }
@@ -2237,7 +2237,7 @@ function PipelineTimeline() {
       frame: ev.startFrame,
       type: 'QUEUE',
       label: ev.columnId,
-      detail: `${ev.id} [${fmt(eventDuration(ev))}]${ev.eventStatus ? ` (${ev.eventStatus})` : ''}`,
+      detail: `${ev.uid} [${fmt(eventDuration(ev))}]${ev.eventStatus ? ` (${ev.eventStatus})` : ''}`,
       color: ev.eventStatus === EventStatusType.CONSUMED ? '#666' : '#dd8844',
     });
   }
@@ -2257,7 +2257,7 @@ function PipelineTimeline() {
           {stops.map((s, i) => (
             <div key={i} style={{ fontSize: 10 }}>
               {fmtRange(s.startFrame, s.durationFrames)}
-              <span style={{ color: 'var(--text-muted)' }}> {s.eventId}</span>
+              <span style={{ color: 'var(--text-muted)' }}> {s.eventUid}</span>
             </div>
           ))}
         </div>
@@ -2270,7 +2270,7 @@ function PipelineTimeline() {
           {comboStops.map((cs, i) => (
             <div key={i} style={{ fontSize: 10 }}>
               @{fmt(cs.startFrame)} animDur={cs.animDur}f
-              <span style={{ color: 'var(--text-muted)' }}> {cs.id}</span>
+              <span style={{ color: 'var(--text-muted)' }}> {cs.uid}</span>
             </div>
           ))}
         </div>

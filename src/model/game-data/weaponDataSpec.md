@@ -90,7 +90,7 @@ Named skill level entries split stats into **permanent** (at level root) and **c
 - **Permanent stats**: Stats that are always active. Mapped to `StatType` keys at the level root.
 - **Conditional stats**: Stats triggered by a condition. Each entry has:
   - `triggerConditions`: Array of `TriggerConditionType` enum values
-  - `triggerSources`: Array of `TargetType` enum values — who receives the buff (e.g., `["SELF"]`, `["SELF", "OTHER_OPERATORS"]`)
+  - `triggerSources`: Array of `DslTarget` objects — who receives the buff (e.g., `[{ determiner: "THIS", noun: "OPERATOR" }]`, `[{ determiner: "THIS", noun: "OPERATOR" }, { determiner: "ALL_OTHER", noun: "OPERATOR" }]`)
   - `duration`: Duration struct `{ value, unit: "SECOND" }`
   - `maxStacks`: Optional max stacks for the effect
   - Stat key-value pairs (raw API keys or mapped `StatType` keys)
@@ -129,7 +129,7 @@ Stat boost skills use generic names without a weapon prefix (e.g., `ATTACK_BOOST
 | `WeaponSkillType`        | `src/consts/enums.ts`         |
 | `StatType`               | `src/model/enums/stats.ts`    |
 | `TriggerConditionType`   | `src/consts/enums.ts`         |
-| `TargetType`             | `src/consts/enums.ts`         |
+| `DslTarget`              | `src/dsl/semantics.ts`        |
 | `DataSourceType`         | `src/consts/enums.ts`         |
 
 ## Data Sources

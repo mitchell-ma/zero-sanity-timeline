@@ -117,7 +117,7 @@ Potential `skillParameterModifier.skillType` values also use unprefixed IDs.
 
 See `src/model/game-data/operatorDataSpec.md` for the full schema. Key structures:
 
-- **Duration**: `{ "value": 2.2, "unit": "SECOND" }` (`DurationUnit` enum)
+- **Duration**: `{ "value": 2.2, "unit": "SECOND" }` (`UnitType` enum)
 - **Resource interactions**: `{ "resourceType": "SKILL_POINT", "interactionType": "RECOVER", "value": 20, "target": "SELF" }`
 - **Status interactions**: `{ "interactionType": "APPLY", "statusType": "HEAT", "stacks": 1, "target": "ENEMY" }`
 - **Animation**: `{ "duration": { ... }, "timeInteractionType": "TIME_STOP" }`

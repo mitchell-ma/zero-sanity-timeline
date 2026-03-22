@@ -7,7 +7,7 @@
  * Reaction type is determined by the incoming element's mapping
  * (INFLICTION_TO_REACTION from channels).
  *
- * Status level = min(active other-element infliction count, 2).
+ * Stacks = total consumed infliction count (active other + incoming).
  * All inflictions (incoming + active same/other element) are consumed.
  */
 import type { TimelineEvent } from '../../consts/viewTypes';
@@ -40,7 +40,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Walk through inflictions in chronological order
   for (let i = 0; i < inflictions.length; i++) {
     const incoming = inflictions[i];
-    if (removedIds.has(incoming.id)) continue;
+    if (removedIds.has(incoming.uid)) continue;
     // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
     if (incoming.eventStatus === EventStatusType.CONSUMED) continue;
 
@@ -48,13 +48,13 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
     const activeOther: TimelineEvent[] = [];
     for (let j = 0; j < i; j++) {
       const prev = inflictions[j];
-      if (removedIds.has(prev.id)) continue;
+      if (removedIds.has(prev.uid)) continue;
       if (prev.columnId === incoming.columnId) continue;
       // Skip inflictions already consumed by absorption — they shouldn't trigger reactions
       if (prev.eventStatus === EventStatusType.CONSUMED) continue;
 
       // Use clamped end if already clamped by a prior reaction
-      const clamp = clampMap.get(prev.id);
+      const clamp = clampMap.get(prev.uid);
       const endFrame = clamp !== undefined
         ? clamp.frame
         : eventEndFrame(prev);
@@ -66,11 +66,10 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
 
     if (activeOther.length > 0) {
       // Generate reaction event.
-      // Status level = number of consumed other-element inflictions, capped at 2.
       const reactionColumnId = INFLICTION_TO_REACTION[incoming.columnId];
-      const statusLevel = Math.min(activeOther.length, 2);
       generatedReactions.push({
-        id: `${incoming.id}-reaction`,
+        uid: `${incoming.uid}-reaction`,
+        id: reactionColumnId,
         name: reactionColumnId,
         ownerId: ENEMY_OWNER_ID,
         columnId: reactionColumnId,
@@ -78,28 +77,27 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         segments: durationSegment(REACTION_DURATION),
         sourceOwnerId: incoming.sourceOwnerId,
         sourceSkillName: incoming.sourceSkillName,
-        statusLevel,
-        inflictionStacks: activeOther.length + 1,
+        stacks: activeOther.length + 1,
       });
 
       // Remove the triggering infliction
-      removedIds.add(incoming.id);
+      removedIds.add(incoming.uid);
 
       // Clamp ALL active other-element inflictions at the reaction frame
       const reactionSource: StatusSource = { ownerId: incoming.sourceOwnerId ?? ENEMY_OWNER_ID, skillName: incoming.sourceSkillName };
       for (const consumed of activeOther) {
-        clampMap.set(consumed.id, { frame: incoming.startFrame, source: reactionSource });
+        clampMap.set(consumed.uid, { frame: incoming.startFrame, source: reactionSource });
       }
 
       // Also consume any active same-element inflictions at the reaction frame
       for (let j = 0; j < i; j++) {
         const prev = inflictions[j];
-        if (removedIds.has(prev.id)) continue;
-        if (clampMap.has(prev.id)) continue; // already clamped by other-element pass
+        if (removedIds.has(prev.uid)) continue;
+        if (clampMap.has(prev.uid)) continue; // already clamped by other-element pass
         if (prev.eventStatus === EventStatusType.CONSUMED) continue;
         const endFrame = eventEndFrame(prev);
         if (endFrame > incoming.startFrame) {
-          clampMap.set(prev.id, { frame: incoming.startFrame, source: reactionSource });
+          clampMap.set(prev.uid, { frame: incoming.startFrame, source: reactionSource });
         }
       }
     }
@@ -110,9 +108,9 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
   // Build output: filter removed, clamp consumed, append generated reactions
   const result: TimelineEvent[] = [];
   for (const ev of events) {
-    if (removedIds.has(ev.id)) continue;
+    if (removedIds.has(ev.uid)) continue;
 
-    const clamp = clampMap.get(ev.id);
+    const clamp = clampMap.get(ev.uid);
     if (clamp !== undefined) {
       const available = Math.max(0, clamp.frame - ev.startFrame);
       const clampedDuration = Math.min(eventDuration(ev), available);

@@ -10,7 +10,7 @@ import { TimeDependency } from '../../consts/enums';
 import {
   TOTAL_FRAMES,
 } from '../../utils/timeline';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { OPERATOR_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 
 // ── Layout types ──────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface PhaseLayout {
 
 /** Layout data for a single event. */
 export interface EventLayout {
-  eventId: string;
+  eventUid: string;
   /** Real-time frame at which this event starts (use with frameToPx). */
   realStartFrame: number;
   /** Total real-time duration of this event (use with durationToPx). */
@@ -71,7 +71,7 @@ export interface TimeStopRegion {
 
 /** Complete layout data for the entire timeline. */
 export interface TimelineLayout {
-  /** Per-event layout, keyed by event ID. */
+  /** Per-event layout, keyed by event UID. */
   events: Map<string, EventLayout>;
   /** Time-stop overlay regions. */
   timeStopRegions: TimeStopRegion[];
@@ -84,7 +84,7 @@ export interface TimelineLayout {
 interface RawTimeStop {
   startFrame: number;
   durationFrames: number;
-  eventId: string;
+  eventUid: string;
   ownerId: string;
   sourceColumnId: string;
 }
@@ -97,12 +97,12 @@ function collectRawStops(events: TimelineEvent[]): RawTimeStop[] {
     const isTimeStop =
       ev.columnId === SKILL_COLUMNS.ULTIMATE ||
       ev.columnId === SKILL_COLUMNS.COMBO ||
-      (ev.columnId === 'dash' && ev.isPerfectDodge);
+      (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge);
     if (!isTimeStop) continue;
     stops.push({
       startFrame: ev.startFrame,
       durationFrames: anim,
-      eventId: ev.id,
+      eventUid: ev.uid,
       ownerId: ev.ownerId,
       sourceColumnId: ev.columnId,
     });
@@ -150,7 +150,7 @@ function isTimeStopEvent(ev: TimelineEvent): boolean {
   const anim = getAnimationDuration(ev);
   if (anim <= 0) return false;
   return ev.columnId === SKILL_COLUMNS.ULTIMATE || ev.columnId === SKILL_COLUMNS.COMBO ||
-    (ev.columnId === 'dash' && !!ev.isPerfectDodge);
+    (ev.columnId === OPERATOR_COLUMNS.INPUT && !!ev.isPerfectDodge);
 }
 
 /**
@@ -228,7 +228,7 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
 
     // Foreign stops = all stops except this event's own
     const foreignStops = isOwn
-      ? allStops.filter((s) => s.eventId !== ev.id)
+      ? allStops.filter((s) => s.eventUid !== ev.uid)
       : allStops;
 
     // In real-time model, startFrame is already real-time — no conversion needed.
@@ -271,8 +271,8 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
         ev.startFrame, maxEndFrame, animDur, isOwn, foreignStops,
       );
 
-      layoutMap.set(ev.id, {
-        eventId: ev.id,
+      layoutMap.set(ev.uid, {
+        eventUid: ev.uid,
         realStartFrame: realStart,
         realTotalDuration: totalRealDur,
         segments,
@@ -329,8 +329,8 @@ export function buildTimelineLayout(events: TimelineEvent[]): TimelineLayout {
         });
       }
 
-      layoutMap.set(ev.id, {
-        eventId: ev.id,
+      layoutMap.set(ev.uid, {
+        eventUid: ev.uid,
         realStartFrame: realStart,
         realTotalDuration: realActivation + realActive + realCooldown,
         phases: {

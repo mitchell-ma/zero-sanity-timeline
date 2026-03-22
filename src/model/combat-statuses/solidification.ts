@@ -25,25 +25,25 @@ const SHATTER_DAMAGE: Readonly<Record<StatusLevel, number>> = {
 
 export class Solidification extends ArtsReaction {
   constructor(params: {
-    statusLevel: StatusLevel;
+    stacks: StatusLevel;
     isForced?: boolean;
   }) {
     super({
       statusType: StatusType.SOLIDIFICATION,
-      statusLevel: params.statusLevel,
-      maxStatusLevel: 4,
+      stacks: params.stacks,
+      maxStacks: 4,
       element: ElementType.CRYO,
       isForced: params.isForced ?? false,
-      durationSeconds: DURATION_SECONDS[params.statusLevel],
+      durationSeconds: DURATION_SECONDS[params.stacks],
     });
   }
 
   getInitialDamage(): number {
     if (this.isForced) return 0;
-    return INITIAL_DAMAGE[this.statusLevel];
+    return INITIAL_DAMAGE[this.stacks];
   }
 
   getShatterDamage(): number {
-    return SHATTER_DAMAGE[this.statusLevel];
+    return SHATTER_DAMAGE[this.stacks];
   }
 }

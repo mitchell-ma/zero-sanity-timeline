@@ -11,7 +11,7 @@ import { EventStatusType } from '../../consts/enums';
 export class MicroColumnController {
   /**
    * Slot assignment for reuseExpiredSlots columns.
-   * Maps eventId → assigned micro-column index.
+   * Maps eventUid → assigned micro-column index.
    * Consumed events are excluded from active count.
    */
   static greedySlotAssignments(
@@ -32,14 +32,14 @@ export class MicroColumnController {
       for (const ev of sorted) {
         let activeCount = 0;
         for (const other of sorted) {
-          if (other.id === ev.id) continue;
+          if (other.uid === ev.uid) continue;
           if (other.eventStatus === EventStatusType.CONSUMED) continue;
           const otherEnd = eventEndFrame(other);
           if (other.startFrame <= ev.startFrame && otherEnd > ev.startFrame) {
             activeCount++;
           }
         }
-        assignments.set(ev.id, Math.min(activeCount, microCount - 1));
+        assignments.set(ev.uid, Math.min(activeCount, microCount - 1));
       }
     }
     return assignments;
@@ -62,7 +62,7 @@ export class MicroColumnController {
     // Collect distinct types that overlap with this event
     const overlappingTypes = new Set<string>([ev.columnId]);
     for (const other of colEvents) {
-      if (other.id === ev.id) continue;
+      if (other.uid === ev.uid) continue;
       const otherEnd = eventEndFrame(other);
       if (other.startFrame < evEnd && otherEnd > ev.startFrame) {
         overlappingTypes.add(other.columnId);
@@ -84,7 +84,7 @@ export class MicroColumnController {
 
   /**
    * Compute monotonic drag bounds for events in requiresMonotonicOrder columns.
-   * Returns a map of eventId → { min, max } startFrame bounds.
+   * Returns a map of eventUid → { min, max } startFrame bounds.
    */
   static computeMonotonicBounds(
     draggedIds: string[],
@@ -98,7 +98,7 @@ export class MicroColumnController {
       (c): c is MiniTimeline => c.type === 'mini-timeline' && !!c.requiresMonotonicOrder,
     );
     for (const eid of draggedIds) {
-      const ev = events.find((e) => e.id === eid);
+      const ev = events.find((e) => e.uid === eid);
       if (!ev) continue;
       const col = monotonicCols.find((c) => {
         if (c.ownerId !== ev.ownerId) return false;
@@ -111,19 +111,19 @@ export class MicroColumnController {
         e.ownerId === col.ownerId &&
         (matchSet ? matchSet.has(e.columnId) : e.columnId === col.columnId),
       );
-      const idx = allInCol.findIndex((e) => e.id === eid);
+      const idx = allInCol.findIndex((e) => e.uid === eid);
       if (idx < 0) continue;
       const orig = ev.startFrame;
       let min = 0;
       let max = totalFrames - 1;
       for (let i = idx - 1; i >= 0; i--) {
-        if (draggedSet.has(allInCol[i].id)) continue;
+        if (draggedSet.has(allInCol[i].uid)) continue;
         if (allInCol[i].startFrame === orig) continue;
         min = allInCol[i].startFrame;
         break;
       }
       for (let i = idx + 1; i < allInCol.length; i++) {
-        if (draggedSet.has(allInCol[i].id)) continue;
+        if (draggedSet.has(allInCol[i].uid)) continue;
         if (allInCol[i].startFrame === orig) continue;
         max = allInCol[i].startFrame;
         break;
@@ -180,7 +180,7 @@ export class MicroColumnController {
 
   /**
    * Compute pixel positions for all events in micro-column layouts.
-   * Returns a map of eventId → { left, right, color } in absolute pixels.
+   * Returns a map of eventUid → { left, right, color } in absolute pixels.
    */
   static computeMicroColumnPixelPositions(
     events: TimelineEvent[],
@@ -204,11 +204,11 @@ export class MicroColumnController {
             (matchSet ? matchSet.has(ev.columnId) : ev.columnId === col.columnId),
         ).sort((a, b) => a.startFrame - b.startFrame);
         colEvents.forEach((ev, i) => {
-          const microIdx = greedySlots.get(ev.id) ?? Math.min(i, microCount - 1);
+          const microIdx = greedySlots.get(ev.uid) ?? Math.min(i, microCount - 1);
           const mcMatch = matchSet
             ? col.microColumns!.find((mc) => mc.id === ev.columnId)
             : undefined;
-          positions.set(ev.id, {
+          positions.set(ev.uid, {
             left: colPos.left + microIdx * microW,
             right: colPos.left + (microIdx + 1) * microW,
             color: mcMatch?.color ?? col.microColumns![microIdx].color,
@@ -233,42 +233,16 @@ export class MicroColumnController {
           const ob = typeOrder.get(b) ?? 999;
           return oa - ob || a.localeCompare(b);
         });
-        // Compute per-type widths, respecting maxWidth constraints
-        const typeWidths: number[] = [];
-        let cappedTotal = 0;
-        let uncappedCount = 0;
-        for (const t of sortedTypes) {
-          const mc = mcById.get(t);
-          if (mc?.maxWidth != null) {
-            cappedTotal += mc.maxWidth;
-            typeWidths.push(mc.maxWidth);
-          } else {
-            uncappedCount++;
-            typeWidths.push(0); // placeholder
-          }
-        }
-        const remainingWidth = Math.max(0, colWidth - cappedTotal);
-        const uncappedW = uncappedCount > 0 ? remainingWidth / uncappedCount : 0;
-        for (let i = 0; i < typeWidths.length; i++) {
-          if (typeWidths[i] === 0) typeWidths[i] = uncappedW;
-        }
-
-        // Build cumulative left offsets
-        const typeLefts: number[] = [];
-        let cumLeft = 0;
-        for (const w of typeWidths) {
-          typeLefts.push(cumLeft);
-          cumLeft += w;
-        }
-
         const typeIndex = new Map<string, number>();
         sortedTypes.forEach((t, i) => typeIndex.set(t, i));
+        const totalTypes = sortedTypes.length || 1;
+        const dynW = colWidth / totalTypes;
 
         for (const ev of colEvents) {
           const idx = typeIndex.get(ev.columnId) ?? 0;
-          positions.set(ev.id, {
-            left: colPos.left + typeLefts[idx],
-            right: colPos.left + typeLefts[idx] + typeWidths[idx],
+          positions.set(ev.uid, {
+            left: colPos.left + idx * dynW,
+            right: colPos.left + (idx + 1) * dynW,
             color: mcById.get(ev.columnId)?.color ?? col.color,
           });
         }
@@ -279,7 +253,7 @@ export class MicroColumnController {
             (ev) => ev.ownerId === col.ownerId && ev.columnId === mc.id,
           );
           mcEvents.forEach((ev) => {
-            positions.set(ev.id, {
+            positions.set(ev.uid, {
               left: colPos.left + mcIdx * microW,
               right: colPos.left + (mcIdx + 1) * microW,
               color: mc.color,

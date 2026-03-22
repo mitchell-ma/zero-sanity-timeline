@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { t } from '../locales/locale';
 
 interface ConfirmModalProps {
   open: boolean;
@@ -8,7 +9,7 @@ interface ConfirmModalProps {
   onClose: () => void;
 }
 
-export default function ConfirmModal({ open, message, confirmLabel = 'Confirm', onConfirm, onClose }: ConfirmModalProps) {
+export default function ConfirmModal({ open, message, confirmLabel, onConfirm, onClose }: ConfirmModalProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -25,8 +26,8 @@ export default function ConfirmModal({ open, message, confirmLabel = 'Confirm', 
       <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="confirm-message">{message}</div>
         <div className="confirm-actions">
-          <button className="confirm-btn confirm-btn--cancel" onClick={onClose}>Cancel</button>
-          <button className="confirm-btn confirm-btn--danger" onClick={onConfirm}>{confirmLabel}</button>
+          <button className="confirm-btn confirm-btn--cancel" onClick={onClose}>{t('confirm.cancel')}</button>
+          <button className="confirm-btn confirm-btn--danger" onClick={onConfirm}>{confirmLabel ?? t('confirm.confirm')}</button>
         </div>
       </div>
     </div>

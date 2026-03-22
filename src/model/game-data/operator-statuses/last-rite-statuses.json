@@ -20,14 +20,16 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
-                "values": [
+                "value": [
                   0.02,
                   0.04
                 ]
               },
               "duration": {
-                "verb": "IS",
-                "value": 15,
+                "value": {
+                  "verb": "IS",
+                  "value": 15
+                },
                 "unit": "SECOND"
               },
               "scalingType": {

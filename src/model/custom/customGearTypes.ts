@@ -3,7 +3,7 @@
  * See docs/customizationSpec.md § 3.
  */
 import { GearCategory } from '../../consts/enums';
-import type { Interaction } from '../../consts/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import type { StatType } from '../enums';
 
 /** A user-created custom gear set (3 pieces + optional set effect). */

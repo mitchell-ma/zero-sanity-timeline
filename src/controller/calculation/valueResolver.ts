@@ -7,7 +7,7 @@
 import {
   ValueNode, ValueOperator,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
-} from '../../consts/semantics';
+} from '../../dsl/semantics';
 
 // ── Resolution context ──────────────────────────────────────────────────────
 
@@ -80,7 +80,7 @@ export function resolveValueNode(node: ValueNode, ctx: ValueResolutionContext): 
   }
 
   if (isValueStat(node)) {
-    return ctx.stats[node.object] ?? 0;
+    return ctx.stats[node.objectId] ?? 0;
   }
 
   if (isValueExpression(node)) {

@@ -1,12 +1,14 @@
 /**
- * SkillPointController — owns the SP resource timeline, subtimeline, and all
- * sync/query logic for skill point tracking.
+ * SkillPointController — persistent singleton that receives SP cost and
+ * recovery notifications incrementally from DerivedEventController.
  *
- * Extracts SP cost and return events from processed skill events, feeds them
- * into the underlying SkillPointTimeline, and computes per-slot insufficiency
- * zones for battle skill columns.
+ * Pure receiver: never scans the event array. DerivedEventController calls
+ * addCost / addRecovery per event or frame. After all events are processed,
+ * finalize() sorts accumulated events, feeds them to the SP subtimeline,
+ * computes insufficiency zones, and notifies UltimateEnergyController about
+ * natural SP consumption per battle skill.
  */
-import { TimelineEvent, getAnimationDuration, durationSegment } from '../../consts/viewTypes';
+import { TimelineEvent, durationSegment } from '../../consts/viewTypes';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 import { ENEMY_OWNER_ID } from '../../model/channels';
 import { absoluteFrame, foreignStopsFor } from '../timeline/processTimeStop';
@@ -15,8 +17,8 @@ import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { Subtimeline } from '../timeline/subtimeline';
 import { SkillPointTimeline, ResourceZone, SkillPointConsumptionHistory } from '../timeline/skillPointTimeline';
 import { ResourceGraphListener, ResourcePoint } from '../timeline/resourceTimeline';
-import { collectTimeStopRanges } from '../timeline/processTimeStop';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from './commonSlotController';
+import type { UltimateEnergyController } from '../timeline/ultimateEnergyController';
 
 export type { ResourceZone, SkillPointConsumptionHistory };
 
@@ -26,6 +28,18 @@ export class SkillPointController {
 
   /** Per-slot SP insufficiency zones, keyed by `slotId:battle`. */
   insufficiencyZones: Map<string, ResourceZone[]> = new Map();
+
+  /** Accumulated SP events (costs and recoveries) during pipeline. */
+  private pendingSpEvents: TimelineEvent[] = [];
+
+  /** Map of battle skill event UID → { frame, ownerId } for UE gauge gain placement. */
+  private battleSkillGainFrames = new Map<string, { frame: number; slotId: string }>();
+
+  /** Per-slot SP cost tracking (for insufficiency zones). */
+  private slotSpCosts = new Map<string, number>();
+
+  /** Reference to UE controller for natural SP consumption notification. */
+  private ueController: UltimateEnergyController | null = null;
 
   constructor() {
     this.subtimeline = new Subtimeline(COMMON_OWNER_ID, COMMON_COLUMN_IDS.SKILL_POINTS);
@@ -50,90 +64,123 @@ export class SkillPointController {
     this.timeline.updateConfig(config);
   }
 
-  // ── Event sync ─────────────────────────────────────────────────────────
+  setUltimateEnergyController(ue: UltimateEnergyController) {
+    this.ueController = ue;
+  }
+
+  // ── Accumulation methods (called by DerivedEventController) ─────────────
 
   /**
-   * Build SP cost and return events from processed battle skill events,
-   * merge with derived SP recovery events, and feed them to the SP subtimeline.
-   * Then compute per-slot insufficiency zones for battle skill columns.
-   *
-   * Extracts time-stops from processed events and applies them to the
-   * SP timeline so regen pauses during animation freezes.
-   *
-   * @param processedEvents All processed timeline events.
-   * @param slotSpCosts Map of slotId → SP cost threshold for that slot's battle skill.
+   * Called per battle skill event with an SP cost.
+   * @param eventUid Original event UID (for UE natural SP tracking).
+   * @param frame The frame at which SP is consumed.
+   * @param amount SP cost amount.
+   * @param ownerId Slot that owns the battle skill.
+   * @param gaugeGainFrame Frame where UE gauge gain should be placed for this BS.
    */
-  sync(
-    processedEvents: ReadonlyArray<TimelineEvent>,
-    slotSpCosts?: ReadonlyMap<string, number>,
-  ): void {
-    // Extract and apply time-stops from processed events
-    this.timeline.setTimeStops(collectTimeStopRanges(processedEvents));
-
-    // Collect derived SP recovery events (from processInflictions)
-    const spRecovery = processedEvents.filter(
-      (ev) => ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS,
-    );
-
-    const battleCosts: TimelineEvent[] = [];
-    const spReturns: TimelineEvent[] = [];
-
-    for (const ev of processedEvents) {
-      if (ev.columnId !== SKILL_COLUMNS.BATTLE || !ev.skillPointCost) continue;
-
-      battleCosts.push({
-        id: `${ev.id}-sp`,
-        name: 'sp-cost',
-        ownerId: COMMON_OWNER_ID,
-        columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-        startFrame: ev.startFrame,
-        segments: durationSegment(ev.skillPointCost),
-      });
-
-      if (ev.segments) {
-        const animOffset = getAnimationDuration(ev);
-        let segOffset = 0;
-        for (const seg of ev.segments) {
-          if (seg.frames) {
-            for (const f of seg.frames) {
-              if (f.skillPointRecovery && f.skillPointRecovery > 0) {
-                const frame = f.absoluteFrame ?? (ev.startFrame + animOffset + segOffset + f.offsetFrame);
-                spReturns.push({
-                  id: `${ev.id}-sp-return-${frame}`,
-                  name: 'sp-return',
-                  ownerId: COMMON_OWNER_ID,
-                  columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
-                  startFrame: frame,
-                  segments: durationSegment(f.skillPointRecovery),
-                });
-              }
-            }
-          }
-          segOffset += seg.properties.duration;
-        }
-      }
-    }
-
-    const allSpEvents = [...spRecovery, ...battleCosts, ...spReturns]
-      .sort((a, b) => a.startFrame - b.startFrame || (a.name === 'sp-cost' ? -1 : 1));
-    this.subtimeline.setEvents(allSpEvents);
-
-    // Compute per-slot SP insufficiency zones for battle skill columns
-    this.insufficiencyZones = new Map();
-    if (slotSpCosts) {
-      slotSpCosts.forEach((cost, slotId) => {
-        const zones = this.timeline.insufficiencyZones(cost);
-        if (zones.length > 0) {
-          this.insufficiencyZones.set(`${slotId}:${SKILL_COLUMNS.BATTLE}`, zones);
-        }
-      });
+  addCost(eventUid: string, frame: number, amount: number, ownerId: string, gaugeGainFrame: number) {
+    this.pendingSpEvents.push({
+      uid: `${eventUid}-sp`,
+      id: 'sp-cost',
+      name: 'sp-cost',
+      ownerId: COMMON_OWNER_ID,
+      columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+      startFrame: frame,
+      segments: durationSegment(amount),
+    });
+    this.battleSkillGainFrames.set(eventUid, { frame: gaugeGainFrame, slotId: ownerId });
+    // Track per-slot SP cost for insufficiency zones
+    if (!this.slotSpCosts.has(ownerId)) {
+      this.slotSpCosts.set(ownerId, amount);
     }
   }
 
-  // ── Cleanup ────────────────────────────────────────────────────────────
+  /**
+   * Called per frame or event that recovers/returns SP.
+   * @param frame Absolute frame of the recovery.
+   * @param amount SP amount recovered (positive).
+   * @param sourceOwnerId Owner of the skill that produced this recovery.
+   * @param sourceSkillName Skill name that produced this recovery.
+   */
+  addRecovery(frame: number, amount: number, sourceOwnerId: string, sourceSkillName: string) {
+    if (amount <= 0) return;
+    this.pendingSpEvents.push({
+      uid: `sp-return-${frame}-${this.pendingSpEvents.length}`,
+      id: 'sp-return',
+      name: 'sp-return',
+      ownerId: COMMON_OWNER_ID,
+      columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
+      startFrame: frame,
+      segments: [{ properties: { duration: amount } }],
+      sourceOwnerId,
+      sourceSkillName,
+    });
+  }
+
+  /**
+   * Called per SP recovery event (already derived, e.g. from deriveSPRecoveryEvents).
+   */
+  addSpRecoveryEvent(ev: TimelineEvent) {
+    this.pendingSpEvents.push(ev);
+  }
+
+  // ── Clear (called at pipeline start) ────────────────────────────────────
+
+  /**
+   * Reset accumulated state for a new pipeline run.
+   * Does NOT clear the subtimeline/graph — that happens in finalize.
+   */
+  clearPending() {
+    this.pendingSpEvents = [];
+    this.battleSkillGainFrames = new Map();
+    this.slotSpCosts = new Map();
+  }
+
+  // ── Finalize ────────────────────────────────────────────────────────────
+
+  /**
+   * Sort accumulated SP events, feed to subtimeline, compute insufficiency
+   * zones, and notify UE controller about natural SP consumption.
+   *
+   * @param stops Time-stop regions for regen pausing.
+   * @param slotSpCosts Map of slotId → SP cost threshold for insufficiency zones.
+   */
+  finalize(
+    stops: readonly TimeStopRegion[],
+  ) {
+    // Apply time-stops for regen pausing (convert TimeStopRegion → TimeStopRange)
+    this.timeline.setTimeStops(
+      stops.map(s => ({ startFrame: s.startFrame, endFrame: s.startFrame + s.durationFrames })),
+    );
+
+    // Sort: costs before returns at same frame
+    this.pendingSpEvents.sort(
+      (a, b) => a.startFrame - b.startFrame || (a.name === 'sp-cost' ? -1 : 1),
+    );
+    this.subtimeline.setEvents(this.pendingSpEvents);
+
+    // Compute per-slot SP insufficiency zones using tracked costs
+    this.insufficiencyZones = new Map();
+    this.slotSpCosts.forEach((cost, slotId) => {
+      const zones = this.timeline.insufficiencyZones(cost);
+      if (zones.length > 0) {
+        this.insufficiencyZones.set(`${slotId}:${SKILL_COLUMNS.BATTLE}`, zones);
+      }
+    });
+
+    // Notify UE controller about natural SP consumption per battle skill
+    if (this.ueController) {
+      for (const record of this.timeline.consumptionHistory) {
+        this.ueController.onNaturalSpConsumed(record);
+      }
+    }
+  }
+
+  // ── Legacy clear / cleanup ──────────────────────────────────────────────
 
   clear(): void {
     this.subtimeline.clear();
+    this.clearPending();
   }
 
   destroy(): void {
@@ -159,7 +206,8 @@ export class SkillPointController {
             const frame = seg.frames[fi];
             if ((frame.skillPointRecovery ?? 0) > 0) {
               derived.push({
-                id: `${event.id}-sp-${si}-${fi}`,
+                uid: `${event.uid}-sp-${si}-${fi}`,
+                id: 'sp-recovery',
                 name: 'sp-recovery',
                 ownerId: COMMON_OWNER_ID,
                 columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
@@ -177,9 +225,10 @@ export class SkillPointController {
 
     // Perfect dodge dash events → SP recovery
     for (const event of events) {
-      if (event.columnId === OPERATOR_COLUMNS.DASH && event.isPerfectDodge) {
+      if (event.columnId === OPERATOR_COLUMNS.INPUT && event.isPerfectDodge) {
         derived.push({
-          id: `${event.id}-sp-dodge`,
+          uid: `${event.uid}-sp-dodge`,
+          id: 'sp-recovery',
           name: 'sp-recovery',
           ownerId: COMMON_OWNER_ID,
           columnId: COMMON_COLUMN_IDS.SKILL_POINTS,
@@ -193,5 +242,10 @@ export class SkillPointController {
 
     if (derived.length === 0) return events;
     return [...events, ...derived];
+  }
+
+  /** Get battle skill gain frames map (for UE finalize). */
+  getBattleSkillGainFrames(): ReadonlyMap<string, { frame: number; slotId: string }> {
+    return this.battleSkillGainFrames;
   }
 }

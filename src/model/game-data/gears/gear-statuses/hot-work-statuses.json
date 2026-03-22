@@ -60,9 +60,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.5
-                ]
+                "value": 0.5
               }
             },
             "toDeterminer": "THIS",
@@ -76,18 +74,16 @@
       "id": "HOT_WORK_HEAT",
       "name": "Hot Work (Heat)",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          10
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },
@@ -108,9 +104,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.5
-                ]
+                "value": 0.5
               }
             },
             "toDeterminer": "THIS",
@@ -124,18 +118,16 @@
       "id": "HOT_WORK_NATURE",
       "name": "Hot Work (Nature)",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          10
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

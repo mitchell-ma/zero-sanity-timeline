@@ -2,8 +2,8 @@
  * Shared types, constants, and configuration for the event queue pipeline.
  */
 import { TimelineEvent } from '../../consts/viewTypes';
+import type { DslTarget } from '../../dsl/semantics';
 import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
-import { getExchangeStatusConfig } from '../../model/event-frames/operatorJsonLoader';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -17,17 +17,15 @@ export const PRIORITY = {
   INFLICTION_CREATE: 10,
   CONSUME: 15,
   COMBO_RESOLVE: 16,
-  ABSORPTION_CHECK: 18,
-  EXCHANGE_CREATE: 20,
   ENGINE_TRIGGER: 22,
 } as const;
 
 export interface QueueFrame {
   frame: number;
   priority: number;
-  type: 'FRAME_EFFECT' | 'COMBO_RESOLVE' | 'INFLICTION_CREATE' | 'ABSORPTION_CHECK' | 'EXCHANGE_CREATE' | 'CONSUME' | 'ENGINE_TRIGGER';
-  /** Event ID template (for infliction entries). */
-  id?: string;
+  type: 'FRAME_EFFECT' | 'COMBO_RESOLVE' | 'INFLICTION_CREATE' | 'CONSUME' | 'ENGINE_TRIGGER';
+  /** Event UID template (for infliction entries). */
+  uid?: string;
   statusName: string;
   columnId: string;
   ownerId: string;
@@ -40,23 +38,13 @@ export interface QueueFrame {
   derivedEvent?: TimelineEvent;
   /** Stacking interaction for FRAME_EFFECT enemy statuses. */
   stackingInteraction?: string;
-  /** Direct absorption data from absorbArtsInfliction frame marker. */
-  absorptionMarker?: {
-    inflictionColumnId: string;
-    exchangeStatus: string;
-    exchangeColumnId: string;
-    maxAbsorb: number;
-    eventId: string;
-    segmentIndex: number;
-    frameIndex: number;
-  };
   /** Max inflictions to consume (for CONSUME entries targeting inflictions). */
   maxConsume?: number;
   /** Consume an active reaction and optionally apply a status (from consumeReaction frame markers). */
   consumeReaction?: {
     reactionColumnId: string;
     applyStatus?: {
-      target: string;
+      target: DslTarget;
       status: string;
       stacks: number;
       durationFrames: number;
@@ -84,10 +72,6 @@ let _consumeStatusConfig: Record<string, { columnId: string; targetOwnerId?: str
 export function getConsumeStatusConfig(): Record<string, { columnId: string; targetOwnerId?: string }> {
   if (!_consumeStatusConfig) {
     _consumeStatusConfig = {
-      // Exchange statuses — derived from JSON configs with type=EXCHANGE
-      ...Object.fromEntries(
-        Object.entries(getExchangeStatusConfig()).map(([id, info]) => [id, { columnId: info.columnId }])
-      ),
       ORIGINIUM_CRYSTAL: { columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL, targetOwnerId: ENEMY_OWNER_ID },
     };
   }

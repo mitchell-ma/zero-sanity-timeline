@@ -213,7 +213,8 @@ export class StaggerTimeline extends ResourceTimeline {
       const endFrame = this.frameAfterEffectiveFrames(crossing.frame, nodeRecoveryFrames);
       const activationDuration = endFrame - crossing.frame;
       events.push({
-        id: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
+        uid: `${idPrefix}-node-${crossing.nodeIndex}-${crossing.frame}`,
+        id: 'Node Stagger',
         name: 'Node Stagger',
         ownerId,
         columnId: nodeColumnId,
@@ -225,7 +226,8 @@ export class StaggerTimeline extends ResourceTimeline {
     for (const brk of this.cachedBreaks) {
       const duration = brk.endFrame - brk.startFrame;
       events.push({
-        id: `${idPrefix}-full-${brk.startFrame}`,
+        uid: `${idPrefix}-full-${brk.startFrame}`,
+        id: 'Full Stagger',
         name: 'Full Stagger',
         ownerId,
         columnId: fullColumnId,

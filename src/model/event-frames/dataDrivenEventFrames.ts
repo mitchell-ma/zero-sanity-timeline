@@ -1,4 +1,7 @@
-import { ElementType, FrameDependencyType, StatusType, TargetType } from "../../consts/enums";
+import { ElementType, FrameDependencyType, StatusType } from "../../consts/enums";
+import { DeterminerType, NounType } from "../../dsl/semantics";
+import type { DslTarget, ValueNode } from "../../dsl/semantics";
+import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from "../../controller/calculation/valueResolver";
 import { REACTION_COLUMNS } from "../channels";
 import {
   SkillEventFrame,
@@ -18,16 +21,15 @@ import { SkillEventSequence } from "./skillEventSequence";
 // ── JSON types (matching operator JSON DSL structure) ────────────────────────
 
 interface JsonDuration {
-  value: number;
+  value: ValueNode;
   unit: string;
 }
 
-/** WITH preposition value: a cardinality with verb determining value shape. */
+/** WITH preposition value: verb determines value shape (IS = single, VARY_BY = array by level/potential). */
 interface JsonWithValue {
   verb: string; // "IS" | "VARY_BY"
   object?: string;
   value: number | number[];
-  values?: number[];
 }
 
 /** DSL Effect: Verb-Object with optional adjective and prepositional phrases. */
@@ -83,9 +85,14 @@ interface JsonClauseCondition {
   cardinality?: number;
 }
 
+interface JsonOffset {
+  value: number;
+  unit: string;
+}
+
 interface JsonFrame {
   metadata?: { eventComponentType?: string; dataSources?: string[] };
-  properties?: { offset?: JsonDuration; dependencyTypes?: string[] };
+  properties?: { offset?: JsonOffset; dependencyTypes?: string[] };
   clause?: JsonClausePredicate[];
   damageElement?: string;
 }
@@ -135,12 +142,10 @@ function dslTargetToLegacy(toObject?: string, toDeterminer?: string): string | u
   return undefined;
 }
 
-/** Map DSL toObject to TargetType enum. */
-function dslTargetToTargetType(toObject?: string): TargetType {
-  switch (toObject) {
-    case 'ENEMY': return TargetType.ENEMY;
-    default: return TargetType.SELF;
-  }
+/** Map DSL toObject/toDeterminer to DslTarget. */
+function dslTargetToDslTarget(toObject?: string, toDeterminer?: string): DslTarget {
+  if (toObject === 'ENEMY') return { noun: NounType.ENEMY };
+  return { determiner: (toDeterminer as DeterminerType) ?? DeterminerType.THIS, noun: NounType.OPERATOR };
 }
 
 // ── DSL effects → legacy resource interaction bridging ──────────────────────
@@ -154,7 +159,7 @@ function withValue(wv?: JsonWithValue): number {
 /**
  * Find a value from a DSL effects array.
  * Maps: object→resourceType, verb→interactionType, toObject→target.
- * Reads cardinality from with.cardinality.
+ * Reads value from with.value.
  */
 function findEffectValue(
   effects: JsonEffect[] | undefined,
@@ -167,7 +172,7 @@ function findEffectValue(
     if (ef.object === object && ef.verb === verb) {
       const efTarget = dslTargetToLegacy(ef.toObject, ef.toDeterminer);
       if (target && efTarget !== target) continue;
-      return withValue(ef.with?.cardinality);
+      return withValue(ef.with?.value);
     }
   }
   return undefined;
@@ -194,7 +199,7 @@ function findConditionalGaugeGains(category: JsonSkillCategory | undefined): Rec
   const byEnemies: Record<number, number> = {};
   for (const ef of flattenClauseEffects(category)) {
     if (ef.object === 'ULTIMATE_ENERGY' && ef.verb === 'RECOVER' && ef.conditions?.enemiesHitThreshold) {
-      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.cardinality);
+      byEnemies[ef.conditions.enemiesHitThreshold] = withValue(ef.with?.value);
     }
   }
   return byEnemies;
@@ -264,8 +269,8 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
 
         switch (ef.verb) {
           case 'RECOVER':
-            if (ef.object === 'SKILL_POINT') { sp = withValue(wp?.cardinality); clauseEffects.push({ type: 'recoverSP' }); }
-            if (ef.object === 'ULTIMATE_ENERGY') gaugeGain = withValue(wp?.cardinality);
+            if (ef.object === 'SKILL_POINT') { sp = withValue(wp?.value); clauseEffects.push({ type: 'recoverSP' }); }
+            if (ef.object === 'ULTIMATE_ENERGY') gaugeGain = withValue(wp?.value);
             break;
 
           case 'APPLY':
@@ -278,14 +283,14 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               const dur = wp?.duration;
               forcedReaction = {
                 reaction: reactionName as StatusType,
-                statusLevel: withValue(wp?.statusLevel) || 1,
+                stacks: withValue(wp?.stacks) || 1,
                 ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
               };
             } else if (ef.object === 'STATUS') {
               const durVal = wp?.duration;
               const isStandardTarget = ['OPERATOR', 'ENEMY'].includes(ef.toObject ?? '');
               const status: FrameApplyStatus = {
-                target: dslTargetToTargetType(ef.toObject),
+                target: dslTargetToDslTarget(ef.toObject),
                 status: ef.objectId!,
                 stacks: withValue(wp?.stacks) || 1,
                 durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
@@ -318,7 +323,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 absorbInfliction = {
                   element: elementAdj!,
                   stacks: withValue(wp?.stacks) || 1,
-                  exchangeStatus: (ef.conversion.objectId as StatusType) ?? StatusType.MELTING_FLAME,
+                  exchangeStatus: (ef.conversion.objectId as string) ?? 'MELTING_FLAME',
                   ratio: '1:1',
                 };
               } else {
@@ -333,7 +338,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               if (ef.applyOnConsume) {
                 const aoc = ef.applyOnConsume;
                 cr.applyStatus = {
-                  target: dslTargetToTargetType(aoc.target),
+                  target: dslTargetToDslTarget(aoc.target),
                   status: aoc.status,
                   stacks: 1,
                   durationFrames: Math.round(aoc.durationSeconds * 120),
@@ -351,8 +356,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
           case 'DEAL':
             if (ef.object === 'DAMAGE') {
               const multipliers = wp?.DAMAGE_MULTIPLIER ?? wp?.value;
-              const mulArr = multipliers && Array.isArray(multipliers.values) ? multipliers.values
-                : (multipliers && Array.isArray(multipliers.value) ? multipliers.value : []);
+              const mulArr = multipliers && Array.isArray(multipliers.value) ? multipliers.value : [];
               const dd: FrameDealDamage = {
                 ...(elementAdj && { element: elementAdj }),
                 multipliers: mulArr,
@@ -417,7 +421,7 @@ export class DataDrivenSkillEventSequence extends SkillEventSequence {
 
   constructor(segment: JsonSegment) {
     super();
-    this._durationSeconds = segment.properties!.duration!.value;
+    this._durationSeconds = resolveDur(segment.properties!.duration!);
     this._frames = segment.frames.map(f => new DataDrivenSkillEventFrame(f));
     this.segmentName = segment.properties?.name;
     this.segmentType = segment.metadata?.segmentType;
@@ -441,7 +445,7 @@ export function buildSequencesFromSkillCategory(
 ): readonly DataDrivenSkillEventSequence[] {
   if (skillCategory.segments) {
     return skillCategory.segments
-      .filter(seg => seg.properties!.duration!.value > 0)
+      .filter(seg => resolveDur(seg.properties!.duration!) > 0)
       .map(seg => new DataDrivenSkillEventSequence(seg));
   }
 
@@ -483,16 +487,22 @@ export function buildSequencesFromOperatorJson(
 
 function dur(seconds: number): number { return Math.round(seconds * 120); }
 
+/** Resolve a JsonDuration's ValueNode to seconds. */
+function resolveDur(d?: JsonDuration): number {
+  if (!d) return 0;
+  return resolveValueNode(d.value, DEFAULT_VALUE_CONTEXT);
+}
+
 /** Get duration from a skill category. */
 function catDuration(cat?: JsonSkillCategory): number {
-  return cat?.properties?.duration?.value ?? 0;
+  return resolveDur(cat?.properties?.duration);
 }
 
 /** Get animation duration from a skill category's ANIMATION segment. */
 function catAnimationDur(cat?: JsonSkillCategory): number {
   if (!cat?.segments) return 0;
   const animSeg = cat.segments.find(s => s.metadata?.segmentType === 'ANIMATION');
-  return animSeg?.properties?.duration?.value ?? 0;
+  return resolveDur(animSeg?.properties?.duration);
 }
 
 export interface SkillTimings {
@@ -517,8 +527,18 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
 
   // Combo skill
   const comboSkill = skills[typeMap?.COMBO_SKILL ?? 'COMBO_SKILL'];
-  const comboDur = dur(catDuration(comboSkill));
-  const comboCd = dur(findValue(comboSkill, 'COOLDOWN', 'CONSUME') ?? 0);
+  // Duration: prefer top-level property, fall back to sum of non-cooldown segments
+  const comboTopDur = catDuration(comboSkill);
+  const comboDur = dur(comboTopDur || ((comboSkill?.segments as JsonSegment[] | undefined)
+    ?.filter(s => s.metadata?.segmentType !== 'COOLDOWN')
+    .reduce((sum, s) => sum + resolveDur(s.properties?.duration), 0) ?? 0));
+  const comboCdFromClause = findValue(comboSkill, 'COOLDOWN', 'CONSUME');
+  const comboCdSeg = (comboSkill?.segments as JsonSegment[] | undefined)
+    ?.find(s => s.metadata?.segmentType === 'COOLDOWN');
+  const comboCdFromSegment = comboCdSeg?.properties?.duration
+    ? resolveDur(comboCdSeg.properties.duration)
+    : undefined;
+  const comboCd = dur(comboCdFromClause ?? comboCdFromSegment ?? 0);
   const comboAnimDur = dur(catAnimationDur(comboSkill) || 0.5);
 
   // Ultimate — read from flat properties or derive from typed segments
@@ -534,7 +554,7 @@ export function getSkillTimings(operatorJson: Record<string, unknown>): SkillTim
     // Data-driven: derive timings from typed segments
     const segDur = (type: string) => {
       const s = ultSegs.find(seg => seg.metadata?.segmentType === type);
-      return s ? dur(s.properties?.duration?.value ?? 0) : 0;
+      return s ? dur(resolveDur(s.properties?.duration)) : 0;
     };
     ultAnimDur = segDur('ANIMATION');
     ultTotalDur = ultAnimDur + segDur('STASIS');
@@ -660,5 +680,5 @@ export function getBasicAttackDurations(operatorJson: Record<string, unknown>): 
   const basicId = typeof basicEntry === 'string' ? basicEntry : (basicEntry as Record<string, string> | undefined)?.BATK ?? 'BASIC_ATTACK';
   const basicAttack = skills?.[basicId];
   if (!basicAttack?.segments) return [];
-  return basicAttack.segments.map(seg => seg.properties!.duration!.value);
+  return basicAttack.segments.map(seg => resolveDur(seg.properties!.duration!));
 }

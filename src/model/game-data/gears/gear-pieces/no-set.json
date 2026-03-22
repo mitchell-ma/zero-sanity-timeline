@@ -12,9 +12,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  8
-                ]
+                "value": 8
               }
             }
           },
@@ -27,7 +25,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   15,
                   15,
                   15,
@@ -45,7 +43,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   10,
                   10,
                   10,
@@ -63,7 +61,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   46.3,
                   46.3,
                   46.3,
@@ -95,9 +93,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  8
-                ]
+                "value": 8
               }
             }
           },
@@ -110,7 +106,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   15,
                   15,
                   15,
@@ -128,7 +124,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   10,
                   10,
                   10,
@@ -146,7 +142,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   46.3,
                   46.3,
                   46.3,
@@ -178,9 +174,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  56
-                ]
+                "value": 56
               }
             }
           },
@@ -193,7 +187,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   115,
                   126,
                   138,
@@ -211,7 +205,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1285714286,
                   0.14142857,
                   0.15428571,
@@ -243,9 +237,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  16
-                ]
+                "value": 16
               }
             }
           },
@@ -258,7 +250,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   27,
                   27,
                   27,
@@ -276,7 +268,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   18,
                   18,
                   18,
@@ -294,7 +286,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   125.4,
                   125.4,
                   125.4,
@@ -326,9 +318,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  16
-                ]
+                "value": 16
               }
             }
           },
@@ -341,7 +331,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   27,
                   27,
                   27,
@@ -359,7 +349,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   18,
                   18,
                   18,
@@ -377,7 +367,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   125.4,
                   125.4,
                   125.4,
@@ -409,9 +399,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  22.4
-                ]
+                "value": 22.4
               }
             }
           },
@@ -424,7 +412,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   37,
                   37,
                   37,
@@ -442,7 +430,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   25,
                   25,
                   25,
@@ -460,7 +448,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   11.7,
                   11.7,
                   11.7,
@@ -492,9 +480,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  22.4
-                ]
+                "value": 22.4
               }
             }
           },
@@ -507,7 +493,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   37,
                   37,
                   37,
@@ -525,7 +511,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   25,
                   25,
                   25,
@@ -543,7 +529,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   11.7,
                   11.7,
                   11.7,
@@ -575,9 +561,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  22.4
-                ]
+                "value": 22.4
               }
             }
           },
@@ -590,7 +574,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   37,
                   37,
                   37,
@@ -608,7 +592,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   25,
                   25,
                   25,
@@ -626,7 +610,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.09,
                   0.09,
                   0.09,
@@ -658,9 +642,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  22.4
-                ]
+                "value": 22.4
               }
             }
           },
@@ -673,7 +655,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   37,
                   37,
                   37,
@@ -691,7 +673,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   25,
                   25,
                   25,
@@ -709,7 +691,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.09,
                   0.09,
                   0.09,
@@ -741,9 +723,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  40
-                ]
+                "value": 40
               }
             }
           },
@@ -756,7 +736,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   65,
                   65,
                   65,
@@ -774,7 +754,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   43,
                   43,
@@ -792,7 +772,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.039,
                   0.039,
                   0.039,
@@ -824,9 +804,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  40
-                ]
+                "value": 40
               }
             }
           },
@@ -839,7 +817,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   65,
                   65,
                   65,
@@ -857,7 +835,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   43,
                   43,
@@ -875,7 +853,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.078,
                   0.078,
                   0.078,
@@ -907,9 +885,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  56
-                ]
+                "value": 56
               }
             }
           },
@@ -922,7 +898,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   115,
                   126,
                   138,
@@ -940,7 +916,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.144,
                   0.1584,
                   0.1728,
@@ -972,9 +948,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  6
-                ]
+                "value": 6
               }
             }
           },
@@ -987,7 +961,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   11,
                   11,
                   11,
@@ -1005,7 +979,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   7,
                   7,
                   7,
@@ -1023,7 +997,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   77.2,
                   77.2,
                   77.2,
@@ -1055,9 +1029,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  6
-                ]
+                "value": 6
               }
             }
           },
@@ -1070,7 +1042,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   11,
                   11,
                   11,
@@ -1088,7 +1060,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   7,
                   7,
                   7,
@@ -1106,7 +1078,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   77.2,
                   77.2,
                   77.2,
@@ -1138,9 +1110,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  12
-                ]
+                "value": 12
               }
             }
           },
@@ -1153,7 +1123,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   20,
                   20,
                   20,
@@ -1171,7 +1141,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   13,
                   13,
                   13,
@@ -1189,7 +1159,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.11,
                   0.11,
                   0.11,
@@ -1221,9 +1191,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  16.8
-                ]
+                "value": 16.8
               }
             }
           },
@@ -1236,7 +1204,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   28,
                   28,
                   28,
@@ -1254,7 +1222,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   18,
                   18,
                   18,
@@ -1272,7 +1240,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.15,
                   0.15,
                   0.15,
@@ -1304,9 +1272,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  12
-                ]
+                "value": 12
               }
             }
           },
@@ -1319,7 +1285,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   20,
                   20,
                   20,
@@ -1337,7 +1303,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   13,
                   13,
                   13,
@@ -1355,7 +1321,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.11,
                   0.11,
                   0.11,
@@ -1387,9 +1353,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  16.8
-                ]
+                "value": 16.8
               }
             }
           },
@@ -1402,7 +1366,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   28,
                   28,
                   28,
@@ -1420,7 +1384,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   18,
                   18,
                   18,
@@ -1438,7 +1402,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.15,
                   0.15,
                   0.15,
@@ -1470,9 +1434,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21.6
-                ]
+                "value": 21.6
               }
             }
           },
@@ -1485,7 +1447,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   36,
                   36,
                   36,
@@ -1503,7 +1465,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   24,
                   24,
                   24,
@@ -1521,7 +1483,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.095,
                   0.095,
                   0.095,
@@ -1553,9 +1515,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21.6
-                ]
+                "value": 21.6
               }
             }
           },
@@ -1568,7 +1528,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   36,
                   36,
                   36,
@@ -1586,7 +1546,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   24,
                   24,
                   24,
@@ -1604,7 +1564,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.19,
                   0.19,
                   0.19,
@@ -1636,9 +1596,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  30
-                ]
+                "value": 30
               }
             }
           },
@@ -1651,7 +1609,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   49,
                   49,
                   49,
@@ -1669,7 +1627,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   32,
                   32,
                   32,
@@ -1687,7 +1645,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.13,
                   0.13,
                   0.13,
@@ -1719,9 +1677,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  30
-                ]
+                "value": 30
               }
             }
           },
@@ -1734,7 +1690,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   49,
                   49,
                   49,
@@ -1752,7 +1708,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   32,
                   32,
                   32,
@@ -1770,7 +1726,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1547619048,
                   0.1547619048,
                   0.1547619048,
@@ -1802,9 +1758,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  42
-                ]
+                "value": 42
               }
             }
           },
@@ -1817,7 +1771,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   86,
                   94,
                   103,
@@ -1835,7 +1789,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.45,
                   0.495,
                   0.54,
@@ -1867,9 +1821,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  42
-                ]
+                "value": 42
               }
             }
           },
@@ -1882,7 +1834,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   86,
                   94,
                   103,
@@ -1900,7 +1852,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.24,
                   0.264,
                   0.288,
@@ -1932,9 +1884,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  6
-                ]
+                "value": 6
               }
             }
           },
@@ -1947,7 +1897,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.066,
                   0.066,
                   0.066,
@@ -1979,9 +1929,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  6
-                ]
+                "value": 6
               }
             }
           },
@@ -1994,7 +1942,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.132,
                   0.132,
                   0.132,
@@ -2026,9 +1974,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21
-                ]
+                "value": 21
               }
             }
           },
@@ -2041,7 +1987,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   47,
                   51,
@@ -2059,7 +2005,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.2571428571,
                   0.28285715,
                   0.30857143,
@@ -2091,9 +2037,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  10.8
-                ]
+                "value": 10.8
               }
             }
           },
@@ -2106,7 +2050,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   22,
                   22,
                   22,
@@ -2124,7 +2068,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.228,
                   0.228,
                   0.228,
@@ -2156,9 +2100,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  10.8
-                ]
+                "value": 10.8
               }
             }
           },
@@ -2171,7 +2113,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   22,
                   22,
                   22,
@@ -2189,7 +2131,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.057,
                   0.057,
                   0.057,
@@ -2221,9 +2163,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  10.8
-                ]
+                "value": 10.8
               }
             }
           },
@@ -2236,7 +2176,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   22,
                   22,
                   22,
@@ -2254,7 +2194,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.057,
                   0.057,
                   0.057,
@@ -2286,9 +2226,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  10.8
-                ]
+                "value": 10.8
               }
             }
           },
@@ -2301,7 +2239,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   22,
                   22,
                   22,
@@ -2319,7 +2257,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.228,
                   0.228,
                   0.228,
@@ -2351,9 +2289,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  15
-                ]
+                "value": 15
               }
             }
           },
@@ -2366,7 +2302,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   31,
                   31,
                   31,
@@ -2384,7 +2320,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1349480969,
                   0.1349480969,
                   0.1349480969,
@@ -2416,9 +2352,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  15
-                ]
+                "value": 15
               }
             }
           },
@@ -2431,7 +2365,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   31,
                   31,
                   31,
@@ -2449,7 +2383,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.312,
                   0.312,
                   0.312,
@@ -2481,9 +2415,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  15
-                ]
+                "value": 15
               }
             }
           },
@@ -2496,7 +2428,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   31,
                   31,
                   31,
@@ -2514,7 +2446,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1857142857,
                   0.1857142857,
                   0.1857142857,
@@ -2546,9 +2478,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  15
-                ]
+                "value": 15
               }
             }
           },
@@ -2561,7 +2491,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   31,
                   31,
                   31,
@@ -2579,7 +2509,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.156,
                   0.156,
                   0.156,
@@ -2611,9 +2541,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21
-                ]
+                "value": 21
               }
             }
           },
@@ -2626,7 +2554,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   47,
                   51,
@@ -2644,7 +2572,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.108,
                   0.1188,
                   0.1296,
@@ -2676,9 +2604,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21
-                ]
+                "value": 21
               }
             }
           },
@@ -2691,7 +2617,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   47,
                   51,
@@ -2709,7 +2635,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.1776315789,
                   0.1919845,
                   0.205845,
@@ -2741,9 +2667,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  21
-                ]
+                "value": 21
               }
             }
           },
@@ -2756,7 +2680,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   43,
                   47,
                   51,
@@ -2774,7 +2698,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.432,
                   0.4752,
                   0.5184,

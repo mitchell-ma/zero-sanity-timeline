@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.08,
                   0.096,
                   0.112,
@@ -32,7 +32,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.08,
                   0.096,
                   0.112,
@@ -53,7 +53,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.07,
                   0.084,
                   0.098,
@@ -74,18 +74,16 @@
       "id": "UMBRAL_TORCH_COVETOUS_BUILDUP",
       "name": "Covetous Buildup",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          20
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 20
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            2
-          ]
+          "value": 2
         },
         "interactionType": "NONE"
       },

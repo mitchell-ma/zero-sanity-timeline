@@ -217,6 +217,51 @@ Add aggregate statistics for sheets, including:
 - Buff uptime (per-buff active duration / total duration)
 - Other relevant combat uptime metrics
 
+## Populate HP/DEF-related gear set effects, operator talents, and weapon skills
+
+Several gear set effects, operator talents, and weapon skills that involve HP or DEF
+are stubs or missing clause data. These need to be populated from wiki/Warfarin sources.
+
+### Gear set effects — missing HP passive clause
+
+These sets have "HP +X" as part of their 3-piece bonus but no FLAT_HP clause in the JSON:
+
+| Gear Set | Missing Effect |
+|----------|---------------|
+| AIC Heavy | FLAT_HP +500; also missing "restore 100 HP on enemy defeat (5s CD)" trigger |
+| AIC Light | FLAT_HP +500 (trigger clause for ATK on defeat exists, but HP passive missing) |
+| Eternal Xiranite | FLAT_HP +1000 (trigger clause for SKILL_DAMAGE_BONUS exists, but HP passive missing) |
+
+### Gear set effects — stubs (no clauses at all)
+
+These sets have HP-threshold conditions but are metadata-only with zero clauses:
+
+| Gear Set | Wiki 3-piece Effect |
+|----------|-------------------|
+| Armored MSGR | STR +50; when HP < 50% → 30% DMG Reduction |
+| Roving MSGR | AGI +50; when HP > 80% → Physical DMG +20% |
+| Mordvolt Insulation | INT +50; when HP > 80% → Arts DMG +20% |
+| Mordvolt Resistant | WILL +50; when HP < 50% → Treatment Effect +30% |
+
+### Gear set effects — missing passive in clauses
+
+| Gear Set | Missing |
+|----------|---------|
+| Lynx | Treatment Efficiency +20% passive (trigger effect for FINAL_DAMAGE_REDUCTION exists) |
+
+### Operator talents — missing or incomplete
+
+| Operator | Issue |
+|----------|-------|
+| Antal | Talent 3 "Subconscious Act" entirely missing (30% Physical DMG immunity + self-heal [27+STR×0.23] / [45+STR×0.38]) |
+| Antal | Improviser status missing heal values (healBase [72, 108], strengthAdditive [0.6, 0.9]) |
+
+### Weapon skills — description-only HP effects
+
+| Weapon Skill | Issue |
+|-------------|-------|
+| Inspiring: Start of a Saga (Pathfinder's Beacon / Hypernova Auto) | HP threshold condition only in description, no clause data |
+
 ## Operator talent/skill DSL reconciliation issues
 
 5 outstanding issues from the batch operator review:

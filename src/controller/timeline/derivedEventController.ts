@@ -16,11 +16,11 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
+import { CombatSkillsType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
-import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
-import { FPS } from '../../utils/timeline';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { StatusLevel } from '../../consts/types';
 import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
 import { MAX_INFLICTION_STACKS } from './eventQueueTypes';
@@ -28,6 +28,11 @@ import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 import type { TriggerAssociation } from '../gameDataController';
+import type { SkillPointController } from '../slot/skillPointController';
+import type { UltimateEnergyController } from './ultimateEnergyController';
+import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
+import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 
 /** Source metadata for event mutations. */
 interface EventSource {
@@ -42,15 +47,25 @@ export class DerivedEventController {
   private registeredStopIds = new Set<string>();
   private rawDurations = new Map<string, number>();
   private extendedIds = new Set<string>();
-  private comboStops: { id: string; startFrame: number; animDur: number }[] = [];
+  private comboStops: { uid: string; startFrame: number; animDur: number }[] = [];
   readonly output: TimelineEvent[] = [];
   private idCounter = 0;
   private triggerAssociations: TriggerAssociation[];
   private slotWirings: SlotTriggerWiring[] = [];
+  private spController: SkillPointController | null = null;
+  private ueController: UltimateEnergyController | null = null;
 
-  constructor(baseEvents?: TimelineEvent[], triggerAssociations?: TriggerAssociation[], slotWirings?: SlotTriggerWiring[]) {
+  constructor(
+    baseEvents?: TimelineEvent[],
+    triggerAssociations?: TriggerAssociation[],
+    slotWirings?: SlotTriggerWiring[],
+    spController?: SkillPointController,
+    ueController?: UltimateEnergyController,
+  ) {
     this.triggerAssociations = triggerAssociations ?? [];
     this.slotWirings = slotWirings ?? [];
+    this.spController = spController ?? null;
+    this.ueController = ueController ?? null;
     if (baseEvents) {
       this.registeredEvents = baseEvents;
       for (const ev of baseEvents) {
@@ -61,6 +76,28 @@ export class DerivedEventController {
 
   private key(columnId: string, ownerId: string) {
     return `${columnId}:${ownerId}`;
+  }
+
+  // ── Controlled operator seeding ──────────────────────────────────────────
+
+  /**
+   * Seed the initial CONTROLLED event for the first occupied operator slot.
+   * Must be called before registerEvents so that user-placed swaps clamp
+   * this seed during registration. No-op if no slots are occupied.
+   */
+  seedControlledOperator(firstOccupiedSlotId: string | undefined) {
+    if (!firstOccupiedSlotId) return;
+    this.registerEvents([{
+      uid: `controlled-seed-${firstOccupiedSlotId}`,
+      id: CombatSkillsType.CONTROL,
+      name: CombatSkillsType.CONTROL,
+      ownerId: firstOccupiedSlotId,
+      columnId: OPERATOR_COLUMNS.INPUT,
+      startFrame: 0,
+      segments: [{ properties: { duration: TOTAL_FRAMES } }],
+      sourceOwnerId: firstOccupiedSlotId,
+      sourceSkillName: CombatSkillsType.CONTROL,
+    }]);
   }
 
   // ── Registration ──────────────────────────────────────────────────────────
@@ -95,19 +132,36 @@ export class DerivedEventController {
         }
       }
 
+      // Controlled operator: clamp earlier CONTROL events on other owners
+      if (ev.id === CombatSkillsType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+        for (let j = 0; j < this.registeredEvents.length; j++) {
+          const prev = this.registeredEvents[j];
+          if (prev.id !== CombatSkillsType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
+          if (prev.ownerId === ev.ownerId) continue;
+          const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
+          if (prevEnd <= ev.startFrame) continue;
+          // Clamp: shorten to end at ev.startFrame
+          this.registeredEvents[j] = {
+            ...prev,
+            segments: [{ properties: { ...prev.segments[0]?.properties, duration: ev.startFrame - prev.startFrame } }],
+          };
+        }
+      }
+
       this.maybeRegisterStop(ev);
       this.registeredEvents.push(ev);
     }
 
-    // Pass 2: per-event extension, frame positions, and validation
+    // Pass 2: per-event extension, frame positions, validation, and SP/UE notification
     for (let i = startIdx; i < this.registeredEvents.length; i++) {
       let ev = this.registeredEvents[i];
-      if (this.stops.length > 0 && !this.extendedIds.has(ev.id)) {
+      if (this.stops.length > 0 && !this.extendedIds.has(ev.uid)) {
         ev = this.extendSingleEvent(ev);
       }
       ev = this.computeFramePositions(ev);
       ev = this.validateTimeStopStart(ev);
       this.registeredEvents[i] = ev;
+      this.notifyResourceControllers(ev);
     }
 
     // Pass 3: resolve combo trigger columns (needs full event list + stops)
@@ -162,6 +216,80 @@ export class DerivedEventController {
         this.registeredEvents[i] = { ...ev, comboTriggerColumnId: match.sourceColumnId };
       } else if (!match && ev.comboTriggerColumnId != null) {
         this.registeredEvents[i] = { ...ev, comboTriggerColumnId: undefined };
+      }
+    }
+  }
+
+  /**
+   * Notify SP and UE controllers about resource effects on a newly registered event.
+   * Called per-event after extension and frame position computation in pass 2.
+   */
+  private notifyResourceControllers(ev: TimelineEvent) {
+    // ── SP notifications ──────────────────────────────────────────────────
+    if (this.spController) {
+      // Battle skill with SP cost → event-level cost + frame-level returns
+      if (ev.columnId === SKILL_COLUMNS.BATTLE && ev.skillPointCost) {
+        const firstFrame = ev.segments[0]?.frames?.[0];
+        const gaugeGainFrame = firstFrame?.absoluteFrame ?? ev.startFrame;
+        this.spController.addCost(ev.uid, ev.startFrame, ev.skillPointCost, ev.ownerId, gaugeGainFrame);
+
+        // Frame-level SP recovery on battle skill frames
+        for (const seg of ev.segments) {
+          for (const f of seg.frames ?? []) {
+            if (f.skillPointRecovery && f.skillPointRecovery > 0 && f.absoluteFrame != null) {
+              this.spController.addRecovery(f.absoluteFrame, f.skillPointRecovery, ev.ownerId, ev.name);
+            }
+          }
+        }
+      }
+
+      // SP recovery events (derived from deriveSPRecoveryEvents)
+      if (ev.ownerId === COMMON_OWNER_ID && ev.columnId === COMMON_COLUMN_IDS.SKILL_POINTS) {
+        this.spController.addSpRecoveryEvent(ev);
+      }
+
+      // Perfect dodge → SP recovery
+      if (ev.columnId === OPERATOR_COLUMNS.INPUT && ev.isPerfectDodge) {
+        this.spController.addRecovery(
+          ev.startFrame, GENERAL_MECHANICS.skillPoints.perfectDodgeRecovery,
+          ev.ownerId, ev.name,
+        );
+      }
+    }
+
+    // ── UE notifications ──────────────────────────────────────────────────
+    if (this.ueController) {
+      // Combo skill → gauge gain from frames
+      if (ev.columnId === SKILL_COLUMNS.COMBO) {
+        for (const seg of ev.segments) {
+          for (const f of seg.frames ?? []) {
+            const selfGain = f.gaugeGain ?? 0;
+            const teamGain = f.teamGaugeGain ?? 0;
+            if ((selfGain > 0 || teamGain > 0) && f.absoluteFrame != null) {
+              this.ueController.addGaugeGain(f.absoluteFrame, ev.ownerId, selfGain, teamGain);
+            }
+          }
+        }
+      }
+
+      // Battle skill → frame-level gaugeGain markers (not SP-based)
+      if (ev.columnId === SKILL_COLUMNS.BATTLE) {
+        for (const seg of ev.segments) {
+          for (const f of seg.frames ?? []) {
+            if (f.gaugeGain && f.gaugeGain > 0 && f.absoluteFrame != null) {
+              this.ueController.addGaugeGain(f.absoluteFrame, ev.ownerId, f.gaugeGain, 0);
+            }
+          }
+        }
+      }
+
+      // Ultimate event → consume + no-gain windows
+      if (ev.columnId === SKILL_COLUMNS.ULTIMATE) {
+        this.ueController.addConsume(ev.startFrame, ev.ownerId);
+        const windows = collectNoGainWindowsForEvent(ev);
+        for (const w of windows) {
+          this.ueController.addNoGainWindow(w.start, w.end, ev.ownerId);
+        }
       }
     }
   }
@@ -229,15 +357,15 @@ export class DerivedEventController {
         const next = sorted[i + 1];
         const curRange = computeSegmentsSpan(cur.segments);
         if (curRange > 0 && cur.startFrame + curRange > next.startFrame) {
-          overlapIds.add(cur.id);
-          overlapIds.add(next.id);
+          overlapIds.add(cur.uid);
+          overlapIds.add(next.uid);
         }
       }
     }
 
     if (overlapIds.size > 0) {
       this.registeredEvents = this.registeredEvents.map(ev => {
-        if (!overlapIds.has(ev.id)) return ev;
+        if (!overlapIds.has(ev.uid)) return ev;
         return { ...ev, warnings: [...(ev.warnings ?? []), 'Overlaps with another event in the same column'] };
       });
     }
@@ -259,9 +387,9 @@ export class DerivedEventController {
   }
 
   /** Update comboTriggerColumnId on a registered combo event (deferred resolution). */
-  setComboTriggerColumnId(eventId: string, columnId: string) {
+  setComboTriggerColumnId(eventUid: string, columnId: string) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
-      if (this.registeredEvents[i].id === eventId) {
+      if (this.registeredEvents[i].uid === eventUid) {
         this.registeredEvents[i] = { ...this.registeredEvents[i], comboTriggerColumnId: columnId };
         return;
       }
@@ -282,7 +410,7 @@ export class DerivedEventController {
   }
 
   /** Get combo chaining state (debug). */
-  getComboStops(): readonly { id: string; startFrame: number; animDur: number }[] {
+  getComboStops(): readonly { uid: string; startFrame: number; animDur: number }[] {
     return this.comboStops;
   }
 
@@ -338,7 +466,7 @@ export class DerivedEventController {
   createInfliction(
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
-    options?: { id?: string },
+    options?: { uid?: string },
   ) {
     // Cross-element reaction check: if another element's infliction is active,
     // consume it and create a reaction instead.
@@ -361,13 +489,14 @@ export class DerivedEventController {
             consumed.eventStatusSkillName = source.skillName;
           }
           this.createReaction(reactionColumnId, ENEMY_OWNER_ID, frame, REACTION_DURATION, source, {
-            id: `${options?.id ?? columnId}-reaction`,
-            inflictionStacks: otherActive.length,
+            uid: `${options?.uid ?? columnId}-reaction`,
+            stacks: otherActive.length,
           });
           // Emit a consumed copy of the incoming infliction so freeform raw
           // events can be replaced with their reacted state.
           const consumed: TimelineEvent = {
-            id: options?.id ?? `${columnId}-q-${this.idCounter++}`,
+            uid: options?.uid ?? `${columnId}-q-${this.idCounter++}`,
+            id: columnId,
             name: columnId,
             ownerId,
             columnId,
@@ -404,7 +533,8 @@ export class DerivedEventController {
     const rawDur = durationFrames;
     const extendedDuration = this.extendDuration(frame, rawDur);
     const ev: TimelineEvent = {
-      id: options?.id ?? `${columnId}-q-${this.idCounter++}`,
+      uid: options?.uid ?? `${columnId}-q-${this.idCounter++}`,
+      id: columnId,
       name: columnId,
       ownerId,
       columnId,
@@ -414,7 +544,7 @@ export class DerivedEventController {
       sourceSkillName: source.skillName,
       ...(isArtsBurst && { isArtsBurst: true }),
     };
-    this.rawDurations.set(ev.id, rawDur);
+    this.rawDurations.set(ev.uid, rawDur);
     existing.push(ev);
     this.stacks.set(key, existing);
     this.output.push(ev);
@@ -423,7 +553,7 @@ export class DerivedEventController {
     const newEnd = frame + extendedDuration;
     const remainingActive = this.activeEventsIn(columnId, ownerId, frame);
     for (const act of remainingActive) {
-      if (act.id === ev.id) continue;
+      if (act.uid === ev.uid) continue;
       const actEnd = act.startFrame + eventDuration(act);
       if (newEnd > actEnd) {
         setEventDuration(act, newEnd - act.startFrame);
@@ -442,10 +572,11 @@ export class DerivedEventController {
   createReaction(
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
-    options?: { statusLevel?: number; inflictionStacks?: number; forcedReaction?: boolean; id?: string },
+    options?: { stacks?: number; forcedReaction?: boolean; uid?: string },
   ) {
     const ev: TimelineEvent = {
-      id: options?.id ?? `reaction-${columnId}-${this.idCounter++}`,
+      uid: options?.uid ?? `reaction-${columnId}-${this.idCounter++}`,
+      id: columnId,
       name: columnId,
       ownerId,
       columnId,
@@ -453,8 +584,7 @@ export class DerivedEventController {
       segments: [{ properties: { duration: durationFrames } }],
       sourceOwnerId: source.ownerId,
       sourceSkillName: source.skillName,
-      statusLevel: options?.statusLevel,
-      inflictionStacks: options?.inflictionStacks,
+      stacks: options?.stacks,
       forcedReaction: options?.forcedReaction,
     };
 
@@ -478,21 +608,19 @@ export class DerivedEventController {
         prev.eventStatusOwnerId = source.ownerId;
         prev.eventStatusSkillName = source.skillName;
 
-        const prevStatusLevel = prev.statusLevel ?? 1;
-        const prevStacks = prev.inflictionStacks ?? 1;
+        const prevStacks = prev.stacks ?? 1;
         const remainingOldDuration = prevEnd - ev.startFrame;
 
         const elapsedSeconds = (ev.startFrame - prev.startFrame) / FPS;
         const oldReductionFloor = prev.reductionFloor ?? 0;
         const oldArtsIntensity = prev.artsIntensity ?? 0;
         const oldBaseReduction = getCorrosionBaseReduction(
-          Math.min(prevStatusLevel, 4) as StatusLevel,
+          Math.min(prevStacks, 4) as StatusLevel,
           elapsedSeconds,
         ) * getCorrosionReductionMultiplier(oldArtsIntensity);
 
         setEventDuration(ev, Math.max(remainingOldDuration, eventDuration(ev)));
-        ev.statusLevel = Math.max(prevStatusLevel, ev.statusLevel ?? 1);
-        ev.inflictionStacks = Math.max(prevStacks, ev.inflictionStacks ?? 1);
+        ev.stacks = Math.max(prevStacks, ev.stacks ?? 1);
         ev.reductionFloor = Math.max(oldReductionFloor, oldBaseReduction);
       } else {
         const newEnd = ev.startFrame + eventDuration(ev);
@@ -514,7 +642,7 @@ export class DerivedEventController {
       if (seg) ev.segments = [seg];
     }
 
-    this.rawDurations.set(ev.id, rawDur);
+    this.rawDurations.set(ev.uid, rawDur);
     existing.push(ev);
     this.stacks.set(key, existing);
     this.output.push(ev);
@@ -527,7 +655,7 @@ export class DerivedEventController {
   createStatus(
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
-    options?: { statusName?: string; stackingMode?: string; id?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
+    options?: { statusName?: string; stackingMode?: string; uid?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
   ) {
     const statusName = options?.statusName ?? columnId;
 
@@ -542,7 +670,8 @@ export class DerivedEventController {
     }
 
     const ev: TimelineEvent = {
-      id: options?.id ?? `${statusName.toLowerCase()}-q-${this.idCounter++}`,
+      uid: options?.uid ?? `${statusName.toLowerCase()}-q-${this.idCounter++}`,
+      id: statusName,
       name: statusName,
       ownerId,
       columnId,
@@ -664,7 +793,7 @@ export class DerivedEventController {
         const truncated = ev.startFrame - cs.startFrame;
         cs.animDur = truncated;
         // Update the registered event
-        const regIdx = this.registeredEvents.findIndex(e => e.id === cs.id);
+        const regIdx = this.registeredEvents.findIndex(e => e.uid === cs.uid);
         if (regIdx >= 0) {
           const reg = this.registeredEvents[regIdx];
           this.registeredEvents[regIdx] = {
@@ -673,7 +802,7 @@ export class DerivedEventController {
           };
         }
         // Update the stop region
-        const stop = this.stops.find(s => s.eventId === cs.id);
+        const stop = this.stops.find(s => s.eventUid === cs.uid);
         if (stop) stop.durationFrames = truncated;
       }
     }
@@ -689,7 +818,7 @@ export class DerivedEventController {
     }
 
     // Track for future chaining
-    this.comboStops.push({ id: ev.id, startFrame: ev.startFrame, animDur });
+    this.comboStops.push({ uid: ev.uid, startFrame: ev.startFrame, animDur });
     this.comboStops.sort((a, b) => a.startFrame - b.startFrame);
 
     if (changed) {
@@ -705,26 +834,26 @@ export class DerivedEventController {
 
   private maybeRegisterStop(ev: TimelineEvent): boolean {
     if (!isTimeStopEvent(ev)) return false;
-    if (this.registeredStopIds.has(ev.id)) return false;
-    this.registeredStopIds.add(ev.id);
+    if (this.registeredStopIds.has(ev.uid)) return false;
+    this.registeredStopIds.add(ev.uid);
     this.stops.push({
       startFrame: ev.startFrame,
       durationFrames: getAnimationDuration(ev),
-      eventId: ev.id,
+      eventUid: ev.uid,
     });
     this.stops.sort((a, b) => a.startFrame - b.startFrame);
     return true;
   }
 
-  private extendDuration(startFrame: number, rawDuration: number, eventId?: string) {
-    const foreign = eventId && this.registeredStopIds.has(eventId)
-      ? this.stops.filter(s => s.eventId !== eventId)
+  private extendDuration(startFrame: number, rawDuration: number, eventUid?: string) {
+    const foreign = eventUid && this.registeredStopIds.has(eventUid)
+      ? this.stops.filter(s => s.eventUid !== eventUid)
       : this.stops;
     return extendByTimeStops(startFrame, rawDuration, foreign);
   }
 
   private foreignStopsFor(ev: TimelineEvent): readonly TimeStopRegion[] {
-    return isTimeStopEvent(ev) ? this.stops.filter(s => s.eventId !== ev.id) : this.stops;
+    return isTimeStopEvent(ev) ? this.stops.filter(s => s.eventUid !== ev.uid) : this.stops;
   }
 
   /**
@@ -735,7 +864,7 @@ export class DerivedEventController {
     const isOwn = isTimeStopEvent(ev);
     const animDur = getAnimationDuration(ev);
     const foreignStops = isOwn
-      ? this.stops.filter(s => s.eventId !== ev.id)
+      ? this.stops.filter(s => s.eventUid !== ev.uid)
       : this.stops;
     if (foreignStops.length === 0) return ev;
 
@@ -774,7 +903,7 @@ export class DerivedEventController {
       });
 
       if (!changed) return ev;
-      this.extendedIds.add(ev.id);
+      this.extendedIds.add(ev.uid);
       return { ...ev, segments: newSegments };
     }
 
@@ -787,9 +916,9 @@ export class DerivedEventController {
       for (const ev of events) {
         if (ev.eventStatus === EventStatusType.CONSUMED || ev.eventStatus === EventStatusType.REFRESHED) continue;
         if (ev.eventStatus === EventStatusType.EXTENDED) continue;
-        const raw = this.rawDurations.get(ev.id);
+        const raw = this.rawDurations.get(ev.uid);
         if (raw == null) continue;
-        setEventDuration(ev, this.extendDuration(ev.startFrame, raw, ev.id));
+        setEventDuration(ev, this.extendDuration(ev.startFrame, raw, ev.uid));
       }
     });
   }
@@ -802,15 +931,15 @@ export class DerivedEventController {
     if (this.stops.length === 0) return ev;
     const warnings: string[] = [];
     for (const stop of this.stops) {
-      if (stop.eventId === ev.id) continue;
+      if (stop.eventUid === ev.uid) continue;
       const stopEnd = stop.startFrame + stop.durationFrames;
       if (ev.startFrame <= stop.startFrame || ev.startFrame >= stopEnd) continue;
 
       // Look up source event to determine stop type
-      const source = this.registeredEvents.find(e => e.id === stop.eventId);
+      const source = this.registeredEvents.find(e => e.uid === stop.eventUid);
       if (!source) continue;
 
-      const sourceIsDodge = source.columnId === 'dash' && !!source.isPerfectDodge;
+      const sourceIsDodge = source.columnId === OPERATOR_COLUMNS.INPUT && !!source.isPerfectDodge;
       if (sourceIsDodge) continue;
 
       const sourceIsUltimate = source.columnId === SKILL_COLUMNS.ULTIMATE;
@@ -851,14 +980,20 @@ export class DerivedEventController {
     return this.activeEventsIn(columnId, ownerId, frame);
   }
 
+  /** Check if a given operator is the controlled operator at a given frame. */
+  isControlledAt(ownerId: string, frame: number): boolean {
+    return this.activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
+      .some((ev) => ev.id === CombatSkillsType.CONTROL);
+  }
+
   // ── Generic event insertion ──────────────────────────────────────────────
 
   addEvent(ev: TimelineEvent) {
     const rawDur = eventDuration(ev);
     if (rawDur > 0) {
-      setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur, ev.id));
+      setEventDuration(ev, this.extendDuration(ev.startFrame, rawDur, ev.uid));
     }
-    this.rawDurations.set(ev.id, rawDur);
+    this.rawDurations.set(ev.uid, rawDur);
     const key = this.key(ev.columnId, ev.ownerId);
     const existing = this.stacks.get(key) ?? [];
     existing.push(ev);
@@ -878,9 +1013,9 @@ export class DerivedEventController {
    * Reset a skill event's cooldown segment at a given frame.
    * Truncates the Cooldown segment so the event ends at resetFrame.
    */
-  resetCooldown(eventId: string, resetFrame: number) {
+  resetCooldown(eventUid: string, resetFrame: number) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
-      if (this.registeredEvents[i].id !== eventId) continue;
+      if (this.registeredEvents[i].uid !== eventUid) continue;
       const ev = this.registeredEvents[i];
       let preCooldownDur = 0;
       const newSegments = ev.segments.map(s => {
@@ -889,6 +1024,21 @@ export class DerivedEventController {
           return { ...s, properties: { ...s.properties, duration: cooldownRemaining } };
         }
         preCooldownDur += s.properties.duration;
+        return s;
+      });
+      this.registeredEvents[i] = { ...ev, segments: newSegments };
+      return;
+    }
+  }
+
+  reduceCooldown(eventUid: string, newCooldownDuration: number) {
+    for (let i = 0; i < this.registeredEvents.length; i++) {
+      if (this.registeredEvents[i].uid !== eventUid) continue;
+      const ev = this.registeredEvents[i];
+      const newSegments = ev.segments.map(s => {
+        if (s.properties.name === 'Cooldown') {
+          return { ...s, properties: { ...s.properties, duration: Math.max(0, newCooldownDuration) } };
+        }
         return s;
       });
       this.registeredEvents[i] = { ...ev, segments: newSegments };

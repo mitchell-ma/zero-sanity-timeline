@@ -65,7 +65,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "STATUS_LEVEL",
-                "values": [
+                "value": [
                   0.08
                 ]
               }
@@ -81,18 +81,16 @@
       "id": "AETHERTECH",
       "name": "Æthertech",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          15
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 15
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            4
-          ]
+          "value": 4
         },
         "interactionType": "NONE"
       },
@@ -113,9 +111,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.16
-                ]
+                "value": 0.16
               }
             },
             "toDeterminer": "THIS",
@@ -129,18 +125,16 @@
       "id": "AETHERTECH_MAX",
       "name": "Æthertech (Max)",
       "duration": {
-        "unit": "SECOND",
-        "values": [
-          10
-        ],
-        "verb": "IS"
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            1
-          ]
+          "value": 1
         },
         "interactionType": "RESET"
       },

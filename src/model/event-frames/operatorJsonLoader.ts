@@ -10,8 +10,6 @@ import {
   buildSequencesFromOperatorJson,
   DataDrivenSkillEventSequence,
 } from "./dataDrivenEventFrames";
-import { OPERATOR_COLUMNS } from '../channels';
-import { TOTAL_FRAMES } from '../../utils/timeline';
 import {
   getOperatorBase,
   getAllOperatorBaseIds,
@@ -22,7 +20,6 @@ import {
 } from '../game-data/operatorSkillsController';
 import {
   getOperatorStatuses as controllerGetStatuses,
-  getAllOperatorStatusOriginIds,
 } from '../game-data/operatorStatusesController';
 
 // ── Status key normalization ─────────────────────────────────────────────────
@@ -115,68 +112,6 @@ function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknow
   }
 
   return typeMap;
-}
-
-// ── Exchange status config ──────────────────────────────────────────────────
-
-const FPS_LOAD = 120;
-
-/** Config for a single exchange status, derived from its JSON definition. */
-export interface ExchangeStatusInfo {
-  columnId: string;
-  durationFrames: number;
-}
-
-/**
- * Build exchange status config by scanning operator statuses.
- * Exchange statuses accumulate stacks that convert into another status at max.
- * Identified by: stackable (limit > 1), no duration reset on reapply (interactionType NONE),
- * and clause that APPLYs another STATUS at max stacks.
- */
-function buildExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
-  const config: Record<string, ExchangeStatusInfo> = {};
-  const permanentDuration = TOTAL_FRAMES * 10;
-
-  for (const operatorId of getAllOperatorStatusOriginIds()) {
-    const statuses = controllerGetStatuses(operatorId);
-    for (const status of statuses) {
-      // Exchange = stackable (limit > 1) + NONE interaction + APPLY STATUS effect at max stacks
-      const limit = status.statusLevel?.limit.values[0] ?? 1;
-      const interaction = status.statusLevel?.interactionType ?? 'NONE';
-      if (limit <= 1 || interaction !== 'NONE') continue;
-      const hasApplyStatus = status.clause.some(c =>
-        c.effects.some(e => e.verb === 'APPLY' && e.object === 'STATUS')
-      );
-      if (!hasApplyStatus) continue;
-
-      const id = status.id;
-      const columnId = (OPERATOR_COLUMNS as Record<string, string>)[id]
-        ?? id.toLowerCase().replace(/_/g, '-');
-      let durationFrames = permanentDuration;
-      if (status.duration) {
-        const val = status.duration.values[0];
-        if (val >= 0) {
-          durationFrames = status.duration.unit === 'SECOND' ? Math.round(val * FPS_LOAD) : val;
-        }
-      }
-      config[id] = { columnId, durationFrames };
-    }
-  }
-  return config;
-}
-
-/** Exchange status config map. */
-let _exchangeStatusConfig: Record<string, ExchangeStatusInfo> | null = null;
-export function getExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
-  if (!_exchangeStatusConfig) _exchangeStatusConfig = buildExchangeStatusConfig();
-  return _exchangeStatusConfig;
-}
-
-/** Set of all exchange status IDs. */
-let _exchangeStatusIds: ReadonlySet<string> | null = null;
-export function getExchangeStatusIds(): ReadonlySet<string> {
-  if (!_exchangeStatusIds) _exchangeStatusIds = new Set(Object.keys(getExchangeStatusConfig()));
-  return _exchangeStatusIds;
 }
 
 // ── Merged JSON builder (for dataDrivenEventFrames) ─────────────────────────

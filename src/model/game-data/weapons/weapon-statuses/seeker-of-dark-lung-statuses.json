@@ -11,7 +11,7 @@
               "value": {
                 "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
-                "values": [
+                "value": [
                   0.06,
                   0.072,
                   0.084,
@@ -32,18 +32,16 @@
       "id": "SEEKER_OF_DARK_LUNG_SEEKER_OF_THE_ESOTERIC",
       "name": "Seeker of the Esoteric",
       "duration": {
-        "unit": "SECOND",
-        "verb": "IS",
-        "values": [
-          30
-        ]
+        "value": {
+          "verb": "IS",
+          "value": 30
+        },
+        "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            3
-          ]
+          "value": 3
         },
         "interactionType": "NONE"
       },

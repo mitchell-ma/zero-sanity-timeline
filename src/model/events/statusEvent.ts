@@ -6,10 +6,9 @@ import {
   OperatorType,
   StackInteractionType,
   StatusType,
-  TargetType,
 } from "../../consts/enums";
-import { THRESHOLD_MAX, PotentialType } from "../../consts/semantics";
-import type { Clause, Effect, Interaction } from "../../consts/semantics";
+import { THRESHOLD_MAX, PotentialType } from "../../dsl/semantics";
+import type { Clause, DslTarget, Effect, Interaction } from "../../dsl/semantics";
 import { StatType } from "../enums";
 import { Duration, Event } from "./event";
 
@@ -17,7 +16,7 @@ import { Duration, Event } from "./event";
 
 /** A trigger condition that causes a status to be created. */
 export interface TriggerCondition {
-  source: { targetType: TargetType };
+  source: { target: DslTarget };
   action: {
     interactionType: Interaction;
     combatSkillType?: CombatSkillType;
@@ -40,14 +39,14 @@ export interface StatModifier {
 }
 
 // Re-export THRESHOLD_MAX from semantics for backward compat
-export { THRESHOLD_MAX } from "../../consts/semantics";
+export { THRESHOLD_MAX } from "../../dsl/semantics";
 
 /** Threshold key: a numeric stack count, or 'MAX' to fire at the potential-resolved max. */
 export type ThresholdKey = number | typeof THRESHOLD_MAX;
 
-/** Status level configuration. */
-export interface StatusLevelConfig {
-  statusLevelInteractionType: StackInteractionType;
+/** Stacking behavior configuration. */
+export interface Stacks {
+  interactionType: StackInteractionType;
   /** Maximum stack count, keyed by PotentialType. */
   limit: Record<PotentialType, number>;
   /** Effects applied when stack count reaches a threshold.
@@ -72,13 +71,17 @@ export function resolveMaxStacks(limit: Record<PotentialType, number>, potential
  *
  * See src/model/eventSpec.md for the full specification.
  */
-export abstract class StatusEvent extends Event {
+export abstract class StatusEvent extends Event implements Stacks {
   readonly statusType: StatusType;
   readonly element: ElementType;
   readonly isForced: boolean;
 
-  /** Status level configuration. */
-  readonly statusLevel: StatusLevelConfig;
+  /** Stacking interaction type. */
+  readonly interactionType: StackInteractionType;
+  /** Maximum stack count, keyed by PotentialType. */
+  readonly limit: Record<PotentialType, number>;
+  /** Effects applied when stack count reaches a threshold. */
+  readonly thresholdEffects: Partial<Record<ThresholdKey, Effect[]>>;
 
   /** Trigger clause — predicates that determine when this status is created. */
   readonly onTriggerClause: Clause;
@@ -95,20 +98,20 @@ export abstract class StatusEvent extends Event {
     statusType: StatusType;
     eventOrigin: EventOriginType;
     name: string;
-    target: TargetType;
+    target: DslTarget;
     sourceOperator: OperatorType;
     element: ElementType;
     duration: Duration;
     isForced?: boolean;
-    statusLevel?: {
-      statusLevelInteractionType?: StackInteractionType;
+    stacks?: {
+      interactionType?: StackInteractionType;
       limit: number | number[] | Record<PotentialType, number>;
       thresholdEffects?: Partial<Record<ThresholdKey, Effect[]>>;
     };
     onTriggerClause?: Clause;
     interactionTypes?: StatusInteractionEntry[];
     stats?: StatModifier[];
-    stacks?: number;
+    count?: number;
   }) {
     super({
       eventType: EventType.STATUS,
@@ -122,7 +125,7 @@ export abstract class StatusEvent extends Event {
     this.element = params.element;
     this.isForced = params.isForced ?? false;
 
-    const rawLimit = params.statusLevel?.limit ?? 1;
+    const rawLimit = params.stacks?.limit ?? 1;
     let limitRecord: Record<PotentialType, number>;
     if (typeof rawLimit === 'number') {
       limitRecord = Object.fromEntries(
@@ -137,21 +140,19 @@ export abstract class StatusEvent extends Event {
       limitRecord = rawLimit;
     }
 
-    this.statusLevel = {
-      statusLevelInteractionType: params.statusLevel?.statusLevelInteractionType ?? StackInteractionType.NONE,
-      limit: limitRecord,
-      thresholdEffects: params.statusLevel?.thresholdEffects ?? {},
-    };
+    this.interactionType = params.stacks?.interactionType ?? StackInteractionType.NONE;
+    this.limit = limitRecord;
+    this.thresholdEffects = params.stacks?.thresholdEffects ?? {};
 
     this.onTriggerClause = params.onTriggerClause ?? [];
     this.interactionTypes = params.interactionTypes ?? [];
     this.stats = params.stats ?? [];
-    this.stacks = params.stacks ?? 0;
+    this.stacks = params.count ?? 0;
 
-    const highestLimit = Math.max(...Object.values(this.statusLevel.limit));
+    const highestLimit = Math.max(...Object.values(this.limit));
     if (this.stacks > highestLimit && highestLimit > 0) {
       throw new RangeError(
-        `stacks (${this.stacks}) cannot exceed statusLevel.limit (${highestLimit})`,
+        `stacks (${this.stacks}) cannot exceed limit (${highestLimit})`,
       );
     }
   }

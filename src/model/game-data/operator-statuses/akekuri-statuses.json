@@ -48,9 +48,7 @@
             "with": {
               "value": {
                 "verb": "IS",
-                "values": [
-                  0.1
-                ]
+                "value": 0.1
               }
             }
           }
@@ -64,18 +62,16 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "IS",
-        "values": [
-          10
-        ],
+        "value": {
+          "verb": "IS",
+          "value": 10
+        },
         "unit": "SECOND"
       },
       "statusLevel": {
         "limit": {
           "verb": "IS",
-          "values": [
-            5
-          ]
+          "value": 5
         },
         "interactionType": "RESET"
       }

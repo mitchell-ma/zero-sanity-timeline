@@ -1,12 +1,13 @@
 import React from 'react';
 import { frameToPx, durationToPx, pxPerFrame, TOTAL_FRAMES } from '../utils/timeline';
 import { TimelineEvent, EventFrameMarker, getAnimationDuration, eventDuration } from "../consts/viewTypes";
-import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType, STATUS_ELEMENT } from '../consts/enums';
+import { ELEMENT_COLORS, ElementType, EventFrameType, SegmentType } from '../consts/enums';
+import { getStatusElementMap } from '../controller/gameDataController';
 import type { EventLayout } from '../controller/timeline/timelineLayout';
 import { validateSegmentContiguity } from '../controller/timeline/eventValidator';
 import { SKILL_COLUMNS } from '../model/channels';
 import { VERTICAL_AXIS, segmentRadius, type AxisMap } from '../utils/axisMap';
-import { formatSegmentShortName } from '../utils/semanticsTranslation';
+import { formatSegmentShortName } from '../dsl/semanticsTranslation';
 
 const ROMAN_RE = /^\d+$/;
 /** Convert bare numeric labels (legacy "1","2",...) to Roman numerals. */
@@ -27,8 +28,8 @@ function getFrameElementColor(f: EventFrameMarker, skillElement?: string): strin
   if (f.applyArtsInfliction) el = f.applyArtsInfliction.element;
   else if (f.absorbArtsInfliction) el = f.absorbArtsInfliction.element;
   else if (f.consumeArtsInfliction) el = f.consumeArtsInfliction.element;
-  else if (f.applyForcedReaction) el = STATUS_ELEMENT[f.applyForcedReaction.reaction];
-  else if (f.applyStatus) el = STATUS_ELEMENT[f.applyStatus.status];
+  else if (f.applyForcedReaction) el = getStatusElementMap()[f.applyForcedReaction.reaction];
+  else if (f.applyStatus) el = getStatusElementMap()[f.applyStatus.status];
   else el = f.damageElement ?? skillElement;
   if (!el) return undefined;
   const base = ELEMENT_COLORS[el as ElementType];
@@ -46,15 +47,15 @@ interface EventBlockProps {
   label?: string;
   /** "ultimate" renders Animation → Statis → Active → Cooldown. "sequenced" renders multi-sequence segments with frame diamonds. */
   variant?: "default" | "ultimate" | "sequenced";
-  onDragStart: (e: React.MouseEvent, eventId: string, startFrame: number) => void;
-  onContextMenu: (e: React.MouseEvent, eventId: string) => void;
-  onSelect?: (e: React.MouseEvent, eventId: string) => void;
-  onHover?: (eventId: string | null) => void;
-  onTouchStart?: (e: React.TouchEvent, eventId: string, startFrame: number) => void;
-  onFrameClick?: (eventId: string, segmentIndex: number, frameIndex: number) => void;
-  onFrameContextMenu?: (e: React.MouseEvent, eventId: string, segmentIndex: number, frameIndex: number) => void;
-  onFrameDragStart?: (e: React.MouseEvent, eventId: string, segmentIndex: number, frameIndex: number) => void;
-  onSegmentContextMenu?: (e: React.MouseEvent, eventId: string, segmentIndex: number) => void;
+  onDragStart: (e: React.MouseEvent, eventUid: string, startFrame: number) => void;
+  onContextMenu: (e: React.MouseEvent, eventUid: string) => void;
+  onSelect?: (e: React.MouseEvent, eventUid: string) => void;
+  onHover?: (eventUid: string | null) => void;
+  onTouchStart?: (e: React.TouchEvent, eventUid: string, startFrame: number) => void;
+  onFrameClick?: (eventUid: string, segmentIndex: number, frameIndex: number) => void;
+  onFrameContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
+  onFrameDragStart?: (e: React.MouseEvent, eventUid: string, segmentIndex: number, frameIndex: number) => void;
+  onSegmentContextMenu?: (e: React.MouseEvent, eventUid: string, segmentIndex: number) => void;
   /** Currently selected frames for highlight. */
   selectedFrames?: { segmentIndex: number; frameIndex: number }[];
   /** If true, event cannot be dragged — shows pointer cursor instead of grab. */
@@ -129,7 +130,7 @@ function EventBlock({
   eventLayout,
   axis = VERTICAL_AXIS,
 }: EventBlockProps) {
-  const { id, startFrame, segments } = event;
+  const { uid, startFrame, segments } = event;
   const activationDuration = eventDuration(event);
   const activeDuration = 0;
   const cooldownDuration = 0;
@@ -233,7 +234,7 @@ function EventBlock({
             padding: 0,
             margin: 0,
           }}
-          onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, id, i); } : undefined}
+          onContextMenu={segments.length > 1 ? (e) => { e.preventDefault(); e.stopPropagation(); onSegmentContextMenu?.(e, uid, i); } : undefined}
         >
           {(passive || segH > 14) && (seg.properties.name || (isFirst && displayLabel)) && (
             <span className="event-block-label" style={{ ...(passive ? {} : isCooldown ? { color: 'rgba(180,180,180,0.5)' } : { color: '#fff' }), ...segLabelHover }}>{toDisplayLabel(seg.properties.name) ?? displayLabel}</span>
@@ -254,9 +255,9 @@ function EventBlock({
                 className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINAL_STRIKE) ? ' event-frame-diamond--final-strike' : ''}${(f.frameTypes ?? []).includes(EventFrameType.FINISHER) ? ' event-frame-diamond--finisher' : ''}${(f.frameTypes ?? []).includes(EventFrameType.DIVE) ? ' event-frame-diamond--dive' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}${f.statusLabel ? ' event-frame-diamond--status' : ''}`}
                 style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
                 title={f.statusLabel ?? undefined}
-                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, i, fi); }}
-                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, i, fi); }}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, i, fi); }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, i, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(uid, i, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, i, fi); }}
                 onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                 onMouseOut={(e) => { e.stopPropagation(); }}
               />
@@ -273,16 +274,16 @@ function EventBlock({
     return (
       <div
         className={wrapClass}
-        data-event-id={id}
+        data-event-uid={uid}
         style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight } as React.CSSProperties}
-        onContextMenu={(e) => onContextMenu(e, id)}
+        onContextMenu={(e) => onContextMenu(e, uid)}
         onMouseDown={(e) => {
-          if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, id, startFrame); }
+          if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, uid, startFrame); }
         }}
-        onClick={(e) => onSelect?.(e, id)}
-        onMouseOver={() => onHover?.(id)}
+        onClick={(e) => onSelect?.(e, uid)}
+        onMouseOver={() => onHover?.(uid)}
         onMouseOut={() => onHover?.(null)}
-        onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
+        onTouchStart={(e) => !notDraggable && onTouchStart?.(e, uid, startFrame)}
       >
         {(warnings.length > 0 || comboWarning) && (
           <div className="event-segment-warning">
@@ -382,16 +383,16 @@ function EventBlock({
   return (
     <div
       className={wrapClass}
-      data-event-id={id}
+      data-event-uid={uid}
       style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight } as React.CSSProperties}
-      onContextMenu={(e) => onContextMenu(e, id)}
+      onContextMenu={(e) => onContextMenu(e, uid)}
       onMouseDown={(e) => {
-        if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, id, startFrame); }
+        if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, uid, startFrame); }
       }}
-      onClick={(e) => onSelect?.(e, id)}
-      onMouseEnter={() => onHover?.(id)}
+      onClick={(e) => onSelect?.(e, uid)}
+      onMouseEnter={() => onHover?.(uid)}
       onMouseLeave={() => onHover?.(null)}
-      onTouchStart={(e) => !notDraggable && onTouchStart?.(e, id, startFrame)}
+      onTouchStart={(e) => !notDraggable && onTouchStart?.(e, uid, startFrame)}
     >
       {/* Active / Activation segment */}
       {activationH > 0 && hasAnimation ? (() => {
@@ -411,7 +412,7 @@ function EventBlock({
               borderBottom: `1px dashed ${hexAlpha(color, 0.55)}`,
               borderRadius: segmentRadius(axis, true, false),
             } as React.CSSProperties}
-            onMouseDown={(e) => onDragStart(e, id, startFrame)}
+            onMouseDown={(e) => onDragStart(e, uid, startFrame)}
           >
             {animH > 14 && (
               <span className="event-block-label" style={{ color: hexAlpha(color, 0.8), ...animLabelHover }}>Animation</span>
@@ -429,7 +430,7 @@ function EventBlock({
               borderBottom: hasActive ? `1px dashed ${hexAlpha(color, 0.75)}` : undefined,
               borderRadius: hasActive || hasCooldown ? '0' : segmentRadius(axis, false, true),
             } as React.CSSProperties}
-            onMouseDown={(e) => onDragStart(e, id, startFrame)}
+            onMouseDown={(e) => onDragStart(e, uid, startFrame)}
           >
             {postAnimH > 14 && (
               <span className="event-block-label" style={{ color: '#fff', ...statisLabelHover }}>Statis</span>
@@ -447,9 +448,9 @@ function EventBlock({
                   key={`f-${fi}`}
                   className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}${hasInflictionOrStatus(f) ? ' event-frame-diamond--infliction' : ''}`}
                   style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
-                  onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 1, fi); }}
-                  onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 1, fi); }}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 1, fi); }}
+                  onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, 1, fi); }}
+                  onClick={(e) => { e.stopPropagation(); onFrameClick?.(uid, 1, fi); }}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, 1, fi); }}
                   onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                   onMouseOut={(e) => { e.stopPropagation(); }}
                 />
@@ -479,7 +480,7 @@ function EventBlock({
             boxShadow: striped ? undefined : `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)`,
             borderRadius: activationRadius,
           } as React.CSSProperties}
-          onMouseDown={(e) => onDragStart(e, id, startFrame)}
+          onMouseDown={(e) => onDragStart(e, uid, startFrame)}
         >
           {activationH > 14 && (
             <span className="event-block-label" style={{ color: '#fff', ...activationLabelHover }}>
@@ -498,9 +499,9 @@ function EventBlock({
                 key={`f-${fi}`}
                 className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
                 style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
-                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 1, fi); }}
-                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 1, fi); }}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 1, fi); }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, 1, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(uid, 1, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, 1, fi); }}
                 onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                 onMouseOut={(e) => { e.stopPropagation(); }}
               />
@@ -553,9 +554,9 @@ function EventBlock({
                 key={`f-${fi}`}
                 className={`event-frame-diamond${isSelected ? ' event-frame-diamond--selected' : ''}${isHoverHighlight ? ' event-frame-diamond--hover-hit' : ''}`}
                 style={{ [axis.framePos]: framePx, ...(elColor && !isSelected && !isHoverHighlight ? { background: elColor, boxShadow: `0 0 3px ${elColor}80` } : {}) } as React.CSSProperties}
-                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, id, 2, fi); }}
-                onClick={(e) => { e.stopPropagation(); onFrameClick?.(id, 2, fi); }}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, id, 2, fi); }}
+                onMouseDown={(e) => { e.stopPropagation(); if (e.button === 0) onFrameDragStart?.(e, uid, 2, fi); }}
+                onClick={(e) => { e.stopPropagation(); onFrameClick?.(uid, 2, fi); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); onFrameContextMenu?.(e, uid, 2, fi); }}
                 onMouseOver={(e) => { e.stopPropagation(); onHover?.(null); }}
                 onMouseOut={(e) => { e.stopPropagation(); }}
               />

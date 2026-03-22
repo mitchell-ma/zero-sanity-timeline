@@ -31,12 +31,12 @@
           ],
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 5
           },
-          "statusLevelInteractionType": "NONE"
+          "interactionType": "NONE"
         }
       },
       "metadata": {
@@ -88,12 +88,12 @@
           ],
           "unit": "SECOND"
         },
-        "statusLevel": {
+        "stacks": {
           "limit": {
             "verb": "IS",
             "value": 5
           },
-          "statusLevelInteractionType": "NONE"
+          "interactionType": "NONE"
         }
       },
       "metadata": {
