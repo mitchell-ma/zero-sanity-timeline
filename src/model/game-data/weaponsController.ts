@@ -177,14 +177,10 @@ for (const key of weaponIconContext.keys()) {
 }
 
 function resolveWeaponIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_');
+  const key = name.replace(/ /g, '_').toLowerCase();
   if (WEAPON_ICONS[key]) return WEAPON_ICONS[key];
   const encoded = key.replace(/'/g, '%27');
   if (WEAPON_ICONS[encoded]) return WEAPON_ICONS[encoded];
-  const lcKey = key.toLowerCase();
-  for (const [k, v] of Object.entries(WEAPON_ICONS)) {
-    if (k.toLowerCase() === lcKey) return v;
-  }
   return undefined;
 }
 

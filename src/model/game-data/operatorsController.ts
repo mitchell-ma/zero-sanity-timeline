@@ -225,7 +225,7 @@ function resolveOperatorIcon(name: string): string | undefined {
   if (OPERATOR_ICONS[splashKey]) return OPERATOR_ICONS[splashKey];
 
   // Try banner suffix
-  const bannerKey = `${key}_Banner`;
+  const bannerKey = `${key}_banner`;
   if (OPERATOR_ICONS[bannerKey]) return OPERATOR_ICONS[bannerKey];
 
   // Try case-insensitive match

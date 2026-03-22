@@ -188,20 +188,16 @@ export class GearPiece {
 
 const gearIconContext = require.context('../../assets/gears', false, /\.(png|webp)$/);
 const GEAR_ICONS: Record<string, string> = {};
-const GEAR_ICONS_LC: Record<string, string> = {};
 for (const key of gearIconContext.keys()) {
   const match = key.match(/\.\/(.+)\.(png|webp)$/);
   if (match) {
     GEAR_ICONS[match[1]] = gearIconContext(key);
-    GEAR_ICONS_LC[match[1].toLowerCase()] = gearIconContext(key);
   }
 }
 
 function resolveGearIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_');
+  const key = name.replace(/ /g, '_').toLowerCase();
   if (GEAR_ICONS[key]) return GEAR_ICONS[key];
-  const lcKey = key.toLowerCase();
-  if (GEAR_ICONS_LC[lcKey]) return GEAR_ICONS_LC[lcKey];
   return undefined;
 }
 

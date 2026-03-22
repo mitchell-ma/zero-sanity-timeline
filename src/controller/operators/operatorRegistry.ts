@@ -22,10 +22,10 @@ import type { OperatorStatConfig } from '../../model/operators/dataDrivenOperato
 import { loadCustomOperators } from '../../utils/customContentStorage';
 
 // Auto-discover splash art assets
-const splashContext = require.context('../../assets/operators', false, /Banner\.webp$/);
+const splashContext = require.context('../../assets/operators', false, /banner\.webp$/);
 const SPLASH_ART: Record<string, string> = {};
 for (const key of splashContext.keys()) {
-  const match = key.match(/\.\/(.+)_Banner\.webp$/);
+  const match = key.match(/\.\/(.+)_banner\.webp$/);
   if (match) {
     const assetName = match[1];
     SPLASH_ART[assetName] = splashContext(key);
@@ -34,7 +34,7 @@ for (const key of splashContext.keys()) {
 
 /** Look up splash art by operator display name. */
 function getSplashArt(operatorName: string): string | undefined {
-  const key = operatorName.replace(/ /g, '_');
+  const key = operatorName.replace(/ /g, '_').toLowerCase();
   if (SPLASH_ART[key]) return SPLASH_ART[key];
   for (const [assetKey, url] of Object.entries(SPLASH_ART)) {
     if (assetKey.startsWith(key)) return url;

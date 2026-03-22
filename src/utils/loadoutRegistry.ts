@@ -30,7 +30,7 @@ for (const key of operatorIconContext.keys()) {
 }
 
 function getOperatorIcon(name: string): string | undefined {
-  const key = name.replace(/ /g, '_');
+  const key = name.replace(/ /g, '_').toLowerCase();
   if (OPERATOR_ICONS[key]) return OPERATOR_ICONS[key];
   for (const [assetKey, url] of Object.entries(OPERATOR_ICONS)) {
     if (assetKey.startsWith(key)) return url;
