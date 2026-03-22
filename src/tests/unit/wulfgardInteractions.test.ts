@@ -64,6 +64,8 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -85,11 +87,6 @@ jest.mock('../../view/InformationPane', () => ({
   getDefaultLoadoutProperties: () => ({}),
 }));
 
-// eslint-disable-next-line import/first
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
-// eslint-disable-next-line import/first
-import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
 // applyPotentialEffects removed — P5 cooldown reset now handled via DSL RESET COOLDOWN verb
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

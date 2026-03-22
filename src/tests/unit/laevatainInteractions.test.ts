@@ -76,8 +76,12 @@
  *   combo events in the timeline yet)
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType } from '../../consts/enums';
+import { EventStatusType, StatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
+import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
+import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
@@ -264,16 +268,6 @@ jest.mock('../../view/InformationPane', () => ({
   getDefaultLoadoutProperties: () => ({}),
 }));
 
-// eslint-disable-next-line import/first
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
-// eslint-disable-next-line import/first
-import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
-// eslint-disable-next-line import/first
-import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
-// eslint-disable-next-line import/first
-import { StatusType } from '../../consts/enums';
 
 // Load JSON for direct assertion in tests (not in jest.mock scope)
 // eslint-disable-next-line @typescript-eslint/no-require-imports

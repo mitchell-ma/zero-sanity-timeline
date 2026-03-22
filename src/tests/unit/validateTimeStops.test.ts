@@ -7,6 +7,10 @@
  * start at the same frame as a time-stop.
  */
 
+import { TimelineEvent } from '../../consts/viewTypes';
+import { validateTimeStops, TimeStopRegion } from '../../controller/timeline/eventValidator';
+import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
+
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => null,
   getSkillIds: () => new Set(),
@@ -27,13 +31,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { TimelineEvent } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { validateTimeStops, TimeStopRegion } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, OPERATOR_COLUMNS } from '../../model/channels';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

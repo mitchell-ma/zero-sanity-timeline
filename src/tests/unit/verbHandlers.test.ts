@@ -10,6 +10,12 @@ import { VerbType } from '../../dsl/semantics';
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { ENEMY_OWNER_ID, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
+import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
+import { findClauseTriggerMatches } from '../../controller/timeline/triggerMatch';
+import {
+  registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs,
+  registerCustomGearEffectDefs, deregisterCustomGearEffectDefs,
+} from '../../model/game-data/weaponGearEffectLoader';
 
 // ── Load real JSON configs ──────────────────────────────────────────────────
 
@@ -48,16 +54,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
-// eslint-disable-next-line import/first
-import { findClauseTriggerMatches } from '../../controller/timeline/triggerMatch';
-// eslint-disable-next-line import/first
-import {
-  registerCustomWeaponEffectDefs, deregisterCustomWeaponEffectDefs,
-  registerCustomGearEffectDefs, deregisterCustomGearEffectDefs,
-} from '../../model/game-data/weaponGearEffectLoader';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

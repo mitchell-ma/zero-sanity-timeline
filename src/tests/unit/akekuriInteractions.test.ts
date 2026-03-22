@@ -52,6 +52,8 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SKILL_COLUMNS } from '../../model/channels';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
 // Mock modules that use require.context (not available in Jest)
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
@@ -84,10 +86,6 @@ jest.mock('../../view/InformationPane', () => ({
   getDefaultLoadoutProperties: () => ({}),
 }));
 
-// eslint-disable-next-line import/first
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
-// eslint-disable-next-line import/first
-import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockOperatorJson = require('../../model/game-data/operators/akekuri-operator.json');

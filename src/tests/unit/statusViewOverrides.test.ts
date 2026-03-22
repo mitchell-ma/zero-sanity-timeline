@@ -8,6 +8,11 @@
  * - Single events are never overridden
  */
 
+import { computeStatusViewOverrides } from '../../controller/timeline/statusViewController';
+import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
+import { TimelineSourceType, UnitType } from '../../consts/enums';
+import { VerbType } from '../../dsl/semantics';
+
 const mockStatusEvents: Record<string, Record<string, unknown>[]> = {
   laevatain: [
     {
@@ -69,15 +74,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { computeStatusViewOverrides } from '../../controller/timeline/statusViewController';
-// eslint-disable-next-line import/first
-import { TimelineEvent, Column, MiniTimeline } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { TimelineSourceType, UnitType } from '../../consts/enums';
-// eslint-disable-next-line import/first
-import { VerbType } from '../../dsl/semantics';
 
 const FPS = 120;
 

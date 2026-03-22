@@ -24,6 +24,10 @@
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { resolveComboTriggerColumns } from '../../controller/timeline/processComboSkill';
+import { ComboSkillEventController } from '../../controller/timeline/comboSkillEventController';
+import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
+import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
 function mockGetSkillFromJson(id: string) {
   const map: Record<string, { file: string; skillId: string }> = {
@@ -62,15 +66,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { resolveComboTriggerColumns } from '../../controller/timeline/processComboSkill';
-// eslint-disable-next-line import/first
-import { ComboSkillEventController } from '../../controller/timeline/comboSkillEventController';
-// eslint-disable-next-line import/first
-import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
-// eslint-disable-next-line import/first
-import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 

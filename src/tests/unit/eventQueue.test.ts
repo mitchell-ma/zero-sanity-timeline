@@ -13,6 +13,8 @@
 import { TimelineEvent, EventSegmentData, EventFrameMarker, eventDuration } from '../../consts/viewTypes';
 import { EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
+import { PriorityQueue } from '../../controller/timeline/priorityQueue';
+import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 
 // ── Mock require.context before importing modules that use it ────────────────
 
@@ -220,10 +222,6 @@ jest.mock('../../view/InformationPane', () => ({
   getDefaultLoadoutProperties: () => ({}),
 }));
 
-// eslint-disable-next-line import/first
-import { PriorityQueue } from '../../controller/timeline/priorityQueue';
-// eslint-disable-next-line import/first
-import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 

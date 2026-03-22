@@ -13,6 +13,15 @@
  *   - Status 2 followed by Status 1: second is upgraded to Status 2
  */
 
+import { attachReactionFrames } from '../../controller/timeline/processInfliction';
+import { deriveReactions } from '../../controller/timeline/deriveReactions';
+import { TimelineEvent } from '../../consts/viewTypes';
+import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
+import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
+import { StatusLevel } from '../../consts/types';
+import { extendByTimeStops, TimeStopRegion } from '../../controller/timeline/processTimeStop';
+import { DerivedEventController } from '../../controller/timeline/derivedEventController';
+
 // Mock modules that use require.context (not available in Jest)
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -33,25 +42,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { attachReactionFrames } from '../../controller/timeline/processInfliction';
-// eslint-disable-next-line import/first
-import { deriveReactions } from '../../controller/timeline/deriveReactions';
-// eslint-disable-next-line import/first
-import { TimelineEvent } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { INFLICTION_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
-// eslint-disable-next-line import/first
-import { getCorrosionBaseReduction, getCorrosionReductionMultiplier } from '../../model/calculation/damageFormulas';
-// eslint-disable-next-line import/first
-import { StatusLevel } from '../../consts/types';
-// eslint-disable-next-line import/first
-import { extendByTimeStops, TimeStopRegion } from '../../controller/timeline/processTimeStop';
-// eslint-disable-next-line import/first
-import { DerivedEventController } from '../../controller/timeline/derivedEventController';
-// eslint-disable-next-line import/first
-import { USER_ID } from '../../model/channels';
 
 const FPS = 120;
 

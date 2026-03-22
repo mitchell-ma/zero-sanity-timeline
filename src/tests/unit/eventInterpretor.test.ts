@@ -10,6 +10,15 @@
  * - Resource/display verbs are no-ops
  */
 
+import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
+import { ElementType, EventStatusType, PhysicalStatusType } from '../../consts/enums';
+import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import { DerivedEventController } from '../../controller/timeline/derivedEventController';
+import { EventInterpretorController } from '../../controller/timeline/eventInterpretorController';
+import type { InterpretContext } from '../../controller/timeline/eventInterpretorController';
+import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType } from '../../dsl/semantics';
+import type { Effect } from '../../dsl/semantics';
+
 // ── Mock require.context before importing modules that use it ────────────
 
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
@@ -32,23 +41,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { ElementType, EventStatusType, PhysicalStatusType } from '../../consts/enums';
-// eslint-disable-next-line import/first
-import { INFLICTION_COLUMNS, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
-// eslint-disable-next-line import/first
-import { DerivedEventController } from '../../controller/timeline/derivedEventController';
-// eslint-disable-next-line import/first
-import { EventInterpretorController } from '../../controller/timeline/eventInterpretorController';
-// eslint-disable-next-line import/first
-import type { InterpretContext } from '../../controller/timeline/eventInterpretorController';
-// eslint-disable-next-line import/first
-import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType } from '../../dsl/semantics';
-// eslint-disable-next-line import/first
-import type { Effect } from '../../dsl/semantics';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

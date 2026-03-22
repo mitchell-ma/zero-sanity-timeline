@@ -5,6 +5,14 @@
  * is correctly accounted for when validating ultimate placement.
  */
 
+import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/timeline/ultimateEnergyTimeline';
+import { preConsumptionValue, validateResources, hasEnhanceClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
+import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
+import { SkillPointController } from '../../controller/slot/skillPointController';
+import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
+import { SKILL_COLUMNS } from '../../model/channels';
+import { SegmentType } from '../../consts/enums';
+
 // Mock operatorJsonLoader to handle require.context (loads real JSON data)
 jest.mock('../../model/event-frames/operatorJsonLoader', () => {
   const actual = jest.requireActual('../../model/event-frames/dataDrivenEventFrames');
@@ -88,20 +96,6 @@ jest.mock('../../controller/operators/operatorRegistry', () => ({
   buildViewOperatorFromJson: () => null,
 }));
 
-// eslint-disable-next-line import/first
-import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/timeline/ultimateEnergyTimeline';
-// eslint-disable-next-line import/first
-import { preConsumptionValue, validateResources, hasEnhanceClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
-// eslint-disable-next-line import/first
-import { SkillPointController } from '../../controller/slot/skillPointController';
-// eslint-disable-next-line import/first
-import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { SKILL_COLUMNS } from '../../model/channels';
-// eslint-disable-next-line import/first
-import { SegmentType } from '../../consts/enums';
 
 describe('Ultimate Energy Validation', () => {
   const MAX_ENERGY = 300;

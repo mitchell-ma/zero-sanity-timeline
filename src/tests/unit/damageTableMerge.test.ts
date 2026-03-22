@@ -5,6 +5,17 @@
  * - buildCollapsedColumns: per-operator column collapse
  */
 
+import {
+  buildDamageTableColumns,
+  mergeRowsByFrame,
+  buildCollapsedColumns,
+  DamageTableRow,
+} from '../../controller/calculation/damageTableBuilder';
+import { Column, MiniTimeline } from '../../consts/viewTypes';
+import { TimelineSourceType } from '../../consts/enums';
+import { OPERATOR_COLUMNS } from '../../model/channels';
+import { Slot } from '../../controller/timeline/columnBuilder';
+
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
   getFrameSequences: () => [], getSkillIds: () => new Set(), getSkillTypeMap: () => ({}), resolveSkillType: () => null,
@@ -41,22 +52,6 @@ jest.mock('../../model/game-data/weaponGearEffectLoader', () => ({
 jest.mock('../../consts/gearSetEffects', () => ({
   getGearSetEffects: () => undefined,
 }));
-
-// eslint-disable-next-line import/first
-import {
-  buildDamageTableColumns,
-  mergeRowsByFrame,
-  buildCollapsedColumns,
-  DamageTableRow,
-} from '../../controller/calculation/damageTableBuilder';
-// eslint-disable-next-line import/first
-import { Column, MiniTimeline } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { TimelineSourceType } from '../../consts/enums';
-// eslint-disable-next-line import/first
-import { OPERATOR_COLUMNS } from '../../model/channels';
-// eslint-disable-next-line import/first
-import { Slot } from '../../controller/timeline/columnBuilder';
 
 function miniTimeline(key: string, ownerId: string, columnId: string, label: string, opts?: { derived?: boolean }): Column {
   return {

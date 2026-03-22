@@ -60,6 +60,10 @@
 import { TimelineEvent } from '../../consts/viewTypes';
 import { SegmentType, TimeDependency } from '../../consts/enums';
 import { SKILL_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
+import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
+import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
+import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => undefined, getAllOperatorIds: () => [],
@@ -99,14 +103,6 @@ jest.mock('../../view/InformationPane', () => ({
   }),
 }));
 
-// eslint-disable-next-line import/first
-import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
-// eslint-disable-next-line import/first
-import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { processCombatSimulation } from '../../controller/timeline/eventQueueController';
-// eslint-disable-next-line import/first
-import { SlotTriggerWiring } from '../../controller/timeline/eventQueueTypes';
 
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

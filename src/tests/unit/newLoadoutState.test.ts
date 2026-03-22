@@ -10,6 +10,9 @@
  * previous loadout into the fresh one.
  */
 
+import { serializeSheet } from '../../utils/sheetStorage';
+import { applySheetData } from '../../app/sheetDefaults';
+
 // ── Mock require.context before importing modules that use it ────────────────
 
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
@@ -59,11 +62,6 @@ jest.mock('../../utils/enemies', () => ({
 jest.mock('../../view/OperatorLoadoutHeader', () => ({
   EMPTY_LOADOUT: {},
 }));
-
-// eslint-disable-next-line import/first
-import { serializeSheet } from '../../utils/sheetStorage';
-// eslint-disable-next-line import/first
-import { applySheetData } from '../../app/sheetDefaults';
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 

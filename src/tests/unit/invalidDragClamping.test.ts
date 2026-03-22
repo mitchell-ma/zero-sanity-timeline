@@ -7,6 +7,12 @@
  * at which point clamping re-engages and prevents re-entering invalid zones.
  */
 
+import { TimelineEvent } from '../../consts/viewTypes';
+import { clampDeltaByResourceZones, clampDeltaByComboWindow } from '../../controller/timeline/eventValidator';
+import { clampDeltaByOverlap } from '../../controller/timeline/inputEventController';
+import type { ResourceZone } from '../../controller/timeline/skillPointTimeline';
+import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
+
 jest.mock('../../model/event-frames/operatorJsonLoader', () => ({
   getOperatorJson: () => null,
   getSkillIds: () => new Set(),
@@ -27,18 +33,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { TimelineEvent } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { clampDeltaByResourceZones, clampDeltaByComboWindow } from '../../controller/timeline/eventValidator';
-// eslint-disable-next-line import/first
-import { clampDeltaByOverlap } from '../../controller/timeline/inputEventController';
-// eslint-disable-next-line import/first
-import type { ResourceZone } from '../../controller/timeline/skillPointTimeline';
-// eslint-disable-next-line import/first
-import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
-// eslint-disable-next-line import/first
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

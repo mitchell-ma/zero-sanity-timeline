@@ -7,23 +7,35 @@
  * - Empty onTriggerClause: statuses are NOT created as passive at frame 0
  */
 
-// ── Mocks (must be before imports) ──────────────────────────────────────
+import { executeEffect, applyMutations } from '../../controller/timeline/effectExecutor';
+import type { ExecutionContext } from '../../controller/timeline/effectExecutor';
+import { evaluateInteraction } from '../../controller/timeline/conditionEvaluator';
+import type { ConditionContext } from '../../controller/timeline/conditionEvaluator';
+import { VerbType, DURATION_END, NounType } from '../../dsl/semantics';
+import type { Effect, Interaction } from '../../dsl/semantics';
+import { eventDuration } from '../../consts/viewTypes';
+import type { TimelineEvent } from '../../consts/viewTypes';
+import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
+
+// ── Mocks ──────────────────────────────────────────────────────────────
 
 jest.mock('../../model/event-frames/operatorJsonLoader', () => {
+  const { VerbType: MockVerbType } = jest.requireActual('../../dsl/semantics');
+  const { UnitType: MockUnitType } = jest.requireActual('../../consts/enums');
   const statusEvents = [
     {
       name: 'FOCUS',
       target: 'ENEMY',
       stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
       onTriggerClause: [],
-      properties: { duration: { value: { verb: VerbType.IS, value: 60 }, unit: UnitType.SECOND } },
+      properties: { duration: { value: { verb: MockVerbType.IS, value: 60 }, unit: MockUnitType.SECOND } },
     },
     {
       name: 'FOCUS_EMPOWERED',
       target: 'ENEMY',
       stack: { max: { P0: 1 }, instances: 1, verb: 'NONE' },
       onTriggerClause: [],
-      properties: { duration: { value: { verb: VerbType.IS, value: 60 }, unit: UnitType.SECOND } },
+      properties: { duration: { value: { verb: MockVerbType.IS, value: 60 }, unit: MockUnitType.SECOND } },
     },
   ];
   const mockJson = { statusEvents, skillTypeMap: {} };
@@ -44,25 +56,6 @@ jest.mock('../../view/InformationPane', () => ({
   DEFAULT_LOADOUT_PROPERTIES: {},
   getDefaultLoadoutProperties: () => ({}),
 }));
-
-// eslint-disable-next-line import/first
-import { executeEffect, applyMutations } from '../../controller/timeline/effectExecutor';
-// eslint-disable-next-line import/first
-import type { ExecutionContext } from '../../controller/timeline/effectExecutor';
-// eslint-disable-next-line import/first
-import { evaluateInteraction } from '../../controller/timeline/conditionEvaluator';
-// eslint-disable-next-line import/first
-import type { ConditionContext } from '../../controller/timeline/conditionEvaluator';
-// eslint-disable-next-line import/first
-import { VerbType, DURATION_END, NounType } from '../../dsl/semantics';
-// eslint-disable-next-line import/first
-import type { Effect, Interaction } from '../../dsl/semantics';
-// eslint-disable-next-line import/first
-import { eventDuration } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import type { TimelineEvent } from '../../consts/viewTypes';
-// eslint-disable-next-line import/first
-import { EventStatusType, PhysicalStatusType, UnitType } from '../../consts/enums';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
