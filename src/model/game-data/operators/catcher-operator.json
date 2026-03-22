@@ -84,7 +84,58 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "RESILIENT_DEFENSE",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "COMPREHENSIVE_MINDSET_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Multi-layered Readiness",
+      "source": "POTENTIAL",
+      "minPotential": 1,
+      "bonusType": "ADDITIONAL_STRIKE",
+      "values": [
+        300
+      ],
+      "condition": {
+        "skillType": [
+          "BATTLE_SKILL",
+          "ULTIMATE"
+        ]
+      },
+      "label": "P1 Strike"
+    },
+    {
+      "name": "Comprehensive Mindset",
+      "source": "TALENT_2",
+      "minLevel": 1,
+      "bonusType": "SHOCKWAVE",
+      "values": [
+        0.3,
+        0.45
+      ],
+      "waveCount": [
+        2,
+        3
+      ],
+      "condition": {
+        "skillType": "ULTIMATE"
+      },
+      "label": "Shockwave"
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1734,59 +1785,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Multi-layered Readiness",
-      "source": "POTENTIAL",
-      "minPotential": 1,
-      "bonusType": "ADDITIONAL_STRIKE",
-      "values": [
-        300
-      ],
-      "condition": {
-        "skillType": [
-          "BATTLE_SKILL",
-          "ULTIMATE"
-        ]
-      },
-      "label": "P1 Strike"
-    },
-    {
-      "name": "Comprehensive Mindset",
-      "source": "TALENT_2",
-      "minLevel": 1,
-      "bonusType": "SHOCKWAVE",
-      "values": [
-        0.3,
-        0.45
-      ],
-      "waveCount": [
-        2,
-        3
-      ],
-      "condition": {
-        "skillType": "ULTIMATE"
-      },
-      "label": "Shockwave"
-    }
-  ],
-  "talents": {
-    "one": {
-      "id": "RESILIENT_DEFENSE",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "COMPREHENSIVE_MINDSET_TALENT",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1833,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

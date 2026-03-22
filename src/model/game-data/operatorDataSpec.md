@@ -725,7 +725,7 @@ No other top-level keys are allowed. Legacy keys (`originId`, `stats`, `element`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `limit` | object | Max stacks — `{ "verb": "IS", "value": N }` for fixed, `{ "verb": "BASED_ON", "value": [...] }` for level-dependent |
+| `limit` | object | Max stacks — `{ "verb": "IS", "value": N }` for fixed, `{ "verb": "VARY_BY", "value": [...] }` for level-dependent |
 | `statusLevelInteractionType` | string | `NONE` (independent stacks) or `RESET` (refresh duration on reapply) |
 
 ### Clause Types
@@ -746,7 +746,7 @@ Clauses define effects that are active while the status is alive. Each clause ha
           "adjective": "ELECTRIC",
           "toObject": "TARGET",
           "with": {
-            "value": { "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.05, 0.06, ...] }
+            "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [0.05, 0.06, ...] }
           }
         }
       ]
@@ -778,9 +778,9 @@ Effect values use `with.value` with a `verb` indicating how to resolve:
 | verb | object | Description |
 |------|--------|-------------|
 | `IS` | — | Fixed scalar value |
-| `BASED_ON` | `SKILL_LEVEL` | Array indexed by skill level (1–12), resolved via source chain |
-| `BASED_ON` | `TALENT_LEVEL` | Array indexed by talent level |
-| `BASED_ON` | `INTELLECT` | Array of per-intellect scaling values |
+| `VARY_BY` | `SKILL_LEVEL` | Array indexed by skill level (1–12), resolved via source chain |
+| `VARY_BY` | `TALENT_LEVEL` | Array indexed by talent level |
+| `VARY_BY` | `INTELLECT` | Array of per-intellect scaling values |
 
 #### Enhancement Type Adjectives
 
@@ -808,7 +808,7 @@ Frames no longer use a separate `multipliers` array. All frame data (damage, SP 
       { "verb": "RECOVER", "object": "SKILL_POINT", "with": { "cardinality": { "verb": "IS", "value": 0 } } },
       { "verb": "DEAL", "object": "STAGGER", "with": { "value": { "verb": "IS", "value": 10 } }, "toObject": "ENEMY" },
       { "verb": "DEAL", "adjective": "HEAT", "object": "DAMAGE", "to": "TARGET",
-        "with": { "value": { "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.16, 0.18, ...] } } }
+        "with": { "value": { "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [0.16, 0.18, ...] } } }
     ]
   }]
 }

@@ -10,7 +10,7 @@
               "object": "ATTACK_BONUS",
               "with": {
                 "value": {
-                  "verb": "BASED_ON",
+                  "verb": "VARY_BY",
                   "object": "SKILL_LEVEL",
                   "values": [
                     0.12,
@@ -70,7 +70,7 @@
               "object": "ATTACK_BONUS",
               "with": {
                 "value": {
-                  "verb": "BASED_ON",
+                  "verb": "VARY_BY",
                   "object": "SKILL_LEVEL",
                   "values": [
                     0.12,

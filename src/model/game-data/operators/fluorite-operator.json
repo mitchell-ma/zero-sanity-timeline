@@ -4,7 +4,9 @@
   "operatorRarity": 4,
   "operatorClassType": "CASTER",
   "elementType": "NATURE",
-  "weaponTypes": ["HANDCANNON"],
+  "weaponTypes": [
+    "HANDCANNON"
+  ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -106,7 +108,35 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "LOVE_THE_STAB_AND_TWIST",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "UNPREDICTABLE_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Skirmisher",
+      "attribute": "AGILITY",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Love the Stab and Twist",
+      "source": "TALENT_1",
+      "minLevel": 1,
+      "bonusType": "DAMAGE_DEALT",
+      "values": [
+        0.1,
+        0.2
+      ],
+      "condition": {}
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1756,36 +1786,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Love the Stab and Twist",
-      "source": "TALENT_1",
-      "minLevel": 1,
-      "bonusType": "DAMAGE_DEALT",
-      "values": [
-        0.1,
-        0.2
-      ],
-      "condition": {}
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Love the Stab and Twist",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Unpredictable",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1833,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

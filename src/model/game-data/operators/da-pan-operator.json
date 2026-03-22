@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "STRIKER",
   "elementType": "PHYSICAL",
-  "weaponType": "GREAT_SWORD",
+  "weaponTypes": [
+    "GREAT_SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -106,7 +108,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "REDUCE_AND_THICKEN_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Salty or Mild",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1756,23 +1773,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "id": "REDUCE_AND_THICKEN_TALENT",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Salty or Mild",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1833,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

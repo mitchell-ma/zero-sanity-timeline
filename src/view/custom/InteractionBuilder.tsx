@@ -3,7 +3,7 @@
  * Renders a single Interaction as a form row with Subject/Verb/Object dropdowns.
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
-import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType, WithValueVerb,
+import { SubjectType, VerbType, ObjectType, CardinalityConstraintType, DeterminerType,
   VERB_LABELS, OBJECT_LABELS, SUBJECT_LABELS, DETERMINER_LABELS, CARDINALITY_LABELS, TARGET_LABELS, WITH_PROPERTY_LABELS, WITH_BOOLEAN_PROPERTIES,
   getInteractionFieldVisibility, getVerbsForSubject, getObjectsForConditionVerb } from '../../consts/semantics';
 import type { Interaction, Effect, WithPreposition } from '../../consts/semantics';
@@ -298,7 +298,8 @@ function WithPropertyInput({ prop, value, update }: {
   };
 
   if (isBoolean) {
-    const checked = !!w[prop]?.value;
+    const wNode = w[prop];
+    const checked = !!(wNode && 'value' in wNode && wNode.value);
     return (
       <>
         <span className="ce-label ce-label--dim">{WITH_PROPERTY_LABELS[prop] ?? prop}</span>
@@ -310,7 +311,7 @@ function WithPropertyInput({ prop, value, update }: {
             if (checked) {
               delete next[prop];
             } else {
-              next[prop] = { verb: WithValueVerb.IS, value: 1 };
+              next[prop] = { verb: 'IS' as const, value: 1 };
             }
             setWith(next);
           }}
@@ -329,7 +330,7 @@ function WithPropertyInput({ prop, value, update }: {
         type="number"
         step="any"
         min={0}
-        value={w[prop]?.value as number ?? ''}
+        value={(() => { const n = w[prop]; return n && 'value' in n && typeof n.value === 'number' ? n.value : ''; })()}
         placeholder="0"
         onChange={(e) => {
           const next = { ...w };
@@ -337,7 +338,7 @@ function WithPropertyInput({ prop, value, update }: {
           if (e.target.value === '' || isNaN(num)) {
             delete next[prop];
           } else {
-            next[prop] = { verb: WithValueVerb.IS, value: num };
+            next[prop] = { verb: 'IS' as const, value: num };
           }
           setWith(next);
         }}

@@ -1,273 +1,489 @@
 /**
- * StatusEventEditor — Full form for creating/editing a CustomStatusEventDef.
- * Uses the SVO DSL grammar for triggers, clauses, and stat modifiers.
+ * StatusEvent editor — form-based editor for operator status JSON configs.
+ *
+ * Sections:
+ *   Properties — id, name, type, element, target, duration, statusLevel
+ *   Metadata — originId, description, note
+ *   Clauses — clause, onTriggerClause, onEntryClause, onExitClause (tabs)
+ *   Segments — collapsible list, each with properties + clause tabs + frames
  */
 import { useState } from 'react';
-import { ElementType, StackInteractionType, DurationUnit } from '../../consts/enums';
-import { ObjectType, DeterminerType } from '../../consts/semantics';
-import type { CustomStatusEventDef } from '../../model/custom/customOperatorTypes';
-import ClauseBuilder from './ClauseBuilder';
-import SegmentFrameEditor from './SegmentFrameEditor';
+import ClauseEditor from './ClauseEditor';
+import type { Clause } from '../../consts/semantics';
+import CustomSelect from './CustomSelect';
 
-const ELEMENT_LABELS: Record<ElementType, string> = {
-  [ElementType.NONE]: 'None', [ElementType.PHYSICAL]: 'Physical',
-  [ElementType.HEAT]: 'Heat', [ElementType.CRYO]: 'Cryo',
-  [ElementType.NATURE]: 'Nature', [ElementType.ELECTRIC]: 'Electric',
-};
+// ── Types (loose JSON shape — matches raw JSON) ─────────────────────────────
 
-const STACK_INTERACTION_LABELS: Record<StackInteractionType, string> = {
-  [StackInteractionType.NONE]: 'None — stacks ignored at max',
-  [StackInteractionType.REFRESH]: 'Refresh — reset and reapply',
-  [StackInteractionType.EXTEND]: 'Extend — match newest duration',
-  [StackInteractionType.MERGE]: 'Merge — newer subsumes older',
-  [StackInteractionType.APPLY]: 'Apply — add new instance',
-  [StackInteractionType.CONSUME]: 'Consume — remove on use',
-};
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type StatusJson = Record<string, JsonValue>;
 
-const TARGET_OPTIONS = [
-  { value: ObjectType.OPERATOR, label: 'This Operator (self-buff)' },
-  { value: ObjectType.ENEMY, label: 'Enemy (debuff)' },
-  { value: `${DeterminerType.ALL}_${ObjectType.OPERATOR}`, label: 'All Operators (team buff)' },
-  { value: `${DeterminerType.OTHER}_${ObjectType.OPERATOR}`, label: 'Other Operator(s)' },
+// ── Constants ───────────────────────────────────────────────────────────────
+
+const TYPE_OPTIONS = [
+  { value: '', label: '—' },
+  { value: 'TALENT', label: 'Talent' },
+  { value: 'TALENT_STATUS', label: 'Talent Status' },
+  { value: 'GEAR_STATUS', label: 'Gear Status' },
+  { value: 'WEAPON_STATUS', label: 'Weapon Status' },
 ];
 
+const ELEMENT_OPTIONS = [
+  { value: '', label: '—' },
+  { value: 'HEAT', label: 'Heat' },
+  { value: 'ELECTRIC', label: 'Electric' },
+  { value: 'CRYO', label: 'Cryo' },
+  { value: 'NATURE', label: 'Nature' },
+];
+
+const TARGET_OPTIONS = [
+  { value: '', label: '—' },
+  { value: 'OPERATOR', label: 'Operator' },
+  { value: 'ENEMY', label: 'Enemy' },
+];
+
+const DETERMINER_OPTIONS = [
+  { value: '', label: '—' },
+  { value: 'THIS', label: 'This' },
+  { value: 'OTHER', label: 'Other' },
+  { value: 'ALL', label: 'All' },
+  { value: 'ANY', label: 'Any' },
+];
+
+const DURATION_UNIT_OPTIONS = [
+  { value: 'SECOND', label: 'Seconds' },
+  { value: 'FRAME', label: 'Frames' },
+];
+
+const INTERACTION_OPTIONS = [
+  { value: '', label: '—' },
+  { value: 'NONE', label: 'None' },
+  { value: 'RESET', label: 'Reset' },
+];
+
+const CLAUSE_TABS = [
+  { key: 'clause', label: 'Clause' },
+  { key: 'onTriggerClause', label: 'On Trigger' },
+  { key: 'onEntryClause', label: 'On Entry' },
+  { key: 'onExitClause', label: 'On Exit' },
+] as const;
+
+// ── Props ───────────────────────────────────────────────────────────────────
+
 interface StatusEventEditorProps {
-  value: CustomStatusEventDef;
-  onChange: (value: CustomStatusEventDef) => void;
-  onRemove?: () => void;
+  value: StatusJson;
+  onChange: (value: StatusJson) => void;
 }
 
-export default function StatusEventEditor({ value, onChange, onRemove }: StatusEventEditorProps) {
-  const [expanded, setExpanded] = useState(true);
+// ── Main component ──────────────────────────────────────────────────────────
 
-  const update = (patch: Partial<CustomStatusEventDef>) => onChange({ ...value, ...patch });
+export default function StatusEventEditor({ value, onChange }: StatusEventEditorProps) {
+  const props = (value.properties ?? {}) as Record<string, JsonValue>;
+  const meta = (value.metadata ?? {}) as Record<string, JsonValue>;
+  const segments = (value.segments ?? []) as StatusJson[];
 
-  const maxStacks = typeof value.stack.max === 'number' ? value.stack.max : Math.max(...(value.stack.max as number[]));
-
-  // Adjust duration array length to match max stacks
-  const adjustDurationArray = (newMax: number) => {
-    const current = value.durationValues;
-    const adjusted = Array.from({ length: newMax }, (_, i) => current[i] ?? current[current.length - 1] ?? 15);
-    update({ durationValues: adjusted });
+  const updateProps = (patch: Record<string, JsonValue>) => {
+    onChange({ ...value, properties: { ...props, ...patch } });
+  };
+  const updateMeta = (patch: Record<string, JsonValue>) => {
+    onChange({ ...value, metadata: { ...meta, ...patch } });
   };
 
   return (
-    <div className="status-event-editor">
-      <div className="status-event-header" onClick={() => setExpanded(!expanded)}>
-        <span className="status-event-name">{value.name || '(unnamed status)'}</span>
-        <div className="status-event-actions">
-          {onRemove && <button className="ib-remove" onClick={(e) => { e.stopPropagation(); onRemove(); }}>×</button>}
-          <span className="collapse-toggle">{expanded ? '▼' : '▶'}</span>
-        </div>
+    <div className="se-editor">
+      {/* ── Properties ──────────────────────────────────────────────────── */}
+      <FormSection label="Properties">
+        <FormRow label="ID">
+          <input className="ib-input se-input--wide" type="text" value={(props.id as string) ?? ''} onChange={(e) => updateProps({ id: e.target.value || null })} placeholder="STATUS_ID" />
+        </FormRow>
+        <FormRow label="Name">
+          <input className="ib-input se-input--wide" type="text" value={(props.name as string) ?? ''} onChange={(e) => updateProps({ name: e.target.value || null })} placeholder="Display Name" />
+        </FormRow>
+        <FormRow label="Type">
+          <CustomSelect className="se-select" value={(props.type as string) ?? ''} options={TYPE_OPTIONS} onChange={(v) => updateProps({ type: v || null })} />
+        </FormRow>
+        <FormRow label="Element">
+          <CustomSelect className="se-select" value={(props.element as string) ?? ''} options={ELEMENT_OPTIONS} onChange={(v) => updateProps({ element: v || null })} />
+        </FormRow>
+        <FormRow label="Target">
+          <CustomSelect className="se-select" value={(props.target as string) ?? ''} options={TARGET_OPTIONS} onChange={(v) => updateProps({ target: v || null })} />
+          <CustomSelect className="se-select" value={(props.targetDeterminer as string) ?? ''} options={DETERMINER_OPTIONS} onChange={(v) => updateProps({ targetDeterminer: v || null })} />
+        </FormRow>
+        <FormRow label="Enhancement">
+          <EnhancementEditor value={(props.enhancementTypes as string[]) ?? []} onChange={(v) => updateProps({ enhancementTypes: v.length ? v : null })} />
+        </FormRow>
+
+        <FormDivider />
+
+        <DurationEditor
+          label="Duration"
+          value={(props.duration as Record<string, JsonValue>) ?? null}
+          onChange={(v) => updateProps({ duration: v })}
+        />
+        <StatusLevelEditor
+          value={(props.statusLevel as Record<string, JsonValue>) ?? null}
+          onChange={(v) => updateProps({ statusLevel: v })}
+        />
+      </FormSection>
+
+      {/* ── Metadata ────────────────────────────────────────────────────── */}
+      <FormSection label="Metadata">
+        <FormRow label="Origin ID">
+          <input className="ib-input se-input--wide" type="text" value={(meta.originId as string) ?? ''} onChange={(e) => updateMeta({ originId: e.target.value || null })} placeholder="e.g. laevatain" />
+        </FormRow>
+        <FormRow label="Description">
+          <input className="ib-input se-input--wide" type="text" value={(meta.description as string) ?? ''} onChange={(e) => updateMeta({ description: e.target.value || null })} placeholder="Optional" />
+        </FormRow>
+        <FormRow label="Note">
+          <input className="ib-input se-input--wide" type="text" value={(meta.note as string) ?? ''} onChange={(e) => updateMeta({ note: e.target.value || null })} placeholder="Optional" />
+        </FormRow>
+      </FormSection>
+
+      {/* ── Clauses ─────────────────────────────────────────────────────── */}
+      <ClauseTabSection value={value} onChange={onChange} />
+
+      {/* ── Segments ────────────────────────────────────────────────────── */}
+      <SegmentsSection
+        segments={segments}
+        onChange={(segs) => onChange({ ...value, segments: segs.length ? segs : null })}
+      />
+    </div>
+  );
+}
+
+// ── Form primitives ─────────────────────────────────────────────────────────
+
+function FormSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="se-section">
+      <div className="se-section-header">
+        <span className="se-section-label">{label}</span>
+      </div>
+      <div className="se-section-body">{children}</div>
+    </div>
+  );
+}
+
+function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="se-row">
+      <span className="se-row-label">{label}</span>
+      <div className="se-row-controls">{children}</div>
+    </div>
+  );
+}
+
+function FormDivider() {
+  return <div className="se-divider" />;
+}
+
+// ── Enhancement types ───────────────────────────────────────────────────────
+
+function EnhancementEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const toggle = (type: string) => {
+    if (value.includes(type)) onChange(value.filter((t) => t !== type));
+    else onChange([...value, type]);
+  };
+  return (
+    <div className="se-enhancement-row">
+      {['EMPOWERED', 'ENHANCED'].map((t) => (
+        <label key={t} className="se-check">
+          <input type="checkbox" checked={value.includes(t)} onChange={() => toggle(t)} />
+          <span>{t.charAt(0) + t.slice(1).toLowerCase()}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+// ── Duration editor ─────────────────────────────────────────────────────────
+
+function DurationEditor({ label, value, onChange }: {
+  label: string;
+  value: Record<string, JsonValue> | null;
+  onChange: (v: Record<string, JsonValue> | null) => void;
+}) {
+  if (!value) {
+    return (
+      <FormRow label={label}>
+        <button className="cv2-add-btn se-inline-add" onClick={() => onChange({ value: 0, unit: 'SECOND' })}>+ Set Duration</button>
+      </FormRow>
+    );
+  }
+
+  const hasVerb = 'verb' in value;
+
+  return (
+    <FormRow label={label}>
+      <input
+        className="ib-input se-input--num"
+        type="number"
+        step="any"
+        min={0}
+        value={hasVerb ? ((value.values as number[])?.[0] ?? 0) : ((value.value as number) ?? 0)}
+        onChange={(e) => {
+          const num = Number(e.target.value) || 0;
+          if (hasVerb) onChange({ ...value, values: [num] });
+          else onChange({ ...value, value: num });
+        }}
+      />
+      <CustomSelect
+        className="se-select"
+        value={(value.unit as string) ?? 'SECOND'}
+        options={DURATION_UNIT_OPTIONS}
+        onChange={(v) => onChange({ ...value, unit: v })}
+      />
+      <button className="se-clear-btn" onClick={() => onChange(null)} title="Remove duration">&times;</button>
+    </FormRow>
+  );
+}
+
+// ── Status level editor ─────────────────────────────────────────────────────
+
+function StatusLevelEditor({ value, onChange }: {
+  value: Record<string, JsonValue> | null;
+  onChange: (v: Record<string, JsonValue> | null) => void;
+}) {
+  if (!value) {
+    return (
+      <FormRow label="Status Level">
+        <button className="cv2-add-btn se-inline-add" onClick={() => onChange({ limit: { verb: 'IS', value: 1 }, statusLevelInteractionType: 'NONE' })}>+ Set Status Level</button>
+      </FormRow>
+    );
+  }
+
+  const limit = (value.limit as Record<string, JsonValue>) ?? {};
+  const interaction = (value.statusLevelInteractionType ?? value.interactionType ?? '') as string;
+
+  return (
+    <>
+      <FormRow label="Max Stacks">
+        <input
+          className="ib-input se-input--num"
+          type="number"
+          min={1}
+          value={(limit.value as number) ?? (limit.values as number[])?.[0] ?? 1}
+          onChange={(e) => onChange({ ...value, limit: { verb: 'IS', value: Number(e.target.value) || 1 } })}
+        />
+      </FormRow>
+      <FormRow label="Interaction">
+        <CustomSelect
+          className="se-select"
+          value={interaction}
+          options={INTERACTION_OPTIONS}
+          onChange={(v) => onChange({ ...value, statusLevelInteractionType: v || null })}
+        />
+        <button className="se-clear-btn" onClick={() => onChange(null)} title="Remove status level">&times;</button>
+      </FormRow>
+    </>
+  );
+}
+
+// ── Clause tab section ──────────────────────────────────────────────────────
+
+function ClauseTabSection({ value, onChange }: { value: StatusJson; onChange: (v: StatusJson) => void }) {
+  const [activeTab, setActiveTab] = useState<string>('clause');
+
+  return (
+    <div className="se-section">
+      <div className="se-section-header">
+        <span className="se-section-label">Clauses</span>
+      </div>
+      <div className="se-tabs">
+        {CLAUSE_TABS.map((tab) => {
+          const hasContent = Array.isArray(value[tab.key]) && (value[tab.key] as unknown as Clause).length > 0;
+          return (
+            <button
+              key={tab.key}
+              className={`se-tab${activeTab === tab.key ? ' se-tab--active' : ''}${hasContent ? ' se-tab--has-content' : ''}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+              {hasContent && <span className="se-tab-dot" />}
+            </button>
+          );
+        })}
+      </div>
+      <div className="se-section-body">
+        <ClauseEditor
+          initialValue={(value[activeTab] as unknown as Clause) ?? []}
+          onChange={(clause) => onChange({ ...value, [activeTab]: clause.length ? clause as unknown as JsonValue : null })}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Segments section ────────────────────────────────────────────────────────
+
+function SegmentsSection({ segments, onChange }: {
+  segments: StatusJson[];
+  onChange: (segments: StatusJson[]) => void;
+}) {
+  const addSegment = () => {
+    onChange([...segments, { properties: { name: '', duration: { value: 0, unit: 'SECOND' } }, frames: [] }]);
+  };
+
+  const updateSegment = (i: number, seg: StatusJson) => {
+    const next = [...segments];
+    next[i] = seg;
+    onChange(next);
+  };
+
+  const removeSegment = (i: number) => {
+    onChange(segments.filter((_, j) => j !== i));
+  };
+
+  return (
+    <div className="se-section">
+      <div className="se-section-header">
+        <span className="se-section-label">Segments</span>
+        <span className="se-section-count">{segments.length}</span>
+      </div>
+      <div className="se-section-body">
+        {segments.map((seg, si) => (
+          <SegmentCard
+            key={si}
+            index={si}
+            segment={seg}
+            onChange={(s) => updateSegment(si, s)}
+            onRemove={() => removeSegment(si)}
+          />
+        ))}
+        <button className="cv2-add-btn" onClick={addSegment}>+ Add Segment</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Segment card ────────────────────────────────────────────────────────────
+
+function SegmentCard({ index, segment, onChange, onRemove }: {
+  index: number;
+  segment: StatusJson;
+  onChange: (s: StatusJson) => void;
+  onRemove: () => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const props = (segment.properties ?? {}) as Record<string, JsonValue>;
+  const frames = (segment.frames ?? []) as StatusJson[];
+
+  const updateProps = (patch: Record<string, JsonValue>) => {
+    onChange({ ...segment, properties: { ...props, ...patch } });
+  };
+
+  return (
+    <div className="se-segment-card">
+      <div className="se-segment-header" onClick={() => setExpanded(!expanded)}>
+        <span className="se-segment-chevron">{expanded ? '\u25BE' : '\u25B8'}</span>
+        <span className="se-segment-title">Segment {index + 1}{props.name ? ` — ${props.name}` : ''}</span>
+        <button className="cv2-remove-btn" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remove segment">&times;</button>
       </div>
 
       {expanded && (
-        <div className="status-event-body">
-          {/* Identity */}
-          <div className="wz-field-row">
-            <label className="wz-field" style={{ flex: 2 }}>
-              <span>Status Name</span>
-              <input
-                type="text"
-                value={value.name}
-                onChange={(e) => update({ name: e.target.value })}
-                placeholder="e.g. MELTING_FLAME"
-              />
-            </label>
-            <label className="wz-field">
-              <span>Element</span>
-              <select value={value.element} onChange={(e) => update({ element: e.target.value as ElementType })}>
-                {Object.values(ElementType).map((el) => <option key={el} value={el}>{ELEMENT_LABELS[el]}</option>)}
-              </select>
-            </label>
-          </div>
+        <div className="se-segment-body">
+          <FormRow label="Name">
+            <input className="ib-input se-input--wide" type="text" value={(props.name as string) ?? ''} onChange={(e) => updateProps({ name: e.target.value || null })} />
+          </FormRow>
+          <DurationEditor
+            label="Duration"
+            value={(props.duration as Record<string, JsonValue>) ?? null}
+            onChange={(v) => updateProps({ duration: v })}
+          />
 
-          <div className="wz-field-row">
-            <label className="wz-field" style={{ flex: 2 }}>
-              <span>Target</span>
-              <select value={value.target} onChange={(e) => update({ target: e.target.value })}>
-                {TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </label>
-            <label className="ib-checkbox" style={{ alignSelf: 'flex-end', padding: '0.3rem 0' }}>
-              <input
-                type="checkbox"
-                checked={value.isNamedEvent}
-                onChange={(e) => update({ isNamedEvent: e.target.checked })}
-              />
-              Shows on timeline
-            </label>
-          </div>
+          {/* Segment clauses */}
+          <ClauseTabSection value={segment} onChange={onChange} />
 
-          {/* Stack Config */}
-          <div className="wz-subsection">
-            <div className="wz-subsection-header"><span>Stacking</span></div>
-
-            <label className="wz-field">
-              <span>Stack Behavior</span>
-              <select
-                value={value.stack.interactionType}
-                onChange={(e) => update({ stack: { ...value.stack, interactionType: e.target.value } })}
-              >
-                {Object.values(StackInteractionType).map((t) => (
-                  <option key={t} value={t}>{STACK_INTERACTION_LABELS[t]}</option>
-                ))}
-              </select>
-            </label>
-
-            <div className="wz-field-row">
-              <label className="wz-field">
-                <span>Max Stacks</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={maxStacks}
-                  onChange={(e) => {
-                    const newMax = Math.max(1, Number(e.target.value));
-                    update({ stack: { ...value.stack, max: newMax } });
-                    adjustDurationArray(newMax);
-                  }}
-                />
-              </label>
-              <label className="wz-field">
-                <span>Instances</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={value.stack.instances}
-                  onChange={(e) => update({ stack: { ...value.stack, instances: Math.max(1, Number(e.target.value)) } })}
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="wz-subsection">
-            <div className="wz-subsection-header">
-              <span>Duration ({value.durationUnit === DurationUnit.FRAME ? 'frames' : 'seconds'}) — per stack</span>
-              <select
-                className="ib-select"
-                value={value.durationUnit}
-                onChange={(e) => update({ durationUnit: e.target.value })}
-                style={{ marginLeft: 'auto' }}
-              >
-                <option value={DurationUnit.SECOND}>Seconds</option>
-                <option value={DurationUnit.FRAME}>Frames</option>
-              </select>
-            </div>
-            <div className="multiplier-table">
-              {value.durationValues.map((d, i) => (
-                <div key={i} className="duration-cell">
-                  <span className="mt-label">{i + 1}</span>
-                  <input
-                    className="mt-input"
-                    type="number"
-                    step="any"
-                    value={d}
-                    onChange={(e) => {
-                      const durationValues = [...value.durationValues];
-                      durationValues[i] = Number(e.target.value);
-                      update({ durationValues });
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <span className="ib-label">Use -1 for permanent (never expires)</span>
-          </div>
-
-          {/* Trigger Clause */}
-          <div className="wz-subsection">
-            <ClauseBuilder
-              value={value.onTriggerClause}
-              onChange={(onTriggerClause) => update({ onTriggerClause })}
-              conditionsOnly
-              label="Trigger — when this status is created"
-            />
-          </div>
-
-          {/* Clause — reactions/threshold effects */}
-          <div className="wz-subsection">
-            <ClauseBuilder
-              value={value.clause ?? []}
-              onChange={(clause) => update({ clause })}
-              label="Reactions — what happens during this status"
-            />
-          </div>
-
-          {/* Stats */}
-          <div className="wz-subsection">
-            <div className="wz-subsection-header">
-              <span>Stat Modifiers (per stack)</span>
-              <button className="btn-add-sm" onClick={() => update({
-                stats: [...value.stats, { statType: '', value: Array(maxStacks).fill(0) }],
-              })}>+</button>
-            </div>
-            {value.stats.map((stat, i) => (
-              <div key={i} className="stat-modifier-row">
-                <input
-                  className="ib-input ib-object-id"
-                  type="text"
-                  value={stat.statType}
-                  placeholder="e.g. ATTACK_BONUS"
-                  onChange={(e) => {
-                    const stats = [...value.stats];
-                    stats[i] = { ...stat, statType: e.target.value };
-                    update({ stats });
-                  }}
-                />
-                <div className="multiplier-table">
-                  {stat.value.map((v, vi) => (
-                    <input
-                      key={vi}
-                      className="mt-input"
-                      type="number"
-                      step="any"
-                      value={v}
-                      onChange={(e) => {
-                        const stats = [...value.stats];
-                        const values = [...stat.value];
-                        values[vi] = Number(e.target.value);
-                        stats[i] = { ...stat, value: values };
-                        update({ stats });
-                      }}
-                    />
-                  ))}
-                </div>
-                <button className="ib-remove" onClick={() => update({ stats: value.stats.filter((_, j) => j !== i) })}>×</button>
-              </div>
-            ))}
-          </div>
-
-          {/* Segments */}
-          <div className="wz-subsection">
-            <SegmentFrameEditor
-              segments={value.segments ?? []}
-              onChange={(segments) => update({ segments: segments.length > 0 ? segments : undefined })}
-            />
-          </div>
+          {/* Frames */}
+          <FramesSection
+            frames={frames}
+            onChange={(f) => onChange({ ...segment, frames: f })}
+          />
         </div>
       )}
     </div>
   );
 }
 
-/** Create a default empty StatusEventDef. */
-export function defaultStatusEventDef(): CustomStatusEventDef {
-  return {
-    name: '',
-    target: ObjectType.OPERATOR,
-    element: ElementType.NONE,
-    isNamedEvent: true,
-    durationValues: [15],
-    durationUnit: DurationUnit.SECOND,
-    stack: {
-      interactionType: StackInteractionType.NONE,
-      max: 1,
-      instances: 1,
-    },
-    onTriggerClause: [],
-    clause: [],
-    stats: [],
+// ── Frames section ──────────────────────────────────────────────────────────
+
+function FramesSection({ frames, onChange }: {
+  frames: StatusJson[];
+  onChange: (frames: StatusJson[]) => void;
+}) {
+  const addFrame = () => {
+    onChange([...frames, { properties: {}, clause: [] }]);
   };
+
+  const updateFrame = (i: number, frame: StatusJson) => {
+    const next = [...frames];
+    next[i] = frame;
+    onChange(next);
+  };
+
+  const removeFrame = (i: number) => {
+    onChange(frames.filter((_, j) => j !== i));
+  };
+
+  return (
+    <div className="se-frames">
+      <div className="se-section-header">
+        <span className="se-section-label se-section-label--sub">Frames</span>
+        <span className="se-section-count">{frames.length}</span>
+      </div>
+      {frames.map((frame, fi) => (
+        <FrameCard
+          key={fi}
+          index={fi}
+          frame={frame}
+          onChange={(f) => updateFrame(fi, f)}
+          onRemove={() => removeFrame(fi)}
+        />
+      ))}
+      <button className="cv2-add-btn" onClick={addFrame}>+ Add Frame</button>
+    </div>
+  );
+}
+
+// ── Frame card ──────────────────────────────────────────────────────────────
+
+function FrameCard({ index, frame, onChange, onRemove }: {
+  index: number;
+  frame: StatusJson;
+  onChange: (f: StatusJson) => void;
+  onRemove: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const props = (frame.properties ?? {}) as Record<string, JsonValue>;
+  const meta = (frame.metadata ?? {}) as Record<string, JsonValue>;
+
+  const updateProps = (patch: Record<string, JsonValue>) => {
+    onChange({ ...frame, properties: { ...props, ...patch } });
+  };
+
+  return (
+    <div className="se-frame-card">
+      <div className="se-frame-header" onClick={() => setExpanded(!expanded)}>
+        <span className="se-segment-chevron">{expanded ? '\u25BE' : '\u25B8'}</span>
+        <span className="se-frame-title">Frame {index + 1}</span>
+        {meta.eventComponentType && <span className="se-frame-tag">{meta.eventComponentType as string}</span>}
+        <button className="cv2-remove-btn" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remove frame">&times;</button>
+      </div>
+
+      {expanded && (
+        <div className="se-frame-body">
+          <FormRow label="Offset">
+            <input className="ib-input se-input--num" type="number" step="any" value={(props.offset as number) ?? ''} placeholder="0" onChange={(e) => updateProps({ offset: Number(e.target.value) || null })} />
+          </FormRow>
+
+          <div className="se-section-header">
+            <span className="se-section-label se-section-label--sub">Clause</span>
+          </div>
+          <ClauseEditor
+            initialValue={(frame.clause as unknown as Clause) ?? []}
+            onChange={(clause) => onChange({ ...frame, clause: clause.length ? clause as unknown as JsonValue : null })}
+          />
+        </div>
+      )}
+    </div>
+  );
 }

@@ -50,7 +50,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   0.04,
@@ -110,7 +110,7 @@
             "toObject": "ENEMY",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
                 "values": [
                   5,
@@ -156,7 +156,7 @@
           {
             "verb": "APPLY",
             "object": "STATUS",
-            "objectId": "SHADOWLESS_P1",
+            "objectId": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
             "toDeterminer": "THIS",
             "to": "OPERATOR"
           }
@@ -164,7 +164,7 @@
       }
     ],
     "properties": {
-      "id": "SHADOWLESS_P1_TALENT",
+      "id": "CHEN_QIANYU_SHADOWLESS_TALENT",
       "name": "Shadowless (P1)",
       "type": "TALENT",
       "to": "OPERATOR",
@@ -200,7 +200,7 @@
       }
     ],
     "properties": {
-      "id": "SHADOWLESS_P1",
+      "id": "CHEN_QIANYU_POTENTIAL1_SHADOWLESS",
       "name": "Shadowless",
       "type": "POTENTIAL_STATUS",
       "to": "OPERATOR",

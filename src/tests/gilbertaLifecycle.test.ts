@@ -12,67 +12,30 @@
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockSkillsJson = require('../model/game-data/operator-skills/gilberta-skills.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockTalentJson = require('../model/game-data/operator-talents/gilberta-talents.json');
-  const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap } = mockSkillsJson;
+  const mockStatusesJson = require('../model/game-data/operator-statuses/gilberta-statuses.json');
 
-  // Normalize talent status entries (same as operatorJsonLoader.ts)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status normalization
-  const normalizeStatusEntry = (raw: Record<string, any>): Record<string, any> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
-    const props = (raw.properties ?? {}) as Record<string, any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
-    const sl = (props.statusLevel ?? {}) as Record<string, any>;
-    let resolvedLimit: unknown;
-    const limit = sl.limit;
-    if (limit) {
-      if (limit.verb === 'IS') {
-        const v = limit.value;
-        resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
-      } else if (limit.verb === 'BASED_ON' && Array.isArray(limit.value)) {
-        const arr = limit.value;
-        resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
-      } else {
-        resolvedLimit = limit.value ?? limit;
-      }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON normalization
-    const out: Record<string, any> = {
-      id: props.id,
-      ...(props.name ? { name: props.name } : {}),
-      ...(props.type ? { type: props.type } : {}),
-      ...(props.element || raw.element ? { element: props.element ?? raw.element } : {}),
-      ...(props.isForced ? { isForced: props.isForced } : {}),
-      target: 'OPERATOR',
-      targetDeterminer: 'THIS',
-      statusLevel: {
-        limit: resolvedLimit ?? { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
-        statusLevelInteractionType: sl.statusLevelInteractionType ?? 'NONE',
-      },
-      onTriggerClause: raw.onTriggerClause ?? [],
-      originId: raw.originId,
-      ...(raw.clause ? { clause: raw.clause } : {}),
-      ...(raw.stats ? { stats: raw.stats } : {}),
-    };
-    if (props.duration) {
-      const dv = props.duration.value;
-      out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: props.duration.unit } };
+  const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'toObject', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
+  const expandKeys = (val: any): any => {
+    if (val == null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) return val.map(expandKeys);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
+    const out = {} as Record<string, any>;
+    for (const [k, v] of Object.entries(val)) {
+      out[KEY_EXPAND[k] ?? k] = expandKeys(v);
     }
     return out;
   };
-
-  const normalizedTalentStatuses = (mockTalentJson.statusEvents ?? []).map(// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
-  (s: Record<string, any>) => normalizeStatusEntry(s));
-  const mergedStatusEvents = [...(skStatusEvents ?? []), ...normalizedTalentStatuses];
-  const mockJson = { skillTypeMap: skTypeMap, statusEvents: mergedStatusEvents };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- status normalization
+  const expandedStatuses = (mockStatusesJson as any[]).map((s: any) => expandKeys(s));
+  const mockJson = { statusEvents: expandedStatuses };
 
   return {
     // @ts-ignore — babel can't parse TS annotations in jest.mock factories
     getOperatorJson: (id) => id === 'gilberta' ? mockJson : undefined,
     getAllOperatorIds: () => ['gilberta'],
     getSkillIds: () => new Set(['BEAM_COHESION_ARTS', 'GRAVITY_MODE', 'MATRIX_DISPLACEMENT', 'GRAVITY_FIELD']),
-    getSkillTypeMap: () => skTypeMap ?? {},
+    getSkillTypeMap: () => ({}),
     getExchangeStatusConfig: () => ({}),
     getExchangeStatusIds: () => new Set(),
   };

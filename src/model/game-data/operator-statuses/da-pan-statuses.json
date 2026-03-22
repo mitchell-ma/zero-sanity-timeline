@@ -47,7 +47,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   0.04,
@@ -97,7 +97,7 @@
       "to": "OPERATOR",
       "toDeterminer": "THIS",
       "duration": {
-        "verb": "BASED_ON",
+        "verb": "VARY_BY",
         "object": "POTENTIAL",
         "values": [
           20,
@@ -111,7 +111,7 @@
       },
       "statusLevel": {
         "limit": {
-          "verb": "BASED_ON",
+          "verb": "VARY_BY",
           "object": "POTENTIAL",
           "values": [
             1,

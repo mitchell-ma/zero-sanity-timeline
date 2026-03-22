@@ -97,5 +97,48 @@
         ]
       }
     ]
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CONSUME",
+            "object": "ARTS_REACTION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "RECOVER",
+            "object": "SKILL_POINT",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  5,
+                  10
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "CODE_OF_RESTRAINT_TALENT",
+      "name": "Code of Restraint (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "wulfgard",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
   }
 ]

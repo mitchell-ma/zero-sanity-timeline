@@ -96,6 +96,7 @@ export const OPERATOR_COLUMNS = {
   ORIGINIUM_CRYSTAL: 'originium-crystal',
   WILDLAND_TREKKER_TRIGGER: 'wildland-trekker-trigger',
   DASH:           'dash',
+  CONTROLLED:     'controlled',
   OTHER:          'other',
 } as const;
 

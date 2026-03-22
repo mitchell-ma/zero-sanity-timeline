@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "DEFENDER",
   "elementType": "CRYO",
-  "weaponTypes": ["GREAT_SWORD"],
+  "weaponTypes": [
+    "GREAT_SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -98,7 +100,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "POLAR_SURVIVAL",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "SAR_PROFESSIONAL_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1748,23 +1765,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "id": "POLAR_SURVIVAL",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "SAR_PROFESSIONAL_TALENT",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.25,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

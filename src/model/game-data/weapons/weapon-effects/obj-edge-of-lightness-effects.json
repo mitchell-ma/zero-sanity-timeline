@@ -13,7 +13,7 @@
               "to": "OPERATOR",
               "with": {
                 "value": {
-                  "verb": "BASED_ON",
+                  "verb": "VARY_BY",
                   "object": "STATUS_LEVEL",
                   "valueMin": 0.03,
                   "valueMax": 0.084
@@ -27,7 +27,7 @@
               "to": "OPERATOR",
               "with": {
                 "value": {
-                  "verb": "BASED_ON",
+                  "verb": "VARY_BY",
                   "object": "STATUS_LEVEL",
                   "valueMin": 0.03,
                   "valueMax": 0.084

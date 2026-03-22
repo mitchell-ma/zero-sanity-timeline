@@ -90,8 +90,23 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   const opJson = require('../model/game-data/operators/laevatain-operator.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const skillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
-  const { statusEvents: skStatusEvents, ...skillCategories } = skillsJson;
-  const merged = { ...opJson, skills: skillCategories, ...(skStatusEvents ? { statusEvents: skStatusEvents } : {}) };
+  const skillCategories = skillsJson;
+  // Infer skillTypeMap from naming conventions
+  const inferMap = (skills: Record<string, Record<string, unknown>>) => {
+    const ids = Object.keys(skills);
+    const tm: Record<string, unknown> = {};
+    const vs = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+    const fId = ids.find(i => i.endsWith('_FINISHER'));
+    let bId: string | undefined;
+    if (fId) { bId = fId.replace(/_FINISHER$/, ''); const b: Record<string, string> = { BATK: bId, FINISHER: fId }; const dId = ids.find(i => i === `${bId}_DIVE`); if (dId) b.DIVE = dId; tm.BASIC_ATTACK = b; }
+    const base = ids.filter(i => i !== bId && !vs.some(s => i.endsWith(s)));
+    for (const i of base) { if ((skills[i].onTriggerClause as unknown[])?.length) { tm.COMBO_SKILL = i; break; } }
+    const rem = base.filter(i => i !== tm.COMBO_SKILL);
+    for (const i of rem) { const segs = (skills[i].segments ?? []) as { metadata?: { segmentType?: string } }[]; if (segs.some(s => s.metadata?.segmentType === 'ANIMATION')) { tm.ULTIMATE = i; break; } }
+    const bc = rem.filter(i => i !== tm.ULTIMATE); if (bc.length === 1) tm.BATTLE_SKILL = bc[0];
+    return tm;
+  };
+  const merged = { ...opJson, skills: skillCategories, skillTypeMap: inferMap(skillCategories) };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const json: Record<string, any> = { laevatain: merged };
 

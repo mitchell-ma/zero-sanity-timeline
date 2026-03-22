@@ -1,0 +1,46 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "RECEIVE",
+            "object": "SOLIDIFICATION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "RECOVER",
+            "object": "ULTIMATE_ENERGY",
+            "toDeterminer": "THIS",
+            "toObject": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  3,
+                  4
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FLASH_FROZEN_TALENT",
+      "name": "Flash-frozen for Freshness (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "alesh",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

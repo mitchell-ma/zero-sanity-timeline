@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "HYPOTHERMIC_ASSAULT",
-      "FINISHER": "HYPOTHERMIC_ASSAULT_FINISHER",
-      "DIVE": "HYPOTHERMIC_ASSAULT_DIVE"
-    },
-    "BATTLE_SKILL": "SATURATED_DEFENSE",
-    "COMBO_SKILL": "POLAR_RESCUE",
-    "ULTIMATE": "FRIGID_SNOWFIELD"
-  },
   "HYPOTHERMIC_ASSAULT": {
     "segments": [
       {
@@ -49,7 +39,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.55,
@@ -112,7 +102,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.59,
@@ -175,7 +165,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1,
@@ -243,7 +233,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1,
@@ -279,141 +269,9 @@
   },
   "SATURATED_DEFENSE": {
     "properties": {
-      "duration": {
-        "value": 4.5,
-        "unit": "SECOND"
-      },
       "name": "Saturated Defense",
       "description": "Raises a shield that can block attacks, grants Protection to self and nearby operators, and immediately returns some SP. \nWhen attacked while the said shield is raised, perform a retaliation bash that deals Cryo DMG and applies Cryo Infliction on the attacker."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 0,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "APPLY",
-                "object": "PROTECTION",
-                "objectType": "STATUS",
-                "toDeterminer": "ALL",
-                "toObject": "OPERATOR",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 0.9
-                  }
-                }
-              },
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 30
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 3.57,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "CRYO",
-                "objectType": "INFLICTION",
-                "to": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.85, 4.15, 4.5]
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "conditions": [
-              {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "HAVE",
-                "object": "POTENTIAL",
-                "with": {
-                  "value": {
-                    "verb": "AT_LEAST",
-                    "value": 5
-                  }
-                }
-              }
-            ],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -433,30 +291,164 @@
     ],
     "metadata": {
       "originId": "snowshine"
-    }
-  },
-  "POLAR_RESCUE": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "HAVE",
-                "object": "HP",
-                "cardinalityConstraint": "AT_MOST",
-                "cardinality": 60
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "APPLY",
+                    "object": "PROTECTION",
+                    "objectType": "STATUS",
+                    "toDeterminer": "ALL",
+                    "toObject": "OPERATOR",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 0.9
+                      }
+                    }
+                  },
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 30
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 3.57,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "CRYO",
+                    "objectType": "INFLICTION",
+                    "to": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          2,
+                          2.2,
+                          2.4,
+                          2.6,
+                          2.8,
+                          3,
+                          3.2,
+                          3.4,
+                          3.6,
+                          3.85,
+                          4.15,
+                          4.5
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "conditions": [
+                  {
+                    "subjectDeterminer": "THIS",
+                    "subject": "OPERATOR",
+                    "verb": "HAVE",
+                    "object": "POTENTIAL",
+                    "with": {
+                      "value": {
+                        "verb": "AT_LEAST",
+                        "value": 5
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Controlled operator drops below 60% HP",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 4.5,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "POLAR_RESCUE": {
+    "properties": {
       "name": "Polar Rescue",
-      "description": "COMBO TRIGGER: After controlled operator gets attacked and drops below  HP. \nSnowshine throws a Snowfield SAR Assistant at the controlled operator. Upon target contact, the Assistant gives massive instant HP Treatment to nearby operators as well as continuous HP Treatment to operators in the area of effect. \nThe attribute of Will increases the amount of HP treatment."
+      "description": "Controlled operator drops below 60% HP",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -527,14 +519,40 @@
                     "toObject": "OPERATOR",
                     "with": {
                       "healBase": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [96, 115, 134, 154, 163, 173, 182, 192, 202, 206, 211, 216]
+                        "value": [
+                          96,
+                          115,
+                          134,
+                          154,
+                          163,
+                          173,
+                          182,
+                          192,
+                          202,
+                          206,
+                          211,
+                          216
+                        ]
                       },
                       "willAdditive": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [0.22, 0.27, 0.31, 0.36, 0.38, 0.4, 0.43, 0.45, 0.47, 0.48, 0.49, 0.5]
+                        "value": [
+                          0.22,
+                          0.27,
+                          0.31,
+                          0.36,
+                          0.38,
+                          0.4,
+                          0.43,
+                          0.45,
+                          0.47,
+                          0.48,
+                          0.49,
+                          0.5
+                        ]
                       }
                     }
                   },
@@ -556,14 +574,40 @@
                         "unit": "SECOND"
                       },
                       "healBase": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [24, 29, 34, 38, 41, 43, 46, 48, 50, 52, 53, 54]
+                        "value": [
+                          24,
+                          29,
+                          34,
+                          38,
+                          41,
+                          43,
+                          46,
+                          48,
+                          50,
+                          52,
+                          53,
+                          54
+                        ]
                       },
                       "willAdditive": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [0.06, 0.07, 0.08, 0.09, 0.1, 0.1, 0.11, 0.11, 0.12, 0.12, 0.12, 0.13]
+                        "value": [
+                          0.06,
+                          0.07,
+                          0.08,
+                          0.09,
+                          0.1,
+                          0.1,
+                          0.11,
+                          0.11,
+                          0.12,
+                          0.12,
+                          0.12,
+                          0.13
+                        ]
                       }
                     }
                   }
@@ -581,7 +625,7 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "BASED_ON",
+            "verb": "VARY_BY",
             "object": "SKILL_LEVEL",
             "value": [
               25,
@@ -606,7 +650,21 @@
     ],
     "metadata": {
       "originId": "snowshine"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HAVE",
+            "object": "HP",
+            "cardinalityConstraint": "AT_MOST",
+            "cardinality": 60
+          }
+        ]
+      }
+    ]
   },
   "FRIGID_SNOWFIELD": {
     "properties": {
@@ -681,9 +739,22 @@
                     "toObject": "ENEMY",
                     "with": {
                       "value": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [15, 15, 15, 15, 15, 15, 15, 15, 15, 20, 20, 20]
+                        "value": [
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          15,
+                          20,
+                          20,
+                          20
+                        ]
                       }
                     }
                   },
@@ -694,9 +765,22 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.85, 4.15, 4.5]
+                        "value": [
+                          2,
+                          2.2,
+                          2.4,
+                          2.6,
+                          2.8,
+                          3,
+                          3.2,
+                          3.4,
+                          3.6,
+                          3.85,
+                          4.15,
+                          4.5
+                        ]
                       }
                     }
                   },
@@ -717,9 +801,22 @@
                         "unit": "SECOND"
                       },
                       "DOT_DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [0.29, 0.32, 0.35, 0.37, 0.4, 0.43, 0.46, 0.49, 0.52, 0.55, 0.6, 0.65]
+                        "value": [
+                          0.29,
+                          0.32,
+                          0.35,
+                          0.37,
+                          0.4,
+                          0.43,
+                          0.46,
+                          0.49,
+                          0.52,
+                          0.55,
+                          0.6,
+                          0.65
+                        ]
                       },
                       "appliesSolidification": {
                         "verb": "IS",
@@ -743,129 +840,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Hypothermic Assault (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "snowshine"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "snowshine"
-    }
+    ]
   },
   "HYPOTHERMIC_ASSAULT_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Hypothermic Assault (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "snowshine"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "snowshine"
-    }
+    ]
   }
 }

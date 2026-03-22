@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "SUPPORTER",
   "elementType": "NATURE",
-  "weaponTypes": ["ARTS_UNIT"],
+  "weaponTypes": [
+    "ARTS_UNIT"
+  ],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -125,7 +127,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "MESSENGERS_SONG",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "LATE_REPLY_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Stalwart",
+      "attribute": "WILL",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1775,23 +1792,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Messenger's Song",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Late Reply",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1833,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

@@ -309,6 +309,8 @@ export interface MicroColumn {
   id: string;         // used as columnId for events in this micro-column
   label: string;      // short display label (e.g. "HEAT", "1")
   color: string;      // render color for events in this micro-column
+  /** Maximum pixel width for this micro-column in dynamic-split layout. */
+  maxWidth?: number;
   /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
   defaultEvent?: {
     name: string;

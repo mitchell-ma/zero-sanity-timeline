@@ -27,7 +27,6 @@
       "name": "Melting Flame",
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
-      "type": "EXCHANGE",
       "element": "HEAT",
       "statusLevel": {
         "limit": {
@@ -75,7 +74,7 @@
             "to": "TARGET",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_LEVEL",
                 "value": [
                   10,
@@ -180,5 +179,130 @@
         ]
       }
     ]
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HP_BELOW",
+            "object": "PERCENTAGE",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "value": 40
+              }
+            }
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "RE_IGNITION",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "RE_IGNITION_TALENT",
+      "name": "Re-Ignition (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "laevatain",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "PROTECTION",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.9
+                ]
+              }
+            }
+          },
+          {
+            "verb": "APPLY",
+            "object": "HP_REGEN",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.05
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "RE_IGNITION",
+      "name": "Re-Ignition",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "VARY_BY",
+        "object": "TALENT_TWO_LEVEL",
+        "values": [
+          4,
+          8
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": 120,
+            "unit": "SECOND"
+          },
+          "timeDependency": "REAL_TIME"
+        },
+        "frames": []
+      }
+    ],
+    "metadata": {
+      "originId": "RE_IGNITION_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
   }
 ]

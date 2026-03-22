@@ -42,6 +42,8 @@ const DevlogModal = lazy(() => import('./view/DevlogModal'));
 const ExportModal = lazy(() => import('./view/ExportModal'));
 const KeyboardShortcutsModal = lazy(() => import('./view/KeyboardShortcutsModal'));
 const ClauseEditorModal = lazy(() => import('./view/custom/ClauseEditorModal'));
+const StatusEditorModal = lazy(() => import('./view/custom/StatusEditorModal'));
+const ExpressionEditorModal = lazy(() => import('./view/custom/ExpressionEditorModal'));
 const UnifiedCustomizer = lazy(() => import('./view/custom/UnifiedCustomizer'));
 
 const UI_STATE_KEY = 'zst-ui-state';
@@ -196,6 +198,8 @@ export default function App() {
           setSidebarMode('workbench');
         }}
         onClauseEditor={() => app.setClauseEditorOpen(true)}
+        onStatusEditor={() => app.setStatusEditorOpen(true)}
+        onExprEditor={() => app.setExprEditorOpen(true)}
         interactionMode={app.interactionMode}
         onToggleInteractionMode={() => app.setInteractionMode(m => m === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT)}
         lightMode={app.lightMode}
@@ -518,6 +522,15 @@ export default function App() {
 
         <DevlogModal open={app.devlogOpen} onClose={() => app.setDevlogOpen(false)} />
         {app.clauseEditorOpen && <ClauseEditorModal onClose={() => app.setClauseEditorOpen(false)} />}
+        {app.statusEditorOpen && <StatusEditorModal onClose={() => app.setStatusEditorOpen(false)} />}
+        {app.exprEditorOpen && <ExpressionEditorModal
+          value={{ verb: 'IS' as const, value: 0 }}
+          onChange={(node) => {
+            // eslint-disable-next-line no-console
+            console.log('[ExprEditor] result:', JSON.stringify(node, null, 2));
+          }}
+          onClose={() => app.setExprEditorOpen(false)}
+        />}
 
         {app.keysOpen && <KeyboardShortcutsModal onClose={() => app.setKeysOpen(false)} />}
 

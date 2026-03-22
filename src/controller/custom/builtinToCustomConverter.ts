@@ -54,7 +54,7 @@ export function weaponToCustomWeapon(weaponName: string): CustomWeapon | null {
             cooldownSeconds: def.cooldownSeconds ?? 0,
             buffs: clauseEffects.map((e) => {
               const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-              const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+              const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
               return {
                 stat: e.object as string,
                 valueMin: (wv.valueMin as number) ?? (wv.value as number) ?? 0,
@@ -118,7 +118,7 @@ export function gearSetToCustomGearSet(gearSetType: GearSetType): CustomGearSet 
           cooldownSeconds: def.cooldownSeconds ?? 0,
           buffs: clauseEffects.map((e) => {
             const wv = (e.with as Record<string, unknown>).value as Record<string, unknown>;
-            const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+            const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
             return {
               stat: e.object as string,
               value: (wv.value as number) ?? (wv.valueMin as number) ?? 0,

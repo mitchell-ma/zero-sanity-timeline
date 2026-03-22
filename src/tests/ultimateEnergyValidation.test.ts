@@ -13,8 +13,6 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const skillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const talentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const statusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = skillsJson;
   const KEY_EXPAND: Record<string, string> = {
@@ -30,7 +28,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     return out;
   };
   const expandedStatuses = (statusesJson as unknown[]).map(expandKeys);
-  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(talentJson.statusEvents ?? [])];
+  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? [])];
   const skills: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(skillEntries as Record<string, unknown>)) {
     skills[key] = { ...(val as Record<string, unknown>), id: key };

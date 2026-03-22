@@ -107,7 +107,38 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "ILLUMINATION",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "SUBDUER_OF_EVIL_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Skirmisher",
+      "attribute": "AGILITY",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Illumination",
+      "source": "TALENT_1",
+      "minLevel": 1,
+      "bonusType": "ATTACK_PCT_FROM_STATS",
+      "statSources": [
+        "INTELLECT",
+        "WILL"
+      ],
+      "values": [
+        0.001,
+        0.0015
+      ]
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1757,39 +1788,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Illumination",
-      "source": "TALENT_1",
-      "minLevel": 1,
-      "bonusType": "ATTACK_PCT_FROM_STATS",
-      "statSources": [
-        "INTELLECT",
-        "WILL"
-      ],
-      "values": [
-        0.001,
-        0.0015
-      ]
-    }
-  ],
-  "talents": {
-    "one": {
-      "id": "ILLUMINATION",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "SUBDUER_OF_EVIL_TALENT",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.2,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

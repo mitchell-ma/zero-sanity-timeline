@@ -1,0 +1,56 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "CONSUME",
+            "object": "ARTS_INFLICTION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_SUSCEPTIBILITY",
+            "objectType": "STATUS",
+            "to": "ENEMY",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.02,
+                  0.04
+                ]
+              },
+              "duration": {
+                "verb": "IS",
+                "value": 15,
+                "unit": "SECOND"
+              },
+              "scalingType": {
+                "verb": "IS",
+                "value": "PER_STACK_CONSUMED"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "HYPOTHERMIA_TALENT",
+      "name": "Hypothermia (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "last-rite",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

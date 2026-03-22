@@ -796,10 +796,10 @@ Fetch the operator's wiki page (`https://endfield.wiki.gg/wiki/<Operator_Name>`)
 For each skill in `operator-skills/<slug>-skills.json`, present the DSL in human-readable form and compare against wiki data. Check:
 
 1. **Damage types** — wiki says Physical vs Heat/Cryo/Electric/Nature. Basic attacks are often Physical even for elemental operators.
-2. **Multiplier values** — verify each rank's value matches wiki percentages (e.g. wiki 173% = 1.73 in JSON)
+2. **Multiplier values** — wiki multipliers are **display values** that sum all per-frame multipliers together (e.g. wiki 97% for a 4-tick pull = 4 frames of ~24.25% each). End-Axis has individual frame timing data. Warfarin has both per-frame `atk_scale` and the display total `display_atk_scale`. To derive frame count: `normal_frames ≈ (display_atk_scale - sum(atk_scale_variants)) / atk_scale`. When adding multipliers to empty frames, divide the wiki total by the number of End-Axis frames — don't use the wiki total as a per-frame value.
 3. **Stagger values** — match wiki stagger numbers
 4. **Status effects** — APPLY KNOCK_DOWN, inflictions, etc. must match wiki descriptions
-5. **Cooldowns** — combo skill cooldowns should be BASED_ON SKILL_LEVEL arrays if they change at rank 12 (check wiki). Cooldowns live in a COOLDOWN segment with `timeDependency: "REAL_TIME"`, not as CONSUME COOLDOWN effects.
+5. **Cooldowns** — combo skill cooldowns should be VARY_BY SKILL_LEVEL arrays if they change at rank 12 (check wiki). Cooldowns live in a COOLDOWN segment with `timeDependency: "REAL_TIME"`, not as CONSUME COOLDOWN effects.
 6. **SP costs** — CONSUME SKILL_POINT on battle skills
 7. **Conditional effects** — e.g. "if hit during cast, deal extra stagger" → separate clause with predicate
 
@@ -840,7 +840,7 @@ Compare the wiki talent description against these categories to decide how to im
 | "When X happens, gain Y buff for Zs" | TALENT trigger + TALENT_STATUS pair in statuses file | `id` → trigger ID | Ember "Pay the Ferric Price": on hit → ATK +6% 7s |
 | "Applying X also does Y" | TALENT trigger with inline effects (no separate status needed) | `id` → trigger ID | Lifeng "Subduer of Evil": knock down → deal Physical DMG |
 | Passive stat scaling (no trigger) | TALENT_STATUS only (no trigger entry) | `id` → status ID | Lifeng "Illumination": ATK +0.1% per INT+WILL |
-| Modifies another talent/status's parameters | No own status — baked into the modified status via BASED_ON POTENTIAL arrays | `name` (no `id`) | Da Pan "Salty or Mild": modifies Prep Ingredients stack limits |
+| Modifies another talent/status's parameters | No own status — baked into the modified status via VARY_BY POTENTIAL arrays | `name` (no `id`) | Da Pan "Salty or Mild": modifies Prep Ingredients stack limits |
 | Passive attribute increase | `attributeIncrease` with `attribute` field | `name` | All operators' "Forged"/"Skirmisher" |
 
 ### Potential implementation strategy

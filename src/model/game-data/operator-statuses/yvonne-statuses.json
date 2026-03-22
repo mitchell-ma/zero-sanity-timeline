@@ -21,5 +21,138 @@
     "metadata": {
       "originId": "CRYOBLASTING_PISTOLIER"
     }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "SOLIDIFICATION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "BARRAGE_OF_TECHNOLOGY",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
+      "name": "Barrage of Technology (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "yvonne",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "IS",
+                "values": [
+                  0.5
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "BARRAGE_OF_TECHNOLOGY",
+      "name": "Barrage of Technology",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "CONSUME"
+      }
+    },
+    "metadata": {
+      "originId": "BARRAGE_OF_TECHNOLOGY_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "CRYO_INFLICTION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRITICAL_DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  0.1,
+                  0.2
+                ]
+              },
+              "vsSolidified": {
+                "verb": "VARY_BY",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  0.2,
+                  0.4
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FREEZING_POINT",
+      "name": "Freezing Point",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "yvonne",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
   }
 ]

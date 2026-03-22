@@ -24,7 +24,7 @@ interface JsonDuration {
 
 /** WITH preposition value: a cardinality with verb determining value shape. */
 interface JsonWithValue {
-  verb: string; // "IS" | "BASED_ON"
+  verb: string; // "IS" | "VARY_BY"
   object?: string;
   value: number | number[];
   values?: number[];
@@ -145,7 +145,7 @@ function dslTargetToTargetType(toObject?: string): TargetType {
 
 // ── DSL effects → legacy resource interaction bridging ──────────────────────
 
-/** Extract a numeric value from a WITH preposition entry. Returns the IS value or first BASED_ON value. */
+/** Extract a numeric value from a WITH preposition entry. Returns the IS value or first VARY_BY value. */
 function withValue(wv?: JsonWithValue): number {
   if (!wv) return 0;
   return typeof wv.value === 'number' ? wv.value : (wv.value[0] ?? 0);

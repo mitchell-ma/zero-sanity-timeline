@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "BASIC_ATTACK",
-      "FINISHER": "BASIC_ATTACK_FINISHER",
-      "DIVE": "BASIC_ATTACK_DIVE"
-    },
-    "BATTLE_SKILL": "DISTRIBUTED_DOS",
-    "COMBO_SKILL": "STRESS_TESTING",
-    "ULTIMATE": "STACK_OVERFLOW"
-  },
   "BASIC_ATTACK": {
     "segments": [
       {
@@ -44,12 +34,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -107,12 +97,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.16,
@@ -170,12 +160,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.21,
@@ -233,12 +223,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -280,12 +270,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -364,12 +354,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.55,
@@ -405,14 +395,9 @@
   },
   "DISTRIBUTED_DOS": {
     "properties": {
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Distributed DoS",
       "description": "Summons an Auxiliary Crystal that orbits the controlled operator for a while. \nAfter the controlled operator performs a Final Strike on the enemy, the Auxiliary Crystal will restore the said operator's HP. This effect can trigger 2 times. The attribute of Will increases the amount of HP treatment. \nWhen the controlled operator is already at Max HP when triggering the HP restoration, grant the said operator a temporary Arts Amp as well. This effect cannot stack."
     },
-    "frames": [],
     "clause": [
       {
         "conditions": [],
@@ -432,28 +417,24 @@
     ],
     "metadata": {
       "originId": "xaihi"
-    }
+    },
+    "segments": [
+      {
+        "frames": [],
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
   },
   "STRESS_TESTING": {
     "properties": {
-      "trigger": {
-        "onTriggerClause": [
-          {
-            "conditions": [
-              {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "RECOVER",
-                "object": "HP"
-              }
-            ]
-          }
-        ],
-        "description": "Auxiliary Crystal exhausts HP treatments",
-        "windowFrames": 720
-      },
       "name": "Stress Testing",
-      "description": "COMBO TRIGGER: When the Auxiliary Crystal uses up its HP treatments. \nQuickly charges up the Auxiliary Crystal and launches it at the enemy to deal Cryo DMG and Cryo Infliction."
+      "description": "Auxiliary Crystal exhausts HP treatments",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -544,16 +525,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "HEAT",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           2,
@@ -586,7 +563,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 8,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              8,
+              7
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -596,7 +588,19 @@
     ],
     "metadata": {
       "originId": "xaihi"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "RECOVER",
+            "object": "HP"
+          }
+        ]
+      }
+    ]
   },
   "STACK_OVERFLOW": {
     "properties": {
@@ -612,8 +616,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 72
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  80,
+                  72,
+                  72,
+                  72,
+                  72,
+                  72
+                ]
               }
             }
           }
@@ -659,129 +671,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Cooldown (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "xaihi"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "xaihi"
-    }
+    ]
   },
   "BASIC_ATTACK_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Cooldown (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "xaihi"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "xaihi"
-    }
+    ]
   }
 }

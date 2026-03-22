@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "VANGUARD",
   "elementType": "ELECTRIC",
-  "weaponTypes": ["SWORD"],
+  "weaponTypes": [
+    "SWORD"
+  ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -95,7 +97,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "WILDLAND_TREKKER_TRIGGER",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Hannabit Wisdom",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Skirmisher",
+      "attribute": "AGILITY",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1745,23 +1762,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Wildland Trekker",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Hannabit Wisdom",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.15,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

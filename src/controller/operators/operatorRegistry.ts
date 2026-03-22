@@ -65,10 +65,6 @@ const PLACEHOLDER_EQUIPMENT = {
 };
 
 
-// ── Helper: seconds → frames ────────────────────────────────────────────────
-
-function dur(seconds: number): number { return Math.round(seconds * 120); }
-
 // ── Unified view operator builder ────────────────────────────────────────────
 
 /**
@@ -103,20 +99,14 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     if (viewKey) categoryToName[viewKey] = baseId;
   }
 
-  // Compute skill timing — use JSON override fields when available, fall back to getSkillTimings
-  const basicActivation = opJson.basicAttackDefaultDuration != null
-    ? dur(opJson.basicAttackDefaultDuration as number) : 24;
-  const battleActivation = opJson.battleSkillActivationDuration != null
-    ? dur(opJson.battleSkillActivationDuration as number) : timings.battleDur;
-  const battleCooldown = opJson.battleSkillCooldownDuration != null
-    ? dur(opJson.battleSkillCooldownDuration as number) : 0;
-  const comboActivation = opJson.comboSkillActivationDuration != null
-    ? dur(opJson.comboSkillActivationDuration as number) : timings.comboDur;
+  // Compute skill timing from End-Axis data
+  const basicActivation = 24;
+  const battleActivation = timings.battleDur;
+  const battleCooldown = 0;
+  const comboActivation = timings.comboDur;
   const ultActiveDur = timings.ultActiveDur
-    ?? (opJson.ultimateActiveDuration != null
-      ? dur(opJson.ultimateActiveDuration as number) : Math.max(0, timings.ultDur - timings.ultAnimDur));
-  const ultCooldown = timings.ultCd || (opJson.ultimateCooldownDuration != null
-    ? dur(opJson.ultimateCooldownDuration as number) : 0);
+    ?? Math.max(0, timings.ultDur - timings.ultAnimDur);
+  const ultCooldown = timings.ultCd;
 
   // Build defaultSegments for each skill type
   const buildSegments = (activation: number, active: number, cooldown: number, isUltimate?: boolean): EventSegmentData[] => {
@@ -199,7 +189,7 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
     role: ROLE_LABELS[opJson.operatorClassType as string] ?? opJson.operatorClassType,
     rarity: opJson.operatorRarity as number,
     splash: splash as string | undefined,
-    weaponTypes: (opJson.weaponTypes as string[]) ?? (Array.isArray(opJson.weaponType) ? opJson.weaponType : [opJson.weaponType]),
+    weaponTypes: (opJson.weaponTypes as string[]) ?? [],
     weapon: '',
     ...PLACEHOLDER_EQUIPMENT,
     skills,
@@ -220,7 +210,7 @@ const FIELD_HINTS: Record<string, string> = {
   name: 'operator name',
   elementType: 'element (Heat, Cryo, etc.)',
   operatorClassType: 'class (Striker, Caster, etc.)',
-  weaponType: 'weapon type (Sword, Arts Unit, etc.)',
+  weaponTypes: 'weapon type (Sword, Arts Unit, etc.)',
 };
 
 function validateOperatorJson(json: Record<string, unknown>, isBuiltIn: boolean): string[] {
@@ -228,7 +218,7 @@ function validateOperatorJson(json: Record<string, unknown>, isBuiltIn: boolean)
   for (const [field, hint] of Object.entries(FIELD_HINTS)) {
     if (!json[field]) issues.push(hint);
   }
-  if (!json.skills && !json.basicAttackDefaultDuration) {
+  if (!json.skills) {
     issues.push('skill data (basic attack, battle skill, combo, ultimate)');
   }
   return issues;

@@ -14,6 +14,8 @@ interface AppBarProps {
   onKeys: () => void;
   onCustomContent: () => void;
   onClauseEditor?: () => void;
+  onStatusEditor?: () => void;
+  onExprEditor?: () => void;
   interactionMode?: InteractionModeType;
   onToggleInteractionMode?: () => void;
   lightMode?: boolean;
@@ -23,7 +25,7 @@ interface AppBarProps {
 export default function AppBar({
   activeLoadoutName, onRenameLoadout,
   onClearLoadout, onClearAll,
-  onExport, onImport, onShare, onDevlog, onKeys, onCustomContent, onClauseEditor,
+  onExport, onImport, onShare, onDevlog, onKeys, onCustomContent, onClauseEditor, onStatusEditor, onExprEditor,
   interactionMode, onToggleInteractionMode,
   lightMode, onToggleTheme,
 }: AppBarProps) {
@@ -125,7 +127,17 @@ export default function AppBar({
       </button>
       {IS_DEV && onClauseEditor && (
         <button className="btn-devlog" onClick={onClauseEditor}>
-          CLAUSE
+          EVENT
+        </button>
+      )}
+      {IS_DEV && onStatusEditor && (
+        <button className="btn-devlog" onClick={onStatusEditor}>
+          STATUS
+        </button>
+      )}
+      {IS_DEV && onExprEditor && (
+        <button className="btn-devlog" onClick={onExprEditor}>
+          EXPR
         </button>
       )}
       <button

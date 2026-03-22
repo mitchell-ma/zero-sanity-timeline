@@ -1,0 +1,95 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HIT_WITH",
+            "object": "COMBO_SKILL"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "CRYO_INFLICTION"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "EXECUTE_PROCESS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "EXECUTE_PROCESS_TALENT",
+      "name": "Execute Process (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "xaihi",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "CRYO_DAMAGE_TAKEN_BONUS",
+            "to": "ENEMY",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "EXECUTE_PROCESS",
+      "name": "Execute Process",
+      "type": "TALENT_STATUS",
+      "to": "ENEMY",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          5
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "EXECUTE_PROCESS_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

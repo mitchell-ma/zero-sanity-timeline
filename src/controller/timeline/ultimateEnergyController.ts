@@ -56,9 +56,9 @@ export function resolveGainEfficiencies(
   return result;
 }
 
-// ── Multi-dimensional BASED_ON resolver ──────────────────────────────────────
+// ── Multi-dimensional VARY_BY resolver ───────────────────────────────────────
 
-/** Context values for resolving BASED_ON lookups. */
+/** Context values for resolving VARY_BY lookups. */
 interface ResolveContext {
   potential: number;
   talentLevel: number;
@@ -66,7 +66,7 @@ interface ResolveContext {
 }
 
 /**
- * Maps a BASED_ON dimension type to the lookup key for the current context.
+ * Maps a VARY_BY dimension type to the lookup key for the current context.
  * For threshold-based dimensions (POTENTIAL), finds the highest key <= actual value.
  */
 function getDimensionKey(dimension: string, ctx: ResolveContext, keys: string[]): string | undefined {
@@ -106,14 +106,14 @@ function getDimensionKey(dimension: string, ctx: ResolveContext, keys: string[])
 }
 
 /**
- * Resolve a BASED_ON value block, supporting both single-dimension (array)
+ * Resolve a VARY_BY value block, supporting both single-dimension (array)
  * and multi-dimension (nested object) lookups.
  */
 function resolveBasedOnValue(
   wp: Record<string, unknown>,
   ctx: ResolveContext,
 ): number | undefined {
-  if (wp.verb !== 'BASED_ON') {
+  if (wp.verb !== 'VARY_BY') {
     return typeof wp.value === 'number' ? wp.value : undefined;
   }
 
@@ -179,26 +179,65 @@ export function resolveMessengersSongBonuses(
 
   // Read clause effects from the talent JSON
   const opJson = getOperatorJson('gilberta');
-  const statusEvents = opJson?.statusEvents as { id: string; clause?: { conditions: Record<string, unknown>[]; effects: Record<string, unknown>[] }[] }[] | undefined;
-  const msDef = statusEvents?.find(se => se.id === 'MESSENGERS_SONG');
+  const statusEvents = opJson?.statusEvents as { id: string; properties?: Record<string, unknown>; clause?: { conditions: Record<string, unknown>[]; effects: Record<string, unknown>[] }[] }[] | undefined;
+  const msDef = statusEvents?.find(se =>
+    se.id === 'MESSENGERS_SONG' || (se.properties as Record<string, unknown> | undefined)?.id === 'MESSENGERS_SONG'
+  );
   if (!msDef?.clause) return {};
 
-  // Collect class → bonus value from ENERGY_GAIN_EFFICIENCY effects
+  // Collect class → bonus value from ULTIMATE_ENERGY_GAIN / ENERGY_GAIN_EFFICIENCY effects
   const classBonuses = new Map<string, number>();
   for (const clause of msDef.clause) {
-    if (clause.conditions?.length) continue;
+    // Check if clause has a potential condition we need to evaluate
+    const conditions = clause.conditions ?? [];
+    let potentialThreshold = 0;
+    for (const cond of conditions) {
+      if (cond.object === 'POTENTIAL' || cond.verb === 'HAVE') {
+        const condWith = cond.with as Record<string, unknown> | undefined;
+        const condValue = condWith?.value as Record<string, unknown> | undefined;
+        if (condValue?.verb === 'AT_LEAST') {
+          potentialThreshold = condValue.value as number;
+        }
+      }
+    }
+    if (potentialThreshold > 0 && potential < potentialThreshold) continue;
+
     for (const effect of clause.effects ?? []) {
-      const verb = effect.verb ?? effect.verb;
-      const object = effect.object ?? effect.object;
-      if (verb !== 'APPLY' || object !== 'ENERGY_GAIN_EFFICIENCY') continue;
+      const verb = effect.verb;
+      const object = effect.object;
+      if (verb !== 'APPLY' || (object !== 'ENERGY_GAIN_EFFICIENCY' && object !== 'ULTIMATE_ENERGY_GAIN')) continue;
 
-      const targetClass = effect.to as string;
       const withObj = effect.with as Record<string, unknown> | undefined;
-      const wp = withObj?.value as Record<string, unknown> | undefined;
-      if (!wp || !targetClass) continue;
+      if (!withObj) continue;
 
-      const value = resolveBasedOnValue(wp, { potential, talentLevel });
-      if (value != null) classBonuses.set(targetClass, value);
+      // Resolve target classes
+      const targetClasses: string[] = [];
+      const tcObj = withObj.targetClasses as Record<string, unknown> | undefined;
+      if (tcObj?.values && Array.isArray(tcObj.values)) {
+        targetClasses.push(...(tcObj.values as string[]));
+      } else if (typeof effect.to === 'string' && effect.to !== 'OPERATOR') {
+        targetClasses.push(effect.to as string);
+      }
+
+      // Resolve bonus value
+      const wp = withObj.value as Record<string, unknown> | undefined;
+      if (!wp || targetClasses.length === 0) continue;
+
+      // Normalize TALENT_ONE_LEVEL → TALENT_LEVEL for resolveBasedOnValue
+      const normalizedWp = { ...wp };
+      if (normalizedWp.object === 'TALENT_ONE_LEVEL') normalizedWp.object = 'TALENT_LEVEL';
+      // Handle `values` array (new format) vs `value` (old format)
+      if (normalizedWp.values && !normalizedWp.value) {
+        const vals = normalizedWp.values as unknown[];
+        normalizedWp.value = vals.length === 1 ? vals[0] : vals;
+      }
+
+      const value = resolveBasedOnValue(normalizedWp, { potential, talentLevel });
+      if (value != null) {
+        for (const cls of targetClasses) {
+          classBonuses.set(cls, (classBonuses.get(cls) ?? 0) + value);
+        }
+      }
     }
   }
   if (classBonuses.size === 0) return {};

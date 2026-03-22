@@ -17,6 +17,7 @@ import {
   AdjectiveType,
   DURATION_END,
 } from '../../consts/semantics';
+import { getSimpleValue } from '../calculation/valueResolver';
 import { TimelineEvent, durationSegment, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMNS, REACTION_COLUMNS } from '../../model/channels/index';
@@ -64,6 +65,8 @@ export interface ExecutionContext {
   parentEventEndFrame?: number;
   /** Target operator ID for OTHER/ANY determiner resolution. */
   targetOwnerId?: string;
+  /** Query which operator slot is controlled at a given frame. */
+  getControlledSlotAtFrame?: (frame: number) => string;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -88,6 +91,8 @@ function resolveOwnerId(target: string | undefined, ctx: ExecutionContext, deter
       case DeterminerType.ALL: return COMMON_OWNER_ID;
       case DeterminerType.OTHER: return ctx.targetOwnerId ?? ctx.sourceOwnerId;
       case DeterminerType.ANY: return ctx.targetOwnerId ?? ctx.sourceOwnerId;
+      case DeterminerType.CONTROLLED:
+        return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
       default: return ctx.sourceOwnerId;
     }
   }
@@ -165,8 +170,8 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const columnId = resolveInflictionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = effect.with?.duration?.value;
-    const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 120;
+    const durationValue = getSimpleValue(effect.with?.duration);
+    const duration = durationValue != null ? Math.round(durationValue * 120) : 120;
 
     const ev: TimelineEvent = {
       id: `infliction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
@@ -185,8 +190,8 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   if (effect.object === 'STATUS') {
     const columnId = resolveStatusColumnId(effect.objectId);
 
-    const durationValue = effect.with?.duration?.value;
-    const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 2400;
+    const durationValue = getSimpleValue(effect.with?.duration);
+    const duration = durationValue != null ? Math.round(durationValue * 120) : 2400;
 
     const ev: TimelineEvent = {
       id: `status-${effect.objectId?.toLowerCase() ?? 'unknown'}-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
@@ -206,9 +211,9 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
     const columnId = resolveReactionColumnId(effect.adjective);
     if (!columnId) { result.failed = true; return result; }
 
-    const durationValue = effect.with?.duration?.value;
-    const duration = typeof durationValue === 'number' ? Math.round(durationValue * 120) : 2400;
-    const statusLevel = effect.with?.statusLevel?.value;
+    const durationValue = getSimpleValue(effect.with?.duration);
+    const duration = durationValue != null ? Math.round(durationValue * 120) : 2400;
+    const statusLevel = getSimpleValue(effect.with?.statusLevel);
 
     const ev: TimelineEvent = {
       id: `reaction-${ctx.sourceOwnerId}-${ctx.idCounter++}`,
@@ -262,7 +267,7 @@ function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
 
     // If statusLevel is specified, consume that many stacks (oldest first);
     // otherwise consume all active stacks.
-    const consumeCount = (effect.with?.statusLevel as number | undefined) ?? targets.length;
+    const consumeCount = getSimpleValue(effect.with?.statusLevel) ?? targets.length;
     const toConsume = targets.slice(0, consumeCount);
     for (const target of toConsume) {
       result.clamped.set(target.id, {
@@ -354,8 +359,8 @@ function executeExtend(effect: Effect, ctx: ExecutionContext): MutationSet {
   }
 
   // Standard EXTEND: add duration frames
-  const extensionValue = effect.with?.duration?.value;
-  const extensionFrames = typeof extensionValue === 'number' ? Math.round(extensionValue * 120) : 0;
+  const extensionValue = getSimpleValue(effect.with?.duration);
+  const extensionFrames = extensionValue != null ? Math.round(extensionValue * 120) : 0;
 
   for (const target of targets) {
     result.clamped.set(target.id, {
@@ -448,6 +453,7 @@ function executeAll(effect: Effect, ctx: ExecutionContext): MutationSet {
         sourceOwnerId: ctx.sourceOwnerId,
         operatorSlotMap: ctx.operatorSlotMap,
         targetOwnerId: ctx.targetOwnerId,
+        getControlledSlotAtFrame: ctx.getControlledSlotAtFrame,
       };
 
       if (!evaluateConditions(pred.conditions, condCtx)) continue;
@@ -487,6 +493,7 @@ function executeAny(effect: Effect, ctx: ExecutionContext): MutationSet {
     sourceOwnerId: ctx.sourceOwnerId,
     operatorSlotMap: ctx.operatorSlotMap,
     targetOwnerId: ctx.targetOwnerId,
+    getControlledSlotAtFrame: ctx.getControlledSlotAtFrame,
   };
 
   for (const pred of predicates) {

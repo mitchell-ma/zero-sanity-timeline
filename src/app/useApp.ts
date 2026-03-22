@@ -15,6 +15,7 @@ import { ALL_OPERATORS } from '../controller/operators/operatorRegistry';
 import { ALL_ENEMIES, DEFAULT_ENEMY } from '../utils/enemies';
 import { TimelineEvent, VisibleSkills, ContextMenuState, SkillType, SelectedFrame, ResourceConfig, MiniTimeline, computeSegmentsSpan, eventEndFrame } from '../consts/viewTypes';
 import type { DamageTableRow } from '../controller/calculation/damageTableBuilder';
+import { getModelEnemy } from '../controller/calculation/enemyRegistry';
 import { processCombatSimulation } from '../controller/timeline/eventQueueController';
 import { SlotTriggerWiring } from '../controller/timeline/eventQueueTypes';
 import { getComboTriggerClause } from '../model/event-frames/operatorJsonLoader';
@@ -210,6 +211,8 @@ export function useApp() {
   const [devlogOpen,       setDevlogOpen]       = useState(false);
   const [keysOpen,         setKeysOpen]         = useState(false);
   const [clauseEditorOpen, setClauseEditorOpen] = useState(false);
+  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
+  const [exprEditorOpen, setExprEditorOpen] = useState(false);
   const [interactionMode, setInteractionMode] = useState<InteractionModeType>(() => {
     try {
       const stored = localStorage.getItem('zst-interaction-mode');
@@ -408,9 +411,15 @@ export function useApp() {
     return map;
   }, [slots]);
 
+  const bossMaxHp = useMemo(() => {
+    const model = getModelEnemy(enemy.id);
+    return model ? model.getHp() : null;
+  }, [enemy.id]);
+
   const processedEvents = useMemo(
-    () => processCombatSimulation(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets),
-    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets],
+    () => processCombatSimulation(validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [validEvents, loadoutProperties, slotWeapons, slotWirings, slotOperatorMap, slotGearSets, bossMaxHp, enemy.id, loadouts],
   );
 
   const { combatLoadout } =
@@ -1727,7 +1736,7 @@ export function useApp() {
     infoPaneClosing, infoPanePinned, infoPaneVerbose, selectedFrames, hoverFrame,
     scrollSynced, showRealTime, splitPct, interactionMode, lightMode, warningMessage, hiddenPane, hidePreview, showPreview, critMode, orientation,
     loadoutRowHeight, headerRowHeight, selectEventIds,
-    devlogOpen, keysOpen, clauseEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
+    devlogOpen, keysOpen, clauseEditorOpen, statusEditorOpen, exprEditorOpen, exportModalOpen, confirmClearLoadout, confirmClearAll, saveFlash,
 
     // Loadout tree
     loadoutTree, activeLoadoutId, sidebarCollapsed,
@@ -1763,7 +1772,7 @@ export function useApp() {
     // Setters for simple inline handlers
     setContextMenu, setSelectedFrames, setLoadoutRowHeight, setHeaderRowHeight,
     setHoverFrame, setInfoPanePinned, setInfoPaneVerbose, setWarningMessage,
-    setDevlogOpen, setKeysOpen, setClauseEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
+    setDevlogOpen, setKeysOpen, setClauseEditorOpen, setStatusEditorOpen, setExprEditorOpen, setInteractionMode, setLightMode, setShowRealTime, setCritMode,
     setSplitPct, setSelectEventIds, setExportModalOpen,
     setConfirmClearLoadout, setConfirmClearAll,
 

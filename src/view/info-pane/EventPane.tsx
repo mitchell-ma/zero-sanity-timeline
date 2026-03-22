@@ -8,6 +8,8 @@ import type { LoadoutProperties } from '../InformationPane';
 import { resolveEventIdentity, resolveSpReturn, resolveActiveModifiers, resolveComboChain, resolveEventDsl, resolveEventFullDetail, resolveEventTiming } from '../../controller/info-pane/eventPaneController';
 import type { ResolvedPredicate, EventFullDetail } from '../../controller/info-pane/eventPaneController';
 import type { Effect, Interaction } from '../../consts/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../../consts/semantics';
+import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, SKILL_COLUMNS, SKILL_COLUMN_ORDER } from '../../model/channels';
 import { getLastController } from '../../controller/timeline/eventQueueController';
 import { getSkillMultiplier, getFrameMultiplier } from '../../controller/calculation/jsonMultiplierEngine';
@@ -226,14 +228,18 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
       {effect.with && (
         <div style={{ ...DETAIL_MONO, paddingLeft: 16 + depth * 10, color: 'var(--text-muted)' }}>
           {Object.entries(effect.with).map(([k, v]) => {
-            const val = typeof v.value === 'number' ? String(v.value)
-              : `[${(v.value as number[]).slice(0, 4).join(', ')}${(v.value as number[]).length > 4 ? ` ...+${(v.value as number[]).length - 4}` : ''}]`;
+            const leaf = getLeafValue(v);
+            const val = typeof leaf === 'number' ? String(leaf)
+              : Array.isArray(leaf) ? `[${leaf.slice(0, 4).join(', ')}${leaf.length > 4 ? ` ...+${leaf.length - 4}` : ''}]`
+              : '(expr)';
+            const verb = isValueLiteral(v) ? v.verb : isValueVariable(v) ? v.verb : isValueStat(v) ? v.verb : isValueExpression(v) ? v.operator : '?';
+            const obj = isValueVariable(v) ? v.object : isValueStat(v) ? v.object : undefined;
             return (
               <div key={k}>
                 <span style={{ color: '#888' }}>WITH</span>{' '}
                 <span style={{ color: '#55aadd' }}>{k.replace(/_/g, ' ')}</span>{' '}
-                <span style={{ color: '#88cc44' }}>{v.verb}</span>{' '}
-                {v.object && <span style={{ color: '#dd8844' }}>{v.object} </span>}
+                <span style={{ color: '#88cc44' }}>{verb}</span>{' '}
+                {obj && <span style={{ color: '#dd8844' }}>{obj} </span>}
                 <span style={{ color: 'var(--text-primary)' }}>{val}</span>
               </div>
             );

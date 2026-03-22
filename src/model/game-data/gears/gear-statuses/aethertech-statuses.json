@@ -63,7 +63,7 @@
             "object": "PHYSICAL_DAMAGE_BONUS",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "STATUS_LEVEL",
                 "values": [
                   0.08

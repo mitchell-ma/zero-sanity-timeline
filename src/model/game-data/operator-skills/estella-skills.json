@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "AUDIO_NOISE",
-      "FINISHER": "AUDIO_NOISE_FINISHER",
-      "DIVE": "AUDIO_NOISE_DIVE"
-    },
-    "BATTLE_SKILL": "ONOMATOPOEIA",
-    "COMBO_SKILL": "DISTORTION",
-    "ULTIMATE": "TREMOLO"
-  },
   "AUDIO_NOISE": {
     "segments": [
       {
@@ -49,7 +39,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.25,
@@ -112,7 +102,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.3,
@@ -175,7 +165,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -222,7 +212,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.2,
@@ -306,7 +296,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.4,
@@ -342,85 +332,9 @@
   },
   "ONOMATOPOEIA": {
     "properties": {
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Onomatopoeia",
       "description": "A lance thrust that fires a stream of freezing sound waves that deal Cryo DMG and apply Cryo Infliction to all enemies along its straight path."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.7,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "CRYO",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.56,
-                      1.71,
-                      1.87,
-                      2.02,
-                      2.18,
-                      2.34,
-                      2.49,
-                      2.65,
-                      2.8,
-                      3,
-                      3.23,
-                      3.5
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -440,27 +354,95 @@
     ],
     "metadata": {
       "originId": "estella"
-    }
-  },
-  "DISTORTION": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.7,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "SOLIDIFIED"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "CRYO",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.56,
+                          1.71,
+                          1.87,
+                          2.02,
+                          2.18,
+                          2.34,
+                          2.49,
+                          2.65,
+                          2.8,
+                          3,
+                          3.23,
+                          3.5
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Enemy has Solidification",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "DISTORTION": {
+    "properties": {
       "name": "Distortion",
-      "description": "COMBO TRIGGER: When an enemy suffers Solidification. \nQuickly moves to the enemy's side to deal Physical DMG and forcibly Lift enemies in a small area. If the skill hits a target with Solidification, the skill deals additional DMG and applies Physical Susceptibility."
+      "description": "Enemy has Solidification",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -557,9 +539,22 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [1.6, 1.76, 1.92, 2.08, 2.24, 2.4, 2.56, 2.72, 2.88, 3.08, 3.32, 3.6]
+                        "value": [
+                          1.6,
+                          1.76,
+                          1.92,
+                          2.08,
+                          2.24,
+                          2.4,
+                          2.56,
+                          2.72,
+                          2.88,
+                          3.08,
+                          3.32,
+                          3.6
+                        ]
                       }
                     }
                   }
@@ -598,9 +593,22 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [2.8, 3.08, 3.36, 3.64, 3.92, 4.2, 4.48, 4.76, 5.04, 5.39, 5.81, 6.3]
+                        "value": [
+                          2.8,
+                          3.08,
+                          3.36,
+                          3.64,
+                          3.92,
+                          4.2,
+                          4.48,
+                          4.76,
+                          5.04,
+                          5.39,
+                          5.81,
+                          6.3
+                        ]
                       }
                     }
                   },
@@ -611,9 +619,22 @@
                     "to": "ENEMY",
                     "with": {
                       "value": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
-                        "value": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.15, 0.15, 0.15]
+                        "value": [
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.1,
+                          0.15,
+                          0.15,
+                          0.15
+                        ]
                       },
                       "duration": {
                         "verb": "IS",
@@ -636,7 +657,7 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "verb": "BASED_ON",
+            "verb": "VARY_BY",
             "object": "SKILL_LEVEL",
             "value": [
               18,
@@ -661,7 +682,18 @@
     ],
     "metadata": {
       "originId": "estella"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "SOLIDIFIED"
+          }
+        ]
+      }
+    ]
   },
   "TREMOLO": {
     "properties": {
@@ -677,7 +709,7 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "POTENTIAL",
                 "value": [
                   70,
@@ -744,7 +776,7 @@
                     "toObject": "ENEMY",
                     "with": {
                       "value": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           15,
@@ -770,7 +802,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           4.89,
@@ -825,129 +857,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Audio Noise (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "estella"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "estella"
-    }
+    ]
   },
   "AUDIO_NOISE_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Audio Noise (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "estella"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "estella"
-    }
+    ]
   }
 }

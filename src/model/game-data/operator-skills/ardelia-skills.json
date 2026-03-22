@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "ROCKY_WHISPERS",
-      "FINISHER": "ROCKY_WHISPERS_FINISHER",
-      "DIVE": "ROCKY_WHISPERS_DIVE"
-    },
-    "BATTLE_SKILL": "DOLLY_RUSH",
-    "COMBO_SKILL": "ERUPTION_COLUMN",
-    "ULTIMATE": "WOOLY_PARTY"
-  },
   "ROCKY_WHISPERS": {
     "segments": [
       {
@@ -49,7 +39,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.3,
@@ -112,7 +102,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.2,
@@ -159,7 +149,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.2,
@@ -222,7 +212,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.04,
@@ -269,7 +259,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.04,
@@ -316,7 +306,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.04,
@@ -400,7 +390,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.55,
@@ -436,201 +426,9 @@
   },
   "DOLLY_RUSH": {
     "properties": {
-      "duration": {
-        "value": 1.57,
-        "unit": "SECOND"
-      },
       "name": "Dolly Rush",
       "description": "Hops on Mr. Dolly and rams the target to deal Nature DMG. If the target has Corrosion, then consume the Corrosion and apply Physical Susceptibility and Arts Susceptibility to the target."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.07,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "REACTION",
-                "objectId": "CORROSION"
-              }
-            ],
-            "effects": [
-              {
-                "verb": "CONSUME",
-                "object": "REACTION",
-                "objectId": "CORROSION"
-              },
-              {
-                "verb": "APPLY",
-                "object": "STATUS",
-                "objectId": "vulnerableInfliction",
-                "toObject": "ENEMY",
-                "with": {
-                  "duration": {
-                    "verb": "IS",
-                    "value": 30
-                  }
-                },
-                "susceptibility": {
-                  "PHYSICAL": [
-                    0.12,
-                    0.12,
-                    0.12,
-                    0.13,
-                    0.13,
-                    0.13,
-                    0.14,
-                    0.14,
-                    0.16,
-                    0.17,
-                    0.18,
-                    0.2
-                  ],
-                  "NATURE": [
-                    0.12,
-                    0.12,
-                    0.12,
-                    0.13,
-                    0.13,
-                    0.13,
-                    0.14,
-                    0.14,
-                    0.16,
-                    0.17,
-                    0.18,
-                    0.2
-                  ]
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "stagger": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "rateVulBase": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.12,
-                      0.12,
-                      0.12,
-                      0.13,
-                      0.13,
-                      0.13,
-                      0.14,
-                      0.14,
-                      0.16,
-                      0.17,
-                      0.18,
-                      0.2
-                    ]
-                  },
-                  "durationVul": {
-                    "verb": "IS",
-                    "value": 30
-                  },
-                  "rateVulMax": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.36,
-                      0.36,
-                      0.37,
-                      0.37,
-                      0.37,
-                      0.38,
-                      0.38,
-                      0.4,
-                      0.41,
-                      0.42,
-                      0.4
-                    ]
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.42,
-                      1.56,
-                      1.71,
-                      1.85,
-                      1.99,
-                      2.13,
-                      2.28,
-                      2.42,
-                      2.56,
-                      2.74,
-                      2.95,
-                      3.2
-                    ]
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "DAMAGE",
-                "adjective": "NATURE",
-                "toObject": "ENEMY",
-                "with": {
-                  "multiplier": {
-                    "verb": "DEPEND_ON",
-                    "value": [
-                      1.42,
-                      1.56,
-                      1.71,
-                      1.85,
-                      1.99,
-                      2.13,
-                      2.28,
-                      2.42,
-                      2.56,
-                      2.74,
-                      2.95,
-                      3.2
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -650,65 +448,207 @@
     ],
     "metadata": {
       "originId": "ardelia"
-    }
-  },
-  "ERUPTION_COLUMN": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.07,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subjectDeterminer": "ANY",
-                "subject": "OPERATOR",
-                "verb": "PERFORM",
-                "object": "FINAL_STRIKE"
+                "conditions": [
+                  {
+                    "subject": "ENEMY",
+                    "verb": "HAVE",
+                    "object": "REACTION",
+                    "objectId": "CORROSION"
+                  }
+                ],
+                "effects": [
+                  {
+                    "verb": "CONSUME",
+                    "object": "REACTION",
+                    "objectId": "CORROSION"
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "STATUS",
+                    "objectId": "vulnerableInfliction",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "duration": {
+                        "verb": "IS",
+                        "value": 30
+                      }
+                    },
+                    "susceptibility": {
+                      "PHYSICAL": [
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13,
+                        0.13,
+                        0.13,
+                        0.14,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2
+                      ],
+                      "NATURE": [
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13,
+                        0.13,
+                        0.13,
+                        0.14,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2
+                      ]
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "rateVulBase": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.12,
+                          0.12,
+                          0.12,
+                          0.13,
+                          0.13,
+                          0.13,
+                          0.14,
+                          0.14,
+                          0.16,
+                          0.17,
+                          0.18,
+                          0.2
+                        ]
+                      },
+                      "durationVul": {
+                        "verb": "IS",
+                        "value": 30
+                      },
+                      "rateVulMax": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.36,
+                          0.36,
+                          0.37,
+                          0.37,
+                          0.37,
+                          0.38,
+                          0.38,
+                          0.4,
+                          0.41,
+                          0.42,
+                          0.4
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ]
+                      }
+                    }
+                  }
+                ]
               },
               {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "STATUS",
-                "objectId": "vulnerableInfliction",
-                "negated": true
-              },
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "STATUS",
-                "objectId": "heatInfliction",
-                "negated": true
-              },
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "STATUS",
-                "objectId": "cryoInfliction",
-                "negated": true
-              },
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "STATUS",
-                "objectId": "natureInfliction",
-                "negated": true
-              },
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "STATUS",
-                "objectId": "electricInfliction",
-                "negated": true
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "DAMAGE",
+                    "adjective": "NATURE",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "multiplier": {
+                        "verb": "DEPEND_ON",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Controlled operator Final Strike on enemy with no Vulnerability or Arts Infliction",
-        "windowFrames": 720
-      },
-      "hasDelayedHit": true,
-      "delayedHitLabel": "Volcanic Cloud Explosion",
+        "properties": {
+          "duration": {
+            "value": 1.57,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "ERUPTION_COLUMN": {
+    "properties": {
       "name": "Eruption Column",
-      "description": "COMBO TRIGGER: When the controlled operator performs a Final Strike on an enemy with no stacks of Vulnerability or Arts Infliction. \nLaunches a homing Volcanic Cloud at a target enemy that deals Nature DMG when close enough to the target. The Volcanic Cloud explodes after a short delay, dealing half of the Nature DMG and forcibly applying temporary Corrosion to nearby enemies."
+      "description": "Controlled operator Final Strike on enemy with no Vulnerability or Arts Infliction",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -784,7 +724,7 @@
                     "to": "ENEMY",
                     "with": {
                       "atkScaleBoom": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.11,
@@ -801,20 +741,12 @@
                           2.5
                         ]
                       },
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "durationCorrupt": {
                         "verb": "IS",
                         "value": 7
                       },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.45,
@@ -895,7 +827,7 @@
                     "to": "ENEMY",
                     "with": {
                       "atkScaleBoom": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.11,
@@ -913,7 +845,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.45,
@@ -946,7 +878,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 18,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              17
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -956,7 +903,54 @@
     ],
     "metadata": {
       "originId": "ardelia"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "ANY",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "vulnerableInfliction",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "heatInfliction",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "cryoInfliction",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "natureInfliction",
+            "negated": true
+          },
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "electricInfliction",
+            "negated": true
+          }
+        ]
+      }
+    ]
   },
   "WOOLY_PARTY": {
     "properties": {
@@ -972,8 +966,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 90
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  90,
+                  90,
+                  90,
+                  76.5,
+                  76.5,
+                  76.5
+                ]
               }
             }
           }
@@ -999,13 +1001,15 @@
       },
       {
         "metadata": {
-          "eventComponentType": "SEGMENT"
+          "eventComponentType": "SEGMENT",
+          "segmentType": "ACTIVE"
         },
         "properties": {
           "duration": {
             "value": 4.47,
             "unit": "SECOND"
-          }
+          },
+          "name": "Active"
         },
         "frames": [
           {
@@ -1204,7 +1208,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.73,
@@ -1330,16 +1334,8 @@
                         "verb": "IS",
                         "value": 3
                       },
-                      "effectProb": {
-                        "verb": "IS",
-                        "value": 0.1
-                      },
-                      "interval": {
-                        "verb": "IS",
-                        "value": 0.3
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.73,
@@ -1429,7 +1425,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.73,
@@ -1461,130 +1457,136 @@
   },
   "DOLLY_RUSH_EMPOWERED": {
     "properties": {
-      "duration": {
-        "value": 1.57,
-        "unit": "SECOND"
-      },
       "enhancementTypes": [
         "EMPOWERED"
       ]
     },
-    "frames": [
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.07,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [
+                  {
+                    "subject": "ENEMY",
+                    "verb": "HAVE",
+                    "object": "REACTION",
+                    "objectId": "CORROSION"
+                  }
+                ],
+                "effects": [
+                  {
+                    "verb": "CONSUME",
+                    "object": "REACTION",
+                    "objectId": "CORROSION"
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "STATUS",
+                    "objectId": "vulnerableInfliction",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "duration": {
+                        "verb": "IS",
+                        "value": 30
+                      }
+                    },
+                    "susceptibility": {
+                      "PHYSICAL": [
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13,
+                        0.13,
+                        0.13,
+                        0.14,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2
+                      ],
+                      "NATURE": [
+                        0.12,
+                        0.12,
+                        0.12,
+                        0.13,
+                        0.13,
+                        0.13,
+                        0.14,
+                        0.14,
+                        0.16,
+                        0.17,
+                        0.18,
+                        0.2
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "DAMAGE",
+                    "adjective": "NATURE",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "multiplier": {
+                        "verb": "DEPEND_ON",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
         "properties": {
-          "offset": {
-            "value": 1.07,
+          "duration": {
+            "value": 1.57,
             "unit": "SECOND"
           }
-        },
-        "clause": [
-          {
-            "conditions": [
-              {
-                "subject": "ENEMY",
-                "verb": "HAVE",
-                "object": "REACTION",
-                "objectId": "CORROSION"
-              }
-            ],
-            "effects": [
-              {
-                "verb": "CONSUME",
-                "object": "REACTION",
-                "objectId": "CORROSION"
-              },
-              {
-                "verb": "APPLY",
-                "object": "STATUS",
-                "objectId": "vulnerableInfliction",
-                "toObject": "ENEMY",
-                "with": {
-                  "duration": {
-                    "verb": "IS",
-                    "value": 30
-                  }
-                },
-                "susceptibility": {
-                  "PHYSICAL": [
-                    0.12,
-                    0.12,
-                    0.12,
-                    0.13,
-                    0.13,
-                    0.13,
-                    0.14,
-                    0.14,
-                    0.16,
-                    0.17,
-                    0.18,
-                    0.2
-                  ],
-                  "NATURE": [
-                    0.12,
-                    0.12,
-                    0.12,
-                    0.13,
-                    0.13,
-                    0.13,
-                    0.14,
-                    0.14,
-                    0.16,
-                    0.17,
-                    0.18,
-                    0.2
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "DAMAGE",
-                "adjective": "NATURE",
-                "toObject": "ENEMY",
-                "with": {
-                  "multiplier": {
-                    "verb": "DEPEND_ON",
-                    "value": [
-                      1.42,
-                      1.56,
-                      1.71,
-                      1.85,
-                      1.99,
-                      2.13,
-                      2.28,
-                      2.42,
-                      2.56,
-                      2.74,
-                      2.95,
-                      3.2
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
+        }
       }
     ]
   },
@@ -1593,129 +1595,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Rocky Whispers (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "ardelia"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "ardelia"
-    }
+    ]
   },
   "ROCKY_WHISPERS_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Rocky Whispers (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "ardelia"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "ardelia"
-    }
+    ]
   }
 }

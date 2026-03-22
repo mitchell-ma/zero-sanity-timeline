@@ -9,7 +9,7 @@
             "object": "ARTS_INTENSITY",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   30,
@@ -30,7 +30,7 @@
             "object": "PHYSICAL_DAMAGE_BONUS",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.36,

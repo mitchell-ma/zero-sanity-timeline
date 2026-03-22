@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "VANGUARD",
   "elementType": "CRYO",
-  "weaponTypes": ["SWORD"],
+  "weaponTypes": [
+    "SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -133,7 +135,36 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "FLASH_FROZEN_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Veteran Angler",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "River Monster",
+      "source": "POTENTIAL",
+      "minPotential": 5,
+      "bonusType": "SPECIAL_MULTIPLIER",
+      "values": [
+        1.5
+      ],
+      "condition": {
+        "skillType": "ULTIMATE"
+      }
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1783,37 +1814,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "River Monster",
-      "source": "POTENTIAL",
-      "minPotential": 5,
-      "bonusType": "SPECIAL_MULTIPLIER",
-      "values": [
-        1.5
-      ],
-      "condition": {
-        "skillType": "ULTIMATE"
-      }
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Flash-frozen for Freshness",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Veteran Angler",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.15,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

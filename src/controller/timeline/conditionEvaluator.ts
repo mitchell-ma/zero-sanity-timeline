@@ -44,6 +44,10 @@ export interface ConditionContext {
   operatorSlotMap?: Record<string, string>;
   /** Target operator ID for OTHER/ANY determiner resolution. */
   targetOwnerId?: string;
+  /** Live enemy HP percentage query (0–100). Provided by calculationController during queue processing. */
+  getEnemyHpPercentage?: (frame: number) => number | null;
+  /** Query which operator slot is controlled at a given frame. */
+  getControlledSlotAtFrame?: (frame: number) => string;
 }
 
 // ── Subject resolution ───────────────────────────────────────────────────
@@ -55,6 +59,8 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
       case DeterminerType.ALL: return COMMON_OWNER_ID;
       case DeterminerType.OTHER: return ctx.targetOwnerId ?? undefined;
       case DeterminerType.ANY: return ctx.targetOwnerId ?? undefined; // wildcard if no target
+      case DeterminerType.CONTROLLED:
+        return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
       default: return ctx.sourceOwnerId;
     }
   }
@@ -89,6 +95,20 @@ function resolveColumnIds(object: string, objectId?: string, element?: string): 
 // ── Evaluators ───────────────────────────────────────────────────────────
 
 function evaluateHave(cond: Interaction, ctx: ConditionContext): boolean {
+  // PERCENTAGE_HP: query live HP% from calculationController
+  if (cond.object === 'PERCENTAGE_HP') {
+    if (!ctx.getEnemyHpPercentage) return false;
+    const hpPct = ctx.getEnemyHpPercentage(ctx.frame);
+    if (hpPct == null) return false;
+    const target = cond.cardinality ?? 100;
+    switch (cond.cardinalityConstraint) {
+      case CardinalityConstraintType.AT_MOST: return hpPct <= target;
+      case CardinalityConstraintType.AT_LEAST: return hpPct >= target;
+      case CardinalityConstraintType.EXACTLY: return Math.round(hpPct) === target;
+    }
+    return false;
+  }
+
   const columnIds = resolveColumnIds(cond.object, cond.objectId, cond.element);
   if (columnIds.length === 0) return false;
 

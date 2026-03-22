@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "SUPPORTER",
   "elementType": "NATURE",
-  "weaponTypes": ["ARTS_UNIT"],
+  "weaponTypes": [
+    "ARTS_UNIT"
+  ],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -125,7 +127,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "FRIENDLY_PRESENCE_TALENT",
+      "maxLevel": 3
+    },
+    "two": {
+      "name": "Mountainpeak Surfer",
+      "maxLevel": 1
+    },
+    "attributeIncrease": {
+      "name": "Keen Mind",
+      "attribute": "INTELLECT",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1775,25 +1792,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Friendly Presence",
-      "maxLevel": 3
-    },
-    "two": {
-      "name": "Mountainpeak Surfer",
-      "maxLevel": 1
-    },
-    "attributeIncrease": {
-      "name": "Keen Mind",
-      "attribute": "INTELLECT",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1833,
-  "ultimateActiveDuration": 3,
-  "ultimateCooldownDuration": 0,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

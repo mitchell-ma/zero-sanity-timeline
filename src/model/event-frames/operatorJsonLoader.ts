@@ -1,56 +1,29 @@
+/**
+ * OperatorJsonLoader — thin adapter that composes data from the three operator
+ * controllers (operatorsController, operatorSkillsController, operatorStatusesController)
+ * into the merged JSON format that dataDrivenEventFrames expects.
+ *
+ * This file is being gradually replaced by direct controller imports.
+ * Only functions that depend on the frame pipeline remain here.
+ */
 import {
   buildSequencesFromOperatorJson,
   DataDrivenSkillEventSequence,
 } from "./dataDrivenEventFrames";
 import { OPERATOR_COLUMNS } from '../channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
-import { validateStatusConfig, validateSkillConfig } from '../game-data/statusConfigValidator';
-
-// ── Auto-discover operator + skill JSON files ────────────────────────────────
-
-/** Convert kebab-case filename to camelCase operator ID. */
-function filenameToCamelCase(filename: string): string {
-  return filename.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-}
-
-// Operator base configs: game-data/operators/*-operator.json
-const operatorContext = require.context('../game-data/operators', false, /-operator\.json$/);
-const OPERATOR_JSON: Record<string, Record<string, unknown>> = {};
-for (const key of operatorContext.keys()) {
-  const filename = key.replace('./', '').replace('-operator.json', '');
-  OPERATOR_JSON[filenameToCamelCase(filename)] = operatorContext(key);
-}
-
-// Skill configs: game-data/operator-skills/*-skills.json
-const skillContext = require.context('../game-data/operator-skills', false, /-skills\.json$/);
-const SKILL_JSON: Record<string, Record<string, unknown>> = {};
-for (const key of skillContext.keys()) {
-  const filename = key.replace('./', '').replace('-skills.json', '');
-  SKILL_JSON[filenameToCamelCase(filename)] = skillContext(key);
-}
-
-// Status configs: game-data/operator-statuses/*-statuses.json
-const statusContext = require.context('../game-data/operator-statuses', false, /-statuses\.json$/);
-const STATUS_JSON: Record<string, Record<string, unknown>[]> = {};
-for (const key of statusContext.keys()) {
-  const filename = key.replace('./', '').replace('-statuses.json', '');
-  STATUS_JSON[filenameToCamelCase(filename)] = statusContext(key);
-}
-
-// Validate status and talent configs at load time
-for (const [operatorId, statuses] of Object.entries(STATUS_JSON)) {
-  const errors = validateStatusConfig(statuses, operatorId);
-  if (errors.length > 0) {
-    console.warn(`[statusValidator] ${operatorId}-statuses.json:`, errors.map(e => `${e.path}: ${e.message}`).join('; '));
-  }
-}
-// Validate skill configs at load time
-for (const [operatorId, skillJson] of Object.entries(SKILL_JSON)) {
-  const errors = validateSkillConfig(skillJson, operatorId);
-  if (errors.length > 0) {
-    console.warn(`[skillValidator] ${operatorId}-skills.json:`, errors.map(e => `${e.path}: ${e.message}`).join('; '));
-  }
-}
+import {
+  getOperatorBase,
+  getAllOperatorBaseIds,
+} from '../game-data/operatorsController';
+import {
+  getOperatorSkills,
+  getOperatorSkillIds as controllerGetSkillIds,
+} from '../game-data/operatorSkillsController';
+import {
+  getOperatorStatuses as controllerGetStatuses,
+  getAllOperatorStatusOriginIds,
+} from '../game-data/operatorStatusesController';
 
 // ── Status key normalization ─────────────────────────────────────────────────
 
@@ -74,7 +47,77 @@ function expandKeys(val: unknown): unknown {
   return out;
 }
 
-// ── Exchange status config (derived from status JSONs with type=EXCHANGE) ────
+// ── SkillTypeMap inference ──────────────────────────────────────────────────
+
+/**
+ * Infer skillTypeMap from skill entries by naming conventions:
+ * - Skills with _FINISHER/_DIVE variants → BASIC_ATTACK
+ * - Skills with onTriggerClause → COMBO_SKILL
+ * - Skills with ANIMATION + ACTIVE/STASIS segments → ULTIMATE
+ * - Remaining skill → BATTLE_SKILL
+ */
+function inferSkillTypeMap(skills: ReadonlyMap<string, { onTriggerClause: unknown[]; segments: unknown[] }>): Record<string, unknown> {
+  const typeMap: Record<string, unknown> = {};
+  const skillIds: string[] = [];
+  skills.forEach((_, id) => skillIds.push(id));
+
+  // Find BASIC_ATTACK: the skill that has _FINISHER and _DIVE variants
+  const finisherIds = skillIds.filter(id => id.endsWith('_FINISHER'));
+  const diveIds = skillIds.filter(id => id.endsWith('_DIVE'));
+
+  let batkId: string | undefined;
+  for (const fId of finisherIds) {
+    const base = fId.replace(/_FINISHER$/, '');
+    if (skills.has(base)) {
+      batkId = base;
+      const batk: Record<string, string> = { BATK: base };
+      batk.FINISHER = fId;
+      const diveId = diveIds.find(d => d.replace(/_DIVE$/, '') === base);
+      if (diveId) batk.DIVE = diveId;
+      typeMap.BASIC_ATTACK = batk;
+      break;
+    }
+  }
+
+  // Filter to base skills (not enhanced/empowered/finisher/dive)
+  const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+  const baseSkills = skillIds.filter(id => {
+    if (id === batkId) return false;
+    return !variantSuffixes.some(s => id.endsWith(s));
+  });
+
+  // Find COMBO_SKILL: has onTriggerClause
+  for (const id of baseSkills) {
+    const skill = skills.get(id);
+    if (skill?.onTriggerClause?.length) {
+      typeMap.COMBO_SKILL = id;
+      break;
+    }
+  }
+
+  // Remaining base skills (not BATK, not COMBO)
+  const remaining = baseSkills.filter(id => id !== typeMap.COMBO_SKILL);
+
+  // Find ULTIMATE: has ANIMATION segment type
+  for (const id of remaining) {
+    const skill = skills.get(id);
+    const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
+    if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+      typeMap.ULTIMATE = id;
+      break;
+    }
+  }
+
+  // BATTLE_SKILL: the remaining one
+  const battleCandidates = remaining.filter(id => id !== typeMap.ULTIMATE);
+  if (battleCandidates.length === 1) {
+    typeMap.BATTLE_SKILL = battleCandidates[0];
+  }
+
+  return typeMap;
+}
+
+// ── Exchange status config ──────────────────────────────────────────────────
 
 const FPS_LOAD = 120;
 
@@ -84,24 +127,36 @@ export interface ExchangeStatusInfo {
   durationFrames: number;
 }
 
+/**
+ * Build exchange status config by scanning operator statuses.
+ * Exchange statuses accumulate stacks that convert into another status at max.
+ * Identified by: stackable (limit > 1), no duration reset on reapply (interactionType NONE),
+ * and clause that APPLYs another STATUS at max stacks.
+ */
 function buildExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
   const config: Record<string, ExchangeStatusInfo> = {};
   const permanentDuration = TOTAL_FRAMES * 10;
 
-  for (const statuses of Object.values(STATUS_JSON)) {
+  for (const operatorId of getAllOperatorStatusOriginIds()) {
+    const statuses = controllerGetStatuses(operatorId);
     for (const status of statuses) {
-      const expanded = expandKeys(status) as Record<string, unknown>;
-      const props = expanded.properties as Record<string, unknown> | undefined;
-      if (!props || props.type !== 'EXCHANGE') continue;
-      const id = props.id as string;
+      // Exchange = stackable (limit > 1) + NONE interaction + APPLY STATUS effect at max stacks
+      const limit = status.statusLevel?.limit.values[0] ?? 1;
+      const interaction = status.statusLevel?.interactionType ?? 'NONE';
+      if (limit <= 1 || interaction !== 'NONE') continue;
+      const hasApplyStatus = status.clause.some(c =>
+        c.effects.some(e => e.verb === 'APPLY' && e.object === 'STATUS')
+      );
+      if (!hasApplyStatus) continue;
+
+      const id = status.id;
       const columnId = (OPERATOR_COLUMNS as Record<string, string>)[id]
         ?? id.toLowerCase().replace(/_/g, '-');
       let durationFrames = permanentDuration;
-      const dur = props.duration as { value: number | number[]; unit: string } | undefined;
-      if (dur) {
-        const val = Array.isArray(dur.value) ? dur.value[0] : dur.value;
+      if (status.duration) {
+        const val = status.duration.values[0];
         if (val >= 0) {
-          durationFrames = dur.unit === 'SECOND' ? Math.round(val * FPS_LOAD) : val;
+          durationFrames = status.duration.unit === 'SECOND' ? Math.round(val * FPS_LOAD) : val;
         }
       }
       config[id] = { columnId, durationFrames };
@@ -110,95 +165,74 @@ function buildExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
   return config;
 }
 
-/** Exchange status config map — keyed by status ID (e.g. MELTING_FLAME → { columnId, durationFrames }). */
+/** Exchange status config map. */
 let _exchangeStatusConfig: Record<string, ExchangeStatusInfo> | null = null;
 export function getExchangeStatusConfig(): Record<string, ExchangeStatusInfo> {
   if (!_exchangeStatusConfig) _exchangeStatusConfig = buildExchangeStatusConfig();
   return _exchangeStatusConfig;
 }
 
-/** Set of all exchange status IDs, derived from status JSON configs with type=EXCHANGE. */
+/** Set of all exchange status IDs. */
 let _exchangeStatusIds: ReadonlySet<string> | null = null;
 export function getExchangeStatusIds(): ReadonlySet<string> {
   if (!_exchangeStatusIds) _exchangeStatusIds = new Set(Object.keys(getExchangeStatusConfig()));
   return _exchangeStatusIds;
 }
 
-// ── Public API ──────────────────────────────────────────────────────────────
+// ── Merged JSON builder (for dataDrivenEventFrames) ─────────────────────────
 
-/** Sequence cache keyed by `operatorId:skillId`. */
-const sequenceCache = new Map<string, readonly DataDrivenSkillEventSequence[]>();
-
-/** Get the raw operator JSON for a given operator ID (includes skills merged in). */
+/**
+ * Build the merged operator JSON that dataDrivenEventFrames expects.
+ * Composes from the three controllers + infers skillTypeMap.
+ */
 export function getOperatorJson(operatorId: string): Record<string, unknown> | undefined {
-  const base = OPERATOR_JSON[operatorId];
+  const base = getOperatorBase(operatorId);
   if (!base) return undefined;
-  const skills = SKILL_JSON[operatorId];
-  if (!skills) return base;
-  // Hoist non-skill keys (statusEvents, skillTypeMap) from skills JSON to top level
-  const { statusEvents, skillTypeMap, ...skillEntries } = skills as Record<string, unknown>;
-  // Merge status sources: operator-statuses JSONs (short keys → expanded) > skills JSON
-  const operatorStatuses = (STATUS_JSON[operatorId] ?? []).map(expandKeys);
-  const mergedStatusEvents = [
-    ...operatorStatuses,
-    ...((statusEvents as unknown[]) ?? []),
-  ];
+
+  const skills = getOperatorSkills(operatorId);
+  const skillEntries: Record<string, unknown> = {};
+  let skillTypeMap: Record<string, unknown> = {};
+
+  if (skills) {
+    skills.forEach((skill, skillId) => {
+      skillEntries[skillId] = skill.serialize();
+    });
+    skillTypeMap = inferSkillTypeMap(skills);
+  }
+
+  const statuses = controllerGetStatuses(operatorId);
+  const statusEvents = statuses.map(s => expandKeys(s.serialize()));
+
   return {
-    ...base,
+    ...base.serialize(),
     skills: skillEntries,
     skillTypeMap,
-    ...(mergedStatusEvents.length > 0 ? { statusEvents: mergedStatusEvents } : {}),
+    ...(statusEvents.length > 0 ? { statusEvents } : {}),
   };
 }
 
-/** Get the skill JSON for a given operator ID. */
-export function getSkillJson(operatorId: string): Record<string, unknown> | undefined {
-  return SKILL_JSON[operatorId];
-}
-
-/** Get the operator-statuses JSON for a given operator ID. */
-export function getOperatorStatuses(operatorId: string): Record<string, unknown>[] | undefined {
-  return STATUS_JSON[operatorId];
-}
+// ── Public API ──────────────────────────────────────────────────────────────
 
 /** Get all registered operator IDs. */
 export function getAllOperatorIds(): string[] {
-  return Object.keys(OPERATOR_JSON);
+  return getAllOperatorBaseIds();
 }
 
-// ── Skill ID resolution ────────────────────────────────────────────────────
-
-/**
- * Get all skill IDs for an operator (keys of the skills JSON, excluding metadata).
- * Includes FINISHER and DIVE as universal basic-attack skill IDs.
- */
+/** Get all skill IDs for an operator. */
 export function getSkillIds(operatorId: string): Set<string> {
-  const skills = SKILL_JSON[operatorId];
-  if (!skills) return new Set();
-  const ids = new Set<string>();
+  const ids = controllerGetSkillIds(operatorId);
   ids.add('FINISHER');
   ids.add('DIVE');
-  for (const key of Object.keys(skills)) {
-    if (key === 'statusEvents' || key === 'skillTypeMap') continue;
-    ids.add(key);
-  }
   return ids;
 }
 
 /**
- * Get the raw skill type map for an operator.
- * BASIC_ATTACK may be an object { BATK, FINISHER, DIVE }; other entries are strings.
- */
-export function getRawSkillTypeMap(operatorId: string): Record<string, unknown> {
-  return (SKILL_JSON[operatorId]?.skillTypeMap as Record<string, unknown>) ?? {};
-}
-
-/**
  * Get the flattened skill type map: { BASIC_ATTACK → batkId, BATTLE_SKILL → id, ... }.
- * For BASIC_ATTACK, resolves to the BATK sub-entry.
  */
 export function getSkillTypeMap(operatorId: string): Record<string, string> {
-  const raw = getRawSkillTypeMap(operatorId);
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return {};
+  const raw = inferSkillTypeMap(skills);
   const flat: Record<string, string> = {};
   for (const [key, val] of Object.entries(raw)) {
     flat[key] = typeof val === 'string' ? val : (val as Record<string, string> | undefined)?.BATK ?? key;
@@ -207,17 +241,24 @@ export function getSkillTypeMap(operatorId: string): Record<string, string> {
 }
 
 /**
+ * Get the raw skill type map for an operator.
+ * BASIC_ATTACK may be an object { BATK, FINISHER, DIVE }; other entries are strings.
+ */
+export function getRawSkillTypeMap(operatorId: string): Record<string, unknown> {
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return {};
+  return inferSkillTypeMap(skills);
+}
+
+/**
  * Resolve the skill type (BASIC_ATTACK, BATTLE_SKILL, etc.) for a given skill ID.
- * Uses the skillTypeMap + variant suffix convention (_ENHANCED, _EMPOWERED, _ENHANCED_EMPOWERED).
  */
 export function resolveSkillType(operatorId: string, skillId: string): string | null {
   if (skillId === 'FINISHER' || skillId === 'DIVE') return 'BASIC_ATTACK';
   const typeMap = getSkillTypeMap(operatorId);
-  // Direct match: base skill ID is in the type map values
   for (const [type, baseId] of Object.entries(typeMap)) {
     if (baseId === skillId) return type;
   }
-  // Variant match: strip suffix and check
   const suffixes = ['_ENHANCED_EMPOWERED', '_ENHANCED', '_EMPOWERED'];
   for (const suffix of suffixes) {
     if (skillId.endsWith(suffix)) {
@@ -229,6 +270,9 @@ export function resolveSkillType(operatorId: string, skillId: string): string | 
   }
   return null;
 }
+
+/** Sequence cache keyed by `operatorId:skillId`. */
+const sequenceCache = new Map<string, readonly DataDrivenSkillEventSequence[]>();
 
 /** Get frame sequences for a skill ID, with caching. */
 export function getFrameSequences(
@@ -247,58 +291,20 @@ export function getFrameSequences(
   return sequences;
 }
 
-/**
- * Get segment labels for a multi-sequence skill.
- * Returns undefined for single-sequence skills.
- */
+/** Get segment labels for a multi-sequence skill. */
 export function getSegmentLabels(
   operatorId: string,
   skillId: string,
 ): string[] | undefined {
   const sequences = getFrameSequences(operatorId, skillId);
   if (sequences.length <= 1) return undefined;
-
   const labels = sequences
     .map(seq => seq.segmentName)
     .filter((name): name is string => name != null);
-
-  // If segments have names, use them; otherwise return undefined (basic attack uses index labels)
   return labels.length === sequences.length ? labels : undefined;
 }
 
-/**
- * Get the delayedHitLabel for a skill (from properties.delayedHitLabel in the skills JSON).
- * Returns undefined if not set.
- */
-export function getDelayedHitLabel(
-  operatorId: string,
-  skillId: string,
-): string | undefined {
-  const json = getOperatorJson(operatorId);
-  if (!json) return undefined;
-  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
-  if (!skills) return undefined;
-  const skillData = skills[skillId];
-  return (skillData?.properties as Record<string, unknown> | undefined)?.delayedHitLabel as string | undefined;
-}
-
-/**
- * Get the combo skill's onTriggerClause from the skills JSON.
- * Resolves COMBO_SKILL → actual skill ID → properties.trigger.onTriggerClause.
- */
-export function getComboTriggerClause(operatorId: string): readonly { conditions: TriggerCondition[] }[] | undefined {
-  const json = getOperatorJson(operatorId);
-  if (!json) return undefined;
-  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
-  const typeMap = getSkillTypeMap(operatorId);
-  const comboSkillId = typeMap.COMBO_SKILL;
-  if (!comboSkillId || !skills?.[comboSkillId]) return undefined;
-  const props = skills[comboSkillId].properties as Record<string, unknown> | undefined;
-  const trigger = props?.trigger as Record<string, unknown> | undefined;
-  return trigger?.onTriggerClause as readonly { conditions: TriggerCondition[] }[] | undefined;
-}
-
-/** A trigger condition predicate as found in skill JSON trigger clauses. */
+/** A trigger condition predicate. */
 export interface TriggerCondition {
   subject: string;
   verb: string;
@@ -314,7 +320,7 @@ export interface TriggerCondition {
   toDeterminer?: string;
 }
 
-/** Combo trigger info extracted from skills JSON. */
+/** Combo trigger info. */
 export interface ComboTriggerInfo {
   onTriggerClause: readonly { conditions: TriggerCondition[] }[];
   description: string;
@@ -322,25 +328,38 @@ export interface ComboTriggerInfo {
 }
 
 /**
- * Get the combo skill's trigger info from the skills JSON.
- * Returns onTriggerClause, description, and windowFrames.
+ * Get the combo skill's onTriggerClause.
+ * Finds the combo skill (has onTriggerClause) and returns its trigger clause.
+ */
+export function getComboTriggerClause(operatorId: string): readonly { conditions: TriggerCondition[] }[] | undefined {
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return undefined;
+  let result: readonly { conditions: TriggerCondition[] }[] | undefined;
+  skills.forEach(skill => {
+    if (!result && skill.onTriggerClause.length > 0) {
+      result = skill.onTriggerClause as readonly { conditions: TriggerCondition[] }[];
+    }
+  });
+  return result;
+}
+
+/**
+ * Get the combo skill's trigger info.
  */
 export function getComboTriggerInfo(operatorId: string): ComboTriggerInfo | undefined {
-  const json = getOperatorJson(operatorId);
-  if (!json) return undefined;
-  const skills = json.skills as Record<string, Record<string, unknown>> | undefined;
-  const typeMap = getSkillTypeMap(operatorId);
-  const comboSkillId = typeMap.COMBO_SKILL;
-  if (!comboSkillId || !skills?.[comboSkillId]) return undefined;
-  const props = skills[comboSkillId].properties as Record<string, unknown> | undefined;
-  const trigger = props?.trigger as Record<string, unknown> | undefined;
-  const onTriggerClause = trigger?.onTriggerClause as readonly { conditions: TriggerCondition[] }[] | undefined;
-  if (!onTriggerClause?.length) return undefined;
-  return {
-    onTriggerClause,
-    description: (trigger?.description as string) ?? '',
-    windowFrames: (trigger?.windowFrames as number) ?? 720,
-  };
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return undefined;
+  let result: ComboTriggerInfo | undefined;
+  skills.forEach(skill => {
+    if (!result && skill.onTriggerClause.length > 0) {
+      result = {
+        onTriggerClause: skill.onTriggerClause as readonly { conditions: TriggerCondition[] }[],
+        description: skill.description ?? '',
+        windowFrames: skill.windowFrames ?? 720,
+      };
+    }
+  });
+  return result;
 }
 
 // ── ID collection helpers ───────────────────────────────────────────────────
@@ -350,7 +369,6 @@ export interface StatusIdEntry { id: string; label: string; }
 
 /**
  * Collect all status IDs with display names.
- * Sources: operator-statuses configs + StatusType enum (covers physical statuses, gear buffs, etc.).
  */
 let _allStatusEntries: StatusIdEntry[] | null = null;
 export function getAllStatusIds(): StatusIdEntry[] {
@@ -369,16 +387,12 @@ export function getAllStatusIds(): StatusIdEntry[] {
     }
   }
 
-  for (const operatorId of Object.keys(OPERATOR_JSON)) {
-    const json = getOperatorJson(operatorId);
-    const statusEvents = (json?.statusEvents ?? []) as Record<string, unknown>[];
-    for (const se of statusEvents) {
-      const props = se.properties as Record<string, unknown> | undefined;
-      const id = ((props?.id ?? props?.name) as string | undefined);
-      if (id && !seen.has(id)) {
-        seen.add(id);
-        const displayName = (props?.name ?? STATUS_LABELS[id] ?? id) as string;
-        entries.push({ id, label: displayName });
+  for (const operatorId of getAllOperatorBaseIds()) {
+    const statuses = controllerGetStatuses(operatorId);
+    for (const status of statuses) {
+      if (!seen.has(status.id)) {
+        seen.add(status.id);
+        entries.push({ id: status.id, label: status.name || STATUS_LABELS[status.id] || status.id });
       }
     }
   }
@@ -389,7 +403,7 @@ export function getAllStatusIds(): StatusIdEntry[] {
 }
 
 /**
- * Collect all reaction IDs with display names from ArtsReactionType + PhysicalStatusType.
+ * Collect all reaction IDs with display names.
  */
 let _allReactionEntries: StatusIdEntry[] | null = null;
 export function getAllReactionIds(): StatusIdEntry[] {
@@ -408,7 +422,7 @@ export function getAllReactionIds(): StatusIdEntry[] {
 }
 
 /**
- * Collect all infliction IDs with display names from the InflictionType enum.
+ * Collect all infliction IDs with display names.
  */
 let _allInflictionEntries: StatusIdEntry[] | null = null;
 export function getAllInflictionIds(): StatusIdEntry[] {

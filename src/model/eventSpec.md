@@ -220,9 +220,9 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
   "onObject"?: string,                  // ON preposition — stat target entity
   "with"?: {                                // WITH — properties/cardinalities
     [key: string]: {
-      "verb": "IS" | "BASED_ON",
-      "object"?: string,                    // dependency target for BASED_ON (e.g. "SKILL_LEVEL")
-      "value": number | number[]            // single for IS, array for BASED_ON
+      "verb": "IS" | "VARY_BY",
+      "object"?: string,                    // dependency target for VARY_BY (e.g. "SKILL_LEVEL")
+      "value": number | number[]            // single for IS, array for VARY_BY
     }
   }
 }
@@ -247,7 +247,7 @@ A Verb-Object sentence with optional adjective and prepositional phrases.
 | Verb | Value shape | Example |
 |------|-------------|---------|
 | `IS` | Single number | `{ "verb": "IS", "value": 10 }` |
-| `BASED_ON` | Array indexed by dependency | `{ "verb": "BASED_ON", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
+| `VARY_BY` | Array indexed by dependency | `{ "verb": "VARY_BY", "object": "SKILL_LEVEL", "value": [0.5, 0.6, ...] }` |
 
 #### Noun adjuncts
 

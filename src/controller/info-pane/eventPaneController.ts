@@ -6,6 +6,7 @@ import {
 } from '../../consts/timelineColumnLabels';
 import { interactionToLabel } from '../../consts/semantics';
 import type { Interaction, Effect, Predicate } from '../../consts/semantics';
+import { getSimpleValue, getLeafValue } from '../../controller/calculation/valueResolver';
 import { translateEffect } from '../../utils/semanticsTranslation';
 import type { TranslatedEffect } from '../../utils/semanticsTranslation';
 import { ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS, PHYSICAL_STATUS_COLUMNS, PHYSICAL_STATUS_COLUMN_IDS, FRAGILITY_COLUMN_PREFIX, SKILL_COLUMNS, INFLICTION_COLUMN_IDS, PHYSICAL_INFLICTION_COLUMN_IDS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -496,7 +497,8 @@ export function effectToText(e: Effect): string {
   if (e.with) {
     const wpParts: string[] = [];
     for (const [k, v] of Object.entries(e.with)) {
-      const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}${(v.value as number[]).length > 3 ? '...' : ''}]`;
+      const leaf = getLeafValue(v);
+      const val = typeof leaf === 'number' ? leaf : Array.isArray(leaf) ? `[${leaf.slice(0, 3).join(', ')}${leaf.length > 3 ? '...' : ''}]` : '(expr)';
       wpParts.push(`${k.replace(/_/g, ' ').toUpperCase()} ${val}`);
     }
     if (wpParts.length) parts.push(`WITH ${wpParts.join(', ')}`);
@@ -536,12 +538,12 @@ function isRedundantEffect(e: Effect): boolean {
   if (verb === 'CONSUME' && (obj === 'SKILL_POINT' || obj === 'ULTIMATE_ENERGY')) return true;
   // Zero-value recoveries are noise
   if (verb === 'RECOVER' && (obj === 'SKILL_POINT' || obj === 'STAGGER')) {
-    const val = e.with?.cardinality?.value ?? e.with?.value?.value;
+    const val = getSimpleValue(e.with?.cardinality) ?? getSimpleValue(e.with?.value);
     if (val === 0) return true;
   }
   // Zero-value stagger applications are noise
   if (verb === 'DEAL' && obj === 'STAGGER') {
-    const val = e.with?.value?.value;
+    const val = getSimpleValue(e.with?.value);
     if (val === 0) return true;
   }
   return false;

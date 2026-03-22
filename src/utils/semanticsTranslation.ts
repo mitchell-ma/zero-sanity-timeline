@@ -7,7 +7,8 @@
  *   properties: ["Duration: 60s"]
  */
 
-import type { Effect, Interaction, Predicate, WithValue, WithPreposition } from '../consts/semantics';
+import type { Effect, Interaction, Predicate, ValueNode, WithPreposition } from '../consts/semantics';
+import { isValueLiteral, isValueVariable, isValueStat, isValueExpression } from '../consts/semantics';
 
 // ── Output ───────────────────────────────────────────────────────────────────
 
@@ -122,29 +123,32 @@ const PROPERTY_UNITS: Record<string, string> = {
 
 // ── Translation ─────────────────────────────────────────────────────────────
 
-function formatWithValue(key: string, wv: WithValue): string {
+function formatWithValue(key: string, node: ValueNode): string {
   const label = PROPERTY_LABELS[key] ?? titleCase(key);
   const unit = PROPERTY_UNITS[key] ?? '';
 
-  if (wv.verb === 'IS' && typeof wv.value === 'number') {
-    return `${label}: ${wv.value}${unit}`;
+  if (isValueLiteral(node)) {
+    return `${label}: ${node.value}${unit}`;
   }
-  if (wv.verb === 'BASED_ON') {
-    const dep = wv.object ? titleCase(wv.object) : 'level';
-    if (Array.isArray(wv.value)) {
-      const arr = wv.value as number[];
+  if (isValueVariable(node)) {
+    const dep = titleCase(node.object);
+    if (Array.isArray(node.value)) {
+      const arr = node.value;
       const preview = arr.length <= 3
         ? arr.map((v) => `${v}${unit}`).join(', ')
         : `${arr[0]}${unit}–${arr[arr.length - 1]}${unit}`;
       return `${label}: ${preview} (by ${dep})`;
     }
+    if (typeof node.value === 'number') return `${label}: ${node.value}${unit}`;
     return `${label}: depends on ${dep}`;
   }
-
-  const val = typeof wv.value === 'number'
-    ? `${wv.value}${unit}`
-    : `[${(wv.value as number[]).slice(0, 3).join(', ')}${(wv.value as number[]).length > 3 ? '...' : ''}]`;
-  return `${label}: ${val}`;
+  if (isValueStat(node)) {
+    return `${label}: ${titleCase(node.object)}`;
+  }
+  if (isValueExpression(node)) {
+    return `${label}: (${node.operator} expression)`;
+  }
+  return `${label}: ?`;
 }
 
 function formatObject(e: Effect): string {
@@ -198,7 +202,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
   let inlinedValue = '';
   if (e.with && INLINE_VALUE_OBJECTS.has(String(e.object ?? ''))) {
     const vw = e.with.value ?? e.with.cardinality;
-    if (vw && vw.verb === 'IS' && typeof vw.value === 'number') {
+    if (vw && isValueLiteral(vw)) {
       inlinedValue = `${vw.value} `;
     }
   }
@@ -367,10 +371,26 @@ export function predicateToJson(p: Predicate): Record<string, unknown> {
   };
 }
 
+function valueNodeToJson(node: ValueNode): unknown {
+  if (isValueLiteral(node)) {
+    return { verb: node.verb, value: node.value };
+  }
+  if (isValueVariable(node)) {
+    return { verb: node.verb, object: node.object, ...(node.value != null ? { value: node.value } : {}) };
+  }
+  if (isValueStat(node)) {
+    return { verb: node.verb, object: node.object };
+  }
+  if (isValueExpression(node)) {
+    return { operator: node.operator, left: valueNodeToJson(node.left), right: valueNodeToJson(node.right) };
+  }
+  return node;
+}
+
 function withPrepositionToJson(wp: WithPreposition): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(wp)) {
-    out[k] = { verb: v.verb, ...(v.object ? { object: v.object } : {}), value: v.value };
+    out[k] = valueNodeToJson(v);
   }
   return out;
 }

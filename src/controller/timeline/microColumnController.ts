@@ -233,16 +233,42 @@ export class MicroColumnController {
           const ob = typeOrder.get(b) ?? 999;
           return oa - ob || a.localeCompare(b);
         });
+        // Compute per-type widths, respecting maxWidth constraints
+        const typeWidths: number[] = [];
+        let cappedTotal = 0;
+        let uncappedCount = 0;
+        for (const t of sortedTypes) {
+          const mc = mcById.get(t);
+          if (mc?.maxWidth != null) {
+            cappedTotal += mc.maxWidth;
+            typeWidths.push(mc.maxWidth);
+          } else {
+            uncappedCount++;
+            typeWidths.push(0); // placeholder
+          }
+        }
+        const remainingWidth = Math.max(0, colWidth - cappedTotal);
+        const uncappedW = uncappedCount > 0 ? remainingWidth / uncappedCount : 0;
+        for (let i = 0; i < typeWidths.length; i++) {
+          if (typeWidths[i] === 0) typeWidths[i] = uncappedW;
+        }
+
+        // Build cumulative left offsets
+        const typeLefts: number[] = [];
+        let cumLeft = 0;
+        for (const w of typeWidths) {
+          typeLefts.push(cumLeft);
+          cumLeft += w;
+        }
+
         const typeIndex = new Map<string, number>();
         sortedTypes.forEach((t, i) => typeIndex.set(t, i));
-        const totalTypes = sortedTypes.length || 1;
-        const dynW = colWidth / totalTypes;
 
         for (const ev of colEvents) {
           const idx = typeIndex.get(ev.columnId) ?? 0;
           positions.set(ev.id, {
-            left: colPos.left + idx * dynW,
-            right: colPos.left + (idx + 1) * dynW,
+            left: colPos.left + typeLefts[idx],
+            right: colPos.left + typeLefts[idx] + typeWidths[idx],
             color: mcById.get(ev.columnId)?.color ?? col.color,
           });
         }

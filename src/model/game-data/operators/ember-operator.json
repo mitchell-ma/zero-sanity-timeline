@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "DEFENDER",
   "elementType": "HEAT",
-  "weaponTypes": ["GREAT_SWORD"],
+  "weaponTypes": [
+    "GREAT_SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -160,7 +162,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "PAY_THE_FERRIC_PRICE_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1810,23 +1827,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "id": "INFLAMED_FOR_THE_ASSAULT_TALENT",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "PAY_THE_FERRIC_PRICE_TALENT",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.2,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

@@ -47,6 +47,7 @@ import { GearSetType, GearCategory, SegmentType } from '../../consts/enums';
 import type { SkillType, SkillDef } from '../../consts/viewTypes';
 import { computeSegmentsSpan } from '../../consts/viewTypes';
 import type { Interaction, Effect, Predicate } from '../../consts/semantics';
+import { getLeafValue } from '../../controller/calculation/valueResolver';
 import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { resolveComboTrigger, resolveUltimateEnergy } from '../../controller/info-pane/loadoutPaneController';
 import { buildSkillEntries, SkillEntrySection, type SkillEntryData } from './OperatorEventEditor';
@@ -582,7 +583,8 @@ function effectToText(e: Effect): string {
   if (e.with) {
     const wpParts: string[] = [];
     for (const [k, v] of Object.entries(e.with)) {
-      const val = typeof v.value === 'number' ? v.value : `[${(v.value as number[]).slice(0, 3).join(', ')}...]`;
+      const leaf = getLeafValue(v);
+      const val = typeof leaf === 'number' ? leaf : Array.isArray(leaf) ? `[${leaf.slice(0, 3).join(', ')}...]` : '(expr)';
       wpParts.push(`${k.replace(/_/g, ' ').toUpperCase()} ${val}`);
     }
     if (wpParts.length) parts.push(`WITH ${wpParts.join(', ')}`);

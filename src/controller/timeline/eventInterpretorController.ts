@@ -17,6 +17,7 @@ import {
   THRESHOLD_MAX,
   DURATION_END,
 } from '../../consts/semantics';
+import { getSimpleValue } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration, setEventDuration } from '../../consts/viewTypes';
 import { CombatSkillsType, ElementType, EventStatusType, PhysicalStatusType, StatusType, TargetType } from '../../consts/enums';
 import { BREACH_DURATION, ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, INFLICTION_DURATION, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, TEAM_STATUS_COLUMN } from '../../model/channels';
@@ -134,6 +135,8 @@ export class EventInterpretorController {
   private readonly loadoutProperties?: Record<string, LoadoutProperties>;
   private readonly slotOperatorMap?: Record<string, string>;
   private readonly slotWirings?: SlotTriggerWiring[];
+  private readonly getEnemyHpPercentage?: (frame: number) => number | null;
+  private readonly getControlledSlotAtFrame?: (frame: number) => string;
   private thresholdDerived: TimelineEvent[] = [];
 
   constructor(
@@ -145,6 +148,8 @@ export class EventInterpretorController {
       loadoutProperties?: Record<string, LoadoutProperties>;
       slotOperatorMap?: Record<string, string>;
       slotWirings?: SlotTriggerWiring[];
+      getEnemyHpPercentage?: (frame: number) => number | null;
+      getControlledSlotAtFrame?: (frame: number) => string;
     },
   ) {
     this.controller = controller;
@@ -154,6 +159,8 @@ export class EventInterpretorController {
     this.loadoutProperties = options?.loadoutProperties;
     this.slotOperatorMap = options?.slotOperatorMap;
     this.slotWirings = options?.slotWirings;
+    this.getEnemyHpPercentage = options?.getEnemyHpPercentage;
+    this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────
@@ -213,6 +220,8 @@ export class EventInterpretorController {
         case DeterminerType.ALL: return COMMON_OWNER_ID;
         case DeterminerType.OTHER: return ctx.targetOwnerId ?? ctx.sourceOwnerId;
         case DeterminerType.ANY: return ctx.targetOwnerId ?? ctx.sourceOwnerId;
+        case DeterminerType.CONTROLLED:
+          return this.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
         default: return ctx.sourceOwnerId;
       }
     }
@@ -268,13 +277,13 @@ export class EventInterpretorController {
     if (effect.object === 'INFLICTION') {
       const columnId = resolveInflictionColumnId(effect.adjective);
       if (!columnId) return false;
-      const dv = effect.with?.duration?.value;
+      const dv = getSimpleValue(effect.with?.duration);
       this.controller.createInfliction(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 120, source);
       return true;
     }
     if (effect.object === 'STATUS') {
       const columnId = resolveStatusColumnId(effect.objectId);
-      const dv = effect.with?.duration?.value;
+      const dv = getSimpleValue(effect.with?.duration);
       this.controller.createStatus(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 2400, source, {
         statusName: effect.objectId,
       });
@@ -283,8 +292,8 @@ export class EventInterpretorController {
     if (effect.object === 'REACTION') {
       const columnId = resolveReactionColumnId(effect.adjective);
       if (!columnId) return false;
-      const dv = effect.with?.duration?.value;
-      const sl = effect.with?.statusLevel?.value;
+      const dv = getSimpleValue(effect.with?.duration);
+      const sl = getSimpleValue(effect.with?.statusLevel);
       this.controller.createReaction(columnId, ownerId, ctx.frame, typeof dv === 'number' ? Math.round(dv * 120) : 2400, source, {
         statusLevel: typeof sl === 'number' ? sl : undefined,
       });
@@ -294,7 +303,7 @@ export class EventInterpretorController {
       return this.applyPhysicalStatus(effect, ctx);
     }
     if (effect.object === 'STAGGER') {
-      const v = effect.with?.staggerValue?.value;
+      const v = getSimpleValue(effect.with?.staggerValue);
       this.controller.createStagger('stagger', ownerId, ctx.frame, typeof v === 'number' ? v : 0, source);
       return true;
     }
@@ -308,7 +317,7 @@ export class EventInterpretorController {
       ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
-    const sv = effect.with?.stacks?.value;
+    const sv = getSimpleValue(effect.with?.stacks);
     const count = typeof sv === 'number' ? sv : 1;
     if (sv == null) console.warn(`[EventInterpretor] CONSUME: implicit cardinality 1 — configs should be explicit`);
 
@@ -370,7 +379,7 @@ export class EventInterpretorController {
       return true;
     }
 
-    const ev2 = effect.with?.duration?.value;
+    const ev2 = getSimpleValue(effect.with?.duration);
     const frames = typeof ev2 === 'number' ? Math.round(ev2 * 120) : 0;
     for (const ev of active) {
       if (ev.eventStatus === EventStatusType.CONSUMED) continue;
@@ -425,7 +434,7 @@ export class EventInterpretorController {
     for (let i = 0; i < maxIter; i++) {
       let ran = false;
       for (const pred of preds) {
-        const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId };
+        const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
         if (!evaluateConditions(pred.conditions, condCtx)) continue;
         if (!pred.effects.every(e => e.verb === VerbType.ALL || e.verb === VerbType.ANY || this.canDo(e, ctx))) continue;
         for (const child of pred.effects) this.interpret(child, ctx);
@@ -438,7 +447,7 @@ export class EventInterpretorController {
 
   private doAny(effect: Effect, ctx: InterpretContext) {
     const preds = effect.predicates ?? [];
-    const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId };
+    const condCtx: ConditionContext = { events: ctx.allEvents(), frame: ctx.frame, sourceOwnerId: ctx.sourceOwnerId, targetOwnerId: ctx.targetOwnerId, getControlledSlotAtFrame: this.getControlledSlotAtFrame };
     for (const pred of preds) {
       if (!evaluateConditions(pred.conditions, condCtx)) continue;
       for (const child of pred.effects) this.interpret(child, ctx);
@@ -464,7 +473,7 @@ export class EventInterpretorController {
     if (!columnId) return false;
 
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
-    const isForced = effect.with?.isForced?.value === 1;
+    const isForced = getSimpleValue(effect.with?.isForced) === 1;
 
     if (columnId === PHYSICAL_STATUS_COLUMNS.LIFT
       || columnId === PHYSICAL_STATUS_COLUMNS.KNOCK_DOWN) {
@@ -800,6 +809,7 @@ export class EventInterpretorController {
           { statusName: name, id, event: { segments, ...extraProps } },
         );
       },
+      this.getEnemyHpPercentage,
     );
     return [];
   }

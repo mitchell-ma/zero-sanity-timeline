@@ -10,7 +10,7 @@ import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEve
 import { EventStatusType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS } from '../../model/channels';
-import { TOTAL_FRAMES } from '../../utils/timeline';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import { getOperatorJson, getSkillIds, getAllOperatorIds } from '../../model/event-frames/operatorJsonLoader';
 import { getWeaponEffectDefs, getGearEffectDefs, NormalizedEffectDef } from '../../model/game-data/weaponGearEffectLoader';
 import { LoadoutProperties } from '../../view/InformationPane';
@@ -79,7 +79,7 @@ interface Effect {
   toDeterminer?: string;
 }
 
-/** Shape of a with-value block inside a clause effect (IS or BASED_ON). */
+/** Shape of a with-value block inside a clause effect (IS or VARY_BY). */
 interface ClauseWithValue {
   verb: string;
   object?: string | string[];
@@ -100,10 +100,10 @@ interface ResolvedClause {
   effects: ClauseEffectEntry[];
 }
 
-// ── Multi-dimensional BASED_ON resolver ──────────────────────────────────────
+// ── Multi-dimensional VARY_BY resolver ───────────────────────────────────────
 
 /**
- * Resolve a dimension key for a multi-dimensional BASED_ON lookup.
+ * Resolve a dimension key for a multi-dimensional VARY_BY lookup.
  * Finds the highest key whose numeric value ≤ the actual context value.
  */
 function resolveClauseDimensionKey(
@@ -193,7 +193,7 @@ function resolveClauseEffectsFromClauses(
 
       const resolveValue = (): number | undefined => {
         if (wp.verb === 'IS' && typeof wp.value === 'number') return wp.value;
-        if (wp.verb !== 'BASED_ON') return undefined;
+        if (wp.verb !== 'VARY_BY') return undefined;
 
         const dims = wp.object;
         const val = wp.value;
@@ -328,16 +328,33 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
   const rp = raw.properties as Record<string, unknown> | undefined;
   const id = raw.id ?? raw.name ?? (rp?.id as string) ?? (rp?.name as string) ?? '';
   const name = raw.name ?? (rp?.name as string);
-  const target = raw.target ?? (rp?.target as string);
-  const targetDeterminer = raw.targetDeterminer ?? (rp?.targetDeterminer as string);
+  let target = raw.target ?? (rp?.target as string);
+  let targetDeterminer = raw.targetDeterminer ?? (rp?.targetDeterminer as string);
+  // Infer target from clause effects if not explicitly set
+  if (!target) {
+    const clauses = raw.clause as { effects?: { to?: string; toDeterminer?: string }[] }[] | undefined;
+    if (clauses) {
+      for (const clause of clauses) {
+        for (const effect of clause.effects ?? []) {
+          if (effect.to === 'ENEMY') { target = 'ENEMY'; targetDeterminer = 'THIS'; break; }
+          if (effect.toDeterminer === 'OTHER') { target = 'OPERATOR'; targetDeterminer = 'OTHER'; break; }
+          if (effect.toDeterminer === 'ALL') { target = 'OPERATOR'; targetDeterminer = 'ALL'; break; }
+          if (effect.to === 'OPERATOR') { target = 'OPERATOR'; targetDeterminer = effect.toDeterminer ?? 'THIS'; break; }
+        }
+        if (target) break;
+      }
+    }
+    if (!target) { target = 'OPERATOR'; targetDeterminer = 'THIS'; }
+  }
   const sl = raw.statusLevel ?? (rp?.statusLevel as NormalizedEffectDef['statusLevel']);
 
-  const slLimit = sl?.limit as { verb?: string; value?: number } | undefined;
+  const slLimit = sl?.limit as { verb?: string; value?: number; values?: number[] } | undefined;
+  const limitValue = slLimit?.value ?? slLimit?.values?.[0] ?? 1;
   const statusLevel: StatusEventDef['properties']['statusLevel'] = {
     limit: slLimit?.verb
-      ? { verb: slLimit.verb, value: slLimit.value ?? 1 }
+      ? { verb: slLimit.verb, value: limitValue }
       : { verb: 'IS', value: 1 },
-    statusLevelInteractionType: sl?.statusLevelInteractionType ?? 'NONE',
+    statusLevelInteractionType: sl?.statusLevelInteractionType ?? (sl as Record<string, unknown>)?.interactionType as string ?? 'NONE',
   };
 
   return {
@@ -350,7 +367,11 @@ function normalizeEquipDef(raw: NormalizedEffectDef): StatusEventDef {
       isForced: raw.isForced ?? (rp?.isForced as boolean),
       enhancementTypes: raw.enhancementTypes ?? (rp?.enhancementTypes as string[]),
       statusLevel,
-      duration: rp?.duration as StatusEventDef['properties']['duration'],
+      duration: rp?.duration ? (() => {
+        const d = rp.duration as { value?: number | number[]; values?: number[]; unit: string };
+        const v = d.value ?? d.values;
+        return v != null ? { value: v, unit: d.unit } : undefined;
+      })() : undefined,
       susceptibility: raw.susceptibility ?? (rp?.susceptibility as string),
       cooldownSeconds: raw.cooldownSeconds ?? (rp?.cooldownSeconds as number),
     },
@@ -366,9 +387,10 @@ function getMaxStacks(limit: { verb: string; value: number }, _potential: number
 
 // ── Duration resolution ─────────────────────────────────────────────────────
 
-function getDurationFrames(duration: { value: number | number[]; unit: string }): number {
-  const val = Array.isArray(duration.value) ? duration.value[0] : duration.value;
-  if (val < 0) return TOTAL_FRAMES; // -1 = permanent
+function getDurationFrames(duration: { value?: number | number[]; values?: number[]; unit: string }): number {
+  const raw = duration.value ?? duration.values;
+  const val = Array.isArray(raw) ? raw[0] : raw;
+  if (val == null || val < 0) return TOTAL_FRAMES; // -1 or missing = permanent
   if (duration.unit === 'SECOND') return Math.round(val * 120);
   return val;
 }
@@ -388,6 +410,25 @@ interface DeriveResult {
 }
 
 /**
+ * Normalize a PERCENTAGE_HP predicate's with.value block into standard cardinality fields.
+ * JSON format: { verb: "HAVE", object: "PERCENTAGE_HP", with: { value: { verb: "BELOW", value: 50 } } }
+ * Normalized:  { verb: "HAVE", object: "PERCENTAGE_HP", cardinalityConstraint: "AT_MOST", cardinality: 50 }
+ */
+function normalizePercentageHpPredicate(pred: Predicate): Predicate {
+  if (pred.object !== 'PERCENTAGE_HP' || pred.cardinalityConstraint) return pred;
+  const w = pred.with as { value?: { verb?: string; value?: number } } | undefined;
+  if (!w?.value) return pred;
+  const { verb, value } = w.value;
+  if (verb === 'BELOW' && value != null) {
+    return { ...pred, cardinalityConstraint: 'AT_MOST', cardinality: value };
+  }
+  if (verb === 'ABOVE' && value != null) {
+    return { ...pred, cardinalityConstraint: 'AT_LEAST', cardinality: value };
+  }
+  return pred;
+}
+
+/**
  * Evaluate a single predicate (condition) at a given frame using the shared condition evaluator.
  */
 function checkPredicate(
@@ -395,13 +436,16 @@ function checkPredicate(
   events: TimelineEvent[],
   operatorSlotId: string,
   candidateFrame: number,
+  getEnemyHpPercentage?: (frame: number) => number | null,
 ): boolean {
+  const normalized = normalizePercentageHpPredicate(pred);
   const ctx: ConditionContext = {
     events,
     frame: candidateFrame,
     sourceOwnerId: operatorSlotId,
+    getEnemyHpPercentage,
   };
-  return evaluateInteraction(pred as unknown as Interaction, ctx);
+  return evaluateInteraction(normalized as unknown as Interaction, ctx);
 }
 
 // ── findTriggerMatches ───────────────────────────────────────────────────────
@@ -467,10 +511,17 @@ function deriveStatusEvents(
   const absorbedInflictions: AbsorbedInfliction[] = [];
   const absorbedIds = new Set<string>();
   let idCounter = 0;
+  const cooldownFrames = outputDef.properties.cooldownSeconds
+    ? Math.round(outputDef.properties.cooldownSeconds * 120)
+    : 0;
+  let lastProcFrame = -Infinity;
 
   for (const trigger of triggers) {
     // Skip triggers at or before the minimum frame (for post-consumption re-derivation)
     if (trigger.frame <= minTriggerFrame) continue;
+
+    // Enforce cooldown between procs
+    if (cooldownFrames > 0 && trigger.frame < lastProcFrame + cooldownFrames) continue;
 
     // Enforce max stack cap: count active events from prior, new derived, and
     // existing events in the timeline that match the output column
@@ -589,6 +640,7 @@ function deriveStatusEvents(
 
 
       derived.push(ev);
+      lastProcFrame = trigger.frame;
 
       // Track absorption
       if (ci < inflictionsToAbsorb.length) {
@@ -1358,20 +1410,45 @@ export function collectEngineTriggerEntries(
       const haveConds = def.onTriggerClause.flatMap(c =>
         c.conditions.filter((p: Predicate) => p.verb === 'HAVE')
       );
+
+      // Check if any clause has a PERCENTAGE_HP condition — these need periodic evaluation
+      // since HP changes on every damage tick, not at discrete event frames.
+      const hasHpThreshold = haveConds.some((c: Predicate) => c.object === 'PERCENTAGE_HP');
+
       const matches = findClauseTriggerMatches(def.onTriggerClause, events, slotId);
-      for (const match of matches) {
+
+      if (matches.length === 0 && hasHpThreshold) {
+        // All-HAVE clause with PERCENTAGE_HP: generate periodic triggers (every second)
+        // so the HP threshold gets evaluated as cumulative damage accumulates.
         const triggerCtx: EngineTriggerContext = {
           def, operatorId, operatorSlotId: slotId, potential, operatorSlotMap,
           loadoutProperties: props, haveConditions: haveConds,
           triggerEffects: def.onTriggerClause[0]?.effects,
         };
-        entries.push({
-          frame: match.frame,
-          sourceOwnerId: match.sourceOwnerId,
-          sourceSkillName: match.sourceSkillName,
-          ctx: triggerCtx,
-          isEquip,
-        });
+        for (let frame = 0; frame < TOTAL_FRAMES; frame += FPS) {
+          entries.push({
+            frame,
+            sourceOwnerId: slotId,
+            sourceSkillName: def.properties.id,
+            ctx: triggerCtx,
+            isEquip,
+          });
+        }
+      } else {
+        for (const match of matches) {
+          const triggerCtx: EngineTriggerContext = {
+            def, operatorId, operatorSlotId: slotId, potential, operatorSlotMap,
+            loadoutProperties: props, haveConditions: haveConds,
+            triggerEffects: def.onTriggerClause[0]?.effects,
+          };
+          entries.push({
+            frame: match.frame,
+            sourceOwnerId: match.sourceOwnerId,
+            sourceSkillName: match.sourceSkillName,
+            ctx: triggerCtx,
+            isEquip,
+          });
+        }
       }
     }
   };
@@ -1419,13 +1496,14 @@ export function evaluateEngineTrigger(
   events: TimelineEvent[],
   activeCountFn: (columnId: string, ownerId: string, frame: number) => number,
   addEventFn: (ev: TimelineEvent) => void,
+  getEnemyHpPercentage?: (frame: number) => number | null,
 ) {
   const { ctx } = entry;
   const { def } = ctx;
 
   if (ctx.haveConditions.length > 0) {
     const allMet = ctx.haveConditions.every(hc =>
-      checkPredicate(hc, events, ctx.operatorSlotId, entry.frame)
+      checkPredicate(hc, events, ctx.operatorSlotId, entry.frame, getEnemyHpPercentage)
     );
     if (!allMet) return;
   }
@@ -1452,6 +1530,16 @@ export function evaluateEngineTrigger(
   const maxStacks = getMaxStacks(eqLimitMap, ctx.potential);
 
   if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
+
+  // Enforce cooldown: skip if within cooldownSeconds of the last proc
+  const cdSecs = outputDef.properties.cooldownSeconds;
+  if (cdSecs && cdSecs > 0) {
+    const cdFrames = Math.round(cdSecs * 120);
+    const lastProc = events
+      .filter(ev => ev.columnId === columnId && ev.ownerId === ownerId)
+      .reduce((latest, ev) => Math.max(latest, ev.startFrame), -Infinity);
+    if (lastProc >= 0 && entry.frame < lastProc + cdFrames) return;
+  }
 
   const finalOwnerId = entry.isEquip && outputDef.properties.targetDeterminer === 'OTHER'
     ? COMMON_OWNER_ID : ownerId;

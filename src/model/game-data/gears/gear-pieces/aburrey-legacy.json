@@ -25,7 +25,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   61,
@@ -43,7 +43,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   41,
@@ -61,7 +61,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.098,
@@ -108,7 +108,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   61,
@@ -126,7 +126,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   41,
@@ -144,7 +144,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.147,
@@ -191,7 +191,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   61,
@@ -209,7 +209,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   41,
@@ -227,7 +227,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.0875,
@@ -274,7 +274,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   61,
@@ -292,7 +292,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   41,
@@ -310,7 +310,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.147,
@@ -357,7 +357,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   46,
@@ -375,7 +375,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   30,
@@ -393,7 +393,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.245,
@@ -440,7 +440,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -458,7 +458,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -476,7 +476,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.294,
@@ -523,7 +523,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -541,7 +541,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -559,7 +559,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.294,
@@ -606,7 +606,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -624,7 +624,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -642,7 +642,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.175,
@@ -689,7 +689,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -707,7 +707,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -725,7 +725,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.294,
@@ -772,7 +772,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -790,7 +790,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -808,7 +808,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.294,
@@ -855,7 +855,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   23,
@@ -873,7 +873,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   15,
@@ -891,7 +891,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "SKILL_LEVEL",
                 "values": [
                   0.196,

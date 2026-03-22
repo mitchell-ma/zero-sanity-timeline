@@ -86,12 +86,18 @@ const customGearEffects: Record<string, NormalizedEffectDef[]> = {};
 // ── Normalization ─────────────────────────────────────────────────────────────
 
 /**
- * Infer target/targetDeterminer from clause effects.
+ * Infer target/targetDeterminer from explicit properties first, then from onTriggerClause effects.
+ * Does NOT infer from clause effects (those describe the status's behavior, not its target).
  */
 function inferTarget(se: Record<string, unknown>): { target: string; targetDeterminer: string } {
-  const clauses = se.clause as { effects?: { to?: string; toDeterminer?: string }[] }[] | undefined;
-  if (clauses) {
-    for (const clause of clauses) {
+  const props = (se.properties ?? {}) as Record<string, unknown>;
+  // Explicit target from properties
+  if (props.target) return { target: props.target as string, targetDeterminer: (props.targetDeterminer ?? props.toDeterminer ?? 'THIS') as string };
+  if (props.to) return { target: props.to as string, targetDeterminer: (props.toDeterminer ?? 'THIS') as string };
+  // Infer from onTriggerClause effects (APPLY STATUS effects indicate target for the triggered status)
+  const triggers = se.onTriggerClause as { effects?: { to?: string; toDeterminer?: string }[] }[] | undefined;
+  if (triggers) {
+    for (const clause of triggers) {
       for (const effect of clause.effects ?? []) {
         if (effect.to === 'ENEMY') return { target: 'ENEMY', targetDeterminer: 'THIS' };
         if (effect.toDeterminer === 'OTHER') return { target: 'OPERATOR', targetDeterminer: 'OTHER' };
@@ -109,10 +115,11 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
   const props = (raw.properties ?? {}) as Record<string, unknown>;
   const sl = (props.statusLevel ?? {}) as Record<string, unknown>;
 
-  // Pass through statusLevel.limit as { verb, value } DSL format
-  const limit = sl.limit as { verb?: string; value?: unknown } | undefined;
+  // Pass through statusLevel.limit as { verb, value } DSL format — handle both value and values
+  const limit = sl.limit as { verb?: string; value?: unknown; values?: number[] } | undefined;
+  const limitVal = limit?.value ?? (limit?.values?.[0]);
   const resolvedLimit = limit
-    ? { verb: limit.verb ?? 'IS', value: (limit.value as number) ?? 1 }
+    ? { verb: limit.verb ?? 'IS', value: (limitVal as number) ?? 1 }
     : { verb: 'IS', value: 1 };
 
   const { target, targetDeterminer } = inferTarget(raw);
@@ -128,19 +135,21 @@ function normalizeEffectEntry(raw: Record<string, unknown>): NormalizedEffectDef
     originId: raw.originId as string | undefined,
     statusLevel: {
       limit: resolvedLimit,
-      statusLevelInteractionType: (sl.statusLevelInteractionType as string) ?? 'NONE',
+      statusLevelInteractionType: ((sl.statusLevelInteractionType ?? sl.interactionType) as string) ?? 'NONE',
     },
     onTriggerClause: (raw.onTriggerClause ?? []) as NormalizedEffectDef['onTriggerClause'],
     ...(raw.clause ? { clause: raw.clause as NormalizedEffectDef['clause'] } : {}),
     ...(raw.note ? { note: raw.note as string } : {}),
-    ...(raw.cooldownSeconds ? { cooldownSeconds: raw.cooldownSeconds as number } : {}),
+    ...(raw.cooldownSeconds ?? (props.cooldownSeconds as number | undefined) ? { cooldownSeconds: (raw.cooldownSeconds ?? props.cooldownSeconds) as number } : {}),
   };
 
-  // Duration
+  // Duration — handle both { value } and { values } formats
   if (props.duration) {
-    const dur = props.duration as { value: number | number[]; unit: string };
-    const dv = dur.value;
-    out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
+    const dur = props.duration as { value?: number | number[]; values?: number[]; unit: string };
+    const dv = dur.value ?? dur.values;
+    if (dv != null) {
+      out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
+    }
   }
 
   return out;
@@ -205,9 +214,39 @@ export function deregisterCustomWeaponEffectDefs(weaponName: string): void {
   delete customWeaponEffects[weaponName];
 }
 
-/** Register custom gear effect defs at runtime. */
+/** Register custom gear effect defs at runtime. Normalizes raw JSON entries and merges trigger+status pairs. */
 export function registerCustomGearEffectDefs(gearSetType: string, defs: NormalizedEffectDef[] | Record<string, unknown>[]): void {
-  customGearEffects[gearSetType] = defs as NormalizedEffectDef[];
+  // Normalize raw entries
+  const normalized = (defs as Record<string, unknown>[]).map(d => normalizeEffectEntry(d));
+  // Merge trigger+status pairs: inject onTriggerClause into status entries that share the same id,
+  // then filter out trigger-only entries whose objectId points to a status entry
+  const triggerObjectIds = new Set<string>();
+  for (const def of normalized) {
+    if (!def.onTriggerClause || def.onTriggerClause.length === 0) {
+      const trigger = normalized.find(t =>
+        t.onTriggerClause?.length &&
+        t.onTriggerClause.some(tc => (tc as unknown as { effects?: { objectId?: string }[] }).effects?.some(e => e.objectId === def.id))
+      );
+      if (trigger) {
+        const matchingClause = trigger.onTriggerClause.find(tc =>
+          (tc as unknown as { effects?: { objectId?: string }[] }).effects?.some(e => e.objectId === def.id)
+        );
+        if (matchingClause) {
+          def.onTriggerClause = [{ conditions: matchingClause.conditions }];
+          triggerObjectIds.add(def.id);
+        }
+      }
+    }
+  }
+  // Remove trigger-only entries whose APPLY STATUS targets have been merged
+  const result = normalized.filter(def => {
+    if (!def.onTriggerClause?.length) return true;
+    const isRedirect = def.onTriggerClause.some(tc =>
+      (tc as unknown as { effects?: { objectId?: string }[] }).effects?.some(e => e.objectId && triggerObjectIds.has(e.objectId))
+    );
+    return !isRedirect;
+  });
+  customGearEffects[gearSetType] = result;
 }
 
 /** Deregister custom gear effect defs. */

@@ -1,26 +1,36 @@
 /**
- * Modal wrapper for the standalone ClauseEditor.
- * Allows experimenting with clause building in isolation.
+ * Modal wrapper for the EventViewer.
+ * Allows experimenting with event building in isolation.
  */
-import ClauseEditor from './ClauseEditor';
+import { useState } from 'react';
+import EventViewer from './EventViewer';
+
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 interface Props {
   onClose: () => void;
 }
 
 export default function ClauseEditorModal({ onClose }: Props) {
+  const [event, setEvent] = useState<Record<string, JsonValue>>({
+    properties: { id: '', name: '' },
+    metadata: {},
+  });
+
   return (
     <div className="devlog-overlay" onClick={onClose}>
       <div className="ce-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ce-modal-header">
-          <span className="ce-modal-title">Clause Editor</span>
+          <span className="ce-modal-title">Event Viewer</span>
           <button className="devlog-close" onClick={onClose}>&times;</button>
         </div>
         <div className="ce-modal-body">
-          <ClauseEditor
-            onChange={(clause) => {
+          <EventViewer
+            value={event}
+            onChange={(next) => {
+              setEvent(next);
               // eslint-disable-next-line no-console
-              console.log('[ClauseEditor] clause:', JSON.stringify(clause, null, 2));
+              console.log('[EventViewer]', JSON.stringify(next, null, 2));
             }}
           />
         </div>

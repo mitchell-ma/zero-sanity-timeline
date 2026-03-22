@@ -44,6 +44,9 @@ import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
 import { getAllTriggerAssociations } from '../gameDataController';
 import { classifyEvents } from './inputEventController';
+import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
+import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
+import { resolveControlledOperator } from './controlledOperatorResolver';
 
 // ── Frame effect collection ─────────────────────────────────────────────────
 
@@ -656,6 +659,8 @@ export function runEventQueue(
   slotWeapons?: Record<string, string | undefined>,
   slotOperatorMap?: Record<string, string>,
   slotGearSets?: Record<string, string | undefined>,
+  getEnemyHpPercentage?: (frame: number) => number | null,
+  getControlledSlotAtFrame?: (frame: number) => string,
 ): void {
   const slotWirings = state.getSlotWirings();
   const registeredEvents = state.getRegisteredEvents();
@@ -681,7 +686,8 @@ export function runEventQueue(
 
   // Create interpreter backed by the single DEC
   const interpretor = new EventInterpretorController(state, registeredEvents, {
-    exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings,
+    exchangeContexts, absorptionContexts, loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
+    getControlledSlotAtFrame,
   });
 
   // Seed derived events (freeform inflictions/reactions) — these go through the
@@ -824,7 +830,16 @@ export function processCombatSimulation(
   slotWirings?: SlotTriggerWiring[],
   slotOperatorMap?: Record<string, string>,
   slotGearSets?: Record<string, string | undefined>,
+  /** Boss max HP for live HP threshold predicates (null = no HP tracking). */
+  bossMaxHp?: number | null,
+  /** Enemy ID for damage estimation (needed for DEF in HP tracking). */
+  enemyId?: string,
+  /** Loadout states per slot (weapon/gear selection, needed for ATK in HP tracking). */
+  loadouts?: Record<string, OperatorLoadoutState>,
 ): TimelineEvent[] {
+  // ── 0. Initialize HP tracker for live HP% queries during queue processing ─
+  initHpTracker(bossMaxHp ?? null);
+
   // ── 1. InputEventController: classify ─────────────────────────────────────
   const { inputEvents, derivedEvents } = classifyEvents(rawEvents);
 
@@ -844,8 +859,21 @@ export function processCombatSimulation(
   );
   state.registerEvents(talentEvents);
 
+  // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
+  if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
+    const slotInfo = Object.entries(slotOperatorMap).map(([slotId, opId]) => ({ slotId, operatorId: opId }));
+    precomputeDamageByFrame(state.getRegisteredEvents(), slotInfo, loadoutProperties, loadouts, enemyId);
+  }
+
+  // ── 3c. Resolve controlled operator ──────────────────────────────────────
+  const slotIds = slotOperatorMap ? Object.keys(slotOperatorMap) : [];
+  const getControlledSlotAtFrame = resolveControlledOperator(
+    state.getRegisteredEvents(), slotIds,
+  );
+
   // ── 4. EventQueueController: seed derived + run queue ─────────────────────
-  runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets);
+  runEventQueue(state, derivedEvents, loadoutProperties, slotWeapons, slotOperatorMap, slotGearSets,
+    bossMaxHp != null ? getEnemyHpPercentage : undefined, getControlledSlotAtFrame);
 
   // ── 5. Output ─────────────────────────────────────────────────────────────
   _lastController = state;

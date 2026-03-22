@@ -33,7 +33,9 @@ export interface OperatorStatConfig {
     two?: { name: string; maxLevel: number };
     attributeIncrease?: { name: string; attribute: string };
   };
-  /** Built-in operators: 99 level entries with exact per-level stats. */
+  /** Built-in operators: level entries with exact per-level stats. */
+  statsByLevel?: { level: number; attributes: Record<string, number> }[];
+  /** @deprecated Use statsByLevel. */
   allLevels?: { level: number; attributes: Record<string, number> }[];
   /** Custom operators: simplified lv1/lv90 stats for interpolation. */
   baseStats?: BaseStats;
@@ -140,9 +142,10 @@ export class DataDrivenOperator {
   // ── Private ──────────────────────────────────────────────────────────────
 
   private computeStats(level: number): Record<StatType, number> {
-    if (this.config.allLevels?.length) {
-      const levelEntry = this.config.allLevels.find(e => e.level === level)
-        ?? this.config.allLevels[this.config.allLevels.length - 1];
+    const levels = this.config.statsByLevel ?? this.config.allLevels;
+    if (levels?.length) {
+      const levelEntry = levels.find(e => e.level === level)
+        ?? levels[levels.length - 1];
       const levelStats: Partial<Record<StatType, number>> = {};
       for (const [key, value] of Object.entries(levelEntry.attributes)) {
         levelStats[key as StatType] = value;
@@ -157,6 +160,6 @@ export class DataDrivenOperator {
         ...interpolateStats(this.config.baseStats, level),
       };
     }
-    throw new Error('Operator config must have either allLevels or baseStats');
+    throw new Error('Operator config must have either statsByLevel or baseStats');
   }
 }

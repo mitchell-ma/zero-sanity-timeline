@@ -46,7 +46,7 @@ import { EventInterpretorController } from '../controller/timeline/eventInterpre
 // eslint-disable-next-line import/first
 import type { InterpretContext } from '../controller/timeline/eventInterpretorController';
 // eslint-disable-next-line import/first
-import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType, WithValueVerb } from '../consts/semantics';
+import { VerbType, AdjectiveType, CardinalityConstraintType, NounType, ObjectType } from '../consts/semantics';
 // eslint-disable-next-line import/first
 import type { Effect } from '../consts/semantics';
 
@@ -121,7 +121,7 @@ describe('EventInterpretorController: APPLY', () => {
       objectId: 'FOCUS',
       toObject: NounType.OPERATOR,
       with: {
-        duration: { verb: 'IS' as WithValueVerb, value: 10 },
+        duration: { verb: 'IS' as const, value: 10 },
       },
     };
 
@@ -143,7 +143,7 @@ describe('EventInterpretorController: APPLY', () => {
       adjective: AdjectiveType.COMBUSTION,
       toObject: NounType.ENEMY,
       with: {
-        statusLevel: { verb: 'IS' as WithValueVerb, value: 2 },
+        statusLevel: { verb: 'IS' as const, value: 2 },
       },
     };
 
@@ -188,7 +188,7 @@ describe('EventInterpretorController: CONSUME', () => {
       adjective: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
-        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
+        stacks: { verb: 'IS' as const, value: 1 },
       },
     };
 
@@ -209,7 +209,7 @@ describe('EventInterpretorController: CONSUME', () => {
       adjective: AdjectiveType.HEAT,
       fromObject: NounType.ENEMY,
       with: {
-        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
+        stacks: { verb: 'IS' as const, value: 1 },
       },
     };
 
@@ -232,7 +232,7 @@ describe('EventInterpretorController: CONSUME', () => {
       objectId: 'MELTING_FLAME',
       fromObject: NounType.OPERATOR,
       with: {
-        stacks: { verb: 'IS' as WithValueVerb, value: 1 },
+        stacks: { verb: 'IS' as const, value: 1 },
       },
     };
 
@@ -293,7 +293,7 @@ describe('EventInterpretorController: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
+            with: { stacks: { verb: 'IS' as const, value: 1 } },
           },
           {
             verb: VerbType.APPLY,
@@ -341,7 +341,7 @@ describe('EventInterpretorController: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
+            with: { stacks: { verb: 'IS' as const, value: 1 } },
           },
         ],
       }],
@@ -379,7 +379,7 @@ describe('EventInterpretorController: ALL', () => {
             object: ObjectType.INFLICTION,
             adjective: AdjectiveType.HEAT,
             fromObject: NounType.ENEMY,
-            with: { stacks: { verb: 'IS' as WithValueVerb, value: 1 } },
+            with: { stacks: { verb: 'IS' as const, value: 1 } },
           },
           {
             verb: VerbType.APPLY,
@@ -646,7 +646,7 @@ describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
 
     const forcedLift: Effect = {
       ...liftEffect,
-      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+      with: { isForced: { verb: 'IS' as const, value: 1 } },
     };
 
     const result = interp.interpret(forcedLift, ctx);
@@ -765,7 +765,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
 
     const forced: Effect = {
       ...knockDownEffect,
-      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+      with: { isForced: { verb: 'IS' as const, value: 1 } },
     };
 
     interp.interpret(forced, ctx);
@@ -843,7 +843,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
 
     const forced: Effect = {
       ...knockDownEffect,
-      with: { isForced: { verb: 'IS' as WithValueVerb, value: 1 } },
+      with: { isForced: { verb: 'IS' as const, value: 1 } },
     };
 
     interp.interpret(forced, ctx);

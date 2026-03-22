@@ -102,7 +102,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "COMMISERATION_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Laziness Pays Off Now",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Stalwart",
+      "attribute": "WILL",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1752,23 +1767,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "id": "COMMISERATION_TALENT",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Laziness Pays Off Now",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.15,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

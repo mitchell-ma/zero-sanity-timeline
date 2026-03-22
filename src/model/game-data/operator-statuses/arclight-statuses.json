@@ -30,7 +30,7 @@
       "element": "ELECTRIC",
       "statusLevel": {
         "limit": {
-          "verb": "BASED_ON",
+          "verb": "VARY_BY",
           "object": "POTENTIAL",
           "value": [
             3,
@@ -78,7 +78,7 @@
             "to": "TARGET",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": [
                   "POTENTIAL",
                   "INTELLECT"
@@ -149,7 +149,7 @@
             "to": "TARGET",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_LEVEL",
                 "value": [
                   0.1,

@@ -8,7 +8,8 @@
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
 import { CombatSkillsType, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
-import { SKILL_COLUMNS } from '../../model/channels';
+import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { MicroColumnController } from './microColumnController';
 import {
   checkComboWindowAvailability,
@@ -41,6 +42,16 @@ export interface ColumnContextMenuContext {
  * Builds context menu items for right-clicking on an empty column area.
  * Returns null if no menu should be shown.
  */
+/** Build "Set as Controlled Operator" item for operator-owned columns. */
+export function controlledItem(ownerId: string, atFrame: number): ContextMenuItem | null {
+  if (ownerId === ENEMY_OWNER_ID || ownerId === COMMON_OWNER_ID) return null;
+  return {
+    label: 'Set as Controlled Operator',
+    actionId: 'addEvent',
+    actionPayload: { ownerId, columnId: OPERATOR_COLUMNS.CONTROLLED, atFrame, defaultSkill: null },
+  };
+}
+
 export function buildColumnContextMenu(
   col: Column,
   atFrame: number,
@@ -52,11 +63,14 @@ export function buildColumnContextMenu(
 
   const { events, slots, resourceGraphs, alwaysAvailableComboSlots, timeStopRegions, staggerBreaks, columnPositions, interactionMode } = ctx;
 
+  const ctrlItem = controlledItem(col.ownerId, atFrame);
+
   // Resource columns: show "Edit Resource" only
   if (col.noAdd && resourceGraphs?.has(col.key)) {
     return [
       { label: col.label, header: true },
       { label: 'Edit Resource', actionId: 'editResource', actionPayload: col.key },
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
   if (col.noAdd && interactionMode === InteractionModeType.STRICT) return null;
@@ -73,13 +87,14 @@ export function buildColumnContextMenu(
   if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
     return [
       headerItem,
-      ...col.microColumns.map((mc) => ({
+      ...col.microColumns.filter((mc) => mc.id !== OPERATOR_COLUMNS.CONTROLLED).map((mc) => ({
         label: REACTION_LABELS[mc.id]?.label ?? mc.label,
         actionId: 'addEvent' as const,
         actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
         disabled: inTimeStop,
         disabledReason: inTimeStop ? timeStopReason : undefined,
       })),
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
 
@@ -98,6 +113,7 @@ export function buildColumnContextMenu(
         disabled: inTimeStop,
         disabledReason: inTimeStop ? timeStopReason : undefined,
       },
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
 
@@ -127,6 +143,7 @@ export function buildColumnContextMenu(
           disabled: inTimeStop,
           disabledReason: inTimeStop ? timeStopReason : undefined,
         })),
+        ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
       ];
     }
 
@@ -150,6 +167,7 @@ export function buildColumnContextMenu(
         disabled,
         disabledReason: disabledReason || undefined,
       },
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
 
@@ -179,6 +197,7 @@ export function buildColumnContextMenu(
         disabled,
         disabledReason: reason,
       },
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
 
@@ -242,6 +261,7 @@ export function buildColumnContextMenu(
           disabled,
         };
       }),
+      ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
 
@@ -265,6 +285,7 @@ export function buildColumnContextMenu(
       disabled,
       disabledReason: reason,
     },
+    ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
   ];
 }
 

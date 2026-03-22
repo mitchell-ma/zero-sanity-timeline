@@ -44,9 +44,9 @@ Cross-reference and validate consistency across weapon configs, weapon skills, a
 ### 3. Multiplier/value consistency
 
 **Checks:**
-- Named skill passive effects (clause with no conditions) have `multiplier` or `value` with `BASED_ON SKILL_LEVEL` and exactly 9 rank values
-- Weapon status effects have `value` with `BASED_ON SKILL_LEVEL` and exactly 9 rank values
-- Generic skills have `value` with `BASED_ON SKILL_LEVEL` and exactly 9 rank values
+- Named skill passive effects (clause with no conditions) have `multiplier` or `value` with `VARY_BY SKILL_LEVEL` and exactly 9 rank values
+- Weapon status effects have `value` with `VARY_BY SKILL_LEVEL` and exactly 9 rank values
+- Generic skills have `value` with `VARY_BY SKILL_LEVEL` and exactly 9 rank values
 - All `values` arrays contain only numbers (no nulls, no strings)
 - Duration `values` arrays are non-empty
 

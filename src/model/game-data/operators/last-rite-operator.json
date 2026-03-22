@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "STRIKER",
   "elementType": "CRYO",
-  "weaponTypes": ["GREAT_SWORD"],
+  "weaponTypes": [
+    "GREAT_SWORD"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -158,7 +160,38 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "HYPOTHERMIA_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Cryogenic Embrittlement",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Cryogenic Embrittlement",
+      "source": "TALENT_2",
+      "minLevel": 1,
+      "bonusType": "SPECIAL_MULTIPLIER",
+      "values": [
+        1.2,
+        1.5
+      ],
+      "condition": {
+        "hasSusceptibility": "CRYO",
+        "skillType": "ULTIMATE"
+      }
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1808,39 +1841,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Cryogenic Embrittlement",
-      "source": "TALENT_2",
-      "minLevel": 1,
-      "bonusType": "SPECIAL_MULTIPLIER",
-      "values": [
-        1.2,
-        1.5
-      ],
-      "condition": {
-        "hasSusceptibility": "CRYO",
-        "skillType": "ULTIMATE"
-      }
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Hypothermia",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Cryogenic Embrittlement",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.2,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

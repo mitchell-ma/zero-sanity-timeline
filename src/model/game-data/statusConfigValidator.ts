@@ -74,10 +74,10 @@ const EFFECT_KEYS = new Set([
 const VALID_ELEMENTS = new Set(['HEAT', 'ELECTRIC', 'CRYO', 'NATURE']);
 const VALID_STATUS_LEVEL_INTERACTIONS = new Set(['NONE', 'RESET']);
 const VALID_ENHANCEMENT_TYPES = new Set(['EMPOWERED', 'ENHANCED']);
-const VALID_LIMIT_VERBS = new Set(['IS', 'BASED_ON']);
+const VALID_LIMIT_VERBS = new Set(['IS', 'VARY_BY']);
 const VALID_DURATION_UNITS = new Set(['SECOND', 'FRAME']);
 const VALID_TARGETS = new Set(['OPERATOR', 'ENEMY']);
-const VALID_TARGET_DETERMINERS = new Set(['THIS', 'OTHER', 'ALL', 'ANY']);
+const VALID_TARGET_DETERMINERS = new Set(['THIS', 'OTHER', 'ALL', 'ANY', 'CONTROLLED']);
 const ID_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 
 /** Legacy keys with migration guidance. */

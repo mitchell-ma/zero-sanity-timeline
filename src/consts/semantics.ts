@@ -43,6 +43,8 @@ export enum DeterminerType {
   ALL_OTHER = "ALL_OTHER",
   /** Any operator (wildcard for triggers). */
   ANY = "ANY",
+  /** The operator currently controlled by the player. */
+  CONTROLLED = "CONTROLLED",
 }
 
 // ── Noun ────────────────────────────────────────────────────────────────────
@@ -95,6 +97,8 @@ enum CoreNounType {
   STAGGER = "STAGGER",
   COOLDOWN = "COOLDOWN",
   HP = "HP",
+  /** Enemy HP as a percentage of max HP (0–100). Used with HAVE for threshold conditions. */
+  PERCENTAGE_HP = "PERCENTAGE_HP",
 
   // States (for IS/BECOME verbs)
   ACTIVE = "ACTIVE",
@@ -212,7 +216,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, string[]>> = {
   [VerbType.IGNORE]:     ['STATUS', 'ULTIMATE_ENERGY'],
   [VerbType.ENHANCE]:    ['BASIC_ATTACK', 'BATTLE_SKILL', 'COMBO_SKILL', 'ULTIMATE'],
   [VerbType.EXPERIENCE]: ['GAME_TIME', 'REAL_TIME'],
-  [VerbType.HAVE]:       ['STATUS', 'INFLICTION', 'REACTION', 'STACKS', 'SKILL_POINT', 'ULTIMATE_ENERGY'],
+  [VerbType.HAVE]:       ['STATUS', 'INFLICTION', 'REACTION', 'STACKS', 'SKILL_POINT', 'ULTIMATE_ENERGY', 'PERCENTAGE_HP'],
   [VerbType.IS]:         ['ACTIVE', 'LIFTED', 'KNOCKED_DOWN', 'CRUSHED', 'BREACHED', 'COMBUSTED', 'CORRODED', 'ELECTRIFIED', 'SOLIDIFIED', 'NODE_STAGGERED', 'FULL_STAGGERED'],
   [VerbType.BECOME]:     ['ACTIVE', 'LIFTED', 'KNOCKED_DOWN', 'CRUSHED', 'BREACHED', 'COMBUSTED', 'CORRODED', 'ELECTRIFIED', 'SOLIDIFIED', 'NODE_STAGGERED', 'FULL_STAGGERED'],
   [VerbType.RECEIVE]:    ['STATUS', 'INFLICTION', 'REACTION', 'STAGGER'],
@@ -400,43 +404,108 @@ export enum PrepositionType {
   UNTIL = "UNTIL",
 }
 
-// ── WITH preposition value verbs ─────────────────────────────────────────────
+// ── Value expression tree ────────────────────────────────────────────────────
+
+/** Binary operators for composing values in the expression tree. */
+export enum ValueOperator {
+  MULT        = "MULT",
+  ADD         = "ADD",
+  SUB         = "SUB",
+  INTEGER_DIV = "INTEGER_DIV",
+  MIN         = "MIN",
+  MAX         = "MAX",
+}
+
+/** Leaf node: a literal numeric value. */
+export interface ValueLiteral {
+  verb: 'IS';
+  value: number;
+}
 
 /**
- * Verb that determines the shape of a WITH preposition value.
- * - IS: single value (number)
- * - BASED_ON: multi-dimensional array indexed by the dependency (SKILL_LEVEL, RANK, etc.)
+ * Leaf node: a variable lookup — indexed table.
+ *
+ * The `value` array is indexed by the dependency (SKILL_LEVEL → 12 entries, POTENTIAL → 6).
  */
-export enum WithValueVerb {
-  IS = "IS",
-  BASED_ON = "BASED_ON",
+export interface ValueVariable {
+  verb: 'VARY_BY';
+  object: string;
+  value?: number | number[];
 }
 
-/** A single WITH preposition entry: a cardinality with its own verb determining value shape. */
-export interface WithValue {
-  verb: WithValueVerb;
-  /** Dependency target when verb is BASED_ON (e.g. "SKILL_LEVEL", "RANK"). */
-  object?: string;
-  /** The value — single number for IS, array for BASED_ON. */
-  value: number | number[];
+/**
+ * Leaf node: a raw stat reference.
+ *
+ * Resolves to the operator's current stat value (e.g. INTELLECT, STRENGTH).
+ * The `object` must be a valid StatType key.
+ */
+export interface ValueStat {
+  verb: 'STAT';
+  object: string;
 }
+
+/** Binary operator node: applies an operator to two operands. */
+export interface ValueExpression {
+  operator: ValueOperator;
+  left: ValueNode;
+  right: ValueNode;
+}
+
+/**
+ * A value in the DSL — a literal, a variable lookup, a stat reference, or a binary expression.
+ *
+ * Examples:
+ *   { verb: "IS", value: 15 }
+ *   { verb: "VARY_BY", object: "SKILL_LEVEL", value: [0.5, 0.6, ...] }
+ *   { verb: "STAT", object: "INTELLECT" }
+ *   { operator: "MULT", left: { verb: "IS", value: 7.5 }, right: { verb: "STAT", object: "INTELLECT" } }
+ */
+export type ValueNode = ValueLiteral | ValueVariable | ValueStat | ValueExpression;
+
+// ── Type guards ─────────────────────────────────────────────────────────────
+
+export function isValueLiteral(node: ValueNode): node is ValueLiteral {
+  return 'verb' in node && node.verb === 'IS';
+}
+
+export function isValueVariable(node: ValueNode): node is ValueVariable {
+  return 'verb' in node && node.verb === 'VARY_BY';
+}
+
+export function isValueStat(node: ValueNode): node is ValueStat {
+  return 'verb' in node && node.verb === 'STAT';
+}
+
+export function isValueExpression(node: ValueNode): node is ValueExpression {
+  return 'operator' in node;
+}
+
+// ── Legacy aliases (deprecated — use ValueNode types directly) ──────────────
+
+/** @deprecated Use ValueNode instead. */
+export type WithValue = ValueLiteral | ValueVariable | ValueStat;
+/** @deprecated Use 'IS' | 'VARY_BY' string literals instead. */
+export const WithValueVerb = { IS: 'IS' as const, VARY_BY: 'VARY_BY' as const };
+/** @deprecated Use 'IS' | 'VARY_BY' string literals instead. */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type WithValueVerb = 'IS' | 'VARY_BY';
 
 /**
  * WITH preposition map — all properties/cardinalities of an effect.
  *
- * Each key is a named cardinality whose value shape is determined by its verb (IS or BASED_ON).
+ * Each key is a named property whose value is a ValueNode expression tree.
  *
  * Key hierarchy:
  *   cardinality      — generic count (e.g. RECOVER 100 SKILL_POINT, CONSUME 300 ULTIMATE_ENERGY)
  *   duration         — seconds (e.g. TIME_STOP, REACTION, STATUS duration)
- *   multiplier       — damage multiplier (BASED_ON SKILL_LEVEL → per-level array)
+ *   multiplier       — damage multiplier (VARY_BY SKILL_LEVEL → per-level array)
  *   staggerValue     — stagger amount
  *   skillPoint       — SP value
  *   stacks           — stack count, implies stacking mechanism (STATUS, INFLICTION)
  *     └─ statusLevel — specialization of stacks for reaction/status tier (1-4);
  *                      applies to: ARTS_REACTION, PHYSICAL_STATUS, INFLICTION
  */
-export type WithPreposition = Record<string, WithValue>;
+export type WithPreposition = Record<string, ValueNode>;
 
 // ── Effect ──────────────────────────────────────────────────────────────────
 
@@ -449,7 +518,7 @@ export type WithPreposition = Record<string, WithValue>;
  * Grammar: VERB [adjective] OBJECT [prepositions...]
  *
  * Examples:
- *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER BASED_ON SKILL_LEVEL [0.5, ...]
+ *   PERFORM HEAT DAMAGE TO ENEMY WITH MULTIPLIER VARY_BY SKILL_LEVEL [0.5, ...]
  *   APPLY FORCED COMBUSTION REACTION TO ENEMY WITH STATUS_LEVEL IS 1
  *   APPLY COMBO TIME_STOP WITH DURATION IS 0.566
  *   RECOVER SKILL_POINT WITH CARDINALITY IS 20
@@ -871,6 +940,7 @@ export const OBJECT_LABELS: Record<string, string> = {
   [ObjectType.STAGGER]: 'Stagger',
   [ObjectType.COOLDOWN]: 'Cooldown',
   [ObjectType.HP]: 'HP',
+  [ObjectType.PERCENTAGE_HP]: 'HP %',
   [ObjectType.DAMAGE]: 'Damage',
   [ObjectType.TIME_STOP]: 'Time Stop',
   [ObjectType.GAME_TIME]: 'Game Time',

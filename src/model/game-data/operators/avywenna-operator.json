@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "STRIKER",
   "elementType": "ELECTRIC",
-  "weaponTypes": ["POLEARM"],
+  "weaponTypes": [
+    "POLEARM"
+  ],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "AGILITY",
   "potentials": [
@@ -115,7 +117,36 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "EXPEDITED_DELIVERY_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Tactful Approach",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Stalwart",
+      "attribute": "WILL",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Carrot and Sharp Stick",
+      "source": "POTENTIAL",
+      "minPotential": 5,
+      "bonusType": "SPECIAL_MULTIPLIER",
+      "values": [
+        1.15
+      ],
+      "condition": {
+        "hasSusceptibility": "ELECTRIC"
+      }
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1765,37 +1796,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Carrot and Sharp Stick",
-      "source": "POTENTIAL",
-      "minPotential": 5,
-      "bonusType": "SPECIAL_MULTIPLIER",
-      "values": [
-        1.15
-      ],
-      "condition": {
-        "hasSusceptibility": "ELECTRIC"
-      }
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Expedited Delivery",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Tactful Approach",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.15,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

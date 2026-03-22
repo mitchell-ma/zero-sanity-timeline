@@ -1,0 +1,141 @@
+[
+  {
+    "clause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "HAVE",
+            "object": "SLOW"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "DAMAGE_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.1,
+                  0.2
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "LOVE_THE_STAB_AND_TWIST",
+      "name": "Love the Stab and Twist",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "fluorite",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "IS_HIT",
+            "with": {
+              "chance": {
+                "verb": "IS",
+                "value": 0.2
+              }
+            }
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "UNPREDICTABLE",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "UNPREDICTABLE_TALENT",
+      "name": "Unpredictable (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "fluorite",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "ATTACK_BONUS",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR",
+            "with": {
+              "value": {
+                "verb": "VARY_BY",
+                "object": "TALENT_TWO_LEVEL",
+                "values": [
+                  0.1,
+                  0.2
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "UNPREDICTABLE",
+      "name": "Unpredictable",
+      "type": "TALENT_STATUS",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS",
+      "duration": {
+        "verb": "IS",
+        "values": [
+          10
+        ],
+        "unit": "SECOND"
+      },
+      "statusLevel": {
+        "limit": {
+          "verb": "IS",
+          "values": [
+            1
+          ]
+        },
+        "interactionType": "RESET"
+      }
+    },
+    "metadata": {
+      "originId": "UNPREDICTABLE_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

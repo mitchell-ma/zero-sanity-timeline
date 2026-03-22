@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "BEAM_COHESION_ARTS",
-      "FINISHER": "BEAM_COHESION_ARTS_FINISHER",
-      "DIVE": "BEAM_COHESION_ARTS_DIVE"
-    },
-    "BATTLE_SKILL": "GRAVITY_MODE",
-    "COMBO_SKILL": "MATRIX_DISPLACEMENT",
-    "ULTIMATE": "GRAVITY_FIELD"
-  },
   "BEAM_COHESION_ARTS": {
     "segments": [
       {
@@ -49,7 +39,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.3,
@@ -112,7 +102,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.18,
@@ -159,7 +149,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.18,
@@ -222,7 +212,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.14,
@@ -269,7 +259,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.14,
@@ -316,7 +306,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.14,
@@ -378,16 +368,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 16
-                      },
-                      "skillPoint": {
-                        "verb": "IS",
-                        "value": 16
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -434,7 +416,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -502,7 +484,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -538,139 +520,9 @@
   },
   "GRAVITY_MODE": {
     "properties": {
-      "duration": {
-        "value": 4.1,
-        "unit": "SECOND"
-      },
       "name": "Arcane Staff: Gravity Mode",
       "description": "Initiates Arts channeling that creates a gravity well. The gravity well pulls in nearby enemies and deals Nature DMG to them. When channeling ends, the gravity well implodes to deal Nature DMG and Nature Infliction to enemies in the area of effect."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.97,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.067,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 2.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 3.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "NATURE",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -690,54 +542,149 @@
     ],
     "metadata": {
       "originId": "gilberta"
-    }
-  },
-  "MATRIX_DISPLACEMENT": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.97,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "COMBUSTED"
+                "conditions": [],
+                "effects": []
               }
             ]
           },
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.53,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "SOLIDIFIED"
+                "conditions": [],
+                "effects": []
               }
             ]
           },
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 2.067,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "CORRODED"
+                "conditions": [],
+                "effects": []
               }
             ]
           },
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 2.6,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "ELECTRIFIED"
+                "conditions": [],
+                "effects": []
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 3.6,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "NATURE",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Any Arts Reaction applied",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 4.1,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "MATRIX_DISPLACEMENT": {
+    "properties": {
       "name": "Arcane Staff: Matrix Displacement",
-      "description": "COMBO TRIGGER: When an Arts Reaction is applied to an enemy. \nA quick casting of the Arts that generates a gravity pull, which then deals Nature DMG and forcibly Lifts the target and nearby enemies."
+      "description": "Any Arts Reaction applied",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -820,12 +767,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.4,
@@ -868,7 +811,45 @@
     ],
     "metadata": {
       "originId": "gilberta"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "COMBUSTED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "SOLIDIFIED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "CORRODED"
+          }
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "ELECTRIFIED"
+          }
+        ]
+      }
+    ]
   },
   "GRAVITY_FIELD": {
     "properties": {
@@ -967,7 +948,7 @@
                     "toObject": "ENEMY",
                     "with": {
                       "duration": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           5,
@@ -992,56 +973,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "spellVulnerableRate": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.18,
-                          0.18,
-                          0.18,
-                          0.22,
-                          0.22,
-                          0.22,
-                          0.26,
-                          0.26,
-                          0.26,
-                          0.3,
-                          0.3,
-                          0.3
-                        ]
-                      },
-                      "moveSpeedScalar": {
-                        "verb": "IS",
-                        "value": 0.8
-                      },
-                      "duration": {
-                        "verb": "IS",
-                        "value": 5
-                      },
-                      "spellVulnerablePerstack": {
-                        "verb": "IS",
-                        "value": 0.1
-                      },
-                      "spellVulnerable_4stack": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          0.252,
-                          0.252,
-                          0.252,
-                          0.308,
-                          0.308,
-                          0.308,
-                          0.364,
-                          0.364,
-                          0.364,
-                          0.42,
-                          0.42,
-                          0.42
-                        ]
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           3.33,
@@ -1071,271 +1004,146 @@
       "originId": "gilberta"
     }
   },
-  "statusEvents": [
-    {
-      "clause": [
-        {
-          "conditions": [],
-          "effects": [
-            {
-              "verb": "APPLY",
-              "object": "SUSCEPTIBILITY",
-              "adjective": "ARTS",
-              "with": {
-                "value": {
-                  "verb": "BASED_ON",
-                  "object": "SKILL_LEVEL",
-                  "value": [
-                    0.18,
-                    0.18,
-                    0.18,
-                    0.22,
-                    0.22,
-                    0.22,
-                    0.26,
-                    0.26,
-                    0.26,
-                    0.3,
-                    0.3,
-                    0.3
-                  ]
-                }
-              }
-            }
-          ]
-        },
-        {
-          "conditions": [
-            {
-              "subject": "ENEMY",
-              "verb": "HAVE",
-              "object": "INFLICTION",
-              "objectId": "VULNERABLE",
-              "cardinalityConstraint": "AT_LEAST",
-              "cardinality": 1
-            }
-          ],
-          "effects": [
-            {
-              "verb": "APPLY",
-              "object": "SUSCEPTIBILITY",
-              "adjective": "ARTS",
-              "with": {
-                "value": {
-                  "verb": "BASED_ON",
-                  "object": "SKILL_LEVEL",
-                  "value": [
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1,
-                    0.1
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      ],
-      "properties": {
-        "id": "ANOMALOUS_GRAVITY_FIELD",
-        "name": "Anomalous Gravity Field",
-        "duration": {
-          "value": [
-            5
-          ],
-          "unit": "SECOND"
-        },
-        "statusLevel": {
-          "limit": {
-            "verb": "IS",
-            "value": 1
-          },
-          "statusLevelInteractionType": "NONE"
-        }
-      },
-      "metadata": {
-        "originId": "gilberta"
-      },
-      "onEntryClause": [
-        {
-          "conditions": [
-            {
-              "subject": "ENEMY",
-              "verb": "HAVE",
-              "object": "STATUS",
-              "objectId": "LIFT"
-            }
-          ],
-          "effects": [
-            {
-              "verb": "EXTEND",
-              "object": "STATUS",
-              "objectId": "LIFT",
-              "onObject": "ENEMY",
-              "until": "END"
-            }
-          ]
-        }
-      ],
-      "onTriggerClause": [
-        {
-          "conditions": [
-            {
-              "subject": "ENEMY",
-              "verb": "RECEIVE",
-              "object": "STATUS",
-              "objectId": "LIFT"
-            }
-          ],
-          "effects": [
-            {
-              "verb": "EXTEND",
-              "object": "STATUS",
-              "objectId": "LIFT",
-              "onObject": "ENEMY",
-              "until": "END"
-            }
-          ]
-        }
-      ]
-    }
-  ],
   "BEAM_COHESION_ARTS_FINISHER": {
     "properties": {
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Arcane Staff: Beam Cohesion Arts (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Nature DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "gilberta"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "gilberta"
-    }
+    ]
   },
   "BEAM_COHESION_ARTS_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Arcane Staff: Beam Cohesion Arts (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Nature DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "gilberta"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "NATURE",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "NATURE",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "gilberta"
-    }
+    ]
   }
 }

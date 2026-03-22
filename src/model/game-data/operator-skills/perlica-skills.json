@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "PROTOCOL_ALPHA_BREACH",
-      "FINISHER": "PROTOCOL_ALPHA_BREACH_FINISHER",
-      "DIVE": "PROTOCOL_ALPHA_BREACH_DIVE"
-    },
-    "BATTLE_SKILL": "PROTOCOL_OMEGA_STRIKE",
-    "COMBO_SKILL": "INSTANT_PROTOCOL_CHAIN",
-    "ULTIMATE": "PROTOCOL_EPSILON"
-  },
   "PROTOCOL_ALPHA_BREACH": {
     "segments": [
       {
@@ -44,12 +34,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.25,
@@ -107,12 +97,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -154,12 +144,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -217,12 +207,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.12,
@@ -264,12 +254,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.12,
@@ -311,12 +301,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.12,
@@ -395,12 +385,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.57,
@@ -436,85 +426,9 @@
   },
   "PROTOCOL_OMEGA_STRIKE": {
     "properties": {
-      "duration": {
-        "value": 0.93,
-        "unit": "SECOND"
-      },
       "name": "Protocol ω: Strike",
       "description": "Unleashes a bolt of electro-magnetic energy that deals Electric DMG and Electric Infliction to enemies in a small area."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.43,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "ELECTRIC",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.78,
-                      1.96,
-                      2.13,
-                      2.31,
-                      2.49,
-                      2.67,
-                      2.85,
-                      3.02,
-                      3.2,
-                      3.42,
-                      3.69,
-                      4
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -534,28 +448,95 @@
     ],
     "metadata": {
       "originId": "perlica"
-    }
-  },
-  "INSTANT_PROTOCOL_CHAIN": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.43,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "PERFORM",
-                "object": "FINAL_STRIKE"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "ELECTRIC",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.78,
+                          1.96,
+                          2.13,
+                          2.31,
+                          2.49,
+                          2.67,
+                          2.85,
+                          3.02,
+                          3.2,
+                          3.42,
+                          3.69,
+                          4
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Final Strike finisher",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 0.93,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "INSTANT_PROTOCOL_CHAIN": {
+    "properties": {
       "name": "Instant Protocol: Chain",
-      "description": "COMBO TRIGGER: When controlled operator performs a Final Strike on any enemy. \nUnleashes stored electro-magnetic energy to bombard the target, dealing Electric DMG and forcibly inflicting temporary Electrification."
+      "description": "Final Strike finisher",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -634,20 +615,16 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "duration": {
                         "verb": "IS",
                         "value": 5
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.8,
@@ -680,7 +657,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 20,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              19
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -690,7 +682,19 @@
     ],
     "metadata": {
       "originId": "perlica"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          }
+        ]
+      }
+    ]
   },
   "PROTOCOL_EPSILON": {
     "properties": {
@@ -706,8 +710,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 68
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  80,
+                  68,
+                  68,
+                  68,
+                  68,
+                  68
+                ]
               }
             }
           }
@@ -761,16 +773,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "ELECTRIC",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 20
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           4.45,
@@ -805,129 +813,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Protocol α: Breach (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Electric DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "perlica"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "perlica"
-    }
+    ]
   },
   "PROTOCOL_ALPHA_BREACH_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Protocol α: Breach (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Electric DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "perlica"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "perlica"
-    }
+    ]
   }
 }

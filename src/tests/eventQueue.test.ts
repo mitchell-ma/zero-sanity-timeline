@@ -23,11 +23,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
-  const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = mockSkillsJson;
-
   const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'toObject', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
   const expandKeys = (val: any): any => {
@@ -43,19 +39,77 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- status normalization
   const expandedStatuses = (mockStatusesJson as any[]).map((s: any) => expandKeys(s));
 
-  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
+  const mergedStatusEvents = [...expandedStatuses];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- infer skillTypeMap from skill entries
+  function inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
+    const ids = Object.keys(skills);
+    const finishers = ids.filter(id => id.endsWith('_FINISHER'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inferred map
+    const map: Record<string, any> = {};
+    for (const fId of finishers) {
+      const base = fId.replace(/_FINISHER$/, '');
+      if (skills[base]) {
+        const batk: Record<string, string> = { BATK: base, FINISHER: fId };
+        const diveId = ids.find(d => d === base + '_DIVE');
+        if (diveId) batk.DIVE = diveId;
+        map.BASIC_ATTACK = batk;
+        break;
+      }
+    }
+    const variantSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+    const baseSkills = ids.filter(id => {
+      const batkId = typeof map.BASIC_ATTACK === 'object' ? (map.BASIC_ATTACK as Record<string,string>).BATK : undefined;
+      if (id === batkId) return false;
+      return !variantSuffixes.some(s => id.endsWith(s));
+    });
+    for (const id of baseSkills) {
+      const skill = skills[id] as Record<string, unknown>;
+      if (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0) {
+        map.COMBO_SKILL = id;
+        break;
+      }
+    }
+    const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
+    for (const id of remaining) {
+      const skill = skills[id] as Record<string, unknown>;
+      const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
+      if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+        map.ULTIMATE = id;
+        break;
+      }
+    }
+    const battleCandidates = remaining.filter(id => id !== map.ULTIMATE);
+    if (battleCandidates.length === 1) map.BATTLE_SKILL = battleCandidates[0];
+    return map;
+  }
+
+  const skillEntries = { ...mockSkillsJson };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
   const laevatainSkills = {} as Record<string, any>;
   for (const [key, val] of Object.entries(skillEntries)) {
     laevatainSkills[key] = { ...(val as Record<string, unknown>), id: key };
   }
-  if (skTypeMap) {
-    const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-    for (const [category, skillId] of Object.entries(skTypeMap as Record<string, string>)) {
-      if (laevatainSkills[skillId]) laevatainSkills[category] = laevatainSkills[skillId];
+  const skTypeMap = inferSkillTypeMap(laevatainSkills);
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, value] of Object.entries(skTypeMap)) {
+    if (typeof value === 'string') {
+      if (laevatainSkills[value]) laevatainSkills[category] = laevatainSkills[value];
       for (const suffix of variantSuffixes) {
-        const variantSkillId = `${skillId}_${suffix}`;
+        const variantSkillId = `${value}_${suffix}`;
         if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const batkId = (value as Record<string, string>).BATK;
+      if (batkId && laevatainSkills[batkId]) laevatainSkills[category] = laevatainSkills[batkId];
+      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
+        if (laevatainSkills[subId]) laevatainSkills[subKey] = laevatainSkills[subId];
+      }
+      if (batkId) {
+        for (const suffix of variantSuffixes) {
+          const variantSkillId = `${batkId}_${suffix}`;
+          if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
+        }
       }
     }
   }
@@ -104,17 +158,27 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     const entry = map[id];
     if (!entry) return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(entry.file)[entry.skillId]?.properties?.trigger?.onTriggerClause;
+    return require(entry.file)[entry.skillId]?.onTriggerClause;
   },
   getExchangeStatusConfig: () => {
-      const OPERATOR_COLUMNS: Record<string, string> = { MELTING_FLAME: 'melting-flame', THUNDERLANCE: 'thunderlance' };
+      const OP_COLUMNS: Record<string, string> = { MELTING_FLAME: 'melting-flame', THUNDERLANCE: 'thunderlance' };
       const TOTAL_FRAMES = 14400;
       const config: Record<string, { columnId: string; durationFrames: number }> = {};
       for (const status of expandedStatuses) {
         const props = status.properties;
-        if (!props || props.type !== 'EXCHANGE') continue;
+        if (!props) continue;
+        // Exchange = stackable (limit > 1) + NONE interaction + APPLY STATUS effect at max
+        const sl = props.statusLevel;
+        const limitVal = sl?.limit?.value ?? 1;
+        const interaction = sl?.statusLevelInteractionType ?? 'NONE';
+        if (limitVal <= 1 || interaction !== 'NONE') continue;
+        const hasApplyStatus = (status.clause ?? []).some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c: any) => (c.effects ?? []).some((e: any) => e.verb === 'APPLY' && e.object === 'STATUS')
+        );
+        if (!hasApplyStatus) continue;
         const id = props.id as string;
-        const columnId = OPERATOR_COLUMNS[id] ?? id.toLowerCase().replace(/_/g, '-');
+        const columnId = OP_COLUMNS[id] ?? id.toLowerCase().replace(/_/g, '-');
         let durationFrames = TOTAL_FRAMES * 10;
         if (props.duration) {
           const val = Array.isArray(props.duration.value) ? props.duration.value[0] : props.duration.value;
@@ -127,7 +191,17 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
     getExchangeStatusIds: () => {
       const ids = new Set<string>();
       for (const status of expandedStatuses) {
-        if (status.properties?.type === 'EXCHANGE') ids.add(status.properties.id);
+        const props = status.properties;
+        if (!props) continue;
+        const sl = props.statusLevel;
+        const limitVal = sl?.limit?.value ?? 1;
+        const interaction = sl?.statusLevelInteractionType ?? 'NONE';
+        if (limitVal <= 1 || interaction !== 'NONE') continue;
+        const hasApplyStatus = (status.clause ?? []).some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (c: any) => (c.effects ?? []).some((e: any) => e.verb === 'APPLY' && e.object === 'STATUS')
+        );
+        if (hasApplyStatus) ids.add(props.id);
       }
       return ids;
     },
@@ -174,10 +248,11 @@ function empoweredBattleSkillEvent(startFrame: number): TimelineEvent {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const skillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   const empDef = skillsJson['SMOULDERING_FIRE_EMPOWERED'];
-  const duration = Math.round(empDef.properties.duration.value * FPS);
+  const empSeg = empDef.segments[0];
+  const duration = Math.round(empSeg.properties.duration.value * FPS);
   const segments: EventSegmentData[] = [];
   const frames: EventFrameMarker[] = [];
-  for (const f of empDef.frames) {
+  for (const f of empSeg.frames) {
     const offset = Math.round(f.properties.offset.value * FPS);
     const frameMarker: EventFrameMarker = { offsetFrame: offset };
     for (const ef of (f.clause?.[0]?.effects ?? [])) {
@@ -1331,8 +1406,14 @@ describe('Combo skill effects — all operators', () => {
   ): TimelineEvent {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const json = require(`../model/game-data/operator-skills/${operatorFile}`);
-    const comboId = json.skillTypeMap?.COMBO_SKILL;
-    const skill = json[comboId];
+    // Infer combo skill: find the skill with onTriggerClause, or named COMBO_SKILL
+    const varSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+    const baseIds = Object.keys(json).filter(id => !varSuffixes.some(s => id.endsWith(s)));
+    const comboId = baseIds.find(id => {
+      const sk = json[id] as Record<string, unknown>;
+      return sk?.onTriggerClause && (sk.onTriggerClause as unknown[]).length > 0;
+    }) ?? (json['COMBO_SKILL'] ? 'COMBO_SKILL' : undefined);
+    const skill = comboId ? json[comboId] : undefined;
     const animSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType === 'ANIMATION');
     const mainSeg = skill.segments?.find((s: Record<string, unknown>) => (s.metadata as Record<string, unknown>)?.segmentType !== 'ANIMATION');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1371,7 +1452,7 @@ describe('Combo skill effects — all operators', () => {
 
     return {
       id: `${comboId}-test`,
-      name: comboId,
+      name: comboId ?? '',
       ownerId,
       columnId: SKILL_COLUMNS.COMBO,
       startFrame,

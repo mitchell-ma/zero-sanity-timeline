@@ -28,7 +28,7 @@
           "to": "OPERATOR",
           "with": {
             "value": {
-              "verb": "BASED_ON",
+              "verb": "VARY_BY",
               "object": "WEAPON_LEVEL",
               "values": [
                 50,

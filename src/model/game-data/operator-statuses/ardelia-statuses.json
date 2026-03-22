@@ -1,0 +1,55 @@
+[
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HIT_WITH",
+            "object": "BATTLE_SKILL"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "TREATMENT",
+            "toDeterminer": "CONTROLLED",
+            "to": "OPERATOR",
+            "with": {
+              "healBase": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  63,
+                  90
+                ]
+              },
+              "willAdditive": {
+                "verb": "VARY_BY",
+                "object": "TALENT_ONE_LEVEL",
+                "values": [
+                  0.53,
+                  0.75
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "FRIENDLY_PRESENCE_TALENT",
+      "name": "Friendly Presence (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "ardelia",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  }
+]

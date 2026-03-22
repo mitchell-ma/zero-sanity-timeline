@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "ALL_OUT_OFFENSIVE",
-      "FINISHER": "ALL_OUT_OFFENSIVE_FINISHER",
-      "DIVE": "ALL_OUT_OFFENSIVE_DIVE"
-    },
-    "BATTLE_SKILL": "THE_PULVERIZING_FRONT",
-    "COMBO_SKILL": "FULL_MOON_SLASH",
-    "ULTIMATE": "SHIELDGUARD_BANNER"
-  },
   "ALL_OUT_OFFENSIVE": {
     "segments": [
       {
@@ -44,12 +34,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.23,
@@ -107,12 +97,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.14,
@@ -154,12 +144,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.14,
@@ -217,12 +207,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -264,12 +254,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -327,12 +317,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -374,12 +364,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -421,12 +411,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -468,12 +458,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -515,12 +505,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -562,12 +552,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.06,
@@ -646,12 +636,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.43,
@@ -687,189 +677,9 @@
   },
   "THE_PULVERIZING_FRONT": {
     "properties": {
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "The Pulverizing Front",
       "description": "Pogranichnik performs a 2-sequence slash attack at enemies in front of him, dealing Physical DMG, applying Breach, and recovering SP based on the number of Vulnerability stacks consumed. The SP recovery effect can only trigger 1 time, even if the skill hits multiple targets."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.93,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "atb1": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "atb2": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      10,
-                      15,
-                      15,
-                      15
-                    ]
-                  },
-                  "atb3": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      20,
-                      25,
-                      25,
-                      25
-                    ]
-                  },
-                  "atb4": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      30,
-                      30,
-                      30,
-                      30,
-                      30,
-                      30,
-                      30,
-                      30,
-                      30,
-                      35,
-                      35,
-                      35
-                    ]
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.86,
-                      0.94,
-                      1.03,
-                      1.11,
-                      1.2,
-                      1.28,
-                      1.37,
-                      1.45,
-                      1.54,
-                      1.65,
-                      1.77,
-                      1.92
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1.27,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.06,
-                      1.16,
-                      1.27,
-                      1.37,
-                      1.48,
-                      1.58,
-                      1.69,
-                      1.8,
-                      1.9,
-                      2.03,
-                      2.19,
-                      2.38
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -889,29 +699,199 @@
     ],
     "metadata": {
       "originId": "pogranichnik"
-    }
-  },
-  "FULL_MOON_SLASH": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.93,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "APPLY",
-                "object": "STATUS",
-                "objectId": "PHYSICAL"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atb1": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "atb2": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          10,
+                          15,
+                          15,
+                          15
+                        ]
+                      },
+                      "atb3": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          20,
+                          25,
+                          25,
+                          25
+                        ]
+                      },
+                      "atb4": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          30,
+                          35,
+                          35,
+                          35
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.86,
+                          0.94,
+                          1.03,
+                          1.11,
+                          1.2,
+                          1.28,
+                          1.37,
+                          1.45,
+                          1.54,
+                          1.65,
+                          1.77,
+                          1.92
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1.27,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.06,
+                          1.16,
+                          1.27,
+                          1.37,
+                          1.48,
+                          1.58,
+                          1.69,
+                          1.8,
+                          1.9,
+                          2.03,
+                          2.19,
+                          2.38
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Crush or Breach consumes Vulnerability",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "FULL_MOON_SLASH": {
+    "properties": {
       "name": "Full Moon Slash",
-      "description": "COMBO TRIGGER: When Crush or Breach consumes the enemy's Vulnerability stack(s). \nPerforms a number of slash sequences (up to 3) based on the max number of Vulnerability stacks consumed, dealing Physical DMG and recovering some SP. Each slash deals more DMG and gives better SP recovery. \nConsuming 4 stacks of Vulnerability enhances the 3rd slash sequence."
+      "description": "Crush or Breach consumes Vulnerability",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -1000,12 +980,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.54,
@@ -1023,7 +1003,7 @@
                         ]
                       },
                       "atkScale3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.66,
@@ -1041,7 +1021,7 @@
                         ]
                       },
                       "atkScale4": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.32,
@@ -1057,10 +1037,6 @@
                           2.74,
                           2.97
                         ]
-                      },
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
                       },
                       "atb1": {
                         "verb": "IS",
@@ -1078,20 +1054,8 @@
                         "verb": "IS",
                         "value": 23
                       },
-                      "poise1": {
-                        "verb": "IS",
-                        "value": 3
-                      },
-                      "poise3": {
-                        "verb": "IS",
-                        "value": 4
-                      },
-                      "poise4": {
-                        "verb": "IS",
-                        "value": 9
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.42,
@@ -1154,12 +1118,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.54,
@@ -1177,7 +1141,7 @@
                         ]
                       },
                       "atkScale3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.66,
@@ -1195,7 +1159,7 @@
                         ]
                       },
                       "atkScale4": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.32,
@@ -1213,7 +1177,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.42,
@@ -1276,12 +1240,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "CRYO",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.54,
@@ -1299,7 +1263,7 @@
                         ]
                       },
                       "atkScale3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.66,
@@ -1317,7 +1281,7 @@
                         ]
                       },
                       "atkScale4": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.32,
@@ -1335,7 +1299,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.42,
@@ -1368,7 +1332,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 18,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              18,
+              17
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -1378,7 +1357,20 @@
     ],
     "metadata": {
       "originId": "pogranichnik"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "PHYSICAL"
+          }
+        ]
+      }
+    ]
   },
   "SHIELDGUARD_BANNER": {
     "properties": {
@@ -1394,8 +1386,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 90
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  90,
+                  90,
+                  90,
+                  76.5,
+                  76.5,
+                  76.5
+                ]
               }
             }
           }
@@ -1640,129 +1640,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "All-Out Offensive (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "pogranichnik"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "pogranichnik"
-    }
+    ]
   },
   "ALL_OUT_OFFENSIVE_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "All-Out Offensive (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "pogranichnik"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "pogranichnik"
-    }
+    ]
   }
 }

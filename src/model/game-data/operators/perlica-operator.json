@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "CASTER",
   "elementType": "ELECTRIC",
-  "weaponTypes": ["ARTS_UNIT"],
+  "weaponTypes": [
+    "ARTS_UNIT"
+  ],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "WILL",
   "potentials": [
@@ -97,7 +99,37 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "OBLITERATION_PROTOCOL",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Cycle Protocol",
+      "maxLevel": 1
+    },
+    "attributeIncrease": {
+      "name": "Keen Mind",
+      "attribute": "INTELLECT",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Obliteration Protocol",
+      "source": "TALENT_1",
+      "minLevel": 1,
+      "bonusType": "DAMAGE_DEALT",
+      "values": [
+        0.2,
+        0.3
+      ],
+      "condition": {
+        "enemyState": "STAGGERED"
+      }
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1747,38 +1779,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Obliteration Protocol",
-      "source": "TALENT_1",
-      "minLevel": 1,
-      "bonusType": "DAMAGE_DEALT",
-      "values": [
-        0.2,
-        0.3
-      ],
-      "condition": {
-        "enemyState": "STAGGERED"
-      }
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Obliteration Protocol",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Cycle Protocol",
-      "maxLevel": 1
-    },
-    "attributeIncrease": {
-      "name": "Keen Mind",
-      "attribute": "INTELLECT",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

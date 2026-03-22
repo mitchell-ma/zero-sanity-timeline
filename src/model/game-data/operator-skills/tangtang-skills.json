@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "BASIC_ATTACK",
-      "FINISHER": "BASIC_ATTACK_FINISHER",
-      "DIVE": "BASIC_ATTACK_DIVE"
-    },
-    "BATTLE_SKILL": "BATTLE_SKILL",
-    "COMBO_SKILL": "COMBO_SKILL",
-    "ULTIMATE": "ULTIMATE"
-  },
   "BASIC_ATTACK": {
     "segments": [
       {
@@ -125,12 +115,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "PHYSICAL",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.5,
@@ -166,173 +156,9 @@
   },
   "BATTLE_SKILL": {
     "properties": {
-      "duration": {
-        "value": 1.867,
-        "unit": "SECOND"
-      },
       "name": "IMA WAVERIDAAH!",
       "description": "Tangtang jumps out from the water and fires a point-blank shot that deals Cryo DMG to the enemy and creates a Waterspout.\nCasting the battle skill also consumes all nearby Whirlpools to create additional Waterspouts and return some SP based on the number of Waterspouts created.\nWaterspout: Applies 1 stack of Cryo Infliction on enemies within range and deals Cryo DMG over time. If the battle skill creates multiple Waterspouts, they also apply Arts Susceptibility to enemies (but not another stack of Cryo Infliction).\nDMG dealt by the Waterspout is treated as Battle Skill DMG."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.77,
-            "unit": "SECOND"
-          }
-        }
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "SELF"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.9,
-            "unit": "SECOND"
-          }
-        }
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 10
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "CRYO",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "poise1": {
-                    "verb": "IS",
-                    "value": 2
-                  },
-                  "poiseTornado": {
-                    "verb": "IS",
-                    "value": 0
-                  },
-                  "atbReturn": {
-                    "verb": "IS",
-                    "value": 20
-                  },
-                  "atbReturn_02": {
-                    "verb": "IS",
-                    "value": 40
-                  },
-                  "rateSpellvulnerable": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.03,
-                      0.03,
-                      0.03,
-                      0.035,
-                      0.035,
-                      0.035,
-                      0.04,
-                      0.04,
-                      0.04,
-                      0.045,
-                      0.045,
-                      0.05
-                    ]
-                  },
-                  "rateSpellvulnerable_02": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.06,
-                      0.06,
-                      0.06,
-                      0.07,
-                      0.07,
-                      0.07,
-                      0.08,
-                      0.08,
-                      0.08,
-                      0.09,
-                      0.09,
-                      0.1
-                    ]
-                  },
-                  "durationSpellvulnerable": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "durationTornado": {
-                    "verb": "IS",
-                    "value": 3
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.16,
-                      0.176,
-                      0.192,
-                      0.208,
-                      0.224,
-                      0.24,
-                      0.256,
-                      0.272,
-                      0.288,
-                      0.308,
-                      0.332,
-                      0.36
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -352,7 +178,169 @@
     ],
     "metadata": {
       "originId": "tangtang"
-    }
+    },
+    "segments": [
+      {
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.77,
+                "unit": "SECOND"
+              }
+            }
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "SELF"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.9,
+                "unit": "SECOND"
+              }
+            }
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 10
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "CRYO",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atbReturn": {
+                        "verb": "IS",
+                        "value": 20
+                      },
+                      "atbReturn_02": {
+                        "verb": "IS",
+                        "value": 40
+                      },
+                      "rateSpellvulnerable": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.03,
+                          0.03,
+                          0.03,
+                          0.035,
+                          0.035,
+                          0.035,
+                          0.04,
+                          0.04,
+                          0.04,
+                          0.045,
+                          0.045,
+                          0.05
+                        ]
+                      },
+                      "rateSpellvulnerable_02": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.06,
+                          0.06,
+                          0.06,
+                          0.07,
+                          0.07,
+                          0.07,
+                          0.08,
+                          0.08,
+                          0.08,
+                          0.09,
+                          0.09,
+                          0.1
+                        ]
+                      },
+                      "durationSpellvulnerable": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "durationTornado": {
+                        "verb": "IS",
+                        "value": 3
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.16,
+                          0.176,
+                          0.192,
+                          0.208,
+                          0.224,
+                          0.24,
+                          0.256,
+                          0.272,
+                          0.288,
+                          0.308,
+                          0.332,
+                          0.36
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "duration": {
+            "value": 1.867,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
   },
   "COMBO_SKILL": {
     "properties": {
@@ -436,20 +424,16 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "PHYSICAL",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "durationWater": {
                         "verb": "IS",
                         "value": 30
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.067,
@@ -482,7 +466,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 13,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              12
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -508,8 +507,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 100
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  90,
+                  90,
+                  90,
+                  76.5,
+                  76.5,
+                  76.5
+                ]
               }
             }
           }
@@ -563,12 +570,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "PHYSICAL",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.778,
@@ -586,7 +593,7 @@
                         ]
                       },
                       "atkScale_3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           3.111,
@@ -603,16 +610,8 @@
                           7
                         ]
                       },
-                      "poise2": {
-                        "verb": "IS",
-                        "value": 15
-                      },
-                      "poise3": {
-                        "verb": "IS",
-                        "value": 20
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.178,
@@ -647,129 +646,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "I'LL BLOW YOUR MIND! (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "tangtang"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "tangtang"
-    }
+    ]
   },
   "BASIC_ATTACK_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "I'LL BLOW YOUR MIND! (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "tangtang"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "tangtang"
-    }
+    ]
   }
 }

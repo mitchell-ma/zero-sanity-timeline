@@ -55,6 +55,7 @@ import {
   buildEventAddItems,
   buildSegmentAddItems as buildSegmentAddItemsCtrl,
   buildFrameAddItems as buildFrameAddItemsCtrl,
+  controlledItem,
 } from '../controller/timeline/contextMenuController';
 import { useTouchHandlers } from '../utils/useTouchHandlers';
 import { throttleByRAF } from '../utils/throttle';
@@ -1484,6 +1485,9 @@ export default function CombatPlanner({
       ? buildEventAddItems(ev, columns, events, atFrame, label, 'addEvent', interactionMode).map(resolveMenuItemAction)
       : [];
 
+    const ctrlItem = ev ? controlledItem(ev.ownerId, atFrame) : null;
+    const ctrlItems = ctrlItem ? [{ separator: true } as const, resolveMenuItemAction(ctrlItem)] : [];
+
     if (selectedIds.has(eventId) && selectedIds.size > 1) {
       const count = selectedIds.size;
       const ids = Array.from(selectedIds);
@@ -1500,6 +1504,7 @@ export default function CombatPlanner({
             danger: true,
           },
           ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
+          ...ctrlItems,
         ],
       });
     } else {
@@ -1519,6 +1524,7 @@ export default function CombatPlanner({
           ...(segAddItems.length > 0 ? [...segAddItems, { separator: true } as const] : []),
           { label: 'Remove Event', action: () => onRemoveEvent(eventId), danger: true },
           ...(addItems.length > 0 ? [{ separator: true } as const, ...addItems] : []),
+          ...ctrlItems,
         ],
       });
     }

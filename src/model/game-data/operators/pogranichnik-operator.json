@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "VANGUARD",
   "elementType": "PHYSICAL",
-  "weaponTypes": ["SWORD"],
+  "weaponTypes": [
+    "SWORD"
+  ],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "AGILITY",
   "potentials": [
@@ -121,7 +123,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "THE_LIVING_BANNER_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Tactical Instruction",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Stalwart",
+      "attribute": "WILL",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1771,23 +1788,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "The Living Banner",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Tactical Instruction",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

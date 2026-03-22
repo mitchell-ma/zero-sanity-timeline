@@ -10,7 +10,7 @@
           "to": "OPERATOR",
           "with": {
             "multiplier": {
-              "verb": "BASED_ON",
+              "verb": "VARY_BY",
               "object": "SKILL_LEVEL",
               "values": [
                 0.035,

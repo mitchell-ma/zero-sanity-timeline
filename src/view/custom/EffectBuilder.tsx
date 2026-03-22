@@ -3,14 +3,17 @@
  * Renders a single DSL Effect as a form row: VERB [cardinality] [adjective] OBJECT [prepositions].
  * Uses SentenceSlot for progressive disclosure with spring-momentum animations.
  */
+import { useState } from 'react';
 import { VerbType, ObjectType, SubjectType, DeterminerType, THRESHOLD_MAX, DURATION_END,
   VERB_LABELS, ADJECTIVE_LABELS, OBJECT_LABELS, TARGET_LABELS, DETERMINER_LABELS, OBJECT_ADJECTIVES,
   EFFECT_VERBS, getObjectsForEffectVerb, getEffectFieldVisibility, WithValueVerb, WITH_PROPERTY_LABELS,
-  OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE } from '../../consts/semantics';
-import type { Effect, WithValue } from '../../consts/semantics';
+  OBJECT_REQUIRED_ADJECTIVE, OBJECT_DEFAULT_ADJECTIVE,
+  isValueLiteral, isValueVariable, isValueStat, isValueExpression, ValueOperator } from '../../consts/semantics';
+import type { Effect, ValueNode } from '../../consts/semantics';
 import { StatusIdSelect, InflictionIdSelect, ReactionIdSelect } from './InteractionBuilder';
 import SentenceSlot from './SentenceSlot';
 import CustomSelect from './CustomSelect';
+import ExpressionEditorModal from './ExpressionEditorModal';
 
 import type { AdjectiveType } from '../../consts/semantics';
 
@@ -188,10 +191,10 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               type="number"
               step="any"
               min={0}
-              value={(value.with?.duration?.value as number) ?? 0}
+              value={value.with?.duration && isValueLiteral(value.with.duration) ? value.with.duration.value : 0}
               onChange={(e) => {
                 const dur = Number(e.target.value) || undefined;
-                update({ with: dur != null ? { ...value.with, duration: { verb: WithValueVerb.IS, value: dur } } : value.with });
+                update({ with: dur != null ? { ...value.with, duration: { verb: 'IS' as const, value: dur } } : value.with });
               }}
             />
             <span className="ib-label">s</span>
@@ -201,7 +204,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
 
       {/* WITH properties — renders value/multiplier data from with preposition */}
       {vis.withProperties.filter((p) => p !== 'duration').map((propKey) => {
-        const wv = value.with?.[propKey] as WithValue | undefined;
+        const wv = value.with?.[propKey] as ValueNode | undefined;
         return (
           <WithPropertyRow
             key={propKey}
@@ -217,22 +220,67 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
   );
 }
 
+// ── Expression summary ────────────────────────────────────────────────────
+
+/** Compact inline summary of a ValueNode for display in the WITH row. */
+function summarizeNode(node: ValueNode): string {
+  if (isValueLiteral(node)) return String(node.value);
+  if (isValueVariable(node)) {
+    const obj = node.object.replace(/_/g, ' ').toLowerCase();
+    if (Array.isArray(node.value)) return `[${node.value[0]}..${node.value[node.value.length - 1]}] by ${obj}`;
+    return obj;
+  }
+  if (isValueStat(node)) {
+    return node.object.replace(/_/g, ' ').toLowerCase();
+  }
+  if (isValueExpression(node)) {
+    const op = node.operator.replace(/_/g, ' ');
+    return `${op}(${summarizeNode(node.left)}, ${summarizeNode(node.right)})`;
+  }
+  return '?';
+}
+
 // ── WITH property row ──────────────────────────────────────────────────────
 
-function WithPropertyRow({ propKey, withValue, onChange }: {
-  propKey: string;
-  withValue: WithValue | undefined;
-  onChange: (wv: WithValue) => void;
-}) {
-  const label = WITH_PROPERTY_LABELS[propKey] ?? propKey;
-  const verb = withValue?.verb ?? WithValueVerb.IS;
-  const val = withValue?.value;
+const WITH_VERB_OPTIONS = [
+  { value: 'IS', label: 'is' },
+  { value: 'VARY_BY', label: 'vary by' },
+  { value: 'EXPR', label: 'expression' },
+];
 
-  const updateVerb = (newVerb: WithValueVerb) => {
-    if (newVerb === WithValueVerb.BASED_ON) {
-      onChange({ verb: newVerb, object: 'SKILL_LEVEL', value: Array.isArray(val) ? val : Array(12).fill(val ?? 0) });
+function WithPropertyRow({ propKey, withValue: node, onChange }: {
+  propKey: string;
+  withValue: ValueNode | undefined;
+  onChange: (wv: ValueNode) => void;
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const label = WITH_PROPERTY_LABELS[propKey] ?? propKey;
+  const isLiteral = !node || isValueLiteral(node);
+  const isVariable = node && isValueVariable(node);
+  const isExpr = node && isValueExpression(node);
+
+  // Extract raw value for display
+  const val = isLiteral && node ? node.value
+    : isVariable ? node.value
+    : undefined;
+
+  const verbValue = isExpr ? 'EXPR' : isVariable ? 'VARY_BY' : 'IS';
+
+  const updateVerb = (newVerb: string) => {
+    if (newVerb === 'EXPR') {
+      setModalOpen(true);
+      // If not already an expression, wrap current value
+      if (!isExpr) {
+        onChange({ operator: ValueOperator.MULT, left: node ?? { verb: 'IS' as const, value: 0 }, right: { verb: 'IS' as const, value: 1 } });
+      }
+      return;
+    }
+    if (newVerb === WithValueVerb.VARY_BY) {
+      const arr = Array.isArray(val) ? val : Array(12).fill(typeof val === 'number' ? val : 0);
+      onChange({ verb: 'VARY_BY' as const, object: 'SKILL_LEVEL', value: arr });
     } else {
-      onChange({ verb: newVerb, value: Array.isArray(val) ? val[0] ?? 0 : val ?? 0 });
+      const num = Array.isArray(val) ? val[0] ?? 0 : typeof val === 'number' ? val : 0;
+      onChange({ verb: 'IS' as const, value: num });
     }
   };
 
@@ -242,32 +290,37 @@ function WithPropertyRow({ propKey, withValue, onChange }: {
       <span className="ib-label">{label}</span>
       <CustomSelect
         className="ib-with-verb"
-        value={verb}
-        options={Object.values(WithValueVerb).map((v) => ({ value: v, label: v === WithValueVerb.IS ? 'is' : 'based on' }))}
-        onChange={(v) => updateVerb(v as WithValueVerb)}
+        value={verbValue}
+        options={WITH_VERB_OPTIONS}
+        onChange={(v) => updateVerb(v)}
       />
-      {verb === WithValueVerb.IS ? (
+      {isExpr ? (
+        <>
+          <span className="expr-summary">{summarizeNode(node)}</span>
+          <button className="expr-open-btn" onClick={() => setModalOpen(true)}>Edit</button>
+        </>
+      ) : isLiteral ? (
         <input
           className="ib-input ib-with-value"
           type="number"
           step="any"
           value={(val as number) ?? 0}
-          onChange={(e) => onChange({ ...withValue!, verb, value: Number(e.target.value) || 0 })}
+          onChange={(e) => onChange({ verb: 'IS' as const, value: Number(e.target.value) || 0 })}
         />
       ) : (
         <>
-          <span className="ib-label">{withValue?.object ?? 'SKILL_LEVEL'}</span>
+          <span className="ib-label">{isVariable ? node.object : 'SKILL_LEVEL'}</span>
           <table className="ib-level-table">
             <thead>
               <tr>
-                {(Array.isArray(val) ? val : Array(12).fill(0)).map((_, i) => (
+                {(Array.isArray(val) ? val : Array(12).fill(0)).map((_: number, i: number) => (
                   <th key={i}>{i + 1}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               <tr>
-                {(Array.isArray(val) ? val : Array(12).fill(0)).map((v, i) => (
+                {(Array.isArray(val) ? val : Array(12).fill(0)).map((v: number, i: number) => (
                   <td key={i}>
                     <input
                       className="ib-input ib-level-input"
@@ -277,7 +330,7 @@ function WithPropertyRow({ propKey, withValue, onChange }: {
                       onChange={(e) => {
                         const arr = Array.isArray(val) ? [...val] : Array(12).fill(0);
                         arr[i] = Number(e.target.value) || 0;
-                        onChange({ ...withValue!, verb, value: arr });
+                        onChange({ verb: 'VARY_BY' as const, object: isVariable ? node.object : 'SKILL_LEVEL', value: arr });
                       }}
                     />
                   </td>
@@ -286,6 +339,14 @@ function WithPropertyRow({ propKey, withValue, onChange }: {
             </tbody>
           </table>
         </>
+      )}
+      {modalOpen && (
+        <ExpressionEditorModal
+          value={node ?? { verb: 'IS' as const, value: 0 }}
+          onChange={onChange}
+          onClose={() => setModalOpen(false)}
+          label={label}
+        />
       )}
     </div>
   );

@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "THUNDERLANCE_BLITZ",
-      "FINISHER": "THUNDERLANCE_BLITZ_FINISHER",
-      "DIVE": "THUNDERLANCE_BLITZ_DIVE"
-    },
-    "BATTLE_SKILL": "THUNDERLANCE_INTERDICTION",
-    "COMBO_SKILL": "THUNDERLANCE_STRIKE",
-    "ULTIMATE": "THUNDERLANCE_FINAL_SHOCK"
-  },
   "THUNDERLANCE_BLITZ": {
     "segments": [
       {
@@ -44,12 +34,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.17,
@@ -107,12 +97,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.22,
@@ -170,12 +160,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.21,
@@ -233,12 +223,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.1,
@@ -280,12 +270,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.2,
@@ -364,12 +354,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "PHYSICAL",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.5,
@@ -405,117 +395,9 @@
   },
   "THUNDERLANCE_INTERDICTION": {
     "properties": {
-      "duration": {
-        "value": 1.13,
-        "unit": "SECOND"
-      },
       "name": "Thunderlance: Interdiction",
       "description": "Leaps into mid-air to stir up a maelstrom with her lance, dealing some Electric DMG to nearby enemies while pulling back all Thunderlances and Thunderlance EX in the battlefield towards herself. \nThe returning Thunderlances pierce through all enemies along their paths and deal Electric DMG, while returning Thunderlances EX deal more Electric DMG and also apply Electric Infliction."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.6,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "atkScaleLance": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.75,
-                      0.82,
-                      0.9,
-                      0.97,
-                      1.04,
-                      1.12,
-                      1.19,
-                      1.27,
-                      1.34,
-                      1.44,
-                      1.55,
-                      1.68
-                    ]
-                  },
-                  "atkScaleLanceUlt": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.92,
-                      2.11,
-                      2.3,
-                      2.5,
-                      2.69,
-                      2.88,
-                      3.07,
-                      3.26,
-                      3.46,
-                      3.7,
-                      3.98,
-                      4.32
-                    ]
-                  },
-                  "poiseLance": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "poiseLanceUlt": {
-                    "verb": "IS",
-                    "value": 10
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.67,
-                      0.73,
-                      0.8,
-                      0.87,
-                      0.93,
-                      1,
-                      1.07,
-                      1.13,
-                      1.2,
-                      1.28,
-                      1.38,
-                      1.5
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -535,28 +417,127 @@
     ],
     "metadata": {
       "originId": "avywenna"
-    }
-  },
-  "THUNDERLANCE_STRIKE": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.6,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subjectDeterminer": "THIS",
-                "subject": "OPERATOR",
-                "verb": "PERFORM",
-                "object": "FINAL_STRIKE"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "ELECTRIC",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atkScaleLance": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.75,
+                          0.82,
+                          0.9,
+                          0.97,
+                          1.04,
+                          1.12,
+                          1.19,
+                          1.27,
+                          1.34,
+                          1.44,
+                          1.55,
+                          1.68
+                        ]
+                      },
+                      "atkScaleLanceUlt": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.92,
+                          2.11,
+                          2.3,
+                          2.5,
+                          2.69,
+                          2.88,
+                          3.07,
+                          3.26,
+                          3.46,
+                          3.7,
+                          3.98,
+                          4.32
+                        ]
+                      },
+                      "poiseLance": {
+                        "verb": "IS",
+                        "value": 5
+                      },
+                      "poiseLanceUlt": {
+                        "verb": "IS",
+                        "value": 10
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.67,
+                          0.73,
+                          0.8,
+                          0.87,
+                          0.93,
+                          1,
+                          1.07,
+                          1.13,
+                          1.2,
+                          1.28,
+                          1.38,
+                          1.5
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Final Strike on Electric/Electrified enemy",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 1.13,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "THUNDERLANCE_STRIKE": {
+    "properties": {
       "name": "Thunderlance: Strike",
-      "description": "COMBO TRIGGER: When controlled operator performs a Final Strike on a target with active Electric Infliction or Electrification. \nLeaps into mid-air and throws 3 Thunderlances at the target, then deals 1 hit of Electric DMG to enemies in the area of effect."
+      "description": "Final Strike on Electric/Electrified enemy",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -639,16 +620,12 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "lanceDuration": {
                         "verb": "IS",
                         "value": 30
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.69,
@@ -681,7 +658,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 13,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              13,
+              12
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -691,7 +683,19 @@
     ],
     "metadata": {
       "originId": "avywenna"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "PERFORM",
+            "object": "FINAL_STRIKE"
+          }
+        ]
+      }
+    ]
   },
   "THUNDERLANCE_FINAL_SHOCK": {
     "properties": {
@@ -707,8 +711,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 85
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  100,
+                  100,
+                  100,
+                  85,
+                  85,
+                  85
+                ]
               }
             }
           }
@@ -766,26 +778,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "stagger": {
-                        "verb": "BASED_ON",
-                        "object": "SKILL_LEVEL",
-                        "value": [
-                          15,
-                          15,
-                          15,
-                          15,
-                          15,
-                          15,
-                          15,
-                          15,
-                          15,
-                          20,
-                          20,
-                          20
-                        ]
-                      },
                       "pulseResistDownRate": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.3,
@@ -803,7 +797,7 @@
                         ]
                       },
                       "pulseResistDownDuration": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           5,
@@ -825,7 +819,7 @@
                         "value": 30
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           4.22,
@@ -855,160 +849,146 @@
       "originId": "avywenna"
     }
   },
-  "statusEvents": [
-    {
-      "properties": {
-        "id": "THUNDERLANCE",
-        "name": "Thunderlance",
-        "duration": {
-          "value": [
-            20
-          ],
-          "unit": "SECOND"
-        },
-        "statusLevel": {
-          "limit": {
-            "verb": "IS",
-            "value": 4
-          },
-          "statusLevelInteractionType": "NONE"
-        },
-        "element": "ELECTRIC"
-      },
-      "metadata": {
-        "originId": "avywenna"
-      },
-      "onTriggerClause": []
-    }
-  ],
   "THUNDERLANCE_BLITZ_FINISHER": {
     "properties": {
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Thunderlance: Blitz (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Physical DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "avywenna"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "avywenna"
-    }
+    ]
   },
   "THUNDERLANCE_BLITZ_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Thunderlance: Blitz (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Physical DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "avywenna"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "PHYSICAL",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "PHYSICAL",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "avywenna"
-    }
+    ]
   }
 }

@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "SUPPORTER",
   "elementType": "CRYO",
-  "weaponTypes": ["ARTS_UNIT"],
+  "weaponTypes": [
+    "ARTS_UNIT"
+  ],
   "mainAttributeType": "WILL",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -106,7 +108,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "EXECUTE_PROCESS_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Freeze Protocol",
+      "maxLevel": 1
+    },
+    "attributeIncrease": {
+      "name": "Stalwart",
+      "attribute": "WILL",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1756,23 +1773,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Execute Process",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Freeze Protocol",
-      "maxLevel": 1
-    },
-    "attributeIncrease": {
-      "name": "Stalwart",
-      "attribute": "WILL",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

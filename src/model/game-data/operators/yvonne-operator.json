@@ -4,7 +4,9 @@
   "operatorRarity": 6,
   "operatorClassType": "STRIKER",
   "elementType": "CRYO",
-  "weaponTypes": ["HANDCANNON"],
+  "weaponTypes": [
+    "HANDCANNON"
+  ],
   "mainAttributeType": "INTELLECT",
   "secondaryAttributeType": "AGILITY",
   "potentials": [
@@ -186,7 +188,51 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "BARRAGE_OF_TECHNOLOGY_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "FREEZING_POINT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Keen Mind",
+      "attribute": "INTELLECT",
+      "maxLevel": 4
+    }
+  },
+  "talentEffects": [
+    {
+      "name": "Freezing Point",
+      "source": "TALENT_2",
+      "minLevel": 1,
+      "bonusType": "CRITICAL_DAMAGE",
+      "values": [
+        0.1,
+        0.2
+      ],
+      "condition": {
+        "enemyStatus": "CRYO",
+        "doubledBy": "SOLIDIFICATION"
+      }
+    },
+    {
+      "name": "Tink-a-Power",
+      "source": "POTENTIAL",
+      "minPotential": 3,
+      "bonusType": "CRITICAL_DAMAGE",
+      "values": [
+        0.1
+      ],
+      "condition": {
+        "enemyStatus": "CRYO",
+        "doubledBy": "SOLIDIFICATION"
+      }
+    }
+  ],
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1836,54 +1882,10 @@
       }
     }
   ],
-  "talentEffects": [
-    {
-      "name": "Freezing Point",
-      "source": "TALENT_2",
-      "minLevel": 1,
-      "bonusType": "CRITICAL_DAMAGE",
-      "values": [
-        0.1,
-        0.2
-      ],
-      "condition": {
-        "enemyStatus": "CRYO",
-        "doubledBy": "SOLIDIFICATION"
-      }
-    },
-    {
-      "name": "Tink-a-Power",
-      "source": "POTENTIAL",
-      "minPotential": 3,
-      "bonusType": "CRITICAL_DAMAGE",
-      "values": [
-        0.1
-      ],
-      "condition": {
-        "enemyStatus": "CRYO",
-        "doubledBy": "SOLIDIFICATION"
-      }
-    }
-  ],
-  "talents": {
-    "one": {
-      "name": "Barrage of Technology",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Freezing Point",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Keen Mind",
-      "attribute": "INTELLECT",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "ultimateActiveDuration": 7,
-  "ultimateCooldownDuration": 0,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

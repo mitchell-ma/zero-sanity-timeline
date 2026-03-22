@@ -166,7 +166,7 @@ export function resolveWeaponBreakdown(
         const stat = e.object;
         const wv = e.with!.value!;
         const isPercent = PERCENT_STATS.has(stat as StatType);
-        const perStack = wv.verb === 'BASED_ON' && wv.object === 'STATUS_LEVEL';
+        const perStack = wv.verb === 'VARY_BY' && wv.object === 'STATUS_LEVEL';
         const valueStr = wv.valueMin != null && wv.valueMax != null
           ? (isPercent
             ? `${fmtN(wv.valueMin * 100)}–${fmtN(wv.valueMax * 100)}%`

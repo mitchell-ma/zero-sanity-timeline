@@ -5,7 +5,7 @@
  * Auto-discovers operator-statuses/*.json via require.context.
  * Each file contains an array of operator status entries sharing an originId.
  */
-import type { ClauseEffect, ClausePredicate, StatusLevelConfig, DurationConfig } from './weaponStatusesController';
+import type { ClauseEffect, ClausePredicate, StatusLevelConfig, DurationConfig, WithValue } from './weaponStatusesController';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -17,6 +17,9 @@ interface TriggerCondition {
   objectId?: string;
   cardinality?: number;
   cardinalityConstraint?: string;
+  to?: string;
+  toDeterminer?: string;
+  with?: unknown;
 }
 
 interface TriggerClause {
@@ -27,22 +30,24 @@ interface TriggerClause {
 // ── Segment type ────────────────────────────────────────────────────────────
 
 interface StatusSegment {
+  metadata?: Record<string, unknown>;
   properties?: Record<string, unknown>;
   clause?: ClausePredicate[];
+  frames?: unknown[];
 }
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_WITH_VALUE_KEYS = new Set(['verb', 'object', 'values']);
-const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'adjective', 'to', 'toDeterminer', 'with']);
+const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'toObject', 'with', 'cardinality', 'cardinalityConstraint', 'effects']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
-const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'cardinality', 'cardinalityConstraint']);
+const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'cardinality', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['verb', 'values', 'unit']);
 const VALID_LIMIT_KEYS = new Set(['verb', 'values']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
-const VALID_SEGMENT_KEYS = new Set(['properties', 'clause']);
-const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'to', 'toDeterminer', 'duration', 'statusLevel', 'enhancementTypes']);
+const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
+const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'statusLevel', 'enhancementTypes', 'minPotential']);
 const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
 
@@ -151,8 +156,11 @@ export class OperatorStatus {
   readonly name: string;
   readonly type?: string;
   readonly element?: string;
+  readonly target: string;
+  readonly targetDeterminer?: string;
   readonly to: string;
   readonly toDeterminer?: string;
+  readonly minPotential?: number;
   readonly duration?: DurationConfig;
   readonly statusLevel?: StatusLevelConfig;
   readonly enhancementTypes?: string[];
@@ -172,10 +180,48 @@ export class OperatorStatus {
     this.name = (props.name ?? '') as string;
     if (props.type) this.type = props.type as string;
     if (props.element) this.element = props.element as string;
-    this.to = (props.to ?? 'OPERATOR') as string;
+    this.target = (props.target ?? props.to ?? 'OPERATOR') as string;
+    if (props.targetDeterminer ?? props.toDeterminer) this.targetDeterminer = (props.targetDeterminer ?? props.toDeterminer) as string;
+    this.to = (props.to ?? props.target ?? 'OPERATOR') as string;
     if (props.toDeterminer) this.toDeterminer = props.toDeterminer as string;
-    if (props.duration) this.duration = props.duration as DurationConfig;
-    if (props.statusLevel) this.statusLevel = props.statusLevel as StatusLevelConfig;
+    if (props.minPotential != null) this.minPotential = props.minPotential as number;
+    if (props.duration) {
+      // Normalize: raw JSON may have { value: N, unit: S } or { verb, values: [...], unit }
+      const rawDur = props.duration as Record<string, unknown>;
+      if (rawDur.values) {
+        this.duration = rawDur as unknown as DurationConfig;
+      } else {
+        const v = rawDur.value;
+        this.duration = {
+          verb: (rawDur.verb ?? 'IS') as string,
+          values: Array.isArray(v) ? v as number[] : [v as number],
+          unit: (rawDur.unit ?? 'SECOND') as string,
+        };
+      }
+    }
+    if (props.statusLevel) {
+      // Normalize: raw JSON may have { limit: { verb, value: N }, statusLevelInteractionType }
+      // or { limit: WithValue, interactionType }
+      const rawSL = props.statusLevel as Record<string, unknown>;
+      const rawLimit = rawSL.limit as Record<string, unknown> | undefined;
+      let normalizedLimit: WithValue;
+      if (rawLimit?.values) {
+        normalizedLimit = rawLimit as unknown as WithValue;
+      } else if (rawLimit) {
+        const v = rawLimit.value;
+        normalizedLimit = {
+          verb: (rawLimit.verb ?? 'IS') as string,
+          ...(rawLimit.object ? { object: rawLimit.object as string } : {}),
+          values: Array.isArray(v) ? v as number[] : [v as number],
+        };
+      } else {
+        normalizedLimit = { verb: 'IS', values: [1] };
+      }
+      this.statusLevel = {
+        limit: normalizedLimit,
+        interactionType: ((rawSL.interactionType ?? rawSL.statusLevelInteractionType) ?? 'NONE') as string,
+      };
+    }
     if (props.enhancementTypes) this.enhancementTypes = props.enhancementTypes as string[];
     this.originId = (meta.originId ?? '') as string;
     this.dataSources = (meta.dataSources ?? []) as string[];
@@ -202,11 +248,12 @@ export class OperatorStatus {
         name: this.name,
         ...(this.type ? { type: this.type } : {}),
         ...(this.element ? { element: this.element } : {}),
-        to: this.to,
-        ...(this.toDeterminer ? { toDeterminer: this.toDeterminer } : {}),
+        target: this.target,
+        ...(this.targetDeterminer ? { targetDeterminer: this.targetDeterminer } : {}),
         ...(this.duration ? { duration: this.duration } : {}),
         ...(this.statusLevel ? { statusLevel: this.statusLevel } : {}),
         ...(this.enhancementTypes ? { enhancementTypes: this.enhancementTypes } : {}),
+        ...(this.minPotential != null ? { minPotential: this.minPotential } : {}),
       },
       metadata: {
         originId: this.originId,
@@ -236,8 +283,10 @@ for (const key of operatorStatusContext.keys()) {
   const entries = operatorStatusContext(key) as Record<string, unknown>[];
   const statuses = entries.map(e => OperatorStatus.deserialize(e, key));
   if (statuses.length > 0) {
-    const originId = statuses[0].originId;
-    operatorStatusCache.set(originId, statuses);
+    // Derive operator ID from filename (e.g. "./laevatain-statuses.json" → "laevatain")
+    const filenameMatch = key.match(/\.\/(.+)-statuses\.json$/);
+    const operatorId = filenameMatch ? filenameMatch[1] : statuses[0].originId;
+    operatorStatusCache.set(operatorId, statuses);
   }
 }
 

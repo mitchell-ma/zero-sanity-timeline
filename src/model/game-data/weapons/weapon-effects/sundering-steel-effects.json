@@ -11,7 +11,7 @@
               "object": "ATTACK_BONUS",
               "with": {
                 "value": {
-                  "verb": "BASED_ON",
+                  "verb": "VARY_BY",
                   "object": "STATUS_LEVEL",
                   "valueMin": 0.05,
                   "valueMax": 0.14

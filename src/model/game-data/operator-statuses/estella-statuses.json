@@ -52,7 +52,7 @@
             "object": "SKILL_POINT",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   7.5,

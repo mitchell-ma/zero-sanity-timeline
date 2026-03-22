@@ -10,7 +10,7 @@ import { FPS } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import type { SkillEventSequence } from '../../model/event-frames/skillEventSequence';
-import { getFrameSequences, getSegmentLabels, getDelayedHitLabel, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
+import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 import { getLinksForSlot } from '../custom/customSkillLinkController';
 import { getCustomSkills } from '../custom/customSkillController';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
@@ -468,8 +468,7 @@ export function buildColumns(
           // Generic battle skill: data-driven frame sequences
           const battleSeqs = op && battleName ? getFrameSequences(op.id, battleName) : undefined;
           if (battleSeqs?.length && skillType === SKILL_COLUMNS.BATTLE && !hasBattleVariants) {
-            const battleDelayLabel = getDelayedHitLabel(op!.id, battleName!);
-            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, delayedHitLabel: battleDelayLabel });
+            const seg = SkillSegmentBuilder.buildSegments(battleSeqs, { gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain });
             const battleCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
             const battleCd = battleCdSeg?.properties.duration ?? 0;
             const battleSegments = battleCd > 0
@@ -510,8 +509,7 @@ export function buildColumns(
           const comboSeqs = op && comboName ? getFrameSequences(op.id, comboName) : undefined;
           if (comboSeqs?.length && skillType === SKILL_COLUMNS.COMBO && !hasComboOverride) {
             const comboLabels = getSegmentLabels(op!.id, comboName!);
-            const comboDelayLabel = getDelayedHitLabel(op!.id, comboName!);
-            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies, delayedHitLabel: comboDelayLabel });
+            const seg = SkillSegmentBuilder.buildSegments(comboSeqs, { labels: comboLabels, gaugeGain: skill.gaugeGain, teamGaugeGain: skill.teamGaugeGain, gaugeGainByEnemies: skill.gaugeGainByEnemies });
             const comboCdSeg = skill.defaultSegments?.find(s => s.metadata?.segmentType === SegmentType.COOLDOWN);
             const comboCd = comboCdSeg?.properties.duration ?? 0;
             col.defaultEvent = {
@@ -627,12 +625,22 @@ export function buildColumns(
       }
     }
 
-    // ── Operator status column (Melting Flame, Scorching Fangs, etc.) ────────
+    // ── Operator status column (Controlled, Melting Flame, Scorching Fangs, etc.) ──
     let statusColCount = 0;
     if (op) {
-      // Collect micro-columns: own statuses + team-shared statuses from other operators
-      const statusMicroCols: { id: string; label: string; color: string; defaultEvent?: { name: string; segments?: import('../../consts/viewTypes').EventSegmentData[] } }[] = [];
+      // Collect micro-columns: controlled + own statuses + team-shared statuses
+      const statusMicroCols: { id: string; label: string; color: string; maxWidth?: number; defaultEvent?: { name: string; segments?: import('../../consts/viewTypes').EventSegmentData[] } }[] = [];
       const matchIds: string[] = [];
+
+      // Controlled indicator — always first, narrow
+      statusMicroCols.push({
+        id: OPERATOR_COLUMNS.CONTROLLED,
+        label: ColumnLabel.CONTROLLED,
+        color: op.color,
+        maxWidth: 10,
+      });
+      matchIds.push(OPERATOR_COLUMNS.CONTROLLED);
+
       const ownDefs = operatorStatusMap.get(slot.slotId) ?? [];
       for (const def of ownDefs) {
         statusMicroCols.push({
@@ -668,23 +676,22 @@ export function buildColumns(
           if (kebab !== tsd.statusName) matchIds.push(kebab);
         }
       }
-      if (statusMicroCols.length > 0) {
-        columns.push({
-          key: `${slot.slotId}-operator-status`,
-          type: 'mini-timeline',
-          source: TimelineSourceType.OPERATOR,
-          ownerId: slot.slotId,
-          columnId: 'operator-status',
-          label: ColumnLabel.STATUS,
-          color: op.color,
-          headerVariant: 'skill',
-          derived: true,
-          microColumns: statusMicroCols,
-          microColumnAssignment: 'dynamic-split',
-          matchColumnIds: matchIds,
-        });
-        statusColCount++;
-      }
+      // Always create status column (at minimum it has the controlled indicator)
+      columns.push({
+        key: `${slot.slotId}-operator-status`,
+        type: 'mini-timeline',
+        source: TimelineSourceType.OPERATOR,
+        ownerId: slot.slotId,
+        columnId: 'operator-status',
+        label: ColumnLabel.STATUS,
+        color: op.color,
+        headerVariant: 'skill',
+        derived: true,
+        microColumns: statusMicroCols,
+        microColumnAssignment: 'dynamic-split',
+        matchColumnIds: matchIds,
+      });
+      statusColCount++;
     }
 
     // Every slot gets at least MIN_SLOT_COLS columns so the loadout row stays visible

@@ -4,7 +4,9 @@
   "operatorRarity": 4,
   "operatorClassType": "VANGUARD",
   "elementType": "HEAT",
-  "weaponTypes": ["SWORD"],
+  "weaponTypes": [
+    "SWORD"
+  ],
   "mainAttributeType": "AGILITY",
   "secondaryAttributeType": "INTELLECT",
   "potentials": [
@@ -118,7 +120,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "name": "Cheer of Victory",
+      "maxLevel": 2
+    },
+    "two": {
+      "name": "Staying in the Zone",
+      "maxLevel": 1
+    },
+    "attributeIncrease": {
+      "name": "Skirmisher",
+      "attribute": "AGILITY",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1768,24 +1785,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Cheer of Victory",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Staying in the Zone",
-      "maxLevel": 1
-    },
-    "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.15,
-  "ultimateActiveDuration": 3.425,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

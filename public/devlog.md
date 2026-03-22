@@ -1,5 +1,18 @@
 # Devlog
 
+## 2026-03-21
+- **Enemy HP tracking** — the simulation now estimates cumulative damage dealt to the boss over time, enabling HP-threshold conditions (e.g. "below 50% HP") for status effects and triggers
+- **Value expressions** — status effect values can now use math expressions (multiply, add, min/max) combining stats, stack counts, and skill levels, enabling more complex buff formulas
+- **Redesigned clause editor** — the IF/THEN clause editor is now a compact form-based layout, replacing the old tree view for easier editing
+- **Status event editor** — new full-featured editor for operator status configs with sections for properties, metadata, clauses, and frame data
+- **Expression editor** — visual editor for building value expressions with nested operators, stat references, and variable lookups
+- **"Controlled operator" condition** — status effects can now check which operator the player is currently controlling
+- Renamed "BASED_ON" lookups to "VARY_BY" across all skill and status data for clarity
+- Removed `skillTypeMap` from skill JSONs — skill types are now inferred automatically from naming conventions
+- Status effects now infer their target from clause effects when not explicitly set
+- New status data added for Alesh, Ardelia, Fluorite, Last Rite, Perlica, Pogranichnik, Tangtang, and Xaihi
+- Updated gear piece data with corrected stat values across all gear sets
+
 ## 2026-03-20
 - **Status effects for more operators** — Akekuri, Chen Qianyu, Da Pan, Ember, Estella, Gilberta, Lifeng, and Snowshine now have tracked status effects on the timeline (buffs, debuffs, and triggered effects)
 - **Improved status trigger system** — status effects from skills, weapons, and gear now trigger more reliably and consistently across all operators

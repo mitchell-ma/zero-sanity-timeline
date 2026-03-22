@@ -11,7 +11,7 @@ import { getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface JsonWithValue {
-  verb: string;
+  verb: string; // "IS" | "VARY_BY"
   object?: string;
   value: number | number[];
 }

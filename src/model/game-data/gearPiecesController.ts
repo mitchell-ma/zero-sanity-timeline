@@ -130,7 +130,7 @@ export class GearPiece {
       for (const ef of pred.effects) {
         const values = ef.with?.value?.values;
         if (!values) continue;
-        // IS verb → single value for all ranks; BASED_ON → indexed by rank
+        // IS verb → single value for all ranks; VARY_BY → indexed by rank
         stats[ef.object] = values.length === 1 ? values[0] : (values[rank - 1] ?? 0);
       }
     }

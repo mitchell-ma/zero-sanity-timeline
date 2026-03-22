@@ -5388,6 +5388,888 @@
   flex: 1;
 }
 
+/* ── Clause editor V2 — form layout ──────────────────────────────────────── */
+
+.cv2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cv2-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0 0 0.5rem;
+}
+
+.cv2-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.cv2-count {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* ── Predicate card ────────────────────────────────────────────────────── */
+
+.cv2-predicate {
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  background: var(--bg-card);
+  margin-bottom: 0.25rem;
+}
+
+.cv2-predicate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.625rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-elevated);
+  border-radius: 4px 4px 0 0;
+}
+
+.cv2-predicate-title {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.cv2-remove-btn {
+  font-size: 0.875rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.cv2-remove-btn:hover {
+  color: var(--red);
+}
+
+/* ── Section (IF / THEN) ───────────────────────────────────────────────── */
+
+.cv2-section {
+  padding: 0.375rem 0.625rem;
+}
+.cv2-section + .cv2-section {
+  border-top: 1px solid var(--border-dim);
+}
+
+.cv2-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-bottom: 0.25rem;
+}
+
+.cv2-section-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  padding: 0.0625rem 0.375rem;
+  background: rgba(76, 144, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* ── Rows ──────────────────────────────────────────────────────────────── */
+
+.cv2-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.cv2-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.cv2-row-connector {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.5rem 0 0;
+  flex-shrink: 0;
+  width: 1.75rem;
+  text-align: center;
+}
+
+.cv2-row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cv2-empty {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.25rem 0;
+}
+
+/* ── OR divider ────────────────────────────────────────────────────────── */
+
+.cv2-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.cv2-or-divider::before,
+.cv2-or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-dim);
+}
+.cv2-or-divider span {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+/* ── Add predicate ─────────────────────────────────────────────────────── */
+
+.cv2-add-row {
+  padding: 0.375rem 0 0;
+}
+
+.cv2-add-btn {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px dashed var(--border-dim);
+  border-radius: 4px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.cv2-add-btn:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+  background: rgba(76, 144, 255, 0.05);
+}
+
+/* ── StatusEvent / EventViewer editor ─────────────────────────────────────── */
+
+.se-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Event kind toggle bar ───────────────────────────────────────────────── */
+
+.ev-kind-bar {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ev-kind-btn {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.375rem 0.75rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ev-kind-btn + .ev-kind-btn {
+  border-left: 1px solid var(--border-dim);
+}
+.ev-kind-btn:hover {
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+}
+.ev-kind-btn--active {
+  color: var(--blue);
+  background: rgba(76, 144, 255, 0.1);
+}
+
+.se-row-unit {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+
+.se-section {
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  background: var(--bg-card);
+}
+
+.se-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-elevated);
+  border-radius: 4px 4px 0 0;
+}
+.se-section:not(:first-child) > .se-section-header {
+  border-radius: 0;
+}
+
+.se-section-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.se-section-label--sub {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+.se-section-count {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+.se-section-body {
+  padding: 0.5rem 0.625rem;
+}
+
+/* ── Form rows ───────────────────────────────────────────────────────────── */
+
+.se-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.125rem;
+  padding: 0.125rem 0;
+}
+
+.se-row-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.se-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.se-input--wide {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.se-input--num {
+  width: 5rem;
+}
+
+.se-select {
+  min-width: 7rem;
+}
+
+.se-divider {
+  height: 1px;
+  background: var(--border-dim);
+  margin: 0.375rem 0;
+}
+
+.se-clear-btn {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.se-clear-btn:hover {
+  color: var(--red);
+}
+
+.se-inline-add {
+  width: auto;
+  padding: 0.25rem 0.625rem;
+}
+
+/* ── Enhancement checkboxes ──────────────────────────────────────────────── */
+
+.se-enhancement-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.se-check {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.se-check input {
+  accent-color: var(--blue);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+
+.se-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.se-tab {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.se-tab:hover {
+  color: var(--text-secondary);
+}
+.se-tab--active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+.se-tab--has-content {
+  color: var(--text-primary);
+}
+
+.se-tab-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--blue);
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
+/* ── Segment/frame actions ────────────────────────────────────────────────── */
+
+.se-segment-actions {
+  padding: 0.375rem 0 0;
+}
+
+.se-segment-actions .cv2-add-btn {
+  border-color: rgba(224, 85, 85, 0.3);
+  color: var(--text-muted);
+}
+.se-segment-actions .cv2-add-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(224, 85, 85, 0.05);
+}
+
+/* ── Flat frames sub-section ─────────────────────────────────────────────── */
+
+.se-frames-flat {
+  padding-top: 0.25rem;
+}
+
+.se-tabs--frames .se-tab {
+  padding: 0.25rem 0.5rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.se-section-body--add {
+  padding-top: 0;
+}
+
+.se-frame-title {
+  font-family: var(--font-display);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.se-frame-tag {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--purple);
+  background: rgba(148, 100, 236, 0.1);
+  padding: 0.0625rem 0.375rem;
+  border-radius: 2px;
+}
+
+.se-frame-body {
+  padding: 0.375rem 0.5rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ── EventViewer — flat form ─────────────────────────────────────────────── */
+
+.ev {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* ── Titles — hierarchy through size and contrast ────────────────────────── */
+
+.ev-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  padding: 0.75rem 0 0.25rem;
+  border-bottom: 1px solid var(--border-med);
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.ev-title:first-child {
+  padding-top: 0;
+}
+
+.ev-subtitle {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0.5rem 0 0.125rem;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.ev-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.375rem 0 0.125rem;
+}
+
+.ev-title-count {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+.ev-hr {
+  height: 1px;
+  background: var(--border-dim);
+  margin: 0.375rem 0;
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────────── */
+
+.ev-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.125rem;
+  padding: 0.0625rem 0;
+}
+
+.ev-row-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.ev-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.ev-input--wide { flex: 1; min-width: 8rem; }
+.ev-input--num { width: 5rem; }
+.ev-select { min-width: 7rem; }
+
+.ev-unit {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ev-clear {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.ev-clear:hover { color: var(--red); }
+
+.ev-inline-add { width: auto; padding: 0.25rem 0.625rem; }
+
+.ev-remove-btn {
+  border-color: rgba(224, 85, 85, 0.3);
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+.ev-remove-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(224, 85, 85, 0.05);
+}
+
+/* ── Tags ─────────────────────────────────────────────────────────────────── */
+
+.ev-tags {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ev-check {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.ev-check input { accent-color: var(--blue); }
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+
+.ev-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.25rem;
+}
+
+.ev-tab {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ev-tab:hover { color: var(--text-secondary); }
+.ev-tab--active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+.ev-tab--dot { color: var(--text-primary); }
+
+.ev-tab-add {
+  width: auto;
+  padding: 0.25rem 0.625rem;
+  margin-left: 0.375rem;
+  align-self: center;
+  font-size: 0.55rem;
+  flex-shrink: 0;
+}
+
+.ev-tabs--top {
+  margin-top: 0.5rem;
+}
+
+.ev-tabs--compact .ev-tab {
+  padding: 0.25rem 0.5rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.ev-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--blue);
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
+/* ── Expression editor modal ─────────────────────────────────────────────── */
+
+.expr-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  width: 720px;
+  max-width: 95vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px var(--scrim-50);
+}
+
+.expr-modal-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.expr-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid var(--border-dim);
+}
+
+.expr-btn {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.375rem 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--border-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.expr-btn--cancel {
+  background: transparent;
+  color: var(--text-muted);
+}
+.expr-btn--cancel:hover {
+  color: var(--text-primary);
+  border-color: var(--border-med);
+}
+
+.expr-btn--apply {
+  background: rgba(76, 144, 255, 0.15);
+  color: var(--blue);
+  border-color: rgba(76, 144, 255, 0.3);
+}
+.expr-btn--apply:hover {
+  background: rgba(76, 144, 255, 0.25);
+  border-color: rgba(76, 144, 255, 0.5);
+}
+
+/* ── Expression node tree ──────────────────────────────────────────────── */
+
+.expr-node {
+  position: relative;
+}
+
+.expr-node-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.125rem;
+}
+
+.expr-type-select { min-width: 6rem; }
+.expr-op-select { min-width: 7.5rem; }
+.expr-var-select { min-width: 7.5rem; }
+
+.expr-literal-input {
+  width: 5rem;
+}
+
+/* ── Expression children (binary branches) ───────────────────────────── */
+
+.expr-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-top: 0.125rem;
+}
+
+.expr-branch {
+  display: flex;
+  align-items: stretch;
+}
+
+/* Arm column: vertical trunk + horizontal connector, auto-height */
+.expr-branch-arm {
+  position: relative;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Vertical trunk — runs full height of the branch */
+.expr-branch-arm::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-dim);
+}
+
+/* Horizontal connector — from trunk to node, vertically centered on the first row */
+.expr-branch-arm::after {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 1.0625rem; /* center of 2.125rem min-height row */
+  width: 1rem;
+  height: 1px;
+  background: var(--border-dim);
+}
+
+/* Last branch: trunk stops at the horizontal arm (no line below) */
+.expr-branch:last-child > .expr-branch-arm::before {
+  bottom: auto;
+  height: 1.0625rem;
+}
+
+/* L/R label — sits on the arm */
+.expr-branch-label {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  opacity: 0.5;
+  position: absolute;
+  left: -0.125rem;
+  top: 0.375rem;
+}
+
+/* Node content fills remaining width */
+.expr-branch > .expr-node {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Variable level table inside expression ──────────────────────────── */
+
+.expr-level-row {
+  padding: 0.125rem 0 0.25rem;
+}
+
+.expr-level-table {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── "Edit expression" button in WithPropertyRow ─────────────────────── */
+
+.expr-open-btn {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 3px;
+  border: 1px solid rgba(148, 100, 236, 0.3);
+  background: rgba(148, 100, 236, 0.1);
+  color: var(--purple);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.expr-open-btn:hover {
+  background: rgba(148, 100, 236, 0.2);
+  border-color: rgba(148, 100, 236, 0.5);
+}
+
+/* Expression summary (inline preview when expression is set) */
+.expr-summary {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /*
  * Tree connector geometry (CSS-only, zero overlap):
  *

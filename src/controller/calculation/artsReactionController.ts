@@ -356,7 +356,7 @@ const REACTION_COLUMN_TO_TYPE: Record<string, string> = {
  * Get the talent-based reaction damage multiplier for an operator.
  * Reads from talentEffects with bonusType === 'REACTION_MULTIPLIER'.
  * Supports both legacy format (source/minPotential/values) and
- * BASED_ON format (value with multi-dimensional lookup).
+ * VARY_BY format (value with multi-dimensional lookup).
  */
 function getReactionTalentMultiplier(operatorId: string, potential: number, reactionColumnId: string): number {
   const json = getOperatorJson(operatorId);
@@ -370,7 +370,7 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
     if (effect.bonusType !== 'REACTION_MULTIPLIER') continue;
     if (effect.condition?.reactionType !== reactionType) continue;
 
-    if (effect.value?.verb === 'BASED_ON') {
+    if (effect.value?.verb === 'VARY_BY') {
       const resolved = resolveBasedOnValueForCalc(effect.value, { potential });
       if (resolved != null) multiplier *= resolved;
     }
@@ -380,14 +380,14 @@ function getReactionTalentMultiplier(operatorId: string, potential: number, reac
 }
 
 /**
- * Resolve a BASED_ON value block for damage calculation contexts.
+ * Resolve a VARY_BY value block for damage calculation contexts.
  * Supports multi-dimensional lookups keyed by POTENTIAL, TALENT_LEVEL, SKILL_LEVEL.
  */
 function resolveBasedOnValueForCalc(
   wp: { verb?: string; object?: string | string[]; value?: unknown },
   ctx: { potential: number; talentLevel?: number; skillLevel?: number },
 ): number | undefined {
-  if (wp.verb !== 'BASED_ON') return typeof wp.value === 'number' ? wp.value : undefined;
+  if (wp.verb !== 'VARY_BY') return typeof wp.value === 'number' ? wp.value : undefined;
 
   const dims = wp.object;
   const val = wp.value;

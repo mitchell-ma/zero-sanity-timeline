@@ -88,11 +88,7 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mockTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
-  const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = mockSkillsJson;
-
   // Expand short keys in status JSONs (same as operatorJsonLoader.ts expandKeys)
   const KEY_EXPAND: Record<string, string> = {
     verb: 'verb', object: 'object', subject: 'subject',
@@ -113,32 +109,76 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => {
   };
   const expandedStatuses = (mockStatusesJson as unknown[]).map(s => expandKeys(s));
 
-  const mergedStatusEvents = [...expandedStatuses, ...(skStatusEvents ?? []), ...(mockTalentJson.statusEvents ?? [])];
+  const mergedStatusEvents = [...expandedStatuses];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- infer skillTypeMap from skill entries
+  function inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
+    const ids = Object.keys(skills);
+    const finishers = ids.filter(id => id.endsWith('_FINISHER'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inferred map
+    const map: Record<string, any> = {};
+    for (const fId of finishers) {
+      const base = fId.replace(/_FINISHER$/, '');
+      if (skills[base]) {
+        const batk: Record<string, string> = { BATK: base, FINISHER: fId };
+        const diveId = ids.find(d => d === base + '_DIVE');
+        if (diveId) batk.DIVE = diveId;
+        map.BASIC_ATTACK = batk;
+        break;
+      }
+    }
+    const variantSuffixes2 = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+    const baseSkills = ids.filter(id => {
+      const batkId = typeof map.BASIC_ATTACK === 'object' ? (map.BASIC_ATTACK as Record<string,string>).BATK : undefined;
+      if (id === batkId) return false;
+      return !variantSuffixes2.some(s => id.endsWith(s));
+    });
+    for (const id of baseSkills) {
+      const skill = skills[id] as Record<string, unknown>;
+      if (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0) {
+        map.COMBO_SKILL = id;
+        break;
+      }
+    }
+    const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
+    for (const id of remaining) {
+      const skill = skills[id] as Record<string, unknown>;
+      const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
+      if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+        map.ULTIMATE = id;
+        break;
+      }
+    }
+    const battleCandidates = remaining.filter(id => id !== map.ULTIMATE);
+    if (battleCandidates.length === 1) map.BATTLE_SKILL = battleCandidates[0];
+    return map;
+  }
+
+  const skillEntries = { ...mockSkillsJson };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
 const laevatainSkills: Record<string, any> = {};
   for (const [key, val] of Object.entries(skillEntries)) {
     laevatainSkills[key] = { ...(val as Record<string, unknown>), id: key };
   }
-  if (skTypeMap) {
-    const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
-    for (const [category, value] of Object.entries(skTypeMap)) {
-      if (typeof value === 'string') {
-        if (laevatainSkills[value]) laevatainSkills[category] = laevatainSkills[value];
+  const skTypeMap = inferSkillTypeMap(laevatainSkills);
+  const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
+  for (const [category, value] of Object.entries(skTypeMap)) {
+    if (typeof value === 'string') {
+      if (laevatainSkills[value]) laevatainSkills[category] = laevatainSkills[value];
+      for (const suffix of variantSuffixes) {
+        const variantSkillId = `${value}_${suffix}`;
+        if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const batkId = (value as Record<string, string>).BATK;
+      if (batkId && laevatainSkills[batkId]) laevatainSkills[category] = laevatainSkills[batkId];
+      for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
+        if (laevatainSkills[subId]) laevatainSkills[subKey] = laevatainSkills[subId];
+      }
+      if (batkId) {
         for (const suffix of variantSuffixes) {
-          const variantSkillId = `${value}_${suffix}`;
+          const variantSkillId = `${batkId}_${suffix}`;
           if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        const batkId = (value as Record<string, string>).BATK;
-        if (batkId && laevatainSkills[batkId]) laevatainSkills[category] = laevatainSkills[batkId];
-        for (const [subKey, subId] of Object.entries(value as Record<string, string>)) {
-          if (laevatainSkills[subId]) laevatainSkills[subKey] = laevatainSkills[subId];
-        }
-        if (batkId) {
-          for (const suffix of variantSuffixes) {
-            const variantSkillId = `${batkId}_${suffix}`;
-            if (laevatainSkills[variantSkillId]) laevatainSkills[`${suffix}_${category}`] = laevatainSkills[variantSkillId];
-          }
         }
       }
     }
@@ -189,7 +229,7 @@ const json: Record<string, any> = { laevatain: mockJson };
     const entry = map[id];
     if (!entry) return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(entry.file)[entry.skillId]?.properties?.trigger?.onTriggerClause;
+    return require(entry.file)[entry.skillId]?.onTriggerClause;
   },
   getComboTriggerInfo: (id: string) => {
     const map: Record<string, { file: string; skillId: string }> = {
@@ -200,9 +240,11 @@ const json: Record<string, any> = { laevatain: mockJson };
     const entry = map[id];
     if (!entry) return undefined;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const trigger = require(entry.file)[entry.skillId]?.properties?.trigger;
-    if (!trigger?.onTriggerClause?.length) return undefined;
-    return { onTriggerClause: trigger.onTriggerClause, description: trigger.description ?? '', windowFrames: trigger.windowFrames ?? 720 };
+    const skill = require(entry.file)[entry.skillId];
+    const onTriggerClause = skill?.onTriggerClause;
+    if (!onTriggerClause?.length) return undefined;
+    const props = skill?.properties ?? {};
+    return { onTriggerClause, description: props.description ?? '', windowFrames: props.windowFrames ?? 720 };
   },
   getExchangeStatusConfig: () => ({}),
   getExchangeStatusIds: () => new Set(),
@@ -239,8 +281,6 @@ const laevatainOperatorJson = require('../model/game-data/operators/laevatain-op
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainSkillsJson = require('../model/game-data/operator-skills/laevatain-skills.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const laevatainTalentJson = require('../model/game-data/operator-talents/laevatain-talents.json');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const laevatainStatusesJson = require('../model/game-data/operator-statuses/laevatain-statuses.json');
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
@@ -270,7 +310,7 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
     if (limit.verb === 'IS') {
       const v = limit.value;
       resolvedLimit = { P0: v, P1: v, P2: v, P3: v, P4: v, P5: v };
-    } else if (limit.verb === 'BASED_ON' && Array.isArray(limit.value)) {
+    } else if (limit.verb === 'VARY_BY' && Array.isArray(limit.value)) {
       const arr = limit.value;
       resolvedLimit = { P0: arr[0], P1: arr[1], P2: arr[2], P3: arr[3], P4: arr[4], P5: arr[5] };
     } else {
@@ -303,15 +343,58 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   }
   return out;
 }
-const { statusEvents: _skStatusEvents2, skillTypeMap: _skTypeMap2, ...laevatainSkillEntries2 } = laevatainSkillsJson;
+const laevatainSkillEntries2 = { ...laevatainSkillsJson };
 const _mergedStatusEvents = [...(laevatainStatusesJson as unknown[]).map(s => _expandKeys(// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON status data
-_normalizeStatusEntry(s as Record<string, any>))), ...(_skStatusEvents2 ?? []), ...(laevatainTalentJson.statusEvents ?? [])];
+_normalizeStatusEntry(s as Record<string, any>)))];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON require() data
 const laevatainSkillCategories: Record<string, any> = {};
 for (const [key, val] of Object.entries(laevatainSkillEntries2)) {
   laevatainSkillCategories[key] = { ...(val as Record<string, unknown>), id: key };
 }
-if (_skTypeMap2) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- infer skillTypeMap from skill entries
+function _inferSkillTypeMap(skills: Record<string, any>): Record<string, any> {
+  const ids = Object.keys(skills);
+  const finishers = ids.filter(id => id.endsWith('_FINISHER'));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- inferred map
+  const map: Record<string, any> = {};
+  for (const fId of finishers) {
+    const base = fId.replace(/_FINISHER$/, '');
+    if (skills[base]) {
+      const batk: Record<string, string> = { BATK: base, FINISHER: fId };
+      const diveId = ids.find(d => d === base + '_DIVE');
+      if (diveId) batk.DIVE = diveId;
+      map.BASIC_ATTACK = batk;
+      break;
+    }
+  }
+  const varSuffixes = ['_FINISHER', '_DIVE', '_ENHANCED', '_EMPOWERED', '_ENHANCED_EMPOWERED'];
+  const baseSkills = ids.filter(id => {
+    const batkId = typeof map.BASIC_ATTACK === 'object' ? (map.BASIC_ATTACK as Record<string,string>).BATK : undefined;
+    if (id === batkId) return false;
+    return !varSuffixes.some(s => id.endsWith(s));
+  });
+  for (const id of baseSkills) {
+    const skill = skills[id] as Record<string, unknown>;
+    if (skill?.onTriggerClause && (skill.onTriggerClause as unknown[]).length > 0) {
+      map.COMBO_SKILL = id;
+      break;
+    }
+  }
+  const remaining = baseSkills.filter(id => id !== map.COMBO_SKILL);
+  for (const id of remaining) {
+    const skill = skills[id] as Record<string, unknown>;
+    const segs = skill?.segments as { metadata?: { segmentType?: string } }[] | undefined;
+    if (segs?.some(s => s.metadata?.segmentType === 'ANIMATION')) {
+      map.ULTIMATE = id;
+      break;
+    }
+  }
+  const battleCandidates = remaining.filter(id => id !== map.ULTIMATE);
+  if (battleCandidates.length === 1) map.BATTLE_SKILL = battleCandidates[0];
+  return map;
+}
+const _skTypeMap2 = _inferSkillTypeMap(laevatainSkillCategories);
+{
   const variantSuffixes = ['ENHANCED', 'EMPOWERED', 'ENHANCED_EMPOWERED'];
   for (const [category, value] of Object.entries(_skTypeMap2)) {
     if (typeof value === 'string') {
@@ -409,7 +492,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
 
   test('C3: Battle skill first frame applies MELTING_FLAME status to Laevatain', () => {
     const rawSkills = mockLaevatainJson.skills;
-    const battleFrames = rawSkills.BATTLE_SKILL.frames;
+    const battleFrames = rawSkills.BATTLE_SKILL.segments[0].frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
     const mfEffect = firstFrameEffects.find(
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.objectId === 'MELTING_FLAME'
@@ -419,16 +502,19 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     expect(mfEffect.toObject).toBe('LAEVATAIN');
   });
 
-  test('C4: Empowered battle skill forced Combustion has 5s duration in clause effects', () => {
-    // The empowered battle skill frame data includes duration: 5 seconds in the DEAL DAMAGE effect
+  test('C4: Empowered battle skill last frame applies forced Combustion reaction', () => {
+    // The empowered battle skill last frame applies forced combustion via APPLY REACTION
     const rawSkills = mockLaevatainJson.skills;
-    const empoweredFrames = rawSkills.EMPOWERED_BATTLE_SKILL.frames;
-    const firstFrameEffects = empoweredFrames[0].clause[0].effects;
-    const dealDamageEffect = firstFrameEffects.find(
-      (e: Record<string, unknown>) => e.verb === 'DEAL' && e.object === 'DAMAGE'
+    const empoweredFrames = rawSkills.EMPOWERED_BATTLE_SKILL.segments[0].frames;
+    const lastFrame = empoweredFrames[empoweredFrames.length - 1];
+    const effects = lastFrame.clause[0].effects;
+    const applyReaction = effects.find(
+      (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'REACTION'
     );
-    expect(dealDamageEffect).toBeDefined();
-    expect(dealDamageEffect.with.duration.value).toBe(5);
+    expect(applyReaction).toBeDefined();
+    const adjectives = Array.isArray(applyReaction.adjective) ? applyReaction.adjective : [applyReaction.adjective];
+    expect(adjectives).toContain('FORCED');
+    expect(adjectives).toContain('COMBUSTION');
   });
 });
 
@@ -439,31 +525,33 @@ describe('C. Empowered Battle Skill & Combustion', () => {
 describe('D. Combo Skill (Seethe) Triggers', () => {
   test('D1: Combo trigger clause requires Combustion or Corrosion', () => {
     const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
-    const trigger = comboSkill.properties.trigger;
-    expect(trigger).toBeDefined();
-    expect(trigger.onTriggerClause.length).toBe(2);
+    const onTriggerClause = comboSkill.onTriggerClause;
+    expect(onTriggerClause).toBeDefined();
+    expect(onTriggerClause.length).toBe(2);
 
     // First clause: enemy is combusted
-    expect(trigger.onTriggerClause[0].conditions[0].subject).toBe('ENEMY');
-    expect(trigger.onTriggerClause[0].conditions[0].object).toBe('COMBUSTED');
+    expect(onTriggerClause[0].conditions[0].subject).toBe('ENEMY');
+    expect(onTriggerClause[0].conditions[0].object).toBe('COMBUSTED');
 
     // Second clause: enemy is corroded
-    expect(trigger.onTriggerClause[1].conditions[0].subject).toBe('ENEMY');
-    expect(trigger.onTriggerClause[1].conditions[0].object).toBe('CORRODED');
+    expect(onTriggerClause[1].conditions[0].subject).toBe('ENEMY');
+    expect(onTriggerClause[1].conditions[0].object).toBe('CORRODED');
   });
 
   test('D2: Combo activation window is 720 frames (6 seconds)', () => {
     const comboSkill = mockLaevatainJson.skills.COMBO_SKILL;
-    const trigger = comboSkill.properties.trigger;
-    expect(trigger.windowFrames).toBe(720);
+    expect(comboSkill.properties.windowFrames).toBe(720);
   });
 
   test('D5: Combo skill frame data includes stagger recovery', () => {
     const sequences = getSequences('COMBO_SKILL');
-    // segments[0] is ANIMATION (no frames), segments[1] has actual frames
-    expect(sequences.length).toBe(2);
+    // segments[0] is ANIMATION (no frames), segments[1] has actual frames, segments[2] is COOLDOWN
+    expect(sequences.length).toBeGreaterThanOrEqual(2);
 
-    const firstFrame = sequences[1].getFrames()[0];
+    // Find the sequence with actual frames (not ANIMATION or COOLDOWN)
+    const frameSeq = sequences.find(s => s.getFrames().length > 0);
+    expect(frameSeq).toBeDefined();
+    const firstFrame = frameSeq!.getFrames()[0];
     expect(firstFrame.getStagger()).toBe(10);
   });
 });
@@ -555,13 +643,13 @@ describe('F. Potentials', () => {
     expect(spEffects[0].skillParameterModifier.parameterModifyType).toBe('ADDITIVE');
   });
 
-  test('F2: P0 adds x1.2 DAMAGE_MULTIPLIER to Smouldering Fire Enhanced', () => {
+  test('F2: P0 adds x1.2 DAMAGE_MULTIPLIER_MODIFIER to Smouldering Fire Enhanced', () => {
     const p0 = mockLaevatainJson.potentials[0];
-    // Enhanced: ×1.2 on DAMAGE_MULTIPLIER
+    // Enhanced: ×1.2 on DAMAGE_MULTIPLIER_MODIFIER
     const enhancedDmg = p0.effects.find(
       (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
         e.skillParameterModifier.skillType === 'SMOULDERING_FIRE_ENHANCED' &&
-        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER'
+        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER_MODIFIER'
     );
     expect(enhancedDmg).toBeDefined();
     expect(enhancedDmg.skillParameterModifier.value).toBe(1.2);
@@ -573,8 +661,8 @@ describe('F. Potentials', () => {
       (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.bonusType === 'REACTION_MULTIPLIER' && e.condition?.reactionType === 'COMBUSTION'
     );
     expect(p3Effect).toBeDefined();
-    // BASED_ON [POTENTIAL] format: P0 = 1 (no bonus), P3 = 1.5
-    expect(p3Effect.value.verb).toBe('BASED_ON');
+    // VARY_BY [POTENTIAL] format: P0 = 1 (no bonus), P3 = 1.5
+    expect(p3Effect.value.verb).toBe('VARY_BY');
     expect(p3Effect.value.object).toEqual(['POTENTIAL']);
     expect(p3Effect.value.value.P0).toBe(1);
     expect(p3Effect.value.value.P2).toBe(1);
@@ -609,7 +697,7 @@ describe('F. Potentials', () => {
     const p5 = mockLaevatainJson.potentials[4];
     const dmgEffects = p5.effects.filter(
       (e: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ e.potentialEffectType === 'SKILL_PARAMETER' &&
-        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER' &&
+        e.skillParameterModifier.parameterKey === 'DAMAGE_MULTIPLIER_MODIFIER' &&
         e.skillParameterModifier.skillType === 'FLAMING_CINDERS_ENHANCED'
     );
     // P5 has two UNIQUE_MULTIPLIER entries for enhanced basic (multiplicative stacking)
@@ -632,26 +720,29 @@ describe('H. Cooldown Interactions', () => {
     return { name: '', ownerId: SLOT_ID, segments: [{ properties: { duration: 0 } }], ...overrides };
   }
 
-  test('H1: Battle skill (Smouldering Fire) has no COOLDOWN effect', () => {
+  test('H1: Battle skill (Smouldering Fire) has no COOLDOWN segment or effect', () => {
     const bs = mockLaevatainJson.skills.BATTLE_SKILL;
-    const cooldown = bs.effects?.find((e: Record<string, unknown>) => e.object === 'COOLDOWN');
-    expect(cooldown).toBeUndefined();
+    // No COOLDOWN segment
+    const cooldownSeg = bs.segments?.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    expect(cooldownSeg).toBeUndefined();
+    // No COOLDOWN effect in clause
+    const cooldownEffect = bs.clause?.flatMap((c: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ c.effects ?? [])
+      .find((e: Record<string, unknown>) => e.object === 'COOLDOWN');
+    expect(cooldownEffect).toBeUndefined();
   });
 
   test('H2: Combo skill (Seethe) has 10s cooldown', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
-    const cooldown = cs.clause[0].effects.find(
-      (e: Record<string, unknown>) => e.object === 'COOLDOWN' && e.verb === 'CONSUME'
-    );
-    expect(cooldown).toBeDefined();
-    expect(cooldown.with.cardinality.value).toBe(10);
-  });
-
-  test('H3: Ultimate (Twilight) has 10s cooldown from skill segments', () => {
-    const ultSkill = mockLaevatainJson.skills.TWILIGHT;
-    const cdSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    const cdSeg = cs.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
     expect(cdSeg).toBeDefined();
     expect(cdSeg.properties.duration.value).toBe(10);
+  });
+
+  test('H3: Ultimate (Twilight) has no COOLDOWN segment (ultimate cooldown is global)', () => {
+    const ultSkill = mockLaevatainJson.skills.TWILIGHT;
+    // Ultimate cooldown is not in skill segments — it's handled by the global ultimate cooldown system
+    const cdSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.metadata?.segmentType === 'COOLDOWN');
+    expect(cdSeg).toBeUndefined();
   });
 
   test('H4: Combo placement during 10s cooldown is blocked', () => {

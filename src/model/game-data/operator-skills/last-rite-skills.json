@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "DANCE_OF_RIME",
-      "FINISHER": "DANCE_OF_RIME_FINISHER",
-      "DIVE": "DANCE_OF_RIME_DIVE"
-    },
-    "BATTLE_SKILL": "ESOTERIC_LEGACY",
-    "COMBO_SKILL": "WINTERS_DEVOURER",
-    "ULTIMATE": "VIGIL_SERVICES"
-  },
   "DANCE_OF_RIME": {
     "segments": [
       {
@@ -44,12 +34,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.3,
@@ -107,12 +97,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.28,
@@ -154,12 +144,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.28,
@@ -217,12 +207,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.34,
@@ -264,12 +254,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.34,
@@ -348,12 +338,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.9,
@@ -389,80 +379,9 @@
   },
   "ESOTERIC_LEGACY": {
     "properties": {
-      "duration": {
-        "value": 0.5,
-        "unit": "SECOND"
-      },
       "name": "Esoteric Legacy of Seš'qa",
       "description": "Performs a Hypothermic Perfusion on the controlled operator's weapon and returns some SP. \nThe next Final Strike performed by the currently controlled operator within a certain duration creates Last Rite's Mirages that unleash an additional attack at the target. This attack deals Cryo DMG and applies Cryo Infliction. \nWhen the controlled operator is Last Rite herself, casting this battle skill does not reset her basic attack sequence."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.2,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 30
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "ELECTRIC",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "duration": {
-                    "verb": "IS",
-                    "value": 15
-                  },
-                  "usp": {
-                    "verb": "IS",
-                    "value": 16
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      1.42,
-                      1.56,
-                      1.71,
-                      1.85,
-                      1.99,
-                      2.13,
-                      2.28,
-                      2.42,
-                      2.56,
-                      2.74,
-                      2.95,
-                      3.2
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -494,27 +413,86 @@
     ],
     "metadata": {
       "originId": "lastRite"
-    }
-  },
-  "WINTERS_DEVOURER": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "SOLIDIFIED"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 30
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "duration": {
+                        "verb": "IS",
+                        "value": 15
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          1.42,
+                          1.56,
+                          1.71,
+                          1.85,
+                          1.99,
+                          2.13,
+                          2.28,
+                          2.42,
+                          2.56,
+                          2.74,
+                          2.95,
+                          3.2
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Enemy has 3+ Cryo Infliction stacks",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 0.5,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "WINTERS_DEVOURER": {
+    "properties": {
       "name": "Winter's Devourer",
-      "description": "COMBO TRIGGER: When an enemy has  or more Cryo Infliction stacks. \nEncases the target enemy in icicles and shatters them to consume all Cryo Infliction stacks of the said enemy. The number of Cryo Infliction stacks consumed determines the amount of Cryo DMG dealt to the said enemy and Ultimate Energy gained by Last Rite."
+      "description": "Enemy has 3+ Cryo Infliction stacks",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -582,12 +560,12 @@
                 "effects": [
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.71,
@@ -605,7 +583,7 @@
                         ]
                       },
                       "atkScale3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.07,
@@ -622,14 +600,6 @@
                           2.4
                         ]
                       },
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 15
-                      },
-                      "usp": {
-                        "verb": "IS",
-                        "value": 15
-                      },
                       "uspBase": {
                         "verb": "IS",
                         "value": 40
@@ -639,7 +609,7 @@
                         "value": 3
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.71,
@@ -692,12 +662,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.71,
@@ -715,7 +685,7 @@
                         ]
                       },
                       "atkScale3": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.07,
@@ -733,7 +703,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.71,
@@ -766,7 +736,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 9,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              8
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -776,7 +761,18 @@
     ],
     "metadata": {
       "originId": "lastRite"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "SOLIDIFIED"
+          }
+        ]
+      }
+    ]
   },
   "VIGIL_SERVICES": {
     "properties": {
@@ -792,8 +788,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 240
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  240,
+                  240,
+                  240,
+                  204,
+                  204,
+                  204
+                ]
               }
             }
           }
@@ -858,12 +862,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           3.56,
@@ -880,20 +884,8 @@
                           8
                         ]
                       },
-                      "poise1": {
-                        "verb": "IS",
-                        "value": 5
-                      },
-                      "poise2": {
-                        "verb": "IS",
-                        "value": 10
-                      },
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.78,
@@ -946,12 +938,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           3.56,
@@ -969,7 +961,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.78,
@@ -1022,12 +1014,12 @@
                   },
                   {
                     "verb": "DEAL",
-                    "adjective": "ELECTRIC",
+                    "adjective": "CRYO",
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
                       "damageMultiplierIncrement": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           3.56,
@@ -1045,7 +1037,7 @@
                         ]
                       },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           1.78,
@@ -1080,129 +1072,141 @@
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Dance of Rime (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Cryo DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "lastRite"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "lastRite"
-    }
+    ]
   },
   "DANCE_OF_RIME_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Dance of Rime (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Cryo DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "lastRite"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "CRYO",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "CRYO",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "lastRite"
-    }
+    ]
   }
 }

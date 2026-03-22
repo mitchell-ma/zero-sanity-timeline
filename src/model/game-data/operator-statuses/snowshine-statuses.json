@@ -11,7 +11,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   0.15,
@@ -19,7 +19,7 @@
                 ]
               },
               "hpThreshold": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   0.45,
@@ -64,7 +64,7 @@
             "toObject": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
                 "values": [
                   6,

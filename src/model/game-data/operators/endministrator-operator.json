@@ -80,7 +80,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "ESSENCE_DISINTEGRATION_TALENT",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "REALSPACE_STASIS",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Skirmisher",
+      "attribute": "AGILITY",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1730,23 +1745,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "id": "ESSENCE_DISINTEGRATION_TALENT",
-      "maxLevel": 2
-    },
-    "two": {
-      "id": "REALSPACE_STASIS",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Skirmisher",
-      "attribute": "AGILITY",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

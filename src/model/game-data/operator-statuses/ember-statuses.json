@@ -66,7 +66,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_ONE_LEVEL",
                 "values": [
                   0.3,
@@ -150,7 +150,7 @@
             "to": "OPERATOR",
             "with": {
               "value": {
-                "verb": "BASED_ON",
+                "verb": "VARY_BY",
                 "object": "TALENT_TWO_LEVEL",
                 "values": [
                   0.06,

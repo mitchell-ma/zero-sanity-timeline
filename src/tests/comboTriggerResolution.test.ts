@@ -25,7 +25,7 @@ import { TimelineEvent, eventDuration } from '../consts/viewTypes';
 import { StatusType, SegmentType, TimeDependency } from '../consts/enums';
 import { SKILL_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
 
-function mockGetTriggerFromJson(id: string) {
+function mockGetSkillFromJson(id: string) {
   const map: Record<string, { file: string; skillId: string }> = {
     antal: { file: '../model/game-data/operator-skills/antal-skills.json', skillId: 'EMP_TEST_SITE' },
     laevatain: { file: '../model/game-data/operator-skills/laevatain-skills.json', skillId: 'SEETHE' },
@@ -34,7 +34,7 @@ function mockGetTriggerFromJson(id: string) {
   const entry = map[id];
   if (!entry) return undefined;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require(entry.file)[entry.skillId]?.properties?.trigger;
+  return require(entry.file)[entry.skillId];
 }
 
 jest.mock('../model/event-frames/operatorJsonLoader', () => ({
@@ -44,11 +44,12 @@ jest.mock('../model/event-frames/operatorJsonLoader', () => ({
   getUltimateEnergyCost: () => 0, getSkillGaugeGains: () => undefined,
   getBattleSkillSpCost: () => undefined, getSkillCategoryData: () => undefined,
   getBasicAttackDurations: () => undefined,
-  getComboTriggerClause: (id: string) => mockGetTriggerFromJson(id)?.onTriggerClause,
+  getComboTriggerClause: (id: string) => mockGetSkillFromJson(id)?.onTriggerClause,
   getComboTriggerInfo: (id: string) => {
-    const trigger = mockGetTriggerFromJson(id);
-    if (!trigger?.onTriggerClause?.length) return undefined;
-    return { onTriggerClause: trigger.onTriggerClause, description: trigger.description ?? '', windowFrames: trigger.windowFrames ?? 720 };
+    const skill = mockGetSkillFromJson(id);
+    const onTriggerClause = skill?.onTriggerClause;
+    if (!onTriggerClause?.length) return undefined;
+    return { onTriggerClause, description: skill?.properties?.description ?? '', windowFrames: skill?.properties?.windowFrames ?? 720 };
   },
   getExchangeStatusConfig: () => ({}),
   getExchangeStatusIds: () => new Set(),

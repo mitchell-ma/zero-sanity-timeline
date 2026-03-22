@@ -20,7 +20,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.05,
@@ -46,7 +46,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.05,
@@ -111,7 +111,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.05,
@@ -137,7 +137,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.05,
@@ -179,7 +179,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.09,
@@ -205,7 +205,7 @@
                 "to": "TARGET",
                 "with": {
                   "value": {
-                    "verb": "BASED_ON",
+                    "verb": "VARY_BY",
                     "object": "SKILL_LEVEL",
                     "value": [
                       0.09,
@@ -250,6 +250,70 @@
     },
     "metadata": {
       "originId": "SPECIFIED_RESEARCH_SUBJECT"
+    }
+  },
+  {
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "DEAL",
+            "object": "DAMAGE"
+          }
+        ],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "IMPROVISER",
+            "toDeterminer": "THIS",
+            "to": "OPERATOR"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "IMPROVISER_TALENT",
+      "name": "IMPROVISER (Talent)",
+      "type": "TALENT",
+      "to": "OPERATOR",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "antal",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
+    "clause": [
+      {
+        "conditions": [],
+        "effects": [
+          {
+            "verb": "APPLY",
+            "object": "TREATMENT",
+            "toDeterminer": "THIS",
+            "to": "TEAMMATE"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "IMPROVISER",
+      "name": "IMPROVISER",
+      "type": "TALENT_STATUS",
+      "to": "TEAMMATE",
+      "toDeterminer": "THIS"
+    },
+    "metadata": {
+      "originId": "IMPROVISER_TALENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
     }
   }
 ]

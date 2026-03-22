@@ -4,7 +4,9 @@
   "operatorRarity": 5,
   "operatorClassType": "CASTER",
   "elementType": "HEAT",
-  "weaponTypes": ["HANDCANNON"],
+  "weaponTypes": [
+    "HANDCANNON"
+  ],
   "mainAttributeType": "STRENGTH",
   "secondaryAttributeType": "AGILITY",
   "potentials": [
@@ -106,7 +108,22 @@
       ]
     }
   ],
-  "allLevels": [
+  "talents": {
+    "one": {
+      "id": "SCORCHING_FANGS",
+      "maxLevel": 2
+    },
+    "two": {
+      "id": "CODE_OF_RESTRAINT_TALENT",
+      "maxLevel": 2
+    },
+    "attributeIncrease": {
+      "name": "Forged",
+      "attribute": "STRENGTH",
+      "maxLevel": 4
+    }
+  },
+  "statsByLevel": [
     {
       "level": 1,
       "operatorPromotionStage": 0,
@@ -1756,23 +1773,10 @@
       }
     }
   ],
-  "talents": {
-    "one": {
-      "name": "Scorching Fangs",
-      "maxLevel": 2
-    },
-    "two": {
-      "name": "Code of Restraint",
-      "maxLevel": 2
-    },
-    "attributeIncrease": {
-      "name": "Forged",
-      "attribute": "STRENGTH",
-      "maxLevel": 4
-    }
-  },
-  "basicAttackDefaultDuration": 0.1667,
-  "dataSources": [
-    "WARFARIN"
-  ]
+  "metadata": {
+    "originId": "game",
+    "dataSources": [
+      "WARFARIN"
+    ]
+  }
 }

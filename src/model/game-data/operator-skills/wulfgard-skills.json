@@ -1,14 +1,4 @@
 {
-  "skillTypeMap": {
-    "BASIC_ATTACK": {
-      "BATK": "RAPID_FIRE_AKIMBO",
-      "FINISHER": "RAPID_FIRE_AKIMBO_FINISHER",
-      "DIVE": "RAPID_FIRE_AKIMBO_DIVE"
-    },
-    "BATTLE_SKILL": "THERMITE_TRACERS",
-    "COMBO_SKILL": "FRAG_GRENADE_BETA",
-    "ULTIMATE": "WOLVEN_FURY"
-  },
   "RAPID_FIRE_AKIMBO": {
     "segments": [
       {
@@ -49,7 +39,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -96,7 +86,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.15,
@@ -159,7 +149,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.18,
@@ -206,7 +196,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.18,
@@ -269,7 +259,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.19,
@@ -316,7 +306,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.19,
@@ -363,7 +353,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.19,
@@ -447,7 +437,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.68,
@@ -483,303 +473,9 @@
   },
   "THERMITE_TRACERS": {
     "properties": {
-      "duration": {
-        "value": 1.07,
-        "unit": "SECOND"
-      },
       "name": "Thermite Tracers",
       "description": "Fires multiple shots at the target that deal some Heat DMG. The final shot also applies Heat Infliction. If the target has active Combustion or Electrification, do not apply Heat Infliction but instead consume the Arts Reaction to fire an additional shot that deals massive Heat DMG."
     },
-    "frames": [
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.2,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "atkScalePlus": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.78,
-                      4.15,
-                      4.53,
-                      4.91,
-                      5.29,
-                      5.66,
-                      6.04,
-                      6.42,
-                      6.8,
-                      7.27,
-                      7.84,
-                      8.5
-                    ]
-                  },
-                  "atkScalePlusFail": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "poiseFirstBullet": {
-                    "verb": "IS",
-                    "value": 1.67
-                  },
-                  "poiseExtraBullet": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "poiseFirstBulletDisplay": {
-                    "verb": "IS",
-                    "value": 5
-                  },
-                  "poiseExtraBulletFail": {
-                    "verb": "IS",
-                    "value": 0
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.34,
-                      0.37,
-                      0.41,
-                      0.44,
-                      0.48,
-                      0.51,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.71,
-                      0.77
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "atkScalePlus": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.78,
-                      4.15,
-                      4.53,
-                      4.91,
-                      5.29,
-                      5.66,
-                      6.04,
-                      6.42,
-                      6.8,
-                      7.27,
-                      7.84,
-                      8.5
-                    ]
-                  },
-                  "atkScalePlusFail": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.34,
-                      0.37,
-                      0.41,
-                      0.44,
-                      0.48,
-                      0.51,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.71,
-                      0.77
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.767,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              },
-              {
-                "verb": "APPLY",
-                "object": "INFLICTION",
-                "adjective": "HEAT",
-                "toObject": "ENEMY",
-                "with": {
-                  "stacks": {
-                    "verb": "IS",
-                    "value": 1
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "atkScalePlus": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      3.78,
-                      4.15,
-                      4.53,
-                      4.91,
-                      5.29,
-                      5.66,
-                      6.04,
-                      6.42,
-                      6.8,
-                      7.27,
-                      7.84,
-                      8.5
-                    ]
-                  },
-                  "atkScalePlusFail": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.36,
-                      0.4,
-                      0.43,
-                      0.47,
-                      0.5,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.69,
-                      0.75,
-                      0.81
-                    ]
-                  },
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.34,
-                      0.37,
-                      0.41,
-                      0.44,
-                      0.48,
-                      0.51,
-                      0.54,
-                      0.58,
-                      0.61,
-                      0.65,
-                      0.71,
-                      0.77
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
     "clause": [
       {
         "conditions": [],
@@ -799,27 +495,297 @@
     ],
     "metadata": {
       "originId": "wulfgard"
-    }
-  },
-  "FRAG_GRENADE_BETA": {
-    "properties": {
-      "trigger": {
-        "onTriggerClause": [
+    },
+    "segments": [
+      {
+        "frames": [
           {
-            "conditions": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "subject": "ENEMY",
-                "verb": "IS",
-                "object": "COMBUSTED"
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atkScalePlus": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.78,
+                          4.15,
+                          4.53,
+                          4.91,
+                          5.29,
+                          5.66,
+                          6.04,
+                          6.42,
+                          6.8,
+                          7.27,
+                          7.84,
+                          8.5
+                        ]
+                      },
+                      "atkScalePlusFail": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.34,
+                          0.37,
+                          0.41,
+                          0.44,
+                          0.48,
+                          0.51,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.71,
+                          0.77
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.53,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atkScalePlus": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.78,
+                          4.15,
+                          4.53,
+                          4.91,
+                          5.29,
+                          5.66,
+                          6.04,
+                          6.42,
+                          6.8,
+                          7.27,
+                          7.84,
+                          8.5
+                        ]
+                      },
+                      "atkScalePlusFail": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.34,
+                          0.37,
+                          0.41,
+                          0.44,
+                          0.48,
+                          0.51,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.71,
+                          0.77
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.767,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  },
+                  {
+                    "verb": "APPLY",
+                    "object": "INFLICTION",
+                    "adjective": "HEAT",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "stacks": {
+                        "verb": "IS",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "atkScalePlus": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          3.78,
+                          4.15,
+                          4.53,
+                          4.91,
+                          5.29,
+                          5.66,
+                          6.04,
+                          6.42,
+                          6.8,
+                          7.27,
+                          7.84,
+                          8.5
+                        ]
+                      },
+                      "atkScalePlusFail": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.36,
+                          0.4,
+                          0.43,
+                          0.47,
+                          0.5,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.69,
+                          0.75,
+                          0.81
+                        ]
+                      },
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.34,
+                          0.37,
+                          0.41,
+                          0.44,
+                          0.48,
+                          0.51,
+                          0.54,
+                          0.58,
+                          0.61,
+                          0.65,
+                          0.71,
+                          0.77
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
         ],
-        "description": "Enemy has Combustion",
-        "windowFrames": 720
-      },
+        "properties": {
+          "duration": {
+            "value": 1.07,
+            "unit": "SECOND"
+          }
+        }
+      }
+    ]
+  },
+  "FRAG_GRENADE_BETA": {
+    "properties": {
       "name": "Frag Grenade·β",
-      "description": "COMBO TRIGGER: When an Arts Infliction is applied to an enemy. \nThrows a frag grenade at the target's location that explodes upon hitting the ground, dealing Heat DMG and Heat Infliction to nearby enemies."
+      "description": "Enemy has Combustion",
+      "windowFrames": 720
     },
     "clause": [
       {
@@ -914,12 +880,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "usp": {
-                        "verb": "IS",
-                        "value": 10
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.6,
@@ -952,7 +914,22 @@
         "properties": {
           "name": "Cooldown",
           "duration": {
-            "value": 20,
+            "verb": "VARY_BY",
+            "object": "SKILL_LEVEL",
+            "value": [
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              20,
+              19
+            ],
             "unit": "SECOND"
           },
           "timeDependency": "REAL_TIME"
@@ -962,7 +939,18 @@
     ],
     "metadata": {
       "originId": "wulfgard"
-    }
+    },
+    "onTriggerClause": [
+      {
+        "conditions": [
+          {
+            "subject": "ENEMY",
+            "verb": "IS",
+            "object": "COMBUSTED"
+          }
+        ]
+      }
+    ]
   },
   "WOLVEN_FURY": {
     "properties": {
@@ -978,8 +966,16 @@
             "object": "ULTIMATE_ENERGY",
             "with": {
               "cardinality": {
-                "verb": "IS",
-                "value": 76.5
+                "verb": "VARY_BY",
+                "object": "POTENTIAL",
+                "value": [
+                  90,
+                  90,
+                  90,
+                  76.5,
+                  76.5,
+                  76.5
+                ]
               }
             }
           }
@@ -1037,16 +1033,8 @@
                     "object": "DAMAGE",
                     "to": "ENEMY",
                     "with": {
-                      "stagger": {
-                        "verb": "IS",
-                        "value": 3
-                      },
-                      "poiseDisplay": {
-                        "verb": "IS",
-                        "value": 15
-                      },
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.32,
@@ -1093,7 +1081,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.32,
@@ -1140,7 +1128,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.32,
@@ -1187,7 +1175,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.32,
@@ -1257,7 +1245,7 @@
                     "to": "ENEMY",
                     "with": {
                       "DAMAGE_MULTIPLIER": {
-                        "verb": "BASED_ON",
+                        "verb": "VARY_BY",
                         "object": "SKILL_LEVEL",
                         "value": [
                           0.32,
@@ -1289,313 +1277,277 @@
   },
   "THERMITE_TRACERS_EMPOWERED": {
     "properties": {
-      "duration": {
-        "value": 2.07,
-        "unit": "SECOND"
-      },
       "enhancementTypes": [
         "EMPOWERED"
       ]
     },
-    "frames": [
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.2,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.53,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": []
-          }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
-        "properties": {
-          "offset": {
-            "value": 0.767,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.2,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
               {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
+                "conditions": [],
+                "effects": []
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.53,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": []
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 0.767,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
                   }
-                }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME",
+              "dataSources": [
+                "END_AXIS"
+              ]
+            },
+            "properties": {
+              "offset": {
+                "value": 2.07,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 20
+                      }
+                    }
+                  },
+                  {
+                    "verb": "DEAL",
+                    "object": "STAGGER",
+                    "toObject": "ENEMY",
+                    "with": {
+                      "value": {
+                        "verb": "IS",
+                        "value": 5
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
-        ]
-      },
-      {
-        "metadata": {
-          "eventComponentType": "FRAME",
-          "dataSources": [
-            "END_AXIS"
-          ]
-        },
+        ],
         "properties": {
-          "offset": {
+          "duration": {
             "value": 2.07,
             "unit": "SECOND"
           }
-        },
-        "clause": [
-          {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "RECOVER",
-                "object": "SKILL_POINT",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 20
-                  }
-                }
-              },
-              {
-                "verb": "DEAL",
-                "object": "STAGGER",
-                "toObject": "ENEMY",
-                "with": {
-                  "value": {
-                    "verb": "IS",
-                    "value": 5
-                  }
-                }
-              }
-            ]
-          }
-        ]
+        }
       }
     ]
   },
-  "statusEvents": [
-    {
-      "properties": {
-        "id": "SCORCHING_FANGS",
-        "name": "Scorching Fangs",
-        "duration": {
-          "value": [
-            15
-          ],
-          "unit": "SECOND"
-        },
-        "statusLevel": {
-          "limit": {
-            "verb": "IS",
-            "value": 1
-          },
-          "statusLevelInteractionType": "RESET"
-        },
-        "element": "HEAT"
-      },
-      "metadata": {
-        "originId": "wulfgard"
-      },
-      "onTriggerClause": [
-        {
-          "conditions": [
-            {
-              "subject": "ENEMY",
-              "verb": "HAVE",
-              "object": "STATUS",
-              "objectId": "COMBUSTION"
-            }
-          ]
-        },
-        {
-          "conditions": [
-            {
-              "subjectDeterminer": "THIS",
-              "subject": "OPERATOR",
-              "verb": "PERFORM",
-              "object": "BATTLE_SKILL"
-            },
-            {
-              "subjectDeterminer": "THIS",
-              "subject": "OPERATOR",
-              "verb": "HAVE",
-              "object": "STATUS",
-              "objectId": "SCORCHING_FANGS"
-            }
-          ]
-        }
-      ]
-    }
-  ],
   "RAPID_FIRE_AKIMBO_FINISHER": {
     "properties": {
       "enhancementTypes": [
         "FINISHER"
       ],
-      "duration": {
-        "value": 1.5,
-        "unit": "SECOND"
-      },
       "name": "Rapid Fire Akimbo (Finisher)",
       "description": "Basic attack performed near a Staggered enemy becomes a finisher that deals massive Heat DMG and recovers some SP."
     },
-    "frames": [
+    "metadata": {
+      "originId": "wulfgard"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1.5,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      4,
-                      4.4,
-                      4.8,
-                      5.2,
-                      5.6,
-                      6,
-                      6.4,
-                      6.8,
-                      7.2,
-                      7.7,
-                      8.3,
-                      9
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.5,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          4,
+                          4.4,
+                          4.8,
+                          5.2,
+                          5.6,
+                          6,
+                          6.4,
+                          6.8,
+                          7.2,
+                          7.7,
+                          8.3,
+                          9
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "FINISHER"
             ]
           }
         ],
-        "frameTypes": [
-          "FINISHER"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1.5,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "wulfgard"
-    }
+    ]
   },
   "RAPID_FIRE_AKIMBO_DIVE": {
     "properties": {
       "enhancementTypes": [
         "DIVE"
       ],
-      "duration": {
-        "value": 1,
-        "unit": "SECOND"
-      },
       "name": "Rapid Fire Akimbo (Dive)",
       "description": "Basic attack performed in mid-air becomes a dive attack that deals Heat DMG to nearby enemies."
     },
-    "frames": [
+    "metadata": {
+      "originId": "wulfgard"
+    },
+    "segments": [
       {
-        "metadata": {
-          "eventComponentType": "FRAME"
-        },
-        "properties": {
-          "offset": {
-            "value": 1,
-            "unit": "SECOND"
-          }
-        },
-        "clause": [
+        "frames": [
           {
-            "conditions": [],
-            "effects": [
-              {
-                "verb": "DEAL",
-                "adjective": "HEAT",
-                "object": "DAMAGE",
-                "to": "ENEMY",
-                "with": {
-                  "DAMAGE_MULTIPLIER": {
-                    "verb": "BASED_ON",
-                    "object": "SKILL_LEVEL",
-                    "value": [
-                      0.8,
-                      0.88,
-                      0.96,
-                      1.04,
-                      1.12,
-                      1.2,
-                      1.28,
-                      1.36,
-                      1.44,
-                      1.54,
-                      1.66,
-                      1.8
-                    ]
-                  }
-                }
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1,
+                "unit": "SECOND"
               }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "DEAL",
+                    "adjective": "HEAT",
+                    "object": "DAMAGE",
+                    "to": "ENEMY",
+                    "with": {
+                      "DAMAGE_MULTIPLIER": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          0.8,
+                          0.88,
+                          0.96,
+                          1.04,
+                          1.12,
+                          1.2,
+                          1.28,
+                          1.36,
+                          1.44,
+                          1.54,
+                          1.66,
+                          1.8
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "frameTypes": [
+              "DIVE"
             ]
           }
         ],
-        "frameTypes": [
-          "DIVE"
-        ]
+        "properties": {
+          "duration": {
+            "value": 1,
+            "unit": "SECOND"
+          }
+        }
       }
-    ],
-    "metadata": {
-      "originId": "wulfgard"
-    }
+    ]
   }
 }

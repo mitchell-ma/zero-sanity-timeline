@@ -34,6 +34,7 @@ export const enum ColumnLabel {
   ORIGINIUM_CRYSTAL    = 'CRYSTAL',
   WILDLAND_TREKKER     = 'WILDLAND TREKKER',
   MESSENGERS_SONG      = "MESSENGER'S SONG",
+  CONTROLLED           = 'CONTROLLED',
   OTHER                = 'OTHER',
 }
 
