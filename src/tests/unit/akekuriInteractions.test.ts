@@ -445,7 +445,13 @@ describe('D. Ultimate (Squad on Me)', () => {
 
   test('D4: Ultimate has no damage frames', () => {
     const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
-    expect(ultimate.segments[1].frames.length).toBe(0);
+    const activeSeg = ultimate.segments[1];
+    // Active segment has frames (SP recovery, Link), but none with damage multipliers
+    const damageFrames = activeSeg.frames.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (f: any) => f.clause?.some((c: any) => c.effects?.some((e: any) => e.verb === 'DEAL' && e.object === 'DAMAGE')),
+    );
+    expect(damageFrames.length).toBe(0);
   });
 
   test('D5: Ultimate skill ID is SQUAD_ON_ME', () => {
