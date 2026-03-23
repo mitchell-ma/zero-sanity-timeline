@@ -725,12 +725,14 @@ export class EventInterpretorController {
     const ev = entry.derivedEvent!;
     const source = { ownerId: ev.sourceOwnerId ?? '', skillName: ev.sourceSkillName ?? '' };
 
+    let created = false;
     if (ev.ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(ev.columnId)) {
       this.controller.createReaction(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
         stacks: ev.stacks, forcedReaction: ev.forcedReaction || ev.isForced, uid: ev.uid,
       });
+      created = true;
     } else {
-      this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
+      created = this.controller.createStatus(ev.columnId, ev.ownerId, entry.frame, eventDuration(ev), source, {
         statusName: ev.name, stackingMode: entry.stackingInteraction, uid: ev.uid,
         event: {
           ...(ev.susceptibility && { susceptibility: ev.susceptibility }),
@@ -740,6 +742,7 @@ export class EventInterpretorController {
     }
 
     // Post-hook: check if the created status has lifecycle clauses (e.g. MF → SH at max stacks)
+    if (!created) return [];
     return this.seedLifecycleTriggers(ev, entry);
   }
 

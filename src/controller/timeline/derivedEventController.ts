@@ -675,7 +675,7 @@ export class DerivedEventController {
     columnId: string, ownerId: string, frame: number,
     durationFrames: number, source: EventSource,
     options?: { statusName?: string; stackingMode?: string; uid?: string; maxStacks?: number; event?: Partial<TimelineEvent> },
-  ) {
+  ): boolean {
     const statusName = options?.statusName ?? columnId;
 
     if (options?.stackingMode === 'RESET') {
@@ -686,7 +686,7 @@ export class DerivedEventController {
     const maxStacks = options?.maxStacks ?? getStatusStackLimit(statusName);
     if (maxStacks != null) {
       const active = this.activeCount(columnId, ownerId, frame);
-      if (active >= maxStacks) return;
+      if (active >= maxStacks) return false;
     }
 
     const ev: TimelineEvent = {
@@ -714,6 +714,7 @@ export class DerivedEventController {
     }
 
     this.addEvent(ev);
+    return true;
   }
 
   /** Create a stagger event (display-only / no-op for now). */
