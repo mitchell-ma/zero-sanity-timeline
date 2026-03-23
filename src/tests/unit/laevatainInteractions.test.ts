@@ -76,7 +76,7 @@
  *   combo events in the timeline yet)
  */
 import { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType, StatusType } from '../../consts/enums';
+import { EventFrameType, EventStatusType, StatusType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, OPERATOR_COLUMNS, SKILL_COLUMNS, INFLICTION_COLUMNS } from '../../model/channels';
 import { buildSequencesFromOperatorJson, DataDrivenSkillEventSequence } from '../../model/event-frames/dataDrivenEventFrames';
 import { wouldOverlapSiblings } from '../../controller/timeline/eventValidator';
@@ -844,7 +844,7 @@ describe('K. Scorching Heart absorbs Antal combo mirrored heat', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     });
 
@@ -912,7 +912,7 @@ describe('L. Freeform infliction + Final Strike absorption', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     };
 
@@ -949,7 +949,7 @@ describe('M. Normal basic attack without external infliction', () => {
             segments: [
         { properties: { duration: 120, name: '1' } },
         { properties: { duration: 120, name: '2' } },
-        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0 }] },
+        { properties: { duration: 120, name: '3' }, frames: [{ offsetFrame: 100, skillPointRecovery: 0, frameTypes: [EventFrameType.FINAL_STRIKE] }] },
       ],
     };
 

@@ -8,7 +8,7 @@
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
 import { TimelineEvent, EventSegmentData, eventDuration } from '../../consts/viewTypes';
-import { ElementType, StatusType } from '../../consts/enums';
+import { ElementType, EventFrameType, StatusType } from '../../consts/enums';
 import { NounType } from '../../dsl/semantics';
 import type { Interaction } from '../../dsl/semantics';
 import { evaluateConditions } from './conditionEvaluator';
@@ -22,8 +22,7 @@ import {
   resolveSusceptibility,
 } from './processInfliction';
 import { SkillPointController } from '../slot/skillPointController';
-import { statusNameToColumnId, getFirstEventFrame } from './triggerMatch';
-import { getFinalStrikeTriggerFrame } from './processComboSkill';
+import { statusNameToColumnId } from './triggerMatch';
 import { genEventUid } from '../timeline/inputEventController';
 import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
 import {
@@ -38,10 +37,10 @@ import {
   ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS,
   INFLICTION_DURATION, REACTION_DURATION,
   FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
-  TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES,
+  TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES, MAX_LINK_STACKS,
   OPERATOR_COLUMNS, SKILL_COLUMNS, REACTION_COLUMN_IDS,
 } from '../../model/channels';
-import { COMMON_OWNER_ID } from '../slot/commonSlotController';
+import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
 import { getAllTriggerAssociations } from '../gameDataController';
 import { classifyEvents } from './inputEventController';
@@ -87,7 +86,37 @@ function collectFrameEffectEntries(
             if (statusEffect.potentialMin != null && pot < statusEffect.potentialMin) continue;
             if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
 
-            if (statusEffect.target.noun === NounType.OPERATOR) {
+            if (statusEffect.target.noun === NounType.TEAM) {
+              // Team-targeted status → shared team-status column on COMMON_OWNER_ID
+              const teamColumnId = COMMON_COLUMN_IDS.TEAM_STATUS;
+              const ultActiveEnd = event.startFrame + eventDuration(event);
+              let statusDuration = statusEffect.durationFrames || Math.max(0, ultActiveEnd - absFrame);
+              if (pot >= 5) statusDuration += P5_LINK_EXTENSION_FRAMES;
+              entries.push({
+                frame: absFrame,
+                priority: PRIORITY.FRAME_EFFECT,
+                type: 'FRAME_EFFECT',
+                statusName: statusEffect.status,
+                columnId: teamColumnId,
+                ownerId: COMMON_OWNER_ID,
+                sourceOwnerId: event.ownerId,
+                sourceSkillName: event.name,
+                maxStacks: MAX_LINK_STACKS,
+                durationFrames: statusDuration,
+                operatorSlotId: event.ownerId,
+                derivedEvent: {
+                  uid: `${event.uid}-team-status-${si}-${fi}`,
+                  id: statusEffect.status,
+                  name: statusEffect.status,
+                  ownerId: COMMON_OWNER_ID,
+                  columnId: teamColumnId,
+                  startFrame: absFrame,
+                  segments: [{ properties: { duration: statusDuration } }],
+                  sourceOwnerId: event.ownerId,
+                  sourceSkillName: event.name,
+                },
+              });
+            } else if (statusEffect.target.noun === NounType.OPERATOR) {
 
               const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
               if (teamColumnId) {
@@ -555,12 +584,127 @@ function collectCryoConsumptionEntries(
   return entries;
 }
 
-// ── PERFORM trigger seeding from input events ──────────────────────────────
+// ── Trigger seeding from input events ────────────────────────────────────────
 
 /**
- * Seed ENGINE_TRIGGER entries from input events using the trigger index.
- * Handles PERFORM triggers (skill events) and APPLY triggers (reactions/statuses
- * placed directly as input events that don't go through queue processing).
+ * Build an ENGINE_TRIGGER QueueFrame from a trigger index entry.
+ */
+function buildTriggerQueueFrame(
+  frame: number, ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry,
+): QueueFrame {
+  const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
+    def: entry.def,
+    operatorId: entry.operatorId,
+    operatorSlotId: entry.operatorSlotId,
+    potential: entry.potential,
+    operatorSlotMap: entry.operatorSlotMap,
+    loadoutProperties: entry.loadoutProperties,
+    haveConditions: entry.haveConditions,
+    triggerEffects: entry.triggerEffects,
+  };
+  return {
+    frame,
+    priority: PRIORITY.ENGINE_TRIGGER,
+    type: 'ENGINE_TRIGGER',
+    statusName: entry.def.properties.id,
+    columnId: '',
+    ownerId: entry.operatorSlotId,
+    sourceOwnerId: ev.ownerId,
+    sourceSkillName: ev.name,
+    maxStacks: 0,
+    durationFrames: 0,
+    operatorSlotId: entry.operatorSlotId,
+    engineTrigger: {
+      frame,
+      sourceOwnerId: ev.ownerId,
+      sourceSkillName: ev.name,
+      ctx: triggerCtx,
+      isEquip: entry.isEquip,
+    },
+  };
+}
+
+/**
+ * Seed PERFORM triggers by iterating frame markers on input events.
+ * Each frame marker's frameTypes determine which PERFORM triggers fire
+ * at that frame's absolute position — no pre-computation of trigger frames.
+ *
+ * Also seeds PERFORM triggers for the first frame of each skill event
+ * (PERFORM BATTLE_SKILL, PERFORM ULTIMATE, etc.).
+ */
+function collectPerformTriggerEntries(
+  events: readonly TimelineEvent[],
+  stops: readonly TimeStopRegion[],
+  triggerIdx: TriggerIndex,
+): QueueFrame[] {
+  const entries: QueueFrame[] = [];
+  const seen = new Set<string>();
+
+  const maybeSeed = (absFrame: number, ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry) => {
+    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}`;
+    if (seen.has(dedupKey)) return;
+    seen.add(dedupKey);
+    entries.push(buildTriggerQueueFrame(absFrame, ev, entry));
+  };
+
+  for (const event of events) {
+    if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
+
+    // Seed generic PERFORM triggers at the event's start frame (PERFORM BATTLE_SKILL, etc.)
+    for (const entry of triggerIdx.matchEvent(event.columnId)) {
+      if (entry.primaryVerb !== 'PERFORM') continue;
+      const obj = entry.primaryCondition.object;
+      // Skip frame-specific PERFORM types — they're seeded from frame markers below
+      if (obj === 'FINAL_STRIKE' || obj === 'FINISHER' || obj === 'DIVE_ATTACK') continue;
+      const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
+      if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
+      maybeSeed(event.startFrame, event, entry);
+    }
+
+    // Iterate frame markers to seed frame-specific PERFORM triggers (FINAL_STRIKE, FINISHER, DIVE)
+    const fStops = foreignStopsFor(event, stops);
+    let cumulativeOffset = 0;
+    for (const seg of event.segments) {
+      if (seg.frames) {
+        for (const frame of seg.frames) {
+          const fTypes = frame.frameTypes;
+          if (!fTypes || fTypes.length === 0) { continue; }
+
+          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
+
+          for (const ft of fTypes) {
+            // Map frameType to PERFORM object for trigger index lookup
+            const performObject = FRAME_TYPE_TO_PERFORM[ft];
+            if (!performObject) continue;
+
+            for (const entry of triggerIdx.matchEvent(event.columnId)) {
+              if (entry.primaryVerb !== 'PERFORM') continue;
+              if (entry.primaryCondition.object !== performObject) continue;
+              const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
+              if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
+              maybeSeed(absFrame, event, entry);
+            }
+          }
+        }
+      }
+      cumulativeOffset += seg.properties.duration;
+    }
+  }
+
+  return entries;
+}
+
+/** Maps EventFrameType to the PERFORM object that triggers on it. */
+const FRAME_TYPE_TO_PERFORM: Record<string, string> = {
+  [EventFrameType.FINAL_STRIKE]: 'FINAL_STRIKE',
+  [EventFrameType.FINISHER]: 'FINISHER',
+  [EventFrameType.DIVE]: 'DIVE_ATTACK',
+};
+
+/**
+ * Seed ENGINE_TRIGGER entries from input events for non-PERFORM triggers.
+ * Handles APPLY/IS/BECOME triggers for reactions/statuses placed directly
+ * as input events that don't go through queue processing.
  */
 function seedInputEventTriggers(
   events: readonly TimelineEvent[],
@@ -569,82 +713,27 @@ function seedInputEventTriggers(
 ) {
   const seen = new Set<string>();
 
-  const seedEntry = (ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry, triggerFrame?: number) => {
-    const frame = triggerFrame ?? ev.startFrame;
-    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
-    if (seen.has(dedupKey)) return;
-    seen.add(dedupKey);
-
-    const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
-      def: entry.def,
-      operatorId: entry.operatorId,
-      operatorSlotId: entry.operatorSlotId,
-      potential: entry.potential,
-      operatorSlotMap: entry.operatorSlotMap,
-      loadoutProperties: entry.loadoutProperties,
-      haveConditions: entry.haveConditions,
-      triggerEffects: entry.triggerEffects,
-    };
-
-    queue.insert({
-      frame,
-      priority: PRIORITY.ENGINE_TRIGGER,
-      type: 'ENGINE_TRIGGER',
-      statusName: entry.def.properties.id,
-      columnId: '',
-      ownerId: entry.operatorSlotId,
-      sourceOwnerId: ev.ownerId,
-      sourceSkillName: ev.name,
-      maxStacks: 0,
-      durationFrames: 0,
-      operatorSlotId: entry.operatorSlotId,
-      engineTrigger: {
-        frame,
-        sourceOwnerId: ev.ownerId,
-        sourceSkillName: ev.name,
-        ctx: triggerCtx,
-        isEquip: entry.isEquip,
-      },
-    });
-  };
-
   for (const ev of events) {
-    // Find all trigger defs whose indexed key matches this event's column
     for (const entry of triggerIdx.matchEvent(ev.columnId)) {
-      // Owner filtering: PERFORM triggers check subject determiner
-      let resolvedFrame: number | undefined;
-      if (entry.primaryVerb === 'PERFORM') {
-        const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
-        if (!isAny && ev.ownerId !== entry.operatorSlotId) continue;
-        // FINISHER/DIVE_ATTACK/FINAL_STRIKE — must match the event's skill type
-        const obj = entry.primaryCondition.object;
-        if (obj === 'FINISHER' && ev.id !== 'FINISHER') continue;
-        if (obj === 'DIVE_ATTACK' && ev.id !== 'DIVE') continue;
-        if (obj === 'FINAL_STRIKE') {
-          if (ev.id === 'FINISHER' || ev.id === 'DIVE') continue;
-          // Final strike fires at the last frame of the last segment
-          const fsFrame = getFinalStrikeTriggerFrame(ev);
-          if (fsFrame == null) continue;
-          resolvedFrame = fsFrame;
-        } else if (obj === 'FINISHER' || obj === 'DIVE_ATTACK') {
-          resolvedFrame = getFirstEventFrame(ev);
-        } else {
-          resolvedFrame = getFirstEventFrame(ev);
-        }
-      }
-      // Target filtering: check the 'to' field on the primary condition
+      // Skip PERFORM triggers — handled by collectPerformTriggerEntries
+      if (entry.primaryVerb === 'PERFORM') continue;
+
+      const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
+      if (seen.has(dedupKey)) continue;
+      seen.add(dedupKey);
+
+      // Target filtering
       const toTarget = entry.primaryCondition.to as string | undefined;
       if (toTarget) {
         if (toTarget === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
         if (toTarget === 'OPERATOR') {
-          // OPERATOR target means the event must be on an operator (not enemy)
           if (ev.ownerId === ENEMY_OWNER_ID) continue;
-          // THIS/ANY determiner
           const toDet = entry.primaryCondition.toDeterminer as string | undefined;
           if (toDet === 'THIS' && ev.ownerId !== entry.operatorSlotId) continue;
         }
       }
-      seedEntry(ev, entry, resolvedFrame);
+
+      queue.insert(buildTriggerQueueFrame(ev.startFrame, ev, entry));
     }
   }
 }
@@ -771,7 +860,9 @@ export function runEventQueue(
   seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
   seed(collectConsumeEntries(registeredEvents, stops, slotOperatorMap));
 
-  // Seed triggers from input events (PERFORM, APPLY reactions/statuses, IS/BECOME)
+  // Seed PERFORM triggers from frame markers (FINAL_STRIKE, FINISHER, DIVE at exact frame positions)
+  seed(collectPerformTriggerEntries(registeredEvents, stops, triggerIdx));
+  // Seed non-PERFORM triggers from input events (APPLY reactions/statuses, IS/BECOME)
   seedInputEventTriggers(registeredEvents, triggerIdx, queue);
 
   // ── Run the queue ─────────────────────────────────────────────────────────
