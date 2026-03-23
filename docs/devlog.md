@@ -1,12 +1,22 @@
 # Devlog
 
 ## 2026-03-22
+- **Frame diamond dragging restored** — you can once again drag the hit-timing diamonds within skill events to fine-tune exactly when each hit lands
+- **Ctrl+click frame multi-select** — hold Ctrl (or Cmd) and click multiple frame diamonds to select them together, useful for comparing hit timings across a skill
+- **No more accidental text selection** — dragging on the timeline (marquee select or moving events) no longer highlights text
 - **Content browser and editor** — browse all operators, weapons, gear sets, and their skills, statuses, talents, and effects in one unified panel with inline editing and a "clone to custom" workflow
 - **Event viewer** — multi-page event inspector showing event details, segment breakdowns, and per-frame hit data with a live timeline preview
 - **Status event editor** — dedicated editor for operator status configs with property, metadata, and clause sections
 - **Human-readable effect descriptions** — status effects and skill clauses now display as plain-language descriptions (e.g. "Apply Focus to the enemy for 10s") instead of raw data
 - **Localization framework** — all UI text now uses a translation system, preparing for future multi-language support
 - **Ultimate energy and skill point tracking improvements** — these resource systems now update incrementally as events are processed, improving accuracy for complex rotations
+- **Damage sheet fold modes** — collapse damage breakdown rows by frame, segment, or full event for easier analysis of long rotations
+- **Marquee selection in damage sheet** — drag to select multiple rows in the damage table and see a summary of selected hits
+- **Operator healing tracking** — the simulation now tracks healing received by operators, including overheal calculations, enabling more accurate buff uptime analysis
+- **Cross-operator talent effects** — talents that affect the triggering operator (e.g. "when any ally uses a skill, heal the attacker") now correctly resolve to the right target
+- **Probability-based effects** — status effects with activation chances (e.g. "30% chance to apply X on hit") are now supported with per-hit resolution
+- **Improved skill event display** — skill blocks on the timeline now show distinct visual styling for each phase (animation, active, stasis, cooldown) and display warning icons for validation issues
+- **Drag constraint improvements** — dragging events on the timeline now handles edge cases better, including overlapping events and resource zone boundaries
 - Updated skill data, status configs, and gear stats across all operators and equipment
 - Reorganized tests into unit and integration categories
 
