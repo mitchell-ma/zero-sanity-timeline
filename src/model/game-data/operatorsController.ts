@@ -4,6 +4,7 @@
  *
  * Auto-discovers operators/*-operator.json via require.context.
  */
+import { checkKeys, VALID_METADATA_KEYS } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -54,8 +55,6 @@ const VALID_TOP_KEYS = new Set([
   'potentials', 'statsByLevel', 'talents', 'talentEffects', 'metadata',
 ]);
 
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
-
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
 const VALID_TALENT_ENTRY_KEYS = new Set(['id', 'name', 'maxLevel']);
 const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute', 'maxLevel']);
@@ -67,13 +66,6 @@ const VALID_TALENT_EFFECT_KEYS = new Set([
 
 const VALID_LEVEL_ENTRY_KEYS = new Set(['level', 'operatorPromotionStage', 'attributes']);
 
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 /** Validate a raw operator JSON entry. Returns an array of error messages (empty = valid). */
 export function validateOperator(json: Record<string, unknown>): string[] {

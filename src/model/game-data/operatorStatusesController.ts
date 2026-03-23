@@ -8,6 +8,7 @@
 import { EventType, EventCategoryType } from '../../consts/enums';
 import type { ClauseEffect, ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesController';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
 
 // ── Trigger clause type ─────────────────────────────────────────────────────
 
@@ -40,26 +41,14 @@ interface StatusSegment {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'with', 'value', 'cardinalityConstraint', 'effects']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value', 'duration']);
-const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'value', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);
-const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_SEGMENT_KEYS = new Set(['metadata', 'properties', 'clause', 'frames']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'element', 'target', 'targetDeterminer', 'to', 'toDeterminer', 'duration', 'stacks', 'enhancementTypes', 'minPotential', 'eventType', 'eventCategoryType']);
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'onEntryClause', 'onExitClause', 'segments', 'properties', 'metadata']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -133,7 +122,7 @@ export function validateOperatorStatus(json: Record<string, unknown>): string[] 
   if (props.stacks) {
     const sl = props.stacks as Record<string, unknown>;
     errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.stacks'));
-    if (sl.limit) errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_LIMIT_KEYS, 'properties.stacks.limit'));
+    if (sl.limit) errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_VALUE_NODE_KEYS, 'properties.stacks.limit'));
   }
 
   const meta = json.metadata as Record<string, unknown> | undefined;

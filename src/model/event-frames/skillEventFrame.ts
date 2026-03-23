@@ -1,4 +1,4 @@
-import { ElementType, FrameDependencyType, StatusType } from "../../consts/enums";
+import { ElementType, StatusType } from "../../consts/enums";
 import type { DslTarget } from "../../dsl/semantics";
 
 /** Arts infliction applied by a frame tick. */
@@ -145,8 +145,8 @@ export abstract class SkillEventFrame {
   /** Ultimate gauge gained on this frame, or 0. */
   getGaugeGain(): number { return 0; }
 
-  /** Frame dependency types (e.g. PREVIOUS_FRAME for cumulative DoT). */
-  getDependencyTypes(): readonly FrameDependencyType[] { return []; }
+  /** Frame dependency types. */
+  getDependencyTypes(): readonly string[] { return []; }
 
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit = false;

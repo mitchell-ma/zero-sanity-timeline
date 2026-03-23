@@ -155,6 +155,11 @@
                         "of": "OPERATOR"
                       }
                     }
+                  },
+                  {
+                    "verb": "PERFORM",
+                    "object": "FINAL_STRIKE",
+                    "to": "ENEMY"
                   }
                 ]
               }

@@ -255,11 +255,11 @@ describe('clampDeltaByComboWindow — invalid at drag start', () => {
   test('clamps within window after transition (comboRevalidated)', () => {
     // After transition, invalidSet no longer has c1, but comboRevalidated does.
     // startFrame=50 is outside all windows, so origWindow lookup fails.
-    // comboRevalidated snaps to nearest window boundary.
+    // comboRevalidated locks to the window the event entered (w1).
     const invalidSet = new Set<string>();
-    const comboRevalidated = new Set<string>(['c1']);
+    const comboRevalidated = new Map<string, string>([['c1', 'w1']]);
 
-    // target=210, outside window → snap to nearest window boundary (end-1 = 199)
+    // target=210, outside window → clamp to locked window boundary (end-1 = 199)
     const result1 = clampDeltaByComboWindow(160, 'c1', events, startFrame, processedEvents, invalidSet, comboRevalidated);
     expect(startFrame + result1).toBe(199);
 

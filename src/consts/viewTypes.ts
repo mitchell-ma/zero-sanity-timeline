@@ -1,4 +1,4 @@
-import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
+import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, SegmentType, TimeDependency } from './enums';
 import type { DslTarget } from '../dsl/semantics';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
@@ -142,8 +142,8 @@ export interface EventFrameMarker {
   dealDamage?: FrameDealDamage;
   /** Frame type classifications (defaults to [NORMAL]). */
   frameTypes?: EventFrameType[];
-  /** Frame dependency types (e.g. PREVIOUS_FRAME for cumulative DoT). */
-  dependencyTypes?: FrameDependencyType[];
+  /** Frame dependency types. */
+  dependencyTypes?: string[];
   /** Whether this frame scored a critical hit (runtime state for simulation mode). */
   isCrit?: boolean;
   /** Template SP recovery for this frame when it is the final strike (from model data). */

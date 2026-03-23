@@ -7,7 +7,7 @@
  * queue entry construction.
  */
 import { TimelineEvent, EventSegmentData, eventEndFrame, durationSegment, setEventDuration } from '../../consts/viewTypes';
-import { CritMode, EventStatusType } from '../../consts/enums';
+import { CritMode, EventStatusType, StackInteractionType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { ENEMY_OWNER_ID, ELEMENT_TO_INFLICTION_COLUMN, REACTION_COLUMNS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -1361,7 +1361,7 @@ export function evaluateEngineTrigger(
   const maxStacks = eqLimitMap ? getMaxStacks(eqLimitMap, ctx.potential) : 1;
   // RESET stacking replaces existing — bypass cap check
   const stackingMode = outputDef.properties.stacks?.interactionType;
-  if (stackingMode !== 'RESET' && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
+  if (stackingMode !== StackInteractionType.RESET && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
 
   // Enforce cooldown: skip if within cooldownSeconds of the last proc
   const cdSecs = outputDef.properties.cooldownSeconds;

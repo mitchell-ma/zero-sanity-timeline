@@ -20,7 +20,7 @@ export interface DragState {
   revalidated: Set<string>; // events that transitioned invalid→valid mid-drag — must not skip self-caused zones
   overlapInvalidAtDragStart: Set<string>; // events that were already overlapping siblings at drag start — allowed free movement until non-overlapping
   overlapRevalidated: Set<string>; // overlap-invalid events that reached a valid position mid-drag — must now respect overlap clamping
-  comboRevalidated: Set<string>; // combo-invalid events that entered a window mid-drag — must stay within a window
+  comboRevalidated: Map<string, string>; // combo-invalid events that entered a window mid-drag — maps eventUid → windowUid
 }
 
 /**
@@ -116,14 +116,6 @@ export function clampDragDelta(
       clampedDelta = clampDeltaByResourceZones(clampedDelta, eid, events, orig, resZones, invalidSet, revalidated);
     }
 
-    // Combo window clamping: keep combo events within their activation window.
-    // Events that were already outside windows at drag start get free movement.
-    const comboReval = dragState.comboRevalidated;
-    for (const eid of eventUids) {
-      const orig = startFrames.get(eid) ?? 0;
-      clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, events, orig, events, invalidSet, comboReval);
-    }
-
     // Overlap clamping: prevent events from overlapping siblings.
     // Events that were already overlapping at drag start get free movement
     // until they reach a non-overlapping position, then clamping kicks in.
@@ -133,6 +125,15 @@ export function clampDragDelta(
     for (const eid of eventUids) {
       const orig = startFrames.get(eid) ?? 0;
       clampedDelta = clampDeltaByOverlap(clampedDelta, eid, events, orig, dragSet, undefined, overlapInvalid, overlapReval);
+    }
+
+    // Combo window clamping runs last — it has final authority.
+    // Other validators (overlap, resource) may have pushed the position;
+    // combo window brings it back within the activation window.
+    const comboReval = dragState.comboRevalidated;
+    for (const eid of eventUids) {
+      const orig = startFrames.get(eid) ?? 0;
+      clampedDelta = clampDeltaByComboWindow(clampedDelta, eid, events, orig, events, invalidSet, comboReval);
     }
   }
 

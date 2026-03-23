@@ -104,7 +104,7 @@
       "id": "SCORCHING_HEART",
       "target": "OPERATOR",
       "targetDeterminer": "THIS",
-      "name": "Scorching Heart",
+      "name": "Scorching Heart (Talent)",
       "duration": {
         "value": {
           "verb": "IS",

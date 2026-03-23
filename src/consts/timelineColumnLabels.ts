@@ -30,11 +30,12 @@ export const enum ColumnLabel {
   STAGGER              = 'STAGGER',
   STAGGER_FRAILTY      = 'STAGGER FRAILTY',
   SCORCHING_FANGS      = 'SCORCHING FANGS',
-  SCORCHING_HEART      = 'SCORCHING HEART',
+  SCORCHING_HEART      = 'SCORCHING HEART (TALENT)',
   SCORCHING_HEART_EFFECT = 'SCORCHING HEART',
   ORIGINIUM_CRYSTAL    = 'CRYSTAL',
   WILDLAND_TREKKER     = 'WILDLAND TREKKER',
   MESSENGERS_SONG      = "MESSENGER'S SONG",
+  ACTION               = 'ACTION',
   CONTROLLED           = 'CONTROLLED',
   OTHER                = 'OTHER',
 }
@@ -111,6 +112,12 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   // Stagger status events
   STAGGER_NODE:         t('infliction.STAGGER_NODE'),
   STAGGER:              t('infliction.STAGGER'),
+  // Enemy actions
+  AOE_PHYSICAL:         t('enemyAction.AOE_PHYSICAL'),
+  AOE_HEAT:             t('enemyAction.AOE_HEAT'),
+  AOE_CRYO:             t('enemyAction.AOE_CRYO'),
+  AOE_NATURE:           t('enemyAction.AOE_NATURE'),
+  AOE_ELECTRIC:         t('enemyAction.AOE_ELECTRIC'),
 };
 
 // ── Reaction labels & micro-columns ─────────────────────────────────────────

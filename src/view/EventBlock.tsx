@@ -140,6 +140,8 @@ interface EventBlockProps {
   isAutoFinisher?: boolean;
   /** Pre-computed layout from the controller (real-time positions). */
   eventLayout?: EventLayout;
+  /** Additional inline styles for the event wrapper (e.g. overlap lane positioning). */
+  wrapStyle?: React.CSSProperties;
 }
 
 function hexAlpha(hex: string, alpha: number): string {
@@ -176,6 +178,7 @@ function EventBlock({
   comboWarning = null,
   isAutoFinisher = false,
   eventLayout,
+  wrapStyle,
   axis = VERTICAL_AXIS,
 }: EventBlockProps) {
   const { uid, startFrame, segments } = event;
@@ -336,7 +339,7 @@ function EventBlock({
     <div
       className={wrapClass}
       data-event-uid={uid}
-      style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight } as React.CSSProperties}
+      style={{ [axis.framePos]: topPx, [axis.frameSize]: totalHeight, ...wrapStyle } as React.CSSProperties}
       onContextMenu={(e) => onContextMenu(e, uid)}
       onMouseDown={(e) => {
         if (e.button === 0) { e.stopPropagation(); if (!notDraggable) onDragStart(e, uid, startFrame); }

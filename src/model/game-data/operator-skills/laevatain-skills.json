@@ -551,6 +551,11 @@
                         "of": "OPERATOR"
                       }
                     }
+                  },
+                  {
+                    "verb": "PERFORM",
+                    "object": "FINAL_STRIKE",
+                    "to": "ENEMY"
                   }
                 ]
               }
@@ -1486,6 +1491,12 @@
     ]
   },
   "TWILIGHT": {
+    "activationClause": [{
+      "conditions": [{
+        "subjectDeterminer": "THIS", "subject": "OPERATOR",
+        "verb": "IS", "object": "CONTROLLED"
+      }]
+    }],
     "segments": [
       {
         "metadata": {

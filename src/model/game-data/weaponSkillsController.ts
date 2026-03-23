@@ -8,25 +8,15 @@
  */
 import type { Interaction } from '../../dsl/semantics';
 import type { ClauseEffect, ClausePredicate } from './weaponStatusesController';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'objectId', 'to', 'toDeterminer', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['multiplier', 'value']);
-const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'element']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description']);
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'onTriggerClause', 'properties', 'metadata']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);

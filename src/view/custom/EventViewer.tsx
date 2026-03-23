@@ -84,9 +84,7 @@ const CLAUSE_TABS_SKILL = [
   { key: 'onTriggerClause', label: t('eventViewer.tab.onTrigger') },
 ] as const;
 
-const DEPENDENCY_OPTIONS = [
-  { value: 'PREVIOUS_FRAME', label: t('eventViewer.dependency.previousFrame') },
-];
+const DEPENDENCY_OPTIONS: { value: string; label: string }[] = [];
 
 function detectKind(value: EventJson): EventKind {
   const props = value.properties as Record<string, JsonValue> | undefined;

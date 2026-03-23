@@ -12,21 +12,13 @@ import type { Interaction } from '../../dsl/semantics';
 import type { ClausePredicate, StacksConfig, DurationConfig } from './weaponStatusesController';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
 
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
+
 // ── Shared validation helpers ───────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'objectId', 'to', 'toDeterminer', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value', 'multiplier', 'staggerValue']);
-const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_TRIGGER_CLAUSE_KEYS = new Set(['conditions', 'effects']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -61,7 +53,6 @@ function validateClause(clause: Record<string, unknown>, path: string): string[]
 
 const VALID_SET_EFFECT_TOP_KEYS = new Set(['onTriggerClause', 'properties', 'metadata']);
 const VALID_SET_EFFECT_PROPS_KEYS = new Set(['type', 'id', 'name', 'rarity', 'piecesRequired', 'description', 'eventType', 'eventCategoryType']);
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 
 /** Validate a raw gear set effect JSON entry. */
 export function validateGearSetEffect(json: Record<string, unknown>): string[] {
@@ -95,7 +86,6 @@ export function validateGearSetEffect(json: Record<string, unknown>): string[] {
 const VALID_STATUS_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
 const VALID_STATUS_PROPS_KEYS = new Set(['type', 'id', 'name', 'description', 'duration', 'stacks', 'cooldownSeconds', 'eventType', 'eventCategoryType']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
-const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 
 /** Validate a raw gear status JSON entry. */
@@ -124,7 +114,7 @@ export function validateGearStatus(json: Record<string, unknown>): string[] {
     errors.push(...checkKeys(sl, VALID_STATUS_LEVEL_KEYS, 'properties.stacks'));
     if (typeof sl.interactionType !== 'string') errors.push('properties.stacks.interactionType: must be a string');
     if (sl.limit) {
-      errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_LIMIT_KEYS, 'properties.stacks.limit'));
+      errors.push(...checkKeys(sl.limit as Record<string, unknown>, VALID_VALUE_NODE_KEYS, 'properties.stacks.limit'));
       errors.push(...validateValueNode(sl.limit as Record<string, unknown>, 'properties.stacks.limit'));
     }
   }

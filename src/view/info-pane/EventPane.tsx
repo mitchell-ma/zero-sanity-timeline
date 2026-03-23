@@ -1050,14 +1050,8 @@ function EventPane({
                   (stats?.operator.potential ?? 0) as Potential,
                   1,
                 );
-                if (tick1 != null && tick1 < tick0) {
-                  // PREVIOUS_FRAME dependency: tick0 is base hit, tick1 is DoT per tick
-                  perTickBase = tick0;
-                  perTickIncrement = tick1;
-                } else {
-                  perTickBase = tick0;
-                  perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
-                }
+                perTickBase = tick0;
+                perTickIncrement = tick1 != null ? tick1 - tick0 : 0;
                 perTickFrames = overallMaxFrames;
               }
             }

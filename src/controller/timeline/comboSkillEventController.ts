@@ -24,7 +24,7 @@ export class ComboSkillEventController {
    * Find the combo activation window containing `frame` for a given owner.
    * Returns the window event or undefined if none matches.
    */
-  private static findWindowAt(
+  static findWindowAt(
     ownerId: string,
     frame: number,
     processedEvents: TimelineEvent[],
@@ -35,6 +35,12 @@ export class ComboSkillEventController {
       if (frame >= w.startFrame && frame < endFrame) return w;
     }
     return undefined;
+  }
+
+  /** Clamp a frame to stay within a specific combo activation window. */
+  static clampToWindow(frame: number, window: TimelineEvent): number {
+    const wEnd = comboWindowEndFrame(window);
+    return Math.max(window.startFrame, Math.min(wEnd - 1, frame));
   }
 
   /**

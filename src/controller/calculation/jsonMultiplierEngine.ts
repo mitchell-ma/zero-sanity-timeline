@@ -71,8 +71,6 @@ interface CategoryMultiplierCache {
   perFrameMultipliers: number[][][];
   /** For ramping skills: DAMAGE_MULTIPLIER_INCREMENT per frame (the per-tick increment). */
   perFrameScale2?: number[][][];
-  /** Whether the skill uses PREVIOUS_FRAME dependency (cumulative DoT). */
-  hasPreviousFrameDependency?: boolean;
 }
 
 const cache = new Map<string, CategoryMultiplierCache>();
@@ -166,15 +164,10 @@ function buildCategoryCache(operatorId: string, category: string): CategoryMulti
   const hasAnyMultiplier = segmentMultipliers.some(seg => seg.some(m => m !== 0));
   if (!hasAnyMultiplier) return null;
 
-  // Detect PREVIOUS_FRAME dependency from skill-level or frame-level properties
-  const hasPrevDep = skillCat.properties?.dependencyTypes?.includes('PREVIOUS_FRAME')
-    || (skillCat.frames ?? []).some(f => f.properties?.dependencyTypes?.includes('PREVIOUS_FRAME'));
-
   return {
     segmentMultipliers,
     perFrameMultipliers,
     ...(hasScale2 && { perFrameScale2 }),
-    ...(hasPrevDep && { hasPreviousFrameDependency: true }),
   };
 }
 
@@ -293,11 +286,7 @@ export function getSkillMultiplier(
 /**
  * Get per-tick multiplier for skills with non-uniform per-frame damage.
  *
- * Supports two models:
- * 1. Legacy ramping: DAMAGE_MULTIPLIER_INCREMENT (base + increment × tickIndex)
- * 2. PREVIOUS_FRAME dependency: cumulative chain (frame0_mult + dotMult × tickIndex)
- *    This produces the same result as the dependency chain when all multiplier
- *    components are equal across frames (non-simulation crit modes).
+ * Supports ramping via DAMAGE_MULTIPLIER_INCREMENT (base + increment × tickIndex).
  *
  * Returns null for skills with uniform frame distribution (most skills).
  */
@@ -317,7 +306,6 @@ export function getFrameMultiplier(
   const segIdx = 0; // Per-tick is only used for single-segment skills
   const potMod = getPotentialMultiplier(operatorId, skillName, potential);
 
-  // Model 1: Legacy ramping with DAMAGE_MULTIPLIER_INCREMENT
   if (data.perFrameScale2) {
     const frameScale2 = data.perFrameScale2[segIdx];
     if (frameScale2?.[0]?.[level - 1]) {
@@ -326,16 +314,6 @@ export function getFrameMultiplier(
       const tickMult = baseAtk + increment * frameIndex;
       return tickMult * potMod;
     }
-  }
-
-  // Model 2: PREVIOUS_FRAME dependency chain — return this frame's own multiplier only.
-  // The dependency chain accumulation happens in damageTableBuilder where each frame
-  // gets its own crit resolution.
-  if (data.hasPreviousFrameDependency) {
-    const frameMults = data.perFrameMultipliers[segIdx];
-    if (!frameMults?.[frameIndex]) return null;
-    const ownMult = frameMults[frameIndex][level - 1];
-    return ownMult * potMod;
   }
 
   return null;

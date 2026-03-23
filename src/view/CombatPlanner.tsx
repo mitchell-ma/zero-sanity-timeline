@@ -21,7 +21,7 @@ import {
   TOTAL_FRAMES,
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
-import { SKILL_COLUMNS, OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
+import { SKILL_COLUMNS, OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID, ENEMY_ACTION_COLUMN_ID } from '../model/channels';
 import { TimelineSourceType, InteractionModeType, CombatSkillType } from '../consts/enums';
 import {
   Operator,
@@ -497,11 +497,14 @@ export default function CombatPlanner({
         values.push(GROUP_FR * w / gw.totalWeight);
       }
     }
-    for (let i = 0; i < enemyColCount; i++) {
-      values.push(ENEMY_FR / enemyColCount);
+    const enemyCols = columns.filter((c): c is MiniTimeline => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY);
+    const enemyWeights = enemyCols.map((c) => c.columnId === ENEMY_ACTION_COLUMN_ID ? 1 : 3);
+    const totalEnemyWeight = enemyWeights.reduce((s, w) => s + w, 0);
+    for (const w of enemyWeights) {
+      values.push(ENEMY_FR * w / totalEnemyWeight);
     }
     return values;
-  }, [commonColCount, slotGroupWeights, enemyColCount]);
+  }, [commonColCount, slotGroupWeights, columns]);
 
   const colFrStrings = colFrValues.map((fr) => `minmax(0, ${fr}fr)`);
   const gridCols = `${TIME_AXIS_WIDTH}px ${colFrStrings.join(' ')}`;
@@ -1211,7 +1214,7 @@ export default function CombatPlanner({
         : resourceZonesRef.current;
       const invalidSet = computeInvalidSet(draggedEvents, resourceZonesRef.current, eventsRef.current);
       const overlapInvalid = computeOverlapInvalidSet(draggedEvents, eventsRef.current);
-      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
+      dragRef.current = { primaryId: eventUid, eventUids: draggedIds, startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds(draggedIds), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Map() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     } else {
@@ -1227,7 +1230,7 @@ export default function CombatPlanner({
       const draggedEv = events.find((e) => e.uid === eventUid);
       const invalidSet = draggedEv ? computeInvalidSet([draggedEv], resourceZonesRef.current, eventsRef.current) : new Set<string>();
       const overlapInvalid = draggedEv ? computeOverlapInvalidSet([draggedEv], eventsRef.current) : new Set<string>();
-      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Set() };
+      dragRef.current = { primaryId: eventUid, eventUids: [eventUid], startMouseFrame: e[axis.clientFrame], startFrames, monotonicBounds: getMonotonicBounds([eventUid]), lastAppliedDelta: 0, resourceZonesSnapshot: resZones, invalidAtDragStart: invalidSet, revalidated: new Set(), overlapInvalidAtDragStart: overlapInvalid, overlapRevalidated: new Set(), comboRevalidated: new Map() };
       setDraggingIds(dragSet);
       setDragZonesSnapshot(resZones);
     }
@@ -2057,6 +2060,15 @@ export default function CombatPlanner({
                   visColEvents.map((ev) => {
                     const pres = computeEventPresentation(ev, col, presentationOpts);
                     const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
+                    const ol = viewModel?.overlapLanes.get(ev.uid);
+                    const laneStyle = ol && ol.laneCount > 1 ? {
+                      left: `${(ol.lane / ol.laneCount) * 100}%`,
+                      right: 'auto',
+                      width: `${(1 / ol.laneCount) * 100}%`,
+                      paddingLeft: 2,
+                      paddingRight: 2,
+                      boxSizing: 'border-box' as const,
+                    } : undefined;
                     return (
                       <EventBlock
                         key={ev.uid}
@@ -2064,6 +2076,7 @@ export default function CombatPlanner({
                         selected={isWindow ? false : selectedIds.has(ev.uid)}
                         hovered={isWindow ? false : hoveredId === ev.uid}
                         hoverFrame={isWindow ? undefined : draggingIds?.has(ev.uid) ? null : hoverFrame}
+                        wrapStyle={laneStyle}
                       />
                     );
                   })

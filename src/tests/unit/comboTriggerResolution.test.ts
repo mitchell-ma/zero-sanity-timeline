@@ -513,7 +513,59 @@ describe('D. Antal battle skill → Focus, Akekuri battle skill → infliction t
     expect(eventDuration(antalWindows[0])).toBe(720);
   });
 
-  test('D5: Antal self-infliction does not trigger her own combo window', () => {
+  test('D5: Antal combo window not extended by its own combo time-stop', () => {
+    // Focus active for 60s, infliction at frame 400 triggers a 720-frame window.
+    // Antal combo placed inside that window — its animation is a time-stop
+    // but should NOT extend the window duration.
+    const focus = makeEvent({
+      uid: 'antal-focus',
+      name: 'Focus',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'focus',
+      startFrame: 0,
+      segments: [{ properties: { duration: 60 * FPS } }],
+      sourceOwnerId: ANTAL_SLOT,
+    });
+
+    const heatInfliction = makeEvent({
+      uid: 'akekuri-heat-inf',
+      name: 'heatInfliction',
+      ownerId: ENEMY_OWNER_ID,
+      columnId: 'heatInfliction',
+      startFrame: 400,
+      segments: [{ properties: { duration: 10 * FPS } }],
+      sourceOwnerId: SLOT_AKEKURI,
+    });
+
+    // Antal combo inside the window — has a REAL_TIME animation segment (time-stop)
+    const antalCombo = makeEvent({
+      uid: 'antal-combo-500',
+      name: 'EMP_TEST_SITE',
+      ownerId: ANTAL_SLOT,
+      columnId: SKILL_COLUMNS.COMBO,
+      startFrame: 500,
+      comboTriggerColumnId: 'heatInfliction',
+      segments: [
+        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: Math.round(0.5 * FPS), timeDependency: TimeDependency.REAL_TIME } },
+        { properties: { duration: Math.round(0.8 * FPS) } },
+        { properties: { name: 'Cooldown', duration: 10 * FPS } },
+      ],
+    });
+
+    const processed = processCombatSimulation(
+      [focus, heatInfliction, antalCombo],
+      undefined, undefined, akekuriAntalWirings(),
+    );
+
+    const antalWindows = processed.filter(
+      (e) => e.columnId === COMBO_WINDOW_COLUMN_ID && e.ownerId === ANTAL_SLOT,
+    );
+    expect(antalWindows.length).toBe(1);
+    // Window duration should be exactly 720, NOT 720 + combo animation duration
+    expect(eventDuration(antalWindows[0])).toBe(720);
+  });
+
+  test('D6: Antal self-infliction does not trigger her own combo window', () => {
     // Focus is active, but the infliction comes from Antal herself
     const focus = makeEvent({
       uid: 'antal-focus',

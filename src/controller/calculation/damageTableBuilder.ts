@@ -6,7 +6,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, FrameDependencyType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -290,9 +290,6 @@ export function buildDamageTableRows(
         if (seg.frames) {
           // Max frames from default segment (not current, which may have deletions)
           const maxFrames = defaultSegs?.[si]?.frames?.length ?? seg.frames.length;
-          // Track resolved damage per frame index for PREVIOUS_FRAME dependency chain
-          const resolvedFrameDamage: (number | null)[] = [];
-
           for (let fi = 0; fi < seg.frames.length; fi++) {
             const frame = seg.frames[fi];
             const absFrame = frame.absoluteFrame ?? (ev.startFrame + segmentFrameOffset + frame.offsetFrame);
@@ -522,19 +519,8 @@ export function buildDamageTableRows(
                 };
 
                 damage = calculateDamage(params);
-
-                // PREVIOUS_FRAME dependency: accumulate previous frame's resolved damage
-                const hasPrevDep = frame.dependencyTypes?.includes(FrameDependencyType.PREVIOUS_FRAME);
-                if (hasPrevDep && fi > 0) {
-                  const prevDamage = resolvedFrameDamage[fi - 1];
-                  if (prevDamage != null && damage != null) {
-                    damage += prevDamage;
-                  }
-                }
               }
             }
-
-            resolvedFrameDamage[fi] = damage;
 
             rows.push({
               key: `${ev.uid}-s${si}-f${fi}`,

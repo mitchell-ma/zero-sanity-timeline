@@ -40,6 +40,7 @@ export class CommonSlotController {
   readonly hp: HPController;
 
   private readonly teamStatusSubtimeline: Subtimeline;
+  private readonly teamStatusSubtimelines = new Map<string, Subtimeline>();
   private readonly changeListeners = new Set<CommonSlotChangeListener>();
 
   constructor() {
@@ -58,7 +59,7 @@ export class CommonSlotController {
       case COMMON_COLUMN_IDS.SKILL_POINTS: return this.skillPoints.getSubtimeline();
       case COMMON_COLUMN_IDS.STAGGER: return this.stagger.getSubtimeline();
       case COMMON_COLUMN_IDS.TEAM_STATUS: return this.teamStatusSubtimeline;
-      default: return undefined;
+      default: return this.getOrCreateTeamStatusSubtimeline(columnId);
     }
   }
 
@@ -67,7 +68,18 @@ export class CommonSlotController {
     map.set(COMMON_COLUMN_IDS.SKILL_POINTS, this.skillPoints.getSubtimeline());
     map.set(COMMON_COLUMN_IDS.STAGGER, this.stagger.getSubtimeline());
     map.set(COMMON_COLUMN_IDS.TEAM_STATUS, this.teamStatusSubtimeline);
+    this.teamStatusSubtimelines.forEach((st, id) => map.set(id, st));
     return map;
+  }
+
+  /** Lazily create a subtimeline for a team status column. */
+  private getOrCreateTeamStatusSubtimeline(columnId: string): Subtimeline {
+    let st = this.teamStatusSubtimelines.get(columnId);
+    if (!st) {
+      st = new Subtimeline(COMMON_OWNER_ID, columnId);
+      this.teamStatusSubtimelines.set(columnId, st);
+    }
+    return st;
   }
 
   // ── Column generation ───────────────────────────────────────────────────

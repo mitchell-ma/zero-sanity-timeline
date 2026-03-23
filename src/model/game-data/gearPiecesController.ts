@@ -7,23 +7,14 @@
  */
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS } from './validationUtils';
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'toDeterminer', 'to', 'with']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
-const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'type', 'gearSet']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);

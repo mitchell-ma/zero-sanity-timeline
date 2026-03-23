@@ -295,9 +295,12 @@ export function useApp() {
   const [customSkillVersion, setCustomSkillVersion] = useState(0);
   const bumpCustomSkillVersion = useCallback(() => setCustomSkillVersion((v) => v + 1), []);
 
+  // CombatLoadout must be created before buildColumns so team status IDs are available.
+  const { combatLoadout } = useCombatLoadout(SLOT_IDS, slots);
+
   const columns = useMemo(
-    () => buildColumns(slots, enemy, visibleSkills),
-    [slots, enemy, visibleSkills, customSkillVersion], // eslint-disable-line react-hooks/exhaustive-deps
+    () => buildColumns(slots, enemy, visibleSkills, combatLoadout.getTeamStatusIds()),
+    [slots, enemy, visibleSkills, customSkillVersion, combatLoadout], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Keep a ref of valid column pairs for use in event handlers
@@ -415,11 +418,6 @@ export function useApp() {
     const model = getModelEnemy(enemy.id);
     return model ? model.getHp() : null;
   }, [enemy.id]);
-
-  // CombatLoadout must be created before processCombatSimulation so we can
-  // pass SP and UE controllers into the pipeline.
-  const { combatLoadout } =
-    useCombatLoadout(SLOT_IDS, slots, validEvents);
 
   const processedEvents = useMemo(
     () => {

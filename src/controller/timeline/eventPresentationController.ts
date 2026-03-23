@@ -344,6 +344,14 @@ export interface MicroPosition {
   color: string;
 }
 
+/** Overlap lane assignment for events that share temporal space within a column. */
+export interface OverlapLane {
+  /** 0-based lane index. */
+  lane: number;
+  /** Total number of concurrent lanes at this event's position. */
+  laneCount: number;
+}
+
 export interface ColumnViewModel {
   column: Column;
   /** Events for this column: filtered, sorted, and (for derived columns) truncated. */
@@ -352,6 +360,8 @@ export interface ColumnViewModel {
   microPositions: Map<string, MicroPosition>;
   /** Status view overrides for events (eventUid → label/visual override). */
   statusOverrides: Map<string, StatusViewOverride>;
+  /** Overlap lane assignments for non-micro columns (eventUid → lane info). */
+  overlapLanes: Map<string, OverlapLane>;
 }
 
 /**
@@ -443,7 +453,6 @@ function computeMicroPositions(
 
   if (col.microColumnAssignment === 'dynamic-split') {
     const mcById = new Map(col.microColumns.map((mc) => [mc.id, mc]));
-    const MAX_SLOT_FRAC = 1 / 3;
 
     // True greedy left-pack: assign each event to the lowest slot index
     // where no different-type event overlaps. Same-type events share slots.
@@ -454,6 +463,8 @@ function computeMicroPositions(
     const slots: { type: string; start: number; end: number }[][] = [];
     // type → assigned slot index (same-type events reuse their type's slot)
     const typeSlots = new Map<string, number>();
+    // eventUid → assigned slot index (for second pass)
+    const eventSlots = new Map<string, number>();
 
     for (const ev of sorted) {
       const evStart = ev.startFrame;
@@ -472,11 +483,7 @@ function computeMicroPositions(
         }
         if (!conflict) {
           slots[existingSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
-          positions.set(ev.uid, {
-            leftFrac: existingSlot * MAX_SLOT_FRAC,
-            widthFrac: MAX_SLOT_FRAC,
-            color: mcById.get(ev.columnId)?.color ?? col.color,
-          });
+          eventSlots.set(ev.uid, existingSlot);
           continue;
         }
       }
@@ -499,9 +506,18 @@ function computeMicroPositions(
 
       slots[assignedSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
       typeSlots.set(ev.columnId, assignedSlot);
+      eventSlots.set(ev.uid, assignedSlot);
+    }
+
+    // Compute widthFrac from actual slot count so all slots fit within the column
+    const slotCount = Math.max(slots.length, 1);
+    const slotFrac = 1 / slotCount;
+
+    for (const ev of sorted) {
+      const slot = eventSlots.get(ev.uid) ?? 0;
       positions.set(ev.uid, {
-        leftFrac: assignedSlot * MAX_SLOT_FRAC,
-        widthFrac: MAX_SLOT_FRAC,
+        leftFrac: slot * slotFrac,
+        widthFrac: slotFrac,
         color: mcById.get(ev.columnId)?.color ?? col.color,
       });
     }
@@ -540,12 +556,78 @@ function computeMicroPositions(
 }
 
 /**
+ * Compute overlap lane assignments for events in a single column.
+ * Events that overlap temporally are assigned to side-by-side lanes.
+ */
+function computeOverlapLanes(colEvents: TimelineEvent[]): Map<string, OverlapLane> {
+  const result = new Map<string, OverlapLane>();
+  if (colEvents.length === 0) return result;
+
+  // Exclude passive/window events — they render full-width behind everything
+  const laneEligible = colEvents.filter((ev) => ev.columnId !== COMBO_WINDOW_COLUMN_ID);
+
+  // Sort by start frame, then by end frame descending (wider events first)
+  const sorted = [...laneEligible].sort((a, b) =>
+    a.startFrame - b.startFrame || eventEndFrame(b) - eventEndFrame(a),
+  );
+
+  // Assign each event to the first available lane (greedy interval packing)
+  // laneEnds[i] = end frame of the last event in lane i
+  const laneEnds: number[] = [];
+  const laneAssignments = new Map<string, number>();
+
+  for (const ev of sorted) {
+    const start = ev.startFrame;
+    const end = eventEndFrame(ev);
+    let assignedLane = -1;
+
+    for (let i = 0; i < laneEnds.length; i++) {
+      if (laneEnds[i] <= start) {
+        assignedLane = i;
+        laneEnds[i] = end;
+        break;
+      }
+    }
+
+    if (assignedLane === -1) {
+      assignedLane = laneEnds.length;
+      laneEnds.push(end);
+    }
+
+    laneAssignments.set(ev.uid, assignedLane);
+  }
+
+  // Now compute laneCount per event: max concurrent lanes among all events overlapping it
+  for (const ev of sorted) {
+    const lane = laneAssignments.get(ev.uid)!;
+    const evStart = ev.startFrame;
+    const evEnd = eventEndFrame(ev);
+
+    // Count how many lanes are active during this event's span
+    let maxConcurrent = 0;
+    for (const other of sorted) {
+      const otherStart = other.startFrame;
+      const otherEnd = eventEndFrame(other);
+      if (otherStart < evEnd && otherEnd > evStart) {
+        const otherLane = laneAssignments.get(other.uid)!;
+        if (otherLane + 1 > maxConcurrent) maxConcurrent = otherLane + 1;
+      }
+    }
+
+    result.set(ev.uid, { lane, laneCount: maxConcurrent });
+  }
+
+  return result;
+}
+
+/**
  * Compute the full timeline presentation model for all mini-timeline columns.
  *
  * Returns a map of column key → ColumnViewModel containing:
  * - Filtered, sorted, and truncated events
  * - Fractional micro-column positions
  * - Status view overrides (stack labels, visual truncation)
+ * - Overlap lane assignments for non-micro columns
  *
  * Viewport culling is NOT applied — the view layer should filter
  * ColumnViewModel.events by visible frame range before rendering.
@@ -578,11 +660,16 @@ export function computeTimelinePresentation(
       ? computeMicroPositions(col, colEvents, allGreedySlots, allStatusOverrides)
       : new Map<string, MicroPosition>();
 
+    const overlapLanes = col.microColumns
+      ? new Map<string, OverlapLane>()
+      : computeOverlapLanes(colEvents);
+
     result.set(col.key, {
       column: col,
       events: colEvents,
       microPositions,
       statusOverrides: colStatusOverrides,
+      overlapLanes,
     });
   }
 

@@ -1,10 +1,10 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import type { Predicate } from '../../dsl/semantics';
+import { DeterminerType, NounType, type Predicate } from '../../dsl/semantics';
 import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
-import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
+import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
-import { getTacticalEntry, getWeapon } from '../gameDataController';
+import { getTacticalEntry, getWeapon, getAllOperatorStatuses } from '../gameDataController';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -50,6 +50,7 @@ export function buildColumns(
   slots: Slot[],
   enemy: Enemy,
   visibleSkills: VisibleSkills,
+  teamStatusIds?: ReadonlySet<string>,
 ): Column[] {
   const columns: Column[] = [];
 
@@ -76,7 +77,7 @@ export function buildColumns(
         const target = se.target ?? seProps?.target;
         const targetDeterminer = se.targetDeterminer ?? seProps?.targetDeterminer;
         const seId = se.id ?? seProps?.id;
-        if (target === 'OPERATOR' && (!targetDeterminer || targetDeterminer === 'THIS') && seId) {
+        if (target === NounType.OPERATOR && (!targetDeterminer || targetDeterminer === DeterminerType.THIS) && seId) {
           const seStacks = seProps?.stacks as { limit?: { value?: number }; duration?: { value?: { value?: number } | number | number[] }; interactionType?: string } | undefined;
           const seDur = (seProps?.duration ?? se.duration ?? seStacks?.duration) as { value?: { value?: number } | number | number[] } | undefined;
           const rawVal = seDur?.value;
@@ -112,7 +113,7 @@ export function buildColumns(
         const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
         const equipId = se.id as string;
         const colId = equipId.toLowerCase().replace(/_/g, '-');
-        if (se.target === 'OPERATOR' && (!se.targetDeterminer || se.targetDeterminer === 'THIS')) {
+        if (se.target === NounType.OPERATOR && (!se.targetDeterminer || se.targetDeterminer === DeterminerType.THIS)) {
           // Wielder-targeted → operator status micro-column
           const defs = operatorStatusMap.get(s.slotId) ?? [];
           defs.push({
@@ -125,7 +126,7 @@ export function buildColumns(
             statusType: equipSource === 'weapon' ? 'WEAPON_STATUS' : 'GEAR_STATUS',
           });
           operatorStatusMap.set(s.slotId, defs);
-        } else if (se.target === 'OPERATOR' && se.targetDeterminer === 'OTHER') {
+        } else if (se.target === NounType.OPERATOR && se.targetDeterminer === DeterminerType.OTHER) {
           // Team-targeted → team weapon/gear column
           teamWeaponGearDefs.push({
             slotId: s.slotId,
@@ -134,7 +135,7 @@ export function buildColumns(
             durationFrames,
             color: s.operator!.color,
           });
-        } else if (se.target === 'ENEMY') {
+        } else if (se.target === NounType.ENEMY) {
           // Enemy-targeted → enemy status micro-column
           enemyWeaponGearDefs.push({
             statusName: equipId,
@@ -173,69 +174,26 @@ export function buildColumns(
     noAdd: true,
   });
 
-  const teamTeamColumns = new Set<string>();
-
-  if (teamTeamColumns.has('team-link')) {
+  // ── Team-targeted status columns (derived from skill configs) ─────────────
+  const allStatuses = getAllOperatorStatuses();
+  for (const statusId of Array.from(teamStatusIds ?? [])) {
+    const cfg = allStatuses.find(s => s.id === statusId);
+    const label = STATUS_LABELS[statusId as StatusType] ?? cfg?.name ?? statusId;
+    const colId = statusId.toLowerCase().replace(/_/g, '-');
+    const durationFrames = cfg ? (cfg.durationSeconds > 0 ? Math.round(cfg.durationSeconds * FPS) : TOTAL_FRAMES) : TOTAL_FRAMES;
     columns.push({
-      key: `${COMMON_OWNER_ID}-link`,
+      key: `${COMMON_OWNER_ID}-${colId}`,
       type: 'mini-timeline',
       source: TimelineSourceType.COMMON,
       ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.LINK,
-      label: ColumnLabel.LINK,
-      color: '#e05555',
+      columnId: statusId,
+      label,
+      color: '#66aa88',
       headerVariant: 'skill',
-      derived: true,
       defaultEvent: {
-        name: 'Link',
-        segments: [{ properties: { duration: 2400 } }], // 20 seconds at 120fps
+        name: statusId,
+        segments: [{ properties: { duration: durationFrames } }],
       },
-    });
-  }
-
-  if (teamTeamColumns.has('team-shield')) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-shield`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.COMMON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.SHIELD,
-      label: ColumnLabel.SHIELD,
-      color: '#88aacc',
-      headerVariant: 'skill',
-      derived: true,
-      defaultEvent: {
-        name: 'Shield',
-        segments: [{ properties: { duration: 1800 } }], // 15 seconds at 120fps
-      },
-    });
-  }
-
-  if (teamTeamColumns.has('team-wildland-trekker')) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-wildland-trekker`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.COMMON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: 'WILDLAND_TREKKER',
-      label: ColumnLabel.WILDLAND_TREKKER,
-      color: '#eebb44',
-      headerVariant: 'skill',
-      derived: true,
-    });
-  }
-
-  if (teamTeamColumns.has('team-ultimate-gain')) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-messengers-song`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.COMMON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: 'MESSENGERS_SONG',
-      label: ColumnLabel.MESSENGERS_SONG,
-      color: '#88cc88',
-      headerVariant: 'skill',
-      derived: true,
     });
   }
 
@@ -680,6 +638,37 @@ export function buildColumns(
       });
     }
   }
+
+  // ── Enemy action timeline ──────────────────────────────────────────────────
+  const ENEMY_AOE_ELEMENTS: { element: ElementType; adjective: string }[] = [
+    { element: ElementType.PHYSICAL, adjective: 'PHYSICAL' },
+    { element: ElementType.HEAT,     adjective: 'HEAT' },
+    { element: ElementType.CRYO,     adjective: 'CRYO' },
+    { element: ElementType.NATURE,   adjective: 'NATURE' },
+    { element: ElementType.ELECTRIC, adjective: 'ELECTRIC' },
+  ];
+  columns.push({
+    key: `enemy-${ENEMY_ACTION_COLUMN_ID}`,
+    type: 'mini-timeline',
+    source: TimelineSourceType.ENEMY,
+    ownerId: ENEMY_OWNER_ID,
+    columnId: ENEMY_ACTION_COLUMN_ID,
+    label: ColumnLabel.ACTION,
+    color: '#cc4444',
+    headerVariant: 'skill',
+    eventVariants: ENEMY_AOE_ELEMENTS.map(({ element, adjective }) => ({
+      name: `AOE_${adjective}`,
+      displayName: `Deal ${adjective} damage`,
+      segments: [{
+        properties: { duration: 240, name: `Deal ${adjective} DMG` },
+        frames: [{ offsetFrame: 0, damageElement: element }],
+        clause: [{
+          conditions: [],
+          effects: [{ verb: 'DEAL', adjective, object: 'DAMAGE', toDeterminer: 'ALL', to: 'OPERATOR' }],
+        }],
+      }],
+    })),
+  });
 
   // ── Enemy stagger resource ─────────────────────────────────────────────────
   columns.push({

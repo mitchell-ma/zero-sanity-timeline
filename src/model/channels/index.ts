@@ -106,6 +106,11 @@ export const OPERATOR_COLUMNS = {
 /** Prefix for per-slot weapon fragility column IDs (e.g. 'fragility-slot1'). */
 export const FRAGILITY_COLUMN_PREFIX = 'fragility-';
 
+// ── Enemy action columns ──────────────────────────────────────────────────
+
+/** Column ID for enemy action timeline (HIT events that deal damage to operators). */
+export const ENEMY_ACTION_COLUMN_ID = 'enemy-action';
+
 // ── Enemy group columns ───────────────────────────────────────────────────
 
 export const ENEMY_GROUP_COLUMNS = {
@@ -137,9 +142,10 @@ export const FORCED_REACTION_COLUMN: Record<string, string> = {
   [StatusType.ELECTRIFICATION]: REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Maps self-targeted grant status → team-level derived column. */
+/** Maps status name → team-level column ID for team-wide buff display. */
 export const TEAM_STATUS_COLUMN: Record<string, string> = {
-  SQUAD_BUFF: StatusType.LINK,
+  SQUAD_BUFF: 'team-status',
+  [StatusType.LINK]: 'team-status',
 };
 
 /** Default active duration for derived reaction events (20s at 120fps). */
@@ -169,3 +175,5 @@ export const PHYSICAL_INFLICTION_DURATION = 2400;
 
 /** P5 link extension: extra frames added to link duration when operator potential >= 5. */
 export const P5_LINK_EXTENSION_FRAMES = 600; // 5s at 120fps
+
+

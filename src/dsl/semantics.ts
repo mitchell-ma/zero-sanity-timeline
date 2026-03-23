@@ -59,6 +59,8 @@ export enum NounType {
   // Entities
   /** An operator — use DeterminerType to specify which. */
   OPERATOR = "OPERATOR",
+  /** The team as a shared entity — statuses applied here go to the common team-status column. */
+  TEAM = "TEAM",
   /** The enemy target. */
   ENEMY = "ENEMY",
   /** An event — the event/status that owns this clause. */
@@ -110,6 +112,8 @@ export enum NounType {
 
   // States (for IS/BECOME verbs)
   ACTIVE = "ACTIVE",
+  /** The operator is currently controlled by the player. */
+  CONTROLLED_STATE = "CONTROLLED",
 
   // Value resolution
   /** A raw operator stat reference (used in ValueStat). */
@@ -295,7 +299,7 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.DISABLE]:    [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
-  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
+  [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.CONTROLLED_STATE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.BECOME]:     [ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
   [VerbType.RECEIVE]:    [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STAGGER],
   [VerbType.OVERHEAL]:   [ObjectType.HP],

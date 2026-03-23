@@ -404,6 +404,11 @@
                         "of": "OPERATOR"
                       }
                     }
+                  },
+                  {
+                    "verb": "PERFORM",
+                    "object": "FINAL_STRIKE",
+                    "to": "ENEMY"
                   }
                 ]
               }
@@ -1057,13 +1062,21 @@
     }
   },
   "TEMPESTUOUS_ARC_EMPOWERED": {
-    "activationClause": [{
-      "conditions": [{
-        "subjectDeterminer": "THIS", "subject": "OPERATOR",
-        "verb": "HAVE", "object": "STATUS", "objectId": "WILDLAND_TREKKER_TRIGGER",
-        "cardinalityConstraint": "EXACTLY", "value": "MAX"
-      }]
-    }],
+    "activationClause": [
+      {
+        "conditions": [
+          {
+            "subjectDeterminer": "THIS",
+            "subject": "OPERATOR",
+            "verb": "HAVE",
+            "object": "STATUS",
+            "objectId": "WILDLAND_TREKKER_TRIGGER",
+            "cardinalityConstraint": "EXACTLY",
+            "value": "MAX"
+          }
+        ]
+      }
+    ],
     "properties": {
       "enhancementTypes": [
         "EMPOWERED"

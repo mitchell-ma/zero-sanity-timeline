@@ -7,6 +7,7 @@
  */
 import { EventType, EventCategoryType } from '../../consts/enums';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
+import { checkKeys } from './validationUtils';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,14 +33,6 @@ const VALID_SKILL_PROPERTIES_KEYS = new Set([
 ]);
 
 const VALID_SKILL_METADATA_KEYS = new Set(['originId']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 /** Validate a single skill entry. Returns an array of error messages (empty = valid). */
 export function validateOperatorSkill(json: Record<string, unknown>, skillId: string): string[] {

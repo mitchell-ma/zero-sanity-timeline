@@ -531,11 +531,7 @@ export enum DamageType {
   DAMAGE_OVER_TIME = 'DAMAGE_OVER_TIME',
 }
 
-export enum FrameDependencyType {
-  SEGMENT = 'SEGMENT',
-  FIRST_FRAME = 'FIRST_FRAME',
-  PREVIOUS_FRAME = 'PREVIOUS_FRAME',
-}
+
 
 
 export enum WeaponSkillType {

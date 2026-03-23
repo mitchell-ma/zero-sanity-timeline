@@ -7,7 +7,7 @@
  * No hardcoded DISPLAY_CONFIGS — all display/timing data comes from JSON fields.
  */
 import { Operator as ViewOperator, SkillDef, EventSegmentData } from '../../consts/viewTypes';
-import { ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, ElementType, OperatorClassType, ELEMENT_COLORS, SegmentType, TimeDependency } from '../../consts/enums';
 import { Potential } from '../../consts/types';
 import {
   getOperatorJson,
@@ -93,8 +93,8 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const typeMap = getSkillTypeMap(operatorId);
   const categoryToName: Record<string, string> = {};
   for (const [type, baseId] of Object.entries(typeMap)) {
-    const viewKey = type === 'BASIC_ATTACK' ? 'basic' : type === 'BATTLE_SKILL' ? 'battle'
-      : type === 'COMBO_SKILL' ? 'combo' : type === 'ULTIMATE' ? 'ultimate' : null;
+    const viewKey = type === CombatSkillType.BASIC_ATTACK ? 'basic' : type === CombatSkillType.BATTLE_SKILL ? 'battle'
+      : type === CombatSkillType.COMBO_SKILL ? 'combo' : type === CombatSkillType.ULTIMATE ? 'ultimate' : null;
     if (viewKey) categoryToName[viewKey] = baseId;
   }
 
@@ -133,8 +133,8 @@ function buildViewOperatorFromJson(operatorId: string, opJson: Record<string, un
   const skills: Record<string, SkillDef> = {};
   for (const [key, timing] of Object.entries(skillSegmentConfigs)) {
     const skillName = categoryToName[key] ?? key;
-    const categoryKey = key === 'basic' ? 'BASIC_ATTACK' : key === 'battle' ? 'BATTLE_SKILL'
-      : key === 'combo' ? 'COMBO_SKILL' : 'ULTIMATE';
+    const categoryKey = key === 'basic' ? CombatSkillType.BASIC_ATTACK : key === 'battle' ? CombatSkillType.BATTLE_SKILL
+      : key === 'combo' ? CombatSkillType.COMBO_SKILL : CombatSkillType.ULTIMATE;
     const rawEntry: string | undefined = typeMap[categoryKey];
     const resolvedSkillId = rawEntry ?? categoryKey;
     const catData = opSkills?.[resolvedSkillId];

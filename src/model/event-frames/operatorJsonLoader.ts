@@ -373,6 +373,34 @@ export function getAllInflictionIds(): StatusIdEntry[] {
   return _allInflictionEntries;
 }
 
+/**
+ * Scan an operator's skills for team-targeted status effects (clause effects with "to": "TEAM").
+ * Returns an array of status IDs that this operator applies to the team.
+ */
+export function getTeamStatusIds(operatorId: string): string[] {
+  const skills = getOperatorSkills(operatorId);
+  if (!skills) return [];
+
+  const ids = new Set<string>();
+  skills.forEach((skill) => {
+    const raw = skill.serialize();
+    const segments = raw.segments as { frames?: { clause?: { effects?: Record<string, unknown>[] }[] }[] }[] | undefined;
+    if (!segments) return;
+    for (const seg of segments) {
+      for (const frame of seg.frames ?? []) {
+        for (const pred of frame.clause ?? []) {
+          for (const ef of pred.effects ?? []) {
+            if (ef.to === 'TEAM' && ef.objectType === 'STATUS' && ef.object) {
+              ids.add(ef.object as string);
+            }
+          }
+        }
+      }
+    }
+  });
+  return Array.from(ids);
+}
+
 // Re-export timing functions from dataDrivenEventFrames
 export {
   getSkillTimings,

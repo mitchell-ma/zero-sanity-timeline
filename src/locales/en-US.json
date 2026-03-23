@@ -238,7 +238,7 @@
   "infliction.SUSCEPTIBILITY": "Susceptibility",
   "infliction.ARTS_AMP": "Arts Amp",
   "infliction.SHIELD": "Shield",
-  "infliction.SCORCHING_HEART": "Scorching Heart",
+  "infliction.SCORCHING_HEART": "Scorching Heart (Talent)",
   "infliction.SCORCHING_HEART_EFFECT": "Scorching Heart",
   "infliction.FRAGILITY": "Fragility",
   "infliction.ORIGINIUM_CRYSTAL": "Originium Crystal",
@@ -246,6 +246,13 @@
   "infliction.WILDLAND_TREKKER": "Wildland Trekker",
   "infliction.STAGGER_NODE": "Node Stagger",
   "infliction.STAGGER": "Stagger",
+  "enemyAction.AOE_PHYSICAL": "Deal PHYS damage",
+  "enemyAction.AOE_HEAT": "Deal HEAT damage",
+  "enemyAction.AOE_CRYO": "Deal CRYO damage",
+  "enemyAction.AOE_NATURE": "Deal NATURE damage",
+  "enemyAction.AOE_ELECTRIC": "Deal ELEC damage",
+
+  "column.action": "ACTION",
 
   "reaction.combustion": "Combustion",
   "reaction.solidification": "Solidification",

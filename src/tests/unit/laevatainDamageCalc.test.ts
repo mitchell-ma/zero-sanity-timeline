@@ -466,7 +466,7 @@ describe('Laevatain damage calculation — Smouldering Fire (battle skill)', () 
       ...neutralParams(),
     });
 
-    // PREVIOUS_FRAME dependency: accumulate previous frames' damage
+    // Accumulate previous frames' damage
     let accumulated = ownDamage;
     if (tickIndex > 0) {
       // Recompute previous tick's accumulated damage (same params, so chain is additive)
@@ -653,7 +653,7 @@ describe('Laevatain damage calculation — bare loadout (Tarr 11 lv1, no gear)',
 
     const ownDamage = calculateDamage(dmgParams);
 
-    // PREVIOUS_FRAME dependency: accumulate previous frames' damage
+    // Accumulate previous frames' damage
     let accumulated = ownDamage;
     if (tickIndex > 0) {
       let prevAccum = 0;

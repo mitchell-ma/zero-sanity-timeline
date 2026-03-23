@@ -46,6 +46,7 @@ Game data:
 - All skill data (frames, multipliers, effects, properties, animation timings) lives in `src/model/game-data/operator-skills/*-skills.json`. Operator JSONs (`src/model/game-data/operators/*-operator.json`) store only operator-level data (stats, potentials, talents, metadata) — never skill frames or overrides.
 - When debugging missing/wrong skill data in the UI, always check the skills JSON first — that is the single source of truth. There is no override mechanism in operator JSONs.
 - When showing JSON configs to the user, always show the full raw JSON — never abbreviate or summarize into pseudo-JSON.
+- **`"to": "TEAM"` and `"to": "OPERATOR", "toDeterminer": "ALL"` are semantically distinct.** `"to": "TEAM"` applies one shared status to the team-status column (`COMMON_OWNER_ID`). `"to": "OPERATOR", "toDeterminer": "ALL"` applies separate status instances to each individual operator's status column. Never conflate or normalize one into the other.
 
 Processes:
 - **"summarize and sync"** — Write a concise git commit message with a descriptive summary in the body, then run `gitsync <DETAILS>` with the summary details.

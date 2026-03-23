@@ -18,6 +18,7 @@ import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
 import { isClauseAlwaysAvailable } from './triggerMatch';
+import { getLastController } from './eventQueueController';
 
 export type TimeStopRegion = {
   startFrame: number;
@@ -537,7 +538,7 @@ export function clampDeltaByComboWindow(
   startFrame: number,
   processedEvents: readonly TimelineEvent[],
   invalidAtDragStart?: Set<string>,
-  comboRevalidated?: Set<string>,
+  comboRevalidated?: Map<string, string>,
 ): number {
   const ev = events.find((e) => e.uid === eventUid);
   if (!ev || ev.columnId !== SKILL_COLUMNS.COMBO) {
@@ -568,9 +569,9 @@ export function clampDeltaByComboWindow(
   if (invalidAtDragStart?.has(eventUid)) {
     const targetWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
     if (!targetWindow) return clampedDelta; // still outside, free movement
-    // Entered a window — transition to revalidated (clamped going forward)
+    // Entered a window — transition to revalidated, locked to this window
     invalidAtDragStart.delete(eventUid);
-    comboRevalidated?.add(eventUid);
+    comboRevalidated?.set(eventUid, targetWindow.uid);
     return clampToWindow(targetWindow);
   }
 
@@ -580,20 +581,12 @@ export function clampDeltaByComboWindow(
     return clampToWindow(origWindow);
   }
 
-  // Event started outside all windows — find the nearest window boundary
-  // for revalidated events so they snap into a window and stay there.
-  if (comboRevalidated?.has(eventUid)) {
-    let bestWindow: TimelineEvent | undefined;
-    let bestDist = Infinity;
-    for (const w of windows) {
-      const wEnd = windowEndFrame(w);
-      const dStart = Math.abs(target - w.startFrame);
-      const dEnd = Math.abs(target - (wEnd - 1));
-      if (dStart < bestDist) { bestDist = dStart; bestWindow = w; }
-      if (dEnd < bestDist) { bestDist = dEnd; bestWindow = w; }
-    }
-    if (bestWindow) {
-      return clampToWindow(bestWindow);
+  // Event was revalidated mid-drag — lock to the window it entered.
+  const lockedWindowUid = comboRevalidated?.get(eventUid);
+  if (lockedWindowUid) {
+    const lockedWindow = windows.find((w) => w.uid === lockedWindowUid);
+    if (lockedWindow) {
+      return clampToWindow(lockedWindow);
     }
   }
 
@@ -838,7 +831,13 @@ export function checkVariantAvailability(
     const clause = getVariantClause(opId, variantName);
     if (clause) {
       const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame) : false;
-      const result = evaluateClause(clause, { enhanceActive });
+      const dec = getLastController();
+      const result = evaluateClause(clause, {
+        enhanceActive,
+        ownerId,
+        atFrame,
+        isControlledAt: dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
+      });
       if (!result.pass) return { disabled: true, reason: result.reason };
     }
   }
@@ -1122,7 +1121,11 @@ function getVariantEnhancementTypes(operatorId: string, variantName: string): st
 function getVariantClause(operatorId: string, variantName: string): Predicate[] | null {
   const json = getOperatorJson(operatorId);
   if (!json?.skills) return null;
-  for (const cat of Object.values(json.skills) as { id?: string; clause?: Predicate[]; segments?: { name?: string; clause?: Predicate[] }[] }[]) {
+  const skills = json.skills as Record<string, { id?: string; clause?: Predicate[]; activationClause?: Predicate[]; segments?: { name?: string; clause?: Predicate[] }[] }>;
+  // Check by skill key (e.g. "TWILIGHT", "THERMITE_TRACERS_EMPOWERED")
+  const direct = skills[variantName];
+  if (direct?.activationClause) return direct.activationClause;
+  for (const cat of Object.values(skills)) {
     // Check skill category-level clause (matched by id)
     if (cat.id === variantName && cat.clause) return cat.clause;
     // Check segment-level clauses (matched by name, case-insensitive)
@@ -1137,6 +1140,12 @@ function getVariantClause(operatorId: string, variantName: string): Predicate[] 
 
 interface ClauseContext {
   enhanceActive: boolean;
+  /** Owner slot ID of the event being evaluated. */
+  ownerId?: string;
+  /** Query which operator slot is controlled at a given frame. */
+  isControlledAt?: (ownerId: string, frame: number) => boolean;
+  /** Frame at which the event is placed. */
+  atFrame?: number;
 }
 
 /** Evaluate a single interaction condition against the current state. */
@@ -1146,6 +1155,13 @@ function evaluateCondition(cond: Interaction, ctx: ClauseContext): boolean {
     if (cond.subjectProperty === 'ULTIMATE') {
       // "ULTIMATE IS ACTIVE" is equivalent to an active ENABLE clause
       result = ctx.enhanceActive;
+    }
+  } else if (cond.verb === VerbType.IS && cond.object === 'CONTROLLED') {
+    // "THIS OPERATOR IS CONTROLLED" — check if this operator is the controlled operator
+    if (ctx.isControlledAt && ctx.ownerId != null && ctx.atFrame != null) {
+      result = ctx.isControlledAt(ctx.ownerId, ctx.atFrame);
+    } else {
+      result = false;
     }
   }
   return cond.negated ? !result : result;
@@ -1166,6 +1182,9 @@ function evaluateClause(clause: Predicate[], ctx: ClauseContext): { pass: boolea
   const firstCond = clause[0]?.conditions?.[0];
   if (firstCond?.subjectProperty === 'ULTIMATE' && firstCond?.object === 'ACTIVE' && firstCond?.negated) {
     return { pass: false, reason: 'Cannot be used while ultimate is active' };
+  }
+  if (firstCond?.verb === VerbType.IS && firstCond?.object === 'CONTROLLED') {
+    return { pass: false, reason: 'Operator must be the controlled operator' };
   }
   return { pass: false, reason: 'Activation condition not met' };
 }
@@ -1192,8 +1211,14 @@ export function validateVariantClauses(
 
     const enableObject = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
     const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ev.ownerId, enableObject, ev.startFrame) : false;
+    const dec = getLastController();
 
-    const result = evaluateClause(clause, { enhanceActive });
+    const result = evaluateClause(clause, {
+      enhanceActive,
+      ownerId: ev.ownerId,
+      atFrame: ev.startFrame,
+      isControlledAt: dec ? (id, frame) => dec.isControlledAt(id, frame) : undefined,
+    });
     if (!result.pass) {
       map.set(ev.uid, result.reason ?? 'Activation condition not met');
     }

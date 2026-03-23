@@ -23,6 +23,7 @@ import {
   wouldSegmentAdditionOverlap,
   getEffectiveStaggerWindows,
   type TimeStopRegion,
+  type VariantAvailability,
 } from './eventValidator';
 import type { Slot } from './columnBuilder';
 import type { ResourceGraphData } from '../../app/useResourceGraphs';
@@ -291,8 +292,12 @@ export function buildColumnContextMenu(
   const resAvail = resourceGraphs
     ? checkResourceAvailability(col.columnId, col.ownerId, atFrame, resourceGraphs, slots)
     : { sufficient: true };
-  const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || overlap || !resAvail.sufficient);
-  const reason = inTimeStop ? timeStopReason : overlap ? t('ctx.overlap') : resAvail.reason;
+  const defaultName = col.defaultEvent?.name;
+  const availability = defaultName
+    ? checkVariantAvailability(defaultName, col.ownerId, events, atFrame, col.columnId, slots)
+    : { disabled: false } as VariantAvailability;
+  const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || overlap || !resAvail.sufficient || availability.disabled);
+  const reason = inTimeStop ? timeStopReason : overlap ? t('ctx.overlap') : !resAvail.sufficient ? resAvail.reason : availability.disabled ? availability.reason : undefined;
   return [
     headerItem,
     ...(resourceGraphs?.has(col.key) ? [

@@ -1,4 +1,4 @@
-import { ElementType, FrameDependencyType, StatusType } from "../../consts/enums";
+import { ElementType, StatusType } from "../../consts/enums";
 import { DeterminerType, NounType } from "../../dsl/semantics";
 import type { DslTarget, ValueNode } from "../../dsl/semantics";
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT, type ValueResolutionContext } from "../../controller/calculation/valueResolver";
@@ -37,6 +37,8 @@ interface JsonEffect {
   verb: string;
   object?: string;
   objectId?: string;
+  /** When present, object holds the specific ID and objectType holds the category (e.g. "STATUS"). */
+  objectType?: string;
   adjective?: string | string[];
   toDeterminer?: string;
   to?: string;
@@ -135,6 +137,7 @@ const DSL_REACTION_TO_COLUMN: Record<string, string> = {
 
 /** Map DSL to + toDeterminer to target string. */
 function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefined {
+  if (to === 'TEAM') return 'TEAM';
   if (to === 'OPERATOR') {
     return toDeterminer === 'ALL' ? 'TEAM' : 'SELF';
   }
@@ -145,6 +148,7 @@ function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefin
 /** Map DSL to/toDeterminer to DslTarget. */
 function dslTargetToDslTarget(to?: string, toDeterminer?: string): DslTarget {
   if (to === 'ENEMY') return { noun: NounType.ENEMY };
+  if (to === 'TEAM') return { noun: NounType.TEAM };
   return { determiner: (toDeterminer as DeterminerType) ?? DeterminerType.THIS, noun: NounType.OPERATOR };
 }
 
@@ -229,7 +233,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   private readonly _clauses: readonly FrameClausePredicate[];
   private readonly _dealDamage: FrameDealDamage | null;
   private readonly _gaugeGain: number;
-  private readonly _dependencyTypes: readonly FrameDependencyType[];
+  private readonly _dependencyTypes: readonly string[];
 
   constructor(frame: JsonFrame) {
     super();
@@ -265,7 +269,11 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
       }));
 
       const clauseEffects: FrameClauseEffect[] = [];
-      for (const ef of pred.effects) {
+      for (let ef of pred.effects) {
+        // Normalize objectType shorthand: { object: "LINK", objectType: "STATUS" } → { object: "STATUS", objectId: "LINK" }
+        if (ef.objectType && !ef.objectId) {
+          ef = { ...ef, objectId: ef.object, object: ef.objectType, objectType: undefined };
+        }
         const wp = ef.with;
         const adjectives = Array.isArray(ef.adjective) ? ef.adjective : ef.adjective ? [ef.adjective] : [];
         const elementAdj = adjectives.find(a => ['HEAT', 'CRYO', 'NATURE', 'ELECTRIC', 'PHYSICAL'].includes(a));
@@ -293,8 +301,11 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
                 ...(dur != null && { durationFrames: Math.round(withValue(dur) * 120) }),
               };
             } else if (ef.object === 'STATUS') {
-              const durVal = wp?.duration;
-              const isStandardTarget = ['OPERATOR', 'ENEMY'].includes(ef.to ?? '');
+              const durRaw = wp?.duration;
+              // Duration may be a flat JsonWithValue or a nested { value: JsonWithValue, unit } wrapper
+              const durVal = durRaw?.value && typeof durRaw.value === 'object' && !Array.isArray(durRaw.value)
+                ? durRaw.value as JsonWithValue : durRaw;
+              const isStandardTarget = ['OPERATOR', 'ENEMY', 'TEAM'].includes(ef.to ?? '');
               const status: FrameApplyStatus = {
                 target: dslTargetToDslTarget(ef.to),
                 status: ef.objectId!,
@@ -392,7 +403,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
     if (consumeReaction) this._consumeReaction = consumeReaction;
     this._consumeStatus = consumeStatus;
     this._duplicatesTriggerInfliction = duplicatesSource;
-    this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as FrameDependencyType[];
+    this._dependencyTypes = (frame.properties?.dependencyTypes ?? []) as string[];
   }
 
   getOffsetSeconds(): number { return this._offsetSeconds; }
@@ -411,7 +422,7 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
   getClauses(): readonly FrameClausePredicate[] { return this._clauses; }
   getDealDamage(): FrameDealDamage | null { return this._dealDamage; }
   getGaugeGain(): number { return this._gaugeGain; }
-  getDependencyTypes(): readonly FrameDependencyType[] { return this._dependencyTypes; }
+  getDependencyTypes(): readonly string[] { return this._dependencyTypes; }
 }
 
 // ── DataDrivenSkillEventSequence ────────────────────────────────────────────

@@ -9,6 +9,7 @@ import { UnitType, EventType, EventCategoryType } from '../../consts/enums';
 import { VerbType } from '../../dsl/semantics';
 import type { Interaction, ValueNode } from '../../dsl/semantics';
 import { resolveValueNode, DEFAULT_VALUE_CONTEXT } from '../../controller/calculation/valueResolver';
+import { checkKeys, VALID_VALUE_NODE_KEYS, VALID_CLAUSE_KEYS, VALID_METADATA_KEYS } from './validationUtils';
 
 // ── DSL value types ─────────────────────────────────────────────────────────
 
@@ -38,24 +39,12 @@ export interface DurationConfig {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'to', 'toDeterminer', 'with', 'objectId']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
-const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit']);
-const VALID_LIMIT_KEYS = new Set(['verb', 'value', 'object']);
 const VALID_STATUS_LEVEL_KEYS = new Set(['limit', 'interactionType']);
 const VALID_PROPERTIES_KEYS = new Set(['id', 'name', 'description', 'to', 'toDeterminer', 'duration', 'stacks', 'eventType', 'eventCategoryType']);
-const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 const VALID_TOP_KEYS = new Set(['clause', 'properties', 'metadata']);
-
-function checkKeys(obj: Record<string, unknown>, valid: Set<string>, path: string): string[] {
-  const errors: string[] = [];
-  for (const key of Object.keys(obj)) {
-    if (!valid.has(key)) errors.push(`${path}: unexpected key "${key}"`);
-  }
-  return errors;
-}
 
 function validateValueNode(wv: Record<string, unknown>, path: string): string[] {
   const errors = checkKeys(wv, VALID_VALUE_NODE_KEYS, path);
@@ -112,7 +101,7 @@ export function validateWeaponStatus(json: Record<string, unknown>): string[] {
     if (typeof sl.interactionType !== 'string') errors.push('properties.stacks.interactionType: must be a string');
     if (sl.limit) {
       const limit = sl.limit as Record<string, unknown>;
-      errors.push(...checkKeys(limit, VALID_LIMIT_KEYS, 'properties.stacks.limit'));
+      errors.push(...checkKeys(limit, VALID_VALUE_NODE_KEYS, 'properties.stacks.limit'));
       if (typeof limit.verb !== 'string') errors.push('properties.stacks.limit.verb: must be a string');
     }
   }

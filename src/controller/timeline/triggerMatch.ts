@@ -12,7 +12,7 @@ import { CombatSkillType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
-  ENEMY_OWNER_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
+  ENEMY_OWNER_ID, ENEMY_ACTION_COLUMN_ID, OPERATOR_COLUMNS, REACTION_COLUMNS,
   REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUMNS,
   PHYSICAL_INFLICTION_COLUMNS,
 } from '../../model/channels';
@@ -478,9 +478,20 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
 }
 
 // ── HIT / DEFEAT handlers ────────────────────────────────────────────────────
-// Non-observable in a planner — generate periodic triggers every second.
+// HIT scans enemy ACTION timeline events; falls back to periodic triggers if none exist.
 
 function handleHit(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch[] {
+  const hitEvents = ctx.events.filter(
+    (ev) => ev.ownerId === ENEMY_OWNER_ID && ev.columnId === ENEMY_ACTION_COLUMN_ID,
+  );
+  if (hitEvents.length > 0) {
+    const matches: TriggerMatch[] = [];
+    for (const ev of hitEvents) {
+      if (!checkSecondary(ctx, ev.startFrame, ctx.operatorSlotId)) continue;
+      matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
+    }
+    return matches;
+  }
   return generatePeriodicTriggers(primaryCond, ctx);
 }
 
