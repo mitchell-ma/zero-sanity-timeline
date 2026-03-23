@@ -1,9 +1,7 @@
 /**
  * Shared types, constants, and configuration for the event queue pipeline.
  */
-import { TimelineEvent } from '../../consts/viewTypes';
-import type { DslTarget } from '../../dsl/semantics';
-import type { } from '../../model/channels';
+import type { TimelineEvent, EventFrameMarker } from '../../consts/viewTypes';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -13,18 +11,22 @@ export const MAX_INFLICTION_STACKS = 4;
 
 /** Priority values — lower fires first at the same frame. */
 export const PRIORITY = {
+  /** Unified frame processing — all frame marker effects in config order. */
+  PROCESS_FRAME: 5,
+  /** Freeform derived events (user-placed reactions/inflictions). */
   FRAME_EFFECT: 5,
+  /** Freeform inflictions seeded from derived events. */
   INFLICTION_CREATE: 10,
-  CONSUME: 15,
-  LINK_CONSUME: 17,
+  /** Engine triggers seeded reactively by PROCESS_FRAME or lifecycle clauses. */
   ENGINE_TRIGGER: 22,
+  /** Combo trigger resolution — fires after engine triggers so absorption resolves first. */
   COMBO_RESOLVE: 25,
 } as const;
 
 export interface QueueFrame {
   frame: number;
   priority: number;
-  type: 'FRAME_EFFECT' | 'COMBO_RESOLVE' | 'INFLICTION_CREATE' | 'CONSUME' | 'LINK_CONSUME' | 'ENGINE_TRIGGER';
+  type: 'PROCESS_FRAME' | 'FRAME_EFFECT' | 'INFLICTION_CREATE' | 'ENGINE_TRIGGER' | 'COMBO_RESOLVE';
   /** Event UID template (for infliction entries). */
   uid?: string;
   statusName: string;
@@ -35,37 +37,30 @@ export interface QueueFrame {
   maxStacks: number;
   durationFrames: number;
   operatorSlotId: string;
+
+  // ── PROCESS_FRAME fields ──────────────────────────────────────────────
+  /** The frame marker being processed. */
+  frameMarker?: EventFrameMarker;
+  /** The parent skill event that owns this frame. */
+  sourceEvent?: TimelineEvent;
+  /** Segment index within the parent event. */
+  segmentIndex?: number;
+  /** Frame index within the segment. */
+  frameIndex?: number;
+
+  // ── FRAME_EFFECT fields (freeform derived events only) ────────────────
   /** Pre-built event for FRAME_EFFECT entries. */
   derivedEvent?: TimelineEvent;
   /** Stacking interaction for FRAME_EFFECT enemy statuses. */
   stackingInteraction?: string;
-  /** Max inflictions to consume (for CONSUME entries targeting inflictions). */
-  maxConsume?: number;
-  /** Consume an active reaction and optionally apply a status (from consumeReaction frame markers). */
-  consumeReaction?: {
-    reactionColumnId: string;
-    applyStatus?: {
-      target: DslTarget;
-      status: string;
-      stacks: number;
-      durationFrames: number;
-      susceptibility?: Partial<Record<string, readonly number[]>>;
-      eventName?: string;
-    };
-    sourceColumnId: string;
-  };
-  /** Consume cryo inflictions and derive susceptibility (Last Rite talent). */
-  cryoSusceptibility?: {
-    perStack: number;
-  };
+
+  // ── ENGINE_TRIGGER fields ─────────────────────────────────────────────
   /** Engine trigger context for ENGINE_TRIGGER entries. */
   engineTrigger?: import('./statusTriggerCollector').EngineTriggerEntry;
-  /** Deferred combo trigger resolution context. */
-  comboResolve?: {
-    comboEvent: import('../../consts/viewTypes').TimelineEvent;
-  };
-  /** The skill event that should try to consume Link at its start frame. */
-  linkConsumeEvent?: import('../../consts/viewTypes').TimelineEvent;
+
+  // ── COMBO_RESOLVE fields ──────────────────────────────────────────────
+  /** The combo event to resolve trigger column for. */
+  comboResolveEvent?: TimelineEvent;
 }
 
 /** Slot-level trigger wiring for the pipeline. */

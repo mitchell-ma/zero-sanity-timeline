@@ -16,7 +16,7 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EventStatusType, SegmentType, StackInteractionType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
@@ -409,7 +409,8 @@ export class DerivedEventController {
   setComboTriggerColumnId(eventUid: string, columnId: string) {
     for (let i = 0; i < this.registeredEvents.length; i++) {
       if (this.registeredEvents[i].uid === eventUid) {
-        this.registeredEvents[i] = { ...this.registeredEvents[i], comboTriggerColumnId: columnId };
+        // Mutate in-place so PROCESS_FRAME entries referencing this event see the update
+        this.registeredEvents[i].comboTriggerColumnId = columnId;
         return;
       }
     }
@@ -678,7 +679,7 @@ export class DerivedEventController {
   ): boolean {
     const statusName = options?.statusName ?? columnId;
 
-    if (options?.stackingMode === 'RESET') {
+    if (options?.stackingMode === StackInteractionType.RESET) {
       this.resetStatus(columnId, ownerId, frame, source);
     }
 
@@ -702,7 +703,7 @@ export class DerivedEventController {
       ...options?.event,
     };
 
-    if (options?.stackingMode === 'MERGE') {
+    if (options?.stackingMode === StackInteractionType.MERGE) {
       // Subsume older: clamp all active, keep the new one
       const active = this.activeEventsIn(columnId, ownerId, frame);
       for (const act of active) {

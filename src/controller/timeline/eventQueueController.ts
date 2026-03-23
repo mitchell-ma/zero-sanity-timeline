@@ -7,41 +7,19 @@
  * ALL game mechanics processing — time-stop resolution, infliction derivation,
  * exchange statuses, combo windows, frame positions, validation — happens here.
  */
-import { TimelineEvent, EventSegmentData, eventDuration } from '../../consts/viewTypes';
-import { ElementType, EventFrameType, StatusType } from '../../consts/enums';
-import { NounType } from '../../dsl/semantics';
-import type { Interaction } from '../../dsl/semantics';
-import { evaluateConditions } from './conditionEvaluator';
+import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { LoadoutProperties } from '../../view/InformationPane';
 import { TimeStopRegion, absoluteFrame, foreignStopsFor } from './processTimeStop';
-import { TOTAL_FRAMES } from '../../utils/timeline';
 import { DerivedEventController } from './derivedEventController';
 import { deriveComboActivationWindows } from './processComboSkill';
 import type { SlotTriggerWiring } from './eventQueueTypes';
-import {
-  resolveSusceptibility,
-} from './processInfliction';
 import { SkillPointController } from '../slot/skillPointController';
-import { statusNameToColumnId } from './triggerMatch';
-import { genEventUid } from '../timeline/inputEventController';
-import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
-import {
-  PRIORITY, MAX_INFLICTION_STACKS,
-} from './eventQueueTypes';
+import { PRIORITY, MAX_INFLICTION_STACKS } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
 import { TriggerIndex } from './triggerIndex';
-import {
-  ELEMENT_TO_INFLICTION_COLUMN,
-  ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS,
-  INFLICTION_DURATION, REACTION_DURATION,
-  FORCED_REACTION_COLUMN, FORCED_REACTION_DURATION,
-  TEAM_STATUS_COLUMN, P5_LINK_EXTENSION_FRAMES, MAX_LINK_STACKS,
-  OPERATOR_COLUMNS, SKILL_COLUMNS, REACTION_COLUMN_IDS,
-} from '../../model/channels';
-import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { getAllOperatorIds, getSkillIds, getSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
+import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { getAllTriggerAssociations } from '../gameDataController';
 import { classifyEvents } from './inputEventController';
 import { initHpTracker, getEnemyHpPercentage, precomputeDamageByFrame } from '../calculation/calculationController';
@@ -49,18 +27,15 @@ import type { HPController } from '../calculation/hpController';
 import type { OperatorLoadoutState } from '../../view/OperatorLoadoutHeader';
 import { resolveControlledOperator } from './controlledOperatorResolver';
 
-// ── Frame effect collection ─────────────────────────────────────────────────
+// ── Unified frame collection ────────────────────────────────────────────────
 
 /**
- * Collect FRAME_EFFECT entries from frame markers:
- * - Enemy-targeted statuses (Focus, susceptibility)
- * - Forced reactions
- * - Team statuses (LINK)
- * - Originium Crystals from SEALING_SEQUENCE
+ * Collect one PROCESS_FRAME entry per frame marker on input skill events.
+ * Each entry carries the full EventFrameMarker + parent event context.
+ * The interpreter processes all effects sequentially in config order.
  */
-function collectFrameEffectEntries(
-  events: TimelineEvent[],
-  loadoutProperties: Record<string, LoadoutProperties> | undefined,
+function collectFrameEntries(
+  events: readonly TimelineEvent[],
   stops: readonly TimeStopRegion[],
 ): QueueFrame[] {
   const entries: QueueFrame[] = [];
@@ -68,261 +43,24 @@ function collectFrameEffectEntries(
   for (const event of events) {
     if (event.ownerId === ENEMY_OWNER_ID) continue;
 
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-      if (seg.frames) {
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-
-          // Status effects applied by this frame
-          const statusEffects = frame.applyStatuses ?? (frame.applyStatus ? [frame.applyStatus] : []);
-          for (let sti = 0; sti < statusEffects.length; sti++) {
-            const statusEffect = statusEffects[sti];
-
-            const pot = loadoutProperties?.[event.ownerId]?.operator.potential ?? 0;
-            if (statusEffect.potentialMin != null && pot < statusEffect.potentialMin) continue;
-            if (statusEffect.potentialMax != null && pot > statusEffect.potentialMax) continue;
-
-            if (statusEffect.target.noun === NounType.TEAM) {
-              // Team-targeted status → shared team-status column on COMMON_OWNER_ID
-              const teamColumnId = COMMON_COLUMN_IDS.TEAM_STATUS;
-              const ultActiveEnd = event.startFrame + eventDuration(event);
-              let statusDuration = statusEffect.durationFrames || Math.max(0, ultActiveEnd - absFrame);
-              if (pot >= 5) statusDuration += P5_LINK_EXTENSION_FRAMES;
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.FRAME_EFFECT,
-                type: 'FRAME_EFFECT',
-                statusName: statusEffect.status,
-                columnId: teamColumnId,
-                ownerId: COMMON_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: MAX_LINK_STACKS,
-                durationFrames: statusDuration,
-                operatorSlotId: event.ownerId,
-                derivedEvent: {
-                  uid: `${event.uid}-team-status-${si}-${fi}`,
-                  id: statusEffect.status,
-                  name: statusEffect.status,
-                  ownerId: COMMON_OWNER_ID,
-                  columnId: teamColumnId,
-                  startFrame: absFrame,
-                  segments: [{ properties: { duration: statusDuration } }],
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                },
-              });
-            } else if (statusEffect.target.noun === NounType.OPERATOR) {
-
-              const teamColumnId = TEAM_STATUS_COLUMN[statusEffect.status];
-              if (teamColumnId) {
-                const ultActiveEnd = event.startFrame + eventDuration(event);
-                let linkDuration = Math.max(0, ultActiveEnd - absFrame);
-                if (pot >= 5) linkDuration += P5_LINK_EXTENSION_FRAMES;
-                entries.push({
-                  frame: absFrame,
-                  priority: PRIORITY.FRAME_EFFECT,
-                  type: 'FRAME_EFFECT',
-                  statusName: statusEffect.status,
-                  columnId: teamColumnId,
-                  ownerId: COMMON_OWNER_ID,
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                  maxStacks: 0,
-                  durationFrames: linkDuration,
-                  operatorSlotId: event.ownerId,
-                  derivedEvent: {
-                    uid: `${event.uid}-team-status-${si}-${fi}`,
-                    id: 'Squad Buff (Link)',
-                    name: 'Squad Buff (Link)',
-                    ownerId: COMMON_OWNER_ID,
-                    columnId: teamColumnId,
-                    startFrame: absFrame,
-                    segments: [{ properties: { duration: linkDuration } }],
-                    sourceOwnerId: event.ownerId,
-                    sourceSkillName: event.name,
-                  },
-                });
-              } else {
-                // Self-targeted operator status (e.g. Melting Flame from combo skill)
-                const statusColumnId = statusNameToColumnId(statusEffect.status);
-                const statusDuration = statusEffect.durationFrames || TOTAL_FRAMES;
-                entries.push({
-                  frame: absFrame,
-                  priority: PRIORITY.FRAME_EFFECT,
-                  type: 'FRAME_EFFECT',
-                  statusName: statusEffect.status,
-                  columnId: statusColumnId,
-                  ownerId: event.ownerId,
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                  maxStacks: 0,
-                  durationFrames: statusDuration,
-                  operatorSlotId: event.ownerId,
-                  derivedEvent: {
-                    uid: `${statusEffect.status.toLowerCase()}-${genEventUid()}`,
-                    id: statusEffect.status,
-                    name: statusEffect.status,
-                    ownerId: event.ownerId,
-                    columnId: statusColumnId,
-                    startFrame: absFrame,
-                    segments: [{ properties: { duration: statusDuration } }],
-                    sourceOwnerId: event.ownerId,
-                    sourceSkillName: event.name,
-                  },
-                });
-              }
-            } else if (statusEffect.target.noun === NounType.ENEMY) {
-              let segments: EventSegmentData[] | undefined;
-              let susceptibility: Partial<Record<ElementType, number>> | undefined;
-
-              if (statusEffect.segments && statusEffect.segments.length > 0) {
-                segments = statusEffect.segments.map(seg => ({
-                  properties: {
-                    duration: seg.durationFrames,
-                    name: seg.name,
-                  },
-                  ...(seg.susceptibility && {
-                    unknown: { susceptibility: resolveSusceptibility(seg.susceptibility, event.columnId, event.ownerId, loadoutProperties) },
-                  }),
-                }));
-                const firstSeg = statusEffect.segments[0];
-                if (firstSeg.susceptibility) {
-                  susceptibility = resolveSusceptibility(firstSeg.susceptibility, event.columnId, event.ownerId, loadoutProperties);
-                }
-              } else if (statusEffect.susceptibility) {
-                susceptibility = resolveSusceptibility(statusEffect.susceptibility, event.columnId, event.ownerId, loadoutProperties);
-              }
-
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.FRAME_EFFECT,
-                type: 'FRAME_EFFECT',
-                statusName: statusEffect.status,
-                columnId: statusEffect.status,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: 0,
-                durationFrames: statusEffect.durationFrames,
-                operatorSlotId: event.ownerId,
-                stackingInteraction: statusEffect.stackingInteraction,
-                derivedEvent: {
-                  uid: `${event.uid}-status-${si}-${fi}-${sti}`,
-                  id: statusEffect.eventName ?? statusEffect.status,
-                  name: statusEffect.eventName ?? statusEffect.status,
-                  ownerId: ENEMY_OWNER_ID,
-                  columnId: statusEffect.status,
-                  startFrame: absFrame,
-                  segments: [{ properties: { duration: statusEffect.durationFrames } }],
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                  ...(susceptibility && { susceptibility }),
-                  ...(segments && { segments }),
-                },
-              });
-            }
-          }
-
-          // Forced reactions bypass infliction stacks entirely
-          if (frame.applyForcedReaction) {
-            const reactionColumnId = FORCED_REACTION_COLUMN[frame.applyForcedReaction.reaction];
-            if (reactionColumnId) {
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.FRAME_EFFECT,
-                type: 'FRAME_EFFECT',
-                statusName: frame.applyForcedReaction.reaction,
-                columnId: reactionColumnId,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: 0,
-                durationFrames: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION,
-                operatorSlotId: event.ownerId,
-                derivedEvent: {
-                  uid: `${event.uid}-forced-${si}-${fi}`,
-                  id: reactionColumnId,
-                  name: reactionColumnId,
-                  ownerId: ENEMY_OWNER_ID,
-                  columnId: reactionColumnId,
-                  startFrame: absFrame,
-                  segments: [{ properties: { duration: frame.applyForcedReaction.durationFrames ?? FORCED_REACTION_DURATION[reactionColumnId] ?? REACTION_DURATION } }],
-                  stacks: frame.applyForcedReaction.stacks,
-                  sourceOwnerId: event.ownerId,
-                  sourceSkillName: event.name,
-                  forcedReaction: true,
-                },
-              });
-            }
-          }
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-    }
-  }
-
-  // Endministrator: Originium Crystals
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID) continue;
-    if (event.name !== 'SEALING_SEQUENCE') continue;
+    // Seed an event-start entry at the event's start frame (no frame marker)
+    // for event-level hooks: Link consumption, generic PERFORM triggers
     entries.push({
       frame: event.startFrame,
-      priority: PRIORITY.FRAME_EFFECT,
-      type: 'FRAME_EFFECT',
-      statusName: StatusType.ORIGINIUM_CRYSTAL,
-      columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
-      ownerId: ENEMY_OWNER_ID,
+      priority: PRIORITY.PROCESS_FRAME,
+      type: 'PROCESS_FRAME',
+      statusName: event.name,
+      columnId: event.columnId,
+      ownerId: event.ownerId,
       sourceOwnerId: event.ownerId,
       sourceSkillName: event.name,
       maxStacks: 0,
-      durationFrames: TOTAL_FRAMES,
+      durationFrames: 0,
       operatorSlotId: event.ownerId,
-      derivedEvent: {
-        uid: `${event.uid}-crystal`,
-        id: StatusType.ORIGINIUM_CRYSTAL,
-        name: StatusType.ORIGINIUM_CRYSTAL,
-        ownerId: ENEMY_OWNER_ID,
-        columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL,
-        startFrame: event.startFrame,
-        segments: [{ properties: { duration: TOTAL_FRAMES } }],
-        sourceOwnerId: event.ownerId,
-        sourceSkillName: event.name,
-      },
+      sourceEvent: event,
+      segmentIndex: -1,
+      frameIndex: -1,
     });
-  }
-
-  return entries;
-}
-
-// ── Infliction collection ───────────────────────────────────────────────────
-
-/**
- * Collect all INFLICTION_CREATE entries:
- * 1. From applyArtsInfliction frame markers on skill events
- * 2. From combo trigger ticks
- * 3. From freeform-placed infliction events (sourceOwnerId === USER_ID)
- *
- * All three sources produce the same entry type and go through the same
- * createInfliction pipeline (deque stacking, cross-element reactions, etc.).
- *
- * Freeform entries are also tracked in `freeformInflictionIds` so the caller
- * can exclude them from the queue controller's base events (the raw events
- * stay in `state` for undo/drag).
- */
-function collectInflictionEntries(
-  events: TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    // Only skill events (freeform inflictions are classified separately by InputEventController)
-    if (event.ownerId === ENEMY_OWNER_ID) continue;
 
     const fStops = foreignStopsFor(event, stops);
     let cumulativeOffset = 0;
@@ -333,412 +71,50 @@ function collectInflictionEntries(
           const frame = seg.frames[fi];
           const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
 
-          if (frame.applyArtsInfliction) {
-            const columnId = ELEMENT_TO_INFLICTION_COLUMN[frame.applyArtsInfliction.element];
-            if (columnId) {
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.INFLICTION_CREATE,
-                type: 'INFLICTION_CREATE',
-                uid: `${event.uid}-inflict-${si}-${fi}`,
-                statusName: columnId,
-                columnId,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: MAX_INFLICTION_STACKS,
-                durationFrames: INFLICTION_DURATION,
-                operatorSlotId: event.ownerId,
-              });
-            }
-          }
-
-          // APPLY TRIGGER INFLICTION: mirror the combo's trigger infliction
-          if (frame.duplicatesTriggerInfliction && event.comboTriggerColumnId) {
-            const triggerCol = event.comboTriggerColumnId;
-            if (INFLICTION_COLUMN_IDS.has(triggerCol)) {
-              entries.push({
-                frame: absFrame,
-                priority: PRIORITY.INFLICTION_CREATE,
-                type: 'INFLICTION_CREATE',
-                uid: `${event.uid}-combo-inflict-${si}-${fi}`,
-                statusName: triggerCol,
-                columnId: triggerCol,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: MAX_INFLICTION_STACKS,
-                durationFrames: INFLICTION_DURATION,
-                operatorSlotId: event.ownerId,
-              });
-            }
-          }
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-    }
-
-  }
-
-  return entries;
-}
-
-// ── Status consumption collection ───────────────────────────────────────────
-
-/** Resolve consume target from status definitions: column ID + target owner. */
-function resolveConsumeTarget(statusId: string, eventOwnerId: string, slotOperatorMap?: Record<string, string>) {
-  const columnId = statusNameToColumnId(statusId);
-  // Look up target from the status definition
-  const operatorId = slotOperatorMap?.[eventOwnerId];
-  if (operatorId) {
-    const statuses = getOperatorStatuses(operatorId);
-    const def = statuses.find(s => s.id === statusId);
-    if (def) {
-      if (def.target === 'ENEMY') return { columnId, ownerId: ENEMY_OWNER_ID };
-      // OPERATOR target defaults to the event owner (THIS)
-      return { columnId, ownerId: eventOwnerId };
-    }
-  }
-  // Fallback: assume operator-targeted, owned by the event owner
-  return { columnId, ownerId: eventOwnerId };
-}
-
-/** Scan events for consumeStatus frame markers targeting operator statuses. */
-function collectConsumeEntries(
-  events: TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-  slotOperatorMap?: Record<string, string>,
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
-
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    for (let si = 0; si < event.segments.length; si++) {
-      const seg = event.segments[si];
-      if (seg.frames) {
-        for (let fi = 0; fi < seg.frames.length; fi++) {
-          const frame = seg.frames[fi];
-          if (!frame.consumeStatus) continue;
-
-          const { columnId, ownerId } = resolveConsumeTarget(frame.consumeStatus, event.ownerId, slotOperatorMap);
           entries.push({
-            frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
-            priority: PRIORITY.CONSUME,
-            type: 'CONSUME',
-            statusName: frame.consumeStatus,
-            columnId,
-            ownerId,
+            frame: absFrame,
+            priority: PRIORITY.PROCESS_FRAME,
+            type: 'PROCESS_FRAME',
+            statusName: event.name,
+            columnId: event.columnId,
+            ownerId: event.ownerId,
             sourceOwnerId: event.ownerId,
             sourceSkillName: event.name,
             maxStacks: 0,
             durationFrames: 0,
             operatorSlotId: event.ownerId,
+            frameMarker: frame,
+            sourceEvent: event,
+            segmentIndex: si,
+            frameIndex: fi,
           });
         }
       }
       cumulativeOffset += seg.properties.duration;
     }
-  }
 
-  return entries;
-}
-
-// ── Reaction consumption ────────────────────────────────────────────────────
-
-/**
- * Collect CONSUME entries from consumeReaction frame markers and clause-based
- * consumeReaction effects.
- */
-function collectConsumeReactionEntries(
-  events: TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID) continue;
-    const fStops = foreignStopsFor(event, stops);
-    let cumOffset = 0;
-    for (const seg of event.segments) {
-      if (seg.frames) {
-        for (const frame of seg.frames) {
-          // Clause-based consume (DSL v2)
-          if (frame.clauses && frame.clauses.length > 0) {
-            const absF = absoluteFrame(event.startFrame, cumOffset, frame.offsetFrame, fStops);
-            for (const pred of frame.clauses) {
-              if (pred.conditions.length === 0) continue;
-              const consumeEf = pred.effects.find(e => e.type === 'consumeReaction');
-              if (!consumeEf?.consumeReaction) continue;
-              const conditionsMet = evaluateConditions(
-                pred.conditions as unknown as Interaction[],
-                { events, frame: absF, sourceOwnerId: event.ownerId },
-              );
-              if (!conditionsMet) continue;
-              const statusEf = pred.effects.find(e => e.type === 'applyStatus');
-              entries.push({
-                frame: absF,
-                priority: PRIORITY.CONSUME,
-                type: 'CONSUME',
-                statusName: 'CONSUME_REACTION',
-                columnId: consumeEf.consumeReaction.columnId,
-                ownerId: ENEMY_OWNER_ID,
-                sourceOwnerId: event.ownerId,
-                sourceSkillName: event.name,
-                maxStacks: 0,
-                durationFrames: 0,
-                operatorSlotId: event.ownerId,
-                consumeReaction: {
-                  reactionColumnId: consumeEf.consumeReaction.columnId,
-                  applyStatus: statusEf?.applyStatus ? {
-                    target: statusEf.applyStatus.target,
-                    status: statusEf.applyStatus.status,
-                    stacks: statusEf.applyStatus.stacks,
-                    durationFrames: statusEf.applyStatus.durationFrames,
-                    ...(statusEf.applyStatus.susceptibility && { susceptibility: statusEf.applyStatus.susceptibility }),
-                    ...(statusEf.applyStatus.eventName && { eventName: statusEf.applyStatus.eventName }),
-                  } : undefined,
-                  sourceColumnId: event.columnId,
-                },
-              });
-            }
-          }
-          // Legacy consumeReaction marker
-          else if (frame.consumeReaction) {
-            entries.push({
-              frame: absoluteFrame(event.startFrame, cumOffset, frame.offsetFrame, fStops),
-              priority: PRIORITY.CONSUME,
-              type: 'CONSUME',
-              statusName: 'CONSUME_REACTION',
-              columnId: frame.consumeReaction.columnId,
-              ownerId: ENEMY_OWNER_ID,
-              sourceOwnerId: event.ownerId,
-              sourceSkillName: event.name,
-              maxStacks: 0,
-              durationFrames: 0,
-              operatorSlotId: event.ownerId,
-              consumeReaction: {
-                reactionColumnId: frame.consumeReaction.columnId,
-                applyStatus: frame.consumeReaction.applyStatus,
-                sourceColumnId: event.columnId,
-              },
-            });
-          }
-        }
-      }
-      cumOffset += seg.properties.duration;
+    // Seed COMBO_RESOLVE for combo events (fires after engine triggers)
+    if (event.columnId === SKILL_COLUMNS.COMBO && !event.comboTriggerColumnId) {
+      entries.push({
+        frame: event.startFrame,
+        priority: PRIORITY.COMBO_RESOLVE,
+        type: 'COMBO_RESOLVE',
+        statusName: event.name,
+        columnId: event.columnId,
+        ownerId: event.ownerId,
+        sourceOwnerId: event.ownerId,
+        sourceSkillName: event.name,
+        maxStacks: 0,
+        durationFrames: 0,
+        operatorSlotId: event.ownerId,
+        comboResolveEvent: event,
+      });
     }
   }
 
   return entries;
 }
 
-// ── Cryo consumption entry collection ───────────────────────────────────────
-
-function collectCryoConsumptionEntries(
-  events: TimelineEvent[],
-  loadoutProperties?: Record<string, LoadoutProperties>,
-): QueueFrame[] {
-  let sourceOpId: string | null = null;
-  for (const opId of getAllOperatorIds()) {
-    if (getSkillIds(opId).has('WINTERS_DEVOURER')) {
-      sourceOpId = opId;
-      break;
-    }
-  }
-  if (!sourceOpId) return [];
-
-  const typeMap = getSkillTypeMap(sourceOpId);
-  const comboBaseId = typeMap.COMBO_SKILL;
-  if (!comboBaseId) return [];
-  const allSkills = getSkillIds(sourceOpId);
-  const comboNames = new Set(Array.from(allSkills).filter(id => id === comboBaseId || id.startsWith(comboBaseId + '_')));
-
-  const comboEvents = events.filter(ev => comboNames.has(ev.name) && ev.ownerId !== ENEMY_OWNER_ID);
-  if (comboEvents.length === 0) return [];
-
-  const entries: QueueFrame[] = [];
-  for (const combo of comboEvents) {
-    const props = loadoutProperties?.[combo.ownerId];
-    const talentOneLevel = props?.operator.talentOneLevel ?? 0;
-    if (talentOneLevel < 1) continue;
-    const perStack = talentOneLevel >= 2 ? 0.04 : 0.02;
-
-    entries.push({
-      frame: combo.startFrame,
-      priority: PRIORITY.CONSUME,
-      type: 'CONSUME',
-      statusName: 'CRYO_SUSCEPTIBILITY',
-      columnId: 'cryoInfliction',
-      ownerId: ENEMY_OWNER_ID,
-      sourceOwnerId: combo.ownerId,
-      sourceSkillName: combo.name,
-      maxStacks: 0,
-      durationFrames: 0,
-      operatorSlotId: combo.ownerId,
-      cryoSusceptibility: { perStack },
-    });
-  }
-  return entries;
-}
-
-// ── Trigger seeding from input events ────────────────────────────────────────
-
-/**
- * Build an ENGINE_TRIGGER QueueFrame from a trigger index entry.
- */
-function buildTriggerQueueFrame(
-  frame: number, ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry,
-): QueueFrame {
-  const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
-    def: entry.def,
-    operatorId: entry.operatorId,
-    operatorSlotId: entry.operatorSlotId,
-    potential: entry.potential,
-    operatorSlotMap: entry.operatorSlotMap,
-    loadoutProperties: entry.loadoutProperties,
-    haveConditions: entry.haveConditions,
-    triggerEffects: entry.triggerEffects,
-  };
-  return {
-    frame,
-    priority: PRIORITY.ENGINE_TRIGGER,
-    type: 'ENGINE_TRIGGER',
-    statusName: entry.def.properties.id,
-    columnId: '',
-    ownerId: entry.operatorSlotId,
-    sourceOwnerId: ev.ownerId,
-    sourceSkillName: ev.name,
-    maxStacks: 0,
-    durationFrames: 0,
-    operatorSlotId: entry.operatorSlotId,
-    engineTrigger: {
-      frame,
-      sourceOwnerId: ev.ownerId,
-      sourceSkillName: ev.name,
-      ctx: triggerCtx,
-      isEquip: entry.isEquip,
-    },
-  };
-}
-
-/**
- * Seed PERFORM triggers by iterating frame markers on input events.
- * Each frame marker's frameTypes determine which PERFORM triggers fire
- * at that frame's absolute position — no pre-computation of trigger frames.
- *
- * Also seeds PERFORM triggers for the first frame of each skill event
- * (PERFORM BATTLE_SKILL, PERFORM ULTIMATE, etc.).
- */
-function collectPerformTriggerEntries(
-  events: readonly TimelineEvent[],
-  stops: readonly TimeStopRegion[],
-  triggerIdx: TriggerIndex,
-): QueueFrame[] {
-  const entries: QueueFrame[] = [];
-  const seen = new Set<string>();
-
-  const maybeSeed = (absFrame: number, ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry) => {
-    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${absFrame}`;
-    if (seen.has(dedupKey)) return;
-    seen.add(dedupKey);
-    entries.push(buildTriggerQueueFrame(absFrame, ev, entry));
-  };
-
-  for (const event of events) {
-    if (event.ownerId === ENEMY_OWNER_ID || event.ownerId === COMMON_OWNER_ID) continue;
-
-    // Seed generic PERFORM triggers at the event's start frame (PERFORM BATTLE_SKILL, etc.)
-    for (const entry of triggerIdx.matchEvent(event.columnId)) {
-      if (entry.primaryVerb !== 'PERFORM') continue;
-      const obj = entry.primaryCondition.object;
-      // Skip frame-specific PERFORM types — they're seeded from frame markers below
-      if (obj === 'FINAL_STRIKE' || obj === 'FINISHER' || obj === 'DIVE_ATTACK') continue;
-      const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
-      if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
-      maybeSeed(event.startFrame, event, entry);
-    }
-
-    // Iterate frame markers to seed frame-specific PERFORM triggers (FINAL_STRIKE, FINISHER, DIVE)
-    const fStops = foreignStopsFor(event, stops);
-    let cumulativeOffset = 0;
-    for (const seg of event.segments) {
-      if (seg.frames) {
-        for (const frame of seg.frames) {
-          const fTypes = frame.frameTypes;
-          if (!fTypes || fTypes.length === 0) { continue; }
-
-          const absFrame = absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops);
-
-          for (const ft of fTypes) {
-            // Map frameType to PERFORM object for trigger index lookup
-            const performObject = FRAME_TYPE_TO_PERFORM[ft];
-            if (!performObject) continue;
-
-            for (const entry of triggerIdx.matchEvent(event.columnId)) {
-              if (entry.primaryVerb !== 'PERFORM') continue;
-              if (entry.primaryCondition.object !== performObject) continue;
-              const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
-              if (!isAny && event.ownerId !== entry.operatorSlotId) continue;
-              maybeSeed(absFrame, event, entry);
-            }
-          }
-        }
-      }
-      cumulativeOffset += seg.properties.duration;
-    }
-  }
-
-  return entries;
-}
-
-/** Maps EventFrameType to the PERFORM object that triggers on it. */
-const FRAME_TYPE_TO_PERFORM: Record<string, string> = {
-  [EventFrameType.FINAL_STRIKE]: 'FINAL_STRIKE',
-  [EventFrameType.FINISHER]: 'FINISHER',
-  [EventFrameType.DIVE]: 'DIVE_ATTACK',
-};
-
-/**
- * Seed ENGINE_TRIGGER entries from input events for non-PERFORM triggers.
- * Handles APPLY/IS/BECOME triggers for reactions/statuses placed directly
- * as input events that don't go through queue processing.
- */
-function seedInputEventTriggers(
-  events: readonly TimelineEvent[],
-  triggerIdx: TriggerIndex,
-  queue: PriorityQueue<QueueFrame>,
-) {
-  const seen = new Set<string>();
-
-  for (const ev of events) {
-    for (const entry of triggerIdx.matchEvent(ev.columnId)) {
-      // Skip PERFORM triggers — handled by collectPerformTriggerEntries
-      if (entry.primaryVerb === 'PERFORM') continue;
-
-      const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
-      if (seen.has(dedupKey)) continue;
-      seen.add(dedupKey);
-
-      // Target filtering
-      const toTarget = entry.primaryCondition.to as string | undefined;
-      if (toTarget) {
-        if (toTarget === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
-        if (toTarget === 'OPERATOR') {
-          if (ev.ownerId === ENEMY_OWNER_ID) continue;
-          const toDet = entry.primaryCondition.toDeterminer as string | undefined;
-          if (toDet === 'THIS' && ev.ownerId !== entry.operatorSlotId) continue;
-        }
-      }
-
-      queue.insert(buildTriggerQueueFrame(ev.startFrame, ev, entry));
-    }
-  }
-}
-
-// ── EventQueueController ─────────────────────────────────────────────────────
 
 /**
  * EventQueueController — seeds the priority queue and runs the interpreter.
@@ -816,54 +192,39 @@ export function runEventQueue(
     }
   }
 
-  // Seed from input event frame markers
-  seed(collectInflictionEntries(registeredEvents, stops));
-  seed(collectFrameEffectEntries(registeredEvents, loadoutProperties, stops));
-  for (const ev of registeredEvents) {
-    if (ev.columnId === SKILL_COLUMNS.COMBO && !ev.comboTriggerColumnId) {
-      queue.insert({
-        frame: ev.startFrame,
-        priority: PRIORITY.COMBO_RESOLVE,
-        type: 'COMBO_RESOLVE',
-        statusName: ev.name,
-        columnId: SKILL_COLUMNS.COMBO,
-        ownerId: ev.ownerId,
-        sourceOwnerId: ev.ownerId,
-        sourceSkillName: ev.name,
-        maxStacks: MAX_INFLICTION_STACKS,
-        durationFrames: 0,
-        operatorSlotId: ev.ownerId,
-        comboResolve: { comboEvent: ev },
-      });
-    }
-  }
-  // Seed Link consumption checks for battle skills and ultimates
-  for (const ev of registeredEvents) {
-    if (ev.columnId === SKILL_COLUMNS.BATTLE || ev.columnId === SKILL_COLUMNS.ULTIMATE) {
-      queue.insert({
-        frame: ev.startFrame,
-        priority: PRIORITY.LINK_CONSUME,
-        type: 'LINK_CONSUME',
-        statusName: StatusType.LINK,
-        columnId: ev.columnId,
-        ownerId: ev.ownerId,
-        sourceOwnerId: ev.ownerId,
-        sourceSkillName: ev.name,
-        maxStacks: 0,
-        durationFrames: 0,
-        operatorSlotId: ev.ownerId,
-        linkConsumeEvent: ev,
-      });
-    }
-  }
-  seed(collectConsumeReactionEntries(registeredEvents, stops));
-  seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
-  seed(collectConsumeEntries(registeredEvents, stops, slotOperatorMap));
+  // Seed one PROCESS_FRAME entry per frame marker — all effects processed sequentially
+  const frameEntries = collectFrameEntries(registeredEvents, stops);
+  seed(frameEntries);
 
-  // Seed PERFORM triggers from frame markers (FINAL_STRIKE, FINISHER, DIVE at exact frame positions)
-  seed(collectPerformTriggerEntries(registeredEvents, stops, triggerIdx));
-  // Seed non-PERFORM triggers from input events (APPLY reactions/statuses, IS/BECOME)
-  seedInputEventTriggers(registeredEvents, triggerIdx, queue);
+  // Seed reactive triggers for freeform enemy events (reactions/inflictions/statuses
+  // placed directly on the timeline — no frame markers, not handled by PROCESS_FRAME)
+  const triggerSeen = new Set<string>();
+  for (const ev of registeredEvents) {
+    if (ev.ownerId !== ENEMY_OWNER_ID) continue;
+    for (const entry of triggerIdx.matchEvent(ev.columnId)) {
+      if (entry.primaryVerb === 'PERFORM') continue; // PERFORM handled by PROCESS_FRAME
+      const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
+      if (triggerSeen.has(dedupKey)) continue;
+      triggerSeen.add(dedupKey);
+      // Target filtering for APPLY triggers
+      const toTarget = entry.primaryCondition.to as string | undefined;
+      if (toTarget === 'OPERATOR' && ev.ownerId === ENEMY_OWNER_ID) continue;
+      if (toTarget === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+      const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
+        def: entry.def, operatorId: entry.operatorId,
+        operatorSlotId: entry.operatorSlotId, potential: entry.potential,
+        operatorSlotMap: entry.operatorSlotMap, loadoutProperties: entry.loadoutProperties,
+        haveConditions: entry.haveConditions, triggerEffects: entry.triggerEffects,
+      };
+      queue.insert({
+        frame: ev.startFrame, priority: PRIORITY.ENGINE_TRIGGER, type: 'ENGINE_TRIGGER',
+        statusName: entry.def.properties.id, columnId: '', ownerId: entry.operatorSlotId,
+        sourceOwnerId: ev.ownerId, sourceSkillName: ev.name,
+        maxStacks: 0, durationFrames: 0, operatorSlotId: entry.operatorSlotId,
+        engineTrigger: { frame: ev.startFrame, sourceOwnerId: ev.ownerId, sourceSkillName: ev.name, ctx: triggerCtx, isEquip: entry.isEquip },
+      });
+    }
+  }
 
   // ── Run the queue ─────────────────────────────────────────────────────────
   while (queue.size > 0) {
