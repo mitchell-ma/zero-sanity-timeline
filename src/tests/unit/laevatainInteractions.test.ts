@@ -484,7 +484,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     }
   });
 
-  test('C3: Battle skill first frame applies MELTING_FLAME status to Laevatain', () => {
+  test('C3: Battle skill first frame applies MELTING_FLAME status to operator', () => {
     const rawSkills = mockLaevatainJson.skills;
     const battleFrames = rawSkills.BATTLE_SKILL.segments[0].frames;
     const firstFrameEffects = battleFrames[0].clause[0].effects;
@@ -493,7 +493,8 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     );
     expect(mfEffect).toBeDefined();
     expect(mfEffect.object).toBe('STATUS');
-    expect(mfEffect.to).toBe('LAEVATAIN');
+    expect(mfEffect.to).toBe('OPERATOR');
+    expect(mfEffect.toDeterminer).toBe('THIS');
   });
 
   test('C4: Empowered battle skill last frame applies forced Combustion reaction', () => {
@@ -596,7 +597,8 @@ describe('E. Ultimate & Enhanced Variants', () => {
     const ultSkill = mockLaevatainJson.skills.TWILIGHT;
     const activeSeg = ultSkill.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('ACTIVE'));
     expect(activeSeg).toBeDefined();
-    expect(activeSeg.properties.duration.value).toBe(15);
+    const durVal = activeSeg.properties.duration.value;
+    expect(typeof durVal === 'object' ? durVal.value : durVal).toBe(15);
   });
 
   test('E7: Ultimate energy cost is 300', () => {
@@ -729,7 +731,8 @@ describe('H. Cooldown Interactions', () => {
     const cs = mockLaevatainJson.skills.COMBO_SKILL;
     const cdSeg = cs.segments.find((s: any) => /* eslint-disable-line @typescript-eslint/no-explicit-any */ s.properties.segmentTypes?.includes('COOLDOWN'));
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value).toBe(10);
+    const cdVal = cdSeg.properties.duration.value;
+    expect(typeof cdVal === 'object' ? cdVal.value : cdVal).toBe(10);
   });
 
   test('H3: Ultimate (Twilight) has no COOLDOWN segment (ultimate cooldown is global)', () => {

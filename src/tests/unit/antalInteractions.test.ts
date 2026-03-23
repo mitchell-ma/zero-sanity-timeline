@@ -181,6 +181,10 @@ const mockAntalJson = { ...mockOperatorJson, skills: antalSkills, skillTypeMap: 
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
+/** Resolve a duration value that may be a plain number or a ValueNode { verb, value }. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function durVal(v: any): number { return typeof v === 'object' && v !== null && 'value' in v ? v.value : v; }
+
 function getSequences(skillCategory: string): readonly DataDrivenSkillEventSequence[] {
   return buildSequencesFromOperatorJson(mockAntalJson, skillCategory);
 }
@@ -202,10 +206,10 @@ describe('A. Basic Attack (Exchange Current)', () => {
 
   test('A2: Segment durations match JSON data', () => {
     const rawSegments = mockAntalJson.skills.BASIC_ATTACK.segments;
-    expect(rawSegments[0].properties.duration.value).toBe(0.53);
-    expect(rawSegments[1].properties.duration.value).toBe(0.7);
-    expect(rawSegments[2].properties.duration.value).toBe(0.767);
-    expect(rawSegments[3].properties.duration.value).toBe(1.3);
+    expect(durVal(rawSegments[0].properties.duration.value)).toBe(0.53);
+    expect(durVal(rawSegments[1].properties.duration.value)).toBe(0.7);
+    expect(durVal(rawSegments[2].properties.duration.value)).toBe(0.767);
+    expect(durVal(rawSegments[3].properties.duration.value)).toBe(1.3);
   });
 
   test('A3: Final Strike (segment 4) recovers 15 SP and 15 Stagger', () => {
@@ -316,7 +320,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId === 'FOCUS'
     );
     expect(focusEffect).toBeDefined();
-    expect(focusEffect.with.duration.value).toBe(60);
+    expect(durVal(focusEffect.with.duration.value)).toBe(60);
   });
 
   test('B5: Susceptibility rate scales from 0.05 (lv1) to 0.10 (lv12)', () => {
@@ -339,7 +343,7 @@ describe('B. Battle Skill (Specified Research Subject)', () => {
 
   test('B7: Battle skill duration is 1 second', () => {
     const battleSkill = mockAntalJson.skills.BATTLE_SKILL;
-    expect(battleSkill.segments[0].properties.duration.value).toBe(1);
+    expect(durVal(battleSkill.segments[0].properties.duration.value)).toBe(1);
     expect(battleSkill.segments[0].properties.duration.unit).toBe('SECOND');
   });
 
@@ -403,7 +407,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value).toBe(24);
+    expect(durVal(cdSeg.properties.duration.value)).toBe(24);
   });
 
   test('C6: Combo stagger recovery is 10', () => {
@@ -416,11 +420,11 @@ describe('C. Combo Skill (EMP Test Site)', () => {
 
   test('C7: Combo animation is TIME_STOP (0.5s within 0.8s)', () => {
     const comboSkill = mockAntalJson.skills.COMBO_SKILL;
-    const totalDuration = comboSkill.segments[0].properties.duration.value + comboSkill.segments[1].properties.duration.value;
+    const totalDuration = durVal(comboSkill.segments[0].properties.duration.value) + durVal(comboSkill.segments[1].properties.duration.value);
     expect(totalDuration).toBeCloseTo(0.8, 2);
     const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(0.5);
+    expect(durVal(animSeg.properties.duration.value)).toBe(0.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
@@ -533,11 +537,11 @@ describe('D. Ultimate (Overclocked Moment)', () => {
 
   test('D4: Ultimate animation is TIME_STOP (1.4s within 1.87s)', () => {
     const ultimate = mockAntalJson.skills.ULTIMATE;
-    const totalDuration = ultimate.segments[0].properties.duration.value + ultimate.segments[1].properties.duration.value;
+    const totalDuration = durVal(ultimate.segments[0].properties.duration.value) + durVal(ultimate.segments[1].properties.duration.value);
     expect(totalDuration).toBeCloseTo(1.87, 2);
     const animSeg = ultimate.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(1.4);
+    expect(durVal(animSeg.properties.duration.value)).toBe(1.4);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
@@ -751,7 +755,7 @@ describe('H. Cooldown Interactions', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value).toBe(24);
+    expect(durVal(cdSeg.properties.duration.value)).toBe(24);
   });
 
   test('H4: Ultimate has no cooldown duration in split JSON', () => {

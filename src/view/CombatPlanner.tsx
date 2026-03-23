@@ -2004,7 +2004,6 @@ export default function CombatPlanner({
                     label: pres.label,
                     color: pres.color,
                     comboWarning: pres.comboWarning,
-                    striped: pres.striped,
                     passive: pres.passive,
                     notDraggable: pres.notDraggable,
                     derived: pres.derived,

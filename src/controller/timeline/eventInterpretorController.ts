@@ -22,7 +22,7 @@ import { resolveValueNode, getSimpleValue, buildContextForSkillColumn } from '..
 import type { ValueResolutionContext } from '../calculation/valueResolver';
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { ElementType, PhysicalStatusType, StatusType, UnitType } from '../../consts/enums';
-import { BREACH_DURATION, ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, INFLICTION_DURATION, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS, TEAM_STATUS_COLUMN } from '../../model/channels';
+import { BREACH_DURATION, ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, INFLICTION_DURATION, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS } from '../../utils/timeline';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
@@ -34,9 +34,9 @@ import { getPhysicalStatusBaseMultiplier } from '../../model/calculation/damageF
 import type { SlotTriggerWiring } from './eventQueueTypes';
 import { findClauseTriggerMatches } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
-import { MAX_INFLICTION_STACKS, PRIORITY, CONSUMING_COLUMNS } from './eventQueueTypes';
+import { MAX_INFLICTION_STACKS, PRIORITY } from './eventQueueTypes';
 import { evaluateEngineTrigger } from './statusTriggerCollector';
-import { DerivedEventController } from './derivedEventController';
+import { DerivedEventController, getStatusStackLimit } from './derivedEventController';
 import type { QueueFrame } from './eventQueueTypes';
 import type { LoadoutProperties } from '../../view/InformationPane';
 
@@ -201,6 +201,7 @@ export class EventInterpretorController {
       case 'FRAME_EFFECT':      return this.handleFrameEffect(entry);
       case 'INFLICTION_CREATE': return this.handleInflictionCreate(entry);
       case 'CONSUME':           return this.handleConsume(entry);
+      case 'LINK_CONSUME':      return this.handleLinkConsume(entry);
       case 'ENGINE_TRIGGER':    return this.handleEngineTrigger(entry);
       case 'COMBO_RESOLVE':     return this.handleComboResolve(entry);
     }
@@ -238,7 +239,8 @@ export class EventInterpretorController {
         }
         if (effect.object === 'STATUS') {
           const col = resolveStatusColumnId(effect.objectId);
-          return this.controller.canApplyStatus(col, ownerId, ctx.frame);
+          const configLimit = effect.objectId ? getStatusStackLimit(effect.objectId) : undefined;
+          return this.controller.canApplyStatus(col, ownerId, ctx.frame, configLimit);
         }
         if (effect.object === 'REACTION') {
           const col = resolveReactionColumnId(effect.adjective);
@@ -656,24 +658,7 @@ export class EventInterpretorController {
       });
     }
 
-    // Post-hook: LINK deferred CONSUME
-    const newEntries: QueueFrame[] = [];
-    if (ev.ownerId === COMMON_OWNER_ID && Object.values(TEAM_STATUS_COLUMN).includes(ev.columnId)) {
-      const statusEnd = ev.startFrame + eventDuration(ev);
-      const firstCast = this.baseEvents
-        .filter(e => e.ownerId !== ENEMY_OWNER_ID && e.ownerId !== COMMON_OWNER_ID && CONSUMING_COLUMNS.has(e.columnId))
-        .sort((a, b) => a.startFrame - b.startFrame)
-        .find(e => e.startFrame > ev.startFrame && e.startFrame < statusEnd);
-      if (firstCast) {
-        newEntries.push({
-          frame: firstCast.startFrame, priority: PRIORITY.CONSUME, type: 'CONSUME',
-          statusName: ev.name, columnId: ev.columnId, ownerId: ev.ownerId,
-          sourceOwnerId: firstCast.ownerId, sourceSkillName: firstCast.name,
-          maxStacks: 0, durationFrames: 0, operatorSlotId: entry.operatorSlotId,
-        });
-      }
-    }
-    return newEntries;
+    return [];
   }
 
   private handleInflictionCreate(entry: QueueFrame): QueueFrame[] {
@@ -696,6 +681,13 @@ export class EventInterpretorController {
     } else {
       this.controller.consumeStatus(entry.columnId, entry.ownerId, entry.frame, source);
     }
+    return [];
+  }
+
+  private handleLinkConsume(entry: QueueFrame): QueueFrame[] {
+    const ev = entry.linkConsumeEvent!;
+    const source = { ownerId: ev.ownerId, skillName: ev.name };
+    this.controller.consumeLink(ev.uid, entry.frame, source);
     return [];
   }
 
@@ -739,6 +731,55 @@ export class EventInterpretorController {
   private handleEngineTrigger(entry: QueueFrame): QueueFrame[] {
     const trigger = entry.engineTrigger;
     if (!trigger) return [];
+
+    const { ctx } = trigger;
+    const triggerEffects = ctx.triggerEffects ?? [];
+
+    // Compound effects (ALL/ANY) go through the interpretor for proper canDo pre-checks.
+    const compoundEffects = triggerEffects.filter(
+      e => (e.verb === 'ALL' || e.verb === 'ANY') && e.effects && e.effects.length > 0,
+    );
+    if (compoundEffects.length > 0) {
+      // Check HAVE conditions first (deferred from collection time)
+      if (ctx.haveConditions.length > 0) {
+        const condCtx: ConditionContext = {
+          events: [...this.baseEvents, ...this.controller.output],
+          frame: entry.frame,
+          sourceOwnerId: ctx.operatorSlotId,
+          getEnemyHpPercentage: this.getEnemyHpPercentage,
+        };
+        if (!evaluateConditions(ctx.haveConditions as unknown as import('../../dsl/semantics').Interaction[], condCtx)) return [];
+      }
+
+      const interpretCtx: InterpretContext = {
+        frame: entry.frame,
+        sourceOwnerId: ctx.operatorSlotId,
+        sourceSkillName: trigger.sourceSkillName,
+        allEvents: () => [...this.baseEvents, ...this.controller.output],
+        potential: ctx.potential,
+      };
+
+      for (const te of compoundEffects) {
+        const effect: Effect = {
+          verb: te.verb as VerbType,
+          cardinalityConstraint: te.cardinalityConstraint as Effect['cardinalityConstraint'],
+          value: te.value === 'MAX' ? THRESHOLD_MAX : te.value as Effect['value'],
+          effects: te.effects?.map(se => ({
+            verb: se.verb as VerbType,
+            object: se.object as Effect['object'],
+            objectId: se.objectId,
+            adjective: (se.adjective ?? se.element) as Effect['adjective'],
+            fromObject: se.fromObject as Effect['fromObject'],
+            to: se.to as Effect['to'],
+            toDeterminer: se.toDeterminer as Effect['toDeterminer'],
+          })),
+        };
+        this.interpret(effect, interpretCtx);
+      }
+      return [];
+    }
+
+    // Simple triggers: use evaluateEngineTrigger
     evaluateEngineTrigger(
       trigger, [...this.baseEvents, ...this.controller.output],
       (col, owner, frame) => this.controller.activeCount(col, owner, frame),

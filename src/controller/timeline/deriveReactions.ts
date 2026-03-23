@@ -7,7 +7,7 @@
  * Reaction type is determined by the incoming element's mapping
  * (INFLICTION_TO_REACTION from channels).
  *
- * Stacks = total consumed infliction count (active other + incoming).
+ * Stacks = min(active other-element infliction count, 2).
  * All inflictions (incoming + active same/other element) are consumed.
  */
 import type { TimelineEvent } from '../../consts/viewTypes';
@@ -77,7 +77,7 @@ export function deriveReactions(events: TimelineEvent[]): TimelineEvent[] {
         segments: durationSegment(REACTION_DURATION),
         sourceOwnerId: incoming.sourceOwnerId,
         sourceSkillName: incoming.sourceSkillName,
-        stacks: activeOther.length + 1,
+        stacks: Math.min(activeOther.length, 2),
       });
 
       // Remove the triggering infliction

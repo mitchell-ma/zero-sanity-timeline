@@ -1,6 +1,8 @@
 # Devlog
 
 ## 2026-03-23
+- **Link team buff consumption** — the Link damage buff (from Li Feng and Akekuri) is now properly consumed when a Battle Skill or Ultimate is used, boosting all hits across the entire skill. Basic attacks, combo skills, finishers, and dive attacks correctly ignore Link, matching in-game behavior
+- **Akekuri Ultimate skill data** — Squad! On Me! now includes SP recovery frames and applies the Link buff to the team during the channeling phase
 - **Stackable statuses now overlap freely** — status effects with multiple stacks (like Melting Flame) no longer show false overlap warnings when placed near each other on the timeline
 - **Stack limits enforced on add** — attempting to place more stacks than an effect allows (e.g. a 5th Melting Flame) is now blocked, matching in-game behavior
 - **Undo preserves status state** — undoing an action that consumed status stacks (like an empowered battle skill) now correctly restores the stacks to their unconsumed state

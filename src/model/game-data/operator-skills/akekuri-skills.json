@@ -889,7 +889,173 @@
           },
           "name": "SQUAD! ON ME!"
         },
-        "frames": []
+        "frames": [
+          {
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 0,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "APPLY",
+                    "object": "LINK",
+                    "objectType": "STATUS",
+                    "to": "TEAM",
+                    "with": {
+                      "duration": {
+                        "value": {
+                          "verb": "IS",
+                          "value": 3.425
+                        },
+                        "unit": "SECOND"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 0.856,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          19.33,
+                          20,
+                          20.67,
+                          21.33,
+                          22,
+                          22.67,
+                          23.33,
+                          24,
+                          24.67,
+                          25.33,
+                          26,
+                          26.67
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 1.713,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          19.33,
+                          20,
+                          20.67,
+                          21.33,
+                          22,
+                          22.67,
+                          23.33,
+                          24,
+                          24.67,
+                          25.33,
+                          26,
+                          26.67
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "metadata": {
+              "eventComponentType": "FRAME"
+            },
+            "properties": {
+              "offset": {
+                "value": 2.569,
+                "unit": "SECOND"
+              }
+            },
+            "clause": [
+              {
+                "conditions": [],
+                "effects": [
+                  {
+                    "verb": "RECOVER",
+                    "object": "SKILL_POINT",
+                    "with": {
+                      "value": {
+                        "verb": "VARY_BY",
+                        "object": "SKILL_LEVEL",
+                        "value": [
+                          19.33,
+                          20,
+                          20.67,
+                          21.33,
+                          22,
+                          22.67,
+                          23.33,
+                          24,
+                          24.67,
+                          25.33,
+                          26,
+                          26.67
+                        ],
+                        "ofDeterminer": "THIS",
+                        "of": "OPERATOR"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ],
     "metadata": {

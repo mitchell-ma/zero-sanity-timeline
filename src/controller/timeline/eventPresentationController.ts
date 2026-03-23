@@ -212,7 +212,6 @@ export interface EventPresentation {
   label: string;
   color: string;
   comboWarning: string | null;
-  striped: boolean;
   passive: boolean;
   notDraggable: boolean;
   derived: boolean;
@@ -272,7 +271,6 @@ export function computeEventPresentation(
   col: Column,
   options: {
     slotElementColors: Record<string, string>;
-    alwaysAvailableComboSlots: Set<string>;
     autoFinisherIds: Set<string>;
     validationMaps: ValidationMaps;
     interactionMode?: InteractionModeType;
@@ -280,7 +278,7 @@ export function computeEventPresentation(
     events?: readonly TimelineEvent[];
   },
 ): EventPresentation {
-  const { slotElementColors, alwaysAvailableComboSlots, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
+  const { slotElementColors, autoFinisherIds, validationMaps, interactionMode, statusViewOverrides, events } = options;
   const isWindow = ev.columnId === COMBO_WINDOW_COLUMN_ID;
   const isDerivedCol = col.type === 'mini-timeline' && !!col.derived && interactionMode === InteractionModeType.STRICT;
   const isEnemy = col.type === 'mini-timeline' && col.source === TimelineSourceType.ENEMY;
@@ -300,11 +298,6 @@ export function computeEventPresentation(
   const comboWarning = validationWarning && eventWarnings
     ? `${validationWarning}\n${eventWarnings}`
     : validationWarning ?? eventWarnings;
-
-  const striped = col.type === 'mini-timeline'
-    && col.columnId === SKILL_COLUMNS.COMBO
-    && !isWindow
-    && !alwaysAvailableComboSlots.has(col.ownerId);
 
   const passive = isWindow;
   const notDraggable = isWindow || isDerivedCol || (isEnemy && interactionMode === InteractionModeType.STRICT);
@@ -328,7 +321,6 @@ export function computeEventPresentation(
     label,
     color,
     comboWarning,
-    striped,
     passive,
     notDraggable,
     derived,
@@ -467,16 +459,26 @@ function computeMicroPositions(
       const evStart = ev.startFrame;
       const evEnd = eventEndFrame(ev);
 
-      // If this type already has a slot assigned, reuse it
+      // If this type already has a slot assigned, reuse it — unless a
+      // different-type event now overlaps in that slot.
       const existingSlot = typeSlots.get(ev.columnId);
       if (existingSlot != null) {
-        slots[existingSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
-        positions.set(ev.uid, {
-          leftFrac: existingSlot * MAX_SLOT_FRAC,
-          widthFrac: MAX_SLOT_FRAC,
-          color: mcById.get(ev.columnId)?.color ?? col.color,
-        });
-        continue;
+        let conflict = false;
+        for (const r of slots[existingSlot]) {
+          if (r.type !== ev.columnId && r.start < evEnd && r.end > evStart) {
+            conflict = true;
+            break;
+          }
+        }
+        if (!conflict) {
+          slots[existingSlot].push({ type: ev.columnId, start: evStart, end: evEnd });
+          positions.set(ev.uid, {
+            leftFrac: existingSlot * MAX_SLOT_FRAC,
+            widthFrac: MAX_SLOT_FRAC,
+            color: mcById.get(ev.columnId)?.color ?? col.color,
+          });
+          continue;
+        }
       }
 
       // Find the lowest slot with no overlapping different-type event

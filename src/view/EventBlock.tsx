@@ -80,29 +80,24 @@ interface SegmentStyle {
   borderAlpha: number;
   labelColor: string;
   glow: boolean;
-  striped: boolean;
 }
 
-function getSegmentStyle(seg: EventSegmentData, color: string, isStriped: boolean): SegmentStyle {
+function getSegmentStyle(seg: EventSegmentData, color: string): SegmentStyle {
   const types = seg.properties.segmentTypes;
   if (types?.includes(SegmentType.COOLDOWN) || types?.includes(SegmentType.IMMEDIATE_COOLDOWN)) {
-    return { bgAlpha: 0.15, borderAlpha: 0, labelColor: 'rgba(180,180,180,0.5)', glow: false, striped: true };
+    return { bgAlpha: 0.35, borderAlpha: 0.2, labelColor: 'rgba(180,180,180,0.7)', glow: false };
   }
   if (types?.includes(SegmentType.ANIMATION)) {
-    return { bgAlpha: 0.35, borderAlpha: 0.55, labelColor: hexAlpha(color, 0.8), glow: false, striped: false };
+    return { bgAlpha: 0.55, borderAlpha: 0.7, labelColor: hexAlpha(color, 0.9), glow: false };
   }
   if (types?.includes(SegmentType.STASIS)) {
-    return { bgAlpha: 0.55, borderAlpha: 0.75, labelColor: '#fff', glow: false, striped: false };
+    return { bgAlpha: 0.7, borderAlpha: 0.85, labelColor: '#fff', glow: false };
   }
   if (types?.includes(SegmentType.ACTIVE)) {
-    return { bgAlpha: 0.80, borderAlpha: 0.95, labelColor: '#fff', glow: true, striped: false };
+    return { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
   }
   // Default (no segmentTypes, NORMAL, or untyped active segments): solid active look
-  // For striped events (e.g. combo triggers), override with striped pattern
-  if (isStriped) {
-    return { bgAlpha: 0.80, borderAlpha: 0.55, labelColor: '#fff', glow: false, striped: true };
-  }
-  return { bgAlpha: 0.80, borderAlpha: 0.95, labelColor: '#fff', glow: true, striped: false };
+  return { bgAlpha: 0.9, borderAlpha: 1.0, labelColor: '#fff', glow: true };
 }
 
 interface EventBlockProps {
@@ -137,8 +132,6 @@ interface EventBlockProps {
   hoverFrame?: number | null;
   /** Element type of the skill (e.g. "HEAT", "NATURE") for frame diamond coloring. */
   skillElement?: string;
-  /** If true, use diagonal stripe pattern for the active segment (e.g. combo trigger). */
-  striped?: boolean;
   /** If true, event is non-interactive: translucent, default cursor, no highlight. */
   passive?: boolean;
   /** If set, shows a warning overlay on top of the event (e.g. combo outside trigger window). */
@@ -154,16 +147,6 @@ function hexAlpha(hex: string, alpha: number): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
-}
-
-function stripedBg(color: string): string {
-  return `repeating-linear-gradient(
-    -45deg,
-    ${hexAlpha(color, 0.18)} 0px,
-    ${hexAlpha(color, 0.18)} 2px,
-    transparent 2px,
-    transparent 8px
-  )`;
 }
 
 function EventBlock({
@@ -189,7 +172,6 @@ function EventBlock({
   allDefaultSegments,
   hoverFrame: hoverFrameProp,
   skillElement,
-  striped = false,
   passive = false,
   comboWarning = null,
   isAutoFinisher = false,
@@ -287,8 +269,8 @@ function EventBlock({
 
     // Derive styling from segment types
     const style = passive
-      ? { bgAlpha: 0.15, borderAlpha: 0, labelColor: '#fff', glow: false, striped: false } as SegmentStyle
-      : getSegmentStyle(seg, color, striped);
+      ? { bgAlpha: 0.15, borderAlpha: 0, labelColor: '#fff', glow: false } as SegmentStyle
+      : getSegmentStyle(seg, color);
 
     // Segment label: use segment name if present, otherwise empty for multi-segment.
     // For single-segment events, fall back to the display label.
@@ -303,9 +285,9 @@ function EventBlock({
         style={{
           [axis.framePos]: segTopPx,
           [axis.frameSize]: segH,
-          background: style.striped ? stripedBg(color) : hexAlpha(color, style.bgAlpha),
-          border: passive ? 'none' : style.striped ? '1px solid rgba(255,255,255,0.1)' : `1px solid ${hexAlpha(color, style.borderAlpha)}`,
-          borderTop: passive ? 'none' : style.striped && !isFirst ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, Math.min(style.borderAlpha, 0.5))}`,
+          background: hexAlpha(color, style.bgAlpha),
+          border: passive ? 'none' : `1px solid ${hexAlpha(color, style.borderAlpha)}`,
+          borderTop: passive ? 'none' : isFirst ? undefined : `1px dashed ${hexAlpha(color, Math.min(style.borderAlpha, 0.5))}`,
           borderRadius: passive ? '2px' : borderRadiusVal,
           boxShadow: style.glow ? `0 0 6px ${hexAlpha(color, 0.35)}, inset 0 1px 0 rgba(255,255,255,0.12)` : undefined,
           zIndex: segments.length - i,

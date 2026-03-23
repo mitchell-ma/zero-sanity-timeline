@@ -740,6 +740,7 @@
           "eventComponentType": "SEGMENT"
         },
         "properties": {
+          "name": "Eruption Column",
           "duration": {
             "value": {
               "verb": "IS",

@@ -332,7 +332,7 @@ describe('APPLY CRYO INFLICTION — target filtering', () => {
         duration: { value: { verb: VerbType.IS, value: 10 }, unit: UnitType.SECOND },
       },
       metadata: { originId: 'TEST' },
-      onTriggerClause: [{ conditions: [condition] }],
+      onTriggerClause: [{ conditions: [condition], effects: [{ verb: 'APPLY', object: 'STATUS', objectId: STATUS_ID }] }],
     }];
   }
 

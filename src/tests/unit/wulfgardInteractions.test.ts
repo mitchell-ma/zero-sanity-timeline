@@ -159,7 +159,7 @@ function _normalizeStatusEntry(raw: Record<string, any>): Record<string, any> {
   if (props.duration) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON data
     const dur = props.duration as Record<string, any>;
-    const dv = dur.value;
+    const dv = durVal(dur.value);
     out.properties = { duration: { value: Array.isArray(dv) ? dv : [dv], unit: dur.unit } };
   }
   return out;
@@ -232,6 +232,10 @@ const mockJson = { ...mockOperatorJson, skills: wulfgardSkills, skillTypeMap: _s
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
+/** Resolve a duration value that may be a plain number or a ValueNode { verb, value }. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function durVal(v: any): any { return typeof v === 'object' && v !== null && 'verb' in v && 'value' in v ? v.value : v; }
+
 /** Helper to extract values from the new clause-effects structure (replaces old multipliers access). */
 /* eslint-disable @typescript-eslint/no-explicit-any -- JSON frame data access helpers */
 function getFrameEffectValue(frame: Record<string, any>, verb: string, object: string, withKey: string): any {
@@ -270,10 +274,10 @@ describe('A. Basic Attack (Rapid Fire Akimbo)', () => {
 
   test('A2: Segment durations match JSON data', () => {
     const rawSegments = mockJson.skills[mockJson.skillTypeMap.BASIC_ATTACK.BATK].segments;
-    expect(rawSegments[0].properties.duration.value).toBe(0.83);
-    expect(rawSegments[1].properties.duration.value).toBe(0.8);
-    expect(rawSegments[2].properties.duration.value).toBe(1.1);
-    expect(rawSegments[3].properties.duration.value).toBe(1.767);
+    expect(durVal(rawSegments[0].properties.duration.value)).toBe(0.83);
+    expect(durVal(rawSegments[1].properties.duration.value)).toBe(0.8);
+    expect(durVal(rawSegments[2].properties.duration.value)).toBe(1.1);
+    expect(durVal(rawSegments[3].properties.duration.value)).toBe(1.767);
   });
 
   test('A3: Final Strike (segment 4) recovers 18 SP and 18 Stagger', () => {
@@ -412,7 +416,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
 
   test('B10: Battle skill duration is 1.07 seconds', () => {
     const battleSkill = mockJson.skills[mockJson.skillTypeMap.BATTLE_SKILL];
-    expect(battleSkill.segments[0].properties.duration.value).toBe(1.07);
+    expect(durVal(battleSkill.segments[0].properties.duration.value)).toBe(1.07);
     expect(battleSkill.segments[0].properties.duration.unit).toBe('SECOND');
   });
 
@@ -444,7 +448,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value[0]).toBe(20);
+    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(20);
   });
 
   test('C4: Combo has 1 frame with 10 Stagger + Heat infliction', () => {
@@ -466,11 +470,11 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
 
   test('C5: Combo animation is TIME_STOP (0.5s within 1s)', () => {
     const comboSkill = mockJson.skills[mockJson.skillTypeMap.COMBO_SKILL];
-    const totalDuration = comboSkill.segments[0].properties.duration.value + comboSkill.segments[1].properties.duration.value;
+    const totalDuration = durVal(comboSkill.segments[0].properties.duration.value) + durVal(comboSkill.segments[1].properties.duration.value);
     expect(totalDuration).toBe(1);
     const animSeg = comboSkill.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(0.5);
+    expect(durVal(animSeg.properties.duration.value)).toBe(0.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
@@ -513,11 +517,11 @@ describe('D. Ultimate (Wolven Fury)', () => {
 
   test('D2: Ultimate animation is TIME_STOP (1.53s within 2.5s)', () => {
     const ultimate = mockJson.skills[mockJson.skillTypeMap.ULTIMATE];
-    const totalDuration = ultimate.segments[0].properties.duration.value + ultimate.segments[1].properties.duration.value;
+    const totalDuration = durVal(ultimate.segments[0].properties.duration.value) + durVal(ultimate.segments[1].properties.duration.value);
     expect(totalDuration).toBe(2.5);
     const animSeg = ultimate.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(1.53);
+    expect(durVal(animSeg.properties.duration.value)).toBe(1.53);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
@@ -542,7 +546,7 @@ describe('E. Empowered Battle Skill', () => {
   });
 
   test('E2: Duration is 2.07 seconds', () => {
-    expect(mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].properties.duration.value).toBe(2.07);
+    expect(durVal(mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].properties.duration.value)).toBe(2.07);
   });
 
   test('E3: Frame offsets at 0.2s, 0.53s, 0.767s, 2.07s', () => {
@@ -826,7 +830,7 @@ describe('I. Cooldown Interactions', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value[0]).toBe(20);
+    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(20);
   });
 
   test('I4: Combo placement during 20s cooldown is blocked', () => {

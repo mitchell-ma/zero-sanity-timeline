@@ -17,13 +17,14 @@ export const PRIORITY = {
   INFLICTION_CREATE: 10,
   CONSUME: 15,
   COMBO_RESOLVE: 16,
+  LINK_CONSUME: 17,
   ENGINE_TRIGGER: 22,
 } as const;
 
 export interface QueueFrame {
   frame: number;
   priority: number;
-  type: 'FRAME_EFFECT' | 'COMBO_RESOLVE' | 'INFLICTION_CREATE' | 'CONSUME' | 'ENGINE_TRIGGER';
+  type: 'FRAME_EFFECT' | 'COMBO_RESOLVE' | 'INFLICTION_CREATE' | 'CONSUME' | 'LINK_CONSUME' | 'ENGINE_TRIGGER';
   /** Event UID template (for infliction entries). */
   uid?: string;
   statusName: string;
@@ -63,10 +64,9 @@ export interface QueueFrame {
   comboResolve?: {
     comboEvent: import('../../consts/viewTypes').TimelineEvent;
   };
+  /** The skill event that should try to consume Link at its start frame. */
+  linkConsumeEvent?: import('../../consts/viewTypes').TimelineEvent;
 }
-
-/** Skill column IDs that consume team statuses (Link) when cast. */
-export const CONSUMING_COLUMNS = new Set(['battle', 'combo', 'ultimate']);
 
 /** Slot-level trigger wiring for the pipeline. */
 export interface SlotTriggerWiring {

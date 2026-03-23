@@ -7,15 +7,12 @@
  * - Empty onTriggerClause: statuses are NOT created as passive at frame 0
  */
 
-import { executeEffect, applyMutations } from '../../controller/timeline/effectExecutor';
-import type { ExecutionContext } from '../../controller/timeline/effectExecutor';
 import { evaluateInteraction } from '../../controller/timeline/conditionEvaluator';
 import type { ConditionContext } from '../../controller/timeline/conditionEvaluator';
-import { VerbType, DURATION_END, NounType } from '../../dsl/semantics';
-import type { Effect, Interaction } from '../../dsl/semantics';
-import { eventDuration } from '../../consts/viewTypes';
+import { VerbType, NounType } from '../../dsl/semantics';
+import type { Interaction } from '../../dsl/semantics';
 import type { TimelineEvent } from '../../consts/viewTypes';
-import { EventStatusType, PhysicalStatusType } from '../../consts/enums';
+import { PhysicalStatusType } from '../../consts/enums';
 
 // ── Mocks ──────────────────────────────────────────────────────────────
 
@@ -69,16 +66,6 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; columnId: 
   };
 }
 
-function makeCtx(overrides: Partial<ExecutionContext> = {}): ExecutionContext {
-  return {
-    events: [],
-    frame: 100,
-    sourceOwnerId: 'slot1',
-    sourceSkillName: 'TEST_SKILL',
-    idCounter: 0,
-    ...overrides,
-  };
-}
 
 function makeCondCtx(overrides: Partial<ConditionContext> = {}): ConditionContext {
   return {
@@ -91,141 +78,7 @@ function makeCondCtx(overrides: Partial<ConditionContext> = {}): ConditionContex
 
 // ── EXTEND UNTIL END ─────────────────────────────────────────────────────
 
-describe('EXTEND UNTIL END', () => {
-  test('extends target to parent end frame when target is shorter', () => {
-    // Lift status: starts at frame 0, duration 600 (5s), ends at 600
-    // Parent status: ends at frame 1200 (10s)
-    // Expected: Lift extended from 600 to 1200
-    const liftEvent = makeEvent({
-      uid: 'lift-1',
-      name: 'LIFT',
-      columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
-      startFrame: 0,
-      segments: [{ properties: { duration: 600 } }],
-    });
-
-    const effect: Effect = {
-      verb: VerbType.EXTEND,
-      object: NounType.STATUS,
-      objectId: 'LIFT',
-      onObject: NounType.ENEMY,
-      until: DURATION_END,
-    };
-
-    const ctx = makeCtx({
-      events: [liftEvent],
-      frame: 0,
-      parentEventEndFrame: 1200,
-    });
-
-    const result = executeEffect(effect, ctx);
-
-    expect(result.failed).toBe(false);
-    expect(result.clamped.size).toBe(1);
-    const clamp = result.clamped.get('lift-1')!;
-    expect(clamp.newDuration).toBe(1200); // extended to parent end
-    expect(clamp.eventStatus).toBe(EventStatusType.EXTENDED);
-  });
-
-  test('does not shorten target when it is already longer than parent', () => {
-    // Lift status: starts at frame 0, duration 2400 (20s), ends at 2400
-    // Parent status: ends at frame 600 (5s)
-    // Expected: no change (don't shorten)
-    const liftEvent = makeEvent({
-      uid: 'lift-1',
-      name: 'LIFT',
-      columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
-      startFrame: 0,
-      segments: [{ properties: { duration: 2400 } }],
-    });
-
-    const effect: Effect = {
-      verb: VerbType.EXTEND,
-      object: NounType.STATUS,
-      objectId: 'LIFT',
-      onObject: NounType.ENEMY,
-      until: DURATION_END,
-    };
-
-    const ctx = makeCtx({
-      events: [liftEvent],
-      frame: 0,
-      parentEventEndFrame: 600,
-    });
-
-    const result = executeEffect(effect, ctx);
-
-    expect(result.failed).toBe(false);
-    expect(result.clamped.size).toBe(0); // no change
-  });
-
-  test('extends mid-timeline target correctly', () => {
-    // Lift starts at frame 300, duration 300 (ends at 600)
-    // Parent ends at frame 1200
-    // Expected: new duration = 1200 - 300 = 900
-    const liftEvent = makeEvent({
-      uid: 'lift-1',
-      name: 'LIFT',
-      columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
-      startFrame: 300,
-      segments: [{ properties: { duration: 300 } }],
-    });
-
-    const effect: Effect = {
-      verb: VerbType.EXTEND,
-      object: NounType.STATUS,
-      objectId: 'LIFT',
-      onObject: NounType.ENEMY,
-      until: DURATION_END,
-    };
-
-    const ctx = makeCtx({
-      events: [liftEvent],
-      frame: 300,
-      parentEventEndFrame: 1200,
-    });
-
-    const result = executeEffect(effect, ctx);
-
-    expect(result.clamped.size).toBe(1);
-    expect(result.clamped.get('lift-1')!.newDuration).toBe(900);
-  });
-
-  test('applyMutations correctly updates extended event', () => {
-    const liftEvent = makeEvent({
-      uid: 'lift-1',
-      name: 'LIFT',
-      columnId: PhysicalStatusType.LIFT,
-      ownerId: 'enemy',
-      startFrame: 0,
-      segments: [{ properties: { duration: 600 } }],
-    });
-
-    const effect: Effect = {
-      verb: VerbType.EXTEND,
-      object: NounType.STATUS,
-      objectId: 'LIFT',
-      onObject: NounType.ENEMY,
-      until: DURATION_END,
-    };
-
-    const ctx = makeCtx({
-      events: [liftEvent],
-      frame: 0,
-      parentEventEndFrame: 1200,
-    });
-
-    const mutations = executeEffect(effect, ctx);
-    const result = applyMutations([liftEvent], mutations);
-
-    expect(result).toHaveLength(1);
-    expect(eventDuration(result[0])).toBe(1200);
-    expect(result[0].eventStatus).toBe(EventStatusType.EXTENDED);
-  });
-});
+// EXTEND UNTIL END was removed — verb is a no-op in both executor and interpretor.
 
 // ── RECEIVE condition ────────────────────────────────────────────────────
 

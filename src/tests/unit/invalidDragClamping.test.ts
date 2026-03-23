@@ -252,19 +252,19 @@ describe('clampDeltaByComboWindow — invalid at drag start', () => {
     expect(invalidSet.has('c1')).toBe(false);
   });
 
-  test('clamps within window after transition (target-based fallback)', () => {
-    // After transition, invalidSet no longer has c1.
+  test('clamps within window after transition (comboRevalidated)', () => {
+    // After transition, invalidSet no longer has c1, but comboRevalidated does.
     // startFrame=50 is outside all windows, so origWindow lookup fails.
-    // Fallback checks target position — if target is in window, clamp within it.
+    // comboRevalidated snaps to nearest window boundary.
     const invalidSet = new Set<string>();
+    const comboRevalidated = new Set<string>(['c1']);
 
-    // target=210, outside window → target-based fallback finds no window
-    const result1 = clampDeltaByComboWindow(160, 'c1', events, startFrame, processedEvents, invalidSet);
-    // Should clamp to window end - 1 = 199
+    // target=210, outside window → snap to nearest window boundary (end-1 = 199)
+    const result1 = clampDeltaByComboWindow(160, 'c1', events, startFrame, processedEvents, invalidSet, comboRevalidated);
     expect(startFrame + result1).toBe(199);
 
-    // target=120, inside window → target-based fallback finds window, allows
-    const result2 = clampDeltaByComboWindow(70, 'c1', events, startFrame, processedEvents, invalidSet);
+    // target=120, inside window → allowed
+    const result2 = clampDeltaByComboWindow(70, 'c1', events, startFrame, processedEvents, invalidSet, comboRevalidated);
     expect(result2).toBe(70);
   });
 });

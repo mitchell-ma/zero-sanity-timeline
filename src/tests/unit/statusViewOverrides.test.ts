@@ -20,7 +20,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
         name: 'Melting Flame',
         element: 'HEAT',
         stacks: {
-          limit: { P0: 4, P1: 4, P2: 4, P3: 4, P4: 4, P5: 4 },
+          limit: { value: 4 },
           interactionType: 'NONE',
         },
         onTriggerClause: [],
@@ -30,7 +30,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
         name: 'Scorching Heart',
         element: 'HEAT',
         stacks: {
-          limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+          limit: { value: 1 },
           interactionType: 'RESET',
         },
         onTriggerClause: [],
@@ -42,7 +42,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
         id: 'FOCUS',
         name: 'Focus',
         stacks: {
-          limit: { P0: 1, P1: 1, P2: 1, P3: 1, P4: 1, P5: 1 },
+          limit: { value: 1 },
           interactionType: 'RESET',
         },
         onTriggerClause: [],

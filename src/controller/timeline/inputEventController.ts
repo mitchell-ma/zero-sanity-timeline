@@ -517,7 +517,6 @@ export function validateMove(
   overlapExemptIds?: Set<string>,
 ): number {
   let clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, newStartFrame));
-  clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
   if (!overlapExemptIds?.has(target.uid)) {
     clamped = clampNonOverlappable(allEvents, target, clamped, processedEvents ?? undefined);
   }
@@ -533,6 +532,10 @@ export function validateMove(
   if (target.enhancementType === EnhancementType.ENHANCED) {
     clamped = clampToEnableWindow(allEvents, target, clamped);
   }
+  // Combo window validation runs last — it has final authority over position
+  // so that other validators (overlap, ultimate edge) can't push the event
+  // out of its activation window.
+  clamped = ComboSkillEventController.validateMove(target, clamped, processedEvents as TimelineEvent[] | null);
   return clamped;
 }
 

@@ -61,7 +61,7 @@ export class ComboSkillEventController {
       }
     }
 
-    // Clamp to nearest window boundary
+    // Outside all windows — clamp to nearest window boundary
     let closest = newStartFrame;
     let minDist = Infinity;
     for (const w of windows) {

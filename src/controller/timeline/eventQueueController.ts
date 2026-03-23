@@ -653,6 +653,25 @@ export function runEventQueue(
       });
     }
   }
+  // Seed Link consumption checks for battle skills and ultimates
+  for (const ev of registeredEvents) {
+    if (ev.columnId === SKILL_COLUMNS.BATTLE || ev.columnId === SKILL_COLUMNS.ULTIMATE) {
+      queue.insert({
+        frame: ev.startFrame,
+        priority: PRIORITY.LINK_CONSUME,
+        type: 'LINK_CONSUME',
+        statusName: StatusType.LINK,
+        columnId: ev.columnId,
+        ownerId: ev.ownerId,
+        sourceOwnerId: ev.ownerId,
+        sourceSkillName: ev.name,
+        maxStacks: 0,
+        durationFrames: 0,
+        operatorSlotId: ev.ownerId,
+        linkConsumeEvent: ev,
+      });
+    }
+  }
   seed(collectConsumeReactionEntries(registeredEvents, stops));
   seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
   seed(collectConsumeEntries(registeredEvents, stops, slotOperatorMap));

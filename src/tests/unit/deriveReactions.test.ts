@@ -246,7 +246,7 @@ describe('deriveReactions', () => {
 
   // ── stacks tracking ───────────────────────────────────────────
 
-  it('stacks records total inflictions involved', () => {
+  it('stacks records active other-element count (capped at 2)', () => {
     const events = [
       infliction('h1', INFLICTION_COLUMNS.HEAT, 0),
       infliction('h2', INFLICTION_COLUMNS.HEAT, 10),
@@ -256,7 +256,7 @@ describe('deriveReactions', () => {
     const result = deriveReactions(events);
     const reactions = findReactions(result);
 
-    expect(reactions[0].stacks).toBe(3); // 2 heat + 1 nature (incoming)
+    expect(reactions[0].stacks).toBe(2); // 2 active heat consumed, incoming not counted
   });
 
   // ── Source attribution ──────────────────────────────────────────────────

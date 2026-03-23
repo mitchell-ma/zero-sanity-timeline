@@ -10,7 +10,7 @@ import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
 import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
-import { VerbType } from '../../dsl/semantics';
+import { VerbType, SubjectType, DeterminerType } from '../../dsl/semantics';
 import type { Interaction, Predicate } from '../../dsl/semantics';
 import { extendByTimeStops } from './processTimeStop';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, OPERATOR_COLUMNS, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
@@ -61,34 +61,35 @@ export function hasEnableClauseAtFrame(
 }
 
 /**
- * Check if any overlapping segment has a DISABLE clause for the specified
- * skill object type at the given frame. Returns the adjective (e.g. 'NORMAL')
- * if found, empty string for DISABLE without adjective, or null if no match.
+ * Check if any overlapping segment has a DISABLE clause matching the specified
+ * object and adjective at the given frame.
+ * When adjective is undefined, matches DISABLE effects with no adjective (e.g. DISABLE FINISHER).
+ * When adjective is provided, matches DISABLE effects with that exact adjective (e.g. DISABLE NORMAL BATK).
  */
-function getDisableAdjectiveAtFrame(
+function hasDisableAtFrame(
   events: readonly TimelineEvent[],
   ownerId: string,
   disableObject: string,
+  adjective: string | undefined,
   atFrame: number,
-): string | null {
+): boolean {
   for (const ev of events) {
     if (ev.ownerId !== ownerId) continue;
     let cursor = ev.startFrame;
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
-        for (const c of seg.clause) {
-          for (const e of c.effects) {
-            if (e.verb === 'DISABLE' && e.object === disableObject) {
-              return (e.adjective as string) ?? '';
-            }
-          }
+        if (seg.clause.some(c => c.effects.some(e =>
+          e.verb === 'DISABLE' && e.object === disableObject
+          && (adjective === undefined ? !e.adjective : e.adjective === adjective),
+        ))) {
+          return true;
         }
       }
       cursor = segEnd;
     }
   }
-  return null;
+  return false;
 }
 
 // ── Time-stop regions ─────────────────────────────────────────────────────────
@@ -553,6 +554,15 @@ export function clampDeltaByComboWindow(
 
   const target = startFrame + clampedDelta;
 
+  // Clamp target's startFrame within a window.
+  const clampToWindow = (w: TimelineEvent) => {
+    const wStart = w.startFrame;
+    const wEnd = windowEndFrame(w);
+    if (target < wStart) return wStart - startFrame;
+    if (target >= wEnd) return wEnd - 1 - startFrame;
+    return clampedDelta;
+  };
+
   // Event was invalid at drag start (outside all windows) — allow free
   // movement until the target enters a window, then clamp within it.
   if (invalidAtDragStart?.has(eventUid)) {
@@ -561,52 +571,32 @@ export function clampDeltaByComboWindow(
     // Entered a window — transition to revalidated (clamped going forward)
     invalidAtDragStart.delete(eventUid);
     comboRevalidated?.add(eventUid);
-    const wStart = targetWindow.startFrame;
-    const wEnd = windowEndFrame(targetWindow);
-    if (target < wStart) return wStart - startFrame;
-    if (target >= wEnd) return wEnd - 1 - startFrame;
-    return clampedDelta;
+    return clampToWindow(targetWindow);
   }
 
-  // Find the window the event started in, or fall back to the window the
-  // target is currently in (handles post-transition from invalid state).
-  // Third fallback: a window crossed between startFrame and target (overshoot).
-  let origWindow = windows.find((w) => startFrame >= w.startFrame && startFrame < windowEndFrame(w));
-  if (!origWindow) {
-    origWindow = windows.find((w) => target >= w.startFrame && target < windowEndFrame(w));
+  // Find the window the event started in — lock to that window only.
+  const origWindow = windows.find((w) => startFrame >= w.startFrame && startFrame < windowEndFrame(w));
+  if (origWindow) {
+    return clampToWindow(origWindow);
   }
-  if (!origWindow) {
-    // Target overshot past a window — find the closest window between
-    // startFrame and target so we clamp to its boundary instead of escaping.
-    origWindow = windows.find((w) => {
-      const wEnd = windowEndFrame(w);
-      return (startFrame < w.startFrame && wEnd <= target)
-        || (startFrame >= wEnd && w.startFrame >= target);
-    });
-  }
-  // Revalidated event that escaped all windows (startFrame is outside and
-  // target overshot) — snap to the nearest window boundary.
-  if (!origWindow && comboRevalidated?.has(eventUid)) {
+
+  // Event started outside all windows — find the nearest window boundary
+  // for revalidated events so they snap into a window and stay there.
+  if (comboRevalidated?.has(eventUid)) {
+    let bestWindow: TimelineEvent | undefined;
     let bestDist = Infinity;
     for (const w of windows) {
       const wEnd = windowEndFrame(w);
       const dStart = Math.abs(target - w.startFrame);
       const dEnd = Math.abs(target - (wEnd - 1));
-      if (dStart < bestDist) { bestDist = dStart; origWindow = w; }
-      if (dEnd < bestDist) { bestDist = dEnd; origWindow = w; }
+      if (dStart < bestDist) { bestDist = dStart; bestWindow = w; }
+      if (dEnd < bestDist) { bestDist = dEnd; bestWindow = w; }
+    }
+    if (bestWindow) {
+      return clampToWindow(bestWindow);
     }
   }
-  if (!origWindow) return clampedDelta;
 
-  const windowStart = origWindow.startFrame;
-  const windowEnd = windowEndFrame(origWindow);
-
-  if (target < windowStart) {
-    return windowStart - startFrame;
-  }
-  if (target >= windowEnd) {
-    return windowEnd - 1 - startFrame;
-  }
   return clampedDelta;
 }
 
@@ -832,23 +822,24 @@ export function checkVariantAvailability(
   slots?: Slot[],
   enhancementType?: string,
 ): VariantAvailability {
-  const isEnhanced = enhancementType === EnhancementType.ENHANCED;
-  const isEmpowered = enhancementType === EnhancementType.EMPOWERED;
+  // Resolve enhancement types from JSON if available (supports dual ENHANCED+EMPOWERED)
+  const slot = slots?.find((s) => s.slotId === ownerId);
+  const opId = slot?.operator?.id;
+  const variantTypes = opId ? getVariantEnhancementTypes(opId, variantName) : null;
+  const isEnhanced = variantTypes ? variantTypes.includes(EnhancementType.ENHANCED) : enhancementType === EnhancementType.ENHANCED;
+  const isEmpowered = variantTypes ? variantTypes.includes(EnhancementType.EMPOWERED) : enhancementType === EnhancementType.EMPOWERED;
 
   // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
   const enableObject = columnId ? COLUMN_TO_ENABLE_OBJECT[columnId] : undefined;
 
   // Evaluate segment clause conditions (e.g. variant-specific activation rules)
-  {
-    const slot = slots?.find((s) => s.slotId === ownerId);
-    if (slot?.operator) {
-      const clause = getVariantClause(slot.operator.id, variantName);
-      if (clause) {
-        const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame) : false;
-        const result = evaluateClause(clause, { enhanceActive });
-        if (!result.pass) return { disabled: true, reason: result.reason };
-      }
+  if (opId) {
+    const clause = getVariantClause(opId, variantName);
+    if (clause) {
+      const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame) : false;
+      const result = evaluateClause(clause, { enhanceActive });
+      if (!result.pass) return { disabled: true, reason: result.reason };
     }
   }
 
@@ -859,44 +850,44 @@ export function checkVariantAvailability(
     }
   }
 
-  // Non-enhanced variant blocked by DISABLE clause
-  if (!isEnhanced && !isEmpowered) {
-    const disableTarget = variantName === CombatSkillType.FINISHER ? CombatSkillType.FINISHER
-      : variantName === CombatSkillType.DIVE ? 'DIVE_ATTACK'
-      : (enableObject && hasEnhancedVariants) ? enableObject : undefined;
-    if (disableTarget) {
-      const disableAdj = getDisableAdjectiveAtFrame(events, ownerId, disableTarget, atFrame);
-      if (disableAdj !== null) {
-        const label = disableAdj || disableTarget;
-        return { disabled: true, reason: `${label} variant disabled during this window` };
+  // Non-enhanced variant blocked by DISABLE clause (enhanced variants bypass DISABLE)
+  if (!isEnhanced) {
+    if (variantName === CombatSkillType.FINISHER) {
+      if (hasDisableAtFrame(events, ownerId, CombatSkillType.FINISHER, undefined, atFrame)) {
+        return { disabled: true, reason: `${CombatSkillType.FINISHER} disabled during this window` };
+      }
+    } else if (variantName === CombatSkillType.DIVE) {
+      if (hasDisableAtFrame(events, ownerId, 'DIVE_ATTACK', undefined, atFrame)) {
+        return { disabled: true, reason: 'DIVE_ATTACK disabled during this window' };
+      }
+    } else if (enableObject && hasEnhancedVariants) {
+      const tier = isEmpowered ? EnhancementType.EMPOWERED : EnhancementType.NORMAL;
+      if (hasDisableAtFrame(events, ownerId, enableObject, tier, atFrame)) {
+        return { disabled: true, reason: `${tier} variant disabled during this window` };
       }
     }
   }
 
   // Check operator status stacks for empowered variants (data-driven)
-  if (isEmpowered) {
-    const slot = slots?.find((s) => s.slotId === ownerId);
-    const opId = slot?.operator?.id;
-    if (opId) {
-      const statuses = getOperatorStatuses(opId);
-      const statusDef = statuses.find(
-        (s) => s.target === 'OPERATOR' && (!s.targetDeterminer || s.targetDeterminer === 'THIS') && s.stacks,
-      );
-      if (statusDef) {
-        const maxStacks = statusDef.maxStacks;
-        const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
-          ?? statusDef.id.toLowerCase().replace(/_/g, '-');
-        const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
-        const activeCount = events.filter(
-          (ev) =>
-            ev.ownerId === ownerId &&
-            ev.columnId === colId &&
-            ev.startFrame <= atFrame &&
-            eventEndFrame(ev) > atFrame,
-        ).length;
-        if (activeCount < maxStacks) {
-          return { disabled: true, reason: `Requires max ${statusLabel} (${activeCount}/${maxStacks})` };
-        }
+  if (isEmpowered && opId) {
+    const statuses = getOperatorStatuses(opId);
+    const statusDef = statuses.find(
+      (s) => s.target === SubjectType.OPERATOR && (!s.targetDeterminer || s.targetDeterminer === DeterminerType.THIS) && s.stacks,
+    );
+    if (statusDef) {
+      const maxStacks = statusDef.maxStacks;
+      const colId = (OPERATOR_COLUMNS as Record<string, string>)[statusDef.id]
+        ?? statusDef.id.toLowerCase().replace(/_/g, '-');
+      const statusLabel = STATUS_LABELS[statusDef.id as StatusType] ?? statusDef.name ?? statusDef.id;
+      const activeCount = events.filter(
+        (ev) =>
+          ev.ownerId === ownerId &&
+          ev.columnId === colId &&
+          ev.startFrame <= atFrame &&
+          eventEndFrame(ev) > atFrame,
+      ).length;
+      if (activeCount < maxStacks) {
+        return { disabled: true, reason: `Requires max ${statusLabel} (${activeCount}/${maxStacks})` };
       }
     }
   }
@@ -1014,7 +1005,7 @@ export function validateEmpowered(events: TimelineEvent[], slots: Slot[]): Map<s
     if (!opId) continue;
     const statuses = getOperatorStatuses(opId);
     const statusDef = statuses.find(
-      (s) => s.target === 'OPERATOR' && (!s.targetDeterminer || s.targetDeterminer === 'THIS') && s.stacks,
+      (s) => s.target === SubjectType.OPERATOR && (!s.targetDeterminer || s.targetDeterminer === DeterminerType.THIS) && s.stacks,
     );
     if (!statusDef) continue;
     const maxStacks = statusDef.maxStacks;
@@ -1069,18 +1060,25 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 
 /**
  * Validates that variants with an active DISABLE clause do NOT start
- * inside the disabled window. Checks regular basic attacks, finishers, and dives.
+ * inside the disabled window. Checks regular basic attacks, battle skills, finishers, and dives.
  */
 export function validateDisabledVariants(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
-    if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-    // Skip enhanced, empowered — only check regular, finisher, and dive
-    if (ev.enhancementType === EnhancementType.ENHANCED || ev.enhancementType === EnhancementType.EMPOWERED) continue;
+    if (ev.columnId !== SKILL_COLUMNS.BASIC && ev.columnId !== SKILL_COLUMNS.BATTLE) continue;
+    // Skip enhanced — enhanced variants bypass DISABLE
+    if (ev.enhancementType === EnhancementType.ENHANCED) continue;
 
-    const disableTarget = ev.id === CombatSkillType.FINISHER ? CombatSkillType.FINISHER
-      : ev.id === CombatSkillType.DIVE ? 'DIVE_ATTACK'
-      : COLUMN_TO_ENABLE_OBJECT[ev.columnId];
+    let disableTarget: string | undefined;
+    let disableAdj: string | undefined;
+    if (ev.id === CombatSkillType.FINISHER) {
+      disableTarget = CombatSkillType.FINISHER;
+    } else if (ev.id === CombatSkillType.DIVE) {
+      disableTarget = 'DIVE_ATTACK';
+    } else {
+      disableTarget = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
+      disableAdj = ev.enhancementType === EnhancementType.EMPOWERED ? EnhancementType.EMPOWERED : EnhancementType.NORMAL;
+    }
     if (!disableTarget) continue;
 
     // Collect all segment start frames
@@ -1096,7 +1094,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     }
 
     for (const frame of segStarts) {
-      if (getDisableAdjectiveAtFrame(events, ev.ownerId, disableTarget, frame) !== null) {
+      if (hasDisableAtFrame(events, ev.ownerId, disableTarget, disableAdj, frame)) {
         map.set(ev.uid, 'Variant cannot be used during DISABLE window');
         break;
       }
@@ -1110,6 +1108,17 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
  * Searches all skill categories for segments with a matching name and a clause,
  * or for a skill category with a matching id and a clause.
  */
+/**
+ * Look up the enhancementTypes array for a variant skill from the operator JSON.
+ * Returns null if not found.
+ */
+function getVariantEnhancementTypes(operatorId: string, variantName: string): string[] | null {
+  const json = getOperatorJson(operatorId);
+  if (!json?.skills) return null;
+  const skill = (json.skills as Record<string, { properties?: { enhancementTypes?: string[] } }>)[variantName];
+  return skill?.properties?.enhancementTypes ?? null;
+}
+
 function getVariantClause(operatorId: string, variantName: string): Predicate[] | null {
   const json = getOperatorJson(operatorId);
   if (!json?.skills) return null;

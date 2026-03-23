@@ -573,7 +573,6 @@ function EventPane({
 
   const [activeSec,     setActiveSec]     = useState(framesToSeconds(eventDuration(event)));
   const [animSec,       setAnimSec]       = useState(framesToSeconds(getAnimationDuration(event)));
-  const [activePhaseSec,     setActivePhaseSec]     = useState(framesToSeconds(0));
   const [cooldownSec,   setCooldownSec]   = useState(framesToSeconds(0));
   const [startWholeSec, setStartWholeSec] = useState(String(Math.floor(event.startFrame / FPS)));
   const [startModFrame, setStartModFrame] = useState(String(event.startFrame % FPS));
@@ -586,7 +585,6 @@ function EventPane({
     setStartModFrame(String(event.startFrame % FPS));
     setActiveSec(framesToSeconds(eventDuration(event)));
     setAnimSec(framesToSeconds(getAnimationDuration(event)));
-    setActivePhaseSec(framesToSeconds(0));
     setCooldownSec(framesToSeconds(0));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event.uid, event.startFrame, event.segments]);
@@ -596,7 +594,7 @@ function EventPane({
   const commit = () => {
     const toFrames = (v: string) => secondsToFrames(isNaN(Number(v)) ? 0 : Number(v));
 
-    // For ultimates, update the ANIMATION segment duration instead of a top-level field
+    // For ultimates, update the ANIMATION segment duration
     const animSegmentUpdate = event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments
       ? {
           segments: event.segments.map((seg) =>
@@ -632,9 +630,7 @@ function EventPane({
   const hasTimeStopDiff = timing.total.withTimeStop != null;
 
   const pActivation = timing.activation.withTimeStop ?? undefined;
-  const pActive = timing.active.withTimeStop ?? undefined;
   const pCooldown = timing.cooldown.withTimeStop ?? undefined;
-  const pAnimation = timing.animation?.withTimeStop ?? undefined;
   const baseActivation = timing.activation.base;
 
 
@@ -1335,250 +1331,7 @@ function EventPane({
           );
         })()}
 
-        {isSequenced && event.columnId === SKILL_COLUMNS.ULTIMATE ? (
-          /* ── Sequenced ultimate: Animation/Statis layout + frame data ── */
-          (readOnly || isDerived) ? (
-          <>
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Animation</span>
-              <div className="edit-info-text">
-                {dualDuration(event.startFrame, getAnimationDuration(event), undefined, pAnimation)}
-              </div>
-            </div>
-
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Statis</span>
-              <div className="edit-info-text">
-                {dualDuration(
-                  event.startFrame + getAnimationDuration(event),
-                  baseActivation - getAnimationDuration(event),
-                  undefined,
-                  pActivation != null && pAnimation != null ? pActivation - (pAnimation ?? 0) : undefined,
-                )}
-              </div>
-            </div>
-
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Active Phase</span>
-              <div className="edit-info-text">
-                {dualDuration(event.startFrame + (event.segments.length >= 3 ? event.segments[0].properties.duration + event.segments[1].properties.duration : eventDuration(event)), event.segments.length >= 3 ? event.segments[2].properties.duration : 0, undefined, pActive)}
-              </div>
-              {event.segments.map((seg, si) => {
-                const ultSegName = seg.properties.name ?? null;
-                const ultSegHeader = ultSegName
-                  ? `${ultSegName} (${formatSegNum(si)})`
-                  : event.segments.length > 1 ? formatSegNum(si) : null;
-                const segOffsetFrames = event.segments.slice(0, si).reduce((acc, s) => acc + s.properties.duration, 0);
-                return seg.frames && seg.frames.length > 0 && (
-                  <div key={si} style={{ marginTop: 6 }}>
-                    {ultSegHeader && (
-                      <div style={{ color: 'var(--text-secondary)', fontSize: 10, fontWeight: 600, marginBottom: 2, paddingLeft: 4 }}>{ultSegHeader}</div>
-                    )}
-                    {seg.frames.map((f, fi) => {
-                      const isSelected = selectedFrames?.some(
-                        (sf) => sf.eventUid === event.uid && sf.segmentIndex === si && sf.frameIndex === fi,
-                      ) ?? false;
-                      const hitDmgRow = eventDamageRows.get(`${si}-${fi}`);
-                      return (
-                        <div
-                          key={fi}
-                          ref={isSelected ? selectedFrameElRef : undefined}
-                          style={{
-                            ...TREE_LINE_1,
-                            padding: '1px 4px 1px 8px',
-                            borderRadius: 2,
-                            background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            borderLeftColor: isSelected ? '#ffdd44' : undefined,
-                          }}
-                        >
-                          <span className="edit-field-label">Frame {fi + 1}</span>
-                          {verbose >= InfoLevel.DETAILED && (() => {
-                            const absFrame = event.startFrame + segOffsetFrames + f.offsetFrame;
-                            return (
-                              <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
-                                @ {frameToDetailLabel(absFrame)} (F{absFrame})
-                              </div>
-                            );
-                          })()}
-                          {/* Properties */}
-                          <div className="edit-info-text" style={TREE_LINE_2}>
-                            <div>Offset: {framesToSeconds(f.offsetFrame)}s ({f.offsetFrame}f)</div>
-                            {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {fmtN(f.skillPointRecovery!)}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{fmtN(f.gaugeGain!)}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{fmtN(f.teamGaugeGain!)}</div>}
-                            {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
-                            {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
-                              <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                                {hitDmgRow.multiplier != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
-                                    {fmtN(hitDmgRow.multiplier * 100)}%
-                                  </span>
-                                )}
-                                {hitDmgRow.damage != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
-                                    {fmtN(hitDmgRow.damage)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {/* Effects */}
-                          {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
-                            <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
-                              <div style={FRAME_SUB_LABEL}>EFFECTS</div>
-                              {dslData?.frameEffects[`${si}-${fi}`]
-                                ? <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                                : <FrameDslEffects f={f} />
-                              }
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-
-            {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && (
-              <div className="edit-panel-section">
-                <span className="edit-section-label">Cooldown</span>
-                <div style={{ padding: '4px 6px' }}>
-                  <div className="edit-info-text">
-                    {dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, undefined, pCooldown)}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-          ) : (
-          <>
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Animation</span>
-              <DurationField label="Duration" value={animSec} onChange={setAnimSec} onCommit={handleBlur} />
-            </div>
-
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Statis</span>
-              <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
-            </div>
-
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Active Phase</span>
-              <DurationField label="Duration" value={activePhaseSec} onChange={setActivePhaseSec} onCommit={handleBlur} />
-              {event.segments.map((seg, si) => {
-                const ultEditSegName = seg.properties.name ?? null;
-                const ultEditSegHeader = ultEditSegName
-                  ? `${ultEditSegName} (${formatSegNum(si)})`
-                  : event.segments.length > 1 ? formatSegNum(si) : null;
-                const editSegOffsetFrames = event.segments.slice(0, si).reduce((acc, s) => acc + s.properties.duration, 0);
-                return seg.frames && seg.frames.length > 0 && (
-                  <div key={si} style={{ marginTop: 6 }}>
-                    {ultEditSegHeader && (
-                      <div style={{ color: 'var(--text-secondary)', fontSize: 10, fontWeight: 600, marginBottom: 2, paddingLeft: 4 }}>{ultEditSegHeader}</div>
-                    )}
-                    {seg.frames.map((f, fi) => {
-                      const isSelected = selectedFrames?.some(
-                        (sf) => sf.eventUid === event.uid && sf.segmentIndex === si && sf.frameIndex === fi,
-                      ) ?? false;
-                      const hitDmgRow = eventDamageRows.get(`${si}-${fi}`);
-                      return (
-                        <div
-                          key={fi}
-                          ref={isSelected ? selectedFrameElRef : undefined}
-                          style={{
-                            ...TREE_LINE_1,
-                            padding: '1px 4px 1px 8px',
-                            borderRadius: 2,
-                            background: isSelected ? 'rgba(255, 221, 68, 0.15)' : 'transparent',
-                            borderLeftColor: isSelected ? '#ffdd44' : undefined,
-                          }}
-                        >
-                          <span className="edit-field-label">Frame {fi + 1}</span>
-                          {verbose >= InfoLevel.DETAILED && (() => {
-                            const absFrame = event.startFrame + editSegOffsetFrames + f.offsetFrame;
-                            return (
-                              <div className="edit-info-text" style={{ ...TREE_LINE_2, color: 'var(--text-muted)', fontSize: 10 }}>
-                                @ {frameToDetailLabel(absFrame)} (F{absFrame})
-                              </div>
-                            );
-                          })()}
-                          <div style={TREE_LINE_2}>
-                            <FrameOffsetField
-                              eventId={event.uid}
-                              segmentIndex={si}
-                              frameIndex={fi}
-                              offsetFrame={f.offsetFrame}
-                              maxOffset={seg.properties.duration}
-                              onUpdate={onUpdate}
-                              segments={event.segments}
-                            />
-                          </div>
-                          {/* Properties */}
-                          <div className="edit-info-text" style={TREE_LINE_2}>
-                            {(f.stagger ?? 0) > 0 && <div>Stagger: {f.stagger}</div>}
-                            {(f.skillPointRecovery ?? 0) > 0 && <div>SP Recovery: {fmtN(f.skillPointRecovery!)}</div>}
-                            {(f.gaugeGain ?? 0) > 0 && <div>Ult Gauge: +{fmtN(f.gaugeGain!)}</div>}
-                            {(f.teamGaugeGain ?? 0) > 0 && <div>Team Gauge: +{fmtN(f.teamGaugeGain!)}</div>}
-                            {f.statusLabel && <div style={{ whiteSpace: 'pre-line' }}>{f.statusLabel}</div>}
-                            {hitDmgRow && (hitDmgRow.multiplier != null || hitDmgRow.damage != null) && (
-                              <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                                {hitDmgRow.multiplier != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 11 }}>
-                                    {fmtN(hitDmgRow.multiplier * 100)}%
-                                  </span>
-                                )}
-                                {hitDmgRow.damage != null && (
-                                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--green)', fontSize: 11 }}>
-                                    {fmtN(hitDmgRow.damage)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {/* Effects */}
-                          {frameHasEffects(f, dslData?.frameEffects[`${si}-${fi}`]) && (
-                            <div className="edit-info-text" style={{ ...TREE_LINE_2, marginTop: 2 }}>
-                              <div style={FRAME_SUB_LABEL}>EFFECTS</div>
-                              {dslData?.frameEffects[`${si}-${fi}`]
-                                ? <DslEffectTags effects={dslData.frameEffects[`${si}-${fi}`]} />
-                                : <FrameDslEffects f={f} />
-                              }
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-
-            {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && (
-              <div className="edit-panel-section">
-                <span className="edit-section-label">Cooldown</span>
-                <div style={{ padding: '4px 6px' }}>
-                  <DurationField label="Duration" value={cooldownSec} onChange={setCooldownSec} onCommit={handleBlur} />
-                </div>
-              </div>
-            )}
-
-            <div className="edit-panel-section">
-              <span className="edit-section-label">Info</span>
-              <div className="edit-info-text">
-                {dualDuration(
-                  event.startFrame,
-                  totalDurationFrames,
-                  'Total',
-                  hasTimeStopDiff ? processedTotalDurationFrames : undefined,
-                )}
-                <div>Frames: {event.segments.map(s => s.properties.duration).join(' / ')}</div>
-              </div>
-            </div>
-          </>
-          )
-        ) : isSequenced ? (
+        {isSequenced ? (
           /* ── Standard sequenced event ── */
           <>
             {(() => { let segCumOffset = 0; return event.segments.map((seg, si) => {
@@ -1874,7 +1627,6 @@ function EventPane({
               <div className="edit-info-text" style={{ paddingLeft: 6 }}>
                 <div>Segments: {event.segments.length}</div>
                 {dualDuration(event.startFrame, totalDurationFrames, 'Duration', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
-                {event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments.length >= 3 && event.segments[2].properties.duration > 0 && dualDuration(event.startFrame + event.segments[0].properties.duration + event.segments[1].properties.duration, event.segments[2].properties.duration, 'Active phase', pActive)}
                 {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, 'Cooldown', pCooldown)}
               </div>
             </div>
@@ -1883,22 +1635,7 @@ function EventPane({
           <div className="edit-panel-section">
             <span className="edit-section-label">Duration</span>
             <div className="edit-info-text">
-              {event.columnId === SKILL_COLUMNS.ULTIMATE && getAnimationDuration(event) > 0 &&
-                dualDuration(event.startFrame, getAnimationDuration(event), 'Animation', pAnimation)
-              }
-              {event.columnId === SKILL_COLUMNS.ULTIMATE ? (
-                dualDuration(
-                  event.startFrame + getAnimationDuration(event),
-                  baseActivation - getAnimationDuration(event),
-                  'Statis',
-                  pActivation != null && pAnimation != null ? pActivation - (pAnimation ?? 0) : undefined,
-                )
-              ) : (
-                dualDuration(event.startFrame, baseActivation, 'Duration', pActivation)
-              )}
-              {event.columnId === SKILL_COLUMNS.ULTIMATE && event.segments.length >= 3 && event.segments[2].properties.duration > 0 && dualDuration(event.startFrame + event.segments[0].properties.duration + event.segments[1].properties.duration, event.segments[2].properties.duration, 'Active', pActive)}
-              {event.segments.length >= 4 && event.segments[3].properties.duration > 0 && dualDuration(event.startFrame + event.segments.slice(0, 3).reduce((a, s) => a + s.properties.duration, 0), event.segments[3].properties.duration, 'Cooldown', pCooldown)}
-              {event.segments.length > 1 && dualDuration(event.startFrame, totalDurationFrames, 'Total', hasTimeStopDiff ? processedTotalDurationFrames : undefined)}
+              {dualDuration(event.startFrame, baseActivation, 'Duration', pActivation)}
             </div>
           </div>
         ) : event.columnId === OPERATOR_COLUMNS.INPUT ? (
@@ -1919,16 +1656,9 @@ function EventPane({
             )}
 
             <div className="edit-panel-section">
-              <span className="edit-section-label">{event.columnId === SKILL_COLUMNS.ULTIMATE ? 'Statis' : 'Active Phase'}</span>
+              <span className="edit-section-label">Duration</span>
               <DurationField label="Duration" value={activeSec} onChange={setActiveSec} onCommit={handleBlur} />
             </div>
-
-            {event.columnId === SKILL_COLUMNS.ULTIMATE && (
-              <div className="edit-panel-section">
-                <span className="edit-section-label">Active Phase</span>
-                <DurationField label="Duration" value={activePhaseSec} onChange={setActivePhaseSec} onCommit={handleBlur} />
-              </div>
-            )}
 
             <div className="edit-panel-section">
               <span className="edit-section-label">Cooldown</span>

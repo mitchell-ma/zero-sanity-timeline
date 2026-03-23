@@ -1531,20 +1531,6 @@
                 "to": "OPERATOR"
               },
               {
-                "verb": "ENABLE",
-                "adjective": "ENHANCED",
-                "object": "BATTLE_SKILL",
-                "toDeterminer": "THIS",
-                "to": "OPERATOR"
-              },
-              {
-                "verb": "DISABLE",
-                "adjective": "NORMAL",
-                "object": "BATTLE_SKILL",
-                "toDeterminer": "THIS",
-                "to": "OPERATOR"
-              },
-              {
                 "verb": "DISABLE",
                 "object": "FINISHER",
                 "toDeterminer": "THIS",
@@ -1606,6 +1592,13 @@
               },
               {
                 "verb": "DISABLE",
+                "adjective": "EMPOWERED",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
                 "object": "FINISHER",
                 "toDeterminer": "THIS",
                 "to": "OPERATOR"
@@ -1660,6 +1653,13 @@
               {
                 "verb": "DISABLE",
                 "adjective": "NORMAL",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "EMPOWERED",
                 "object": "BATTLE_SKILL",
                 "toDeterminer": "THIS",
                 "to": "OPERATOR"

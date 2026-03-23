@@ -16,7 +16,7 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CombatSkillType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EventStatusType, SegmentType, StatusType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
@@ -34,11 +34,26 @@ import { collectNoGainWindowsForEvent } from './ultimateEnergyController';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { genEventUid } from './inputEventController';
+import { getAllOperatorStatuses } from '../gameDataController';
 
 /** Source metadata for event mutations. */
 interface EventSource {
   ownerId: string;
   skillName: string;
+}
+
+// ── Status stack limit cache (from operator status configs) ──────────────────
+
+let _statusStackLimitCache: Map<string, number> | null = null;
+
+export function getStatusStackLimit(statusName: string): number | undefined {
+  if (!_statusStackLimitCache) {
+    _statusStackLimitCache = new Map();
+    for (const s of getAllOperatorStatuses()) {
+      if (s.stacks) _statusStackLimitCache.set(s.id, s.maxStacks);
+    }
+  }
+  return _statusStackLimitCache.get(statusName);
 }
 
 export class DerivedEventController {
@@ -55,6 +70,8 @@ export class DerivedEventController {
   private slotWirings: SlotTriggerWiring[] = [];
   private spController: SkillPointController | null = null;
   private ueController: UltimateEnergyController | null = null;
+  /** Event UIDs that consumed Link, mapped to their stack count at consumption time. */
+  private linkConsumptions = new Map<string, number>();
 
   constructor(
     baseEvents?: TimelineEvent[],
@@ -665,10 +682,11 @@ export class DerivedEventController {
       this.resetStatus(columnId, ownerId, frame, source);
     }
 
-    // For exchange statuses, check max stacks
-    if (options?.maxStacks != null) {
+    // Enforce stack limit from explicit option or operator status config
+    const maxStacks = options?.maxStacks ?? getStatusStackLimit(statusName);
+    if (maxStacks != null) {
       const active = this.activeCount(columnId, ownerId, frame);
-      if (active >= options.maxStacks) return;
+      if (active >= maxStacks) return;
     }
 
     const ev: TimelineEvent = {
@@ -741,6 +759,27 @@ export class DerivedEventController {
     source: EventSource,
   ) {
     this.clampActive(columnId, ownerId, frame, source, EventStatusType.CONSUMED);
+  }
+
+  // ── Link consumption tracking ──────────────────────────────────────────
+
+  /**
+   * Try to consume Link for a battle skill or ultimate event.
+   * If Link is active, consumes it and records the stack count against the event UID.
+   * Returns the number of stacks consumed (0 if none).
+   */
+  consumeLink(eventUid: string, frame: number, source: EventSource): number {
+    const stacks = this.activeCount(StatusType.LINK, COMMON_OWNER_ID, frame);
+    if (stacks === 0) return 0;
+    this.consumeStatus(StatusType.LINK, COMMON_OWNER_ID, frame, source);
+    const clampedStacks = Math.min(stacks, 4);
+    this.linkConsumptions.set(eventUid, clampedStacks);
+    return clampedStacks;
+  }
+
+  /** Get the Link stack count consumed by an event (0 if none). */
+  getLinkStacks(eventUid: string): number {
+    return this.linkConsumptions.get(eventUid) ?? 0;
   }
 
   // ── canDo checks for ALL loop semantics ───────────────────────────────

@@ -17,6 +17,7 @@ import {
   OPERATOR_COLUMNS,
   PHYSICAL_STATUS_COLUMNS,
   REACTION_COLUMNS,
+  SKILL_COLUMNS,
 } from '../../model/channels';
 import { getCorrosionReduction, getScorchingHeartIgnoredResistance, MultiplierSource } from '../../model/calculation/damageFormulas';
 import { FPS } from '../../utils/timeline';
@@ -207,18 +208,17 @@ export class EventsQueryService {
 
   getLinkBonus(frame: number, skillType: CombatSkillType): number {
     if (skillType !== CombatSkillType.BATTLE_SKILL && skillType !== CombatSkillType.ULTIMATE) return 0;
-    let stacks = 0;
-    let explicitValue: number | undefined;
-    for (const ev of this.linkEvents) {
-      if (!this.isActive(ev, frame)) continue;
-      stacks++;
-      if (ev.statusValue != null) explicitValue = ev.statusValue;
+    // Find the registered event that owns this frame and check if it consumed Link
+    const events = this.state.getRegisteredEvents();
+    for (const ev of events) {
+      if (ev.columnId !== SKILL_COLUMNS.BATTLE && ev.columnId !== SKILL_COLUMNS.ULTIMATE) continue;
+      if (ev.startFrame > frame || frame >= ev.startFrame + eventDuration(ev)) continue;
+      const stacks = this.state.getLinkStacks(ev.uid);
+      if (stacks === 0) continue;
+      const table = skillType === CombatSkillType.ULTIMATE ? LINK_ULTIMATE_BONUS : LINK_BATTLE_SKILL_BONUS;
+      return table[stacks] ?? 0;
     }
-    if (stacks === 0) return 0;
-    if (explicitValue != null) return explicitValue;
-    const clampedStacks = Math.min(stacks, 4);
-    const table = skillType === CombatSkillType.ULTIMATE ? LINK_ULTIMATE_BONUS : LINK_BATTLE_SKILL_BONUS;
-    return table[clampedStacks] ?? 0;
+    return 0;
   }
 
   isArtsAmpActive(frame: number): boolean {

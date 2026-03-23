@@ -172,6 +172,10 @@ const mockJson = { ...mockOperatorJson, skills: ardeliaSkills, skillTypeMap: _sk
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
 
+/** Resolve a duration value that may be a plain number or a ValueNode { verb, value }. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function durVal(v: any): any { return typeof v === 'object' && v !== null && 'value' in v ? v.value : v; }
+
 function getSequences(skillCategory: string): readonly DataDrivenSkillEventSequence[] {
   return buildSequencesFromOperatorJson(mockJson, skillCategory);
 }
@@ -192,10 +196,10 @@ describe('A. Basic Attack (Rocky Whispers)', () => {
 
   test('A2: Segment durations match JSON data', () => {
     const rawSegments = mockJson.skills.BASIC_ATTACK.segments;
-    expect(rawSegments[0].properties.duration.value).toBe(0.4);
-    expect(rawSegments[1].properties.duration.value).toBe(0.7);
-    expect(rawSegments[2].properties.duration.value).toBe(1.53);
-    expect(rawSegments[3].properties.duration.value).toBe(2.167);
+    expect(durVal(rawSegments[0].properties.duration.value)).toBe(0.4);
+    expect(durVal(rawSegments[1].properties.duration.value)).toBe(0.7);
+    expect(durVal(rawSegments[2].properties.duration.value)).toBe(1.53);
+    expect(durVal(rawSegments[3].properties.duration.value)).toBe(2.167);
   });
 
   test('A3: Final Strike (segment 4) recovers 18 SP and 18 Stagger', () => {
@@ -326,7 +330,7 @@ describe('B. Battle Skill (Dolly Rush)', () => {
 
   test('B9: Battle skill duration is 1.57 seconds', () => {
     const battleSkill = mockJson.skills.BATTLE_SKILL;
-    expect(battleSkill.segments[0].properties.duration.value).toBe(1.57);
+    expect(durVal(battleSkill.segments[0].properties.duration.value)).toBe(1.57);
     expect(battleSkill.segments[0].properties.duration.unit).toBe('SECOND');
   });
 
@@ -369,7 +373,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value[0]).toBe(18);
+    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(18);
   });
 
   test('C4: Combo has 2 frames', () => {
@@ -385,7 +389,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
     expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
     expect(reaction.to).toBe('ENEMY');
     expect(reaction.with.stacks.value).toBe(1);
-    expect(reaction.with.duration.value).toBe(7);
+    expect(durVal(reaction.with.duration.value)).toBe(7);
   });
 
   test('C5b: Combo frame 2 is GUARANTEED_HIT and PASSIVE', () => {
@@ -405,12 +409,12 @@ describe('C. Combo Skill (Eruption Column)', () => {
     const combo = mockJson.skills.COMBO_SKILL;
     const animSeg = combo.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(0.729);
+    expect(durVal(animSeg.properties.duration.value)).toBe(0.729);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
   test('C8: Combo base duration is 0.77 seconds', () => {
-    const totalDuration = mockJson.skills.COMBO_SKILL.segments[0].properties.duration.value + mockJson.skills.COMBO_SKILL.segments[1].properties.duration.value;
+    const totalDuration = durVal(mockJson.skills.COMBO_SKILL.segments[0].properties.duration.value) + durVal(mockJson.skills.COMBO_SKILL.segments[1].properties.duration.value);
     expect(totalDuration).toBeCloseTo(0.77, 2);
   });
 
@@ -458,18 +462,18 @@ describe('D. Ultimate (Wooly Party)', () => {
     const activeSeg = ultimate.segments.find(
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ACTIVE')
     );
-    expect(activeSeg.properties.duration.value).toBe(4.47);
+    expect(durVal(activeSeg.properties.duration.value)).toBe(4.47);
   });
 
   test('D3: Ultimate animation is TIME_STOP (2.5s within 6.97s total)', () => {
     const ult = mockJson.skills.ULTIMATE;
     const totalDuration = ult.segments.reduce(
-      (sum: number, s: Record<string, unknown>) => sum + ((s.properties as Record<string, Record<string, number>>)?.duration?.value ?? 0), 0
+      (sum: number, s: Record<string, unknown>) => sum + (durVal((s.properties as Record<string, Record<string, unknown>>)?.duration?.value) ?? 0), 0
     );
     expect(totalDuration).toBeCloseTo(6.97, 2);
     const animSeg = ult.segments.find((s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('ANIMATION'));
     expect(animSeg).toBeDefined();
-    expect(animSeg.properties.duration.value).toBe(2.5);
+    expect(durVal(animSeg.properties.duration.value)).toBe(2.5);
     expect(animSeg.properties.timeInteractionType).toBe('TIME_STOP');
   });
 
@@ -504,7 +508,7 @@ describe('D. Ultimate (Wooly Party)', () => {
     );
     expect(dmgFrame).toBeDefined();
     const dmgEffect = dmgFrame.clause[0].effects.find((e: Record<string, unknown>) => (e.with as Record<string, unknown> | undefined)?.duration != null);
-    expect(dmgEffect.with.duration.value).toBe(3);
+    expect(durVal(dmgEffect.with.duration.value)).toBe(3);
   });
 });
 
@@ -524,7 +528,7 @@ describe('E. Empowered Battle Skill', () => {
   });
 
   test('E3: Empowered battle skill duration is 1.57s (same as normal)', () => {
-    expect(mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].properties.duration.value).toBe(1.57);
+    expect(durVal(mockJson.skills.EMPOWERED_BATTLE_SKILL.segments[0].properties.duration.value)).toBe(1.57);
   });
 
   test('E4: Empowered battle skill frame has stagger recovery 10', () => {
@@ -724,7 +728,7 @@ describe('I. Cooldown Interactions', () => {
       (s: Record<string, unknown>) => ((s.properties as Record<string, unknown>)?.segmentTypes as string[] | undefined)?.includes('COOLDOWN')
     );
     expect(cdSeg).toBeDefined();
-    expect(cdSeg.properties.duration.value[0]).toBe(18);
+    expect(durVal(cdSeg.properties.duration.value)[0]).toBe(18);
   });
 
   test('H4: Ultimate (Wooly Party) has no cooldown duration in operator JSON', () => {

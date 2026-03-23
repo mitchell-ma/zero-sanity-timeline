@@ -403,7 +403,11 @@ function getMaxStacks(limit: ValueNode, _potential: number): number {
 // ── Duration resolution ─────────────────────────────────────────────────────
 
 function getDurationFrames(duration: { value: ValueNode; unit: string }): number {
-  const val = resolveValueNode(duration.value, DEFAULT_VALUE_CONTEXT);
+  // Handle bare arrays (e.g. [20] from weapon/gear JSON) and bare numbers
+  const raw = duration.value;
+  const val = Array.isArray(raw) ? (raw as number[])[0] ?? 0
+    : typeof raw === 'number' ? raw
+    : resolveValueNode(raw, DEFAULT_VALUE_CONTEXT);
   if (val < 0) return TOTAL_FRAMES; // -1 = permanent
   if (duration.unit === 'SECOND') return Math.round(val * 120);
   return val;
@@ -1213,10 +1217,12 @@ export function collectEngineTriggerEntries(
 
       if (!def.onTriggerClause || def.onTriggerClause.length === 0) continue;
 
-      // Skip defs whose trigger clauses have no effects — these define triggers for other
-      // defs (e.g. a talent) to use, they don't produce events on their own.
+      // Skip defs whose trigger clauses have no effects AND no clause effects —
+      // these define triggers for other defs (e.g. a talent) to use, they don't produce events on their own.
+      // Weapon/gear defs often have output effects in `clause` rather than `onTriggerClause[].effects`.
       const hasEffects = def.onTriggerClause.some(c => c.effects && c.effects.length > 0);
-      if (!hasEffects && def.properties.type !== 'TALENT') continue;
+      const hasClauseEffects = (def.clause as { effects?: unknown[] }[] | undefined)?.some(c => c.effects && c.effects.length > 0);
+      if (!hasEffects && !hasClauseEffects && def.properties.type !== 'TALENT') continue;
 
       // Use the unified verb-handler registry to find trigger matches for ALL verb types.
       // HAVE conditions are extracted and deferred to queue-time evaluation — they must
