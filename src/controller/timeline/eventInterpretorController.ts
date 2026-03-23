@@ -24,7 +24,7 @@ import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
 import { ElementType, PhysicalStatusType, StatusType, UnitType } from '../../consts/enums';
 import { BREACH_DURATION, ENEMY_OWNER_ID, INFLICTION_COLUMNS, INFLICTION_COLUMN_IDS, INFLICTION_DURATION, PHYSICAL_INFLICTION_COLUMNS, PHYSICAL_INFLICTION_DURATION, PHYSICAL_STATUS_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
-import { getAllOperatorStatuses, getAllOperatorStatusOriginIds, getOperatorStatuses } from '../gameDataController';
+import { getAllOperatorStatuses } from '../gameDataController';
 import { STATUS_LABELS } from '../../consts/timelineColumnLabels';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import { evaluateConditions } from './conditionEvaluator';
@@ -33,11 +33,12 @@ import { absoluteFrame, foreignStopsFor } from './processTimeStop';
 import { resolveSusceptibility } from './processInfliction';
 import { getPhysicalStatusBaseMultiplier } from '../../model/calculation/damageFormulas';
 import type { SlotTriggerWiring } from './eventQueueTypes';
-import { findClauseTriggerMatches } from './triggerMatch';
+import { findClauseTriggerMatches, statusNameToColumnId } from './triggerMatch';
 import { getComboTriggerClause, getComboTriggerInfo } from '../../model/event-frames/operatorJsonLoader';
 import { MAX_INFLICTION_STACKS, PRIORITY } from './eventQueueTypes';
 import { evaluateEngineTrigger } from './statusTriggerCollector';
-import type { EngineTriggerContext, EngineTriggerEntry } from './statusTriggerCollector';
+import type { EngineTriggerContext } from './statusTriggerCollector';
+import type { TriggerIndex } from './triggerIndex';
 import { DerivedEventController, getStatusStackLimit } from './derivedEventController';
 import type { QueueFrame } from './eventQueueTypes';
 import type { LoadoutProperties } from '../../view/InformationPane';
@@ -134,63 +135,6 @@ function getStatusConfigDuration(statusId?: string): number {
   return _statusDurationCache.get(statusId) ?? TOTAL_FRAMES;
 }
 
-// ── Lifecycle clause cache ─────────────────────────────────────────────────
-// Status definitions with `clause` containing HAVE conditions → fire ENGINE_TRIGGER
-// when the status is created and the condition may be newly met.
-
-interface LifecycleClause {
-  operatorId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  haveConditions: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  effects: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fullDef: any;
-}
-
-let _lifecycleClauseCache: Map<string, LifecycleClause> | null = null;
-
-function getLifecycleClauses(): Map<string, LifecycleClause> {
-  if (_lifecycleClauseCache) return _lifecycleClauseCache;
-  _lifecycleClauseCache = new Map();
-  for (const opId of getAllOperatorStatusOriginIds()) {
-    for (const s of getOperatorStatuses(opId)) {
-      if (s.clause.length === 0) continue;
-      for (const c of s.clause) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const clause = c as any;
-        const conditions = clause.conditions ?? [];
-        const effects = clause.effects ?? [];
-        const haveConds = conditions.filter((p: { verb?: string }) => p.verb === 'HAVE');
-        if (haveConds.length > 0 && effects.length > 0) {
-          // Resolve abstract STACKS conditions to concrete STATUS conditions
-          // e.g. HAVE STACKS EXACTLY MAX → HAVE STATUS MELTING_FLAME EXACTLY 4
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const resolvedConds = haveConds.map((cond: any) => {
-            if (cond.object === 'STACKS') {
-              return {
-                ...cond,
-                object: 'STATUS',
-                objectId: s.id,
-                value: cond.value === 'MAX' ? { verb: 'IS', value: s.maxStacks } : cond.value,
-              };
-            }
-            return cond;
-          });
-          _lifecycleClauseCache.set(s.id, {
-            operatorId: opId,
-            haveConditions: resolvedConds,
-            effects,
-            fullDef: s.serialize(),
-          });
-          break; // one lifecycle clause per status
-        }
-      }
-    }
-  }
-  return _lifecycleClauseCache;
-}
-
 // ── InterpretContext ─────────────────────────────────────────────────────
 
 /** Context for interpreting DSL effects. */
@@ -214,6 +158,9 @@ export class EventInterpretorController {
   private readonly slotWirings?: SlotTriggerWiring[];
   private readonly getEnemyHpPercentage?: (frame: number) => number | null;
   private readonly getControlledSlotAtFrame?: (frame: number) => string;
+  private readonly triggerIndex?: TriggerIndex;
+  /** Dedup set for reactive triggers: prevents double-firing at the same frame. */
+  private readonly seenTriggers = new Set<string>();
 
   constructor(
     controller: DerivedEventController,
@@ -224,6 +171,7 @@ export class EventInterpretorController {
       slotWirings?: SlotTriggerWiring[];
       getEnemyHpPercentage?: (frame: number) => number | null;
       getControlledSlotAtFrame?: (frame: number) => string;
+      triggerIndex?: TriggerIndex;
     },
   ) {
     this.controller = controller;
@@ -233,6 +181,7 @@ export class EventInterpretorController {
     this.slotWirings = options?.slotWirings;
     this.getEnemyHpPercentage = options?.getEnemyHpPercentage;
     this.getControlledSlotAtFrame = options?.getControlledSlotAtFrame;
+    this.triggerIndex = options?.triggerIndex;
   }
 
   // ── DSL Effect interpretation ──────────────────────────────────────────
@@ -741,64 +690,97 @@ export class EventInterpretorController {
       });
     }
 
-    // Post-hook: check if the created status has lifecycle clauses (e.g. MF → SH at max stacks)
+    // Post-hook: check for reactive triggers (lifecycle clauses + onTriggerClause APPLY matches)
     if (!created) return [];
-    return this.seedLifecycleTriggers(ev, entry);
+    const triggerObjectId = ev.name || ev.columnId || ev.id;
+    return this.checkReactiveTriggers('APPLY', triggerObjectId, entry.frame, entry.operatorSlotId ?? ev.ownerId, ev.sourceSkillName ?? ev.name);
   }
 
   /**
-   * After a status is created, check if its definition has lifecycle clauses
-   * (clause with HAVE conditions). If so, seed an ENGINE_TRIGGER entry so the
-   * condition is evaluated chronologically during queue processing.
+   * Check the trigger index for defs that react to an observable event.
+   * Seeds ENGINE_TRIGGER entries for matching triggers with HAVE conditions deferred.
+   * Also checks lifecycle clauses (clause-based triggers on the status itself).
    */
-  private seedLifecycleTriggers(ev: TimelineEvent, entry: QueueFrame): QueueFrame[] {
-    const lifecycle = getLifecycleClauses().get(ev.name ?? ev.id);
-    if (!lifecycle) return [];
+  private checkReactiveTriggers(
+    verb: string, objectId: string, frame: number, slotId: string, sourceSkillName: string,
+  ): QueueFrame[] {
+    if (!this.triggerIndex) return [];
+    const results: QueueFrame[] = [];
 
-    const slotId = entry.operatorSlotId ?? ev.ownerId;
-    const operatorId = this.slotOperatorMap?.[slotId] ?? lifecycle.operatorId;
-    const props = this.loadoutProperties?.[slotId];
-    const potential = props?.operator.potential ?? 0;
-
-    const operatorSlotMap: Record<string, string> = {};
-    if (this.slotOperatorMap) {
-      for (const [s, o] of Object.entries(this.slotOperatorMap)) operatorSlotMap[o] = s;
+    // ── Lifecycle clause triggers (clause with HAVE conditions) ──────────
+    const lifecycle = this.triggerIndex.getLifecycle(objectId);
+    if (lifecycle) {
+      const key = `lifecycle:${lifecycle.def.properties.id}:${slotId}:${frame}`;
+      if (!this.seenTriggers.has(key)) {
+        this.seenTriggers.add(key);
+        const operatorId = this.slotOperatorMap?.[slotId] ?? lifecycle.operatorId;
+        const props = this.loadoutProperties?.[slotId];
+        const potential = props?.operator.potential ?? 0;
+        const operatorSlotMap: Record<string, string> = {};
+        if (this.slotOperatorMap) {
+          for (const [s, o] of Object.entries(this.slotOperatorMap)) operatorSlotMap[o] = s;
+        }
+        const triggerCtx: EngineTriggerContext = {
+          def: lifecycle.fullDef,
+          operatorId,
+          operatorSlotId: slotId,
+          potential,
+          operatorSlotMap,
+          loadoutProperties: props,
+          haveConditions: lifecycle.haveConditions,
+          triggerEffects: lifecycle.effects,
+        };
+        results.push({
+          frame,
+          priority: PRIORITY.ENGINE_TRIGGER,
+          type: 'ENGINE_TRIGGER',
+          statusName: lifecycle.def.properties.id,
+          columnId: '',
+          ownerId: slotId,
+          sourceOwnerId: slotId,
+          sourceSkillName,
+          maxStacks: 0,
+          durationFrames: 0,
+          operatorSlotId: slotId,
+          engineTrigger: { frame, sourceOwnerId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: false },
+        });
+      }
     }
 
-    const triggerCtx: EngineTriggerContext = {
-      def: lifecycle.fullDef,
-      operatorId,
-      operatorSlotId: slotId,
-      potential,
-      operatorSlotMap,
-      loadoutProperties: props,
-      haveConditions: lifecycle.haveConditions,
-      triggerEffects: lifecycle.effects,
-    };
+    // ── onTriggerClause triggers matching this event's column ──────────────
+    const col = statusNameToColumnId(objectId);
+    for (const entry of this.triggerIndex.matchEvent(col)) {
+      const defKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
+      if (this.seenTriggers.has(defKey)) continue;
+      this.seenTriggers.add(defKey);
 
-    const triggerEntry: EngineTriggerEntry = {
-      frame: entry.frame,
-      sourceOwnerId: slotId,
-      sourceSkillName: ev.sourceSkillName ?? ev.name,
-      ctx: triggerCtx,
-      isEquip: false,
-    };
+      const triggerCtx: EngineTriggerContext = {
+        def: entry.def,
+        operatorId: entry.operatorId,
+        operatorSlotId: entry.operatorSlotId,
+        potential: entry.potential,
+        operatorSlotMap: entry.operatorSlotMap,
+        loadoutProperties: entry.loadoutProperties,
+        haveConditions: entry.haveConditions,
+        triggerEffects: entry.triggerEffects,
+      };
+      results.push({
+        frame,
+        priority: PRIORITY.ENGINE_TRIGGER,
+        type: 'ENGINE_TRIGGER',
+        statusName: entry.def.properties.id,
+        columnId: '',
+        ownerId: entry.operatorSlotId,
+        sourceOwnerId: slotId,
+        sourceSkillName,
+        maxStacks: 0,
+        durationFrames: 0,
+        operatorSlotId: entry.operatorSlotId,
+        engineTrigger: { frame, sourceOwnerId: slotId, sourceSkillName, ctx: triggerCtx, isEquip: entry.isEquip },
+      });
+    }
 
-    return [{
-      frame: entry.frame,
-      priority: PRIORITY.ENGINE_TRIGGER,
-      type: 'ENGINE_TRIGGER',
-      statusName: ev.name,
-      columnId: '',
-      ownerId: slotId,
-      sourceOwnerId: slotId,
-      sourceSkillName: ev.sourceSkillName ?? ev.name,
-      maxStacks: 0,
-      durationFrames: 0,
-      operatorSlotId: slotId,
-      engineTrigger: triggerEntry,
-      lifecycleReset: true,
-    }];
+    return results;
   }
 
   private handleInflictionCreate(entry: QueueFrame): QueueFrame[] {
@@ -807,7 +789,7 @@ export class EventInterpretorController {
       { ownerId: entry.sourceOwnerId, skillName: entry.sourceSkillName },
       { uid: entry.uid },
     );
-    return [];
+    return this.checkReactiveTriggers('APPLY', entry.columnId, entry.frame, entry.operatorSlotId, entry.sourceSkillName);
   }
 
   private handleConsume(entry: QueueFrame): QueueFrame[] {
@@ -821,7 +803,7 @@ export class EventInterpretorController {
     } else {
       this.controller.consumeStatus(entry.columnId, entry.ownerId, entry.frame, source);
     }
-    return [];
+    return this.checkReactiveTriggers('CONSUME', entry.columnId, entry.frame, entry.operatorSlotId, entry.sourceSkillName);
   }
 
   private handleLinkConsume(entry: QueueFrame): QueueFrame[] {
@@ -920,19 +902,15 @@ export class EventInterpretorController {
     }
 
     // Simple triggers: use evaluateEngineTrigger
-    // Lifecycle triggers with RESET stacking bypass the cap check and reset existing
-    const useReset = entry.lifecycleReset;
     evaluateEngineTrigger(
       trigger, [...this.baseEvents, ...this.controller.output],
-      useReset
-        ? () => 0  // bypass cap check — RESET will replace existing
-        : (col, owner, frame) => this.controller.activeCount(col, owner, frame),
+      (col, owner, frame) => this.controller.activeCount(col, owner, frame),
       (ev) => {
-        const { uid, name, ownerId, columnId, startFrame,
-          segments, sourceOwnerId, sourceSkillName, ...extraProps } = ev;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { uid, name, ownerId, columnId, startFrame, segments, sourceOwnerId, sourceSkillName, stackingMode: sm, ...extraProps } = ev as any;
         this.controller.createStatus(columnId, ownerId, startFrame, eventDuration(ev),
           { ownerId: sourceOwnerId ?? '', skillName: sourceSkillName ?? '' },
-          { statusName: name, uid, ...(useReset ? { stackingMode: 'RESET' } : {}), event: { segments, ...extraProps } },
+          { statusName: name, uid, ...(sm ? { stackingMode: sm } : {}), event: { segments, ...extraProps } },
         );
       },
       this.getEnemyHpPercentage,

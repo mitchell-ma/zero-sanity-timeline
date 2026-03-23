@@ -1355,11 +1355,13 @@ export function evaluateEngineTrigger(
   const durationFrames = outputDef.properties.duration ? getDurationFrames(outputDef.properties.duration) : TOTAL_FRAMES;
   const ownerId = resolveOwnerId(outputDef.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.properties.targetDeterminer);
   const eqStatusId = outputDef.properties.id ?? outputDef.properties.name;
-  if (!eqStatusId) { console.log('[DEBUG-OUT] No eqStatusId'); return; }
+  if (!eqStatusId) return;
   const columnId = statusNameToColumnId(eqStatusId);
   const eqLimitMap = outputDef.properties.stacks?.limit;
   const maxStacks = eqLimitMap ? getMaxStacks(eqLimitMap, ctx.potential) : 1;
-  if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
+  // RESET stacking replaces existing — bypass cap check
+  const stackingMode = outputDef.properties.stacks?.interactionType;
+  if (stackingMode !== 'RESET' && activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
 
   // Enforce cooldown: skip if within cooldownSeconds of the last proc
   const cdSecs = outputDef.properties.cooldownSeconds;
@@ -1384,7 +1386,8 @@ export function evaluateEngineTrigger(
     segments: durationSegment(durationFrames),
     sourceOwnerId: ctx.operatorSlotId,
     sourceSkillName: entry.sourceSkillName,
-  };
+    ...(stackingMode ? { stackingMode } : {}),
+  } as TimelineEvent;
 
   const deriveCtx: DeriveContext = {
     events, operatorId: ctx.operatorId, operatorSlotId: ctx.operatorSlotId,

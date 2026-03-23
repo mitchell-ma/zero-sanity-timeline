@@ -28,9 +28,8 @@ processCombatSimulation(rawEvents, loadoutContext...)
   2b. state.seedControlledOperator(firstOccupiedSlotId)  → seeds CONTROL for first operator (full timeline)
   3. state.registerEvents(inputEvents)                    → inline: extension, frame positions, combo triggers, CONTROL clamping, validation
   4. SkillPointController.deriveSPRecoveryEvents(...)     → SP recovery events → state.registerEvents
-  5. statusTriggerCollector.collectEngineTriggerEntries   → talent events → state.registerEvents
-  6. runEventQueue(state, derivedEvents, ...)             → seeds derived into queue, runs EventInterpretorController
-  7. state.getProcessedEvents()                           → final output (reactions merged)
+  5. runEventQueue(state, derivedEvents, ...)             → builds TriggerIndex, seeds talent + derived + triggers, runs EventInterpretorController
+  6. state.getProcessedEvents()                           → final output (reactions merged)
 ```
 
 ### Components
@@ -39,8 +38,9 @@ processCombatSimulation(rawEvents, loadoutContext...)
 |-----------|------|-----------|------|
 | `InputEventController` | `inputEventController.ts` | Stateless functions | `classifyEvents`: splits raw events into input (operator skills) and derived (freeform inflictions/reactions), sorts input events by `startFrame`. Also provides event creation/validation for the view layer. |
 | `DerivedEventController` | `derivedEventController.ts` | Per-invocation | Single source of truth. Inline registration (extension, frame positions, combo triggers, validation). Domain methods for creation/consumption. `addEvent` for queue-created events. |
-| `EventQueueController` | `eventQueueController.ts` | Stateless function | `runEventQueue`: seeds priority queue from frame markers + derived events, runs EventInterpretorController loop, registers output. |
-| `EventInterpretorController` | `eventInterpretorController.ts` | Per-invocation | DSL interpreter + PROCESS_FRAME handler. Routes effects through DerivedEventController domain methods. |
+| `EventQueueController` | `eventQueueController.ts` | Stateless function | `runEventQueue`: builds TriggerIndex, seeds priority queue from frame markers + derived events + triggers + talents, runs EventInterpretorController loop, registers output. |
+| `TriggerIndex` | `triggerIndex.ts` | Per-invocation | Config-driven index mapping observable verbs to trigger defs. Built from operator/weapon/gear JSON. Used by EventInterpretorController for reactive trigger evaluation. |
+| `EventInterpretorController` | `eventInterpretorController.ts` | Per-invocation | DSL interpreter + queue frame handler. Routes effects through DerivedEventController domain methods. Reactive trigger evaluation via TriggerIndex after each DEC mutation. |
 | `CombatLoadoutController` | `combatLoadoutController.ts` | Persistent (React) | Manages operator/weapon/gear selection. Provides loadout context to the pipeline. |
 | `SkillPointController` | `skillPointController.ts` | Persistent (React) | SP resource timeline. `deriveSPRecoveryEvents` derives SP events; `sync` post-processes after pipeline. |
 | `StaggerController` | `staggerController.ts` | Persistent (React) | Stagger resource timeline. `sync` post-processes after pipeline. |
@@ -151,13 +151,14 @@ Entries ordered by `(frame, priority)`. Lower priority fires first at the same f
 
 | Priority | Type | Handler |
 |----------|------|---------|
-| 5 | `FRAME_EFFECT` | Enemy statuses, forced reactions, team buffs, originium crystals, freeform reactions |
-| 10 | `INFLICTION_CREATE` | Deque stacking (cap 4) + cross-element reaction, freeform inflictions |
-| 15 | `CONSUME` | Clamp/remove active events |
+| 5 | `FRAME_EFFECT` | Enemy statuses, forced reactions, team buffs, originium crystals, freeform reactions. Post-hook: reactive trigger evaluation via TriggerIndex (lifecycle clauses, APPLY/IS/BECOME triggers). |
+| 10 | `INFLICTION_CREATE` | Deque stacking (cap 4) + cross-element reaction, freeform inflictions. Post-hook: reactive APPLY INFLICTION triggers. |
+| 15 | `CONSUME` | Clamp/remove active events. Post-hook: reactive CONSUME triggers. |
 | 16 | `COMBO_RESOLVE` | Deferred combo trigger resolution |
+| 17 | `LINK_CONSUME` | Consume Link team status for battle skills / ultimates |
 | 18 | `ABSORPTION_CHECK` | Consume inflictions → create exchange statuses |
 | 20 | `EXCHANGE_CREATE` | Create exchange stacks |
-| 22 | `ENGINE_TRIGGER` | Evaluate HAVE conditions → create derived statuses |
+| 22 | `ENGINE_TRIGGER` | Evaluate HAVE conditions + create derived statuses. Seeded from input events (PERFORM), from reactive post-hooks (APPLY/CONSUME/lifecycle), and from TriggerIndex. |
 
 ---
 

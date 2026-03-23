@@ -256,51 +256,77 @@ describe('Swordmancer — APPLY STATUS trigger', () => {
 
 // ── Former Finery — ENEMY HIT OPERATOR ───────────────────────────────────────
 // "Mincing Therapy": when operator is hit, gain Treatment Efficiency buff.
-// 15s duration, 15s CD. Periodic trigger assumed in planner.
+// 15s duration, 15s CD. HIT triggers require user-placed HIT events.
 
 describe('Former Finery — ENEMY HIT OPERATOR trigger', () => {
   beforeAll(() => registerCustomWeaponEffectDefs(formerFineryJson.weaponName, formerFineryJson.statusEvents));
   afterAll(() => deregisterCustomWeaponEffectDefs(formerFineryJson.weaponName));
 
-  test('first proc at frame 0, self-buff on operator', () => {
+  test('no buff without HIT events', () => {
     const result = derive([], { [SLOT]: formerFineryJson.weaponName });
     const buffs = result.filter(ev => ev.id === 'FORMER_FINERY_MINCING_THERAPY');
-    expect(buffs.length).toBeGreaterThan(0);
+    expect(buffs.length).toBe(0);
+  });
+
+  test('HIT event triggers self-buff on operator', () => {
+    const hitEvents = [
+      makeEvent({ uid: 'hit-1', ownerId: SLOT, columnId: 'hit', startFrame: 0, name: 'hit' }),
+    ];
+    const result = derive(hitEvents, { [SLOT]: formerFineryJson.weaponName });
+    const buffs = derivedEvents(result, hitEvents).filter(ev => ev.id === 'FORMER_FINERY_MINCING_THERAPY');
+    expect(buffs.length).toBe(1);
     expect(buffs[0].startFrame).toBe(0);
     expect(buffs[0].ownerId).toBe(SLOT);
     expect(eventDuration(buffs[0])).toBe(15 * FPS);
   });
 
-  test('15s cooldown spaces procs correctly', () => {
-    const result = derive([], { [SLOT]: formerFineryJson.weaponName });
-    const buffs = result.filter(ev => ev.id === 'FORMER_FINERY_MINCING_THERAPY');
-    expect(buffs.length).toBeGreaterThanOrEqual(2);
-    const gap = buffs[1].startFrame - buffs[0].startFrame;
-    expect(gap).toBeGreaterThanOrEqual(15 * FPS);
+  test('each HIT event triggers a proc (RESET stacking, no cooldown)', () => {
+    const hitEvents = [
+      makeEvent({ uid: 'hit-1', ownerId: SLOT, columnId: 'hit', startFrame: 0, name: 'hit' }),
+      makeEvent({ uid: 'hit-2', ownerId: SLOT, columnId: 'hit', startFrame: 10 * FPS, name: 'hit' }),
+      makeEvent({ uid: 'hit-3', ownerId: SLOT, columnId: 'hit', startFrame: 20 * FPS, name: 'hit' }),
+    ];
+    const result = derive(hitEvents, { [SLOT]: formerFineryJson.weaponName });
+    const buffs = derivedEvents(result, hitEvents).filter(ev => ev.id === 'FORMER_FINERY_MINCING_THERAPY');
+    // All 3 HIT events trigger procs — RESET stacking replaces previous, no explicit cooldown
+    expect(buffs.length).toBe(3);
   });
 });
 
 // ── AIC Light — OPERATOR DEFEAT ENEMY ────────────────────────────────────────
 // When wielder defeats an enemy, gain +20 Base ATK for 5s.
-// Periodic trigger assumed in planner.
+// DEFEAT triggers require user-placed DEFEAT events.
 
 describe('AIC Light — OPERATOR DEFEAT ENEMY trigger', () => {
   beforeAll(() => registerCustomGearEffectDefs(aicLightJson.gearSetType, aicLightJson.statusEvents));
   afterAll(() => deregisterCustomGearEffectDefs(aicLightJson.gearSetType));
 
-  test('generates periodic ATK buffs on operator', () => {
+  test('no buff without DEFEAT events', () => {
     const result = derive([], undefined, { [SLOT]: aicLightJson.gearSetType });
     const buffs = result.filter(ev => ev.id === 'AIC_LIGHT');
-    expect(buffs.length).toBeGreaterThan(0);
+    expect(buffs.length).toBe(0);
+  });
+
+  test('DEFEAT event generates ATK buff on operator', () => {
+    const defeatEvents = [
+      makeEvent({ uid: 'defeat-1', ownerId: SLOT, columnId: 'defeat', startFrame: 0, name: 'defeat' }),
+    ];
+    const result = derive(defeatEvents, undefined, { [SLOT]: aicLightJson.gearSetType });
+    const buffs = derivedEvents(result, defeatEvents).filter(ev => ev.id === 'AIC_LIGHT');
+    expect(buffs.length).toBe(1);
     expect(buffs[0].ownerId).toBe(SLOT);
     expect(eventDuration(buffs[0])).toBe(5 * FPS);
   });
 
   test('RESET interaction: new proc clamps previous buff', () => {
-    const result = derive([], undefined, { [SLOT]: aicLightJson.gearSetType });
-    const buffs = result.filter(ev => ev.id === 'AIC_LIGHT');
-    expect(buffs.length).toBeGreaterThanOrEqual(2);
-    // With 5s duration and no cooldown, each proc should clamp the previous
+    const defeatEvents = [
+      makeEvent({ uid: 'defeat-1', ownerId: SLOT, columnId: 'defeat', startFrame: 0, name: 'defeat' }),
+      makeEvent({ uid: 'defeat-2', ownerId: SLOT, columnId: 'defeat', startFrame: 3 * FPS, name: 'defeat' }),
+    ];
+    const result = derive(defeatEvents, undefined, { [SLOT]: aicLightJson.gearSetType });
+    const buffs = derivedEvents(result, defeatEvents).filter(ev => ev.id === 'AIC_LIGHT');
+    expect(buffs.length).toBe(2);
+    // With 5s duration and no cooldown, second proc should clamp the first
     expect(eventDuration(buffs[0])).toBeLessThanOrEqual(buffs[1].startFrame - buffs[0].startFrame);
   });
 });

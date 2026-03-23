@@ -22,9 +22,6 @@ import {
   resolveSusceptibility,
 } from './processInfliction';
 import { SkillPointController } from '../slot/skillPointController';
-import {
-  collectEngineTriggerEntries,
-} from './statusTriggerCollector';
 import { statusNameToColumnId } from './triggerMatch';
 import { genEventUid } from '../timeline/inputEventController';
 import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
@@ -34,6 +31,7 @@ import {
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
 import { PriorityQueue } from './priorityQueue';
+import { TriggerIndex } from './triggerIndex';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
   ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS,
@@ -556,6 +554,89 @@ function collectCryoConsumptionEntries(
   return entries;
 }
 
+// ── PERFORM trigger seeding from input events ──────────────────────────────
+
+/**
+ * Seed ENGINE_TRIGGER entries from input events using the trigger index.
+ * Handles PERFORM triggers (skill events) and APPLY triggers (reactions/statuses
+ * placed directly as input events that don't go through queue processing).
+ */
+function seedInputEventTriggers(
+  events: readonly TimelineEvent[],
+  triggerIdx: TriggerIndex,
+  queue: PriorityQueue<QueueFrame>,
+) {
+  const seen = new Set<string>();
+
+  const seedEntry = (ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry) => {
+    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
+    if (seen.has(dedupKey)) return;
+    seen.add(dedupKey);
+
+    const triggerCtx: import('./statusTriggerCollector').EngineTriggerContext = {
+      def: entry.def,
+      operatorId: entry.operatorId,
+      operatorSlotId: entry.operatorSlotId,
+      potential: entry.potential,
+      operatorSlotMap: entry.operatorSlotMap,
+      loadoutProperties: entry.loadoutProperties,
+      haveConditions: entry.haveConditions,
+      triggerEffects: entry.triggerEffects,
+    };
+
+    queue.insert({
+      frame: ev.startFrame,
+      priority: PRIORITY.ENGINE_TRIGGER,
+      type: 'ENGINE_TRIGGER',
+      statusName: entry.def.properties.id,
+      columnId: '',
+      ownerId: entry.operatorSlotId,
+      sourceOwnerId: ev.ownerId,
+      sourceSkillName: ev.name,
+      maxStacks: 0,
+      durationFrames: 0,
+      operatorSlotId: entry.operatorSlotId,
+      engineTrigger: {
+        frame: ev.startFrame,
+        sourceOwnerId: ev.ownerId,
+        sourceSkillName: ev.name,
+        ctx: triggerCtx,
+        isEquip: entry.isEquip,
+      },
+    });
+  };
+
+  for (const ev of events) {
+    // Find all trigger defs whose indexed key matches this event's column
+    for (const entry of triggerIdx.matchEvent(ev.columnId)) {
+      // Owner filtering: PERFORM triggers check subject determiner
+      if (entry.primaryVerb === 'PERFORM') {
+        const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
+        if (!isAny && ev.ownerId !== entry.operatorSlotId) continue;
+        // FINISHER/DIVE_ATTACK/FINAL_STRIKE — must match the event's skill type
+        const obj = entry.primaryCondition.object;
+        if (obj === 'FINISHER' && ev.id !== 'FINISHER') continue;
+        if (obj === 'DIVE_ATTACK' && ev.id !== 'DIVE') continue;
+        // FINAL_STRIKE matches normal basic attacks (not finisher/dive)
+        if (obj === 'FINAL_STRIKE' && (ev.id === 'FINISHER' || ev.id === 'DIVE')) continue;
+      }
+      // Target filtering: check the 'to' field on the primary condition
+      const toTarget = entry.primaryCondition.to as string | undefined;
+      if (toTarget) {
+        if (toTarget === 'ENEMY' && ev.ownerId !== ENEMY_OWNER_ID) continue;
+        if (toTarget === 'OPERATOR') {
+          // OPERATOR target means the event must be on an operator (not enemy)
+          if (ev.ownerId === ENEMY_OWNER_ID) continue;
+          // THIS/ANY determiner
+          const toDet = entry.primaryCondition.toDeterminer as string | undefined;
+          if (toDet === 'THIS' && ev.ownerId !== entry.operatorSlotId) continue;
+        }
+      }
+      seedEntry(ev, entry);
+    }
+  }
+}
+
 // ── EventQueueController ─────────────────────────────────────────────────────
 
 /**
@@ -579,10 +660,12 @@ export function runEventQueue(
   const registeredEvents = state.getRegisteredEvents();
   const stops = state.getStops();
 
-  // Collect trigger contexts from configs
-  const { entries: engineEntries } = collectEngineTriggerEntries(
-    registeredEvents, loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-  );
+  // Build trigger index from configs (config scan, not event scan)
+  const triggerIdx = TriggerIndex.build(slotOperatorMap, loadoutProperties, slotWeapons, slotGearSets, registeredEvents);
+
+  // Register talent events (permanent presence) before queue processing
+  const talentEvents = triggerIdx.getAllTalentEvents();
+  if (talentEvents.length > 0) state.registerEvents(talentEvents);
 
   // ── Seed priority queue ───────────────────────────────────────────────────
   const queue = new PriorityQueue<QueueFrame>((a, b) =>
@@ -593,7 +676,7 @@ export function runEventQueue(
   // Create interpreter backed by the single DEC
   const interpretor = new EventInterpretorController(state, registeredEvents, {
     loadoutProperties, slotOperatorMap, slotWirings, getEnemyHpPercentage,
-    getControlledSlotAtFrame,
+    getControlledSlotAtFrame, triggerIndex: triggerIdx,
   });
 
   // Seed derived events (freeform inflictions/reactions) — these go through the
@@ -675,20 +758,9 @@ export function runEventQueue(
   seed(collectConsumeReactionEntries(registeredEvents, stops));
   seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
   seed(collectConsumeEntries(registeredEvents, stops, slotOperatorMap));
-  seed(engineEntries.map(e => ({
-    frame: e.frame,
-    priority: PRIORITY.ENGINE_TRIGGER,
-    type: 'ENGINE_TRIGGER' as const,
-    statusName: e.ctx.def.properties.id,
-    columnId: '',
-    ownerId: e.ctx.operatorSlotId,
-    sourceOwnerId: e.sourceOwnerId,
-    sourceSkillName: e.sourceSkillName,
-    maxStacks: 0,
-    durationFrames: 0,
-    operatorSlotId: e.ctx.operatorSlotId,
-    engineTrigger: e,
-  })));
+
+  // Seed triggers from input events (PERFORM, APPLY reactions/statuses, IS/BECOME)
+  seedInputEventTriggers(registeredEvents, triggerIdx, queue);
 
   // ── Run the queue ─────────────────────────────────────────────────────────
   while (queue.size > 0) {
@@ -705,6 +777,7 @@ export function runEventQueue(
   const comboWindows = slotWirings && slotWirings.length > 0
     ? deriveComboActivationWindows(allEvents, slotWirings, stops)
     : [];
+  state.markExtended(comboWindows.map(ev => ev.uid));
   state.registerEvents([...queueEvents, ...comboWindows]);
 
   state.validateAll();
@@ -725,9 +798,8 @@ export function getLastController(): DerivedEventController {
  * 1. InputEventController.classifyEvents → split input vs derived
  * 2. DerivedEventController.registerEvents → input events only
  * 3. SkillPointController.deriveSPRecoveryEvents → SP recovery events
- * 4. collectEngineTriggerEntries → talent presence events
- * 5. EventQueueController.runEventQueue → seeds derived, runs interpreter
- * 6. DerivedEventController.getProcessedEvents → final output
+ * 4. EventQueueController.runEventQueue → builds trigger index, seeds derived + talents, runs interpreter
+ * 5. DerivedEventController.getProcessedEvents → final output
  */
 export function processCombatSimulation(
   rawEvents: TimelineEvent[],
@@ -777,10 +849,7 @@ export function processCombatSimulation(
   const spEvents = withSPRecovery.slice(state.getRegisteredEvents().length);
   state.registerEvents(spEvents);
 
-  const { talentEvents } = collectEngineTriggerEntries(
-    state.getRegisteredEvents(), loadoutProperties, slotOperatorMap, slotWeapons, slotGearSets,
-  );
-  state.registerEvents(talentEvents);
+  // Talent events are now registered inside runEventQueue via the trigger index.
 
   // ── 3b. Pre-compute damage by frame for HP threshold predicates ───────────
   if (bossMaxHp != null && enemyId && slotOperatorMap && loadoutProperties) {
