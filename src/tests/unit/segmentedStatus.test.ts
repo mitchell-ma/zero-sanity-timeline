@@ -51,7 +51,7 @@ describe('OTHER/ANY target resolution', () => {
         verb: VerbType.APPLY,
         object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObject: NounType.OPERATOR,
+        to: NounType.OPERATOR,
         toDeterminer: DeterminerType.OTHER,
         with: {
           duration: { verb: VerbType.IS, value: 10 },
@@ -70,7 +70,7 @@ describe('OTHER/ANY target resolution', () => {
         verb: VerbType.APPLY,
         object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObject: NounType.OPERATOR,
+        to: NounType.OPERATOR,
         toDeterminer: DeterminerType.OTHER,
         with: {
           duration: { verb: VerbType.IS, value: 10 },
@@ -89,7 +89,7 @@ describe('OTHER/ANY target resolution', () => {
         verb: VerbType.APPLY,
         object: NounType.STATUS,
         objectId: 'TEST_BUFF',
-        toObject: NounType.OPERATOR,
+        to: NounType.OPERATOR,
         toDeterminer: DeterminerType.ANY,
         with: {
           duration: { verb: VerbType.IS, value: 5 },

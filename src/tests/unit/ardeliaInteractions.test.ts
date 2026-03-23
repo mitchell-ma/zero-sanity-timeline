@@ -383,7 +383,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
     );
     expect(reaction).toBeDefined();
     expect(reaction.adjective).toEqual(['FORCED', 'CORROSION']);
-    expect(reaction.toObject).toBe('ENEMY');
+    expect(reaction.to).toBe('ENEMY');
     expect(reaction.with.stacks.value).toBe(1);
     expect(reaction.with.duration.value).toBe(7);
   });
@@ -421,7 +421,7 @@ describe('C. Combo Skill (Eruption Column)', () => {
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.to).toBe('OPERATOR');
     expect(energy.with.value.value).toBe(10);
   });
 

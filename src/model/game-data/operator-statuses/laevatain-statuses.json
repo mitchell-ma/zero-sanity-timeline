@@ -159,7 +159,7 @@
                 "object": "STATUS",
                 "objectId": "MELTING_FLAME",
                 "toDeterminer": "THIS",
-                "toObject": "OPERATOR"
+                "to": "OPERATOR"
               }
             ]
           }

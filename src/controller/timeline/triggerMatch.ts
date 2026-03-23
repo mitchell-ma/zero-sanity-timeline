@@ -35,7 +35,7 @@ export interface Predicate {
   element?: string;
   adjective?: string;
   subjectDeterminer?: string;
-  toObject?: string;
+  to?: string;
   toDeterminer?: string;
   with?: Record<string, unknown>;
 }
@@ -55,7 +55,7 @@ export interface TriggerSubEffect {
   element?: string;
   adjective?: string;
   fromObject?: string;
-  toObject?: string;
+  to?: string;
   toDeterminer?: string;
 }
 
@@ -201,17 +201,17 @@ function resolveColumns(cond: Predicate): Set<string> | undefined {
  * Resolve which ownerId to filter events by, based on verb semantics.
  *
  * For action verbs (APPLY, CONSUME), the subject is the actor and the target
- * (toObject) is the recipient. Timeline events are owned by the recipient.
+ * (to) is the recipient. Timeline events are owned by the recipient.
  * For state/possession verbs (HAVE, IS, RECEIVE), the subject is the entity.
  * For skill verbs (PERFORM, DEAL, RECOVER), the subject is the performer.
  */
 function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: string) {
   const det = cond.subjectDeterminer;
   const isAnyOperator = cond.subject === 'OPERATOR' && det === 'ANY';
-  const toObj = cond.toObject;
+  const toObj = cond.to;
   const toDet = cond.toDeterminer;
 
-  // Action verbs: event ownerId = recipient (toObject), not subject
+  // Action verbs: event ownerId = recipient (to), not subject
   const isActionVerb = verb === 'APPLY' || verb === 'CONSUME';
 
   return {

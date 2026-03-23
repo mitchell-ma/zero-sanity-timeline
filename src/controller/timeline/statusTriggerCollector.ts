@@ -87,7 +87,7 @@ interface Effect {
   verb: string;
   object: string;
   objectId?: string;
-  toObject?: string;
+  to?: string;
   toDeterminer?: string;
 }
 
@@ -773,8 +773,8 @@ function evaluateThresholdClauses(
             .find(d => d.properties.id === targetStatusName);
 
           // Resolve owner from the target def's own target field (authoritative),
-          // falling back to the clause's toObject
-          const targetField = targetDef?.properties.target ?? effect.toObject;
+          // falling back to the clause's to
+          const targetField = targetDef?.properties.target ?? effect.to;
           const targetDet = targetDef?.properties.targetDeterminer ?? effect.toDeterminer;
           const targetOwnerId = resolveOwnerId(targetField ?? 'OPERATOR', ctx.operatorSlotId, ctx.operatorSlotMap, targetDet ?? 'THIS');
 
@@ -1476,7 +1476,7 @@ function evaluateCompoundTrigger(
       objectId: se.objectId,
       adjective: (se.adjective ?? se.element) as SemanticEffect['adjective'],
       fromObject: se.fromObject as SemanticEffect['fromObject'],
-      toObject: se.toObject as SemanticEffect['toObject'],
+      to: se.to as SemanticEffect['to'],
       toDeterminer: se.toDeterminer as SemanticEffect['toDeterminer'],
     })),
   }));

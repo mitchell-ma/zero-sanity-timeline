@@ -111,7 +111,7 @@
           {
             "verb": "DEAL",
             "object": "STAGGER",
-            "toObject": "ENEMY",
+            "to": "ENEMY",
             "with": {
               "value": {
                 "verb": "VARY_BY",

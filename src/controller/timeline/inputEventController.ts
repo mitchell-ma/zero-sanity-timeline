@@ -12,7 +12,7 @@ import { ENEMY_OWNER_ID, REACTION_COLUMN_IDS, INFLICTION_COLUMN_IDS, SKILL_COLUM
 import { USER_ID } from '../../model/channels';
 import { TOTAL_FRAMES } from '../../utils/timeline';
 import { ComboSkillEventController } from './comboSkillEventController';
-import { hasEnhanceClauseAtFrame } from './eventValidator';
+import { hasEnableClauseAtFrame } from './eventValidator';
 import type { CombatLoadoutController } from '../combat-loadout/combatLoadoutController';
 
 // ── Event classification ─────────────────────────────────────────────────────
@@ -28,11 +28,13 @@ export function classifyEvents(rawEvents: TimelineEvent[]): { inputEvents: Timel
   const inputEvents: TimelineEvent[] = [];
   const derivedEvents: TimelineEvent[] = [];
   for (const ev of rawEvents) {
-    if (ev.ownerId === ENEMY_OWNER_ID && ev.sourceOwnerId === USER_ID
-      && (INFLICTION_COLUMN_IDS.has(ev.columnId) || REACTION_COLUMN_IDS.has(ev.columnId))) {
-      derivedEvents.push(ev);
+    // Clone to prevent engine mutations from leaking back to raw state
+    const copy = { ...ev, segments: ev.segments.map(s => ({ ...s, properties: { ...s.properties }, frames: s.frames?.map(f => ({ ...f })) })) };
+    if (copy.ownerId === ENEMY_OWNER_ID && copy.sourceOwnerId === USER_ID
+      && (INFLICTION_COLUMN_IDS.has(copy.columnId) || REACTION_COLUMN_IDS.has(copy.columnId))) {
+      derivedEvents.push(copy);
     } else {
-      inputEvents.push(ev);
+      inputEvents.push(copy);
     }
   }
   inputEvents.sort((a, b) => a.startFrame - b.startFrame);
@@ -70,9 +72,10 @@ export function getNextEventUid(): number {
 // ── Non-overlappable range helpers ──────────────────────────────────────────
 
 function getRange(ev: TimelineEvent): number {
+  if (ev.nonOverlappableRange == null) return 0;
   // Prefer segments (may be time-stop-extended) over static nonOverlappableRange
   if (ev.segments) return computeSegmentsSpan(ev.segments);
-  return ev.nonOverlappableRange ?? 0;
+  return ev.nonOverlappableRange;
 }
 
 /**
@@ -283,11 +286,14 @@ export function createEvent(
     sourceOwnerId?: string;
     sourceSkillName?: string;
     enhancementType?: import('../../consts/enums').EnhancementType;
+    stacks?: Record<string, unknown>;
   } | null,
 ): TimelineEvent {
   const isForced = ownerId === ENEMY_OWNER_ID && REACTION_COLUMN_IDS.has(columnId);
   const segments = defaultSkill?.segments ?? durationSegment(120);
   const span = computeSegmentsSpan(segments);
+  const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value ?? 1;
+  const isStackable = stackLimit > 1 || (ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId));
   return {
     uid: genEventUid(),
     id: defaultSkill?.name ?? columnId,
@@ -297,8 +303,8 @@ export function createEvent(
     startFrame: atFrame,
     segments,
     ...(isForced ? { isForced: true } : {}),
-    // Enemy inflictions are stackable — no overlap prevention
-    ...(span > 0 && !(ownerId === ENEMY_OWNER_ID && INFLICTION_COLUMN_IDS.has(columnId)) ? { nonOverlappableRange: span } : {}),
+    // Stackable events (status stacks, enemy inflictions) allow overlap
+    ...(span > 0 && !isStackable ? { nonOverlappableRange: span } : {}),
     ...(defaultSkill?.gaugeGain ? { gaugeGain: defaultSkill.gaugeGain } : {}),
     ...(defaultSkill?.teamGaugeGain ? { teamGaugeGain: defaultSkill.teamGaugeGain } : {}),
     ...(defaultSkill?.gaugeGainByEnemies ? { gaugeGainByEnemies: defaultSkill.gaugeGainByEnemies } : {}),
@@ -403,11 +409,11 @@ function clampToComboEdge(
   return result;
 }
 
-// ── Enhanced → ENHANCE clause constraint ─────────────────────────────────
+// ── Enhanced → ENABLE clause constraint ──────────────────────────────────
 
-/** Map column IDs to DSL ENHANCE object types. */
-const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
-  basic: 'BASIC_ATTACK',
+/** Map column IDs to DSL ENABLE object types. */
+const COLUMN_TO_ENABLE_OBJECT: Record<string, string> = {
+  basic: 'BATK',
   battle: 'BATTLE_SKILL',
   combo: 'COMBO_SKILL',
   ultimate: 'ULTIMATE',
@@ -415,19 +421,19 @@ const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
 
 /**
  * Clamp enhanced events so that all segment start frames remain within
- * an active ENHANCE clause window.
+ * an active ENABLE clause window.
  */
-function clampToEnhanceWindow(
+function clampToEnableWindow(
   allEvents: TimelineEvent[],
   target: TimelineEvent,
   desiredFrame: number,
 ): number {
-  const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[target.columnId];
-  if (!enhanceObject) return target.startFrame;
+  const enableObject = COLUMN_TO_ENABLE_OBJECT[target.columnId];
+  if (!enableObject) return target.startFrame;
 
-  // Find the ENHANCE window by scanning for a frame that has the clause
-  if (!hasEnhanceClauseAtFrame(allEvents, target.ownerId, enhanceObject, desiredFrame)) {
-    return target.startFrame; // desired frame outside ENHANCE window
+  // Find the ENABLE window by scanning for a frame that has the clause
+  if (!hasEnableClauseAtFrame(allEvents, target.ownerId, enableObject, desiredFrame)) {
+    return target.startFrame; // desired frame outside ENABLE window
   }
   return desiredFrame;
 }
@@ -523,9 +529,9 @@ export function validateMove(
   if (target.columnId === SKILL_COLUMNS.BATTLE || target.columnId === SKILL_COLUMNS.BASIC) {
     clamped = clampToComboEdge(allEvents, target, clamped);
   }
-  // Clamp enhanced events within the ENHANCE clause window
+  // Clamp enhanced events within the ENABLE clause window
   if (target.enhancementType === EnhancementType.ENHANCED) {
-    clamped = clampToEnhanceWindow(allEvents, target, clamped);
+    clamped = clampToEnableWindow(allEvents, target, clamped);
   }
   return clamped;
 }

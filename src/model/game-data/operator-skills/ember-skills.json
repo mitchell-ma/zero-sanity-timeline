@@ -252,7 +252,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -404,7 +404,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -460,7 +460,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -501,7 +501,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",
@@ -568,7 +568,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -776,7 +776,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -789,7 +789,7 @@
                     "object": "THE_STEEL_OATH",
                     "objectType": "STATUS",
                     "toDeterminer": "ALL",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "duration": {
                         "verb": "IS",
@@ -840,7 +840,7 @@
                     "object": "THE_STEEL_OATH_EMPOWERED",
                     "objectType": "STATUS",
                     "toDeterminer": "THIS",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "HP_MULTIPLIER": {
                         "verb": "VARY_BY",

@@ -30,7 +30,7 @@ interface Effect {
   object: string;
   adjective?: string | string[];
   toDeterminer?: string;
-  toObject?: string;
+  to?: string;
   with?: {
     value?: { verb: string; value: number };
     stacks?: { verb: string; value: number };
@@ -268,7 +268,7 @@ function convertTick(
       verb: mapping.verb,
       object: mapping.object,
       adjective: mapping.adjective,
-      toObject: 'ENEMY',
+      to: 'ENEMY',
     };
 
     const withPrep: Effect['with'] = {};
@@ -313,10 +313,10 @@ function buildResourceEffect(
   if (resourceType === 'ULTIMATE_ENERGY' && interactionType === 'RECOVER') {
     if (target === 'SELF') {
       effect.toDeterminer = 'THIS';
-      effect.toObject = 'OPERATOR';
+      effect.to = 'OPERATOR';
     } else if (target === 'TEAM') {
       effect.toDeterminer = 'ALL';
-      effect.toObject = 'OPERATOR';
+      effect.to = 'OPERATOR';
     }
   }
 

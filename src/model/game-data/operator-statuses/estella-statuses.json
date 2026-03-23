@@ -150,7 +150,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",

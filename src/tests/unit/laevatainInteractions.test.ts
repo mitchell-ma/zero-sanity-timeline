@@ -66,7 +66,7 @@
  *
  * - Scorching Heart Part 1 (absorption): Any operator's Final Strike absorbs
  *   Heat Infliction from enemy → MF on Laevatain. Requires frame-effect-driven
- *   derivation engine (toObject operator ID resolution implemented, but
+ *   derivation engine (to operator ID resolution implemented, but
  *   cross-operator frame scanning not yet wired).
  * - Cooldowns & SP costs: resource validation tests (spec groups H, I)
  * - Full rotation chain test (spec I5): ultimate → enhanced variants → MF →
@@ -96,7 +96,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
   // Expand short keys in status JSONs (same as operatorJsonLoader.ts expandKeys)
   const KEY_EXPAND: Record<string, string> = {
     verb: 'verb', object: 'object', subject: 'subject',
-    to: 'toObject',
+    to: 'to',
     from: 'fromObject',
     on: 'onObject',
     with: 'with', for: 'for',
@@ -278,7 +278,7 @@ const laevatainSkillsJson = require('../../model/game-data/operator-skills/laeva
 const laevatainStatusesJson = require('../../model/game-data/operator-statuses/laevatain-statuses.json');
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
-  to: 'toObject',
+  to: 'to',
   from: 'fromObject',
   on: 'onObject',
   with: 'with', for: 'for',
@@ -493,7 +493,7 @@ describe('C. Empowered Battle Skill & Combustion', () => {
     );
     expect(mfEffect).toBeDefined();
     expect(mfEffect.object).toBe('STATUS');
-    expect(mfEffect.toObject).toBe('LAEVATAIN');
+    expect(mfEffect.to).toBe('LAEVATAIN');
   });
 
   test('C4: Empowered battle skill last frame applies forced Combustion reaction', () => {

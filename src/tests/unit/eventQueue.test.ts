@@ -26,7 +26,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
   const mockSkillsJson = require('../../model/game-data/operator-skills/laevatain-skills.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockStatusesJson = require('../../model/game-data/operator-statuses/laevatain-statuses.json');
-  const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'toObject', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
+  const KEY_EXPAND = { verb: 'verb', object: 'object', subject: 'subject', to: 'to', from: 'fromObject', on: 'onObject', with: 'with', for: 'for' } as Record<string, string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- key expansion
   const expandKeys = (val: any): any => {
     if (val == null || typeof val !== 'object') return val;

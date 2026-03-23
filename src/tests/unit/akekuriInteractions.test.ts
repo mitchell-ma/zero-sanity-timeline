@@ -303,7 +303,7 @@ describe('B. Battle Skill (Burst of Passion)', () => {
     );
     expect(infliction).toBeDefined();
     expect(infliction.adjective).toBe('HEAT');
-    expect(infliction.toObject).toBe('ENEMY');
+    expect(infliction.to).toBe('ENEMY');
   });
 
   test('B6: Damage multiplier scales from 1.42 (lv1) to 3.2 (lv12)', () => {
@@ -389,7 +389,7 @@ describe('C. Combo Skill (Flash and Dash)', () => {
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.to).toBe('OPERATOR');
     expect(energy.with.value.value).toBe(10);
   });
 

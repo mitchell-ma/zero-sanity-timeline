@@ -216,7 +216,7 @@ function EffectLine({ effect, depth = 0 }: { effect: Effect; depth?: number }) {
         {adjs.length > 0 && <span style={{ color: '#dd8844' }}> {adjs.map(a => fmt(a)).join(' ')}</span>}
         {effect.object && <span style={{ color: '#55aadd' }}> {fmt(String(effect.object))}</span>}
         {effect.objectId && <span style={{ color: 'var(--text-muted)' }}> ({effect.objectId})</span>}
-        {effect.toObject && <span style={{ color: '#cc88dd' }}> TO {fmt(String(effect.toObject))}</span>}
+        {effect.to && <span style={{ color: '#cc88dd' }}> TO {fmt(String(effect.to))}</span>}
         {effect.fromObject && <span style={{ color: '#cc88dd' }}> FROM {fmt(String(effect.fromObject))}</span>}
         {effect.onObject && <span style={{ color: '#cc88dd' }}> ON {fmt(String(effect.onObject))}</span>}
         {effect.for && (

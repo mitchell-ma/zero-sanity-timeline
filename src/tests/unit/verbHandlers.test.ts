@@ -315,13 +315,13 @@ describe('APPLY CRYO INFLICTION — target filtering', () => {
   const WEAPON_NAME = '__test_target_filter';
   const STATUS_ID = 'TARGET_FILTER_BUFF';
 
-  function makeTriggerDef(toObject?: string, toDeterminer?: string) {
+  function makeTriggerDef(toTarget?: string, toDeterminer?: string) {
     const condition: Record<string, unknown> = {
       subjectDeterminer: 'ANY', subject: 'OPERATOR',
       verb: 'APPLY', object: 'INFLICTION', element: 'CRYO',
     };
-    if (toObject) {
-      condition.toObject = toObject;
+    if (toTarget) {
+      condition.to = toTarget;
       if (toDeterminer) condition.toDeterminer = toDeterminer;
     }
     return [{

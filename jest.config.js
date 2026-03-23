@@ -10,4 +10,7 @@ module.exports = {
   moduleNameMapper: {
     '\\.(webp|png|jpg|jpeg|gif|svg)$': '<rootDir>/src/tests/assetStub.js',
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!uuid/)',
+  ],
 };

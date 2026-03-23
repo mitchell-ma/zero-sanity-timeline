@@ -101,7 +101,7 @@ const wulfgardSkillEntries = mockSkillsJson as Record<string, any>;
 
 const _KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
-  to: 'toObject', from: 'fromObject', on: 'onObject',
+  to: 'to', from: 'fromObject', on: 'onObject',
   with: 'with', for: 'for',
 };
 function _expandKeys(val: unknown): unknown {
@@ -377,7 +377,7 @@ describe('B. Battle Skill (Thermite Tracers)', () => {
     );
     expect(infliction).toBeDefined();
     expect(infliction.adjective).toBe('HEAT');
-    expect(infliction.toObject).toBe('ENEMY');
+    expect(infliction.to).toBe('ENEMY');
   });
 
   test('B6: Frames 1 and 2 have no stagger effects (zero-value effects removed)', () => {
@@ -461,7 +461,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
     );
     expect(infliction).toBeDefined();
     expect(infliction.adjective).toBe('HEAT');
-    expect(infliction.toObject).toBe('ENEMY');
+    expect(infliction.to).toBe('ENEMY');
   });
 
   test('C5: Combo animation is TIME_STOP (0.5s within 1s)', () => {
@@ -481,7 +481,7 @@ describe('C. Combo Skill (Frag Grenade Beta)', () => {
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.to).toBe('OPERATOR');
     expect(energy.with.value.value).toBe(10);
   });
 

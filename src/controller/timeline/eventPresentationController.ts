@@ -108,13 +108,17 @@ export function computeStatusViewOverrides(
     for (const [columnId, typeEvents] of Array.from(byType.entries())) {
       if (REACTION_COLUMN_IDS.has(columnId)) continue;
 
-      const sorted = [...typeEvents].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+      // Exclude consumed events — they already have correct durations and
+      // should not cause visual truncation of active events before them.
+      const active = typeEvents.filter((ev) => ev.eventStatus !== EventStatusType.CONSUMED);
+      const sorted = [...active].sort((a, b) => a.startFrame - b.startFrame || a.uid.localeCompare(b.uid));
+      if (sorted.length === 0) continue;
       const baseName = INFLICTION_EVENT_LABELS[columnId] ?? INFLICTION_EVENT_LABELS[sorted[0].name] ?? sorted[0].name;
 
       const singleInstance = isSingleInstanceStatus(sorted[0].name);
       const stackable = isStackableStatus(sorted[0].name);
 
-      if (typeEvents.length <= 1 && !stackable) continue;
+      if (sorted.length <= 1 && !stackable) continue;
 
       for (let i = 0; i < sorted.length; i++) {
         const ev = sorted[i];

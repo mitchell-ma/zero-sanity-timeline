@@ -27,7 +27,7 @@ import {
 /** Key mappings: short (operator-statuses) → long (engine-expected). */
 const KEY_EXPAND: Record<string, string> = {
   verb: 'verb', object: 'object', subject: 'subject',
-  to: 'toObject',
+  to: 'to',
   from: 'fromObject',
   on: 'onObject',
   with: 'with', for: 'for',
@@ -251,7 +251,7 @@ export interface TriggerCondition {
   element?: string;
   adjective?: string;
   subjectDeterminer?: string;
-  toObject?: string;
+  to?: string;
   toDeterminer?: string;
 }
 

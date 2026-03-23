@@ -595,7 +595,7 @@ function effectToText(e: Effect): string {
   }
   if (e.object) parts.push(e.object.replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);
-  if (e.toObject) parts.push(`TO ${String(e.toObject).replace(/_/g, ' ')}`);
+  if (e.to) parts.push(`TO ${String(e.to).replace(/_/g, ' ')}`);
   if (e.with) {
     const wpParts: string[] = [];
     for (const [k, v] of Object.entries(e.with)) {

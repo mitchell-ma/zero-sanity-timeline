@@ -350,7 +350,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -551,7 +551,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -671,7 +671,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",
@@ -768,7 +768,7 @@
                     "object": "LINK",
                     "objectType": "STATUS",
                     "toDeterminer": "THIS",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "duration": {
                         "value": {
@@ -803,7 +803,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -965,7 +965,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -1053,7 +1053,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -1114,12 +1114,12 @@
                     "object": "STATUS",
                     "objectId": "LINK",
                     "toDeterminer": "THIS",
-                    "toObject": "OPERATOR"
+                    "to": "OPERATOR"
                   },
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",

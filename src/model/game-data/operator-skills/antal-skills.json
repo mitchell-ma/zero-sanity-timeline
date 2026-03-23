@@ -301,7 +301,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -405,7 +405,7 @@
                     "verb": "APPLY",
                     "object": "STATUS",
                     "objectId": "FOCUS",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "eventName": "Focus",
                     "stackingInteraction": "RESET",
                     "potentialMax": 4,
@@ -450,7 +450,7 @@
                     "verb": "APPLY",
                     "object": "STATUS",
                     "objectId": "FOCUS",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "eventName": "Empowered Focus",
                     "stackingInteraction": "RESET",
                     "potentialMin": 5,
@@ -616,7 +616,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",
@@ -683,7 +683,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -695,13 +695,13 @@
                     "verb": "APPLY",
                     "adjective": "TRIGGER",
                     "object": "INFLICTION",
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "APPLY",
                     "adjective": "TRIGGER",
                     "object": "STATUS",
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",

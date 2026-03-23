@@ -369,7 +369,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -472,7 +472,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -589,7 +589,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",
@@ -656,7 +656,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",

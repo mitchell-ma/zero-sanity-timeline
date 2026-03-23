@@ -10,16 +10,22 @@ export function useHistory<T>(initial: T) {
   const batchRef = useRef<T | null>(null);
 
   const setState = useCallback((action: T | ((prev: T) => T)) => {
+    // Snapshot current state BEFORE the updater runs — ref mutations must be
+    // outside the updater to avoid StrictMode double-invocation corruption.
+    const snapshot = stateRef.current;
     setStateRaw((prev) => {
       const next = typeof action === 'function' ? (action as (p: T) => T)(prev) : action;
       if (next === prev) return prev;
-      if (batchRef.current === null) {
-        undoRef.current.push(prev);
+      stateRef.current = next;
+      return next;
+    });
+    // Push undo entry outside updater using the pre-mutation snapshot
+    queueMicrotask(() => {
+      if (stateRef.current !== snapshot && batchRef.current === null) {
+        undoRef.current.push(snapshot);
         if (undoRef.current.length > MAX_HISTORY) undoRef.current.shift();
         redoRef.current = [];
       }
-      stateRef.current = next;
-      return next;
     });
   }, []);
 

@@ -646,11 +646,11 @@ export interface Effect {
   /** Value for compound constraints (e.g. ALL AT_MOST MAX). */
   value?: ValueNode | typeof THRESHOLD_MAX;
   /** TO — target/recipient. */
-  toObject?: SubjectType | string;
+  to?: SubjectType | string;
   /** Determiner for TO target (THIS, OTHER, ALL, ANY). */
   toDeterminer?: DeterminerType;
   /** Class filter for TO target (e.g. "GUARD"). */
-  toObjectClassFilter?: string;
+  toClassFilter?: string;
   /** FROM — source. */
   fromObject?: SubjectType | string;
   /** Determiner for FROM source (THIS, OTHER, ALL, ANY). */

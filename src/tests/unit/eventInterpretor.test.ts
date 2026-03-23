@@ -95,7 +95,7 @@ describe('EventInterpretorController: APPLY', () => {
       verb: VerbType.APPLY,
       object: ObjectType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      toObject: NounType.ENEMY,
+      to: NounType.ENEMY,
     };
 
     const result = interp.interpret(effect, ctx);
@@ -114,7 +114,7 @@ describe('EventInterpretorController: APPLY', () => {
       verb: VerbType.APPLY,
       object: ObjectType.STATUS,
       objectId: 'FOCUS',
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
       with: {
         duration: { verb: VerbType.IS, value: 10 },
       },
@@ -136,7 +136,7 @@ describe('EventInterpretorController: APPLY', () => {
       verb: VerbType.APPLY,
       object: ObjectType.REACTION,
       adjective: AdjectiveType.COMBUSTION,
-      toObject: NounType.ENEMY,
+      to: NounType.ENEMY,
       with: {
         stacks: { verb: VerbType.IS, value: 2 },
       },
@@ -294,7 +294,7 @@ describe('EventInterpretorController: ALL', () => {
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
         ],
       }],
@@ -380,7 +380,7 @@ describe('EventInterpretorController: ALL', () => {
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
             objectId: 'MELTING_FLAME',
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
         ],
       }],
@@ -420,7 +420,7 @@ describe('EventInterpretorController: ANY', () => {
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
             objectId: 'HEAT_STATUS',
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           }],
         },
         {
@@ -434,7 +434,7 @@ describe('EventInterpretorController: ANY', () => {
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
             objectId: 'CRYO_STATUS',
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           }],
         },
       ],
@@ -468,7 +468,7 @@ describe('EventInterpretorController: ANY', () => {
             verb: VerbType.APPLY,
             object: ObjectType.STATUS,
             objectId: 'HEAT_STATUS',
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           }],
         },
       ],
@@ -534,13 +534,13 @@ describe('EventInterpretorController: interpretEffects', () => {
         verb: VerbType.APPLY,
         object: ObjectType.INFLICTION,
         adjective: AdjectiveType.HEAT,
-        toObject: NounType.ENEMY,
+        to: NounType.ENEMY,
       },
       {
         verb: VerbType.APPLY,
         object: ObjectType.INFLICTION,
         adjective: AdjectiveType.HEAT,
-        toObject: NounType.ENEMY,
+        to: NounType.ENEMY,
       },
     ];
 
@@ -559,7 +559,7 @@ describe('EventInterpretorController: APPLY LIFT PHYSICAL_STATUS', () => {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
     adjective: AdjectiveType.LIFT,
-    toObject: NounType.ENEMY,
+    to: NounType.ENEMY,
   };
 
   test('no Vulnerable → adds Vulnerable only, no Lift status', () => {
@@ -715,7 +715,7 @@ describe('EventInterpretorController: APPLY KNOCK_DOWN PHYSICAL_STATUS', () => {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
     adjective: AdjectiveType.KNOCK_DOWN,
-    toObject: NounType.ENEMY,
+    to: NounType.ENEMY,
   };
 
   test('no Vulnerable → adds Vulnerable only, no Knock Down status', () => {
@@ -861,7 +861,7 @@ describe('EventInterpretorController: APPLY CRUSH PHYSICAL_STATUS', () => {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
     adjective: AdjectiveType.CRUSH,
-    toObject: NounType.ENEMY,
+    to: NounType.ENEMY,
   };
 
   test('no Vulnerable → adds Vulnerable only, no Crush status', () => {
@@ -1029,7 +1029,7 @@ describe('EventInterpretorController: APPLY BREACH PHYSICAL_STATUS', () => {
     verb: VerbType.APPLY,
     object: ObjectType.PHYSICAL_STATUS,
     adjective: AdjectiveType.BREACH,
-    toObject: NounType.ENEMY,
+    to: NounType.ENEMY,
   };
 
   test('no Vulnerable → adds Vulnerable only, no Breach status', () => {

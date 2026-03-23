@@ -64,7 +64,7 @@ const CONDITION_KEYS = new Set([
 
 const EFFECT_KEYS = new Set([
   'verb', 'object', 'objectId', 'adjective', 'element',
-  'to', 'toObject', 'toDeterminer',
+  'to', 'toDeterminer',
   'fromObject', 'onObject',
   'with', 'for', 'until',
   'value', 'cardinalityConstraint',

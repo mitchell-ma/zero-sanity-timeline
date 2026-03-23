@@ -222,7 +222,7 @@ export function translateEffect(e: Effect): TranslatedEffect {
   const parts: string[] = [`${displayVerb} ${inlinedValue}${card}${obj}`.replace(/\s+/g, ' ').trim()];
 
   // TO
-  if (e.toObject) parts.push(`to ${formatTarget(String(e.toObject), e.toDeterminer)}`);
+  if (e.to) parts.push(`to ${formatTarget(String(e.to), e.toDeterminer)}`);
   // FROM
   if (e.fromObject) parts.push(`from ${formatTarget(String(e.fromObject), e.fromDeterminer)}`);
   // ON
@@ -351,8 +351,8 @@ export function effectToJson(e: Effect): Record<string, unknown> {
   if (e.cardinalityConstraint) out.cardinalityConstraint = e.cardinalityConstraint;
   if (e.value != null) out.value = e.value;
   if (e.toDeterminer) out.toDeterminer = e.toDeterminer;
-  if (e.toObject) out.to = e.toObject;
-  if (e.toObjectClassFilter) out.toClassFilter = e.toObjectClassFilter;
+  if (e.to) out.to = e.to;
+  if (e.toClassFilter) out.toClassFilter = e.toClassFilter;
   if (e.fromDeterminer) out.fromDeterminer = e.fromDeterminer;
   if (e.fromObject) out.from = e.fromObject;
   if (e.onDeterminer) out.onDeterminer = e.onDeterminer;

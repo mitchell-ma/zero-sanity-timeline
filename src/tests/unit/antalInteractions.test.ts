@@ -431,7 +431,7 @@ describe('C. Combo Skill (EMP Test Site)', () => {
     );
     expect(energy).toBeDefined();
     expect(energy.toDeterminer).toBe('THIS');
-    expect(energy.toObject).toBe('OPERATOR');
+    expect(energy.to).toBe('OPERATOR');
     expect(energy.with.value.value).toBe(10);
   });
 
@@ -461,7 +461,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'INFLICTION'
     );
     expect(sourceInfliction).toBeDefined();
-    expect(sourceInfliction.toObject).toBe('ENEMY');
+    expect(sourceInfliction.to).toBe('ENEMY');
   });
 
   test('C2.2: Combo frame has APPLY TRIGGER STATUS DSL effect', () => {
@@ -471,7 +471,7 @@ describe('C2. Combo Skill Source Infliction Duplication', () => {
       (e: Record<string, unknown>) => e.verb === 'APPLY' && e.adjective === 'TRIGGER' && e.object === 'STATUS'
     );
     expect(sourceStatus).toBeDefined();
-    expect(sourceStatus.toObject).toBe('ENEMY');
+    expect(sourceStatus.to).toBe('ENEMY');
   });
 
   test('C2.3: Frame class reports getDuplicatesTriggerInfliction() as true from DSL', () => {

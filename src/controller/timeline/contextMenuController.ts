@@ -107,7 +107,7 @@ export function buildColumnContextMenu(
         return {
           label: REACTION_LABELS[mc.id]?.label ?? mc.label,
           actionId: 'addEvent' as const,
-          actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: { ...(mc.defaultEvent ?? col.defaultEvent ?? {}), ...(col.maxEvents != null && col.maxEvents > 1 ? { stackable: true } : {}) } },
+          actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
           disabled: mcFull || inTimeStop,
           disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
         };
@@ -182,7 +182,7 @@ export function buildColumnContextMenu(
       {
         label: eventName,
         actionId: 'addEvent',
-        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: { ...(col.defaultEvent ?? {}), ...(col.maxEvents != null && col.maxEvents > 1 ? { stackable: true } : {}) } },
+        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
         disabled,
         disabledReason: disabledReason || undefined,
       },

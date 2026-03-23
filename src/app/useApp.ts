@@ -484,8 +484,6 @@ export function useApp() {
 
   const processedEventsRef = useRef(allProcessedEvents);
   processedEventsRef.current = allProcessedEvents;
-  const columnsRef = useRef(columns);
-  columnsRef.current = columns;
 
   // Prune stale overrides when derived events change
   useEffect(() => {
@@ -651,6 +649,12 @@ export function useApp() {
         e.preventDefault();
         setInfoPanePinned(false);
         setInfoPaneClosing(true);
+      }
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey && !e.altKey
+        && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+        setInteractionMode((prev) =>
+          prev === InteractionModeType.STRICT ? InteractionModeType.FREEFORM : InteractionModeType.STRICT,
+        );
       }
     };
     window.addEventListener('keydown', handler);
@@ -899,28 +903,36 @@ export function useApp() {
     ownerId: string,
     columnId: string,
     atFrame: number,
-    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType } | null,
+    defaultSkill: { name?: string; segments?: import('../consts/viewTypes').EventSegmentData[]; gaugeGain?: number; teamGaugeGain?: number; comboTriggerColumnId?: string; operatorPotential?: number; timeInteraction?: string; isPerfectDodge?: boolean; timeDilation?: number; timeDependency?: import('../consts/enums').TimeDependency; skillPointCost?: number; sourceOwnerId?: string; sourceSkillName?: string; enhancementType?: import('../consts/enums').EnhancementType; stacks?: Record<string, unknown> } | null,
   ) => {
     // Validate against controller-derived columns before adding
     if (!validColumnPairsRef.current.has(`${ownerId}:${columnId}`)) return;
     const ev = createEvent(ownerId, columnId, atFrame, defaultSkill);
     if (defaultSkill?.comboTriggerColumnId) ev.comboTriggerColumnId = defaultSkill.comboTriggerColumnId;
     setEvents((prev) => {
+      // Stack limit is always enforced (not mode-dependent)
+      const stackLimit = (defaultSkill?.stacks?.limit as { value?: number } | undefined)?.value;
+      if (stackLimit != null) {
+        const existing = prev.filter((e) => e.ownerId === ownerId && e.columnId === columnId);
+        if (existing.length >= stackLimit) return prev;
+      }
       if (interactionModeRef.current === InteractionModeType.STRICT) {
         if (wouldOverlapNonOverlappable(prev, ev, ev.startFrame, processedEventsRef.current)) return prev;
         // Check SP sufficiency for battle skills
         if (columnId === SKILL_COLUMNS.BATTLE && !hasSufficientSP(ownerId, atFrame)) return prev;
         // Enhanced skills require an active ultimate
         if (ev.enhancementType === EnhancementType.ENHANCED) {
-          const ultActive = prev.some(
+          // Use processed events (full segments) for the ultimate check;
+          // fall back to raw prev if a just-added ultimate isn't processed yet
+          const eventsToCheck = processedEventsRef.current.some(
+            (e) => e.ownerId === ownerId && e.columnId === SKILL_COLUMNS.ULTIMATE,
+          ) ? processedEventsRef.current : prev;
+          const ultActive = eventsToCheck.some(
             (e) => {
               if (e.ownerId !== ownerId || e.columnId !== SKILL_COLUMNS.ULTIMATE) return false;
-              // Resolve segments from column defaults if the raw event has placeholder segments
-              const defaults = findEventDefaults(e, columnsRef.current);
-              const segs = (defaults?.segments && e.segments.length < (defaults.segments.length))
-                ? defaults.segments : e.segments;
               // Ultimate segments: [animation, statis, active, cooldown]
               // "Active" phase starts after animation + statis
+              const segs = e.segments;
               if (segs.length >= 3) {
                 const activationEnd = e.startFrame + segs[0].properties.duration + segs[1].properties.duration;
                 const activeEnd = activationEnd + segs[2].properties.duration;
@@ -1770,7 +1782,7 @@ export function useApp() {
     setConfirmClearLoadout, setConfirmClearAll,
 
     // Undo/redo
-    beginBatch, endBatch,
+    undo, redo, beginBatch, endBatch,
 
     // Custom skill links
     bumpCustomSkillVersion,

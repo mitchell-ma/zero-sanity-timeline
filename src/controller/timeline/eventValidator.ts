@@ -26,9 +26,9 @@ export type TimeStopRegion = {
   sourceColumnId: string;
 };
 
-/** Map column IDs to DSL ENHANCE object types. */
-const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
-  basic: 'BASIC_ATTACK',
+/** Map column IDs to DSL ENABLE/DISABLE object types. */
+const COLUMN_TO_ENABLE_OBJECT: Record<string, string> = {
+  basic: 'BATK',
   battle: 'BATTLE_SKILL',
   combo: 'COMBO_SKILL',
   ultimate: 'ULTIMATE',
@@ -36,12 +36,12 @@ const COLUMN_TO_ENHANCE_OBJECT: Record<string, string> = {
 
 /**
  * Check if any overlapping segment across all events for a given owner
- * has an ENHANCE clause for the specified skill object type at the given frame.
+ * has an ENABLE clause for the specified skill object type at the given frame.
  */
-export function hasEnhanceClauseAtFrame(
+export function hasEnableClauseAtFrame(
   events: readonly TimelineEvent[],
   ownerId: string,
-  enhanceObject: string,
+  enableObject: string,
   atFrame: number,
 ): boolean {
   for (const ev of events) {
@@ -50,7 +50,7 @@ export function hasEnhanceClauseAtFrame(
     for (const seg of ev.segments) {
       const segEnd = cursor + seg.properties.duration;
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
-        if (seg.clause.some(c => c.effects.some(e => e.verb === 'ENHANCE' && e.object === enhanceObject))) {
+        if (seg.clause.some(c => c.effects.some(e => e.verb === 'ENABLE' && e.object === enableObject))) {
           return true;
         }
       }
@@ -63,7 +63,7 @@ export function hasEnhanceClauseAtFrame(
 /**
  * Check if any overlapping segment has a DISABLE clause for the specified
  * skill object type at the given frame. Returns the adjective (e.g. 'NORMAL')
- * if found, or null if no DISABLE clause is active.
+ * if found, empty string for DISABLE without adjective, or null if no match.
  */
 function getDisableAdjectiveAtFrame(
   events: readonly TimelineEvent[],
@@ -79,8 +79,8 @@ function getDisableAdjectiveAtFrame(
       if (atFrame >= cursor && atFrame < segEnd && seg.clause) {
         for (const c of seg.clause) {
           for (const e of c.effects) {
-            if (e.verb === 'DISABLE' && e.object === disableObject && e.adjective) {
-              return e.adjective;
+            if (e.verb === 'DISABLE' && e.object === disableObject) {
+              return (e.adjective as string) ?? '';
             }
           }
         }
@@ -837,37 +837,39 @@ export function checkVariantAvailability(
 
   // Enhanced/non-enhanced checks only apply to basic, battle, and combo skills
   const hasEnhancedVariants = columnId ? ENHANCED_VARIANT_COLUMNS.has(columnId as SkillType) : true;
-  const enhanceObject = columnId ? COLUMN_TO_ENHANCE_OBJECT[columnId] : undefined;
+  const enableObject = columnId ? COLUMN_TO_ENABLE_OBJECT[columnId] : undefined;
 
-  // Evaluate segment clause conditions (e.g. Finisher blocked during ultimate)
+  // Evaluate segment clause conditions (e.g. variant-specific activation rules)
   {
     const slot = slots?.find((s) => s.slotId === ownerId);
     if (slot?.operator) {
       const clause = getVariantClause(slot.operator.id, variantName);
       if (clause) {
-        const enhanceActive = enhanceObject ? hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame) : false;
+        const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame) : false;
         const result = evaluateClause(clause, { enhanceActive });
         if (!result.pass) return { disabled: true, reason: result.reason };
       }
     }
   }
 
-  // Enhanced variant: requires an active ENHANCE clause for this skill type
-  if (isEnhanced && enhanceObject && hasEnhancedVariants) {
-    if (!hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame)) {
-      return { disabled: true, reason: 'No active ENHANCE effect' };
+  // Enhanced variant: requires an active ENABLE clause for this skill type
+  if (isEnhanced && enableObject && hasEnhancedVariants) {
+    if (!hasEnableClauseAtFrame(events, ownerId, enableObject, atFrame)) {
+      return { disabled: true, reason: 'No active ENABLE effect' };
     }
   }
 
-  // Regular variant blocked by DISABLE clause or when ENHANCE clause is active
-  if (!isEnhanced && !isEmpowered && enhanceObject && hasEnhancedVariants
-    && variantName !== CombatSkillType.FINISHER && variantName !== CombatSkillType.DIVE) {
-    const disableAdj = getDisableAdjectiveAtFrame(events, ownerId, enhanceObject, atFrame);
-    if (disableAdj) {
-      return { disabled: true, reason: `${disableAdj} variant disabled during this window` };
-    }
-    if (hasEnhanceClauseAtFrame(events, ownerId, enhanceObject, atFrame)) {
-      return { disabled: true, reason: 'Enhanced variant active (use enhanced)' };
+  // Non-enhanced variant blocked by DISABLE clause
+  if (!isEnhanced && !isEmpowered) {
+    const disableTarget = variantName === CombatSkillType.FINISHER ? CombatSkillType.FINISHER
+      : variantName === CombatSkillType.DIVE ? 'DIVE_ATTACK'
+      : (enableObject && hasEnhancedVariants) ? enableObject : undefined;
+    if (disableTarget) {
+      const disableAdj = getDisableAdjectiveAtFrame(events, ownerId, disableTarget, atFrame);
+      if (disableAdj !== null) {
+        const label = disableAdj || disableTarget;
+        return { disabled: true, reason: `${label} variant disabled during this window` };
+      }
     }
   }
 
@@ -1039,8 +1041,8 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
     if (ev.enhancementType !== EnhancementType.ENHANCED) continue;
     if (ev.columnId === SKILL_COLUMNS.ULTIMATE) continue;
 
-    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
-    if (!enhanceObject) continue;
+    const enableObject = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
+    if (!enableObject) continue;
 
     // Collect all segment start frames; fall back to event start if no segments
     const segStarts: number[] = [];
@@ -1054,10 +1056,10 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
       segStarts.push(ev.startFrame);
     }
 
-    // Every segment start must fall within an active ENHANCE clause
+    // Every segment start must fall within an active ENABLE clause
     for (const frame of segStarts) {
-      if (!hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
-        map.set(ev.uid, 'Enhanced skill must be within an active ENHANCE effect');
+      if (!hasEnableClauseAtFrame(events, ev.ownerId, enableObject, frame)) {
+        map.set(ev.uid, 'Enhanced skill must be within an active ENABLE effect');
         break;
       }
     }
@@ -1066,20 +1068,20 @@ export function validateEnhanced(events: TimelineEvent[]): Map<string, string> {
 }
 
 /**
- * Validates that regular (non-enhanced) basic attack segments do NOT start
- * inside the ultimate active phase. Mirrors validateEnhanced (inverse logic).
- * Only applies to operators that have enhanced basic attack variants.
+ * Validates that variants with an active DISABLE clause do NOT start
+ * inside the disabled window. Checks regular basic attacks, finishers, and dives.
  */
 export function validateDisabledVariants(events: TimelineEvent[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const ev of events) {
     if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-    // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
+    // Skip enhanced, empowered — only check regular, finisher, and dive
     if (ev.enhancementType === EnhancementType.ENHANCED || ev.enhancementType === EnhancementType.EMPOWERED) continue;
-    if (ev.id === CombatSkillType.FINISHER || ev.id === CombatSkillType.DIVE) continue;
 
-    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
-    if (!enhanceObject) continue;
+    const disableTarget = ev.id === CombatSkillType.FINISHER ? CombatSkillType.FINISHER
+      : ev.id === CombatSkillType.DIVE ? 'DIVE_ATTACK'
+      : COLUMN_TO_ENABLE_OBJECT[ev.columnId];
+    if (!disableTarget) continue;
 
     // Collect all segment start frames
     const segStarts: number[] = [];
@@ -1094,8 +1096,8 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     }
 
     for (const frame of segStarts) {
-      if (hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, frame)) {
-        map.set(ev.uid, 'Regular basic attack cannot be used during ENHANCE effect (use enhanced variant)');
+      if (getDisableAdjectiveAtFrame(events, ev.ownerId, disableTarget, frame) !== null) {
+        map.set(ev.uid, 'Variant cannot be used during DISABLE window');
         break;
       }
     }
@@ -1133,7 +1135,7 @@ function evaluateCondition(cond: Interaction, ctx: ClauseContext): boolean {
   let result = true;
   if (cond.verb === VerbType.IS && cond.object === 'ACTIVE') {
     if (cond.subjectProperty === 'ULTIMATE') {
-      // "ULTIMATE IS ACTIVE" is equivalent to an active ENHANCE clause
+      // "ULTIMATE IS ACTIVE" is equivalent to an active ENABLE clause
       result = ctx.enhanceActive;
     }
   }
@@ -1179,8 +1181,8 @@ export function validateVariantClauses(
     const clause = getVariantClause(operatorId, ev.name);
     if (!clause) continue;
 
-    const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
-    const enhanceActive = enhanceObject ? hasEnhanceClauseAtFrame(events, ev.ownerId, enhanceObject, ev.startFrame) : false;
+    const enableObject = COLUMN_TO_ENABLE_OBJECT[ev.columnId];
+    const enhanceActive = enableObject ? hasEnableClauseAtFrame(events, ev.ownerId, enableObject, ev.startFrame) : false;
 
     const result = evaluateClause(clause, { enhanceActive });
     if (!result.pass) {

@@ -522,7 +522,7 @@
                         "value": 18
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",
@@ -627,7 +627,7 @@
                     "verb": "APPLY",
                     "object": "STATUS",
                     "objectId": "MELTING_FLAME",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "toDeterminer": "THIS",
                     "with": {
                       "stacks": {
@@ -639,7 +639,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -1291,7 +1291,7 @@
           {
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
                     "toDeterminer": "THIS",
             "with": {
               "value": {
@@ -1351,7 +1351,7 @@
             },
             "properties": {
               "offset": {
-                "value": 0.104,
+                "value": 1,
                 "unit": "SECOND"
               }
             },
@@ -1362,7 +1362,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -1374,7 +1374,7 @@
                     "verb": "APPLY",
                     "object": "STATUS",
                     "objectId": "MELTING_FLAME",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "toDeterminer": "THIS",
                     "with": {
                       "stacks": {
@@ -1517,8 +1517,36 @@
                 "to": "OPERATOR"
               },
               {
-                "verb": "ENHANCE",
-                "object": "BASIC_ATTACK",
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "object": "FINISHER",
                 "toDeterminer": "THIS",
                 "to": "OPERATOR"
               }
@@ -1549,8 +1577,36 @@
             "conditions": [],
             "effects": [
               {
-                "verb": "ENHANCE",
-                "object": "BASIC_ATTACK",
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "object": "FINISHER",
                 "toDeterminer": "THIS",
                 "to": "OPERATOR"
               }
@@ -1581,8 +1637,36 @@
             "conditions": [],
             "effects": [
               {
-                "verb": "ENHANCE",
-                "object": "BASIC_ATTACK",
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATK",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "ENABLE",
+                "adjective": "ENHANCED",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "adjective": "NORMAL",
+                "object": "BATTLE_SKILL",
+                "toDeterminer": "THIS",
+                "to": "OPERATOR"
+              },
+              {
+                "verb": "DISABLE",
+                "object": "FINISHER",
                 "toDeterminer": "THIS",
                 "to": "OPERATOR"
               }
@@ -1659,7 +1743,7 @@
                         "value": 10
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",
@@ -1767,7 +1851,7 @@
                         "value": 10
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",
@@ -1892,7 +1976,7 @@
                         "value": 10
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",
@@ -2000,7 +2084,7 @@
                         "value": 10
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",
@@ -2095,7 +2179,7 @@
                     "verb": "CONSUME",
                     "object": "STATUS",
                     "objectId": "MELTING_FLAME",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "toDeterminer": "THIS"
                   },
                   {
@@ -2107,7 +2191,7 @@
                         "value": 10
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   }
                 ]
               }
@@ -2608,7 +2692,7 @@
                     "verb": "CONSUME",
                     "object": "STATUS",
                     "objectId": "MELTING_FLAME",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "toDeterminer": "THIS"
                   },
                   {
@@ -2618,7 +2702,7 @@
                       "FORCED",
                       "COMBUSTION"
                     ],
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "toDeterminer": "THIS",
                     "with": {
                       "stacks": {
@@ -2879,7 +2963,7 @@
                     "verb": "APPLY",
                     "object": "INFLICTION",
                     "adjective": "HEAT",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "stacks": {
                         "verb": "IS",
@@ -3023,7 +3107,7 @@
                         "value": 12
                       }
                     },
-                    "toObject": "ENEMY"
+                    "to": "ENEMY"
                   },
                   {
                     "verb": "DEAL",

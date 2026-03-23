@@ -82,7 +82,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
           : {}),
         ...(skills.battleSkill.resourceInteractions?.length
           ? { effects: skills.battleSkill.resourceInteractions.map(r => ({
-            toDeterminer: 'THIS', toObject: 'OPERATOR',
+            toDeterminer: 'THIS', to: 'OPERATOR',
             verb: r.verb, object: r.resourceType, with: { value: { verb: VerbType.IS, value: r.value } },
           })) }
           : {}),
@@ -91,7 +91,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
         id: skills.comboSkill.name,
         duration: { value: { verb: VerbType.IS, value: skills.comboSkill.durationSeconds }, unit: UnitType.SECOND },
         ...(skills.comboSkill.cooldownSeconds
-          ? { effects: [{ toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', with: { value: { verb: VerbType.IS, value: skills.comboSkill.cooldownSeconds } } }] }
+          ? { effects: [{ toDeterminer: 'THIS', to: 'OPERATOR', verb: 'CONSUME', object: 'COOLDOWN', with: { value: { verb: VerbType.IS, value: skills.comboSkill.cooldownSeconds } } }] }
           : {}),
         ...(skills.comboSkill.animationSeconds
           ? { segments: [{
@@ -120,7 +120,7 @@ function customOperatorToJson(operator: CustomOperator): Record<string, unknown>
           }] }
           : {}),
         effects: [
-          { toDeterminer: 'THIS', toObject: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', with: { value: { verb: VerbType.IS, value: 300 } } },
+          { toDeterminer: 'THIS', to: 'OPERATOR', verb: 'CONSUME', object: 'ULTIMATE_ENERGY', with: { value: { verb: VerbType.IS, value: 300 } } },
         ],
       },
     },

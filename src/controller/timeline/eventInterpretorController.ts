@@ -226,7 +226,7 @@ export class EventInterpretorController {
 
   private canDo(effect: Effect, ctx: InterpretContext) {
     const ownerId = this.resolveOwnerId(
-      effect.toObject as string ?? effect.fromObject as string,
+      effect.to as string ?? effect.fromObject as string,
       ctx, effect.toDeterminer ?? effect.fromDeterminer,
     );
 
@@ -266,7 +266,7 @@ export class EventInterpretorController {
   }
 
   private doApply(effect: Effect, ctx: InterpretContext) {
-    const ownerId = this.resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
+    const ownerId = this.resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };
 
     if (effect.object === 'INFLICTION') {
@@ -308,7 +308,7 @@ export class EventInterpretorController {
 
   private doConsume(effect: Effect, ctx: InterpretContext) {
     const ownerId = this.resolveOwnerId(
-      effect.fromObject as string ?? effect.toObject as string,
+      effect.fromObject as string ?? effect.to as string,
       ctx, effect.fromDeterminer ?? effect.toDeterminer,
     );
     const source = { ownerId: ctx.sourceOwnerId, skillName: ctx.sourceSkillName };

@@ -97,6 +97,7 @@ export function buildColumns(
             color: s.operator.color,
             source: 'talent',
             statusType: seType ?? 'STATUS',
+            ...(seStacks ? { stacks: seStacks } : {}),
           });
           operatorStatusMap.set(s.slotId, defs);
         }

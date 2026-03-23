@@ -343,11 +343,16 @@ export function attachDefaultSegments(
       if (ev.enhancementType === undefined && ext.enhancementType != null) props.enhancementType = ext.enhancementType as import('../consts/enums').EnhancementType;
       const stacks = findMicroColumnStacks(ev, columns);
       const stackLimit = (stacks?.limit as { value?: number } | undefined)?.value ?? 1;
-      if (ev.nonOverlappableRange === undefined && defaults.segments && stackLimit <= 1) {
+      if (defaults.segments && stackLimit <= 1 && ev.nonOverlappableRange === undefined) {
         const span = defaults.segments.reduce((sum, s) => sum + s.properties.duration, 0);
         props.nonOverlappableRange = span;
       }
       if (Object.keys(props).length > 0) patched = { ...ev, ...props };
+      // Stackable events must not block sibling overlap — strip nonOverlappableRange
+      if (stackLimit > 1 && patched.nonOverlappableRange !== undefined) {
+        const { nonOverlappableRange: _, ...rest } = patched;
+        patched = rest as TimelineEvent;
+      }
     }
 
     if (!defaults?.segments) return patched;

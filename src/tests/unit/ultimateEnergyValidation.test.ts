@@ -6,7 +6,7 @@
  */
 
 import { computeUltimateEnergyGraph, UltEnergyEvent } from '../../controller/timeline/ultimateEnergyTimeline';
-import { preConsumptionValue, validateResources, hasEnhanceClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
+import { preConsumptionValue, validateResources, hasEnableClauseAtFrame, checkVariantAvailability, validateEnhanced, validateDisabledVariants } from '../../controller/timeline/eventValidator';
 import { applyGainEfficiency, collectNoGainWindowsForEvent, UltimateEnergyController, RawGaugeGainEvent } from '../../controller/timeline/ultimateEnergyController';
 import { SkillPointController } from '../../controller/slot/skillPointController';
 import { TimelineEvent, EventSegmentData } from '../../consts/viewTypes';
@@ -25,7 +25,7 @@ jest.mock('../../model/event-frames/operatorJsonLoader', () => {
   const { statusEvents: skStatusEvents, skillTypeMap: skTypeMap, ...skillEntries } = skillsJson;
   const KEY_EXPAND: Record<string, string> = {
     verb: 'verb', object: 'object', subject: 'subject',
-    to: 'toObject', from: 'fromObject',
+    to: 'to', from: 'fromObject',
     on: 'onObject', with: 'with', for: 'for',
   };
   const expandKeys = (val: unknown): unknown => {
@@ -371,9 +371,9 @@ function rawSegmentsToEventSegments(rawSegments: any[]): EventSegmentData[] {
 }
 const twilightSegments = rawSegmentsToEventSegments(twilightSkill.segments);
 
-// ── hasEffectClauseAtFrame / hasEnhanceClauseAtFrame ────────────────────────
+// ── hasEffectClauseAtFrame / hasEnableClauseAtFrame ────────────────────────
 // Uses real TWILIGHT segments from laevatain-skills.json
-describe('hasEnhanceClauseAtFrame', () => {
+describe('hasEnableClauseAtFrame', () => {
   const SLOT = 'slot-0';
 
   function ultWithSegments(startFrame: number, segments: EventSegmentData[]): TimelineEvent {
@@ -389,35 +389,35 @@ describe('hasEnhanceClauseAtFrame', () => {
   test('returns true when frame falls within a segment with ENABLE clause', () => {
     const ev = ultWithSegments(0, twilightSegments);
     // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE ENHANCED BATK
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 100)).toBe(true);
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(true);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 100)).toBe(true);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(true);
   });
 
   test('returns false after ultimate ends (past all segments)', () => {
     const ev = ultWithSegments(0, twilightSegments);
     const totalDuration = twilightSegments.reduce((s, seg) => s + seg.properties.duration, 0);
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', totalDuration + 100)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', totalDuration + 100)).toBe(false);
   });
 
   test('returns false before ultimate starts', () => {
     const ev = ultWithSegments(1000, twilightSegments);
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(false);
   });
 
   test('returns false for wrong skill object type', () => {
     const ev = ultWithSegments(0, twilightSegments);
     // ENABLE ENHANCED BATK/BATTLE_SKILL doesn't match COMBO_SKILL
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'COMBO_SKILL', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'COMBO_SKILL', 500)).toBe(false);
   });
 
   test('returns false for different owner', () => {
     const ev = ultWithSegments(0, twilightSegments);
-    expect(hasEnhanceClauseAtFrame([ev], 'slot-1', 'BATK', 500)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], 'slot-1', 'BATK', 500)).toBe(false);
   });
 
   test('returns false when event has no segments', () => {
     const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0 });
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 0)).toBe(false);
+    expect(hasEnableClauseAtFrame([ev], SLOT, 'BATK', 0)).toBe(false);
   });
 });
 

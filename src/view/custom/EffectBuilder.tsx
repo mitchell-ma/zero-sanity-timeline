@@ -128,7 +128,7 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
         <div className="interaction-row interaction-row--qualifier">
           <SentenceSlot active={vis.showTo}>
             <span className="ce-badge ce-badge--keyword">TO</span>
-            <SentenceSlot active={value.toObject === SubjectType.OPERATOR}>
+            <SentenceSlot active={value.to === SubjectType.OPERATOR}>
               <CustomSelect
                 className="ib-determiner"
                 value={value.toDeterminer ?? DeterminerType.THIS}
@@ -137,9 +137,9 @@ export default function EffectBuilder({ value, onChange, onRemove, compact }: Ef
               />
             </SentenceSlot>
             <CustomSelect
-              value={value.toObject ?? ''}
+              value={value.to ?? ''}
               options={[{ value: '', label: '—' }, ...Object.entries(TARGET_LABELS).map(([k, label]) => ({ value: k, label }))]}
-              onChange={(v) => update({ toObject: v || undefined })}
+              onChange={(v) => update({ to: v || undefined })}
             />
           </SentenceSlot>
           <SentenceSlot active={vis.showFrom}>
@@ -359,6 +359,6 @@ export function defaultEffect(): Effect {
     object: ObjectType.STATUS,
     objectId: '',
     toDeterminer: DeterminerType.THIS,
-    toObject: SubjectType.OPERATOR,
+    to: SubjectType.OPERATOR,
   };
 }

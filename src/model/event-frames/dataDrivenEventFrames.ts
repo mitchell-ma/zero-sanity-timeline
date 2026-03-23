@@ -39,7 +39,7 @@ interface JsonEffect {
   objectId?: string;
   adjective?: string | string[];
   toDeterminer?: string;
-  toObject?: string;
+  to?: string;
   fromDeterminer?: string;
   fromObject?: string;
   onObject?: string;
@@ -133,18 +133,18 @@ const DSL_REACTION_TO_COLUMN: Record<string, string> = {
   ELECTRIFICATION:  REACTION_COLUMNS.ELECTRIFICATION,
 };
 
-/** Map DSL toObject + toDeterminer to target string. */
-function dslTargetToLegacy(toObject?: string, toDeterminer?: string): string | undefined {
-  if (toObject === 'OPERATOR') {
+/** Map DSL to + toDeterminer to target string. */
+function dslTargetToLegacy(to?: string, toDeterminer?: string): string | undefined {
+  if (to === 'OPERATOR') {
     return toDeterminer === 'ALL' ? 'TEAM' : 'SELF';
   }
-  if (toObject === 'ENEMY') return 'ENEMY';
+  if (to === 'ENEMY') return 'ENEMY';
   return undefined;
 }
 
-/** Map DSL toObject/toDeterminer to DslTarget. */
-function dslTargetToDslTarget(toObject?: string, toDeterminer?: string): DslTarget {
-  if (toObject === 'ENEMY') return { noun: NounType.ENEMY };
+/** Map DSL to/toDeterminer to DslTarget. */
+function dslTargetToDslTarget(to?: string, toDeterminer?: string): DslTarget {
+  if (to === 'ENEMY') return { noun: NounType.ENEMY };
   return { determiner: (toDeterminer as DeterminerType) ?? DeterminerType.THIS, noun: NounType.OPERATOR };
 }
 
@@ -162,7 +162,7 @@ function withValue(wv?: JsonWithValue, ctx?: ValueResolutionContext): number {
 
 /**
  * Find a value from a DSL effects array.
- * Maps: object→resourceType, verb→interactionType, toObject→target.
+ * Maps: object→resourceType, verb→interactionType, to→target.
  * Reads value from with.value.
  */
 function findEffectValue(
@@ -175,7 +175,7 @@ function findEffectValue(
   if (!effects) return undefined;
   for (const ef of effects) {
     if (ef.object === object && ef.verb === verb) {
-      const efTarget = dslTargetToLegacy(ef.toObject, ef.toDeterminer);
+      const efTarget = dslTargetToLegacy(ef.to, ef.toDeterminer);
       if (target && efTarget !== target) continue;
       return withValue(ef.with?.value, ctx);
     }
@@ -294,15 +294,15 @@ export class DataDrivenSkillEventFrame extends SkillEventFrame {
               };
             } else if (ef.object === 'STATUS') {
               const durVal = wp?.duration;
-              const isStandardTarget = ['OPERATOR', 'ENEMY'].includes(ef.toObject ?? '');
+              const isStandardTarget = ['OPERATOR', 'ENEMY'].includes(ef.to ?? '');
               const status: FrameApplyStatus = {
-                target: dslTargetToDslTarget(ef.toObject),
+                target: dslTargetToDslTarget(ef.to),
                 status: ef.objectId!,
                 stacks: withValue(wp?.stacks) || 1,
                 durationFrames: durVal != null ? Math.round(withValue(durVal) * 120) : 0,
               };
-              if (ef.toObject && !isStandardTarget) {
-                status.targetOperatorId = ef.toObject;
+              if (ef.to && !isStandardTarget) {
+                status.targetOperatorId = ef.to;
               }
               if (ef.susceptibility) {
                 status.susceptibility = ef.susceptibility as Partial<Record<ElementType, readonly number[]>>;

@@ -63,7 +63,7 @@ describe('APPLY effects', () => {
       verb: VerbType.APPLY,
       object: NounType.INFLICTION,
       adjective: AdjectiveType.HEAT,
-      toObject: NounType.ENEMY,
+      to: NounType.ENEMY,
       with: {
         duration: { verb: VerbType.IS, value: 10 },
       },
@@ -84,7 +84,7 @@ describe('APPLY effects', () => {
       object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
       toDeterminer: DeterminerType.THIS,
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
       with: {
         duration: { verb: VerbType.IS, value: 20 },
       },
@@ -114,7 +114,7 @@ describe('APPLY effects', () => {
       object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
       toDeterminer: DeterminerType.THIS,
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: existingMf });
     const result = executeEffect(effect, ctx);
@@ -138,7 +138,7 @@ describe('APPLY effects', () => {
       object: NounType.STATUS,
       objectId: 'SCORCHING_HEART_EFFECT',
       toDeterminer: DeterminerType.THIS,
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
     };
     const ctx = makeCtx({ events: existing });
     const result = executeEffect(effect, ctx);
@@ -151,7 +151,7 @@ describe('APPLY effects', () => {
       verb: VerbType.APPLY,
       object: NounType.REACTION,
       adjective: AdjectiveType.COMBUSTION,
-      toObject: NounType.ENEMY,
+      to: NounType.ENEMY,
       with: {
         duration: { verb: VerbType.IS, value: 5 },
         stacks: { verb: VerbType.IS, value: 2 },
@@ -248,13 +248,13 @@ describe('ALL compound effects', () => {
             object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
           {
             verb: VerbType.APPLY,
             object: NounType.STATUS,
             objectId: 'FOCUS',
-            toObject: NounType.ENEMY,
+            to: NounType.ENEMY,
           },
         ],
       }],
@@ -284,7 +284,7 @@ describe('ALL compound effects', () => {
             object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
         ],
       }],
@@ -323,7 +323,7 @@ describe('ALL compound effects', () => {
             object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
         ],
       }],
@@ -369,7 +369,7 @@ describe('ALL compound effects', () => {
             object: NounType.STATUS,
             objectId: 'MELTING_FLAME',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           },
         ],
       }],
@@ -411,7 +411,7 @@ describe('ANY compound effects', () => {
             verb: VerbType.APPLY,
             object: NounType.STATUS,
             objectId: 'SCORCHING_FANGS',
-            toObject: NounType.ENEMY,
+            to: NounType.ENEMY,
           }],
         },
         {
@@ -421,7 +421,7 @@ describe('ANY compound effects', () => {
             object: NounType.STATUS,
             objectId: 'FALLBACK_STATUS',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           }],
         },
       ],
@@ -451,7 +451,7 @@ describe('ANY compound effects', () => {
             verb: VerbType.APPLY,
             object: NounType.STATUS,
             objectId: 'SCORCHING_FANGS',
-            toObject: NounType.ENEMY,
+            to: NounType.ENEMY,
           }],
         },
         {
@@ -461,7 +461,7 @@ describe('ANY compound effects', () => {
             object: NounType.STATUS,
             objectId: 'FALLBACK_STATUS',
             toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
           }],
         },
       ],
@@ -489,7 +489,7 @@ describe('Nested compound effects', () => {
             verb: VerbType.APPLY,
             object: NounType.STATUS,
             objectId: 'FOCUS',
-            toObject: NounType.ENEMY,
+            to: NounType.ENEMY,
           },
           // Second child: nested ANY
           {
@@ -506,7 +506,7 @@ describe('Nested compound effects', () => {
                   verb: VerbType.APPLY,
                   object: NounType.STATUS,
                   objectId: 'CONDITIONAL_STATUS',
-                  toObject: NounType.ENEMY,
+                  to: NounType.ENEMY,
                 }],
               },
               {
@@ -516,7 +516,7 @@ describe('Nested compound effects', () => {
                   object: NounType.STATUS,
                   objectId: 'DEFAULT_STATUS',
                   toDeterminer: DeterminerType.THIS,
-            toObject: NounType.OPERATOR,
+            to: NounType.OPERATOR,
                 }],
               },
             ],
@@ -703,14 +703,14 @@ describe('Edge cases', () => {
         verb: VerbType.APPLY,
         object: NounType.STATUS,
         objectId: 'FOCUS',
-        toObject: NounType.ENEMY,
+        to: NounType.ENEMY,
       },
       {
         verb: VerbType.APPLY,
         object: NounType.STATUS,
         objectId: 'MELTING_FLAME',
         toDeterminer: DeterminerType.THIS,
-        toObject: NounType.OPERATOR,
+        to: NounType.OPERATOR,
       },
     ];
     const ctx = makeCtx();
@@ -733,7 +733,7 @@ describe('Edge cases', () => {
         object: NounType.STATUS,
         objectId: 'MELTING_FLAME',
         toDeterminer: DeterminerType.THIS,
-        toObject: NounType.OPERATOR,
+        to: NounType.OPERATOR,
       },
     ];
     const ctx = makeCtx({ events: [] });
@@ -900,7 +900,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       object: NounType.STATUS,
       objectId: 'MELTING_FLAME',
       toDeterminer: DeterminerType.THIS,
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot2' });
     const result = executeEffect(effect, ctx);
@@ -914,7 +914,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       object: NounType.STATUS,
       objectId: 'SCORCHING_FANGS',
       toDeterminer: DeterminerType.ALL,
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot1' });
     const result = executeEffect(effect, ctx);
@@ -927,7 +927,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       verb: VerbType.APPLY,
       object: NounType.STATUS,
       objectId: 'FOCUS',
-      toObject: NounType.ENEMY,
+      to: NounType.ENEMY,
     };
     const ctx = makeCtx();
     const result = executeEffect(effect, ctx);
@@ -940,7 +940,7 @@ describe('resolveOwnerId — determiner-based target resolution', () => {
       verb: VerbType.APPLY,
       object: NounType.STATUS,
       objectId: 'BUFF',
-      toObject: NounType.OPERATOR,
+      to: NounType.OPERATOR,
     };
     const ctx = makeCtx({ sourceOwnerId: 'slot3' });
     const result = executeEffect(effect, ctx);
@@ -983,14 +983,14 @@ describe('CHANCE compound effects', () => {
     object: NounType.STATUS,
     objectId,
     toDeterminer: DeterminerType.THIS,
-    toObject: NounType.OPERATOR,
+    to: NounType.OPERATOR,
   });
 
   const applyInflictionWithDuration = (durationSec: number): Effect => ({
     verb: VerbType.APPLY,
     object: NounType.INFLICTION,
     adjective: AdjectiveType.HEAT,
-    toObject: NounType.ENEMY,
+    to: NounType.ENEMY,
     with: { duration: { verb: VerbType.IS, value: durationSec } },
   });
 

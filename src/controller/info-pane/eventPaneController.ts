@@ -490,7 +490,7 @@ export function effectToText(e: Effect): string {
   }
   if (e.object) parts.push(String(e.object).replace(/_/g, ' '));
   if (e.objectId) parts.push(`(${e.objectId})`);
-  if (e.toObject) parts.push(`TO ${String(e.toObject).replace(/_/g, ' ')}`);
+  if (e.to) parts.push(`TO ${String(e.to).replace(/_/g, ' ')}`);
   if (e.fromObject) parts.push(`FROM ${String(e.fromObject).replace(/_/g, ' ')}`);
   if (e.onObject) parts.push(`ON ${String(e.onObject).replace(/_/g, ' ')}`);
   if (e.for) {

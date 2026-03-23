@@ -233,7 +233,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -335,7 +335,7 @@
                     "object": "PROTECTION",
                     "objectType": "STATUS",
                     "toDeterminer": "ALL",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -377,7 +377,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "IS",
@@ -486,7 +486,7 @@
             "verb": "RECOVER",
             "object": "ULTIMATE_ENERGY",
             "toDeterminer": "THIS",
-            "toObject": "OPERATOR",
+            "to": "OPERATOR",
             "with": {
               "value": {
                 "verb": "IS",
@@ -552,7 +552,7 @@
                     "object": "TREATMENT",
                     "objectType": "STATUS",
                     "toDeterminer": "ALL",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "healBase": {
                         "verb": "VARY_BY",
@@ -601,7 +601,7 @@
                     "object": "CONTINUOUS_TREATMENT",
                     "objectType": "STATUS",
                     "toDeterminer": "ALL",
-                    "toObject": "OPERATOR",
+                    "to": "OPERATOR",
                     "with": {
                       "duration": {
                         "value": {
@@ -802,7 +802,7 @@
                   {
                     "verb": "DEAL",
                     "object": "STAGGER",
-                    "toObject": "ENEMY",
+                    "to": "ENEMY",
                     "with": {
                       "value": {
                         "verb": "VARY_BY",

@@ -191,7 +191,7 @@ function resolveReactionColumnId(adjective?: AdjectiveType | AdjectiveType[]): s
 
 function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
+  const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
 
   if (effect.object === 'INFLICTION') {
     const columnId = resolveInflictionColumnId(effect.adjective);
@@ -267,7 +267,7 @@ function executeApply(effect: Effect, ctx: ExecutionContext): MutationSet {
 
 function executeConsume(effect: Effect, ctx: ExecutionContext): MutationSet {
   const result = emptyMutationSet();
-  const ownerId = resolveOwnerId(effect.fromObject as string ?? effect.toObject as string, ctx, effect.fromDeterminer ?? effect.toDeterminer);
+  const ownerId = resolveOwnerId(effect.fromObject as string ?? effect.to as string, ctx, effect.fromDeterminer ?? effect.toDeterminer);
 
   if (effect.object === 'INFLICTION') {
     const columnId = resolveInflictionColumnId(effect.adjective);
@@ -339,7 +339,7 @@ function executeReset(effect: Effect, ctx: ExecutionContext): MutationSet {
   // RESET STACKS or RESET COOLDOWN — clamp all active instances
   if (effect.object === 'STACKS' && effect.objectId) {
     const columnId = resolveStatusColumnId(effect.objectId);
-    const ownerId = resolveOwnerId(effect.toObject as string, ctx, effect.toDeterminer);
+    const ownerId = resolveOwnerId(effect.to as string, ctx, effect.toDeterminer);
     const targets = activeEventsAtFrame(ctx.events, columnId, ownerId, ctx.frame)
       .filter(ev => ev.eventStatus !== EventStatusType.CONSUMED);
 
