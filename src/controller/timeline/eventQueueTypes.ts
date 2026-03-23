@@ -66,6 +66,8 @@ export interface QueueFrame {
   };
   /** The skill event that should try to consume Link at its start frame. */
   linkConsumeEvent?: import('../../consts/viewTypes').TimelineEvent;
+  /** Lifecycle trigger: use RESET stacking to replace existing status at cap. */
+  lifecycleReset?: boolean;
 }
 
 /** Slot-level trigger wiring for the pipeline. */

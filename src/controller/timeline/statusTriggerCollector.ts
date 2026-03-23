@@ -1355,11 +1355,10 @@ export function evaluateEngineTrigger(
   const durationFrames = outputDef.properties.duration ? getDurationFrames(outputDef.properties.duration) : TOTAL_FRAMES;
   const ownerId = resolveOwnerId(outputDef.properties.target, ctx.operatorSlotId, ctx.operatorSlotMap, outputDef.properties.targetDeterminer);
   const eqStatusId = outputDef.properties.id ?? outputDef.properties.name;
-  if (!eqStatusId) return;
+  if (!eqStatusId) { console.log('[DEBUG-OUT] No eqStatusId'); return; }
   const columnId = statusNameToColumnId(eqStatusId);
   const eqLimitMap = outputDef.properties.stacks?.limit;
   const maxStacks = eqLimitMap ? getMaxStacks(eqLimitMap, ctx.potential) : 1;
-
   if (activeCountFn(columnId, ownerId, entry.frame) >= maxStacks) return;
 
   // Enforce cooldown: skip if within cooldownSeconds of the last proc
@@ -1444,8 +1443,9 @@ export function evaluateEngineTrigger(
   addEventFn(ev);
 }
 
-/** Resolve the output status def from trigger effects (follows ALL → APPLY STATUS redirects). */
+/** Resolve the output status def from trigger effects (follows APPLY STATUS redirects). */
 function resolveOutputDef(ctx: EngineTriggerContext): StatusEventDef {
+  // Check ALL → APPLY STATUS (compound trigger path)
   const applySubEffect = (ctx.triggerEffects ?? [])
     .filter(e => e.verb === 'ALL')
     .flatMap(e => e.effects ?? [])
@@ -1454,6 +1454,16 @@ function resolveOutputDef(ctx: EngineTriggerContext): StatusEventDef {
     const json = getOperatorJson(ctx.operatorId);
     const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
       .find(d => d.properties.id === applySubEffect.objectId);
+    if (targetDef) return targetDef;
+  }
+  // Check direct APPLY STATUS (lifecycle clause path — effects may have object/objectId)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const directApply = (ctx.triggerEffects as any[] ?? [])
+    .find(e => e.verb === 'APPLY' && e.object === 'STATUS' && e.objectId);
+  if (directApply?.objectId) {
+    const json = getOperatorJson(ctx.operatorId);
+    const targetDef = (json?.statusEvents as StatusEventDef[] ?? [])
+      .find(d => d.properties.id === directApply.objectId);
     if (targetDef) return targetDef;
   }
   return ctx.def;

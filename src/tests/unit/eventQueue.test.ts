@@ -407,11 +407,36 @@ describe('MF Stacking (Queue Pipeline)', () => {
     expect(active[0].startFrame).toBeGreaterThanOrEqual(1800);
   });
 
-  // TODO: SH threshold evaluation runs in collectEngineTriggerEntries (pre-queue),
-  // but MF events are created by the queue. Needs post-queue threshold evaluation.
-  test.todo('Q5: Scorching Heart Effect activates at MAX stacks');
+  test('Q5: Scorching Heart Effect activates at MAX stacks', () => {
+    const events = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      battleSkillEvent(900),
+    ];
+    const result = processCombatSimulation(events);
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
+    expect(shEvents.length).toBe(1);
+    expect(shEvents[0].sourceOwnerId).toBe(SLOT_ID);
+  });
 
-  test.todo('Q6: Scorching Heart Effect re-activates after consume + re-accumulation');
+  test('Q6: Scorching Heart Effect re-activates after consume + re-accumulation', () => {
+    const events = [
+      battleSkillEvent(0),
+      battleSkillEvent(300),
+      battleSkillEvent(600),
+      battleSkillEvent(900),
+      empoweredBattleSkillEvent(1200), // consumes all 4 MF
+      battleSkillEvent(1800),
+      battleSkillEvent(2100),
+      battleSkillEvent(2400),
+      battleSkillEvent(2700),
+    ];
+    const result = processCombatSimulation(events);
+    const shEvents = filterByColumn(result, 'scorching-heart-effect');
+    // Should have 2 SH events: one from first 4 MF, one from second 4 MF
+    expect(shEvents.length).toBe(2);
+  });
 
   test('Q7: Shuffled battle skill order produces same MF count as sorted', () => {
     resetIdCounter();
