@@ -16,9 +16,9 @@ export const PRIORITY = {
   FRAME_EFFECT: 5,
   INFLICTION_CREATE: 10,
   CONSUME: 15,
-  COMBO_RESOLVE: 16,
   LINK_CONSUME: 17,
   ENGINE_TRIGGER: 22,
+  COMBO_RESOLVE: 25,
 } as const;
 
 export interface QueueFrame {
