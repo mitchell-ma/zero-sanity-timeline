@@ -6,7 +6,7 @@
  */
 import { TimelineEvent, Column, MiniTimeline, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, FrameDependencyType, StatType, TimelineSourceType } from '../../consts/enums';
+import { CombatSkillType, CritMode, DamageType, ElementType, EnemyTierType, FrameDependencyType, StatType, TimelineSourceType } from '../../consts/enums';
 import { SkillLevel, Potential } from '../../consts/types';
 import { StatusDamageParams } from '../../model/calculation/damageFormulas';
 import { getModelEnemy } from './enemyRegistry';
@@ -62,7 +62,7 @@ export interface DamageTableRow {
   multiplier: number | null;
   /** Segment label (e.g. "1", "2") for multiplier lookup. */
   segmentLabel: string | undefined;
-  /** Skill name (CombatSkillsType) for this tick. */
+  /** Skill name (CombatSkillType) for this tick. */
   skillName: string;
   /** Remaining boss HP after this tick's damage (can go negative). Null if HP unknown. */
   hpRemaining: number | null;
@@ -124,7 +124,7 @@ export interface DamageStatistics {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getEventDisplayName(name: string): string {
-  return COMBAT_SKILL_LABELS[name as CombatSkillsType] ?? name;
+  return COMBAT_SKILL_LABELS[name as CombatSkillType] ?? name;
 }
 
 function isUltEnhanced(name: string): boolean {
@@ -316,7 +316,7 @@ export function buildDamageTableRows(
                 // Try per-tick multiplier first (for skills with ramping damage like Smouldering Fire)
                 const perTickMult = getFrameMultiplier(
                   operatorId,
-                  ev.name as CombatSkillsType,
+                  ev.name as CombatSkillType,
                   skillLevel,
                   potential,
                   fi,
@@ -330,7 +330,7 @@ export function buildDamageTableRows(
                 } else {
                   multiplier = getSkillMultiplier(
                     operatorId,
-                    ev.name as CombatSkillsType,
+                    ev.name as CombatSkillType,
                     si,
                     skillLevel,
                     potential,
@@ -450,7 +450,7 @@ export function buildDamageTableRows(
                 }
 
                 // Finisher: applies when the event is a finisher attack during stagger break
-                const isFinisher = ev.id === CombatSkillsType.FINISHER;
+                const isFinisher = ev.id === CombatSkillType.FINISHER;
                 const enemyTier = modelEnemy?.tier ?? EnemyTierType.COMMON;
 
                 // Link bonus depends on stacks and skill type (battle skill vs ultimate)

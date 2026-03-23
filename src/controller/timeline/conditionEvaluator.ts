@@ -45,6 +45,8 @@ export interface ConditionContext {
   operatorSlotMap?: Record<string, string>;
   /** Target operator ID for OTHER/ANY determiner resolution. */
   targetOwnerId?: string;
+  /** Operator who matched the primary trigger condition (for TRIGGER determiner). */
+  triggerOwnerId?: string;
   /** Live enemy HP percentage query (0–100). Provided by calculationController during queue processing. */
   getEnemyHpPercentage?: (frame: number) => number | null;
   /** Query which operator slot is controlled at a given frame. */
@@ -60,6 +62,7 @@ function resolveOwnerId(subject: string, ctx: ConditionContext, determiner?: str
       case DeterminerType.ALL: return COMMON_OWNER_ID;
       case DeterminerType.OTHER: return ctx.targetOwnerId ?? undefined;
       case DeterminerType.ANY: return ctx.targetOwnerId ?? undefined; // wildcard if no target
+      case DeterminerType.TRIGGER: return ctx.triggerOwnerId ?? ctx.sourceOwnerId;
       case DeterminerType.CONTROLLED:
         return ctx.getControlledSlotAtFrame?.(ctx.frame) ?? ctx.sourceOwnerId;
       default: return ctx.sourceOwnerId;

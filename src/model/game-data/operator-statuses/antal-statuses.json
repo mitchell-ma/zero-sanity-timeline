@@ -286,14 +286,133 @@
     }
   },
   {
+    "segments": [
+      {
+        "metadata": {
+          "eventComponentType": "SEGMENT"
+        },
+        "properties": {
+          "duration": {
+            "value": {
+              "verb": "IS",
+              "value": 12
+            },
+            "unit": "SECOND"
+          }
+        },
+        "clause": [
+          {
+            "conditions": [],
+            "effects": [
+              {
+                "verb": "APPLY",
+                "adjective": "ELECTRIC",
+                "object": "AMP",
+                "toDeterminer": "ALL",
+                "to": "OPERATOR",
+                "with": {
+                  "value": {
+                    "verb": "VARY_BY",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.08,
+                      0.09,
+                      0.10,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14,
+                      0.15,
+                      0.16,
+                      0.17,
+                      0.18,
+                      0.20
+                    ],
+                    "ofDeterminer": "SOURCE",
+                    "of": "OPERATOR"
+                  }
+                }
+              },
+              {
+                "verb": "APPLY",
+                "adjective": "HEAT",
+                "object": "AMP",
+                "toDeterminer": "ALL",
+                "to": "OPERATOR",
+                "with": {
+                  "value": {
+                    "verb": "VARY_BY",
+                    "object": "SKILL_LEVEL",
+                    "value": [
+                      0.08,
+                      0.09,
+                      0.10,
+                      0.11,
+                      0.12,
+                      0.13,
+                      0.14,
+                      0.15,
+                      0.16,
+                      0.17,
+                      0.18,
+                      0.20
+                    ],
+                    "ofDeterminer": "SOURCE",
+                    "of": "OPERATOR"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "id": "OVERCLOCKED_MOMENT_AMP",
+      "name": "Overclocked Moment (Amp)",
+      "to": "OPERATOR",
+      "toDeterminer": "ALL",
+      "stacks": {
+        "limit": {
+          "verb": "IS",
+          "value": 1
+        },
+        "interactionType": "RESET"
+      },
+      "duration": {
+        "value": {
+          "verb": "IS",
+          "value": 12
+        },
+        "unit": "SECOND"
+      },
+      "eventType": "STATUS_EVENT",
+      "type": "SKILL_STATUS",
+      "eventCategoryType": "SKILL_STATUS"
+    },
+    "metadata": {
+      "originId": "OVERCLOCKED_MOMENT",
+      "dataSources": [
+        "ENDFIELD_WIKI"
+      ]
+    }
+  },
+  {
     "onTriggerClause": [
       {
         "conditions": [
           {
-            "subjectDeterminer": "THIS",
+            "subjectDeterminer": "OTHER",
             "subject": "OPERATOR",
             "verb": "DEAL",
             "object": "DAMAGE"
+          },
+          {
+            "subjectDeterminer": "TRIGGER",
+            "subject": "OPERATOR",
+            "verb": "HAVE",
+            "nounAdjunct": "ANY",
+            "object": "AMP"
           }
         ],
         "effects": [
@@ -301,8 +420,8 @@
             "verb": "APPLY",
             "object": "STATUS",
             "objectId": "IMPROVISER",
-            "toDeterminer": "TRIGGER",
-            "to": "OPERATOR"
+            "toDeterminer": "ALL",
+            "to": "TEAM"
           }
         ]
       }
@@ -412,7 +531,7 @@
           "duration": {
             "value": {
               "verb": "IS",
-              "value": 15
+              "value": 30
             },
             "unit": "SECOND"
           }

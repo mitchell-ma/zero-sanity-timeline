@@ -72,6 +72,7 @@ export function getElementDamageBonusStat(element: ElementType): StatType {
     [ElementType.ELECTRIC]: StatType.ELECTRIC_DAMAGE_BONUS,
     [ElementType.CRYO]: StatType.CRYO_DAMAGE_BONUS,
     [ElementType.NATURE]: StatType.NATURE_DAMAGE_BONUS,
+    [ElementType.ARTS]: StatType.PHYSICAL_DAMAGE_BONUS,
   };
   return map[element];
 }
@@ -87,6 +88,10 @@ export function getSkillTypeDamageBonusStat(skillType: CombatSkillType): StatTyp
     [CombatSkillType.COMBO_SKILL]: StatType.COMBO_SKILL_DAMAGE_BONUS,
     [CombatSkillType.ULTIMATE]: StatType.ULTIMATE_DAMAGE_BONUS,
     [CombatSkillType.ULTIMATE_SKILL]: StatType.ULTIMATE_DAMAGE_BONUS,
+    [CombatSkillType.DASH]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.FINISHER]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.DIVE]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
+    [CombatSkillType.CONTROL]: StatType.BASIC_ATTACK_DAMAGE_BONUS,
   };
   return map[skillType];
 }

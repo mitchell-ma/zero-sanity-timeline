@@ -828,6 +828,13 @@
                 "of": "OPERATOR"
               }
             }
+          },
+          {
+            "verb": "APPLY",
+            "object": "STATUS",
+            "objectId": "OVERCLOCKED_MOMENT_AMP",
+            "toDeterminer": "ALL",
+            "to": "OPERATOR"
           }
         ]
       }

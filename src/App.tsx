@@ -16,7 +16,7 @@ import { createCustomGearEffect, updateCustomGearEffect } from './controller/cus
 import { createCustomOperatorStatus, updateCustomOperatorStatus } from './controller/custom/customOperatorStatusController';
 import { createCustomOperatorTalent, updateCustomOperatorTalent } from './controller/custom/customOperatorTalentController';
 import { addSkillLink } from './controller/custom/customSkillLinkController';
-import { InteractionModeType, CombatSkillsType, CombatSkillType, InfoLevel } from './consts/enums';
+import { InteractionModeType, CombatSkillType, InfoLevel } from './consts/enums';
 import { VerbType } from './dsl/semantics';
 import { getAnimationDuration, eventDuration } from './consts/viewTypes';
 import type { SkillType } from './consts/viewTypes';
@@ -159,7 +159,7 @@ export default function App() {
     if (!skillType) return;
 
     const id = `skill_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const label = COMBAT_SKILL_LABELS[event.name as CombatSkillsType] || event.name;
+    const label = COMBAT_SKILL_LABELS[event.name as CombatSkillType] || event.name;
     const skill: CustomSkill = {
       id,
       name: `${label} (Custom)`,

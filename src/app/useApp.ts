@@ -948,7 +948,8 @@ export function useApp() {
         });
         return prev;
       }
-      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
+      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
+      const processed = isStrict ? processedEventsRef.current : null;
       const merged = validateUpdate(prev, target, updates, processed);
       if (!merged) return prev;
       return prev.map((ev) => (ev.uid === id ? merged : ev));
@@ -973,7 +974,8 @@ export function useApp() {
         const reaction = processedEventsRef.current?.find((ev) => ev.uid === id);
         if (reaction) adjustedFrame = target.startFrame + (newStartFrame - reaction.startFrame);
       }
-      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
+      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
+      const processed = isStrict ? processedEventsRef.current : null;
       const clamped = validateMove(prev, target, adjustedFrame, processed, overlapExemptIds);
       if (clamped === target.startFrame) return prev;
       const targetId = target.uid;
@@ -986,10 +988,11 @@ export function useApp() {
   const handleMoveEvents = useCallback((ids: string[], delta: number, overlapExemptIds?: Set<string>) => {
     if (delta === 0) return;
     setEvents((prev) => {
-      const processed = interactionModeRef.current !== InteractionModeType.STRICT ? null : processedEventsRef.current;
+      const isStrict = interactionModeRef.current === InteractionModeType.STRICT;
+      const processed = isStrict ? processedEventsRef.current : null;
       // Resolve derived reaction IDs to their source infliction IDs
       let resolvedIds = ids;
-      if (interactionModeRef.current !== InteractionModeType.STRICT) {
+      if (!isStrict) {
         resolvedIds = ids.map((id) => {
           if (prev.some((ev) => ev.uid === id)) return id;
           const sourceId = id.endsWith('-reaction') ? id.slice(0, -'-reaction'.length) : undefined;

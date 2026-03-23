@@ -1,4 +1,4 @@
-import { CombatSkillsType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
+import { CombatSkillType, DamageFactorType, ElementType, ELEMENT_COLORS, ELEMENT_LABELS, StatusType } from '../../consts/enums';
 import { TimelineEvent, Operator, Enemy, SkillType, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
 import {
   REACTION_LABELS, COMBAT_SKILL_LABELS, STATUS_LABELS,
@@ -177,14 +177,14 @@ export function resolveEventIdentity(
       sourceColor = sourceSlot.operator.color;
     }
     if (event.sourceSkillName) {
-      sourceSkillLabel = COMBAT_SKILL_LABELS[event.sourceSkillName as CombatSkillsType]
+      sourceSkillLabel = COMBAT_SKILL_LABELS[event.sourceSkillName as CombatSkillType]
         ?? STATUS_LABELS[event.sourceSkillName as StatusType]
         ?? event.sourceSkillName;
     }
   }
 
   // Override skill name with combat label if available
-  const combatLabel = COMBAT_SKILL_LABELS[event.name as CombatSkillsType];
+  const combatLabel = COMBAT_SKILL_LABELS[event.name as CombatSkillType];
   if (combatLabel) {
     skillName = combatLabel;
   } else if (INFLICTION_EVENT_LABELS[event.name]) {
@@ -275,7 +275,7 @@ export function resolveComboChain(
     }
 
     const originalSkillLabel = bestMatch?.sourceSkillName
-      ? (COMBAT_SKILL_LABELS[bestMatch.sourceSkillName as CombatSkillsType]
+      ? (COMBAT_SKILL_LABELS[bestMatch.sourceSkillName as CombatSkillType]
         ?? STATUS_LABELS[bestMatch.sourceSkillName as StatusType]
         ?? bestMatch.sourceSkillName)
       : undefined;
@@ -300,7 +300,7 @@ export function resolveComboChain(
   } else {
     // Direct operator trigger (e.g. FINAL_STRIKE from basic attack)
     const skillLabel = window.sourceSkillName
-      ? (COMBAT_SKILL_LABELS[window.sourceSkillName as CombatSkillsType]
+      ? (COMBAT_SKILL_LABELS[window.sourceSkillName as CombatSkillType]
         ?? STATUS_LABELS[window.sourceSkillName as StatusType]
         ?? window.sourceSkillName)
       : undefined;
@@ -433,10 +433,10 @@ export function resolveActiveModifiers(
   for (const ev of allProcessedEvents) {
     if (!isActiveAt(ev, midFrame)) continue;
 
-    if (ev.columnId === StatusType.ARTS_AMP) {
+    if (ev.damageFactorType === DamageFactorType.AMP) {
       const bonus = ev.statusValue ?? DEFAULT_AMP_BONUS;
       modifiers.push({
-        label: 'Arts Amp',
+        label: ev.name ?? 'Amp',
         color: '#aa66dd',
         formattedValue: `+${Math.round(bonus * 100)}%`,
         source: 'Amp',

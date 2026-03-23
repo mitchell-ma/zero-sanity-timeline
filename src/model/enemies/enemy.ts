@@ -108,6 +108,7 @@ export abstract class Enemy {
       [ElementType.ELECTRIC]: StatType.ELECTRIC_RESISTANCE,
       [ElementType.CRYO]: StatType.CRYO_RESISTANCE,
       [ElementType.NATURE]: StatType.NATURE_RESISTANCE,
+      [ElementType.ARTS]: StatType.AETHER_RESISTANCE,
     };
     return this.stats[resistanceMap[element]] ?? this.stats[StatType.AETHER_RESISTANCE];
   }

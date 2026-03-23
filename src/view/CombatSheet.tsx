@@ -12,7 +12,7 @@ import { runCalculation } from '../controller/calculation/calculationController'
 import type { Slot } from '../controller/timeline/columnBuilder';
 import type { StaggerBreak } from '../controller/timeline/staggerTimeline';
 import { ResourcePoint } from '../controller/timeline/resourceTimeline';
-import { CritMode, CombatSkillsType, FoldMode } from '../consts/enums';
+import { CritMode, CombatSkillType, FoldMode } from '../consts/enums';
 import { LoadoutProperties } from './InformationPane';
 import { OperatorLoadoutState } from './OperatorLoadoutHeader';
 import { OPERATORS } from '../utils/loadoutRegistry';
@@ -200,7 +200,7 @@ function formatPct(n: number): string {
 }
 
 function getSkillDisplayName(skillName: string): string {
-  return COMBAT_SKILL_LABELS[skillName as CombatSkillsType] ?? skillName;
+  return COMBAT_SKILL_LABELS[skillName as CombatSkillType] ?? skillName;
 }
 
 function getCategoryLabel(columnId: string): string {

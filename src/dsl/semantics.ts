@@ -7,7 +7,7 @@
  * See src/model/eventSpec.md for the full specification.
  */
 
-import { UnitType } from '../consts/enums';
+import { UnitType, EnhancementType } from '../consts/enums';
 import { Reaction } from '../model/combat-statuses/reaction';
 
 // ── Sentinels ───────────────────────────────────────────────────────────────
@@ -54,8 +54,8 @@ export enum DeterminerType {
 
 // ── Noun ────────────────────────────────────────────────────────────────────
 
-/** Core nouns — entities, skills, resources, statuses, and states. */
-export enum CoreNounType {
+/** Nouns — entities, skills, resources, statuses, and states. */
+export enum NounType {
   // Entities
   /** An operator — use DeterminerType to specify which. */
   OPERATOR = "OPERATOR",
@@ -68,6 +68,8 @@ export enum CoreNounType {
 
   // Skills / actions
   BASIC_ATTACK = "BASIC_ATTACK",
+  /** Basic attack subcategory (normal attack sequence). Distinct from BASIC_ATTACK which is the skill category. */
+  BATK = "BATK",
   BATTLE_SKILL = "BATTLE_SKILL",
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE = "ULTIMATE",
@@ -82,6 +84,7 @@ export enum CoreNounType {
 
   // Statuses
   STATUS = "STATUS",
+  AMP = "AMP",
   INFLICTION = "INFLICTION",
   REACTION = "REACTION",
   ARTS_REACTION = "ARTS_REACTION",
@@ -118,19 +121,6 @@ export enum CoreNounType {
   /** Attribute increase level of an operator (0–4). */
   ATTRIBUTE_INCREASE_LEVEL = "ATTRIBUTE_INCREASE_LEVEL",
 }
-
-// ── Noun Adjunct ──────────────────────────────────────────────────────────
-
-/** Noun adjuncts — nouns used in adjective position to modify other nouns. */
-export enum NounAdjunctType {
-  /** The triggering event — "APPLY TRIGGER INFLICTION TO ENEMY" (duplicate what triggered this). */
-  TRIGGER = "TRIGGER",
-}
-
-/** All nouns = core nouns + noun adjuncts. */
-export type NounType = CoreNounType | NounAdjunctType;
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const NounType = { ...CoreNounType, ...NounAdjunctType } as typeof CoreNounType & typeof NounAdjunctType;
 
 // ── Subject ─────────────────────────────────────────────────────────────────
 
@@ -195,9 +185,9 @@ export enum VerbType {
   // ── Stat ────────────────────────────────────────────────────────────────
   /** Ignore a resistance/stat (e.g. IGNORE HEAT_RESISTANCE ON ENEMY). */
   IGNORE = "IGNORE",
-  /** Enhance a skill type for a target operator (e.g. ENHANCE BASIC_ATTACK TO THIS OPERATOR). */
-  ENHANCE = "ENHANCE",
-  /** Disable a skill variant tier (e.g. DISABLE NORMAL BASIC_ATTACK TO THIS OPERATOR). */
+  /** Enable a skill variant tier (e.g. ENABLE ENHANCED BATK OF THIS OPERATOR). */
+  ENABLE = "ENABLE",
+  /** Disable a skill variant tier (e.g. DISABLE NORMAL BATK OF THIS OPERATOR). */
   DISABLE = "DISABLE",
 
   // ── Time ────────────────────────────────────────────────────────────────
@@ -239,6 +229,7 @@ export enum AdjectiveType {
   NATURE = "NATURE",
   ELECTRIC = "ELECTRIC",
   PHYSICAL = "PHYSICAL",
+  ARTS = "ARTS",
 
   // Arts reaction adjectives (APPLY 1 <adj> REACTION TO ENEMY)
   COMBUSTION = "COMBUSTION",
@@ -300,7 +291,8 @@ export const VERB_OBJECTS: Partial<Record<VerbType, ObjectType[]>> = {
   [VerbType.MERGE]:      [ObjectType.STATUS, ObjectType.INFLICTION],
   [VerbType.RESET]:      [ObjectType.STACKS],
   [VerbType.IGNORE]:     [ObjectType.STATUS, ObjectType.ULTIMATE_ENERGY],
-  [VerbType.ENHANCE]:    [ObjectType.BASIC_ATTACK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE],
+  [VerbType.ENABLE]:     [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
+  [VerbType.DISABLE]:    [ObjectType.BATK, ObjectType.BATTLE_SKILL, ObjectType.COMBO_SKILL, ObjectType.ULTIMATE, ObjectType.FINISHER, ObjectType.DIVE_ATTACK],
   [VerbType.EXPERIENCE]: [ObjectType.GAME_TIME, ObjectType.REAL_TIME],
   [VerbType.HAVE]:       [ObjectType.STATUS, ObjectType.INFLICTION, ObjectType.REACTION, ObjectType.STACKS, ObjectType.SKILL_POINT, ObjectType.ULTIMATE_ENERGY, ObjectType.HP],
   [VerbType.IS]:         [ObjectType.ACTIVE, ObjectType.LIFTED, ObjectType.KNOCKED_DOWN, ObjectType.CRUSHED, ObjectType.BREACHED, ObjectType.COMBUSTED, ObjectType.CORRODED, ObjectType.ELECTRIFIED, ObjectType.SOLIDIFIED, ObjectType.NODE_STAGGERED, ObjectType.FULL_STAGGERED],
@@ -346,6 +338,9 @@ export const OBJECT_ADJECTIVES: Partial<Record<ObjectType, AdjectiveType[]>> = {
   [ObjectType.STAGGER]: [
     AdjectiveType.NODE_STAGGERED, AdjectiveType.FULL_STAGGERED,
   ],
+  [ObjectType.AMP]: [
+    AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
+  ],
   [ObjectType.NORMAL_ATTACK]: [
     AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL,
   ],
@@ -360,20 +355,6 @@ export const OBJECT_REQUIRED_ADJECTIVE = new Set<string>([ObjectType.DAMAGE]);
 /** Default adjective for objects that require one. */
 export const OBJECT_DEFAULT_ADJECTIVE: Partial<Record<ObjectType, AdjectiveType>> = {
   [ObjectType.DAMAGE]: AdjectiveType.PHYSICAL,
-};
-
-/**
- * Valid noun adjuncts per object noun.
- * Noun adjuncts are NounType values used in adjective position to modify another noun.
- * e.g. APPLY TRIGGER INFLICTION TO ENEMY — TRIGGER modifies INFLICTION.
- */
-export const NOUN_ADJUNCTS: Partial<Record<NounType, NounAdjunctType[]>> = {
-  [NounType.INFLICTION]: [
-    NounAdjunctType.TRIGGER,
-  ],
-  [NounType.STATUS]: [
-    NounAdjunctType.TRIGGER,
-  ],
 };
 
 /**
@@ -397,9 +378,18 @@ export const NOUN_UNITS: Partial<Record<NounType, UnitType[]>> = {
  * Maps nouns to the NounType or AdjectiveType values that can appear in qualifier position.
  * e.g. "ULTIMATE COOLDOWN", "COMBO_SKILL COOLDOWN", "HEAT DAMAGE".
  */
-export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, (NounType | AdjectiveType)[]>> = {
+export type QualifierType = NounType | AdjectiveType | EnhancementType | DeterminerType;
+
+export const NOUN_QUALIFIER_MAPPING: Partial<Record<NounType, QualifierType[]>> = {
   [NounType.COOLDOWN]: [NounType.ULTIMATE, NounType.COMBO_SKILL],
   [NounType.DAMAGE]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL],
+  [NounType.AMP]: [AdjectiveType.HEAT, AdjectiveType.CRYO, AdjectiveType.NATURE, AdjectiveType.ELECTRIC, AdjectiveType.PHYSICAL, DeterminerType.ANY],
+  [NounType.BATK]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.BATTLE_SKILL]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.COMBO_SKILL]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.ULTIMATE]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.FINISHER]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
+  [NounType.DIVE_ATTACK]: [EnhancementType.NORMAL, EnhancementType.ENHANCED, EnhancementType.EMPOWERED],
 };
 
 /**
@@ -412,6 +402,13 @@ export const NOUN_POSSESSOR_MAPPING: Partial<Record<NounType, NounType[]>> = {
   [NounType.TALENT_ONE_LEVEL]: [NounType.OPERATOR],
   [NounType.TALENT_TWO_LEVEL]: [NounType.OPERATOR],
   [NounType.STAT]: [NounType.OPERATOR],
+  [NounType.BASIC_ATTACK]: [NounType.OPERATOR],
+  [NounType.BATK]: [NounType.OPERATOR],
+  [NounType.BATTLE_SKILL]: [NounType.OPERATOR],
+  [NounType.COMBO_SKILL]: [NounType.OPERATOR],
+  [NounType.ULTIMATE]: [NounType.OPERATOR],
+  [NounType.FINISHER]: [NounType.OPERATOR],
+  [NounType.DIVE_ATTACK]: [NounType.OPERATOR],
 };
 
 /**
@@ -540,12 +537,12 @@ export interface ValueVariable {
  */
 export interface ValueStat {
   verb: VerbType.IS;
-  /** Existing form: object is CoreNounType.STAT. */
-  object?: CoreNounType.STAT;
+  /** Existing form: object is NounType.STAT. */
+  object?: NounType.STAT;
   /** Existing form: stat key. */
   objectId?: string;
   /** Extended form: discriminator indicating this is a stat reference. */
-  valueType?: CoreNounType.STAT;
+  valueType?: NounType.STAT;
   /** Extended form: stat key. */
   stat?: string;
   /** Whose stat to look up (e.g. SOURCE for the talent owner's stats). */
@@ -582,8 +579,8 @@ export function isValueVariable(node: ValueNode): node is ValueVariable {
 
 export function isValueStat(node: ValueNode): node is ValueStat {
   if (!('verb' in node) || node.verb !== VerbType.IS) return false;
-  if ('object' in node && (node as ValueStat).object === CoreNounType.STAT) return true;
-  if ('valueType' in node && (node as ValueStat).valueType === CoreNounType.STAT) return true;
+  if ('object' in node && (node as ValueStat).object === NounType.STAT) return true;
+  if ('valueType' in node && (node as ValueStat).valueType === NounType.STAT) return true;
   return false;
 }
 
@@ -642,8 +639,8 @@ export interface Effect {
   objectId?: string;
   /** Adjective(s) — modifies the object. Can stack: e.g. [FORCED, COMBUSTION] REACTION, [HEAT] DAMAGE. */
   adjective?: AdjectiveType | AdjectiveType[];
-  /** Noun adjunct — a noun modifying the object: "REDUCE ULTIMATE COOLDOWN". */
-  nounAdjunct?: NounType;
+  /** Noun adjunct — a qualifier modifying the object: "REDUCE ULTIMATE COOLDOWN", "ENABLE ENHANCED BATK". */
+  nounAdjunct?: QualifierType;
   /** Constraint on cardinality (AT_MOST, AT_LEAST, EXACTLY) — for compound ALL/ANY grouping. */
   cardinalityConstraint?: CardinalityConstraintType;
   /** Value for compound constraints (e.g. ALL AT_MOST MAX). */
@@ -792,7 +789,7 @@ export const OPERATOR_VERBS = [
 export const EFFECT_VERBS = [
   VerbType.ALL, // VerbType.ANY,
   VerbType.APPLY, VerbType.CHANCE, VerbType.CONSUME, VerbType.DEAL,
-  VerbType.DISABLE, VerbType.ENHANCE, VerbType.EXTEND,
+  VerbType.DISABLE, VerbType.ENABLE, VerbType.EXTEND,
   VerbType.IGNORE, VerbType.MERGE, VerbType.PERFORM,
   VerbType.RECOVER, VerbType.REFRESH, VerbType.RESET,
   VerbType.RETURN,
@@ -850,7 +847,7 @@ export interface InteractionFieldVisibility {
 }
 
 // Verbs that need prepositions
-const NEEDS_TO = new Set([VerbType.APPLY, VerbType.RECOVER, VerbType.RETURN, VerbType.ENHANCE, VerbType.DISABLE]);
+const NEEDS_TO = new Set([VerbType.APPLY, VerbType.RECOVER, VerbType.RETURN]);
 const NEEDS_FROM = new Set([VerbType.CONSUME]);
 const NEEDS_ON = new Set([VerbType.EXTEND, VerbType.REFRESH, VerbType.MERGE, VerbType.IGNORE]);
 const NEEDS_DURATION = new Set([VerbType.APPLY]);
@@ -872,7 +869,7 @@ export interface EffectFieldVisibility {
   showDuration: boolean;
   showUntilEnd: boolean;
   showQualifierRow: boolean;
-  nounAdjuncts: (NounType | AdjectiveType)[];
+  nounAdjuncts: QualifierType[];
   withProperties: string[];
 }
 
@@ -1040,7 +1037,7 @@ export const VERB_LABELS: Record<string, string> = {
   [VerbType.MERGE]: 'Merge',
   [VerbType.RESET]: 'Reset',
   [VerbType.IGNORE]: 'Ignore',
-  [VerbType.ENHANCE]: 'Enhance',
+  [VerbType.ENABLE]: 'Enable',
   [VerbType.DISABLE]: 'Disable',
   [VerbType.EXPERIENCE]: 'Experience',
   [VerbType.HAVE]: 'Have',

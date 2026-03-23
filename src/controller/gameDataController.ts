@@ -8,7 +8,7 @@
 
 // ── Typed controllers (data layer) ──────────────────────────────────────────
 
-import { CombatSkillsType, ElementType, ArtsReactionType } from '../consts/enums';
+import { CombatSkillType, ElementType, ArtsReactionType } from '../consts/enums';
 import { t } from '../locales/locale';
 
 import {
@@ -238,10 +238,10 @@ let _skillLabels: Record<string, string> | null = null;
 export function getAllSkillLabels(): Record<string, string> {
   if (_skillLabels) return _skillLabels;
   const labels: Record<string, string> = {
-    [CombatSkillsType.DASH]: t('skill.DASH'),
-    [CombatSkillsType.FINISHER]: t('skill.FINISHER'),
-    [CombatSkillsType.DIVE]: t('skill.DIVE'),
-    [CombatSkillsType.CONTROL]: t('skill.CONTROL'),
+    [CombatSkillType.DASH]: t('skill.DASH'),
+    [CombatSkillType.FINISHER]: t('skill.FINISHER'),
+    [CombatSkillType.DIVE]: t('skill.DIVE'),
+    [CombatSkillType.CONTROL]: t('skill.CONTROL'),
   };
   for (const operatorId of getAllOperatorSkillSetIds()) {
     const skills = getOperatorSkills(operatorId);

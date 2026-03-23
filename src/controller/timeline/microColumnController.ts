@@ -187,6 +187,7 @@ export class MicroColumnController {
     columns: Column[],
     columnPositions: Map<string, { left: number; right: number }>,
     greedySlots: Map<string, number>,
+    statusMaxWidth?: number,
   ): Map<string, { left: number; right: number; color: string }> {
     const positions = new Map<string, { left: number; right: number; color: string }>();
     for (const col of columns) {
@@ -225,24 +226,16 @@ export class MicroColumnController {
         col.microColumns!.forEach((mc, idx) => typeOrder.set(mc.id, idx));
         const mcById = new Map(col.microColumns!.map((mc) => [mc.id, mc]));
 
-        // Collect all active types and assign stable indices by type order
-        const activeTypes = new Set<string>();
-        for (const ev of colEvents) activeTypes.add(ev.columnId);
-        const sortedTypes = Array.from(activeTypes).sort((a, b) => {
-          const oa = typeOrder.get(a) ?? 999;
-          const ob = typeOrder.get(b) ?? 999;
-          return oa - ob || a.localeCompare(b);
-        });
-        const typeIndex = new Map<string, number>();
-        sortedTypes.forEach((t, i) => typeIndex.set(t, i));
-        const totalTypes = sortedTypes.length || 1;
-        const dynW = colWidth / totalTypes;
-
+        // Per-event overlap-aware positioning: each event gets a greedy
+        // left-packed index based on how many distinct types overlap it.
+        // Sub-lane width is capped at statusMaxWidth (1/5 of full timeline).
         for (const ev of colEvents) {
-          const idx = typeIndex.get(ev.columnId) ?? 0;
+          const { count, index } = MicroColumnController.dynamicSplitPosition(ev, colEvents, typeOrder);
+          const evenW = colWidth / (count || 1);
+          const dynW = statusMaxWidth ? Math.min(evenW, statusMaxWidth) : evenW;
           positions.set(ev.uid, {
-            left: colPos.left + idx * dynW,
-            right: colPos.left + (idx + 1) * dynW,
+            left: colPos.left + index * dynW,
+            right: colPos.left + (index + 1) * dynW,
             color: mcById.get(ev.columnId)?.color ?? col.color,
           });
         }

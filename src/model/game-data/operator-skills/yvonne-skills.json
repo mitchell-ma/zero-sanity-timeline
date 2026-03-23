@@ -746,6 +746,13 @@
     }
   },
   "EXUBERANT_TRIGGER_EMPOWERED": {
+    "activationClause": [{
+      "conditions": [{
+        "subjectDeterminer": "THIS", "subject": "OPERATOR",
+        "verb": "HAVE", "object": "STATUS", "objectId": "CRIT_STACKS",
+        "cardinalityConstraint": "EXACTLY", "value": "MAX"
+      }]
+    }],
     "segments": [
       {
         "metadata": {

@@ -81,7 +81,7 @@ export const VERB_LABELS: Record<string, string> = {
   RESET: t('dsl.verb.RESET'),
   // Stat
   IGNORE: t('dsl.verb.IGNORE'),
-  ENHANCE: t('dsl.verb.ENHANCE'),
+  ENABLE: t('dsl.verb.ENABLE'),
   // Time
   EXPERIENCE: t('dsl.verb.EXPERIENCE'),
   // Condition-only

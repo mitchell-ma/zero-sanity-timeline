@@ -40,9 +40,9 @@ interface StatusSegment {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'objectId', 'objectType', 'adjective', 'to', 'toDeterminer', 'toObject', 'with', 'value', 'cardinalityConstraint', 'effects']);
-const VALID_EFFECT_WITH_KEYS = new Set(['value']);
+const VALID_EFFECT_WITH_KEYS = new Set(['value', 'duration']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);
 const VALID_TRIGGER_CONDITION_KEYS = new Set(['subjectDeterminer', 'subject', 'verb', 'object', 'objectId', 'value', 'cardinalityConstraint', 'to', 'toDeterminer', 'with']);
 const VALID_DURATION_KEYS = new Set(['value', 'unit', 'modifier']);

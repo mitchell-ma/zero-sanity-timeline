@@ -5,7 +5,7 @@
  * empowered skill prerequisites, and time-stop overlap constraints.
  */
 import { TimelineEvent, SkillType, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, eventEndFrame } from '../../consts/viewTypes';
-import { CombatSkillsType, EnhancementType, StatusType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EnhancementType, StatusType, TimeDependency } from '../../consts/enums';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
 import type { ResourceZone } from './skillPointTimeline';
 import { getOperatorJson, getComboTriggerClause } from '../../model/event-frames/operatorJsonLoader';
@@ -861,7 +861,7 @@ export function checkVariantAvailability(
 
   // Regular variant blocked by DISABLE clause or when ENHANCE clause is active
   if (!isEnhanced && !isEmpowered && enhanceObject && hasEnhancedVariants
-    && variantName !== CombatSkillsType.FINISHER && variantName !== CombatSkillsType.DIVE) {
+    && variantName !== CombatSkillType.FINISHER && variantName !== CombatSkillType.DIVE) {
     const disableAdj = getDisableAdjectiveAtFrame(events, ownerId, enhanceObject, atFrame);
     if (disableAdj) {
       return { disabled: true, reason: `${disableAdj} variant disabled during this window` };
@@ -1076,7 +1076,7 @@ export function validateDisabledVariants(events: TimelineEvent[]): Map<string, s
     if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
     // Skip enhanced, empowered, finisher, dive — only check regular basic attacks
     if (ev.enhancementType === EnhancementType.ENHANCED || ev.enhancementType === EnhancementType.EMPOWERED) continue;
-    if (ev.id === CombatSkillsType.FINISHER || ev.id === CombatSkillsType.DIVE) continue;
+    if (ev.id === CombatSkillType.FINISHER || ev.id === CombatSkillType.DIVE) continue;
 
     const enhanceObject = COLUMN_TO_ENHANCE_OBJECT[ev.columnId];
     if (!enhanceObject) continue;
@@ -1238,7 +1238,7 @@ export function getAutoFinisherIds(
   for (const brk of staggerBreaks) {
     // Check if a manually placed finisher already exists in this break
     const hasManualFinisher = events.some(
-      (ev) => ev.id === CombatSkillsType.FINISHER
+      (ev) => ev.id === CombatSkillType.FINISHER
         && ev.startFrame >= brk.startFrame && ev.startFrame < brk.endFrame,
     );
     if (hasManualFinisher) continue;
@@ -1247,8 +1247,8 @@ export function getAutoFinisherIds(
     const firstBasic = events
       .filter((ev) =>
         ev.columnId === SKILL_COLUMNS.BASIC
-        && ev.id !== CombatSkillsType.FINISHER
-        && ev.id !== CombatSkillsType.DIVE
+        && ev.id !== CombatSkillType.FINISHER
+        && ev.id !== CombatSkillType.DIVE
         && ev.startFrame >= brk.startFrame
         && ev.startFrame < brk.endFrame,
       )
@@ -1270,7 +1270,7 @@ export function validateFinisherStaggerBreak(
   staggerBreaks: readonly import('./staggerTimeline').StaggerBreak[],
 ): Map<string, string> {
   const map = new Map<string, string>();
-  const finishers = events.filter((ev) => ev.id === CombatSkillsType.FINISHER);
+  const finishers = events.filter((ev) => ev.id === CombatSkillType.FINISHER);
   if (finishers.length === 0) return map;
 
   for (const ev of finishers) {

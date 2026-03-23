@@ -38,7 +38,7 @@ export interface DurationConfig {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right']);
+const VALID_VALUE_NODE_KEYS = new Set(['verb', 'value', 'object', 'objectId', 'operator', 'left', 'right', 'ofDeterminer', 'of']);
 const VALID_EFFECT_KEYS = new Set(['verb', 'object', 'adjective', 'to', 'toDeterminer', 'with', 'objectId']);
 const VALID_EFFECT_WITH_KEYS = new Set(['value']);
 const VALID_CLAUSE_KEYS = new Set(['conditions', 'effects']);

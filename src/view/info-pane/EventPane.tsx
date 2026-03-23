@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { framesToSeconds, secondsToFrames, frameToDetailLabel, frameToTimeLabelPrecise, FPS, fmtN } from '../../utils/timeline';
 import { COMBAT_SKILL_LABELS, STATUS_LABELS } from '../../consts/timelineColumnLabels';
-import { CombatSkillsType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
+import { CombatSkillType, ELEMENT_COLORS, ELEMENT_LABELS, ElementType, EventFrameType, EventStatusType, InfoLevel, InteractionModeType, SegmentType, StatusType } from '../../consts/enums';
 import { getStatusElementMap } from '../../controller/gameDataController';
 import { TimelineEvent, Operator, Enemy, SelectedFrame, Column, MiniTimeline, computeSegmentsSpan, getAnimationDuration, eventDuration } from '../../consts/viewTypes';
 import { DurationField, StatField, SegmentDurationField, FrameOffsetField } from './SharedFields';
@@ -694,7 +694,7 @@ function EventPane({
                     const statusOpName = statusSlot?.operator?.name ?? event.eventStatusOwnerId;
                     const statusOpColor = statusSlot?.operator?.color;
                     const statusSkillLabel = event.eventStatusSkillName
-                      ? COMBAT_SKILL_LABELS[event.eventStatusSkillName as CombatSkillsType]
+                      ? COMBAT_SKILL_LABELS[event.eventStatusSkillName as CombatSkillType]
                         ?? STATUS_LABELS[event.eventStatusSkillName as StatusType]
                         ?? event.eventStatusSkillName
                       : null;
@@ -1012,7 +1012,7 @@ function EventPane({
                 if (!seg.properties.name) continue;
                 const m = getSkillMultiplier(
                   operatorId,
-                  event.name as CombatSkillsType,
+                  event.name as CombatSkillType,
                   si,
                   skillLevel as SkillLevel,
                   (stats?.operator.potential ?? 0) as Potential,
@@ -1030,7 +1030,7 @@ function EventPane({
             } else {
               overallMultiplier = getSkillMultiplier(
                 operatorId,
-                event.name as CombatSkillsType,
+                event.name as CombatSkillType,
                 undefined,
                 skillLevel as SkillLevel,
                 (stats?.operator.potential ?? 0) as Potential,
@@ -1041,7 +1041,7 @@ function EventPane({
               // Check if this skill has per-tick ramping multipliers
               const tick0 = getFrameMultiplier(
                 operatorId,
-                event.name as CombatSkillsType,
+                event.name as CombatSkillType,
                 skillLevel as SkillLevel,
                 (stats?.operator.potential ?? 0) as Potential,
                 0,
@@ -1049,7 +1049,7 @@ function EventPane({
               if (tick0 != null && overallMaxFrames > 1) {
                 const tick1 = getFrameMultiplier(
                   operatorId,
-                  event.name as CombatSkillsType,
+                  event.name as CombatSkillType,
                   skillLevel as SkillLevel,
                   (stats?.operator.potential ?? 0) as Potential,
                   1,
@@ -2149,7 +2149,7 @@ function DebugPane({ event, processedEvent, rawEvents, allProcessedEvents }: { e
           const pipes = '│'.repeat(depth);
           const prefix = depth > 0 ? pipes + ' ' : '';
           const color = isRaw ? '#88cc44' : '#dd8844';
-          const label = COMBAT_SKILL_LABELS[ev.name as CombatSkillsType] ?? STATUS_LABELS[ev.name as StatusType] ?? ev.name;
+          const label = COMBAT_SKILL_LABELS[ev.name as CombatSkillType] ?? STATUS_LABELS[ev.name as StatusType] ?? ev.name;
           const children = childrenMap.get(ev.uid) ?? [];
           return (
             <div key={ev.uid}>

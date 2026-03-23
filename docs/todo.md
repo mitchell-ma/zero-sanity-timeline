@@ -275,3 +275,50 @@ These sets have HP-threshold conditions but are metadata-only with zero clauses:
 4. **Pogranichnik "Tactical Instruction"** — talent two is `name`-only. Wiki says "operators triggering ultimate's subsequent effects gain Fervent Morale for 5s/10s." Fervent Morale status already exists (from talent one The Living Banner). This should be baked into the ult DSL — when other operators benefit from the ult, they receive FERVENT_MORALE with duration VARY_BY TALENT_TWO_LEVEL [5, 10].
 
 5. ~~**Antal combo CD**~~ — RESOLVED. Was flat 15s, corrected to 24s (rank 12). Follows standard 1s CD reduction at rank 12 pattern.
+
+## Expand eventPresentationController — consolidate timeline presentation logic
+
+Timeline presentation logic is scattered across 5 locations. Consolidate into `eventPresentationController.ts` as the single source for "how events appear in the timeline."
+
+### What moves in
+
+1. **Event-to-column filtering** (from `CombatPlanner.tsx` inline render loop) → `getEventsForColumn(col, events)`
+2. **Event sorting + derived truncation** (from `CombatPlanner.tsx` inline) → part of column filtering
+3. **Greedy slot assignment** (`MicroColumnController.greedySlotAssignments()`) → move from `microColumnController.ts`
+4. **Dynamic-split positioning** (`MicroColumnController.dynamicSplitPosition()`) → move from `microColumnController.ts`
+5. **Micro-column pixel positions** (`MicroColumnController.computeMicroColumnPixelPositions()`) → move from `microColumnController.ts`
+6. **Status stack labels + visual truncation** (`computeStatusViewOverrides()`) → absorb `statusViewController.ts`
+7. **Overlap warnings** (`DEC.validateAll()`) → move from `derivedEventController.ts`
+
+### What stays
+
+- `MicroColumnController.computeMonotonicBounds()` — drag constraint (input validation)
+- `MicroColumnController.isColumnFull()` / `isBeforeLastEvent()` — input validation
+- `eventValidationController.ts` — validation rules (consumed by presentation controller)
+- `columnBuilder.ts` — column structure definitions
+- `DerivedEventController` — event engine (no presentation)
+
+### New API
+
+```typescript
+interface ColumnViewModel {
+  column: MiniTimeline;
+  events: TimelineEvent[];  // filtered, sorted, truncated
+  microPositions: Map<string, { left: number; right: number; color: string }>;
+  statusOverrides: Map<string, { label: string; visualActivationDuration?: number }>;
+}
+
+function computeTimelinePresentation(
+  events: TimelineEvent[],
+  columns: Column[],
+  columnPositions: Map<string, { left: number; right: number }>,
+  statusMaxWidth?: number,
+): Map<string, ColumnViewModel>;
+```
+
+### Files to modify
+- `src/controller/timeline/eventPresentationController.ts` — expand
+- `src/controller/timeline/microColumnController.ts` — remove layout functions, keep input validation
+- `src/controller/timeline/statusViewController.ts` — delete (absorbed)
+- `src/controller/timeline/derivedEventController.ts` — remove validateAll overlap check
+- `src/view/CombatPlanner.tsx` — replace inline filtering/sorting/positioning with controller calls

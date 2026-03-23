@@ -1,4 +1,4 @@
-import { DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
+import { DamageFactorType, DamageType, ElementType, EnhancementType, EventFrameType, EventStatusType, FrameDependencyType, SegmentType, TimeDependency } from './enums';
 import type { DslTarget } from '../dsl/semantics';
 import type { FrameClausePredicate, FrameDealDamage } from '../model/event-frames/skillEventFrame';
 
@@ -191,7 +191,7 @@ export interface EventSegmentData {
   /** Damage frame markers within this segment. */
   frames?: EventFrameMarker[];
   /** Clause effects active during this segment (from JSON clause data). */
-  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; adjective?: string; object: string; toDeterminer?: string; to?: string }[] }[];
+  clause?: { conditions: Record<string, unknown>[]; effects: { verb: string; adjective?: string; object: string; nounAdjunct?: string; toDeterminer?: string; to?: string; ofDeterminer?: string; ofObject?: string }[] }[];
   /** Catch-all for domain-specific fields not part of the core segment model. */
   unknown?: Record<string, unknown>;
 }
@@ -199,7 +199,7 @@ export interface EventSegmentData {
 export interface TimelineEvent {
   /** Unique instance identifier (e.g. `ev-1-abc4`). Not the game-data config ID. */
   uid: string;
-  /** Game-data config ID (e.g. `CombatSkillsType.DASH`, `"BURST_OF_PASSION"`). Used for all identity comparisons. */
+  /** Game-data config ID (e.g. `CombatSkillType.DASH`, `"BURST_OF_PASSION"`). Used for all identity comparisons. */
   id: string;
   /** Display name. Not used for logic — use `id` for comparisons. */
   name: string;
@@ -262,12 +262,16 @@ export interface TimelineEvent {
   skillPointCost?: number;
   /** Enhancement tier of this event's skill variant (derived from column definition). */
   enhancementType?: EnhancementType;
+  /** Preconditions for placing this event (OR of predicates). Evaluated by context menu and validation. */
+  activationClause?: import('../dsl/semantics').Predicate[];
   /** For chained combo time-stops: game frames [startFrame, comboChainFreezeEnd) are frozen in real-time layout. */
   comboChainFreezeEnd?: number;
   /** Validation warnings (e.g. event starts inside an invalid time-stop period). */
   warnings?: string[];
   /** Magnitude of a status effect (e.g. 0.15 for 15% amp, 0.30 for 30% link bonus, 0.10 for 10% weaken). */
   statusValue?: number;
+  /** Damage formula factor this status contributes to (e.g. AMP, WEAKEN, SUSCEPTIBILITY). */
+  damageFactorType?: DamageFactorType;
   /** Pending segment overrides from share URL decode (applied by attachDefaultSegments when columns become available). */
   _pendingSegmentOverrides?: { sg?: number[]; fo?: number[][] };
 }
@@ -314,6 +318,8 @@ export interface MicroColumn {
   color: string;      // render color for events in this micro-column
   /** Status category type (TALENT, TALENT_STATUS, GEAR_STATUS, WEAPON_STATUS, etc.). */
   statusType?: string;
+  /** Maximum concurrent events for this micro-column (from status stacks limit). */
+  maxEvents?: number;
   /** Per-micro-column default event overrides (name, duration). Used by dynamic-split context menu. */
   defaultEvent?: {
     name: string;
@@ -322,6 +328,8 @@ export interface MicroColumn {
     sourceOwnerId?: string;
     /** Source skill name for manually-created events (e.g. 'Debug'). */
     sourceSkillName?: string;
+    /** Stacking config from status JSON (limit, interactionType, duration). */
+    stacks?: Record<string, unknown>;
   };
 }
 
@@ -397,6 +405,8 @@ export type MiniTimeline = {
     timeDependency?: TimeDependency;
     /** SP cost for battle skills. */
     skillPointCost?: number;
+    /** Preconditions for placing this variant (OR of predicates). */
+    activationClause?: import('../dsl/semantics').Predicate[];
   }[];
 
   /** Element type of this skill column (for per-skill coloring). */

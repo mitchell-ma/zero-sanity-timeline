@@ -301,7 +301,7 @@ Player-initiated skill activation. Extends the abstract Event with skill-specifi
 ```ts
 combatSkillEvent = {
   // ── Inherited from Event ──
-  "name": string,                          // CombatSkillsType enum value
+  "name": string,                          // CombatSkillType enum value
   "source": OperatorType,
   "element"?: ElementType,
   "clause"?: Predicate[],                  // activation gate (no effects — combat skill clauses are pure conditions)

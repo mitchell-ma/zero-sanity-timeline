@@ -373,7 +373,7 @@ Custom content introduces dynamic enum values. The system must support custom id
 | Field | Built-in Enum | Custom Extension |
 |-------|---------------|------------------|
 | Operator identity | `OperatorType` | `CUSTOM_<id>` prefix |
-| Skill names | `CombatSkillsType` | `CUSTOM_<id>_<skill>` prefix |
+| Skill names | `CombatSkillType` | `CUSTOM_<id>_<skill>` prefix |
 | Status names | `StatusType` | `CUSTOM_<id>` prefix |
 | Gear set type | `GearSetType` | `CUSTOM_<id>` prefix |
 | Weapon name | registry key | `custom/<id>` prefix |

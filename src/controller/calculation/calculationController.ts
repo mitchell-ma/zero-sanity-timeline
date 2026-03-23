@@ -9,7 +9,7 @@
  * estimated damage per frame from registered skill events, stores cumulative
  * damage by frame, and exposes getEnemyHpPercentage() for HP threshold predicates.
  */
-import { CritMode, CombatSkillsType, ElementType, PhysicalStatusType, StatType } from '../../consts/enums';
+import { CritMode, CombatSkillType, ElementType, PhysicalStatusType, StatType } from '../../consts/enums';
 import { TimelineEvent, Column, Enemy as ViewEnemy } from '../../consts/viewTypes';
 import { PHYSICAL_STATUS_COLUMN_IDS, SKILL_COLUMNS } from '../../model/channels';
 import { getPhysicalStatusStagger, getDefenseMultiplier, getTotalAttack } from '../../model/calculation/damageFormulas';
@@ -128,12 +128,12 @@ export function precomputeDamageByFrame(
             multiplier = f.dealDamage.multipliers[idx];
           } else {
             // Per-tick multiplier
-            const perTick = getFrameMultiplier(op.operatorId, ev.name as CombatSkillsType, skillLevel, potential, fi);
+            const perTick = getFrameMultiplier(op.operatorId, ev.name as CombatSkillType, skillLevel, potential, fi);
             if (perTick != null) {
               multiplier = perTick;
             } else {
               // Segment multiplier divided by frame count
-              const segMult = getSkillMultiplier(op.operatorId, ev.name as CombatSkillsType, si, skillLevel, potential);
+              const segMult = getSkillMultiplier(op.operatorId, ev.name as CombatSkillType, si, skillLevel, potential);
               if (segMult != null) {
                 multiplier = maxFrames > 1 ? segMult / maxFrames : segMult;
               }

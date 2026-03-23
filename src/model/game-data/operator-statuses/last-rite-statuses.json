@@ -33,10 +33,6 @@
                   "value": 15
                 },
                 "unit": "SECOND"
-              },
-              "scalingType": {
-                "verb": "IS",
-                "value": "PER_STACK_CONSUMED"
               }
             }
           }

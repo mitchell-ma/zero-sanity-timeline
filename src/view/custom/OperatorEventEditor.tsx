@@ -9,7 +9,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { getOperatorJson, getRawSkillTypeMap } from '../../model/event-frames/operatorJsonLoader';
 import { ALL_OPERATORS } from '../../controller/operators/operatorRegistry';
 import { COMBAT_SKILL_LABELS } from '../../consts/timelineColumnLabels';
-import type { CombatSkillsType } from '../../consts/enums';
+import type { CombatSkillType } from '../../consts/enums';
 import type { Clause } from '../../dsl/semantics';
 import ClauseEditor from './ClauseEditor';
 
@@ -85,12 +85,12 @@ export function buildSkillEntries(
   if (typeof mapping === 'string') {
     const data = skills[mapping];
     if (data) {
-      entries.push({ id: mapping, label: COMBAT_SKILL_LABELS[mapping as CombatSkillsType] || data.properties?.name || mapping, data });
+      entries.push({ id: mapping, label: COMBAT_SKILL_LABELS[mapping as CombatSkillType] || data.properties?.name || mapping, data });
     }
     for (const [key, val] of Object.entries(skills)) {
       if (key !== mapping && key.startsWith(mapping + '_')) {
         const suffix = key.slice(mapping.length + 1);
-        entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: suffix.replace(/_/g, ' ') });
+        entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: suffix.replace(/_/g, ' ') });
       }
     }
   } else if (typeof mapping === 'object') {
@@ -100,13 +100,13 @@ export function buildSkillEntries(
       seenIds.add(skillId as string);
       const data = skills[skillId as string];
       if (data) {
-        entries.push({ id: skillId as string, label: COMBAT_SKILL_LABELS[skillId as CombatSkillsType] || (data as JsonSkillData).properties?.name as string || (skillId as string), data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
+        entries.push({ id: skillId as string, label: COMBAT_SKILL_LABELS[skillId as CombatSkillType] || (data as JsonSkillData).properties?.name as string || (skillId as string), data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
       }
       for (const [key, val] of Object.entries(skills)) {
         if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
           seenIds.add(key);
           const suffix = key.slice((skillId as string).length + 1);
-          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
+          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
         }
       }
     }
@@ -138,7 +138,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
       // Simple mapping: one skill ID
       const data = skills[mapping];
       if (data) {
-        const displayLabel = COMBAT_SKILL_LABELS[mapping as CombatSkillsType] || data.properties?.name || mapping;
+        const displayLabel = COMBAT_SKILL_LABELS[mapping as CombatSkillType] || data.properties?.name || mapping;
         entries.push({ id: mapping, label: displayLabel, data });
       }
       // Also find variants (ENHANCED_, EMPOWERED_)
@@ -146,7 +146,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
         if (key !== mapping && key.startsWith(mapping + '_')) {
           const suffix = key.slice(mapping.length + 1);
           const variantLabel = suffix.replace(/_/g, ' ');
-          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: variantLabel });
+          entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: variantLabel });
         }
       }
     } else if (typeof mapping === 'object') {
@@ -157,7 +157,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
         seenIds.add(skillId as string);
         const data = skills[skillId as string];
         if (data) {
-          const displayLabel = COMBAT_SKILL_LABELS[skillId as CombatSkillsType] || (data as JsonSkillData).properties?.name as string || (skillId as string);
+          const displayLabel = COMBAT_SKILL_LABELS[skillId as CombatSkillType] || (data as JsonSkillData).properties?.name as string || (skillId as string);
           entries.push({ id: skillId as string, label: displayLabel, data, subLabel: BATK_VARIANT_LABELS[variant] || variant });
         }
         // Variants of this BATK skill (ENHANCED_, etc.)
@@ -165,7 +165,7 @@ export default function OperatorEventEditor({ operatorId, onBack }: Props) {
           if (key !== skillId && key.startsWith((skillId as string) + '_') && !seenIds.has(key)) {
             seenIds.add(key);
             const suffix = key.slice((skillId as string).length + 1);
-            entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillsType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
+            entries.push({ id: key, label: COMBAT_SKILL_LABELS[key as CombatSkillType] || (val as JsonSkillData).properties?.name as string || key, data: val as JsonSkillData, subLabel: `${BATK_VARIANT_LABELS[variant] || variant} (${suffix.replace(/_/g, ' ')})` });
           }
         }
       }

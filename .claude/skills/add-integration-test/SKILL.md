@@ -141,7 +141,7 @@ const statusEvents = processed.filter(ev => ev.columnId === someColumnId && ev.o
 
 **Key fields on TimelineEvent:**
 - `uid` — unique ID
-- `id`, `name` — skill/status ID (e.g. `CombatSkillsType.SMOULDERING_FIRE`)
+- `id`, `name` — skill/status ID (e.g. `CombatSkillType.SMOULDERING_FIRE`)
 - `ownerId` — slot ID or ENEMY_OWNER_ID
 - `columnId` — column ID (use enum constants, never string literals)
 - `startFrame` — placement frame

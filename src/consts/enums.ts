@@ -9,6 +9,10 @@ export enum CombatSkillType {
   COMBO_SKILL = "COMBO_SKILL",
   ULTIMATE = "ULTIMATE",
   ULTIMATE_SKILL = "ULTIMATE_SKILL",
+  DASH = "DASH",
+  FINISHER = "FINISHER",
+  DIVE = "DIVE",
+  CONTROL = "CONTROL",
 }
 
 export enum MainStatType {
@@ -108,6 +112,7 @@ export enum ElementType {
   CRYO = "CRYO",
   NATURE = "NATURE",
   ELECTRIC = "ELECTRIC",
+  ARTS = "ARTS",
 }
 
 /** Maps status types to their associated element (for coloring).
@@ -126,6 +131,7 @@ export const ELEMENT_LABELS: Record<ElementType, string> = {
   [ElementType.CRYO]:     t('element.CRYO'),
   [ElementType.NATURE]:   t('element.NATURE'),
   [ElementType.ELECTRIC]: t('element.ELECTRIC'),
+  [ElementType.ARTS]:     t('element.ARTS'),
 };
 
 export const ELEMENT_COLORS: Record<ElementType, string> = {
@@ -135,6 +141,7 @@ export const ELEMENT_COLORS: Record<ElementType, string> = {
   [ElementType.CRYO]:     '#55ccee',
   [ElementType.NATURE]:   '#55cc55',
   [ElementType.ELECTRIC]: '#e8c840',
+  [ElementType.ARTS]:     '#c080e0',
 };
 
 /** Arts reactions — triggered by arts infliction combinations. */
@@ -164,7 +171,6 @@ enum _StatusType {
   GEAR_BUFF = "GEAR_BUFF",
   // ── Team statuses ─────────────────────────────────────────────────────────
   LINK = "LINK",
-  ARTS_AMP = "ARTS_AMP",
   SHIELD = "SHIELD",
   // ── Enemy debuffs ─────────────────────────────────────────────────────────
   FOCUS = "FOCUS",
@@ -208,7 +214,6 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [StatusType.GEAR_BUFF]: DamageFactorType.NONE,
   // Team statuses
   [StatusType.LINK]: DamageFactorType.LINK,
-  [StatusType.ARTS_AMP]: DamageFactorType.AMP,
   [StatusType.SHIELD]: DamageFactorType.NONE,
   // Enemy debuffs
   [StatusType.FOCUS]: DamageFactorType.SUSCEPTIBILITY,
@@ -224,6 +229,17 @@ export const STATUS_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
   [PhysicalStatusType.CRUSH]: DamageFactorType.NONE,
   [PhysicalStatusType.BREACH]: DamageFactorType.FRAGILITY,
   [PhysicalStatusType.SHATTER]: DamageFactorType.NONE,
+};
+
+/**
+ * Maps DSL NounType effect objects to the damage formula factor they contribute to.
+ * Used to derive `DamageFactorType` from operator status clause effects (e.g. `object: "AMP"`).
+ * AMP is elemental — its adjective (HEAT, ELECTRIC, etc.) carries the element type.
+ */
+export const NOUN_DAMAGE_FACTOR: Partial<Record<string, DamageFactorType>> = {
+  AMP: DamageFactorType.AMP,
+  STAGGER: DamageFactorType.STAGGER,
+  DAMAGE: DamageFactorType.MULTIPLIER_GROUP,
 };
 
 /** Arts inflictions — elemental inflictions that trigger arts reactions. */
@@ -409,13 +425,6 @@ export enum InfoLevel {
 export { StatType, StatOwnerType, STAT_ATTRIBUTION, getStatsForTarget } from '../model/enums/stats';
 export { GearType } from '../model/enums/gears';
 
-/** Common (built-in) combat skill types. Operator-specific skill IDs come from JSON via game data controllers. */
-export enum CombatSkillsType {
-  DASH = "DASH",
-  FINISHER = "FINISHER",
-  DIVE = "DIVE",
-  CONTROL = "CONTROL",
-}
 
 
 export { OperatorInformationType, OperatorType } from '../model/enums/operators';

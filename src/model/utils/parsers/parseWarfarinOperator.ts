@@ -72,7 +72,7 @@ const ELEMENT_MAP: Record<string, string> = {
 };
 
 /**
- * Maps warfarin skill IDs → CombatSkillsType enum values.
+ * Maps warfarin skill IDs → CombatSkillType enum values.
  * Warfarin uses: {charId}_{suffix} where suffix is attack/normal_skill/combo_skill/ultimate_skill.
  * Variants: _during_ult (enhanced), ult_attack1-4 (enhanced basic sequences).
  */
@@ -651,7 +651,7 @@ function buildSkillMultipliers(
 }
 
 /**
- * Builds a map of skill category → CombatSkillsType enum ID from WARFARIN_SKILL_ID_MAP.
+ * Builds a map of skill category → CombatSkillType enum ID from WARFARIN_SKILL_ID_MAP.
  * For segmented skills (basic attacks), uses the first segment's ID.
  */
 function buildSkillIds(

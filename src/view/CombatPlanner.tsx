@@ -22,7 +22,7 @@ import {
   TIMELINE_TOP_PAD,
 } from '../utils/timeline';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../model/channels';
-import { TimelineSourceType, InteractionModeType, CombatSkillsType } from '../consts/enums';
+import { TimelineSourceType, InteractionModeType, CombatSkillType } from '../consts/enums';
 import {
   Operator,
   Enemy,
@@ -160,6 +160,17 @@ const STATUS_TYPE_LABELS: Record<string, string> = {
   GEAR_STATUS: 'Gear Status', WEAPON_STATUS: 'Weapon Status',
   POTENTIAL: 'Potential', POTENTIAL_STATUS: 'Potential Status',
 };
+
+// Column width weight — used for grid proportions within operator groups
+const COL_WEIGHT_SKILL_IDS = new Set<string>([SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE]);
+function getColWeight(col: Column) {
+  if (col.type === 'placeholder') return 1;
+  const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
+  if (cid === OPERATOR_COLUMNS.INPUT) return 1;
+  if (cid === 'operator-status') return 2;
+  if (cid && COL_WEIGHT_SKILL_IDS.has(cid)) return 2;
+  return 2; // tactical, etc.
+}
 
 export default function CombatPlanner({
   slots,
@@ -464,17 +475,6 @@ export default function CombatPlanner({
   const enemyColCount = columns.filter((c) => c.type === 'mini-timeline' && c.source === TimelineSourceType.ENEMY).length;
 
   // Build fluid gridTemplateColumns: team:operator:enemy = 1:3:2
-  // Within each operator group, columns have weighted widths:
-  // DASH=1, combat skills=2, status=4, tactical=2, placeholder=1
-  const SKILL_IDS = new Set([SKILL_COLUMNS.BASIC, SKILL_COLUMNS.BATTLE, SKILL_COLUMNS.COMBO, SKILL_COLUMNS.ULTIMATE]);
-  const getColWeight = (col: Column) => {
-    if (col.type === 'placeholder') return 1;
-    const cid = col.type === 'mini-timeline' ? col.columnId : undefined;
-    if (cid === OPERATOR_COLUMNS.INPUT) return 1;
-    if (cid === 'operator-status') return 4;
-    if (cid && (SKILL_IDS as Set<string>).has(cid)) return 2;
-    return 2; // tactical, etc.
-  };
   // Pre-compute total weight per slot group
   const slotGroupWeights = slotGroups.map((g) => {
     const slotCols = columns.filter((c) => c.ownerId === g.slot.slotId);
@@ -484,23 +484,29 @@ export default function CombatPlanner({
   const GROUP_FR = 3;
   const COMMON_FR = 1;
   const ENEMY_FR = 2;
-  const colFrStrings: string[] = [];
-  // Common columns
-  for (let i = 0; i < commonColCount; i++) {
-    colFrStrings.push(`minmax(0, ${COMMON_FR / Math.max(1, commonColCount)}fr)`);
-  }
-  // Operator groups — weighted columns
-  for (const gw of slotGroupWeights) {
-    for (const col of gw.slotCols) {
-      const w = getColWeight(col);
-      const fr = GROUP_FR * w / gw.totalWeight;
-      colFrStrings.push(`minmax(0, ${fr}fr)`);
+  // Status columns are capped at 1/5 of the timeline width
+  const STATUS_MAX_FRACTION = 5;
+
+  // Compute fr values for all columns
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const colFrValues = useMemo(() => {
+    const values: number[] = [];
+    for (let i = 0; i < commonColCount; i++) {
+      values.push(COMMON_FR / Math.max(1, commonColCount));
     }
-  }
-  // Enemy columns
-  for (let i = 0; i < enemyColCount; i++) {
-    colFrStrings.push(`minmax(0, ${ENEMY_FR / enemyColCount}fr)`);
-  }
+    for (const gw of slotGroupWeights) {
+      for (const col of gw.slotCols) {
+        const w = getColWeight(col);
+        values.push(GROUP_FR * w / gw.totalWeight);
+      }
+    }
+    for (let i = 0; i < enemyColCount; i++) {
+      values.push(ENEMY_FR / enemyColCount);
+    }
+    return values;
+  }, [commonColCount, slotGroupWeights, enemyColCount]);
+
+  const colFrStrings = colFrValues.map((fr) => `minmax(0, ${fr}fr)`);
   const gridCols = `${TIME_AXIS_WIDTH}px ${colFrStrings.join(' ')}`;
   // In horizontal mode, lanes become rows — use fixed min height so rows don't collapse
   const rowFrStrings = colFrStrings.map((s) => s.replace('minmax(0,', 'minmax(28px,'));
@@ -511,31 +517,22 @@ export default function CombatPlanner({
   const containerWidth = isHorizontal
     ? (scrollClientHeight ?? outerRect?.height ?? 800)
     : (outerRect?.width ?? 800);
-  const totalFr = commonColCount * (COMMON_FR / Math.max(1, commonColCount))
-    + slotGroupWeights.reduce((sum, gw) => sum + gw.slotCols.reduce((s, c) => s + GROUP_FR * getColWeight(c) / gw.totalWeight, 0), 0)
-    + (enemyColCount > 0 ? enemyColCount * (ENEMY_FR / enemyColCount) : 0);
+  const totalFr = colFrValues.reduce((s, v) => s + v, 0);
   const pxPerFr = totalFr > 0 ? (containerWidth - TIME_AXIS_WIDTH) / totalFr : 0;
+  const statusMaxPx = (containerWidth - TIME_AXIS_WIDTH) / STATUS_MAX_FRACTION;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const columnPositions = useMemo(() => {
     const map = new Map<string, { left: number; right: number }>();
     let x = TIME_AXIS_WIDTH;
     for (let i = 0; i < columns.length; i++) {
-      const col = columns[i];
-      let fr: number;
-      if (col.type === 'mini-timeline' && col.source === TimelineSourceType.COMMON) {
-        fr = COMMON_FR / Math.max(1, commonColCount);
-      } else {
-        const gw = slotGroupWeights.find((g) => g.slot.slotId === col.ownerId);
-        fr = gw ? GROUP_FR * getColWeight(col) / gw.totalWeight : ENEMY_FR / enemyColCount;
-      }
-      const w = fr * pxPerFr;
-      map.set(col.key, { left: x, right: x + w });
+      const w = colFrValues[i] * pxPerFr;
+      map.set(columns[i].key, { left: x, right: x + w });
       x += w;
     }
     return map;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns, commonColCount, enemyColCount, pxPerFr]);
+  }, [columns, pxPerFr, colFrValues]);
 
   const contentFrames = contentFramesProp ?? TOTAL_FRAMES;
   const totalRealFrames = contentFrames + timeStopRegions.reduce((sum, s) => sum + s.durationFrames, 0);
@@ -787,8 +784,8 @@ export default function CombatPlanner({
 
   // ─── Precompute micro-column positions per event ────────────────────────────
   const microColumnEventPositions = useMemo(
-    () => MicroColumnController.computeMicroColumnPixelPositions(events, columns, columnPositions, greedySlotAssignments),
-    [events, columns, columnPositions, greedySlotAssignments],
+    () => MicroColumnController.computeMicroColumnPixelPositions(events, columns, columnPositions, greedySlotAssignments, statusMaxPx),
+    [events, columns, columnPositions, greedySlotAssignments, statusMaxPx],
   );
 
   // ─── Precompute stack-aware status view overrides ──────────────────────────
@@ -1494,7 +1491,7 @@ export default function CombatPlanner({
         ],
       });
     } else {
-      const isControl = ev?.name === CombatSkillsType.CONTROL;
+      const isControl = ev?.name === CombatSkillType.CONTROL;
       const isSeededControl = isControl && ev?.uid.startsWith('controlled-seed-');
       const hasSegments = ev && ev.segments.length > 0;
       const multiSegment = (ev?.segments.length ?? 0) > 1;
@@ -2082,21 +2079,39 @@ export default function CombatPlanner({
                   return hasMicro ? (
                   // Micro-column events
                   visColEvents.map((ev, i) => {
-                    const dynPos = col.microColumnAssignment === 'dynamic-split'
-                      ? microColumnEventPositions.get(ev.uid)
-                      : undefined;
-
                     let microColor: string;
                     let leftPct: string;
                     let widthPct: string;
 
-                    if (dynPos && colPos) {
-                      const colWidth = colPos.right - colPos.left;
-                      const relLeft = dynPos.left - colPos.left;
-                      const relWidth = dynPos.right - dynPos.left;
-                      leftPct = `${(relLeft / colWidth) * 100}%`;
-                      widthPct = `${(relWidth / colWidth) * 100}%`;
-                      microColor = dynPos.color;
+                    if (col.microColumnAssignment === 'dynamic-split') {
+                      // Overlap-aware greedy left-packing with fixed slot width.
+                      // Width: fixed at colW / totalActive (consistent across all events).
+                      // Index: overlap-aware — only count types that overlap THIS event,
+                      // so types slide left to fill gaps when neighbors aren't active.
+                      const evEnd = eventEndFrame(ev);
+                      const firstAppearance = new Map<string, number>();
+                      for (const e of colEvents) {
+                        const prev = firstAppearance.get(e.columnId);
+                        if (prev === undefined || e.startFrame < prev) firstAppearance.set(e.columnId, e.startFrame);
+                      }
+                      const totalActive = firstAppearance.size || 1;
+                      const overlapping = new Set<string>([ev.columnId]);
+                      for (const other of colEvents) {
+                        if (other.uid === ev.uid) continue;
+                        if (other.startFrame < evEnd && eventEndFrame(other) > ev.startFrame) {
+                          overlapping.add(other.columnId);
+                        }
+                      }
+                      const sorted = Array.from(overlapping).sort((a, b) =>
+                        (firstAppearance.get(a) ?? 0) - (firstAppearance.get(b) ?? 0),
+                      );
+                      const typeIdx = sorted.indexOf(ev.columnId);
+                      const colW = colPos ? colPos.right - colPos.left : 100;
+                      const slotW = statusMaxPx ? Math.min(statusMaxPx, colW / totalActive) : colW / totalActive;
+                      leftPct = `${(typeIdx * slotW / colW) * 100}%`;
+                      widthPct = `${(slotW / colW) * 100}%`;
+                      const mc = col.microColumns!.find((mc) => mc.id === ev.columnId);
+                      microColor = mc?.color ?? col.color;
                     } else if (col.microColumnAssignment === 'by-order') {
                       const microIdx = greedySlotAssignments.get(ev.uid) ?? Math.min(i, microCount - 1);
                       const mcMatch = col.matchColumnIds

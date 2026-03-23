@@ -58,7 +58,7 @@ const VALID_METADATA_KEYS = new Set(['originId', 'dataSources']);
 
 const VALID_TALENT_KEYS = new Set(['one', 'two', 'attributeIncrease']);
 const VALID_TALENT_ENTRY_KEYS = new Set(['id', 'name', 'maxLevel']);
-const VALID_ATTR_INCREASE_KEYS = new Set(['name', 'attribute', 'maxLevel']);
+const VALID_ATTR_INCREASE_KEYS = new Set(['id', 'name', 'attribute', 'maxLevel']);
 
 const VALID_TALENT_EFFECT_KEYS = new Set([
   'name', 'bonusType', 'source', 'minPotential', 'minLevel',

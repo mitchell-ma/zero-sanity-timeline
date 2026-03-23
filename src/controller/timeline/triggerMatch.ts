@@ -8,7 +8,7 @@
  * predicates at each candidate frame.
  */
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
-import { CombatSkillsType } from '../../consts/enums';
+import { CombatSkillType } from '../../consts/enums';
 import { COMMON_OWNER_ID } from '../slot/commonSlotController';
 import {
   ELEMENT_TO_INFLICTION_COLUMN,
@@ -112,11 +112,13 @@ function checkPredicate(
   events: TimelineEvent[],
   operatorSlotId: string,
   candidateFrame: number,
+  triggerOwnerId?: string,
 ): boolean {
   const ctx: ConditionContext = {
     events,
     frame: candidateFrame,
     sourceOwnerId: operatorSlotId,
+    triggerOwnerId,
   };
   return evaluateInteraction(pred as unknown as Interaction, ctx);
 }
@@ -238,9 +240,9 @@ function resolveOwnerFilter(cond: Predicate, operatorSlotId: string, verb?: stri
   };
 }
 
-function checkSecondary(ctx: VerbHandlerContext, frame: number): boolean {
+function checkSecondary(ctx: VerbHandlerContext, frame: number, triggerOwnerId?: string): boolean {
   return ctx.secondaryConditions.every(sc =>
-    checkPredicate(sc, ctx.events, ctx.operatorSlotId, frame)
+    checkPredicate(sc, ctx.events, ctx.operatorSlotId, frame, triggerOwnerId)
   );
 }
 
@@ -271,7 +273,7 @@ function scanEvents(primaryCond: Predicate, ctx: VerbHandlerContext, verb: strin
     // Arts Burst: only match infliction events flagged as same-element stacking
     if (primaryCond.object === 'ARTS_BURST' && !ev.isArtsBurst) continue;
     if (!matchesOwner(ev.ownerId)) continue;
-    if (!checkSecondary(ctx, ev.startFrame)) continue;
+    if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
 
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
@@ -288,11 +290,11 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
-      if (ev.id === CombatSkillsType.FINISHER || ev.id === CombatSkillsType.DIVE) continue;
+      if (ev.id === CombatSkillType.FINISHER || ev.id === CombatSkillType.DIVE) continue;
 
       const triggerFrame = getFinalStrikeTriggerFrame(ev, ctx.stops);
       if (triggerFrame == null) continue;
-      if (!checkSecondary(ctx, triggerFrame)) continue;
+      if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
     }
@@ -301,14 +303,14 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
 
   // FINISHER / DIVE_ATTACK — match events on basic column by skill name
   if (primaryCond.object === 'FINISHER' || primaryCond.object === 'DIVE_ATTACK') {
-    const targetName = primaryCond.object === 'FINISHER' ? CombatSkillsType.FINISHER : CombatSkillsType.DIVE;
+    const targetName = primaryCond.object === 'FINISHER' ? CombatSkillType.FINISHER : CombatSkillType.DIVE;
     for (const ev of ctx.events) {
       if (!matchesOwner(ev.ownerId)) continue;
       if (ev.columnId !== SKILL_COLUMNS.BASIC) continue;
       if (ev.id !== targetName) continue;
 
       const triggerFrame = getFirstEventFrame(ev);
-      if (!checkSecondary(ctx, triggerFrame)) continue;
+      if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
 
       matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
     }
@@ -323,7 +325,7 @@ function handlePerform(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
     if (ev.columnId !== matchingColumn) continue;
 
     const triggerFrame = getFirstEventFrame(ev);
-    if (!checkSecondary(ctx, triggerFrame)) continue;
+    if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
 
     matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
   }
@@ -358,7 +360,7 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
         }
       }
       if (activeCount >= stacksThreshold) {
-        if (!checkSecondary(ctx, candidateFrame)) continue;
+        if (!checkSecondary(ctx, candidateFrame, colEvents[i].ownerId)) continue;
         matches.push(makeMatch(candidateFrame, colEvents[i], ctx.clauseEffects));
       }
     }
@@ -368,9 +370,9 @@ function handleHave(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
       if (!matchesOwner(ev.ownerId)) continue;
 
       if (primaryCond.value != null) {
-        if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, ev.startFrame)) continue;
+        if (!checkPredicate(primaryCond, ctx.events, ctx.operatorSlotId, ev.startFrame, ev.ownerId)) continue;
       }
-      if (!checkSecondary(ctx, ev.startFrame)) continue;
+      if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
 
       matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
     }
@@ -403,7 +405,7 @@ function handleRecover(primaryCond: Predicate, ctx: VerbHandlerContext): Trigger
           for (const frame of seg.frames) {
             if (frame.skillPointRecovery && frame.skillPointRecovery > 0) {
               const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
-              if (!checkSecondary(ctx, triggerFrame)) continue;
+              if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
               matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
             }
           }
@@ -427,7 +429,7 @@ function handleIs(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMatch
   for (const ev of ctx.events) {
     if (ev.columnId !== colId) continue;
     if (!matchesOwner(ev.ownerId)) continue;
-    if (!checkSecondary(ctx, ev.startFrame)) continue;
+    if (!checkSecondary(ctx, ev.startFrame, ev.ownerId)) continue;
     matches.push(makeMatch(ev.startFrame, ev, ctx.clauseEffects));
   }
   return matches;
@@ -465,7 +467,7 @@ function handleDeal(primaryCond: Predicate, ctx: VerbHandlerContext): TriggerMat
       if (seg.frames) {
         for (const frame of seg.frames) {
           const triggerFrame = ev.startFrame + cumulativeOffset + frame.offsetFrame;
-          if (!checkSecondary(ctx, triggerFrame)) continue;
+          if (!checkSecondary(ctx, triggerFrame, ev.ownerId)) continue;
           matches.push(makeMatch(triggerFrame, ev, ctx.clauseEffects));
         }
       }
@@ -490,7 +492,7 @@ function generatePeriodicTriggers(_primaryCond: Predicate, ctx: VerbHandlerConte
   const matches: TriggerMatch[] = [];
   const synthetic = { ownerId: ctx.operatorSlotId, name: '' } as TimelineEvent;
   for (let frame = 0; frame < TOTAL_FRAMES; frame += FPS) {
-    if (!checkSecondary(ctx, frame)) continue;
+    if (!checkSecondary(ctx, frame, ctx.operatorSlotId)) continue;
     matches.push(makeMatch(frame, synthetic, ctx.clauseEffects));
   }
   return matches;

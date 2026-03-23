@@ -669,7 +669,7 @@ async function parseOne(slug: string, roster: unknown[]) {
     console.log(`  Warfarin: ${Object.keys(skillDescriptions).length} skill descriptions merged`);
   }
 
-  // Merge skill IDs (CombatSkillsType enum values) from Warfarin into skill categories
+  // Merge skill IDs (CombatSkillType enum values) from Warfarin into skill categories
   if (skillIds && merged.skills) {
     const skills = merged.skills as Record<string, Record<string, unknown>>;
     for (const [categoryKey, id] of Object.entries(skillIds)) {

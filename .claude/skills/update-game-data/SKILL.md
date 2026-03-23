@@ -102,7 +102,7 @@ Top-level timing fields in operator JSON (`ultimateActiveDuration`, `ultimateCoo
 
 ## Skill ID Convention
 
-Skill IDs are **unprefixed** — they match the `CombatSkillsType` enum values directly:
+Skill IDs are **unprefixed** — they match the `CombatSkillType` enum values directly:
 - `"id": "FLAMING_CINDERS"` (not `"LAEVATAIN_FLAMING_CINDERS"`)
 - `"id": "SMOULDERING_FIRE_ENHANCED"` (not `"LAEVATAIN_SMOULDERING_FIRE_ENHANCED"`)
 

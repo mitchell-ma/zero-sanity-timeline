@@ -14,7 +14,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
-import { CombatSkillsType } from '../../consts/enums';
+import { CombatSkillType } from '../../consts/enums';
 import { OPERATOR_COLUMNS } from '../../model/channels';
 import { eventDuration } from '../../consts/viewTypes';
 import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
@@ -26,7 +26,7 @@ const SLOT_2 = 'slot-2';
 
 function getControlEvents(app: ReturnType<typeof useApp>) {
   return app.allProcessedEvents.filter(
-    (ev) => ev.id === CombatSkillsType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
+    (ev) => ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT,
   );
 }
 
@@ -48,7 +48,7 @@ describe('Controlled Operator — integration through useApp', () => {
     act(() => {
       result.current.handleAddEvent(
         SLOT_1, OPERATOR_COLUMNS.INPUT, swapFrame,
-        { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapFrame, name: 'Control' } }] },
+        { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapFrame, name: 'Control' } }] },
       );
     });
 
@@ -79,13 +79,13 @@ describe('Controlled Operator — integration through useApp', () => {
     act(() => {
       result.current.handleAddEvent(
         SLOT_1, OPERATOR_COLUMNS.INPUT, swapAkekuri,
-        { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapAkekuri, name: 'Control' } }] },
+        { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapAkekuri, name: 'Control' } }] },
       );
     });
     act(() => {
       result.current.handleAddEvent(
         SLOT_2, OPERATOR_COLUMNS.INPUT, swapAntal,
-        { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapAntal, name: 'Control' } }] },
+        { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapAntal, name: 'Control' } }] },
       );
     });
 
@@ -120,7 +120,7 @@ describe('Controlled Operator — integration through useApp', () => {
     act(() => {
       result.current.handleAddEvent(
         SLOT_1, OPERATOR_COLUMNS.INPUT, swapFrame,
-        { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapFrame, name: 'Control' } }] },
+        { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - swapFrame, name: 'Control' } }] },
       );
     });
 

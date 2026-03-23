@@ -1,6 +1,13 @@
 # Devlog
 
 ## 2026-03-22
+- **Empowered skill activation conditions** — empowered skill variants (Arclight, Wulfgard, Yvonne) now show as disabled in the context menu until their activation condition is met (e.g. max Scorching Fangs stacks)
+- **Arts Amp is now per-element** — amp buffs are tracked per element type (Heat Amp, Cryo Amp, etc.) instead of a single shared column, matching in-game behavior
+- **TRIGGER determiner** — status effects that reference "the triggering operator" now correctly resolve to whichever operator caused the trigger, enabling cross-operator buff chains
+- **Status stack limits enforced** — statuses with stack limits (e.g. max 3 instances) now prevent adding more events beyond the cap in the context menu
+- **Antal Overclocked Moment amp** — Antal's EMP Test Site ultimate now correctly applies the Overclocked Moment amp buff to all operators
+- **Improved status duration parsing** — status columns now correctly read nested duration formats from game data, fixing some statuses showing incorrect durations
+- **Consume status targets resolved from data** — status consumption (e.g. Originium Crystal) now derives its target from operator configs instead of a hardcoded registry
 - **Frame diamond dragging restored** — you can once again drag the hit-timing diamonds within skill events to fine-tune exactly when each hit lands
 - **Ctrl+click frame multi-select** — hold Ctrl (or Cmd) and click multiple frame diamonds to select them together, useful for comparing hit timings across a skill
 - **No more accidental text selection** — dragging on the timeline (marquee select or moving events) no longer highlights text

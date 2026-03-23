@@ -12,10 +12,9 @@
  *   ValueExpression = { operation: ValueOperation, left: ValueNode, right: ValueNode }
  */
 import {
-  VerbType, ValueOperation,
+  VerbType, NounType, ValueOperation,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
 } from '../../dsl/semantics';
-import { CoreNounType } from '../../dsl/semantics';
 import type { ValueNode, ValueLiteral, ValueVariable, ValueStat } from '../../dsl/semantics';
 import { StatType } from '../../model/enums/stats';
 import CustomSelect from './CustomSelect';
@@ -96,7 +95,7 @@ function convertNode(node: ValueNode, toType: string): ValueNode {
   }
   if (toType === 'stat') {
     if (isValueStat(node)) return node;
-    return { verb: VerbType.IS, object: CoreNounType.STAT, objectId: StatType.INTELLECT };
+    return { verb: VerbType.IS, object: NounType.STAT, objectId: StatType.INTELLECT };
   }
   if (toType === 'expression') {
     if (isValueExpression(node)) return node;
@@ -197,7 +196,7 @@ function StatEditor({ node, onChange }: { node: ValueStat; onChange: (n: ValueNo
       className="expr-var-select"
       value={node.objectId ?? node.stat ?? ''}
       options={STAT_OPTIONS}
-      onChange={(obj) => onChange({ verb: VerbType.IS, object: CoreNounType.STAT, objectId: obj })}
+      onChange={(obj) => onChange({ verb: VerbType.IS, object: NounType.STAT, objectId: obj })}
     />
   );
 }

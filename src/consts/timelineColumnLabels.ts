@@ -16,7 +16,6 @@ export const enum ColumnLabel {
   SKILL_POINTS         = 'SKILL POINTS',
   TEAM_STATUS          = 'TEAM STATUS',
   LINK                 = 'LINK',
-  ARTS_AMP             = 'ARTS AMP',
   SHIELD               = 'SHIELD',
   INFLICTION           = 'ARTS INFLICTION',
   ARTS_REACTION        = 'ARTS REACTION',
@@ -50,7 +49,6 @@ const GAME_MECHANIC_STATUS_LABELS: Record<string, string> = {
   [StatusType.DMG_REDUCTION]:   t('status.DMG_REDUCTION'),
   [StatusType.PROTECTION]:      t('status.PROTECTION'),
   [StatusType.LINK]:            t('status.LINK'),
-  [StatusType.ARTS_AMP]:        t('status.ARTS_AMP'),
   [StatusType.SHIELD]:          t('status.SHIELD'),
   [StatusType.GEAR_BUFF]:       t('status.GEAR_BUFF'),
   // Reactions
@@ -102,7 +100,6 @@ export const INFLICTION_EVENT_LABELS: Record<string, string> = {
   FOCUS:                t('infliction.FOCUS'),
   SUSCEPTIBILITY:       t('infliction.SUSCEPTIBILITY'),
   // Team statuses
-  ARTS_AMP:             t('infliction.ARTS_AMP'),
   SHIELD:               t('infliction.SHIELD'),
   // Enemy debuffs
   SCORCHING_HEART:      t('infliction.SCORCHING_HEART'),

@@ -7,7 +7,7 @@
  * - isValueLiteral excluding valueType field
  */
 import {
-  VerbType, CoreNounType, ValueOperation, DeterminerType,
+  VerbType, NounType, ValueOperation, DeterminerType,
   isValueLiteral, isValueVariable, isValueStat, isValueExpression,
 } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
@@ -20,14 +20,14 @@ describe('ValueNode type guards', () => {
     });
 
     it('rejects ValueStat existing form (has object field)', () => {
-      const node: ValueNode = { verb: VerbType.IS, object: CoreNounType.STAT, objectId: 'STRENGTH' };
+      const node: ValueNode = { verb: VerbType.IS, object: NounType.STAT, objectId: 'STRENGTH' };
       expect(isValueLiteral(node)).toBe(false);
     });
 
     it('rejects ValueStat extended form (has valueType field)', () => {
       const node = {
         verb: VerbType.IS,
-        valueType: CoreNounType.STAT,
+        valueType: NounType.STAT,
         stat: 'STRENGTH',
         ofDeterminer: DeterminerType.SOURCE,
       } as ValueNode;
@@ -51,14 +51,14 @@ describe('ValueNode type guards', () => {
 
   describe('isValueStat', () => {
     it('matches existing form { verb: IS, object: STAT, objectId }', () => {
-      const node: ValueNode = { verb: VerbType.IS, object: CoreNounType.STAT, objectId: 'INTELLECT' };
+      const node: ValueNode = { verb: VerbType.IS, object: NounType.STAT, objectId: 'INTELLECT' };
       expect(isValueStat(node)).toBe(true);
     });
 
     it('matches extended form { verb: IS, valueType: STAT, stat, ofDeterminer }', () => {
       const node = {
         verb: VerbType.IS,
-        valueType: CoreNounType.STAT,
+        valueType: NounType.STAT,
         stat: 'STRENGTH',
         ofDeterminer: DeterminerType.SOURCE,
       } as ValueNode;
@@ -107,7 +107,7 @@ describe('ValueNode type guards', () => {
     it('rejects leaf nodes', () => {
       expect(isValueExpression({ verb: VerbType.IS, value: 1 })).toBe(false);
       expect(isValueExpression({ verb: VerbType.VARY_BY, object: 'X', value: [1] })).toBe(false);
-      expect(isValueExpression({ verb: VerbType.IS, object: CoreNounType.STAT, objectId: 'X' })).toBe(false);
+      expect(isValueExpression({ verb: VerbType.IS, object: NounType.STAT, objectId: 'X' })).toBe(false);
     });
   });
 });

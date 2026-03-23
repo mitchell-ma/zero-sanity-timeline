@@ -15,8 +15,9 @@
 import { renderHook, act } from '@testing-library/react';
 import { useApp } from '../../app/useApp';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, INFLICTION_COLUMNS, ENEMY_OWNER_ID, USER_ID } from '../../model/channels';
-import { EventStatusType } from '../../consts/enums';
-import { FPS } from '../../utils/timeline';
+import { EnhancementType, EventStatusType } from '../../consts/enums';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
+import { eventDuration } from '../../consts/viewTypes';
 import type { MiniTimeline } from '../../consts/viewTypes';
 
 const SLOT_LAEVATAIN = 'slot-0';
@@ -200,4 +201,150 @@ describe('Laevatain Skills — integration through useApp', () => {
       expect(heatsAfter).toHaveLength(heatCount);
     },
   );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // D. MF stacks from compound trigger (heat absorption) are permanent
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it('MF from heat absorption has TOTAL_FRAMES duration', () => {
+    const { result } = renderHook(() => useApp());
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+
+    // Place 1 heat infliction + multi-segment basic to trigger absorption
+    act(() => {
+      result.current.handleAddEvent(
+        ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, 1 * FPS,
+        { name: INFLICTION_COLUMNS.HEAT, segments: [{ properties: { duration: 20 * FPS } }], sourceOwnerId: USER_ID },
+      );
+    });
+    const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
+    act(() => {
+      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 3 * FPS, multiSegBasic);
+    });
+
+    const mfEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    expect(mfEvents.length).toBeGreaterThanOrEqual(1);
+    for (const ev of mfEvents) {
+      expect(eventDuration(ev)).toBe(TOTAL_FRAMES);
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // E. Empowered battle skill consumes all MF stacks
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it('empowered battle skill consumes all 4 MF stacks', () => {
+    const { result } = renderHook(() => useApp());
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+
+    // Place 4 battle skills well-spaced to generate 4 MF stacks
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+        );
+      });
+    }
+
+    // Verify all 4 battle skills were added
+    const battleEvents = result.current.allProcessedEvents.filter(
+      (ev) => ev.ownerId === SLOT_LAEVATAIN && ev.columnId === SKILL_COLUMNS.BATTLE,
+    );
+    expect(battleEvents).toHaveLength(4);
+
+    // Verify 4 MF stacks exist
+    const mfBefore = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+        && ev.eventStatus !== EventStatusType.CONSUMED,
+    );
+    expect(mfBefore).toHaveLength(4);
+
+    // Find empowered variant from battle column
+    const empoweredVariant = battleCol!.eventVariants?.find(
+      (v) => v.enhancementType === EnhancementType.EMPOWERED,
+    );
+    expect(empoweredVariant).toBeDefined();
+
+    // Add empowered BS well after all 4 battle skills have triggered MF
+    act(() => {
+      result.current.handleAddEvent(
+        SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, 50 * FPS, empoweredVariant!,
+      );
+    });
+
+    // All 4 MF stacks should be consumed
+    const mfAfter = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN,
+    );
+    const consumed = mfAfter.filter((ev) => ev.eventStatus === EventStatusType.CONSUMED);
+    expect(consumed).toHaveLength(4);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // F. At max MF stacks, additional attacks do NOT consume heat inflictions
+  //
+  // The ALL clause pre-validates: canCONSUME & canAPPLY before executing.
+  // When APPLY MELTING_FLAME would exceed max stacks (4), the entire compound
+  // action is skipped — heat inflictions remain unconsumed.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it('at max MF stacks, basic attack does not consume heat inflictions', () => {
+    const { result } = renderHook(() => useApp());
+    const basicCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC);
+    const battleCol = findColumn(result.current, SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE);
+
+    // 1. Generate 4 MF stacks via 4 battle skills (each produces 1 MF)
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          SLOT_LAEVATAIN, SKILL_COLUMNS.BATTLE, (2 + i * 10) * FPS, battleCol!.defaultEvent!,
+        );
+      });
+    }
+
+    // Verify 4 MF stacks (max)
+    const mfStacks = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+        && ev.eventStatus !== EventStatusType.CONSUMED,
+    );
+    expect(mfStacks).toHaveLength(4);
+
+    // 2. Add heat inflictions on enemy AFTER all battle skills
+    const inflictionFrame = 60 * FPS;
+    for (let i = 0; i < 2; i++) {
+      act(() => {
+        result.current.handleAddEvent(
+          ENEMY_OWNER_ID, INFLICTION_COLUMNS.HEAT, inflictionFrame + i,
+          {
+            name: INFLICTION_COLUMNS.HEAT,
+            segments: [{ properties: { duration: 20 * FPS } }],
+            sourceOwnerId: USER_ID,
+          },
+        );
+      });
+    }
+
+    // 3. Add multi-segment basic attack after heat inflictions (triggers FINAL_STRIKE)
+    const multiSegBasic = buildMultiSegmentBasic(basicCol!.defaultEvent!);
+    act(() => {
+      result.current.handleAddEvent(SLOT_LAEVATAIN, SKILL_COLUMNS.BASIC, 65 * FPS, multiSegBasic);
+    });
+
+    // 4. Heat inflictions should NOT be consumed (ALL pre-validation fails: can't APPLY more MF)
+    const heatsConsumed = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === INFLICTION_COLUMNS.HEAT
+        && ev.ownerId === ENEMY_OWNER_ID
+        && ev.eventStatus === EventStatusType.CONSUMED,
+    );
+    expect(heatsConsumed).toHaveLength(0);
+
+    // 5. MF stacks should still be exactly 4 (unchanged)
+    const mfAfter = result.current.allProcessedEvents.filter(
+      (ev) => ev.columnId === OPERATOR_COLUMNS.MELTING_FLAME && ev.ownerId === SLOT_LAEVATAIN
+        && ev.eventStatus !== EventStatusType.CONSUMED,
+    );
+    expect(mfAfter).toHaveLength(4);
+  });
 });

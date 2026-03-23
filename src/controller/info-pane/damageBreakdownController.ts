@@ -67,6 +67,7 @@ const ELEMENT_DMG_LABELS: Record<ElementType, string> = {
   [ElementType.CRYO]: 'Cryo DMG%',
   [ElementType.NATURE]: 'Nature DMG%',
   [ElementType.ELECTRIC]: 'Electric DMG%',
+  [ElementType.ARTS]: 'Arts DMG%',
 };
 
 /** The display elements (no NONE — Physical covers it). */

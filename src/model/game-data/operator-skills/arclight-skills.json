@@ -1057,6 +1057,13 @@
     }
   },
   "TEMPESTUOUS_ARC_EMPOWERED": {
+    "activationClause": [{
+      "conditions": [{
+        "subjectDeterminer": "THIS", "subject": "OPERATOR",
+        "verb": "HAVE", "object": "STATUS", "objectId": "WILDLAND_TREKKER_TRIGGER",
+        "cardinalityConstraint": "EXACTLY", "value": "MAX"
+      }]
+    }],
     "properties": {
       "enhancementTypes": [
         "EMPOWERED"

@@ -16,7 +16,7 @@
  * No external bulk passes — all processing is internal to DerivedEventController methods.
  */
 import { TimelineEvent, EventSegmentData, computeSegmentsSpan, getAnimationDuration, eventDuration, setEventDuration } from '../../consts/viewTypes';
-import { CombatSkillsType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
+import { CombatSkillType, EventStatusType, SegmentType, TimeDependency } from '../../consts/enums';
 import { TimeStopRegion, extendByTimeStops, isTimeStopEvent } from './processTimeStop';
 import { buildReactionSegment, buildCorrosionSegments, mergeReactions, attachReactionFrames } from './processInfliction';
 import { ENEMY_OWNER_ID, INFLICTION_COLUMN_IDS, INFLICTION_TO_REACTION, OPERATOR_COLUMNS, REACTION_COLUMNS, REACTION_COLUMN_IDS, REACTION_DURATION, SKILL_COLUMNS } from '../../model/channels';
@@ -89,14 +89,14 @@ export class DerivedEventController {
     if (!firstOccupiedSlotId) return;
     this.registerEvents([{
       uid: `controlled-seed-${firstOccupiedSlotId}`,
-      id: CombatSkillsType.CONTROL,
-      name: CombatSkillsType.CONTROL,
+      id: CombatSkillType.CONTROL,
+      name: CombatSkillType.CONTROL,
       ownerId: firstOccupiedSlotId,
       columnId: OPERATOR_COLUMNS.INPUT,
       startFrame: 0,
       segments: [{ properties: { duration: TOTAL_FRAMES } }],
       sourceOwnerId: firstOccupiedSlotId,
-      sourceSkillName: CombatSkillsType.CONTROL,
+      sourceSkillName: CombatSkillType.CONTROL,
     }]);
   }
 
@@ -133,10 +133,10 @@ export class DerivedEventController {
       }
 
       // Controlled operator: clamp earlier CONTROL events on other owners
-      if (ev.id === CombatSkillsType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
+      if (ev.id === CombatSkillType.CONTROL && ev.columnId === OPERATOR_COLUMNS.INPUT) {
         for (let j = 0; j < this.registeredEvents.length; j++) {
           const prev = this.registeredEvents[j];
-          if (prev.id !== CombatSkillsType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
+          if (prev.id !== CombatSkillType.CONTROL || prev.columnId !== OPERATOR_COLUMNS.INPUT) continue;
           if (prev.ownerId === ev.ownerId) continue;
           const prevEnd = prev.startFrame + computeSegmentsSpan(prev.segments);
           if (prevEnd <= ev.startFrame) continue;
@@ -984,7 +984,7 @@ export class DerivedEventController {
   /** Check if a given operator is the controlled operator at a given frame. */
   isControlledAt(ownerId: string, frame: number): boolean {
     return this.activeEventsIn(OPERATOR_COLUMNS.INPUT, ownerId, frame)
-      .some((ev) => ev.id === CombatSkillsType.CONTROL);
+      .some((ev) => ev.id === CombatSkillType.CONTROL);
   }
 
   // ── Generic event insertion ──────────────────────────────────────────────

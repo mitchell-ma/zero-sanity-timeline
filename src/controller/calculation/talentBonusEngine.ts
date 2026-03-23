@@ -22,7 +22,7 @@ interface TalentCondition {
   hasSusceptibility?: string;
   /** Only applies to this skill type. */
   skillType?: string;
-  /** Only applies to this specific skill name (CombatSkillsType). */
+  /** Only applies to this specific skill name (CombatSkillType). */
   skillName?: string;
 }
 

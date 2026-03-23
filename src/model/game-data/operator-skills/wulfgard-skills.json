@@ -1370,6 +1370,13 @@
     }
   },
   "THERMITE_TRACERS_EMPOWERED": {
+    "activationClause": [{
+      "conditions": [{
+        "subjectDeterminer": "THIS", "subject": "OPERATOR",
+        "verb": "HAVE", "object": "STATUS", "objectId": "SCORCHING_FANGS",
+        "cardinalityConstraint": "EXACTLY", "value": "MAX"
+      }]
+    }],
     "properties": {
       "enhancementTypes": [
         "EMPOWERED"

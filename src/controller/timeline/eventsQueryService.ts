@@ -7,7 +7,7 @@
  * the DerivedEventController's event data and time-stop regions.
  */
 import { TimelineEvent, eventDuration } from '../../consts/viewTypes';
-import { CombatSkillType, ElementType, StatType, StatusType } from '../../consts/enums';
+import { CombatSkillType, DamageFactorType, ElementType, StatType, StatusType } from '../../consts/enums';
 import { StaggerBreak } from './staggerTimeline';
 import {
   ENEMY_OWNER_ID,
@@ -37,7 +37,7 @@ export const BREACH_PHYSICAL_FRAGILITY: Readonly<Record<number, number>> = {
 };
 
 /** Default amp bonus when statusValue is not specified on the event. */
-export const DEFAULT_AMP_BONUS = 0.15;
+export const DEFAULT_AMP_BONUS = 0;
 
 /** Maximum 0-based index for skill level arrays (12 levels → index 0–11). */
 export const MAX_SKILL_LEVEL_INDEX = 11;
@@ -122,7 +122,7 @@ export class EventsQueryService {
     const events = state.getRegisteredEvents();
     this.susceptibilityEvents = events.filter(e => (e.columnId === StatusType.SUSCEPTIBILITY || e.columnId === StatusType.FOCUS) && e.ownerId === ENEMY_OWNER_ID);
     this.linkEvents = events.filter(e => e.columnId === StatusType.LINK);
-    this.artsAmpEvents = events.filter(e => e.columnId === StatusType.ARTS_AMP);
+    this.artsAmpEvents = events.filter(e => e.damageFactorType === DamageFactorType.AMP);
     this.electrificationEvents = events.filter(e => e.columnId === REACTION_COLUMNS.ELECTRIFICATION);
     this.breachEvents = events.filter(e => e.columnId === PHYSICAL_STATUS_COLUMNS.BREACH);
     this.corrosionEvents = events.filter(e => e.ownerId === ENEMY_OWNER_ID && e.columnId === REACTION_COLUMNS.CORROSION);

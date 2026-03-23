@@ -1,12 +1,13 @@
 import { Column, MiniTimeline, Operator, Enemy, VisibleSkills } from '../../consts/viewTypes';
-import { CombatSkillsType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
+import type { Predicate } from '../../dsl/semantics';
+import { CombatSkillType, ELEMENT_COLORS, ElementType, EnhancementType, EventFrameType, SegmentType, StatusType, TimeDependency, TimelineSourceType } from '../../consts/enums';
 import { ENEMY_OWNER_ID, USER_ID, ENEMY_GROUP_COLUMNS, OPERATOR_COLUMNS, PHYSICAL_STATUS_COLUMNS, SKILL_COLUMN_ORDER as SKILL_ORDER, SKILL_COLUMNS, NODE_STAGGER_COLUMN_ID, FULL_STAGGER_COLUMN_ID } from '../../model/channels';
 import { SKILL_LABELS, ColumnLabel, STATUS_LABELS, REACTION_MICRO_COLUMNS } from '../../consts/timelineColumnLabels';
 import { getWeaponEffectDefs, getGearEffectDefs } from '../../model/game-data/weaponGearEffectLoader';
 import { getTacticalEntry, getWeapon } from '../gameDataController';
 import { Tactical } from '../../model/consumables/tactical';
 import { COMMON_OWNER_ID, COMMON_COLUMN_IDS } from '../slot/commonSlotController';
-import { FPS } from '../../utils/timeline';
+import { FPS, TOTAL_FRAMES } from '../../utils/timeline';
 import GENERAL_MECHANICS from '../../model/game-data/generalMechanics.json';
 import { SkillSegmentBuilder } from '../events/basicAttackController';
 import { getFrameSequences, getSegmentLabels, getOperatorJson } from '../../model/event-frames/operatorJsonLoader';
@@ -38,7 +39,7 @@ export interface Slot {
 
 /** Resolve a variant skill's display name from its JSON data + base skill label. */
 function resolveVariantDisplayName(varId: string, varSkill: Record<string, unknown>): string {
-  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillsType] ?? (varSkill.name as string);
+  const baseName = COMBAT_SKILL_LABELS[getBaseSkillId(varId) as CombatSkillType] ?? (varSkill.name as string);
   return formatSkillDisplayName(baseName, (varSkill.properties as Record<string, unknown> | undefined)?.enhancementTypes as string[] | undefined, varSkill.name as string | undefined);
 }
 
@@ -56,7 +57,7 @@ export function buildColumns(
   type TeamStatusDef = { sourceSlot: Slot; statusName: string; label: string; duration: number; minPotentialForTeam: number };
   const teamStatusDefs: TeamStatusDef[] = [];
   // Pre-scan: collect THIS_OPERATOR status defs per operator for operator status column
-  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string };
+  type OperatorStatusDef = { statusName: string; label: string; columnId: string; duration: number; color: string; source: 'talent' | 'weapon' | 'gear' | 'other'; statusType?: string; stacks?: Record<string, unknown> };
   const operatorStatusMap = new Map<string, OperatorStatusDef[]>();
   // Pre-scan: collect team-targeting weapon/gear effects
   type TeamEquipDef = { slotId: string; statusName: string; label: string; durationFrames: number; color: string };
@@ -76,10 +77,14 @@ export function buildColumns(
         const targetDeterminer = se.targetDeterminer ?? seProps?.targetDeterminer;
         const seId = se.id ?? seProps?.id;
         if (target === 'OPERATOR' && (!targetDeterminer || targetDeterminer === 'THIS') && seId) {
-          const seDur = (seProps?.duration ?? se.duration) as { value?: number | number[] } | undefined;
-          const durVal = Array.isArray(seDur?.value) ? seDur.value[0] : seDur?.value;
+          const seStacks = seProps?.stacks as { limit?: { value?: number }; duration?: { value?: { value?: number } | number | number[] }; interactionType?: string } | undefined;
+          const seDur = (seProps?.duration ?? se.duration ?? seStacks?.duration) as { value?: { value?: number } | number | number[] } | undefined;
+          const rawVal = seDur?.value;
+          const durVal = typeof rawVal === 'object' && rawVal !== null && !Array.isArray(rawVal)
+            ? (rawVal as { value?: number }).value
+            : Array.isArray(rawVal) ? rawVal[0] : rawVal;
           const dur = durVal ?? -1;
-          const durationFrames = dur > 0 ? Math.round(dur * 120) : 10 * 120;
+          const durationFrames = dur === -1 ? TOTAL_FRAMES : dur > 0 ? Math.round(dur * FPS) : 10 * FPS;
           const colId = (OPERATOR_COLUMNS as Record<string, string>)[seId as string]
             ?? (seId as string).toLowerCase().replace(/_/g, '-');
           const seType = (seProps?.type ?? se.type) as string | undefined;
@@ -183,24 +188,6 @@ export function buildColumns(
       defaultEvent: {
         name: 'Link',
         segments: [{ properties: { duration: 2400 } }], // 20 seconds at 120fps
-      },
-    });
-  }
-
-  if (teamTeamColumns.has('team-amp')) {
-    columns.push({
-      key: `${COMMON_OWNER_ID}-amp`,
-      type: 'mini-timeline',
-      source: TimelineSourceType.COMMON,
-      ownerId: COMMON_OWNER_ID,
-      columnId: StatusType.ARTS_AMP,
-      label: ColumnLabel.ARTS_AMP,
-      color: '#dd88cc',
-      headerVariant: 'skill',
-      derived: true,
-      defaultEvent: {
-        name: 'Arts Amp',
-        segments: [{ properties: { duration: 1440 } }], // 12 seconds at 120fps
       },
     });
   }
@@ -316,11 +303,11 @@ export function buildColumns(
         headerVariant: 'skill',
         eventVariants: [
           {
-            name: CombatSkillsType.DASH,
+            name: CombatSkillType.DASH,
             segments: [{ properties: { duration: DASH_FRAMES } }],
           },
           {
-            name: CombatSkillsType.DASH,
+            name: CombatSkillType.DASH,
             isPerfectDodge: true,
             timeInteraction: 'TIME_STOP',
             timeDependency: TimeDependency.REAL_TIME,
@@ -328,7 +315,7 @@ export function buildColumns(
           },
         ],
         defaultEvent: {
-          name: CombatSkillsType.DASH,
+          name: CombatSkillType.DASH,
           segments: [{ properties: { duration: DASH_FRAMES } }],
         },
       });
@@ -386,6 +373,7 @@ export function buildColumns(
                   enhancementType,
                   segments: variantSeg.segments,
                   ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
+                  ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
                 });
               }
             }
@@ -407,11 +395,11 @@ export function buildColumns(
 
             col.eventVariants!.push(
               {
-                name: CombatSkillsType.FINISHER,
+                name: CombatSkillType.FINISHER,
                 segments: finSeg.segments,
               },
               {
-                name: CombatSkillsType.DIVE,
+                name: CombatSkillType.DIVE,
                 segments: diveSeg.segments,
               },
             );
@@ -468,6 +456,7 @@ export function buildColumns(
                 enhancementType,
                 segments: variantSeg.segments,
                 ...(varSkill.triggerCondition ? { triggerCondition: varSkill.triggerCondition as string } : {}),
+                ...(varSkill.activationClause ? { activationClause: varSkill.activationClause as Predicate[] } : {}),
                 gaugeGain: gg,
                 teamGaugeGain: tgg,
               });
@@ -507,7 +496,7 @@ export function buildColumns(
             const empoweredBattleSeqs = battleName ? getFrameSequences(op!.id, empoweredBattleId) : undefined;
             if (empoweredBattleSeqs?.length) {
               const empowered = SkillSegmentBuilder.buildSegments(empoweredBattleSeqs, { ctx: skillCtx });
-              const empoweredName = empoweredBattleId as CombatSkillsType;
+              const empoweredName = empoweredBattleId as CombatSkillType;
               const hasEmpCdSegment = empowered.segments.some(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
               // Append cooldown from base skill if empowered segments don't have one
               const cdSeg = battleSegments.find(s => s.properties.segmentTypes?.includes(SegmentType.COOLDOWN));
@@ -622,14 +611,17 @@ export function buildColumns(
         .slice()
         .sort((a, b) => (STATUS_SOURCE_ORDER[a.source] ?? 3) - (STATUS_SOURCE_ORDER[b.source] ?? 3));
       for (const def of ownDefs) {
+        const defLimit = (def.stacks?.limit as { value?: number } | undefined)?.value;
         statusMicroCols.push({
           id: def.columnId,
           label: def.label,
           color: def.color,
           statusType: def.statusType,
+          ...(defLimit != null && defLimit > 1 ? { maxEvents: defLimit } : {}),
           defaultEvent: {
             name: def.label,
             segments: [{ properties: { duration: def.duration } }],
+            ...(def.stacks ? { stacks: def.stacks } : {}),
           },
         });
         matchIds.push(def.columnId);

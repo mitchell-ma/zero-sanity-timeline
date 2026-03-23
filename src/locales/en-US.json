@@ -321,7 +321,7 @@
   "dsl.verb.MERGE": "Merge",
   "dsl.verb.RESET": "Reset",
   "dsl.verb.IGNORE": "Ignore",
-  "dsl.verb.ENHANCE": "Enhance",
+  "dsl.verb.ENABLE": "Enable",
   "dsl.verb.EXPERIENCE": "Experience",
   "dsl.verb.HAVE": "Have",
   "dsl.verb.IS": "Is",

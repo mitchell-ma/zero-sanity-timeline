@@ -195,6 +195,7 @@ const ELEMENT_LABELS: Record<ElementType, string> = {
   [ElementType.NONE]: 'None', [ElementType.PHYSICAL]: 'Physical',
   [ElementType.HEAT]: 'Heat', [ElementType.CRYO]: 'Cryo',
   [ElementType.NATURE]: 'Nature', [ElementType.ELECTRIC]: 'Electric',
+  [ElementType.ARTS]: 'Arts',
 };
 
 function FrameEditor({ index, frame, onChange, onRemove }: {

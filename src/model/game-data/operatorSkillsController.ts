@@ -22,7 +22,7 @@ interface TriggerClause {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const VALID_SKILL_ENTRY_KEYS = new Set([
-  'segments', 'clause', 'onTriggerClause', 'properties', 'metadata',
+  'segments', 'clause', 'onTriggerClause', 'activationClause', 'properties', 'metadata',
 ]);
 
 const VALID_SKILL_PROPERTIES_KEYS = new Set([
@@ -54,6 +54,10 @@ export function validateOperatorSkill(json: Record<string, unknown>, skillId: st
     errors.push(`${path}.clause: must be an array`);
   }
 
+  if (json.activationClause && !Array.isArray(json.activationClause)) {
+    errors.push(`${path}.activationClause: must be an array`);
+  }
+
   if (json.onTriggerClause && !Array.isArray(json.onTriggerClause)) {
     errors.push(`${path}.onTriggerClause: must be an array`);
   }
@@ -78,6 +82,7 @@ export class OperatorSkill {
   readonly id: string;
   readonly segments: unknown[];
   readonly clause: unknown[];
+  readonly activationClause: unknown[];
   readonly onTriggerClause: TriggerClause[];
   readonly name: string;
   readonly description: string;
@@ -96,6 +101,7 @@ export class OperatorSkill {
     this.id = id;
     this.segments = (json.segments ?? []) as unknown[];
     this.clause = (json.clause ?? []) as unknown[];
+    this.activationClause = (json.activationClause ?? []) as unknown[];
     this.onTriggerClause = (json.onTriggerClause ?? []) as TriggerClause[];
     this.name = (props.name ?? '') as string;
     this.description = (props.description ?? '') as string;
@@ -113,6 +119,7 @@ export class OperatorSkill {
     return {
       ...(this.segments.length > 0 ? { segments: this.segments } : {}),
       ...(this.clause.length > 0 ? { clause: this.clause } : {}),
+      ...(this.activationClause.length > 0 ? { activationClause: this.activationClause } : {}),
       ...(this.onTriggerClause.length > 0 ? { onTriggerClause: this.onTriggerClause } : {}),
       properties: {
         name: this.name,

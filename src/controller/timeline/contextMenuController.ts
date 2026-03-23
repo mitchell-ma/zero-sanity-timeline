@@ -6,7 +6,7 @@
  * closures, allowing the view to map actionIds to callbacks.
  */
 import { TimelineEvent, Column, MiniTimeline, ContextMenuItem, getAnimationDurationFromSegments } from '../../consts/viewTypes';
-import { CombatSkillsType, InteractionModeType } from '../../consts/enums';
+import { CombatSkillType, InteractionModeType } from '../../consts/enums';
 import { REACTION_LABELS, COMBAT_SKILL_LABELS, INFLICTION_EVENT_LABELS } from '../../consts/timelineColumnLabels';
 import { t } from '../../locales/locale';
 import { SKILL_COLUMNS, OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
@@ -55,7 +55,7 @@ export function controlledItem(ownerId: string, atFrame: number): ContextMenuIte
       ownerId,
       columnId: OPERATOR_COLUMNS.INPUT,
       atFrame,
-      defaultSkill: { name: CombatSkillsType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
+      defaultSkill: { name: CombatSkillType.CONTROL, segments: [{ properties: { duration: TOTAL_FRAMES - atFrame, name: 'Control' } }] },
     },
     disabled: alreadyControlled,
     disabledReason: alreadyControlled ? t('ctx.alreadyControlled') : undefined,
@@ -97,13 +97,21 @@ export function buildColumnContextMenu(
   if (col.microColumns && col.microColumnAssignment === 'dynamic-split') {
     return [
       headerItem,
-      ...col.microColumns.map((mc) => ({
-        label: REACTION_LABELS[mc.id]?.label ?? mc.label,
-        actionId: 'addEvent' as const,
-        actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: mc.defaultEvent ?? col.defaultEvent ?? null },
-        disabled: inTimeStop,
-        disabledReason: inTimeStop ? timeStopReason : undefined,
-      })),
+      ...col.microColumns.map((mc) => {
+        // Check stack limit per micro-column
+        const matchSet = col.matchColumnIds ? new Set(col.matchColumnIds) : null;
+        const mcEvents = events.filter(
+          (ev) => ev.ownerId === col.ownerId && (matchSet ? ev.columnId === mc.id : ev.columnId === col.columnId),
+        );
+        const mcFull = col.maxEvents != null && mcEvents.length >= col.maxEvents;
+        return {
+          label: REACTION_LABELS[mc.id]?.label ?? mc.label,
+          actionId: 'addEvent' as const,
+          actionPayload: { ownerId: col.ownerId, columnId: mc.id, atFrame, defaultSkill: { ...(mc.defaultEvent ?? col.defaultEvent ?? {}), ...(col.maxEvents != null && col.maxEvents > 1 ? { stackable: true } : {}) } },
+          disabled: mcFull || inTimeStop,
+          disabledReason: mcFull ? t('ctx.stacksFull', { current: String(mcEvents.length), max: String(col.maxEvents ?? '?') }) : inTimeStop ? timeStopReason : undefined,
+        };
+      }),
       ...(ctrlItem ? [{ separator: true } as ContextMenuItem, ctrlItem] : []),
     ];
   }
@@ -157,10 +165,11 @@ export function buildColumnContextMenu(
       ];
     }
 
-    // Single-column stacking (MF)
-    const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || full || beforePrev);
+    // Single-column stacking (MF) — stack limit is always enforced; ordering/time-stop are strict-only
+    const strict = interactionMode === InteractionModeType.STRICT;
+    const disabled = full || (strict && (inTimeStop || beforePrev));
     const rawName = col.defaultEvent?.name ?? col.label;
-    const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
+    const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
     const disabledReason = inTimeStop
       ? t('ctx.ultimateActive')
       : full
@@ -173,7 +182,7 @@ export function buildColumnContextMenu(
       {
         label: eventName,
         actionId: 'addEvent',
-        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: col.defaultEvent ?? null },
+        actionPayload: { ownerId: col.ownerId, columnId: col.columnId, atFrame, defaultSkill: { ...(col.defaultEvent ?? {}), ...(col.maxEvents != null && col.maxEvents > 1 ? { stackable: true } : {}) } },
         disabled,
         disabledReason: disabledReason || undefined,
       },
@@ -183,7 +192,7 @@ export function buildColumnContextMenu(
 
   // Simple single-column mini-timeline (skill columns)
   const rawName = col.defaultEvent?.name ?? col.label;
-  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
+  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
 
   if (col.columnId === SKILL_COLUMNS.COMBO) {
     const comboAvail = checkComboWindowAvailability(col.ownerId, atFrame, events, alwaysAvailableComboSlots);
@@ -224,14 +233,14 @@ export function buildColumnContextMenu(
         const availability = checkVariantAvailability(v.name, col.ownerId, events, atFrame, col.columnId, slots, v.enhancementType);
         const overlap = checkOverlap(col.ownerId, col.columnId, computeProspectiveRange(v, atFrame, timeStopRegions));
         let finisherBlock: string | undefined;
-        if (v.name === CombatSkillsType.FINISHER && staggerBreaks) {
+        if (v.name === CombatSkillType.FINISHER && staggerBreaks) {
           const effectiveBreaks = getEffectiveStaggerWindows(events, staggerBreaks);
           const inBreak = effectiveBreaks.find((b) => atFrame >= b.startFrame && atFrame < b.endFrame);
           if (!inBreak) {
             finisherBlock = t('ctx.finisher.outsideBreak');
           } else {
             const existing = events.some((ev) =>
-              ev.id === CombatSkillsType.FINISHER
+              ev.id === CombatSkillType.FINISHER
               && ev.startFrame >= inBreak.startFrame && ev.startFrame < inBreak.endFrame,
             );
             if (existing) finisherBlock = t('ctx.finisher.duplicate');
@@ -240,7 +249,7 @@ export function buildColumnContextMenu(
         const disabled = interactionMode === InteractionModeType.STRICT && (inTimeStop || v.disabled || availability.disabled || overlap || spInsufficient || !!finisherBlock);
         const displayName = v.isPerfectDodge ? 'Dodge'
           : col.columnId === OPERATOR_COLUMNS.INPUT ? 'Dash'
-          : v.displayName ?? COMBAT_SKILL_LABELS[v.name as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
+          : v.displayName ?? COMBAT_SKILL_LABELS[v.name as CombatSkillType] ?? INFLICTION_EVENT_LABELS[v.name] ?? v.name;
         const reason = v.disabledReason
           ?? (inTimeStop ? timeStopReason
           : spInsufficient ? spReason
@@ -267,6 +276,7 @@ export function buildColumnContextMenu(
               ...(v.timeDependency ? { timeDependency: v.timeDependency } : {}),
               ...(v.skillPointCost != null ? { skillPointCost: v.skillPointCost } : {}),
               ...(v.enhancementType ? { enhancementType: v.enhancementType } : {}),
+              ...(v.activationClause ? { activationClause: v.activationClause } : {}),
             },
           },
           disabled,
@@ -339,7 +349,7 @@ export function buildEventAddItems(
   );
   const maxLabel = col.maxEvents ?? '?';
   const rawName = col.defaultEvent?.name ?? col.label;
-  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillsType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
+  const eventName = COMBAT_SKILL_LABELS[rawName as CombatSkillType] ?? INFLICTION_EVENT_LABELS[rawName] ?? rawName;
   const disabledReason = full
     ? `${maxLabel}/${maxLabel} stacks`
     : beforePrev

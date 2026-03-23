@@ -355,7 +355,24 @@ function makeEvent(overrides: Partial<TimelineEvent> & { uid: string; ownerId: s
   } as TimelineEvent;
 }
 
-// ── hasEnhanceClauseAtFrame ────────────────────────────────────────────────
+// ── Helper to convert raw JSON segments to EventSegmentData ─────────────────
+const FPS = 120;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const twilightSkill = require('../../model/game-data/operator-skills/laevatain-skills.json').TWILIGHT;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rawSegmentsToEventSegments(rawSegments: any[]): EventSegmentData[] {
+  return rawSegments.map((seg) => ({
+    properties: {
+      ...seg.properties,
+      duration: Math.round((seg.properties.duration?.value?.value ?? 0) * FPS),
+    },
+    ...(seg.clause ? { clause: seg.clause } : {}),
+  }));
+}
+const twilightSegments = rawSegmentsToEventSegments(twilightSkill.segments);
+
+// ── hasEffectClauseAtFrame / hasEnhanceClauseAtFrame ────────────────────────
+// Uses real TWILIGHT segments from laevatain-skills.json
 describe('hasEnhanceClauseAtFrame', () => {
   const SLOT = 'slot-0';
 
@@ -369,60 +386,38 @@ describe('hasEnhanceClauseAtFrame', () => {
     });
   }
 
-  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
-
-  test('returns true when frame falls within a segment with ENHANCE clause', () => {
-    const ev = ultWithSegments(0, [
-      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
-    ]);
-    // During Animation (0-248)
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 100)).toBe(true);
-    // During Stasis (249-284)
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 260)).toBe(true);
-    // During Active (285-2084)
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 500)).toBe(true);
+  test('returns true when frame falls within a segment with ENABLE clause', () => {
+    const ev = ultWithSegments(0, twilightSegments);
+    // All three pre-cooldown segments (Animation, Stasis, Active) have ENABLE ENHANCED BATK
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 100)).toBe(true);
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(true);
   });
 
-  test('returns false during Cooldown (no ENHANCE clause)', () => {
-    const ev = ultWithSegments(0, [
-      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
-    ]);
-    // During Cooldown (2085-3284)
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 2100)).toBe(false);
+  test('returns false after ultimate ends (past all segments)', () => {
+    const ev = ultWithSegments(0, twilightSegments);
+    const totalDuration = twilightSegments.reduce((s, seg) => s + seg.properties.duration, 0);
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', totalDuration + 100)).toBe(false);
   });
 
   test('returns false before ultimate starts', () => {
-    const ev = ultWithSegments(1000, [
-      { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
-      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
-    ]);
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 500)).toBe(false);
+    const ev = ultWithSegments(1000, twilightSegments);
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 500)).toBe(false);
   });
 
-  test('returns false for wrong enhance object type', () => {
-    const ev = ultWithSegments(0, [
-      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
-    ]);
-    // ENHANCE BASIC_ATTACK doesn't match BATTLE_SKILL
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATTLE_SKILL', 500)).toBe(false);
+  test('returns false for wrong skill object type', () => {
+    const ev = ultWithSegments(0, twilightSegments);
+    // ENABLE ENHANCED BATK/BATTLE_SKILL doesn't match COMBO_SKILL
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'COMBO_SKILL', 500)).toBe(false);
   });
 
   test('returns false for different owner', () => {
-    const ev = ultWithSegments(0, [
-      { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceClause },
-    ]);
-    expect(hasEnhanceClauseAtFrame([ev], 'slot-1', 'BASIC_ATTACK', 500)).toBe(false);
+    const ev = ultWithSegments(0, twilightSegments);
+    expect(hasEnhanceClauseAtFrame([ev], 'slot-1', 'BATK', 500)).toBe(false);
   });
 
   test('returns false when event has no segments', () => {
     const ev = makeEvent({ uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame: 0 });
-    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BASIC_ATTACK', 0)).toBe(false);
+    expect(hasEnhanceClauseAtFrame([ev], SLOT, 'BATK', 0)).toBe(false);
   });
 });
 
@@ -561,39 +556,30 @@ describe('UE gauge gains — natural SP consumption via controllers', () => {
   });
 });
 
-// ── ENHANCE clause variant validation ──────────────────────────────────────
-describe('ENHANCE clause variant validation', () => {
+// ── ENABLE/DISABLE clause variant validation ──────────────────────────────
+// Uses real TWILIGHT segments from laevatain-skills.json
+describe('ENABLE/DISABLE clause variant validation', () => {
   const SLOT = 'slot-0';
-  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
-  const enhanceAndDisableClause = [{ conditions: [], effects: [
-    { verb: 'ENHANCE', object: 'BASIC_ATTACK' },
-    { verb: 'DISABLE', adjective: 'NORMAL', object: 'BASIC_ATTACK' },
-  ] }];
+  const totalDuration = twilightSegments.reduce((s: number, seg: EventSegmentData) => s + seg.properties.duration, 0);
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
-      segments: [
-        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
-        { properties: { segmentTypes: [SegmentType.STASIS], duration: 36, name: 'Stasis' }, clause: enhanceClause },
-        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: enhanceAndDisableClause },
-        { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
-      ],
+      segments: twilightSegments,
     });
   }
 
-  test('enhanced variant is available during ENHANCE window', () => {
+  test('enhanced variant is available during ENABLE window', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(false);
   });
 
-  test('enhanced variant is disabled outside ENHANCE window', () => {
+  test('enhanced variant is disabled outside ENABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    // Frame 3000 is during Cooldown (no ENHANCE clause)
-    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, 3000, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
+    const result = checkVariantAvailability('FLAMING_CINDERS_ENHANCED', SLOT, events, totalDuration + 100, SKILL_COLUMNS.BASIC, undefined, EnhancementType.ENHANCED);
     expect(result.disabled).toBe(true);
-    expect(result.reason).toContain('ENHANCE');
+    expect(result.reason).toContain('ENABLE');
   });
 
   test('enhanced variant is disabled when no ultimate placed', () => {
@@ -603,24 +589,24 @@ describe('ENHANCE clause variant validation', () => {
 
   test('regular basic is blocked during DISABLE window', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 500, SKILL_COLUMNS.BASIC, undefined, EnhancementType.NORMAL);
     expect(result.disabled).toBe(true);
     expect(result.reason).toContain('NORMAL');
   });
 
-  test('regular basic is allowed outside DISABLE window', () => {
+  test('regular basic is allowed outside DISABLE window (past ultimate)', () => {
     const events = [ultEvent(0)];
-    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, 3000, SKILL_COLUMNS.BASIC);
+    const result = checkVariantAvailability('FLAMING_CINDERS', SLOT, events, totalDuration + 100, SKILL_COLUMNS.BASIC, undefined, EnhancementType.NORMAL);
     expect(result.disabled).toBe(false);
   });
 
-  test('finisher is allowed during DISABLE window', () => {
+  test('finisher is disabled during ultimate (DISABLE FINISHER clause)', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('FINISHER', SLOT, events, 500, SKILL_COLUMNS.BASIC);
-    expect(result.disabled).toBe(false);
+    expect(result.disabled).toBe(true);
   });
 
-  test('dive is allowed during ENHANCE window', () => {
+  test('dive is allowed during ENABLE window', () => {
     const events = [ultEvent(0)];
     const result = checkVariantAvailability('DIVE', SLOT, events, 500, SKILL_COLUMNS.BASIC);
     expect(result.disabled).toBe(false);
@@ -628,26 +614,19 @@ describe('ENHANCE clause variant validation', () => {
 });
 
 // ── validateEnhanced / validateDisabledVariants ──────────────────
+// Uses real TWILIGHT segments from laevatain-skills.json
 describe('validateEnhanced and validateDisabledVariants', () => {
   const SLOT = 'slot-0';
-  const enhanceClause = [{ conditions: [], effects: [{ verb: 'ENHANCE', object: 'BASIC_ATTACK' }] }];
-  const disableClause = [{ conditions: [], effects: [
-    { verb: 'ENHANCE', object: 'BASIC_ATTACK' },
-    { verb: 'DISABLE', adjective: 'NORMAL', object: 'BASIC_ATTACK' },
-  ] }];
+  const totalDuration = twilightSegments.reduce((s: number, seg: EventSegmentData) => s + seg.properties.duration, 0);
 
   function ultEvent(startFrame: number): TimelineEvent {
     return makeEvent({
       uid: 'ult-1', ownerId: SLOT, columnId: SKILL_COLUMNS.ULTIMATE, startFrame,
-      segments: [
-        { properties: { segmentTypes: [SegmentType.ANIMATION], duration: 249, name: 'Animation' }, clause: enhanceClause },
-        { properties: { segmentTypes: [SegmentType.ACTIVE], duration: 1800, name: 'Active' }, clause: disableClause },
-        { properties: { segmentTypes: [SegmentType.COOLDOWN], duration: 1200, name: 'Cooldown' } },
-      ],
+      segments: twilightSegments,
     });
   }
 
-  test('enhanced basic during ENHANCE window: no warning', () => {
+  test('enhanced basic during ENABLE window: no warning', () => {
     const events = [
       ultEvent(0),
       makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 500, enhancementType: EnhancementType.ENHANCED }),
@@ -656,16 +635,16 @@ describe('validateEnhanced and validateDisabledVariants', () => {
     expect(warnings.has('basic-1')).toBe(false);
   });
 
-  test('enhanced basic outside ENHANCE window: warning', () => {
+  test('enhanced basic outside ENABLE window: warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: 3000, enhancementType: EnhancementType.ENHANCED }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS_ENHANCED', startFrame: totalDuration + 100, enhancementType: EnhancementType.ENHANCED }),
     ];
     const warnings = validateEnhanced(events);
     expect(warnings.has('basic-1')).toBe(true);
   });
 
-  test('regular basic during ENHANCE window: warning', () => {
+  test('regular basic during DISABLE window: warning', () => {
     const events = [
       ultEvent(0),
       makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: 500 }),
@@ -674,21 +653,21 @@ describe('validateEnhanced and validateDisabledVariants', () => {
     expect(warnings.has('basic-1')).toBe(true);
   });
 
-  test('regular basic outside ENHANCE window: no warning', () => {
+  test('regular basic outside DISABLE window (past ultimate): no warning', () => {
     const events = [
       ultEvent(0),
-      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: 3000 }),
+      makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FLAMING_CINDERS', startFrame: totalDuration + 100 }),
     ];
     const warnings = validateDisabledVariants(events);
     expect(warnings.has('basic-1')).toBe(false);
   });
 
-  test('finisher during ENHANCE window: no warning', () => {
+  test('finisher during DISABLE window: warning (DISABLE FINISHER in Laevatain ultimate)', () => {
     const events = [
       ultEvent(0),
       makeEvent({ uid: 'basic-1', ownerId: SLOT, columnId: SKILL_COLUMNS.BASIC, name: 'FINISHER', startFrame: 500 }),
     ];
     const warnings = validateDisabledVariants(events);
-    expect(warnings.has('basic-1')).toBe(false);
+    expect(warnings.has('basic-1')).toBe(true);
   });
 });

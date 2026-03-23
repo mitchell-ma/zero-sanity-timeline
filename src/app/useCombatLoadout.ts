@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { CombatLoadoutController } from '../controller/combat-loadout';
 import { TimelineEvent } from '../consts/viewTypes';
 import type { Slot } from '../controller/timeline/columnBuilder';
@@ -15,15 +15,20 @@ export function useCombatLoadout(
     combatLoadoutRef.current.setSlotIds(slotIds);
   }
 
-  // Sync slots (operators + SP costs + trigger wiring)
-  useEffect(() => {
+  // Sync slots synchronously so SP costs are available when processedEvents
+  // useMemo reads getAllSpCosts() during the same render cycle.
+  const prevSlotsRef = useRef<Slot[]>(null!);
+  if (prevSlotsRef.current !== slots) {
+    prevSlotsRef.current = slots;
     combatLoadoutRef.current.syncSlots(slots);
-  }, [slots]);
+  }
 
-  // Recompute combo windows when events change
-  useEffect(() => {
+  // Recompute combo windows synchronously for the same reason.
+  const prevEventsRef = useRef<TimelineEvent[]>(null!);
+  if (prevEventsRef.current !== events) {
+    prevEventsRef.current = events;
     combatLoadoutRef.current.recomputeWindows(events);
-  }, [events]);
+  }
 
   return {
     combatLoadout: combatLoadoutRef.current,

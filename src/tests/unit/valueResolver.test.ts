@@ -1,7 +1,7 @@
 /**
  * Value resolver — unit tests for sourceContext, ofDeterminer, and ValueOperation rename.
  */
-import { VerbType, ValueOperation, CoreNounType, DeterminerType } from '../../dsl/semantics';
+import { VerbType, ValueOperation, NounType, DeterminerType } from '../../dsl/semantics';
 import type { ValueNode } from '../../dsl/semantics';
 import { resolveValueNode } from '../../controller/calculation/valueResolver';
 import type { ValueResolutionContext } from '../../controller/calculation/valueResolver';
@@ -85,12 +85,12 @@ describe('resolveValueNode', () => {
 
   describe('ValueStat — existing form', () => {
     it('looks up stat from context', () => {
-      const node: ValueNode = { verb: VerbType.IS, object: CoreNounType.STAT, objectId: 'STRENGTH' };
+      const node: ValueNode = { verb: VerbType.IS, object: NounType.STAT, objectId: 'STRENGTH' };
       expect(resolveValueNode(node, makeCtx({ stats: { STRENGTH: 500 } }))).toBe(500);
     });
 
     it('returns 0 for missing stat', () => {
-      const node: ValueNode = { verb: VerbType.IS, object: CoreNounType.STAT, objectId: 'STRENGTH' };
+      const node: ValueNode = { verb: VerbType.IS, object: NounType.STAT, objectId: 'STRENGTH' };
       expect(resolveValueNode(node, makeCtx())).toBe(0);
     });
   });
@@ -99,7 +99,7 @@ describe('resolveValueNode', () => {
     it('resolves stat from sourceContext when ofDeterminer is SOURCE', () => {
       const node: ValueNode = {
         verb: VerbType.IS,
-        valueType: CoreNounType.STAT,
+        valueType: NounType.STAT,
         stat: 'STRENGTH',
         ofDeterminer: DeterminerType.SOURCE,
       } as ValueNode;
@@ -113,7 +113,7 @@ describe('resolveValueNode', () => {
     it('resolves stat from main context when no sourceContext', () => {
       const node: ValueNode = {
         verb: VerbType.IS,
-        valueType: CoreNounType.STAT,
+        valueType: NounType.STAT,
         stat: 'STRENGTH',
         ofDeterminer: DeterminerType.SOURCE,
       } as ValueNode;
@@ -124,7 +124,7 @@ describe('resolveValueNode', () => {
     it('resolves stat from main context when ofDeterminer is absent', () => {
       const node: ValueNode = {
         verb: VerbType.IS,
-        valueType: CoreNounType.STAT,
+        valueType: NounType.STAT,
         stat: 'INTELLECT',
       } as ValueNode;
       const ctx = makeCtx({
@@ -187,7 +187,7 @@ describe('resolveValueNode', () => {
           } as ValueNode,
           right: {
             verb: VerbType.IS,
-            valueType: CoreNounType.STAT,
+            valueType: NounType.STAT,
             stat: 'STRENGTH',
             ofDeterminer: DeterminerType.SOURCE,
           } as ValueNode,
@@ -222,7 +222,7 @@ describe('resolveValueNode', () => {
           } as ValueNode,
           right: {
             verb: VerbType.IS,
-            valueType: CoreNounType.STAT,
+            valueType: NounType.STAT,
             stat: 'STRENGTH',
             ofDeterminer: DeterminerType.SOURCE,
           } as ValueNode,

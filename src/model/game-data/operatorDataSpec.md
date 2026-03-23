@@ -794,7 +794,7 @@ The `DISABLE` verb uses enhancement type adjectives to target specific skill var
 
 | Adjective | Description |
 |-----------|-------------|
-| `NORMAL` | Base skill variant (no enhancement) |
+| `NONE` | Base skill variant (no enhancement) |
 | `ENHANCED` | Enhanced variant (active during ultimate) |
 | `EMPOWERED` | Empowered variant (requires max status stacks) |
 

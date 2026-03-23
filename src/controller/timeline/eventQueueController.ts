@@ -25,8 +25,10 @@ import { SkillPointController } from '../slot/skillPointController';
 import {
   collectEngineTriggerEntries,
 } from './statusTriggerCollector';
+import { statusNameToColumnId } from './triggerMatch';
+import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
 import {
-  PRIORITY, MAX_INFLICTION_STACKS, getConsumeStatusConfig,
+  PRIORITY, MAX_INFLICTION_STACKS,
 } from './eventQueueTypes';
 import type { QueueFrame } from './eventQueueTypes';
 import { EventInterpretorController } from './eventInterpretorController';
@@ -326,10 +328,29 @@ function collectInflictionEntries(
 
 // ── Status consumption collection ───────────────────────────────────────────
 
+/** Resolve consume target from status definitions: column ID + target owner. */
+function resolveConsumeTarget(statusId: string, eventOwnerId: string, slotOperatorMap?: Record<string, string>) {
+  const columnId = statusNameToColumnId(statusId);
+  // Look up target from the status definition
+  const operatorId = slotOperatorMap?.[eventOwnerId];
+  if (operatorId) {
+    const statuses = getOperatorStatuses(operatorId);
+    const def = statuses.find(s => s.id === statusId);
+    if (def) {
+      if (def.target === 'ENEMY') return { columnId, ownerId: ENEMY_OWNER_ID };
+      // OPERATOR target defaults to the event owner (THIS)
+      return { columnId, ownerId: eventOwnerId };
+    }
+  }
+  // Fallback: assume operator-targeted, owned by the event owner
+  return { columnId, ownerId: eventOwnerId };
+}
+
 /** Scan events for consumeStatus frame markers targeting operator statuses. */
 function collectConsumeEntries(
   events: TimelineEvent[],
   stops: readonly TimeStopRegion[],
+  slotOperatorMap?: Record<string, string>,
 ): QueueFrame[] {
   const entries: QueueFrame[] = [];
 
@@ -345,23 +366,20 @@ function collectConsumeEntries(
           const frame = seg.frames[fi];
           if (!frame.consumeStatus) continue;
 
-          const config = getConsumeStatusConfig()[frame.consumeStatus];
-          if (config) {
-            const targetOwnerId = config.targetOwnerId ?? event.ownerId;
-            entries.push({
-              frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
-              priority: PRIORITY.CONSUME,
-              type: 'CONSUME',
-              statusName: frame.consumeStatus,
-              columnId: config.columnId,
-              ownerId: targetOwnerId,
-              sourceOwnerId: event.ownerId,
-              sourceSkillName: event.name,
-              maxStacks: 0,
-              durationFrames: 0,
-              operatorSlotId: event.ownerId,
-            });
-          }
+          const { columnId, ownerId } = resolveConsumeTarget(frame.consumeStatus, event.ownerId, slotOperatorMap);
+          entries.push({
+            frame: absoluteFrame(event.startFrame, cumulativeOffset, frame.offsetFrame, fStops),
+            priority: PRIORITY.CONSUME,
+            type: 'CONSUME',
+            statusName: frame.consumeStatus,
+            columnId,
+            ownerId,
+            sourceOwnerId: event.ownerId,
+            sourceSkillName: event.name,
+            maxStacks: 0,
+            durationFrames: 0,
+            operatorSlotId: event.ownerId,
+          });
         }
       }
       cumulativeOffset += seg.properties.duration;
@@ -608,7 +626,7 @@ export function runEventQueue(
   }
   seed(collectConsumeReactionEntries(registeredEvents, stops));
   seed(collectCryoConsumptionEntries(registeredEvents, loadoutProperties));
-  seed(collectConsumeEntries(registeredEvents, stops));
+  seed(collectConsumeEntries(registeredEvents, stops, slotOperatorMap));
   seed(engineEntries.map(e => ({
     frame: e.frame,
     priority: PRIORITY.ENGINE_TRIGGER,

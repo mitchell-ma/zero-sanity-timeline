@@ -3,7 +3,7 @@
  */
 import { TimelineEvent } from '../../consts/viewTypes';
 import type { DslTarget } from '../../dsl/semantics';
-import { OPERATOR_COLUMNS, ENEMY_OWNER_ID } from '../../model/channels';
+import type { } from '../../model/channels';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -63,19 +63,6 @@ export interface QueueFrame {
   comboResolve?: {
     comboEvent: import('../../consts/viewTypes').TimelineEvent;
   };
-}
-
-// ── Status consumption configuration ────────────────────────────────────────
-
-/** Maps consumeStatus name → column + target owner for queue consumption. */
-let _consumeStatusConfig: Record<string, { columnId: string; targetOwnerId?: string }> | null = null;
-export function getConsumeStatusConfig(): Record<string, { columnId: string; targetOwnerId?: string }> {
-  if (!_consumeStatusConfig) {
-    _consumeStatusConfig = {
-      ORIGINIUM_CRYSTAL: { columnId: OPERATOR_COLUMNS.ORIGINIUM_CRYSTAL, targetOwnerId: ENEMY_OWNER_ID },
-    };
-  }
-  return _consumeStatusConfig;
 }
 
 /** Skill column IDs that consume team statuses (Link) when cast. */
