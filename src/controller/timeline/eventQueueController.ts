@@ -22,7 +22,8 @@ import {
   resolveSusceptibility,
 } from './processInfliction';
 import { SkillPointController } from '../slot/skillPointController';
-import { statusNameToColumnId } from './triggerMatch';
+import { statusNameToColumnId, getFirstEventFrame } from './triggerMatch';
+import { getFinalStrikeTriggerFrame } from './processComboSkill';
 import { genEventUid } from '../timeline/inputEventController';
 import { getOperatorStatuses } from '../../model/game-data/operatorStatusesController';
 import {
@@ -568,8 +569,9 @@ function seedInputEventTriggers(
 ) {
   const seen = new Set<string>();
 
-  const seedEntry = (ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry) => {
-    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${ev.startFrame}`;
+  const seedEntry = (ev: TimelineEvent, entry: import('./triggerIndex').TriggerDefEntry, triggerFrame?: number) => {
+    const frame = triggerFrame ?? ev.startFrame;
+    const dedupKey = `${entry.def.properties.id}:${entry.operatorSlotId}:${frame}`;
     if (seen.has(dedupKey)) return;
     seen.add(dedupKey);
 
@@ -585,7 +587,7 @@ function seedInputEventTriggers(
     };
 
     queue.insert({
-      frame: ev.startFrame,
+      frame,
       priority: PRIORITY.ENGINE_TRIGGER,
       type: 'ENGINE_TRIGGER',
       statusName: entry.def.properties.id,
@@ -597,7 +599,7 @@ function seedInputEventTriggers(
       durationFrames: 0,
       operatorSlotId: entry.operatorSlotId,
       engineTrigger: {
-        frame: ev.startFrame,
+        frame,
         sourceOwnerId: ev.ownerId,
         sourceSkillName: ev.name,
         ctx: triggerCtx,
@@ -610,6 +612,7 @@ function seedInputEventTriggers(
     // Find all trigger defs whose indexed key matches this event's column
     for (const entry of triggerIdx.matchEvent(ev.columnId)) {
       // Owner filtering: PERFORM triggers check subject determiner
+      let resolvedFrame: number | undefined;
       if (entry.primaryVerb === 'PERFORM') {
         const isAny = entry.primaryCondition.subjectDeterminer === 'ANY';
         if (!isAny && ev.ownerId !== entry.operatorSlotId) continue;
@@ -617,8 +620,17 @@ function seedInputEventTriggers(
         const obj = entry.primaryCondition.object;
         if (obj === 'FINISHER' && ev.id !== 'FINISHER') continue;
         if (obj === 'DIVE_ATTACK' && ev.id !== 'DIVE') continue;
-        // FINAL_STRIKE matches normal basic attacks (not finisher/dive)
-        if (obj === 'FINAL_STRIKE' && (ev.id === 'FINISHER' || ev.id === 'DIVE')) continue;
+        if (obj === 'FINAL_STRIKE') {
+          if (ev.id === 'FINISHER' || ev.id === 'DIVE') continue;
+          // Final strike fires at the last frame of the last segment
+          const fsFrame = getFinalStrikeTriggerFrame(ev);
+          if (fsFrame == null) continue;
+          resolvedFrame = fsFrame;
+        } else if (obj === 'FINISHER' || obj === 'DIVE_ATTACK') {
+          resolvedFrame = getFirstEventFrame(ev);
+        } else {
+          resolvedFrame = getFirstEventFrame(ev);
+        }
       }
       // Target filtering: check the 'to' field on the primary condition
       const toTarget = entry.primaryCondition.to as string | undefined;
@@ -632,7 +644,7 @@ function seedInputEventTriggers(
           if (toDet === 'THIS' && ev.ownerId !== entry.operatorSlotId) continue;
         }
       }
-      seedEntry(ev, entry);
+      seedEntry(ev, entry, resolvedFrame);
     }
   }
 }
