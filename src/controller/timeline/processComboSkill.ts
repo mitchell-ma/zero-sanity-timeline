@@ -1,4 +1,5 @@
 import { TimelineEvent, computeSegmentsSpan } from '../../consts/viewTypes';
+import { EventFrameType } from '../../consts/enums';
 import { SKILL_COLUMNS, COMBO_WINDOW_COLUMN_ID } from '../../model/channels';
 import { TimeStopRegion, isTimeStopEvent, extendByTimeStops, foreignStopsFor } from './processTimeStop';
 import { findClauseTriggerMatches } from './triggerMatch';
@@ -150,12 +151,14 @@ export function hasActiveEventInColumns(events: TimelineEvent[], columnIds: stri
 }
 
 /**
- * For a sequenced event, compute the frame at which the final strike's last
- * hit lands.  Returns null if the event has no segments or fewer than 2.
+ * For a sequenced event, compute the frame at which the final strike lands.
+ * Searches for a frame marker with `frameTypes` containing FINAL_STRIKE.
+ * Falls back to the last frame of the last segment with a warning if not found.
+ * Returns null if the event has no segments or fewer than 2.
  *
- * When `stops` is provided, the last hit's offset within its segment is
- * extended by any overlapping time-stop regions, matching how
- * `deriveFrameInflictions` / `absoluteFrame()` position the actual hit.
+ * When `stops` is provided, the hit offset within its segment is extended
+ * by any overlapping time-stop regions, matching how `absoluteFrame()`
+ * positions the actual hit.
  */
 export function getFinalStrikeTriggerFrame(
   event: TimelineEvent,
@@ -164,11 +167,32 @@ export function getFinalStrikeTriggerFrame(
   const segs = event.segments;
   if (segs.length < 2) return null;
 
+  // Search all segments for a frame with FINAL_STRIKE type
+  let cumulativeOffset = 0;
+  for (let si = 0; si < segs.length; si++) {
+    const seg = segs[si];
+    if (seg.frames) {
+      for (const frame of seg.frames) {
+        if (frame.frameTypes?.includes(EventFrameType.FINAL_STRIKE)) {
+          if (frame.absoluteFrame != null) return frame.absoluteFrame;
+          const segAbsStart = event.startFrame + cumulativeOffset;
+          if (stops && stops.length > 0) {
+            const fStops = foreignStopsFor(event, stops);
+            return segAbsStart + extendByTimeStops(segAbsStart, frame.offsetFrame, fStops);
+          }
+          return segAbsStart + frame.offsetFrame;
+        }
+      }
+    }
+    cumulativeOffset += seg.properties.duration;
+  }
+
+  // Fallback: last frame of last segment
+  console.warn(`[getFinalStrikeTriggerFrame] No FINAL_STRIKE frame found for ${event.name ?? event.id} — falling back to last segment last frame`);
   let offsetFrames = 0;
   for (let i = 0; i < segs.length - 1; i++) {
     offsetFrames += segs[i].properties.duration;
   }
-
   const lastSeg = segs[segs.length - 1];
   const frames = lastSeg.frames;
   if (frames && frames.length > 0) {
@@ -178,7 +202,6 @@ export function getFinalStrikeTriggerFrame(
   const lastHitOffset = frames && frames.length > 0
     ? frames[frames.length - 1].offsetFrame
     : 0;
-
   const segAbsStart = event.startFrame + offsetFrames;
   if (stops && stops.length > 0) {
     const fStops = foreignStopsFor(event, stops);
